@@ -1,10 +1,10 @@
-[gd_scene format=3 uid="uid://mainmenu001"]
+[gd_scene format=3 uid="uid://cokexptktj0u0"]
 
-[ext_resource type="Script" uid="uid://srjisxxnddcr" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Script" uid="uid://srjisxxnddcr" path="res://modules/quiz_rpg/scripts/ui/main_menu.gd" id="1"]
 
 [node name="MainMenu" type="CanvasLayer" unique_id=748218835]
 process_mode = 3
-script = ExtResource("1_menu")
+script = ExtResource("1")
 
 [node name="BG" type="ColorRect" parent="." unique_id=445807727]
 anchors_preset = 15

@@ -2,7 +2,7 @@ extends Node
 
 ## GameManager — moduł QuizRPG
 ## Zarządza stanami gry RPG, scenami i zapisem.
-## Dostępny przez: CoreManager.get_singleton("GameManager") lub Engine.get_singleton("GameManager")
+## Dostępny przez: CoreManager.get_singleton("GameManager")
 
 enum GameState { MENU, EXPLORING, QUIZ_COMBAT, QUIZ_PUZZLE, PAUSED, CUTSCENE }
 
@@ -13,15 +13,6 @@ signal scene_transition_finished
 var current_state: GameState = GameState.MENU
 var current_map_path: String = ""
 var _transition_in_progress: bool = false
-
-
-## Pobiera singleton modułu przez CoreManager (host) lub Engine (standalone).
-func _get_module_singleton(singleton_name: String) -> Node:
-	if Engine.has_singleton("CoreManager"):
-		return Engine.get_singleton("CoreManager").get_singleton(singleton_name)
-	if Engine.has_singleton(singleton_name):
-		return Engine.get_singleton(singleton_name)
-	return null
 
 
 func change_state(new_state: GameState) -> void:
@@ -46,9 +37,7 @@ func transition_to_scene(scene_path: String) -> void:
 	var tween = create_tween()
 	tween.tween_method(_set_fade, 0.0, 1.0, 0.3)
 	await tween.finished
-	var module_root: Node = null
-	if Engine.has_singleton("CoreManager"):
-		module_root = Engine.get_singleton("CoreManager").get_active_module()
+	var module_root := CoreManager.get_active_module()
 	if module_root and module_root.has_method("open_scene"):
 		module_root.call("open_scene", scene_path)
 	else:
@@ -71,14 +60,13 @@ func _set_fade(value: float) -> void:
 const SAVE_PATH = "user://savegame_rpg.json"
 
 func save_game() -> void:
-	var ps  := _get_module_singleton("PlayerStats")
-	var dm  := _get_module_singleton("DifficultyManager")
-	var qm  := _get_module_singleton("QuizManager")
+	var ps  := CoreManager.get_singleton("PlayerStats")
+	var dm  := CoreManager.get_singleton("DifficultyManager")
 	var save_data = {
-		"player_stats":  ps.get_save_data()   if ps else {},
-		"quiz_progress": qm.get_save_data()   if qm else {},
-		"difficulty":    dm.get_save_data()   if dm else {},
-		"current_map":   current_map_path,
+		"player_stats": ps.get_save_data()  if ps else {},
+		"quiz_progress": QuizManager.get_save_data(),
+		"difficulty": dm.get_save_data()    if dm else {},
+		"current_map": current_map_path,
 	}
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -98,11 +86,10 @@ func load_game() -> bool:
 		return false
 	file.close()
 	var data = json.data
-	var ps := _get_module_singleton("PlayerStats")
-	var dm := _get_module_singleton("DifficultyManager")
-	var qm := _get_module_singleton("QuizManager")
+	var ps := CoreManager.get_singleton("PlayerStats")
+	var dm := CoreManager.get_singleton("DifficultyManager")
 	if ps: ps.load_save_data(data.get("player_stats", {}))
-	if qm: qm.load_save_data(data.get("quiz_progress", {}))
+	QuizManager.load_save_data(data.get("quiz_progress", {}))
 	if dm: dm.load_save_data(data.get("difficulty", {}))
 	if data.has("current_map") and data["current_map"] != "":
 		transition_to_scene(data["current_map"])
@@ -110,11 +97,10 @@ func load_game() -> bool:
 
 
 func new_game() -> void:
-	var ps := _get_module_singleton("PlayerStats")
-	var dm := _get_module_singleton("DifficultyManager")
-	var qm := _get_module_singleton("QuizManager")
+	var ps := CoreManager.get_singleton("PlayerStats")
+	var dm := CoreManager.get_singleton("DifficultyManager")
 	if ps: ps.reset()
-	if qm: qm.reset()
+	QuizManager.reset()
 	if dm: dm.reset()
 	change_state(GameState.EXPLORING)
 	transition_to_scene("res://modules/quiz_rpg/scenes/maps/world_map.tscn")

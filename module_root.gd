@@ -51,12 +51,13 @@ func exit_module() -> void:
 
 
 func _register_singletons() -> void:
-	var use_core_manager := Engine.has_singleton("CoreManager")
+	var core_manager := get_node_or_null("/root/CoreManager")
+	var use_core_manager := core_manager != null and core_manager.has_method("register_singleton")
 	for singleton_name in ["GameManager", "DifficultyManager", "PlayerStats"]:
 		var singleton_node := get_node_or_null(singleton_name)
 		if not singleton_node:
 			continue
 		if use_core_manager:
-			CoreManager.register_singleton(singleton_name, singleton_node)
+			core_manager.call("register_singleton", singleton_name, singleton_node)
 		else:
 			Engine.register_singleton(singleton_name, singleton_node)

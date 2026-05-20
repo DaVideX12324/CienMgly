@@ -1,122 +1,126 @@
-extends Control
+extends CanvasLayer
 
-## Menu główne — nowa gra, wczytaj, statystyki, wyjście.
-## Stylowane z kodu, nie wymaga Theme resource.
+## Main menu for res://modules/quiz_rpg/scenes/ui/main_menu.tscn.
 
-@onready var new_game_btn: Button = $VBoxContainer/NewGameBtn
-@onready var load_game_btn: Button = $VBoxContainer/LoadGameBtn
-@onready var stats_btn: Button = $VBoxContainer/StatsBtn
-@onready var quit_btn: Button = $VBoxContainer/QuitBtn
-@onready var title_label: Label = $TitleLabel
-@onready var stats_panel: Panel = $StatsPanel
+@onready var new_game_btn: Button = $Center/Panel/Margin/VBox/BtnNewGame
+@onready var load_game_btn: Button = $Center/Panel/Margin/VBox/BtnLoadGame
+@onready var stats_btn: Button = $Center/Panel/Margin/VBox/BtnStats
+@onready var quit_btn: Button = $Center/Panel/Margin/VBox/BtnQuit
+@onready var close_stats_btn: Button = $StatsPanel/StatsMargin/StatsVBox/BtnCloseStats
+@onready var title_label: Label = $Center/Panel/Margin/VBox/Title
+@onready var subtitle_label: Label = $Center/Panel/Margin/VBox/Subtitle
+@onready var stats_label: Label = $StatsPanel/StatsMargin/StatsVBox/StatsLabel
+@onready var stats_panel: PanelContainer = $StatsPanel
+@onready var background: ColorRect = $BG
 
-var _title_time: float = 0.0
+var _title_time := 0.0
 
 
 func _ready() -> void:
-	new_game_btn.pressed.connect(_on_new_game)
-	load_game_btn.pressed.connect(_on_load_game)
-	stats_btn.pressed.connect(_on_stats)
-	quit_btn.pressed.connect(_on_quit)
-
-	var gm := ModuleUtils.get_singleton("GameManager")
-	load_game_btn.disabled = not FileAccess.file_exists(gm.SAVE_PATH) if gm else true
-
-	if stats_panel:
-		stats_panel.visible = false
-
+	_connect_buttons()
+	_update_load_button()
 	_style_menu()
+	stats_panel.visible = false
 
 
 func _process(delta: float) -> void:
 	_title_time += delta
-	if title_label:
-		var scale_factor = 1.0 + sin(_title_time * 1.5) * 0.02
-		title_label.scale = Vector2(scale_factor, scale_factor)
+	var scale_factor := 1.0 + sin(_title_time * 1.5) * 0.02
+	title_label.scale = Vector2(scale_factor, scale_factor)
+
+
+func _connect_buttons() -> void:
+	if not new_game_btn.pressed.is_connected(_on_new_game):
+		new_game_btn.pressed.connect(_on_new_game)
+	if not load_game_btn.pressed.is_connected(_on_load_game):
+		load_game_btn.pressed.connect(_on_load_game)
+	if not stats_btn.pressed.is_connected(_on_stats):
+		stats_btn.pressed.connect(_on_stats)
+	if not quit_btn.pressed.is_connected(_on_quit):
+		quit_btn.pressed.connect(_on_quit)
+	if not close_stats_btn.pressed.is_connected(_on_close_stats):
+		close_stats_btn.pressed.connect(_on_close_stats)
+
+
+func _update_load_button() -> void:
+	var gm := _get_module_singleton("GameManager")
+	load_game_btn.disabled = not FileAccess.file_exists(gm.SAVE_PATH) if gm else true
 
 
 func _style_menu() -> void:
-	var bg = get_node_or_null("Background")
-	if bg and bg is ColorRect:
-		bg.color = Color(0.06, 0.07, 0.12, 1)
+	background.color = Color(0.06, 0.07, 0.12, 1)
 
-	if title_label:
-		title_label.add_theme_font_size_override("font_size", 32)
-		title_label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5))
-		title_label.pivot_offset = title_label.size / 2.0
+	title_label.add_theme_font_size_override("font_size", 32)
+	title_label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5))
+	title_label.pivot_offset = title_label.size / 2.0
 
-	for btn in [new_game_btn, load_game_btn, stats_btn, quit_btn]:
-		if btn:
-			UIThemeSetup.style_button(btn, UIThemeSetup.BG_LIGHT, 8)
+	subtitle_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_SECONDARY)
+	subtitle_label.add_theme_font_size_override("font_size", 14)
 
-	if new_game_btn:
-		UIThemeSetup.style_button(new_game_btn, UIThemeSetup.ACCENT, 8)
+	for btn in [new_game_btn, load_game_btn, stats_btn, quit_btn, close_stats_btn]:
+		UIThemeSetup.style_button(btn, UIThemeSetup.BG_LIGHT, 8)
 
-	if stats_panel:
-		var style = StyleBoxFlat.new()
-		style.bg_color = UIThemeSetup.BG_DARK
-		style.corner_radius_top_left = 12
-		style.corner_radius_top_right = 12
-		style.corner_radius_bottom_left = 12
-		style.corner_radius_bottom_right = 12
-		style.border_color = UIThemeSetup.BORDER
-		style.border_width_left = 1
-		style.border_width_right = 1
-		style.border_width_top = 1
-		style.border_width_bottom = 1
-		stats_panel.add_theme_stylebox_override("panel", style)
+	UIThemeSetup.style_button(new_game_btn, UIThemeSetup.ACCENT, 8)
 
-		var stats_label = stats_panel.get_node_or_null("StatsLabel")
-		if stats_label:
-			stats_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_PRIMARY)
+	quit_btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
+	close_stats_btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
 
-	_add_subtitle()
+	_style_stats_panel()
 
 
-func _add_subtitle() -> void:
-	var sub = Label.new()
-	sub.text = "Edukacyjna gra RPG z quizami"
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_color_override("font_color", UIThemeSetup.TEXT_SECONDARY)
-	sub.add_theme_font_size_override("font_size", 14)
-	if title_label:
-		sub.position = title_label.position + Vector2(0, 50)
-		sub.size = Vector2(title_label.size.x, 30)
-		add_child(sub)
+func _style_stats_panel() -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = UIThemeSetup.BG_DARK
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_left = 12
+	style.corner_radius_bottom_right = 12
+	style.border_color = UIThemeSetup.BORDER
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+
+	stats_panel.add_theme_stylebox_override("panel", style)
+
+	stats_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_PRIMARY)
+	stats_label.add_theme_font_size_override("font_size", 16)
 
 
 func _on_new_game() -> void:
-	var gm := ModuleUtils.get_singleton("GameManager")
+	var gm := _get_module_singleton("GameManager")
 	if gm:
 		gm.new_game()
+	else:
+		push_warning("MainMenu: GameManager unavailable, cannot start new game.")
 
 
 func _on_load_game() -> void:
-	var gm := ModuleUtils.get_singleton("GameManager")
+	var gm := _get_module_singleton("GameManager")
 	if not gm:
 		return
 	if gm.load_game():
 		gm.change_state(gm.GameState.EXPLORING)
 	else:
-		push_warning("Nie udało się wczytać gry!")
+		push_warning("Nie udalo sie wczytac gry!")
 
 
 func _on_stats() -> void:
-	if stats_panel:
-		stats_panel.visible = not stats_panel.visible
-		if stats_panel.visible:
-			_populate_stats()
+	stats_panel.visible = not stats_panel.visible
+	if stats_panel.visible:
+		_populate_stats()
+
+
+func _on_close_stats() -> void:
+	stats_panel.visible = false
 
 
 func _populate_stats() -> void:
-	var stats_label = stats_panel.get_node_or_null("StatsLabel")
-	if not stats_label:
-		return
-	var ps := ModuleUtils.get_singleton("PlayerStats")
+	var ps := _get_module_singleton("PlayerStats")
 	if not ps:
+		stats_label.text = "Brak statystyk"
 		return
-	var qm := ModuleUtils.get_singleton("QuizManager")
-	var accuracy: float = qm.get_overall_accuracy() * 100.0 if qm else 0.0
+
 	stats_label.text = """Statystyki gracza:
 Poziom: %d
 XP: %d / %d
@@ -124,7 +128,7 @@ HP: %d / %d
 Punkty: %d
 Poprawne: %d
 Bledne: %d
-Seria: %d
+Najlepsza seria: %d
 Nagrody: %d
 Trafnosc: %.0f%%""" % [
 		ps.level,
@@ -135,9 +139,27 @@ Trafnosc: %.0f%%""" % [
 		ps.total_wrong,
 		ps.best_streak,
 		ps.rewards.size(),
-		accuracy,
+		QuizManager.get_overall_accuracy() * 100,
 	]
 
 
 func _on_quit() -> void:
-	ModuleUtils.exit_module(get_tree())
+	if CoreManager.get_active_module_id() != "":
+		CoreManager.exit_active_module()
+		return
+	get_tree().quit()
+
+
+func _get_module_singleton(singleton_name: String) -> Node:
+	var singleton := CoreManager.get_singleton(singleton_name)
+	if singleton:
+		return singleton
+
+	var module_root := CoreManager.get_active_module()
+	if module_root:
+		singleton = module_root.get_node_or_null(singleton_name)
+		if singleton:
+			CoreManager.register_singleton(singleton_name, singleton)
+			return singleton
+
+	return null
