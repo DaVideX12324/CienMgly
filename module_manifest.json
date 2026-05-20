@@ -1,0 +1,9 @@
+{
+  "id": "quiz_rpg",
+  "name": "Quiz RPG",
+  "description": "Edukacyjna gra RPG z quizami uruchamiana jako modul Artefaktu Wiedzy.",
+  "version": "0.1.0",
+  "entry_scene": "module_root.tscn",
+  "quiz_path": "res://resources/quizes",
+  "asset_path": "assets"
+}

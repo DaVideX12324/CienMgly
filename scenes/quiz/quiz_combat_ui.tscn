@@ -1,0 +1,351 @@
+[gd_scene format=3 uid="uid://beviygxa01iyy"]
+
+[ext_resource type="Script" uid="uid://bmndbqqcgecbu" path="res://modules/quiz_rpg/scripts/quiz/quiz_combat_controller.gd" id="1_combat"]
+[ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
+
+[node name="QuizCombatUI" type="CanvasLayer" unique_id=750384614]
+layer = 15
+
+[node name="Root" type="Control" parent="." unique_id=2053545249]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_combat")
+
+[node name="DimOverlay" type="ColorRect" parent="Root" unique_id=2138132920]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.42)
+
+[node name="Battlefield" type="Control" parent="Root" unique_id=1418199928]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -228.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="Control" parent="Root/Battlefield" unique_id=1665120522]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_bg")
+
+[node name="FieldContent" type="Control" parent="Root/Battlefield" unique_id=1015002366]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=582408108]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -107.0
+offset_bottom = 107.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="EnemyName" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=425274952]
+layout_mode = 2
+text = "Przeciwnicy"
+horizontal_alignment = 1
+
+[node name="EnemySprite" type="Control" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=2125911801]
+custom_minimum_size = Vector2(0, 170)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnemyHPBar" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=386943177]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="PlayerSection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=556329006]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -180.0
+offset_right = 240.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="PlayerSprite" type="Control" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=794888481]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+
+[node name="PlayerName" type="Label" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=1005016373]
+layout_mode = 2
+text = "Bohater"
+
+[node name="PlayerHPBar" type="ProgressBar" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=845955099]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BattleWindow" type="PanelContainer" parent="Root" unique_id=1413311179]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -228.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="WindowMargin" type="MarginContainer" parent="Root/BattleWindow" unique_id=2100140408]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin" unique_id=1450173316]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TopRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=391211547]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TurnLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=1468403639]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tura 1 - Twoj ruch"
+
+[node name="StreakLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=966764685]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Seria: 0 | RNG: +0%"
+horizontal_alignment = 2
+
+[node name="ContentRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=686867539]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 28
+
+[node name="CombatLogPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1546846743]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CombatLog" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=1446119112]
+layout_mode = 2
+fit_content = true
+scroll_active = false
+
+[node name="CommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=140944812]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+
+[node name="CommandMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel" unique_id=1697323302]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 2
+
+[node name="CommandVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin" unique_id=1831924314]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="ActionPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=690238325]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ActionTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1291137571]
+visible = false
+layout_mode = 2
+text = "Komendy"
+
+[node name="AtkBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1866796304]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Scream"
+flat = true
+
+[node name="HealBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1710775318]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Skills"
+flat = true
+
+[node name="DefBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=282018336]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Guard"
+flat = true
+
+[node name="FleeBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1429473075]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Items"
+flat = true
+
+[node name="QuizPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=53330131]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="QuizTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=2131578746]
+layout_mode = 2
+text = "Quiz"
+
+[node name="TimerLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=4645523]
+layout_mode = 2
+text = "Czas: 20.0 s"
+
+[node name="TimerBar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1489021440]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="QuestionLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=126472146]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Pytanie..."
+autowrap_mode = 3
+
+[node name="HintLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1847755731]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="MC_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1591546232]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Btn0" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=938203437]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+flat = true
+autowrap_mode = 3
+
+[node name="Btn1" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=725855434]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+flat = true
+autowrap_mode = 3
+
+[node name="Btn2" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=36713273]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+flat = true
+autowrap_mode = 3
+
+[node name="Btn3" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=1302002792]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+flat = true
+autowrap_mode = 3
+
+[node name="TF_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=152624673]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="BtnTrue" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=975986283]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+flat = true
+
+[node name="BtnFalse" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=223402829]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+flat = true
+
+[node name="FillText_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1460985267]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PatternHint" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=276184369]
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1999008874]
+layout_mode = 2
+placeholder_text = "Odpowiedz..."
+
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1206577909]
+layout_mode = 2
+text = "Zatwierdz"
+flat = true
+
+[node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1577141249]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1619466119]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=652978296]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=393764167]
+layout_mode = 2
+text = "Zatwierdz"
+flat = true
+
+[node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=404525362]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="MatchGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=1285141330]
+layout_mode = 2
+columns = 2
+
+[node name="LeftCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=1453286509]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=2112116248]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=2131252061]
+layout_mode = 2
+text = "Zatwierdz"
+flat = true
+
+[node name="ResultLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=1710307304]
+visible = false
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="CorrectAnswerLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=176911944]
+visible = false
+layout_mode = 2
+autowrap_mode = 3

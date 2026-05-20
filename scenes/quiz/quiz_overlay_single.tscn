@@ -1,0 +1,202 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/quiz_overlay_single.gd" id="1_overlay"]
+
+[node name="QuizOverlaySingle" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1_overlay")
+
+[node name="Overlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="Panel" type="PanelContainer" parent="."]
+texture_filter = 2
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -300.0
+offset_right = 340.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 24
+text = "Quiz"
+horizontal_alignment = 1
+
+[node name="Question" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TimerLabel" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "Czas: 15.0 s"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+
+[node name="HSep" type="HSeparator" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="MC_Box" type="VBoxContainer" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Btn0" type="Button" parent="Panel/VBox/MC_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+alignment = 0
+autowrap_mode = 3
+
+[node name="Btn1" type="Button" parent="Panel/VBox/MC_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+alignment = 0
+autowrap_mode = 3
+
+[node name="Btn2" type="Button" parent="Panel/VBox/MC_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+alignment = 0
+autowrap_mode = 3
+
+[node name="Btn3" type="Button" parent="Panel/VBox/MC_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+alignment = 0
+autowrap_mode = 3
+
+[node name="TF_Box" type="VBoxContainer" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BtnTrue" type="Button" parent="Panel/VBox/TF_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+alignment = 0
+
+[node name="BtnFalse" type="Button" parent="Panel/VBox/TF_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+alignment = 0
+
+[node name="FillText_Box" type="VBoxContainer" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PatternHint" type="Label" parent="Panel/VBox/FillText_Box"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="Input" type="LineEdit" parent="Panel/VBox/FillText_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+placeholder_text = "Wpisz odpowiedz..."
+
+[node name="Confirm" type="Button" parent="Panel/VBox/FillText_Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Zatwierdz (Enter)"
+
+[node name="FillTiles_Box" type="VBoxContainer" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="GapRow" type="HFlowContainer" parent="Panel/VBox/FillTiles_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TileSep" type="HSeparator" parent="Panel/VBox/FillTiles_Box"]
+layout_mode = 2
+
+[node name="TileRow" type="HFlowContainer" parent="Panel/VBox/FillTiles_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Confirm" type="Button" parent="Panel/VBox/FillTiles_Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Zatwierdz (Enter)"
+
+[node name="Matching_Box" type="VBoxContainer" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MatchGrid" type="GridContainer" parent="Panel/VBox/Matching_Box"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="LeftCol" type="VBoxContainer" parent="Panel/VBox/Matching_Box/MatchGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightCol" type="VBoxContainer" parent="Panel/VBox/Matching_Box/MatchGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Confirm" type="Button" parent="Panel/VBox/Matching_Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Zatwierdz (Enter)"
+
+[node name="ResultLabel" type="Label" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="CorrectAnswer" type="Label" parent="Panel/VBox"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 15.0
+one_shot = true

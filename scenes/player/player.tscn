@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://player001"]
+
+[ext_resource type="Script" uid="uid://d382dc0bji8wj" path="res://modules/quiz_rpg/scripts/player/player.gd" id="1_player"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(14, 8)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interact"]
+radius = 30.0
+
+[node name="Player" type="CharacterBody2D" unique_id=921874676 groups=["player"]]
+collision_mask = 6
+motion_mode = 1
+script = ExtResource("1_player")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1377984551]
+position = Vector2(0, -8)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2099671777]
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=501759005]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=965442546]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=2040479895]
+shape = SubResource("CircleShape2D_interact")
