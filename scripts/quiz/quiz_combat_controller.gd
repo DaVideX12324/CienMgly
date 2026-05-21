@@ -7,6 +7,9 @@ enum Action { ATTACK, DEFEND, HEAL, FLEE }
 
 const WORDS_PER_SEC := 0.35
 const DIFF_STEP_SEC := 3.0
+const PARTY_SKILL_SP_MAX := 100
+const PARTY_TP_MAX := 100
+const SKILL_SP_COST := 20
 const TYPE_MULTIPLIER := {
 	"true_false": 0.80,
 	"multiple_choice": 1.00,
@@ -34,7 +37,12 @@ var enemy_base_damage := 15
 var player_base_damage := 20
 var turn_number := 0
 
+var content_row: HBoxContainer
+var command_panel_container: PanelContainer
+var party_panel_container: PanelContainer
 var action_panel: VBoxContainer
+var primary_menu: VBoxContainer
+var action_menu: VBoxContainer
 var quiz_panel: VBoxContainer
 var result_label: Label
 var correct_answer_label: Label
@@ -66,8 +74,10 @@ var enemy_sprite_node: Control
 var player_sprite_node: Control
 var turn_label: Label
 var streak_label: Label
-var combat_log: RichTextLabel
+var party_rows: Array[HBoxContainer] = []
 var battle_background: Control
+var engage_btn: Button
+var run_btn: Button
 var atk_btn: Button
 var def_btn: Button
 var heal_btn: Button
@@ -89,6 +99,11 @@ var _match_selected := -1
 var _match_pairs: Dictionary = {}
 var _match_left_buttons: Array[Button] = []
 var _match_right_buttons: Array[Button] = []
+var _action_buttons: Array[Button] = []
+var _selected_action_idx: int = 0
+var _victory_skip := false
+var _action_menu_open := false
+var _party_state: Array[Dictionary] = []
 var _ps: Node
 var _dm: Node
 var _gm: Node
@@ -121,7 +136,12 @@ func _ready() -> void:
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
 
+	content_row = $BattleWindow/WindowMargin/VBox/ContentRow
+	command_panel_container = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel
+	party_panel_container = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel
 	action_panel = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel
+	primary_menu = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu
+	action_menu = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu
 	quiz_panel = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel
 	result_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ResultLabel
 	correct_answer_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/CorrectAnswerLabel
@@ -162,20 +182,26 @@ func _ready() -> void:
 	battle_background = $Battlefield/Background
 	turn_label = $BattleWindow/WindowMargin/VBox/TopRow/TurnLabel
 	streak_label = $BattleWindow/WindowMargin/VBox/TopRow/StreakLabel
-	combat_log = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/CombatLog
-	atk_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/AtkBtn
-	def_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/DefBtn
-	heal_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/HealBtn
-	flee_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/FleeBtn
+	party_rows = [
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0,
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1,
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2,
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3,
+	]
+	engage_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/EngageBtn
+	run_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/RunBtn
+	atk_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/AtkBtn
+	def_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/DefBtn
+	heal_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/HealBtn
+	flee_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/FleeBtn
 
-	atk_btn.pressed.connect(_on_action.bind(Action.ATTACK))
-	def_btn.pressed.connect(_on_action.bind(Action.DEFEND))
-	heal_btn.pressed.connect(_on_action.bind(Action.HEAL))
-	flee_btn.pressed.connect(_on_action.bind(Action.FLEE))
-	atk_btn.text = "Scream"
-	heal_btn.text = "Skills"
-	def_btn.text = "Guard"
-	flee_btn.text = "Items"
+	engage_btn.pressed.connect(_on_engage_pressed)
+	run_btn.pressed.connect(_on_run_pressed)
+	_action_buttons = [atk_btn, heal_btn, def_btn, flee_btn]
+	for i in range(_action_buttons.size()):
+		var action_index := i
+		_action_buttons[i].pressed.connect(_on_action.bind([Action.ATTACK, Action.HEAL, Action.DEFEND, Action.FLEE][action_index]))
+		_action_buttons[i].mouse_entered.connect(func(): _highlight_action(action_index))
 	for i in range(mc_buttons.size()):
 		var index := i
 		mc_buttons[i].pressed.connect(func(): _submit_mc(index))
@@ -188,6 +214,8 @@ func _ready() -> void:
 
 	UIThemeSetup.style_quiz_ui(self)
 	_style_battle_ui()
+	_setup_party_layout()
+	_init_party_state()
 
 	if battle_background and battle_background.has_method("set_context"):
 		battle_background.call("set_context", _find_current_map_node(), enemy, player, _enemy_units)
@@ -210,6 +238,34 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if phase == Phase.COMBAT_END and event.is_action_pressed("ui_accept"):
+		_victory_skip = true
+		get_viewport().set_input_as_handled()
+		return
+	if phase == Phase.ACTION_SELECT:
+		var menu_count := _get_visible_action_count()
+		if event.is_action_pressed("ui_down"):
+			_selected_action_idx = (_selected_action_idx + 1) % menu_count
+			_highlight_action(_selected_action_idx)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_up"):
+			_selected_action_idx = (_selected_action_idx - 1 + menu_count) % menu_count
+			_highlight_action(_selected_action_idx)
+			get_viewport().set_input_as_handled()
+			return
+		if _action_menu_open and event.is_action_pressed("ui_cancel"):
+			_show_primary_menu()
+			_highlight_action(0)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_accept"):
+			if _action_menu_open:
+				_get_visible_action_buttons()[_selected_action_idx].emit_signal("pressed")
+			else:
+				_get_visible_primary_buttons()[_selected_action_idx].emit_signal("pressed")
+			get_viewport().set_input_as_handled()
+			return
 	if not _answering:
 		return
 	if not (event is InputEventKey) or not event.pressed or event.is_echo():
@@ -259,6 +315,8 @@ func _start_player_turn() -> void:
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	_set_action_buttons_enabled(true)
+	_show_primary_menu()
+	_highlight_action(0)
 
 
 func _on_action(action: Action) -> void:
@@ -621,6 +679,7 @@ func _resolve_defend(correct: bool) -> void:
 func _resolve_heal(correct: bool) -> void:
 	if not _ps:
 		return
+	_consume_party_sp(0, SKILL_SP_COST)
 	var heal_pct := 0.30 if correct else 0.10
 	var heal_amount := int(_ps.max_hp * heal_pct)
 	_ps.heal(heal_amount)
@@ -677,6 +736,7 @@ func _enemy_turn() -> void:
 			actual_damage = int(raw_damage * 0.5)
 			if _ps:
 				_ps.take_damage(actual_damage)
+			_gain_party_tp(0, actual_damage)
 			result_label.text = "%s zadaje %d HP" % [enemy_label, actual_damage]
 			result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
 			_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
@@ -685,6 +745,7 @@ func _enemy_turn() -> void:
 			actual_damage = raw_damage
 			if _ps:
 				_ps.take_damage(actual_damage)
+			_gain_party_tp(0, actual_damage)
 			result_label.text = "%s atakuje! -%d HP" % [enemy_label, actual_damage]
 			result_label.add_theme_color_override("font_color", Color.RED)
 			_flash_sprite(player_sprite_node, Color.RED)
@@ -702,24 +763,35 @@ func _enemy_turn() -> void:
 func _end_combat(player_won: bool, fled: bool = false) -> void:
 	phase = Phase.COMBAT_END
 	_current_question = {}
+	_answering = false
+	_timer_active = false
+	_victory_skip = false
 	action_panel.visible = false
 	quiz_panel.visible = false
-	result_label.visible = true
+	result_label.visible = false
+	correct_answer_label.visible = false
+	var victory_log := _get_or_create_victory_log()
+	victory_log.visible = true
 	if player_won:
-		var total_xp_reward = enemy.xp_reward + _bonus_xp_reward
-		result_label.text = "Zwyciestwo! +%d XP" % total_xp_reward
-		result_label.add_theme_color_override("font_color", Color.GOLD)
+		var total_xp_reward :int= enemy.xp_reward + _bonus_xp_reward
+		var lvl_before :int= _ps.level if _ps else 1
+		if _ps:
+			_ps.add_xp(total_xp_reward)
+		var lines: Array[String] = ["%s and co. won the fight!" % (_ps.player_name if _ps else "Bohater")]
+		lines.append("%d EXP received!" % total_xp_reward)
+		if _ps and _ps.level > lvl_before:
+			lines.append("%s reached LV %d!" % [_ps.player_name, _ps.level])
+		var item_name := _roll_item_drop()
+		if item_name != "":
+			lines.append("Got %s!" % item_name)
+		_refresh_stats_panel()
+		await _show_message_sequence(lines)
 	elif fled:
-		result_label.text = "Udana ucieczka."
-		result_label.add_theme_color_override("font_color", Color.WHITE)
+		await _show_message_sequence(["Uciekasz!"])
 	else:
-		result_label.text = "Porazka..."
-		result_label.add_theme_color_override("font_color", Color.RED)
+		await _show_message_sequence(["Porazka..."])
 	_refresh_stats_panel()
-	await get_tree().create_timer(2.0).timeout
 	enemy.hp = 0 if player_won else enemy.max_hp
-	if player_won and _ps and _bonus_xp_reward > 0:
-		_ps.add_xp(_bonus_xp_reward)
 	combat_finished.emit(player_won)
 	enemy.on_combat_finished(player_won, player)
 	get_parent().queue_free()
@@ -735,6 +807,19 @@ func _update_hp_bars() -> void:
 func _log(text: String) -> void:
 	result_label.text = text
 	result_label.visible = true
+
+
+func _highlight_action(idx: int) -> void:
+	var buttons := _get_visible_action_buttons() if _action_menu_open else _get_visible_primary_buttons()
+	if buttons.is_empty():
+		return
+	_selected_action_idx = clampi(idx, 0, buttons.size() - 1)
+	for btn in [engage_btn, run_btn, atk_btn, heal_btn, def_btn, flee_btn]:
+		btn.text = btn.text.trim_prefix("► ")
+		btn.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	var selected := buttons[_selected_action_idx]
+	selected.text = "► " + selected.text
+	selected.add_theme_color_override("font_color", Color.WHITE)
 
 
 func _flash_sprite(sprite_control: Control, color: Color) -> void:
@@ -899,11 +984,6 @@ func _style_battle_ui() -> void:
 		panel.add_theme_stylebox_override("panel", style)
 	dim_overlay.color = Color(0.0, 0.0, 0.0, 0.18)
 
-	combat_log.fit_content = true
-	combat_log.bbcode_enabled = false
-	combat_log.scroll_active = false
-	combat_log.add_theme_font_size_override("normal_font_size", 27)
-	combat_log.add_theme_color_override("default_color", Color.WHITE)
 	enemy_name_label.visible = false
 	enemy_hp_bar.visible = false
 	player_name_label.visible = false
@@ -918,6 +998,8 @@ func _style_battle_ui() -> void:
 	correct_answer_label.add_theme_font_size_override("font_size", 14)
 	turn_label.add_theme_font_size_override("font_size", 16)
 	streak_label.add_theme_font_size_override("font_size", 15)
+	for row in party_rows:
+		_style_party_row(row)
 
 	for btn in [atk_btn, def_btn, heal_btn, flee_btn]:
 		_style_command_button(btn)
@@ -1112,29 +1194,230 @@ func _refresh_enemy_header() -> void:
 
 
 func _refresh_stats_panel() -> void:
-	if not combat_log:
+	if party_rows.is_empty():
 		return
-	var lines: Array[String] = []
-	var hero_name: String = _ps.player_name if _ps and str(_ps.player_name) != "" else "Bohater"
-	var hero_hp: int = _ps.hp if _ps else 0
-	var hero_max_hp: int = _ps.max_hp if _ps else 0
-	lines.append("%-14s HP %4d/%-4d" % [hero_name, hero_hp, hero_max_hp])
-	if _ps:
-		lines.append("%-14s LV %4d  XP %4d" % ["", _ps.level, _ps.xp])
-		lines.append("%-14s ST %4d  RNG %3.0f%%" % ["", _ps.streak, _ps.rng_bonus * 100.0])
-	lines.append("")
-	for enemy_index in range(_enemy_units.size()):
-		var enemy_unit := _enemy_units[enemy_index]
-		var prefix := ">" if enemy_index == _active_enemy_index and int(enemy_unit.get("hp", 0)) > 0 else " "
-		lines.append("%s %-12s HP %4d/%-4d DMG %3d" % [
-			prefix,
-			str(enemy_unit.get("name", enemy_name_str)).left(12),
-			int(enemy_unit.get("hp", 0)),
-			int(enemy_unit.get("max_hp", 0)),
-			int(enemy_unit.get("damage", enemy_base_damage)),
-		])
-	combat_log.clear()
-	combat_log.append_text("\n".join(lines))
+	_sync_party_member_from_player()
+	for i in range(party_rows.size()):
+		var row := party_rows[i]
+		if i < _party_state.size():
+			row.visible = true
+			var member := _party_state[i]
+			_set_party_row_name(row, str(member.get("name", "Bohater")))
+			_set_party_stat(row, "StatLP", int(member.get("lp", 0)), int(member.get("lp_max", 1)), "%d/%d" % [int(member.get("lp", 0)), int(member.get("lp_max", 1))])
+			_set_party_stat(row, "StatSP", int(member.get("sp", 0)), int(member.get("sp_max", 1)), "%d/%d" % [int(member.get("sp", 0)), int(member.get("sp_max", 1))])
+			_set_party_stat(row, "StatTP", int(member.get("tp", 0)), int(member.get("tp_max", 1)), "%d/%d" % [int(member.get("tp", 0)), int(member.get("tp_max", 1))])
+		else:
+			row.visible = false
+
+
+func _style_party_row(row: HBoxContainer) -> void:
+	if row == null:
+		return
+	var name_label := row.get_node_or_null("NameLabel") as Label
+	if name_label:
+		name_label.add_theme_font_size_override("font_size", 24)
+		name_label.add_theme_color_override("font_color", Color.WHITE)
+	for stat_name in ["StatLP", "StatSP", "StatTP"]:
+		var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
+		if stat_box == null:
+			continue
+		var label := stat_box.get_node_or_null("Label") as Label
+		var bar := stat_box.get_node_or_null("Bar") as ProgressBar
+		var value_label := stat_box.get_node_or_null("ValueLabel") as Label
+		if label:
+			label.add_theme_font_size_override("font_size", 20)
+			label.add_theme_color_override("font_color", Color.WHITE)
+		if value_label:
+			value_label.add_theme_font_size_override("font_size", 18)
+			value_label.add_theme_color_override("font_color", Color.WHITE)
+		if bar:
+			match stat_name:
+				"StatLP":
+					_style_party_progress_bar(bar, Color(0.95, 0.55, 0.1))
+				"StatSP":
+					_style_party_progress_bar(bar, Color(0.2, 0.6, 1.0))
+				"StatTP":
+					_style_party_progress_bar(bar, Color(0.2, 0.9, 0.3))
+
+
+func _style_party_progress_bar(bar: ProgressBar, fill_color: Color) -> void:
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = fill_color
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.15, 0.15, 0.15)
+	bar.show_percentage = false
+	bar.add_theme_stylebox_override("fill", fill)
+	bar.add_theme_stylebox_override("background", bg)
+
+
+func _set_party_row_name(row: HBoxContainer, value: String) -> void:
+	var name_label := row.get_node_or_null("NameLabel") as Label
+	if name_label:
+		name_label.text = value
+
+
+func _set_party_stat(row: HBoxContainer, stat_name: String, value: int, max_value: int, display_value: String) -> void:
+	var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
+	if stat_box == null:
+		return
+	var bar := stat_box.get_node_or_null("Bar") as ProgressBar
+	var value_label := stat_box.get_node_or_null("ValueLabel") as Label
+	if bar:
+		bar.value = (float(value) / float(maxi(max_value, 1))) * 100.0
+	if value_label:
+		value_label.text = display_value
+
+
+func _setup_party_layout() -> void:
+	if content_row and command_panel_container:
+		content_row.move_child(command_panel_container, 0)
+	if content_row and party_panel_container:
+		content_row.move_child(party_panel_container, 1)
+	if command_panel_container:
+		command_panel_container.custom_minimum_size = Vector2(180, 0)
+	if party_panel_container:
+		party_panel_container.custom_minimum_size = Vector2(860, 0)
+
+
+func _init_party_state() -> void:
+	_party_state.clear()
+	var hero_name : String = _ps.player_name if _ps and str(_ps.player_name) != "" else "Bohater"
+	var hero_hp : int = _ps.hp if _ps else 0
+	var hero_hp_max : int = _ps.max_hp if _ps else 1
+	_party_state.append({
+		"name": hero_name,
+		"lp": hero_hp,
+		"lp_max": hero_hp_max,
+		"sp": PARTY_SKILL_SP_MAX,
+		"sp_max": PARTY_SKILL_SP_MAX,
+		"tp": 0,
+		"tp_max": PARTY_TP_MAX,
+	})
+
+
+func _sync_party_member_from_player(index: int = 0) -> void:
+	if _ps == null or index < 0 or index >= _party_state.size():
+		return
+	var member := _party_state[index]
+	member["name"] = _ps.player_name if str(_ps.player_name) != "" else "Bohater"
+	member["lp"] = _ps.hp
+	member["lp_max"] = _ps.max_hp
+	_party_state[index] = member
+
+
+func _gain_party_tp(index: int, amount: int) -> void:
+	if index < 0 or index >= _party_state.size():
+		return
+	var member := _party_state[index]
+	member["tp"] = clampi(int(member.get("tp", 0)) + maxi(amount, 0), 0, int(member.get("tp_max", PARTY_TP_MAX)))
+	_party_state[index] = member
+
+
+func _consume_party_sp(index: int, amount: int) -> void:
+	if index < 0 or index >= _party_state.size():
+		return
+	var member := _party_state[index]
+	member["sp"] = clampi(int(member.get("sp", 0)) - maxi(amount, 0), 0, int(member.get("sp_max", PARTY_SKILL_SP_MAX)))
+	_party_state[index] = member
+
+
+func _show_primary_menu() -> void:
+	_action_menu_open = false
+	primary_menu.visible = true
+	action_menu.visible = false
+	_selected_action_idx = 0
+
+
+func _show_action_menu() -> void:
+	_action_menu_open = true
+	primary_menu.visible = false
+	action_menu.visible = true
+	_selected_action_idx = 0
+
+
+func _get_visible_action_buttons() -> Array[Button]:
+	var visible_buttons: Array[Button] = []
+	for btn in _action_buttons:
+		if btn.visible:
+			visible_buttons.append(btn)
+	return visible_buttons
+
+
+func _get_visible_action_count() -> int:
+	if _action_menu_open:
+		return maxi(_get_visible_action_buttons().size(), 1)
+	return maxi(_get_visible_primary_buttons().size(), 1)
+
+
+func _get_visible_primary_buttons() -> Array[Button]:
+	var visible_buttons: Array[Button] = []
+	for btn in [engage_btn, run_btn]:
+		if btn.visible:
+			visible_buttons.append(btn)
+	return visible_buttons
+
+
+func _on_engage_pressed() -> void:
+	if phase != Phase.ACTION_SELECT:
+		return
+	_show_action_menu()
+	_highlight_action(0)
+
+
+func _on_run_pressed() -> void:
+	if phase != Phase.ACTION_SELECT:
+		return
+	_try_flee()
+
+
+func _get_or_create_victory_log() -> Label:
+	var label := get_node_or_null("VictoryLog") as Label
+	if label:
+		return label
+	label = Label.new()
+	label.name = "VictoryLog"
+	label.position = Vector2(24, 620)
+	label.custom_minimum_size = Vector2(800, 160)
+	label.size = Vector2(800, 160)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	add_child(label)
+	return label
+
+
+func _show_message_sequence(lines: Array[String]) -> void:
+	var lbl := _get_or_create_victory_log()
+	lbl.text = ""
+	lbl.visible = true
+	_victory_skip = false
+	for line in lines:
+		lbl.text += line + "\n"
+		if _victory_skip:
+			continue
+		await _wait_for_victory_advance(1.2)
+	if not _victory_skip:
+		await _wait_for_victory_advance(3.0)
+
+
+func _wait_for_victory_advance(max_wait: float) -> void:
+	var elapsed := 0.0
+	while elapsed < max_wait and not _victory_skip:
+		await get_tree().create_timer(0.05).timeout
+		elapsed += 0.05
+
+
+func _roll_item_drop() -> String:
+	if enemy == null or not enemy.has_method("get_drop_table"):
+		return ""
+	var drops: Array = enemy.call("get_drop_table")
+	for drop in drops:
+		if randf() < float(drop.get("chance", 0.0)):
+			var item_name := str(drop.get("item", ""))
+			if item_name != "" and _ps and _ps.has_method("add_item"):
+				_ps.add_item(item_name)
+			return item_name
+	return ""
 
 
 func _find_current_map_node() -> Node:
