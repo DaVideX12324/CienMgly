@@ -3,6 +3,15 @@
 [ext_resource type="Script" uid="uid://bmndbqqcgecbu" path="res://modules/quiz_rpg/scripts/quiz/quiz_combat_controller.gd" id="1_combat"]
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lp"]
+bg_color = Color(0.9, 0.45, 0.05, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sp"]
+bg_color = Color(0.15, 0.55, 1.0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tp"]
+bg_color = Color(0.45, 0.45, 0.45, 1)
+
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=750384614]
 layer = 15
 
@@ -148,278 +157,6 @@ horizontal_alignment = 2
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 28
-
-[node name="CombatLogPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1546846743]
-custom_minimum_size = Vector2(560, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=1600010001]
-layout_mode = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 4
-
-[node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1600010002]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="PartyRow0" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010003]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010004]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "Bohater"
-
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010005]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1600010006]
-layout_mode = 2
-text = "LP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1600010007]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-value = 100.0
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1600010008]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "100/100"
-
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010009]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1600010010]
-layout_mode = 2
-text = "SP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1600010011]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1600010012]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010013]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1600010014]
-layout_mode = 2
-text = "TP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1600010015]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1600010016]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010017]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010018]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "Ally 2"
-
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010019]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1600010020]
-layout_mode = 2
-text = "LP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1600010021]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-value = 100.0
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1600010022]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "100/100"
-
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010023]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1600010024]
-layout_mode = 2
-text = "SP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1600010025]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1600010026]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010027]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1600010028]
-layout_mode = 2
-text = "TP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1600010029]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1600010030]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010031]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010032]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "Ally 3"
-
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010033]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1600010034]
-layout_mode = 2
-text = "LP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1600010035]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-value = 100.0
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1600010036]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "100/100"
-
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010037]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1600010038]
-layout_mode = 2
-text = "SP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1600010039]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1600010040]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010041]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1600010042]
-layout_mode = 2
-text = "TP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1600010043]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1600010044]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010045]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010046]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "Ally 4"
-
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010047]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1600010048]
-layout_mode = 2
-text = "LP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1600010049]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-value = 100.0
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1600010050]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "100/100"
-
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010051]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1600010052]
-layout_mode = 2
-text = "SP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1600010053]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1600010054]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
-
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010055]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=1600010056]
-layout_mode = 2
-text = "TP"
-
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=1600010057]
-custom_minimum_size = Vector2(80, 8)
-layout_mode = 2
-show_percentage = false
-
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=1600010058]
-custom_minimum_size = Vector2(74, 0)
-layout_mode = 2
-text = "0/100"
 
 [node name="CommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=140944812]
 custom_minimum_size = Vector2(280, 0)
@@ -632,3 +369,290 @@ autowrap_mode = 3
 visible = false
 layout_mode = 2
 autowrap_mode = 3
+
+[node name="CombatLogPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1546846743]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=1600010001]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1600010002]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PartyRow0" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010003]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010004]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Bohater"
+
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010005]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1600010006]
+layout_mode = 2
+text = "LP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1600010007]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1600010008]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "100/100"
+
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010009]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1600010010]
+layout_mode = 2
+text = "SP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1600010011]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1600010012]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1600010013]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1600010014]
+layout_mode = 2
+text = "TP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1600010015]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1600010016]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010017]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010018]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Ally 2"
+
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010019]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1600010020]
+layout_mode = 2
+text = "LP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1600010021]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+value = 100.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1600010022]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "100/100"
+
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010023]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1600010024]
+layout_mode = 2
+text = "SP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1600010025]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1600010026]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1600010027]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1600010028]
+layout_mode = 2
+text = "TP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1600010029]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1600010030]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010031]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010032]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Ally 3"
+
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010033]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1600010034]
+layout_mode = 2
+text = "LP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1600010035]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+value = 100.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1600010036]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "100/100"
+
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010037]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1600010038]
+layout_mode = 2
+text = "SP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1600010039]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1600010040]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1600010041]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1600010042]
+layout_mode = 2
+text = "TP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1600010043]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1600010044]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1600010045]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010046]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "Ally 4"
+
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010047]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1600010048]
+layout_mode = 2
+text = "LP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1600010049]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+value = 100.0
+theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1600010050]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "100/100"
+
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010051]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1600010052]
+layout_mode = 2
+text = "SP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1600010053]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1600010054]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
+
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1600010055]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=1600010056]
+layout_mode = 2
+text = "TP"
+
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=1600010057]
+custom_minimum_size = Vector2(80, 8)
+layout_mode = 2
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
+
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=1600010058]
+custom_minimum_size = Vector2(74, 0)
+layout_mode = 2
+text = "0/100"
