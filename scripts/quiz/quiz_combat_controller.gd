@@ -5,18 +5,16 @@ signal combat_finished(player_won: bool)
 enum Phase { ACTION_SELECT, QUIZ, PLAYER_RESULT, ENEMY_TURN, COMBAT_END }
 enum Action { ATTACK, DEFEND, HEAL, FLEE }
 
-const WORDS_PER_SEC := 0.35
-const DIFF_STEP_SEC := 3.0
+const QuizPanelController = preload("res://modules/quiz_rpg/scripts/quiz/quiz_panel_controller.gd")
+
 const PARTY_SKILL_SP_MAX := 100
 const PARTY_TP_MAX := 100
 const SKILL_SP_COST := 20
-const TYPE_MULTIPLIER := {
-	"true_false": 0.80,
-	"multiple_choice": 1.00,
-	"fill_text": 1.20,
-	"fill_tiles": 1.40,
-	"matching": 1.55,
-}
+const COMMAND_PANEL_WIDTH_DEFAULT := 280.0
+const PARTY_PANEL_WIDTH_DEFAULT := 1080.0
+const COMMAND_PANEL_WIDTH_MIN := 180.0
+const PARTY_PANEL_WIDTH_MIN := 320.0
+const PANEL_RESIZE_DURATION := 0
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -37,68 +35,39 @@ var enemy_base_damage := 15
 var player_base_damage := 20
 var turn_number := 0
 
-var content_row: HBoxContainer
-var command_panel_container: PanelContainer
-var party_panel_container: PanelContainer
-var action_panel: VBoxContainer
-var primary_menu: VBoxContainer
-var action_menu: VBoxContainer
-var quiz_panel: VBoxContainer
-var result_label: Label
-var correct_answer_label: Label
-var question_label: Label
-var hint_label: Label
-var timer_label: Label
-var timer_bar: ProgressBar
-var mc_box: VBoxContainer
-var mc_buttons: Array[Button] = []
-var tf_box: VBoxContainer
-var tf_buttons: Array[Button] = []
-var fill_text_box: VBoxContainer
-var pattern_label: Label
-var fill_input: LineEdit
-var fill_confirm: Button
-var fill_tiles_box: VBoxContainer
-var gap_row: HFlowContainer
-var tile_row: HFlowContainer
-var tiles_confirm: Button
-var matching_box: VBoxContainer
-var match_left: VBoxContainer
-var match_right: VBoxContainer
-var match_confirm: Button
-var enemy_hp_bar: ProgressBar
-var player_hp_bar: ProgressBar
-var enemy_name_label: Label
-var player_name_label: Label
-var enemy_sprite_node: Control
-var player_sprite_node: Control
-var turn_label: Label
-var streak_label: Label
-var party_rows: Array[HBoxContainer] = []
-var battle_background: Control
-var engage_btn: Button
-var run_btn: Button
-var atk_btn: Button
-var def_btn: Button
-var heal_btn: Button
-var flee_btn: Button
+@onready var content_row: HBoxContainer  = $BattleWindow/WindowMargin/VBox/ContentRow
+@onready var command_panel_container: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel
+@onready var party_panel_container: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel
+@onready var command_vbox: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox
+@onready var action_panel: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel
+@onready var primary_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu
+@onready var action_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu
+@onready var result_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ResultLabel
+@onready var enemy_hp_bar: ProgressBar = $Battlefield/FieldContent/EnemySection/EnemyHPBar
+@onready var player_hp_bar: ProgressBar = $Battlefield/FieldContent/PlayerSection/PlayerHPBar
+@onready var enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyName
+@onready var player_name_label: Label = $Battlefield/FieldContent/PlayerSection/PlayerName
+@onready var enemy_sprite_node: Control = $Battlefield/FieldContent/EnemySection/EnemySprite
+@onready var player_sprite_node: Control = $Battlefield/FieldContent/PlayerSection/PlayerSprite
+@onready var battle_background: Control = $Battlefield/Background
+@onready var turn_label: Label = $BattleWindow/WindowMargin/VBox/TopRow/TurnLabel
+@onready var streak_label: Label = $BattleWindow/WindowMargin/VBox/TopRow/StreakLabel
+@onready var party_rows : Array[HBoxContainer] = [
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0,
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1,
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2,
+		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3,
+	]
+@onready var engage_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/EngageBtn
+@onready var run_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/RunBtn
+@onready var atk_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/AtkBtn
+@onready var def_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/DefBtn
+@onready var skills_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/SkillsBtn
+@onready var items_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/ItemsBtn
 
-var _time_left := 0.0
-var _total_time := 0.0
-var _timer_active := false
-var _answering := false
-var _current_question: Dictionary = {}
-var _tile_slots: Array[String] = []
-var _tile_buttons: Array[Button] = []
-var _gap_buttons: Array[Button] = []
-var _active_gap := 0
 var _enemy_units: Array[Dictionary] = []
 var _active_enemy_index := 0
 var _bonus_xp_reward := 0
-var _match_selected := -1
-var _match_pairs: Dictionary = {}
-var _match_left_buttons: Array[Button] = []
-var _match_right_buttons: Array[Button] = []
 var _action_buttons: Array[Button] = []
 var _selected_action_idx: int = 0
 var _victory_skip := false
@@ -107,6 +76,7 @@ var _party_state: Array[Dictionary] = []
 var _ps: Node
 var _dm: Node
 var _gm: Node
+var _quiz_panel_controller
 
 
 func setup(
@@ -136,86 +106,23 @@ func _ready() -> void:
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
 
-	content_row = $BattleWindow/WindowMargin/VBox/ContentRow
-	command_panel_container = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel
-	party_panel_container = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel
-	action_panel = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel
-	primary_menu = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu
-	action_menu = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu
-	quiz_panel = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel
-	result_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ResultLabel
-	correct_answer_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/CorrectAnswerLabel
-	question_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/QuestionLabel
-	hint_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/HintLabel
-	timer_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TimerLabel
-	timer_bar = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TimerBar
-	mc_box = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box
-	mc_buttons = [
-		$BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box/Btn0,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box/Btn1,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box/Btn2,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box/Btn3,
-	]
-	tf_box = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box
-	tf_buttons = [
-		$BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box/BtnTrue,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box/BtnFalse,
-	]
-	fill_text_box = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box
-	pattern_label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box/PatternHint
-	fill_input = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box/Input
-	fill_confirm = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box/Confirm
-	fill_tiles_box = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box
-	gap_row = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box/GapRow
-	tile_row = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box/TileRow
-	tiles_confirm = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box/Confirm
-	matching_box = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box
-	match_left = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid/LeftCol
-	match_right = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid/RightCol
-	match_confirm = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/Confirm
-	enemy_hp_bar = $Battlefield/FieldContent/EnemySection/EnemyHPBar
-	player_hp_bar = $Battlefield/FieldContent/PlayerSection/PlayerHPBar
-	enemy_name_label = $Battlefield/FieldContent/EnemySection/EnemyName
-	player_name_label = $Battlefield/FieldContent/PlayerSection/PlayerName
-	enemy_sprite_node = $Battlefield/FieldContent/EnemySection/EnemySprite
-	player_sprite_node = $Battlefield/FieldContent/PlayerSection/PlayerSprite
-	battle_background = $Battlefield/Background
-	turn_label = $BattleWindow/WindowMargin/VBox/TopRow/TurnLabel
-	streak_label = $BattleWindow/WindowMargin/VBox/TopRow/StreakLabel
-	party_rows = [
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3,
-	]
-	engage_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/EngageBtn
-	run_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/RunBtn
-	atk_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/AtkBtn
-	def_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/DefBtn
-	heal_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/HealBtn
-	flee_btn = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/FleeBtn
 
 	engage_btn.pressed.connect(_on_engage_pressed)
 	run_btn.pressed.connect(_on_run_pressed)
-	_action_buttons = [atk_btn, heal_btn, def_btn, flee_btn]
+	_action_buttons = [atk_btn, skills_btn, def_btn, items_btn]
 	for i in range(_action_buttons.size()):
 		var action_index := i
 		_action_buttons[i].pressed.connect(_on_action.bind([Action.ATTACK, Action.HEAL, Action.DEFEND, Action.FLEE][action_index]))
 		_action_buttons[i].mouse_entered.connect(func(): _highlight_action(action_index))
-	for i in range(mc_buttons.size()):
-		var index := i
-		mc_buttons[i].pressed.connect(func(): _submit_mc(index))
-	tf_buttons[0].pressed.connect(func(): _submit_tf(true))
-	tf_buttons[1].pressed.connect(func(): _submit_tf(false))
-	fill_confirm.pressed.connect(_submit_fill_text)
-	fill_input.text_submitted.connect(func(_value: String): _submit_fill_text())
-	tiles_confirm.pressed.connect(_submit_fill_tiles)
-	match_confirm.pressed.connect(_submit_matching)
 
 	UIThemeSetup.style_quiz_ui(self)
 	_style_battle_ui()
 	_setup_party_layout()
 	_init_party_state()
+	_quiz_panel_controller = QuizPanelController.new()
+	_quiz_panel_controller.setup(command_vbox)
+	_quiz_panel_controller.apply_visual_style(_style_command_button)
+	_quiz_panel_controller.answered.connect(_on_quiz_answered)
 
 	if battle_background and battle_background.has_method("set_context"):
 		battle_background.call("set_context", _find_current_map_node(), enemy, player, _enemy_units)
@@ -228,13 +135,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	if _timer_active:
-		_time_left = maxf(_time_left - delta, 0.0)
-		timer_bar.value = (_time_left / maxf(_total_time, 0.001)) * 100.0
-		timer_label.text = "Czas: %.1f s" % _time_left
-		if _time_left <= 0.0:
-			_timer_active = false
-			_submit_timeout()
+	if _quiz_panel_controller:
+		_quiz_panel_controller.tick(delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -266,52 +168,22 @@ func _unhandled_input(event: InputEvent) -> void:
 				_get_visible_primary_buttons()[_selected_action_idx].emit_signal("pressed")
 			get_viewport().set_input_as_handled()
 			return
-	if not _answering:
+	if phase == Phase.QUIZ and _quiz_panel_controller and _quiz_panel_controller.handle_input(event):
+		get_viewport().set_input_as_handled()
 		return
-	if not (event is InputEventKey) or not event.pressed or event.is_echo():
-		return
-	var key_event := event as InputEventKey
-	match str(_current_question.get("type", "multiple_choice")):
-		"multiple_choice":
-			var mapping := [KEY_W, KEY_S, KEY_A, KEY_D]
-			for i in range(min(mc_buttons.size(), 4)):
-				if key_event.keycode == mapping[i]:
-					_submit_mc(i)
-					get_viewport().set_input_as_handled()
-					return
-		"true_false":
-			if key_event.keycode == KEY_W:
-				_submit_tf(true)
-				get_viewport().set_input_as_handled()
-			elif key_event.keycode == KEY_S:
-				_submit_tf(false)
-				get_viewport().set_input_as_handled()
-		"fill_tiles":
-			if key_event.keycode == KEY_TAB:
-				_active_gap = (_active_gap + 1) % max(_tile_slots.size(), 1)
-				_update_gap_highlight()
-				get_viewport().set_input_as_handled()
-			elif key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
-				_submit_fill_tiles()
-				get_viewport().set_input_as_handled()
-		"matching":
-			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
-				_submit_matching()
-				get_viewport().set_input_as_handled()
 
 
 func _start_player_turn() -> void:
 	turn_number += 1
 	defending = false
-	_current_question = {}
+	_quiz_panel_controller.reset_question()
+	_set_quiz_layout_active(false)
 	phase = Phase.ACTION_SELECT
 	turn_label.text = "Tura %d - Twoj ruch" % turn_number
 	if _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	action_panel.visible = true
-	quiz_panel.visible = false
 	result_label.visible = false
-	correct_answer_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	_set_action_buttons_enabled(true)
@@ -337,208 +209,11 @@ func _on_action(action: Action) -> void:
 
 
 func _show_question(q: Dictionary) -> void:
-	_current_question = q.duplicate(true)
-	_answering = true
-	quiz_panel.visible = true
-	result_label.visible = false
-	correct_answer_label.visible = false
-	_hide_quiz_modes()
-	question_label.text = _main_question_text(_current_question)
-	hint_label.text = _default_hint(_current_question)
-	_time_left = _calculate_time(_current_question, 16.0, _diff_range.x)
-	_total_time = _time_left
-	_timer_active = true
-	timer_label.text = "Czas: %.1f s" % _time_left
-	timer_bar.value = 100.0
-
-	match str(_current_question.get("type", "multiple_choice")):
-		"multiple_choice":
-			_build_mc(_current_question)
-		"true_false":
-			_build_tf()
-		"fill_text":
-			_build_fill_text(_current_question)
-		"fill_tiles":
-			_build_fill_tiles(_current_question)
-		"matching":
-			_build_matching(_current_question)
-		_:
-			_build_mc(_current_question)
+	_quiz_panel_controller.start_question(q, _diff_range.x)
+	_set_quiz_layout_active(true)
 
 
-func _build_mc(q: Dictionary) -> void:
-	mc_box.visible = true
-	var answers: Array = q.get("answers", [])
-	var keys := ["W", "S", "A", "D"]
-	for i in range(mc_buttons.size()):
-		var btn := mc_buttons[i]
-		if i < answers.size():
-			btn.text = "[%s] %s" % [keys[i], str(answers[i])]
-			btn.visible = true
-			btn.disabled = false
-			btn.remove_theme_color_override("font_color")
-		else:
-			btn.visible = false
-
-
-func _build_tf() -> void:
-	tf_box.visible = true
-	tf_buttons[0].text = "[W] Prawda"
-	tf_buttons[1].text = "[S] Falsz"
-	for btn in tf_buttons:
-		btn.disabled = false
-		btn.remove_theme_color_override("font_color")
-
-
-func _build_fill_text(q: Dictionary) -> void:
-	fill_text_box.visible = true
-	var pattern := str(q.get("prefilled_pattern", ""))
-	pattern_label.text = "Podpowiedz: %s" % pattern
-	pattern_label.visible = pattern != ""
-	fill_input.text = ""
-	fill_input.grab_focus()
-
-
-func _build_fill_tiles(q: Dictionary) -> void:
-	fill_tiles_box.visible = true
-	for child in gap_row.get_children():
-		child.queue_free()
-	for child in tile_row.get_children():
-		child.queue_free()
-	_tile_slots.clear()
-	_tile_buttons.clear()
-	_gap_buttons.clear()
-	_active_gap = 0
-	var text_with_gaps := str(q.get("text_with_gaps", ""))
-	var gaps: Array = q.get("gaps", [])
-	var tiles: Array = q.get("tiles", [])
-	_tile_slots.resize(gaps.size())
-	_tile_slots.fill("")
-	var parts := text_with_gaps.split("___")
-	for i in range(parts.size()):
-		var label := Label.new()
-		label.text = parts[i]
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		gap_row.add_child(label)
-		if i < gaps.size():
-			var gap_button := Button.new()
-			gap_button.text = "[ ___ ]"
-			gap_button.focus_mode = Control.FOCUS_NONE
-			gap_button.custom_minimum_size = Vector2(110, 32)
-			var gap_index := i
-			gap_button.pressed.connect(func(): _on_gap_clicked(gap_index))
-			gap_row.add_child(gap_button)
-			_gap_buttons.append(gap_button)
-	for tile in tiles:
-		var tile_button := Button.new()
-		tile_button.text = str(tile)
-		tile_button.focus_mode = Control.FOCUS_NONE
-		var tile_text := str(tile)
-		tile_button.pressed.connect(func(): _on_tile_clicked(tile_text, tile_button))
-		tile_row.add_child(tile_button)
-		_tile_buttons.append(tile_button)
-	_update_gap_highlight()
-
-
-func _build_matching(q: Dictionary) -> void:
-	matching_box.visible = true
-	for child in match_left.get_children():
-		child.queue_free()
-	for child in match_right.get_children():
-		child.queue_free()
-	_match_selected = -1
-	_match_pairs.clear()
-	_match_left_buttons.clear()
-	_match_right_buttons.clear()
-	var left_items: Array = q.get("left_items", [])
-	var right_items: Array = q.get("right_items", [])
-	for i in range(left_items.size()):
-		var button := Button.new()
-		button.text = str(left_items[i])
-		button.focus_mode = Control.FOCUS_NONE
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var index := i
-		button.pressed.connect(func(): _on_match_left(index))
-		match_left.add_child(button)
-		_match_left_buttons.append(button)
-	for i in range(right_items.size()):
-		var button := Button.new()
-		button.text = str(right_items[i])
-		button.focus_mode = Control.FOCUS_NONE
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var index := i
-		button.pressed.connect(func(): _on_match_right(index))
-		match_right.add_child(button)
-		_match_right_buttons.append(button)
-
-
-func _submit_mc(index: int) -> void:
-	if not _answering:
-		return
-	_finish_quiz_answer(QuizManager.answer_current({"index": index}), {"index": index})
-
-
-func _submit_tf(value: bool) -> void:
-	if not _answering:
-		return
-	_finish_quiz_answer(QuizManager.answer_current({"value": value}), {"value": value})
-
-
-func _submit_fill_text() -> void:
-	if not _answering:
-		return
-	_finish_quiz_answer(QuizManager.answer_current({"text": fill_input.text}), {"text": fill_input.text})
-
-
-func _submit_fill_tiles() -> void:
-	if not _answering:
-		return
-	var placements: Dictionary = {}
-	for i in range(_tile_slots.size()):
-		placements[str(i)] = _tile_slots[i]
-	_finish_quiz_answer(QuizManager.answer_current({"placements": placements}), {"placements": placements})
-
-
-func _submit_matching() -> void:
-	if not _answering:
-		return
-	var pairs: Array = []
-	for left_index in _match_pairs.keys():
-		pairs.append({
-			"left_index": left_index,
-			"right_index": _match_pairs[left_index],
-		})
-	_finish_quiz_answer(QuizManager.answer_current({"pairs": pairs}), {"pairs": pairs})
-
-
-func _submit_timeout() -> void:
-	if not _answering:
-		return
-	var result: Dictionary
-	match str(_current_question.get("type", "multiple_choice")):
-		"multiple_choice":
-			result = QuizManager.answer_current({"index": -1})
-		"true_false":
-			result = QuizManager.answer_current({"value": null})
-		"fill_text":
-			result = QuizManager.answer_current({"text": ""})
-		"fill_tiles":
-			result = QuizManager.answer_current({"placements": {}})
-		"matching":
-			result = QuizManager.answer_current({"pairs": []})
-		_:
-			result = {"correct": false}
-	result["timed_out"] = true
-	_finish_quiz_answer(result, {})
-
-
-func _finish_quiz_answer(result: Dictionary, submitted_answer: Dictionary) -> void:
-	if not _answering:
-		return
-	_answering = false
-	_timer_active = false
+func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void:
 	var correct := bool(result.get("correct", false))
 	var category := quiz_id
 	if _ps:
@@ -554,63 +229,14 @@ func _finish_quiz_answer(result: Dictionary, submitted_answer: Dictionary) -> vo
 
 
 func _show_quiz_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
-	result_label.visible = true
-	correct_answer_label.visible = false
-	if bool(result.get("correct", false)):
-		result_label.text = "Poprawnie!"
-		result_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
-	else:
-		result_label.text = "Bledna odpowiedz!"
-		if bool(result.get("timed_out", false)):
-			result_label.text = "Czas minal!"
-		result_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-		_show_correct_answer()
-	match str(_current_question.get("type", "multiple_choice")):
-		"multiple_choice":
-			var correct_index := int(result.get("correct_index", -1))
-			if correct_index >= 0 and correct_index < mc_buttons.size():
-				mc_buttons[correct_index].add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
-			var picked := int(submitted_answer.get("index", -1))
-			if not bool(result.get("correct", false)) and picked >= 0 and picked < mc_buttons.size():
-				mc_buttons[picked].add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-		"true_false":
-			var correct_index := int(result.get("correct_index", -1))
-			if correct_index >= 0 and correct_index < tf_buttons.size():
-				tf_buttons[correct_index].add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
-
-
-func _show_correct_answer() -> void:
-	var question := _current_question
-	match str(question.get("type", "multiple_choice")):
-		"fill_text":
-			var values: Array[String] = [str(question.get("answer", ""))]
-			for alt in question.get("accepted_alternatives", []):
-				values.append(str(alt))
-			correct_answer_label.text = "Poprawne: %s" % ", ".join(values)
-			correct_answer_label.visible = true
-		"fill_tiles":
-			var values: Array[String] = []
-			for gap in question.get("gaps", []):
-				values.append(str(gap.get("correct", "")))
-			correct_answer_label.text = "Poprawna kolejnosc: %s" % ", ".join(values)
-			correct_answer_label.visible = true
-		"matching":
-			var left_items: Array = question.get("left_items", [])
-			var right_items: Array = question.get("right_items", [])
-			var lines: Array[String] = []
-			for pair in question.get("pairs", []):
-				var left_index := int(pair.get("left_index", -1))
-				var right_index := int(pair.get("right_index", -1))
-				if left_index >= 0 and left_index < left_items.size() and right_index >= 0 and right_index < right_items.size():
-					lines.append("%s -> %s" % [str(left_items[left_index]), str(right_items[right_index])])
-			correct_answer_label.text = "Poprawne:\n%s" % "\n".join(lines)
-			correct_answer_label.visible = true
+	_quiz_panel_controller.show_feedback(result, submitted_answer)
 
 
 func _resolve_action(correct: bool) -> void:
 	quiz_correct = correct
 	phase = Phase.PLAYER_RESULT
-	quiz_panel.visible = false
+	_set_quiz_layout_active(false)
+	_quiz_panel_controller.hide_quiz()
 	result_label.visible = true
 	match chosen_action:
 		Action.ATTACK:
@@ -762,14 +388,11 @@ func _enemy_turn() -> void:
 
 func _end_combat(player_won: bool, fled: bool = false) -> void:
 	phase = Phase.COMBAT_END
-	_current_question = {}
-	_answering = false
-	_timer_active = false
+	_quiz_panel_controller.reset_question()
+	_set_quiz_layout_active(false, false)
 	_victory_skip = false
 	action_panel.visible = false
-	quiz_panel.visible = false
 	result_label.visible = false
-	correct_answer_label.visible = false
 	var victory_log := _get_or_create_victory_log()
 	victory_log.visible = true
 	if player_won:
@@ -814,7 +437,7 @@ func _highlight_action(idx: int) -> void:
 	if buttons.is_empty():
 		return
 	_selected_action_idx = clampi(idx, 0, buttons.size() - 1)
-	for btn in [engage_btn, run_btn, atk_btn, heal_btn, def_btn, flee_btn]:
+	for btn in [engage_btn, run_btn, atk_btn, skills_btn, def_btn, items_btn]:
 		btn.text = btn.text.trim_prefix("► ")
 		btn.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 	var selected := buttons[_selected_action_idx]
@@ -842,134 +465,8 @@ func _dodge_anim(sprite_control: Control) -> void:
 func _set_action_buttons_enabled(enabled: bool) -> void:
 	atk_btn.disabled = not enabled
 	def_btn.disabled = not enabled
-	heal_btn.disabled = not enabled
-	flee_btn.disabled = not enabled
-
-
-func _hide_quiz_modes() -> void:
-	mc_box.visible = false
-	tf_box.visible = false
-	fill_text_box.visible = false
-	fill_tiles_box.visible = false
-	matching_box.visible = false
-
-
-func _on_gap_clicked(gap_index: int) -> void:
-	_active_gap = gap_index
-	_update_gap_highlight()
-
-
-func _on_tile_clicked(tile_text: String, tile_button: Button) -> void:
-	if _tile_slots.is_empty():
-		return
-	var old_tile := _tile_slots[_active_gap]
-	if old_tile != "":
-		for button in _tile_buttons:
-			if button.text == old_tile:
-				button.disabled = false
-				break
-	_tile_slots[_active_gap] = tile_text
-	tile_button.disabled = true
-	_gap_buttons[_active_gap].text = tile_text
-	var next := (_active_gap + 1) % _tile_slots.size()
-	for _i in range(_tile_slots.size()):
-		if _tile_slots[next] == "":
-			break
-		next = (next + 1) % _tile_slots.size()
-	_active_gap = next
-	_update_gap_highlight()
-
-
-func _update_gap_highlight() -> void:
-	for i in range(_gap_buttons.size()):
-		if i == _active_gap:
-			_gap_buttons[i].add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-		else:
-			_gap_buttons[i].remove_theme_color_override("font_color")
-
-
-func _on_match_left(index: int) -> void:
-	_match_selected = index
-	for i in range(_match_left_buttons.size()):
-		if i == index:
-			_match_left_buttons[i].add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-		else:
-			_match_left_buttons[i].remove_theme_color_override("font_color")
-
-
-func _on_match_right(index: int) -> void:
-	if _match_selected < 0:
-		return
-	var current_question := _current_question
-	var left_items: Array = current_question.get("left_items", [])
-	for key in _match_pairs.keys():
-		if _match_pairs[key] == index:
-			_match_pairs.erase(key)
-			if int(key) < _match_left_buttons.size():
-				_match_left_buttons[int(key)].text = str(left_items[int(key)])
-				_match_left_buttons[int(key)].remove_theme_color_override("font_color")
-	_match_pairs[_match_selected] = index
-	if _match_selected < _match_left_buttons.size():
-		_match_left_buttons[_match_selected].text = str(left_items[_match_selected]) + " OK"
-	_match_selected = -1
-	for button in _match_left_buttons:
-		button.remove_theme_color_override("font_color")
-	for i in range(_match_right_buttons.size()):
-		if _match_pairs.values().has(i):
-			_match_right_buttons[i].add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
-		else:
-			_match_right_buttons[i].remove_theme_color_override("font_color")
-
-
-func _main_question_text(q: Dictionary) -> String:
-	match str(q.get("type", "multiple_choice")):
-		"true_false":
-			return str(q.get("statement", ""))
-		"fill_text":
-			return str(q.get("prompt", ""))
-		"fill_tiles":
-			return str(q.get("text_with_gaps", ""))
-		_:
-			return str(q.get("question", q.get("prompt", "")))
-
-
-func _default_hint(q: Dictionary) -> String:
-	match str(q.get("type", "multiple_choice")):
-		"multiple_choice":
-			return "W/S/A/D lub klikniecie"
-		"true_false":
-			return "W = Prawda, S = Falsz"
-		"fill_text":
-			return "Wpisz odpowiedz i Enter"
-		"fill_tiles":
-			return "Klikaj kafle, Tab zmienia luke, Enter zatwierdza"
-		"matching":
-			return "Lewa -> prawa, Enter zatwierdza"
-		_:
-			return ""
-
-
-func _calculate_time(question: Dictionary, base_time: float, base_difficulty: int) -> float:
-	var word_count := 0
-	for field in [
-		question.get("question", ""),
-		question.get("statement", ""),
-		question.get("prompt", ""),
-		question.get("text_with_gaps", ""),
-	]:
-		if str(field) != "":
-			word_count += str(field).split(" ", false).size()
-	for answer in question.get("answers", []):
-		word_count += str(answer).split(" ", false).size()
-	for item in question.get("left_items", []):
-		word_count += str(item).split(" ", false).size()
-	for item in question.get("right_items", []):
-		word_count += str(item).split(" ", false).size()
-	var word_bonus := float(word_count) * WORDS_PER_SEC
-	var qtype := str(question.get("type", "multiple_choice"))
-	var type_mult := float(TYPE_MULTIPLIER.get(qtype, 1.0))
-	var diff_offset := float(int(question.get("difficulty", base_difficulty)) - base_difficulty) * DIFF_STEP_SEC
-	return clampf((base_time + word_bonus) * type_mult + diff_offset, 5.0, 120.0)
+	skills_btn.disabled = not enabled
+	items_btn.disabled = not enabled
 
 
 func _style_battle_ui() -> void:
@@ -989,35 +486,22 @@ func _style_battle_ui() -> void:
 	player_name_label.visible = false
 	player_hp_bar.visible = false
 
-	for label in [turn_label, streak_label, enemy_name_label, player_name_label, question_label, hint_label, result_label, correct_answer_label]:
+	for label in [turn_label, streak_label, enemy_name_label, player_name_label, result_label]:
 		label.add_theme_color_override("font_color", UIThemeSetup.TEXT_PRIMARY)
-	question_label.add_theme_font_size_override("font_size", 18)
-	hint_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_SECONDARY)
-	hint_label.add_theme_font_size_override("font_size", 13)
 	result_label.add_theme_font_size_override("font_size", 17)
-	correct_answer_label.add_theme_font_size_override("font_size", 14)
 	turn_label.add_theme_font_size_override("font_size", 16)
 	streak_label.add_theme_font_size_override("font_size", 15)
 	for row in party_rows:
 		_style_party_row(row)
 
-	for btn in [atk_btn, def_btn, heal_btn, flee_btn]:
+	for btn in [atk_btn, def_btn, skills_btn, items_btn]:
 		_style_command_button(btn)
-
-	for btn in mc_buttons:
-		_style_command_button(btn, 17)
-	for btn in tf_buttons:
-		_style_command_button(btn, 17)
-	_style_command_button(fill_confirm, 17)
-	_style_command_button(tiles_confirm, 17)
-	_style_command_button(match_confirm, 17)
 
 	UIThemeSetup.style_progress_bar(enemy_hp_bar, Color(0.86, 0.24, 0.28), Color(0.2, 0.12, 0.12), 3)
 	UIThemeSetup.style_progress_bar(player_hp_bar, Color(0.22, 0.72, 0.34), Color(0.12, 0.2, 0.12), 3)
-	UIThemeSetup.style_progress_bar(timer_bar, Color(0.92, 0.74, 0.24), Color(0.2, 0.18, 0.1), 2)
 
 
-func _style_command_button(btn: Button, font_size: int = 30) -> void:
+func _style_command_button(btn: Button, font_size: int = 16) -> void:
 	var empty := StyleBoxFlat.new()
 	empty.bg_color = Color(0, 0, 0, 0)
 	btn.add_theme_stylebox_override("normal", empty)
@@ -1030,7 +514,7 @@ func _style_command_button(btn: Button, font_size: int = 30) -> void:
 	btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.45))
 	btn.add_theme_color_override("font_pressed_color", Color(0.95, 0.64, 0.22))
 	btn.add_theme_color_override("font_disabled_color", Color(0.52, 0.52, 0.62))
-	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 
 func _setup_battlefield_visuals() -> void:
@@ -1274,9 +758,38 @@ func _setup_party_layout() -> void:
 	if content_row and party_panel_container:
 		content_row.move_child(party_panel_container, 1)
 	if command_panel_container:
-		command_panel_container.custom_minimum_size = Vector2(180, 0)
+		command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		command_panel_container.size_flags_stretch_ratio = COMMAND_PANEL_WIDTH_DEFAULT
+		command_panel_container.custom_minimum_size = Vector2(COMMAND_PANEL_WIDTH_MIN, 0)
 	if party_panel_container:
-		party_panel_container.custom_minimum_size = Vector2(860, 0)
+		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		party_panel_container.size_flags_stretch_ratio = PARTY_PANEL_WIDTH_DEFAULT
+		party_panel_container.custom_minimum_size = Vector2(PARTY_PANEL_WIDTH_MIN, 0)
+
+
+func _set_quiz_layout_active(active: bool, animated: bool = true) -> void:
+	if command_panel_container == null or party_panel_container == null:
+		return
+	var command_ratio := COMMAND_PANEL_WIDTH_DEFAULT
+	var party_ratio := PARTY_PANEL_WIDTH_DEFAULT
+	if active:
+		var separation := float(content_row.get_theme_constant("separation"))
+		var available_width := maxf(content_row.size.x - separation, 1.0)
+		var desired_width = _quiz_panel_controller.get_desired_panel_width() + 56.0
+		var party_min_width := maxf(party_panel_container.get_combined_minimum_size().x, PARTY_PANEL_WIDTH_MIN)
+		var command_max_width := maxf(available_width - party_min_width, COMMAND_PANEL_WIDTH_MIN)
+		var command_target_width := clampf(desired_width, COMMAND_PANEL_WIDTH_MIN, command_max_width)
+		var party_target_width := maxf(PARTY_PANEL_WIDTH_MIN, available_width - command_target_width)
+		command_ratio = command_target_width
+		party_ratio = party_target_width
+	if not animated:
+		command_panel_container.size_flags_stretch_ratio = command_ratio
+		party_panel_container.size_flags_stretch_ratio = party_ratio
+		return
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(command_panel_container, "size_flags_stretch_ratio", command_ratio, PANEL_RESIZE_DURATION)
+	tween.tween_property(party_panel_container, "size_flags_stretch_ratio", party_ratio, PANEL_RESIZE_DURATION)
 
 
 func _init_party_state() -> void:
