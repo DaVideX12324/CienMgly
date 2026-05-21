@@ -5,7 +5,7 @@ signal combat_finished(player_won: bool)
 enum Phase { ACTION_SELECT, QUIZ, PLAYER_RESULT, ENEMY_TURN, COMBAT_END }
 enum Action { ATTACK, DEFEND, HEAL, FLEE }
 
-const QuizPanelController = preload("res://modules/quiz_rpg/scripts/quiz/quiz_panel_controller.gd")
+const QuizPanelController = preload("res://scripts/shared/quiz/quiz_panel_controller.gd")
 
 const PARTY_SKILL_SP_MAX := 100
 const PARTY_TP_MAX := 100
