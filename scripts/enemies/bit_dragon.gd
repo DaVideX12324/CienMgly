@@ -1,0 +1,2 @@
+extends EnemyBase
+class_name BitDragon

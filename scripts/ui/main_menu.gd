@@ -48,43 +48,7 @@ func _update_load_button() -> void:
 
 
 func _style_menu() -> void:
-	background.color = Color(0.06, 0.07, 0.12, 1)
-
-	title_label.add_theme_font_size_override("font_size", 32)
-	title_label.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5))
 	title_label.pivot_offset = title_label.size / 2.0
-
-	subtitle_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_SECONDARY)
-	subtitle_label.add_theme_font_size_override("font_size", 14)
-
-	for btn in [new_game_btn, load_game_btn, stats_btn, quit_btn, close_stats_btn]:
-		UIThemeSetup.style_button(btn, UIThemeSetup.BG_LIGHT, 8)
-
-	UIThemeSetup.style_button(new_game_btn, UIThemeSetup.ACCENT, 8)
-
-	quit_btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
-	close_stats_btn.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
-
-	_style_stats_panel()
-
-
-func _style_stats_panel() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = UIThemeSetup.BG_DARK
-	style.corner_radius_top_left = 12
-	style.corner_radius_top_right = 12
-	style.corner_radius_bottom_left = 12
-	style.corner_radius_bottom_right = 12
-	style.border_color = UIThemeSetup.BORDER
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-
-	stats_panel.add_theme_stylebox_override("panel", style)
-
-	stats_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_PRIMARY)
-	stats_label.add_theme_font_size_override("font_size", 16)
 
 
 func _on_new_game() -> void:

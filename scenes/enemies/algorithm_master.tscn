@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/algorithm_master.gd" id="2_script"]
+
+[node name="Enemy" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+enemy_name = "Mistrz Algorytmów"
+quiz_id = "informatyka"
+quiz_category = "informatyka"
+question_count = 4
+hp = 80
+max_hp = 80
+damage_on_wrong = 20
+xp_reward = 75
+body_color = Color(0.6, 0.2, 0.8, 1)
+shape_type = 2
+

@@ -2,6 +2,9 @@ extends RefCounted
 
 signal answered(result: Dictionary, submitted_answer: Dictionary)
 
+const TEXT_PRIMARY := Color(0.95, 0.95, 0.98)
+const TEXT_SECONDARY := Color(0.65, 0.65, 0.72)
+
 var command_vbox: VBoxContainer
 var quiz_panel: VBoxContainer
 var result_label: Label
@@ -39,6 +42,8 @@ var _match_selected := -1
 var _match_pairs: Dictionary = {}
 var _match_left_buttons: Array[Button] = []
 var _match_right_buttons: Array[Button] = []
+var _mc_selected_idx: int = 0
+var _tf_selected_idx: int = 0
 
 
 func setup(p_command_vbox: VBoxContainer) -> void:
@@ -87,11 +92,11 @@ func setup(p_command_vbox: VBoxContainer) -> void:
 
 
 func apply_visual_style(button_styler: Callable) -> void:
-	question_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_PRIMARY)
+	question_label.add_theme_color_override("font_color", TEXT_PRIMARY)
 	question_label.add_theme_font_size_override("font_size", 18)
-	hint_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_SECONDARY)
+	hint_label.add_theme_color_override("font_color", TEXT_SECONDARY)
 	hint_label.add_theme_font_size_override("font_size", 13)
-	correct_answer_label.add_theme_color_override("font_color", UIThemeSetup.TEXT_PRIMARY)
+	correct_answer_label.add_theme_color_override("font_color", TEXT_PRIMARY)
 	correct_answer_label.add_theme_font_size_override("font_size", 14)
 	for btn in mc_buttons:
 		button_styler.call(btn, 17)
@@ -100,7 +105,25 @@ func apply_visual_style(button_styler: Callable) -> void:
 	button_styler.call(fill_confirm, 17)
 	button_styler.call(tiles_confirm, 17)
 	button_styler.call(match_confirm, 17)
-	UIThemeSetup.style_progress_bar(timer_bar, Color(0.92, 0.74, 0.24), Color(0.2, 0.18, 0.1), 2)
+	_style_progress_bar(timer_bar, Color(0.92, 0.74, 0.24), Color(0.2, 0.18, 0.1), 2)
+
+
+func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, corner: int) -> void:
+	var fill: StyleBoxFlat = StyleBoxFlat.new()
+	fill.bg_color = fill_color
+	fill.corner_radius_top_left = corner
+	fill.corner_radius_top_right = corner
+	fill.corner_radius_bottom_left = corner
+	fill.corner_radius_bottom_right = corner
+	bar.add_theme_stylebox_override("fill", fill)
+
+	var bg: StyleBoxFlat = StyleBoxFlat.new()
+	bg.bg_color = bg_color
+	bg.corner_radius_top_left = corner
+	bg.corner_radius_top_right = corner
+	bg.corner_radius_bottom_left = corner
+	bg.corner_radius_bottom_right = corner
+	bar.add_theme_stylebox_override("background", bg)
 
 
 func tick(delta: float) -> void:
@@ -118,22 +141,29 @@ func handle_input(event: InputEvent) -> bool:
 		return false
 	if not (event is InputEventKey) or not event.pressed or event.is_echo():
 		return false
-	var key_event := event as InputEventKey
 	match str(_current_question.get("type", "multiple_choice")):
 		"multiple_choice":
-			var mapping := [KEY_W, KEY_S, KEY_A, KEY_D]
-			for i in range(min(mc_buttons.size(), 4)):
-				if key_event.keycode == mapping[i]:
-					_submit_answer(answer_multiple_choice(i))
-					return true
-		"true_false":
-			if key_event.keycode == KEY_W:
-				_submit_answer(answer_true_false(true))
+			if _is_choice_prev(event):
+				_move_mc_selection(-1)
 				return true
-			if key_event.keycode == KEY_S:
-				_submit_answer(answer_true_false(false))
+			if _is_choice_next(event):
+				_move_mc_selection(1)
+				return true
+			if _is_choice_accept(event):
+				_submit_answer(answer_multiple_choice(_mc_selected_idx))
+				return true
+		"true_false":
+			if _is_choice_prev(event):
+				_move_tf_selection(-1)
+				return true
+			if _is_choice_next(event):
+				_move_tf_selection(1)
+				return true
+			if _is_choice_accept(event):
+				_submit_answer(answer_true_false(_tf_selected_idx == 0))
 				return true
 		"fill_tiles":
+			var key_event: InputEventKey = event as InputEventKey
 			if key_event.keycode == KEY_TAB:
 				_active_gap = (_active_gap + 1) % max(_tile_slots.size(), 1)
 				_update_gap_highlight()
@@ -142,6 +172,7 @@ func handle_input(event: InputEvent) -> bool:
 				_submit_answer(answer_fill_tiles())
 				return true
 		"matching":
+			var key_event: InputEventKey = event as InputEventKey
 			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
 				_submit_answer(answer_matching())
 				return true
@@ -189,6 +220,8 @@ func reset_question() -> void:
 	_gap_buttons.clear()
 	_match_left_buttons.clear()
 	_match_right_buttons.clear()
+	_mc_selected_idx = 0
+	_tf_selected_idx = 0
 	if quiz_panel:
 		quiz_panel.visible = false
 	if correct_answer_label:
@@ -321,22 +354,107 @@ func _submit_timeout() -> void:
 func _build_mc(question: Dictionary) -> void:
 	mc_box.visible = true
 	var answers: Array = question.get("answers", [])
-	var keys := ["W", "S", "A", "D"]
+	_mc_selected_idx = 0
 	for i in range(mc_buttons.size()):
-		var btn := mc_buttons[i]
+		var btn: Button = mc_buttons[i]
 		if i < answers.size():
-			btn.text = "[%s] %s" % [keys[i], str(answers[i])]
+			btn.text = str(answers[i])
 			btn.visible = true
 			btn.disabled = false
+			btn.mouse_filter = Control.MOUSE_FILTER_STOP
+			btn.set_meta("base_text", str(answers[i]))
 			btn.remove_theme_color_override("font_color")
+			if not btn.mouse_entered.is_connected(_on_mc_button_hover.bind(i)):
+				btn.mouse_entered.connect(_on_mc_button_hover.bind(i))
 		else:
 			btn.visible = false
+	_refresh_mc_selection()
 
 
 func _build_tf() -> void:
 	tf_box.visible = true
-	tf_buttons[0].text = "[W] Prawda"
-	tf_buttons[1].text = "[S] Falsz"
+	_tf_selected_idx = 0
+	tf_buttons[0].text = "Prawda"
+	tf_buttons[1].text = "Falsz"
+	tf_buttons[0].set_meta("base_text", "Prawda")
+	tf_buttons[1].set_meta("base_text", "Falsz")
+	for i in range(tf_buttons.size()):
+		var btn: Button = tf_buttons[i]
+		btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		btn.remove_theme_color_override("font_color")
+		if not btn.mouse_entered.is_connected(_on_tf_button_hover.bind(i)):
+			btn.mouse_entered.connect(_on_tf_button_hover.bind(i))
+	_refresh_tf_selection()
+
+
+func _is_choice_prev(event: InputEvent) -> bool:
+	return event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W, KEY_A])
+
+
+func _is_choice_next(event: InputEvent) -> bool:
+	return event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S, KEY_D])
+
+
+func _is_choice_accept(event: InputEvent) -> bool:
+	return event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE])
+
+
+func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
+	if not (event is InputEventKey):
+		return false
+	var key_event: InputEventKey = event as InputEventKey
+	return key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
+
+
+func _move_mc_selection(delta: int) -> void:
+	var visible_indices: Array[int] = []
+	for i in range(mc_buttons.size()):
+		if mc_buttons[i].visible and not mc_buttons[i].disabled:
+			visible_indices.append(i)
+	if visible_indices.is_empty():
+		return
+	var current_pos: int = maxi(visible_indices.find(_mc_selected_idx), 0)
+	current_pos = (current_pos + delta + visible_indices.size()) % visible_indices.size()
+	_mc_selected_idx = visible_indices[current_pos]
+	_refresh_mc_selection()
+
+
+func _move_tf_selection(delta: int) -> void:
+	_tf_selected_idx = (_tf_selected_idx + delta + tf_buttons.size()) % tf_buttons.size()
+	_refresh_tf_selection()
+
+
+func _refresh_mc_selection() -> void:
+	for i in range(mc_buttons.size()):
+		var btn: Button = mc_buttons[i]
+		var base_text: String = str(btn.get_meta("base_text", btn.text)).trim_prefix("► ")
+		btn.text = ("► " if i == _mc_selected_idx and btn.visible else "") + base_text
+		if btn.visible:
+			btn.add_theme_color_override("font_color", Color.WHITE if i == _mc_selected_idx else TEXT_PRIMARY)
+
+
+func _refresh_tf_selection() -> void:
+	for i in range(tf_buttons.size()):
+		var btn: Button = tf_buttons[i]
+		var base_text: String = str(btn.get_meta("base_text", btn.text)).trim_prefix("► ")
+		btn.text = ("► " if i == _tf_selected_idx else "") + base_text
+		btn.add_theme_color_override("font_color", Color.WHITE if i == _tf_selected_idx else TEXT_PRIMARY)
+
+
+func _on_mc_button_hover(index: int) -> void:
+	if index < 0 or index >= mc_buttons.size():
+		return
+	if not mc_buttons[index].visible or mc_buttons[index].disabled:
+		return
+	_mc_selected_idx = index
+	_refresh_mc_selection()
+
+
+func _on_tf_button_hover(index: int) -> void:
+	if index < 0 or index >= tf_buttons.size():
+		return
+	_tf_selected_idx = index
+	_refresh_tf_selection()
 	for btn in tf_buttons:
 		btn.disabled = false
 		btn.remove_theme_color_override("font_color")

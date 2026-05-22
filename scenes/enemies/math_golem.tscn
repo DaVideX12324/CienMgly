@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/math_golem.gd" id="2_script"]
+
+[node name="Enemy" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+enemy_name = "Golem Matematyczny"
+quiz_id = "matematyka"
+quiz_category = "matematyka"
+hp = 70
+max_hp = 70
+damage_on_wrong = 20
+xp_reward = 60
+body_color = Color(0.2, 0.7, 0.4, 1)
+shape_type = 3

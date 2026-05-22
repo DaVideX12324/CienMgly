@@ -27,6 +27,31 @@ var total_correct: int     = 0
 var total_wrong: int       = 0
 var rewards: Array[String] = []
 var rng_bonus: float       = 0.0
+var skills: Array[Dictionary] = [
+	{
+		"name": "Leczenie",
+		"description": "Przywroc czesc HP po poprawnym rozwiazaniu quizu.",
+		"sp_cost": 20,
+		"effect": "heal",
+		"heal_ratio_correct": 0.30,
+		"heal_ratio_wrong": 0.10,
+	},
+	{
+		"name": "Mocny Atak",
+		"description": "Szansa na ciezsze trafienie kosztem TP.",
+		"tp_cost": 25,
+		"effect": "attack",
+		"damage_multiplier": 1.5,
+	},
+]
+var inventory: Array[Dictionary] = [
+	{
+		"name": "Mikstura",
+		"description": "Przywraca 30 HP.",
+		"count": 2,
+		"heal_amount": 30,
+	},
+]
 
 
 func _ready() -> void:
@@ -114,6 +139,7 @@ func get_save_data() -> Dictionary:
 		"streak": streak, "best_streak": best_streak,
 		"total_correct": total_correct, "total_wrong": total_wrong,
 		"rewards": rewards.duplicate(), "rng_bonus": rng_bonus,
+		"skills": skills.duplicate(true), "inventory": inventory.duplicate(true),
 	}
 
 
@@ -130,6 +156,8 @@ func load_save_data(data: Dictionary) -> void:
 	total_wrong   = data.get("total_wrong", 0)
 	rewards.assign(data.get("rewards", []))
 	rng_bonus     = data.get("rng_bonus", 0.0)
+	skills = data.get("skills", skills).duplicate(true)
+	inventory = data.get("inventory", inventory).duplicate(true)
 
 
 func reset() -> void:
@@ -138,3 +166,34 @@ func reset() -> void:
 	hp = max_hp ; points = 0 ; streak = 0
 	best_streak = 0 ; total_correct = 0 ; total_wrong = 0
 	rewards.clear() ; rng_bonus = 0.0
+
+
+func add_item(item_name: String, count: int = 1, description: String = "") -> void:
+	for i in range(inventory.size()):
+		var item: Dictionary = inventory[i]
+		if str(item.get("name", "")) == item_name:
+			item["count"] = int(item.get("count", 0)) + count
+			if description != "" and str(item.get("description", "")) == "":
+				item["description"] = description
+			inventory[i] = item
+			return
+	inventory.append({
+		"name": item_name,
+		"description": description if description != "" else "Nowy przedmiot.",
+		"count": count,
+	})
+
+
+func consume_item(item_name: String, count: int = 1) -> bool:
+	for i in range(inventory.size()):
+		var item: Dictionary = inventory[i]
+		if str(item.get("name", "")) != item_name:
+			continue
+		var current_count: int = int(item.get("count", 0))
+		if current_count < count:
+			return false
+		current_count -= count
+		item["count"] = current_count
+		inventory[i] = item
+		return true
+	return false

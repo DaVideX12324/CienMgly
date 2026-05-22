@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/bit_dragon.gd" id="2_script"]
+
+[node name="Enemy" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+enemy_name = "Smok Bitowy"
+quiz_id = "informatyka"
+quiz_category = "informatyka"
+question_count = 5
+hp = 100
+max_hp = 100
+damage_on_wrong = 25
+xp_reward = 100
+is_boss = true
+body_color = Color(0.9, 0.5, 0.1, 1)
+shape_type = 4
+

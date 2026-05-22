@@ -57,7 +57,6 @@ func _ready() -> void:
 	progress_label = $Panel/MarginContainer/VBoxContainer/ProgressLabel
 	title_label    = $Panel/MarginContainer/VBoxContainer/TitleLabel
 
-	UIThemeSetup.style_quiz_ui(self)
 	$Panel/MarginContainer/VBoxContainer/QuestionLabel.visible = false
 	$Panel/MarginContainer/VBoxContainer/AnswersGrid.visible = false
 

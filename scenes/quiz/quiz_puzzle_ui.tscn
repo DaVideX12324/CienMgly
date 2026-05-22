@@ -2,6 +2,65 @@
 
 [ext_resource type="Script" uid="uid://bcsjvn2ktrcl7" path="res://modules/quiz_rpg/scripts/quiz/quiz_puzzle_controller.gd" id="1_puzzle"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.08, 0.12, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.25, 0.35, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.18, 0.18, 0.25, 0.9)
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+bg_color = Color(0.24, 0.24, 0.31, 0.9)
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.12, 0.12, 0.18, 0.95)
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
+bg_color = Color(0.3, 0.6, 1, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
+bg_color = Color(0.15, 0.15, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [node name="QuizPuzzleUI" type="CanvasLayer"]
 layer = 15
 
@@ -32,6 +91,7 @@ offset_left = -320.0
 offset_top = -210.0
 offset_right = 320.0
 offset_bottom = 210.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/Panel"]
 layout_mode = 2
@@ -46,16 +106,21 @@ theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
+theme_override_font_sizes/font_size = 24
 text = "Zagadka"
 horizontal_alignment = 1
 
 [node name="ProgressBar" type="ProgressBar" parent="Root/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 16)
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
 value = 0.0
 
 [node name="ProgressLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "0 / 3 poprawnych odpowiedzi"
 horizontal_alignment = 1
 
@@ -63,6 +128,7 @@ horizontal_alignment = 1
 layout_mode = 2
 custom_minimum_size = Vector2(0, 70)
 bbcode_enabled = true
+theme_override_colors/default_color = Color(0.95, 0.95, 0.98, 1)
 text = "Pytanie..."
 fit_content = true
 
@@ -76,26 +142,43 @@ theme_override_constants/v_separation = 10
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(260, 40)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Odpowiedz A"
 
 [node name="AnswerBtn1" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(260, 40)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Odpowiedz B"
 
 [node name="AnswerBtn2" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(260, 40)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Odpowiedz C"
 
 [node name="AnswerBtn3" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(260, 40)
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "Odpowiedz D"
 
 [node name="FeedbackLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 horizontal_alignment = 1

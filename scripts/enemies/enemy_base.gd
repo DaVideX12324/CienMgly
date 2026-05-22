@@ -14,6 +14,7 @@ class_name EnemyBase
 @export var xp_reward: int = 50
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
+@export var is_boss: bool = false
 @export var patrol_speed: float = 80.0
 @export var detection_radius: float = 150.0
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
