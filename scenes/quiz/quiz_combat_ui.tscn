@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://beviygxa01iyy" load_steps=9]
+[gd_scene format=3 uid="uid://beviygxa01iyy"]
 
 [ext_resource type="Script" uid="uid://bmndbqqcgecbu" path="res://modules/quiz_rpg/scripts/quiz/quiz_combat_controller.gd" id="1_combat"]
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
@@ -11,15 +11,6 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.18, 0.22, 0.3, 0.95)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lp"]
-bg_color = Color(0.9, 0.45, 0.05, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sp"]
-bg_color = Color(0.15, 0.55, 1, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tp"]
-bg_color = Color(0.45, 0.45, 0.45, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_hp_bg"]
 bg_color = Color(0.08, 0.09, 0.1, 0.95)
 
@@ -29,10 +20,19 @@ bg_color = Color(0.25, 0.95, 0.25, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_hp_fill"]
 bg_color = Color(0.9, 0.3, 0.3, 1)
 
-[node name="QuizCombatUI" type="CanvasLayer"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lp"]
+bg_color = Color(0.9, 0.45, 0.05, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sp"]
+bg_color = Color(0.15, 0.55, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tp"]
+bg_color = Color(0.45, 0.45, 0.45, 1)
+
+[node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
 layer = 15
 
-[node name="Root" type="Control" parent="."]
+[node name="Root" type="Control" parent="." unique_id=1394769950]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -41,7 +41,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_combat")
 
-[node name="DimOverlay" type="ColorRect" parent="Root"]
+[node name="DimOverlay" type="ColorRect" parent="Root" unique_id=886926143]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -50,7 +50,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.42)
 
-[node name="Battlefield" type="Control" parent="Root"]
+[node name="Battlefield" type="Control" parent="Root" unique_id=1796037858]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -59,7 +59,7 @@ offset_bottom = -228.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="Control" parent="Root/Battlefield"]
+[node name="Background" type="Control" parent="Root/Battlefield" unique_id=885207106]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -68,7 +68,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("2_bg")
 
-[node name="FieldContent" type="Control" parent="Root/Battlefield"]
+[node name="FieldContent" type="Control" parent="Root/Battlefield" unique_id=2101901598]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -76,17 +76,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BattleMenuOverlay" type="Control" parent="Root/Battlefield/FieldContent"]
+[node name="BattleMenuOverlay" type="Control" parent="Root/Battlefield/FieldContent" unique_id=1173231907]
 visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 z_index = 5
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="SkillsPanel" type="PanelContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay"]
+[node name="SkillsPanel" type="PanelContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay" unique_id=1944758089]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -96,28 +96,28 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
 
-[node name="Margin" type="MarginContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel"]
+[node name="Margin" type="MarginContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel" unique_id=1265959556]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin" unique_id=1719113093]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="DescriptionLabel" type="Label" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox"]
+[node name="DescriptionLabel" type="Label" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox" unique_id=965120955]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="ListVBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox"]
+[node name="ListVBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox" unique_id=1418046697]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 
-[node name="ItemsPanel" type="PanelContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay"]
+[node name="ItemsPanel" type="PanelContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay" unique_id=2146696085]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -127,28 +127,28 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
 
-[node name="Margin" type="MarginContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel"]
+[node name="Margin" type="MarginContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel" unique_id=2044142363]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin" unique_id=1119236053]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="DescriptionLabel" type="Label" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox"]
+[node name="DescriptionLabel" type="Label" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox" unique_id=419067097]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="ListVBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox"]
+[node name="ListVBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox" unique_id=631221828]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 
-[node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent"]
+[node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=1837799062]
 layout_mode = 1
 anchors_preset = 14
 anchor_top = 0.5
@@ -158,322 +158,325 @@ offset_top = -130.0
 offset_bottom = 130.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 15
 alignment = 1
 
-[node name="EnemyName" type="Label" parent="Root/Battlefield/FieldContent/EnemySection"]
+[node name="EnemyName" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=1684427100]
 visible = false
 layout_mode = 2
 text = "Przeciwnicy"
 horizontal_alignment = 1
 
-[node name="EnemyNameLabel" type="Label" parent="Root/Battlefield/FieldContent/EnemySection"]
+[node name="EnemyNameLabel" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=711721997]
 layout_mode = 2
 text = "Przeciwnicy"
 horizontal_alignment = 1
 
-[node name="EnemySprite" type="Control" parent="Root/Battlefield/FieldContent/EnemySection"]
+[node name="EnemySprite" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=637457849]
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="EnemyDisplayCanvas" type="Node2D" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite"]
+[node name="EnemyDisplayCanvas" type="Node2D" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=1973957803]
 
-[node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=550312785]
+layout_mode = 2
 alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1" unique_id=971464970]
 layout_mode = 2
 size_flags_horizontal = 4
-alignment = 1
 theme_override_constants/separation = 18
+alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1908863979]
+custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
-custom_minimum_size = Vector2(120, 152)
 
-[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer"]
+[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=658252826]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="TargetCursor" type="Label" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0"]
+[node name="TargetCursor" type="Label" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=1521527078]
 visible = false
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -24.0
 offset_top = -28.0
 offset_right = 24.0
 offset_bottom = -8.0
+grow_horizontal = 2
 text = "v"
 horizontal_alignment = 1
 
-[node name="TargetHighlight" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0"]
+[node name="TargetHighlight" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=470500810]
 visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-mouse_filter = 2
-
-[node name="HighlightFill" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0.3, 0.6, 1, 0.08)
-
-[node name="CornerTL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-offset_right = 16.0
-offset_bottom = 3.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerTL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-offset_right = 3.0
-offset_bottom = 16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerTR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -16.0
-offset_bottom = 3.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerTR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -3.0
-offset_bottom = 16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -3.0
-offset_right = 16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -16.0
-offset_right = 3.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -16.0
-offset_top = -3.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight"]
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -3.0
-offset_top = -16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer"]
-custom_minimum_size = Vector2(96, 8)
-layout_mode = 2
-size_flags_horizontal = 4
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
-
-[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer"]
-layout_mode = 2
-alignment = 1
-custom_minimum_size = Vector2(120, 152)
-
-[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1"]
-custom_minimum_size = Vector2(120, 120)
-layout_mode = 2
-mouse_filter = 1
-
-[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1"]
-custom_minimum_size = Vector2(96, 8)
-layout_mode = 2
-size_flags_horizontal = 4
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
-
-[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer"]
-layout_mode = 2
-alignment = 1
-custom_minimum_size = Vector2(120, 152)
-
-[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2"]
-custom_minimum_size = Vector2(120, 120)
-layout_mode = 2
-mouse_filter = 1
-
-[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2"]
-custom_minimum_size = Vector2(96, 8)
-layout_mode = 2
-size_flags_horizontal = 4
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
-
-[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer"]
-layout_mode = 2
-alignment = 1
-custom_minimum_size = Vector2(120, 152)
-
-[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3"]
-custom_minimum_size = Vector2(120, 120)
-layout_mode = 2
-mouse_filter = 1
-
-[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3"]
-custom_minimum_size = Vector2(96, 8)
-layout_mode = 2
-size_flags_horizontal = 4
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
-
-[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer"]
-layout_mode = 2
-alignment = 1
-custom_minimum_size = Vector2(120, 152)
-
-[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4"]
-custom_minimum_size = Vector2(120, 120)
-layout_mode = 2
-mouse_filter = 1
-
-[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4"]
-custom_minimum_size = Vector2(96, 8)
-layout_mode = 2
-size_flags_horizontal = 4
-show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
-
-[node name="EnemyRow2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+
+[node name="HighlightFill" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=221059475]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.3, 0.6, 1, 0.08)
+
+[node name="CornerTL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=644855837]
+layout_mode = 0
+offset_right = 16.0
+offset_bottom = 3.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerTL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1875534250]
+layout_mode = 0
+offset_right = 3.0
+offset_bottom = 16.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerTR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=808152701]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -16.0
+offset_bottom = 3.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerTR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1090748851]
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -3.0
+offset_bottom = 16.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerBL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=715230197]
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -3.0
+offset_right = 16.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerBL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1893925431]
+layout_mode = 0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -16.0
+offset_right = 3.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerBR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1172693026]
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -16.0
+offset_top = -3.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="CornerBR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1795692176]
+layout_mode = 0
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -3.0
+offset_top = -16.0
+color = Color(0.3, 0.6, 1, 1)
+
+[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=347917086]
+custom_minimum_size = Vector2(96, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
+
+[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1354719110]
+custom_minimum_size = Vector2(120, 152)
+layout_mode = 2
+alignment = 1
+
+[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=452001507]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=1589554787]
+custom_minimum_size = Vector2(96, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1034919302]
+custom_minimum_size = Vector2(120, 152)
+layout_mode = 2
+alignment = 1
+
+[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=1308029390]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=2085553291]
+custom_minimum_size = Vector2(96, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=2103601440]
+custom_minimum_size = Vector2(120, 152)
+layout_mode = 2
+alignment = 1
+
+[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=1371240813]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=362736361]
+custom_minimum_size = Vector2(96, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
+
+[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=555046163]
+custom_minimum_size = Vector2(120, 152)
+layout_mode = 2
+alignment = 1
+
+[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=2014095328]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 1
+
+[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=132120749]
+custom_minimum_size = Vector2(96, 8)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
+
+[node name="EnemyRow2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=189913761]
+layout_mode = 2
 alignment = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2" unique_id=701350609]
 layout_mode = 2
 size_flags_horizontal = 4
-alignment = 1
 theme_override_constants/separation = 18
+alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=267635856]
+custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
-custom_minimum_size = Vector2(120, 152)
 
-[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer"]
+[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=35175901]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer"]
+[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=405477884]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
 
-[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer"]
+[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1793056165]
+custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
-custom_minimum_size = Vector2(120, 152)
 
-[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1"]
+[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=1923917040]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1"]
+[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=1994615515]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer"]
+[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=865972905]
+custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
-custom_minimum_size = Vector2(120, 152)
 
-[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2"]
+[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=829799068]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2"]
+[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=40865332]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
 
-[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer"]
+[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1184342599]
+custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
-custom_minimum_size = Vector2(120, 152)
 
-[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3"]
+[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=984312419]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3"]
+[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=1063495788]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
 
-[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer"]
+[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=563760635]
+custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
-custom_minimum_size = Vector2(120, 152)
 
-[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4"]
+[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=1625721205]
 custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4"]
+[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=2443933]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
+show_percentage = false
 
-[node name="PlayerSection" type="VBoxContainer" parent="Root/Battlefield/FieldContent"]
+[node name="PlayerSection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=334847837]
 visible = false
 layout_mode = 1
 anchors_preset = 3
@@ -488,22 +491,22 @@ offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="PlayerSprite" type="Control" parent="Root/Battlefield/FieldContent/PlayerSection"]
+[node name="PlayerSprite" type="Control" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=1867313679]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 
-[node name="PlayerName" type="Label" parent="Root/Battlefield/FieldContent/PlayerSection"]
+[node name="PlayerName" type="Label" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=1086654047]
 layout_mode = 2
 text = "Bohater"
 
-[node name="PlayerHPBar" type="ProgressBar" parent="Root/Battlefield/FieldContent/PlayerSection"]
+[node name="PlayerHPBar" type="ProgressBar" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=1194477032]
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
+theme_override_styles/fill = SubResource("StyleBoxFlat_player_hp_fill")
 value = 100.0
 show_percentage = false
-theme_override_styles/fill = SubResource("StyleBoxFlat_player_hp_fill")
 
-[node name="BattleWindow" type="PanelContainer" parent="Root"]
+[node name="BattleWindow" type="PanelContainer" parent="Root" unique_id=112675901]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -514,300 +517,300 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
 
-[node name="WindowMargin" type="MarginContainer" parent="Root/BattleWindow"]
+[node name="WindowMargin" type="MarginContainer" parent="Root/BattleWindow" unique_id=1827320336]
 layout_mode = 2
 theme_override_constants/margin_left = 26
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 26
 theme_override_constants/margin_bottom = 18
 
-[node name="VBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin"]
+[node name="VBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin" unique_id=2089815672]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TopRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox"]
+[node name="TopRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=424396952]
 layout_mode = 2
 theme_override_constants/separation = 18
 
-[node name="TurnLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow"]
+[node name="TurnLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=2124071130]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Tura 1 - Twoj ruch"
 
-[node name="StreakLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow"]
+[node name="StreakLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=313790074]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Seria: 0 | RNG: +0%"
 horizontal_alignment = 2
 
-[node name="ContentRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox"]
+[node name="ContentRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=91440854]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 28
 
-[node name="CommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow"]
+[node name="CommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=850453509]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
 
-[node name="CommandMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel"]
+[node name="CommandMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel" unique_id=2096468025]
 layout_mode = 2
 theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 2
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 2
 
-[node name="CommandVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin"]
+[node name="CommandVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin" unique_id=346466550]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="ActionPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox"]
+[node name="ActionPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=197487872]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="ActionTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel"]
+[node name="ActionTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1990655470]
 visible = false
 layout_mode = 2
 text = "Komendy"
 
-[node name="PrimaryMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel"]
+[node name="PrimaryMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=692157191]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="EngageBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu"]
+[node name="EngageBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1501538786]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Walcz"
 flat = true
 
-[node name="RunBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu"]
+[node name="RunBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698012]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Ucieknij"
 flat = true
 
-[node name="ActionMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel"]
+[node name="ActionMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1594848201]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="AtkBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu"]
+[node name="AtkBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1229105933]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Atak"
 flat = true
 
-[node name="SkillsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu"]
+[node name="SkillsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1148802861]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Umiejetnosci"
 flat = true
 
-[node name="DefBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu"]
+[node name="DefBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1087095694]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Obrona"
 flat = true
 
-[node name="ItemsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu"]
+[node name="ItemsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1511743442]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 text = "Przedmioty"
 flat = true
 
-[node name="QuizPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox"]
+[node name="QuizPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=631232541]
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 
-[node name="QuizTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="QuizTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1270601236]
 layout_mode = 2
 text = "Quiz"
 
-[node name="TimerLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="TimerLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1374842371]
 layout_mode = 2
 text = "Czas: 20.0 s"
 
-[node name="TimerBar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="TimerBar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=82783259]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 value = 100.0
 show_percentage = false
 
-[node name="QuestionLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="QuestionLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=2052245524]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Pytanie..."
 autowrap_mode = 3
 
-[node name="HintLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="HintLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1410459933]
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="MC_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="MC_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1793185763]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 1
 
-[node name="Btn0" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box"]
+[node name="Btn0" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=371378339]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 flat = true
 autowrap_mode = 3
 
-[node name="Btn1" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box"]
+[node name="Btn1" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=396330636]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 flat = true
 autowrap_mode = 3
 
-[node name="Btn2" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box"]
+[node name="Btn2" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=103563379]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 flat = true
 autowrap_mode = 3
 
-[node name="Btn3" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box"]
+[node name="Btn3" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=405486461]
 custom_minimum_size = Vector2(0, 28)
 layout_mode = 2
 flat = true
 autowrap_mode = 3
 
-[node name="TF_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="TF_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=210528019]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="BtnTrue" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box"]
+[node name="BtnTrue" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=899732370]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 flat = true
 
-[node name="BtnFalse" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box"]
+[node name="BtnFalse" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=218378251]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 flat = true
 
-[node name="FillText_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="FillText_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=538701248]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PatternHint" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box"]
+[node name="PatternHint" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=406056373]
 visible = false
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box"]
+[node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1299322072]
 layout_mode = 2
 placeholder_text = "Odpowiedz..."
 
-[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box"]
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1371367524]
 layout_mode = 2
 text = "Zatwierdz"
 flat = true
 
-[node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1736166103]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box"]
+[node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1502888160]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box"]
+[node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=878326736]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box"]
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1238327094]
 layout_mode = 2
 text = "Zatwierdz"
 flat = true
 
-[node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel"]
+[node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1438959482]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="MatchGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box"]
+[node name="MatchGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=1395954460]
 layout_mode = 2
 columns = 2
 
-[node name="LeftCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid"]
+[node name="LeftCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=12532810]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid"]
+[node name="RightCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=1257703016]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box"]
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=544255924]
 layout_mode = 2
 text = "Zatwierdz"
 flat = true
 
-[node name="ResultLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox"]
+[node name="ResultLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=405897888]
 visible = false
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="CorrectAnswerLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox"]
+[node name="CorrectAnswerLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=974434540]
 visible = false
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="CombatLogPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow"]
+[node name="CombatLogPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=427796143]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
 
-[node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel"]
+[node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=568404965]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 4
 
-[node name="TargetPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin"]
+[node name="TargetPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1100172619]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TargetLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel"]
+[node name="TargetLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel" unique_id=398570461]
 layout_mode = 2
 text = "Wybierz cel"
 
-[node name="TargetListVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel"]
+[node name="TargetListVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel" unique_id=1191194108]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 
-[node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin"]
+[node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1670251784]
 layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 8
 
-[node name="PartyRow0" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox"]
+[node name="PartyRow0" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=338588353]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0"]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=820547815]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "Bohater"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0"]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1092062408]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=1979947495]
 layout_mode = 2
 text = "HP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=165655448]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 size_flags_vertical = 4
@@ -815,251 +818,251 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
 value = 100.0
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=301627451]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "100/100"
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0"]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=2090064986]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=465912224]
 layout_mode = 2
 text = "SP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1760073518]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1804427118]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0"]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1682715726]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=685712313]
 layout_mode = 2
 text = "TP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1720153271]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=1480859977]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox"]
+[node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1659099946]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1"]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=489189149]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "Ally 2"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1"]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=509783440]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=67081975]
 layout_mode = 2
 text = "LP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1761014635]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
 value = 100.0
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=1577650980]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "100/100"
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1"]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=273789009]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=1144297693]
 layout_mode = 2
 text = "SP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=636456736]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=755492476]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1"]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=72093438]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=793997531]
 layout_mode = 2
 text = "TP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=2103621860]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=166832373]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox"]
+[node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=2091251807]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2"]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1040332721]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "Ally 3"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2"]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=2028103206]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1339346648]
 layout_mode = 2
 text = "LP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=740423526]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
 value = 100.0
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=1490372732]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "100/100"
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2"]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=86861941]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=407168714]
 layout_mode = 2
 text = "SP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=484989898]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=400451179]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2"]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1004025915]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1277400325]
 layout_mode = 2
 text = "TP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=1918702154]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=762148005]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox"]
+[node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=635091655]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3"]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1769485415]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "Ally 4"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3"]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1848860792]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=2078240647]
 layout_mode = 2
 text = "LP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=764813116]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_lp")
 value = 100.0
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1183802448]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "100/100"
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3"]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=517307656]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1348792556]
 layout_mode = 2
 text = "SP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=1470212885]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_sp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=178423301]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3"]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=2049204596]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP"]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=729597569]
 layout_mode = 2
 text = "TP"
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP"]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=994443156]
 custom_minimum_size = Vector2(80, 8)
 layout_mode = 2
 theme_override_styles/fill = SubResource("StyleBoxFlat_tp")
 show_percentage = false
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP"]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=6102806]
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0/100"
