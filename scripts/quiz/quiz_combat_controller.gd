@@ -54,25 +54,25 @@ var turn_number := 0
 @onready var action_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu
 @onready var result_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ResultLabel
 @onready var player_hp_bar: ProgressBar = $Battlefield/FieldContent/PlayerSection/PlayerHPBar
-var enemy_name_label: Label = null
+@onready var enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyNameLabel
 @onready var legacy_enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyName
 @onready var player_name_label: Label = $Battlefield/FieldContent/PlayerSection/PlayerName
 @onready var enemy_sprite_node: Control = $Battlefield/FieldContent/EnemySection/EnemySprite
-var enemy_target_home_slot: Control = null
+@onready var enemy_target_home_slot: Control = $Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0
 @onready var player_sprite_node: Control = $Battlefield/FieldContent/PlayerSection/PlayerSprite
 @onready var battle_background: Control = $Battlefield/Background
-var battle_menu_overlay: Control = null
-var skills_panel: PanelContainer = null
-var skills_description_label: Label = null
-var skills_list_vbox: VBoxContainer = null
-var items_panel: PanelContainer = null
-var items_description_label: Label = null
-var items_list_vbox: VBoxContainer = null
+@onready var battle_menu_overlay: Control = $Battlefield/FieldContent/BattleMenuOverlay
+@onready var skills_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel
+@onready var skills_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/DescriptionLabel
+@onready var skills_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/ListVBox
+@onready var items_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel
+@onready var items_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/DescriptionLabel
+@onready var items_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/ListVBox
 @onready var turn_label: Label = $BattleWindow/WindowMargin/VBox/TopRow/TurnLabel
 @onready var streak_label: Label = $BattleWindow/WindowMargin/VBox/TopRow/StreakLabel
-var target_panel: VBoxContainer = null
-var target_label: Label = null
-var target_list_vbox: VBoxContainer = null
+@onready var target_panel: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel
+@onready var target_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetLabel
+@onready var target_list_vbox: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetListVBox
 @onready var party_rows : Array[HBoxContainer] = [
 		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0,
 		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1,
@@ -145,8 +145,6 @@ func _ready() -> void:
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
-	_ensure_combat_ui_scene()
-
 
 	engage_btn.pressed.connect(_on_engage_pressed)
 	run_btn.pressed.connect(_on_run_pressed)
@@ -181,208 +179,6 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
-
-
-func _ensure_combat_ui_scene() -> void:
-	enemy_name_label = get_node_or_null("Battlefield/FieldContent/EnemySection/EnemyNameLabel") as Label
-	if enemy_name_label == null:
-		enemy_name_label = Label.new()
-		enemy_name_label.name = "EnemyNameLabel"
-		enemy_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		enemy_name_label.visible = false
-		var enemy_section: Node = get_node_or_null("Battlefield/FieldContent/EnemySection")
-		if enemy_section:
-			enemy_section.add_child(enemy_name_label)
-
-	_ensure_enemy_sprite_layout()
-	_ensure_battle_menu_overlay()
-	_ensure_target_panel()
-
-	enemy_target_home_slot = get_node_or_null("Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0") as Control
-	battle_menu_overlay = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay") as Control
-	skills_panel = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel") as PanelContainer
-	skills_description_label = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/DescriptionLabel") as Label
-	skills_list_vbox = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/ListVBox") as VBoxContainer
-	items_panel = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel") as PanelContainer
-	items_description_label = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/DescriptionLabel") as Label
-	items_list_vbox = get_node_or_null("Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/ListVBox") as VBoxContainer
-	target_panel = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel") as VBoxContainer
-	target_label = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetLabel") as Label
-	target_list_vbox = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetListVBox") as VBoxContainer
-
-
-func _ensure_enemy_sprite_layout() -> void:
-	if enemy_sprite_node == null:
-		return
-	var display_canvas: Node2D = enemy_sprite_node.get_node_or_null("EnemyDisplayCanvas") as Node2D
-	if display_canvas == null:
-		display_canvas = Node2D.new()
-		display_canvas.name = "EnemyDisplayCanvas"
-		enemy_sprite_node.add_child(display_canvas)
-	for row_index in range(2):
-		var row_name: String = "EnemyRow%d" % (row_index + 1)
-		var row: VBoxContainer = enemy_sprite_node.get_node_or_null(row_name) as VBoxContainer
-		if row == null:
-			row = VBoxContainer.new()
-			row.name = row_name
-			row.set_anchors_preset(Control.PRESET_FULL_RECT)
-			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.alignment = BoxContainer.ALIGNMENT_CENTER
-			enemy_sprite_node.add_child(row)
-		var row_box: HBoxContainer = row.get_node_or_null("HBoxContainer") as HBoxContainer
-		if row_box == null:
-			row_box = HBoxContainer.new()
-			row_box.name = "HBoxContainer"
-			row_box.alignment = BoxContainer.ALIGNMENT_CENTER
-			row_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			row.add_child(row_box)
-		for slot_index in range(5):
-			var wrapper_name: String = "VBoxContainer" if slot_index == 0 else "VBoxContainer%d" % slot_index
-			var wrapper: VBoxContainer = row_box.get_node_or_null(wrapper_name) as VBoxContainer
-			if wrapper == null:
-				wrapper = VBoxContainer.new()
-				wrapper.name = wrapper_name
-				wrapper.alignment = BoxContainer.ALIGNMENT_CENTER
-				wrapper.custom_minimum_size = Vector2(120.0, 160.0)
-				row_box.add_child(wrapper)
-			var slot_name: String = "EnemySlot%d" % slot_index
-			var slot: Control = wrapper.get_node_or_null(slot_name) as Control
-			if slot == null:
-				slot = Control.new()
-				slot.name = slot_name
-				slot.custom_minimum_size = Vector2(120.0, 120.0)
-				slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				slot.mouse_filter = Control.MOUSE_FILTER_STOP
-				wrapper.add_child(slot)
-			var hp_bar_name: String = "EnemyHPBar%d" % slot_index
-			var hp_bar: ProgressBar = wrapper.get_node_or_null(hp_bar_name) as ProgressBar
-			if hp_bar == null:
-				hp_bar = ProgressBar.new()
-				hp_bar.name = hp_bar_name
-				hp_bar.custom_minimum_size = Vector2(96.0, 8.0)
-				hp_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-				hp_bar.show_percentage = false
-				wrapper.add_child(hp_bar)
-	_ensure_enemy_target_decor()
-
-
-func _ensure_enemy_target_decor() -> void:
-	var home_slot: Control = enemy_sprite_node.get_node_or_null("EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0") as Control
-	if home_slot == null:
-		return
-	var cursor: Label = home_slot.get_node_or_null("TargetCursor") as Label
-	if cursor == null:
-		cursor = Label.new()
-		cursor.name = "TargetCursor"
-		cursor.text = "v"
-		cursor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cursor.anchors_preset = Control.PRESET_TOP_WIDE
-		cursor.offset_top = -24.0
-		cursor.offset_bottom = -4.0
-		cursor.visible = false
-		home_slot.add_child(cursor)
-	var highlight: Control = home_slot.get_node_or_null("TargetHighlight") as Control
-	if highlight == null:
-		highlight = Control.new()
-		highlight.name = "TargetHighlight"
-		highlight.set_anchors_preset(Control.PRESET_FULL_RECT)
-		highlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		highlight.visible = false
-		home_slot.add_child(highlight)
-		_add_corner_rects(highlight)
-
-
-func _add_corner_rects(highlight: Control) -> void:
-	var corner_specs: Array[Dictionary] = [
-		{"name":"CornerTL_H","left":0.0,"top":0.0,"right":16.0,"bottom":3.0},
-		{"name":"CornerTL_V","left":0.0,"top":0.0,"right":3.0,"bottom":16.0},
-		{"name":"CornerTR_H","left":-16.0,"top":0.0,"right":0.0,"bottom":3.0,"right_anchor":1.0},
-		{"name":"CornerTR_V","left":-3.0,"top":0.0,"right":0.0,"bottom":16.0,"right_anchor":1.0},
-		{"name":"CornerBL_H","left":0.0,"top":-3.0,"right":16.0,"bottom":0.0,"bottom_anchor":1.0},
-		{"name":"CornerBL_V","left":0.0,"top":-16.0,"right":3.0,"bottom":0.0,"bottom_anchor":1.0},
-		{"name":"CornerBR_H","left":-16.0,"top":-3.0,"right":0.0,"bottom":0.0,"right_anchor":1.0,"bottom_anchor":1.0},
-		{"name":"CornerBR_V","left":-3.0,"top":-16.0,"right":0.0,"bottom":0.0,"right_anchor":1.0,"bottom_anchor":1.0},
-	]
-	for spec_variant in corner_specs:
-		var spec: Dictionary = spec_variant
-		var rect: ColorRect = ColorRect.new()
-		rect.name = str(spec.get("name", "Corner"))
-		rect.color = UI_ACCENT
-		rect.anchor_right = float(spec.get("right_anchor", 0.0))
-		rect.anchor_bottom = float(spec.get("bottom_anchor", 0.0))
-		rect.offset_left = float(spec.get("left", 0.0))
-		rect.offset_top = float(spec.get("top", 0.0))
-		rect.offset_right = float(spec.get("right", 0.0))
-		rect.offset_bottom = float(spec.get("bottom", 0.0))
-		highlight.add_child(rect)
-
-
-func _ensure_battle_menu_overlay() -> void:
-	var field_content: Control = get_node_or_null("Battlefield/FieldContent") as Control
-	if field_content == null:
-		return
-	var overlay: Control = field_content.get_node_or_null("BattleMenuOverlay") as Control
-	if overlay == null:
-		overlay = Control.new()
-		overlay.name = "BattleMenuOverlay"
-		overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-		overlay.visible = false
-		field_content.add_child(overlay)
-		var skill_panel_node: PanelContainer = _create_list_overlay_panel("SkillsPanel")
-		var item_panel_node: PanelContainer = _create_list_overlay_panel("ItemsPanel")
-		overlay.add_child(skill_panel_node)
-		overlay.add_child(item_panel_node)
-		item_panel_node.visible = false
-
-
-func _create_list_overlay_panel(panel_name: String) -> PanelContainer:
-	var panel: PanelContainer = PanelContainer.new()
-	panel.name = panel_name
-	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var margin: MarginContainer = MarginContainer.new()
-	margin.name = "Margin"
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_top", 16)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_bottom", 16)
-	panel.add_child(margin)
-	var vb: VBoxContainer = VBoxContainer.new()
-	vb.name = "VBox"
-	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vb.add_theme_constant_override("separation", 8)
-	margin.add_child(vb)
-	var desc: Label = Label.new()
-	desc.name = "DescriptionLabel"
-	desc.custom_minimum_size = Vector2(0.0, 42.0)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vb.add_child(desc)
-	var list_box: VBoxContainer = VBoxContainer.new()
-	list_box.name = "ListVBox"
-	list_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vb.add_child(list_box)
-	return panel
-
-
-func _ensure_target_panel() -> void:
-	var party_margin: MarginContainer = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin") as MarginContainer
-	if party_margin == null:
-		return
-	var panel: VBoxContainer = party_margin.get_node_or_null("TargetPanel") as VBoxContainer
-	if panel == null:
-		panel = VBoxContainer.new()
-		panel.name = "TargetPanel"
-		panel.visible = false
-		panel.add_theme_constant_override("separation", 8)
-		party_margin.add_child(panel)
-		var label: Label = Label.new()
-		label.name = "TargetLabel"
-		label.text = "Wybierz cel"
-		panel.add_child(label)
-		var list_box: VBoxContainer = VBoxContainer.new()
-		list_box.name = "TargetListVBox"
-		list_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		panel.add_child(list_box)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -697,6 +493,9 @@ func _begin_action_quiz() -> void:
 	phase = Phase.QUIZ
 	_set_action_buttons_enabled(false)
 	var allowed_types: Array = _get_combat_quiz_types()
+	if _should_auto_resolve_quiz(allowed_types):
+		_resolve_action(true)
+		return
 	var q: Dictionary = QuizManager.start_quiz(quiz_id, _diff_range, 1, allowed_types)
 	if q.is_empty():
 		_resolve_action(true)
@@ -721,6 +520,39 @@ func _is_boss_encounter() -> bool:
 		return bool(enemy.get_meta("is_boss"))
 	if enemy.has_method("is_boss"):
 		return bool(enemy.call("is_boss"))
+	return false
+
+
+func _should_auto_resolve_quiz(allowed_types: Array) -> bool:
+	if _is_quizless_mode_enabled():
+		return true
+	if quiz_id.strip_edges() == "":
+		return true
+	var available_questions: Array = QuizManager.get_questions(quiz_id, _diff_range, 1, allowed_types)
+	return available_questions.is_empty()
+
+
+func _is_quizless_mode_enabled() -> bool:
+	var settings_service: Node = get_node_or_null("/root/SettingsService")
+	if settings_service == null:
+		return false
+	if settings_service.has_method("is_quizless_mode_enabled"):
+		return bool(settings_service.call("is_quizless_mode_enabled"))
+	if _read_quizless_flag(settings_service, true):
+		return true
+	return _read_quizless_flag(settings_service, false)
+
+
+func _read_quizless_flag(settings_service: Node, module_scope: bool) -> bool:
+	var keys: Array[String] = ["quizless_mode", "disable_quizzes", "skip_quizzes"]
+	for key_name in keys:
+		var value: Variant
+		if module_scope:
+			value = settings_service.call("get_module", "quiz_rpg", key_name, null)
+		else:
+			value = settings_service.call("get_global", key_name, null)
+		if value != null:
+			return bool(value)
 	return false
 
 
@@ -1394,6 +1226,7 @@ func _select_enemy_layout_slots(active_count: int) -> Array[Dictionary]:
 			if wrapper:
 				wrapper.visible = true
 				wrapper.remove_theme_stylebox_override("panel")
+				_bind_enemy_slot_target_input(wrapper, selected.size())
 			if slot:
 				_bind_enemy_slot_target_input(slot, selected.size())
 			selected.append(slot_data)

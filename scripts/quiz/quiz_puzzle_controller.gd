@@ -73,6 +73,13 @@ func _ready() -> void:
 	if _dm:
 		diff_range = _dm.get_difficulty_range(_category)
 
+	if _should_auto_solve_puzzle(diff_range):
+		current_correct = required_correct
+		current_question = total_questions
+		_update_progress()
+		_finish(true)
+		return
+
 	var first_q: Dictionary = QuizManager.start_quiz(_quiz_id, diff_range, total_questions)
 
 	if first_q.is_empty():
@@ -83,6 +90,39 @@ func _ready() -> void:
 
 	_update_progress()
 	_show_question(first_q)
+
+
+func _should_auto_solve_puzzle(diff_range: Vector2i) -> bool:
+	if _is_quizless_mode_enabled():
+		return true
+	if _quiz_id.strip_edges() == "":
+		return true
+	var available_questions: Array = QuizManager.get_questions(_quiz_id, diff_range, total_questions)
+	return available_questions.is_empty()
+
+
+func _is_quizless_mode_enabled() -> bool:
+	var settings_service: Node = get_node_or_null("/root/SettingsService")
+	if settings_service == null:
+		return false
+	if settings_service.has_method("is_quizless_mode_enabled"):
+		return bool(settings_service.call("is_quizless_mode_enabled"))
+	if _read_quizless_flag(settings_service, true):
+		return true
+	return _read_quizless_flag(settings_service, false)
+
+
+func _read_quizless_flag(settings_service: Node, module_scope: bool) -> bool:
+	var keys: Array[String] = ["quizless_mode", "disable_quizzes", "skip_quizzes"]
+	for key_name in keys:
+		var value: Variant
+		if module_scope:
+			value = settings_service.call("get_module", "quiz_rpg", key_name, null)
+		else:
+			value = settings_service.call("get_global", key_name, null)
+		if value != null:
+			return bool(value)
+	return false
 
 
 func _show_question(q: Dictionary) -> void:
