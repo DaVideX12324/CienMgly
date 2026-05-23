@@ -9,6 +9,7 @@ signal xp_changed(new_xp: int, xp_to_next: int)
 signal level_up(new_level: int)
 signal points_changed(new_points: int)
 signal reward_earned(reward_name: String)
+signal inventory_changed()
 
 const BASE_HP          := 100
 const HP_PER_LEVEL     := 20
@@ -46,16 +47,19 @@ var skills: Array[Dictionary] = [
 ]
 var inventory: Array[Dictionary] = [
 	{
-		"name": "Mikstura",
-		"description": "Przywraca 30 HP.",
+		"item_id": "potion",
 		"count": 2,
-		"heal_amount": 30,
+	},
+	{
+		"item_id": "ether",
+		"count": 1,
 	},
 ]
 
 
 func _ready() -> void:
 	_recalculate_max_hp()
+	_normalize_inventory()
 
 
 func xp_to_next_level() -> int:
@@ -158,6 +162,7 @@ func load_save_data(data: Dictionary) -> void:
 	rng_bonus     = data.get("rng_bonus", 0.0)
 	skills = data.get("skills", skills).duplicate(true)
 	inventory = data.get("inventory", inventory).duplicate(true)
+	_normalize_inventory()
 
 
 func reset() -> void:
@@ -168,32 +173,53 @@ func reset() -> void:
 	rewards.clear() ; rng_bonus = 0.0
 
 
-func add_item(item_name: String, count: int = 1, description: String = "") -> void:
-	for i in range(inventory.size()):
-		var item: Dictionary = inventory[i]
-		if str(item.get("name", "")) == item_name:
-			item["count"] = int(item.get("count", 0)) + count
-			if description != "" and str(item.get("description", "")) == "":
-				item["description"] = description
-			inventory[i] = item
-			return
-	inventory.append({
-		"name": item_name,
-		"description": description if description != "" else "Nowy przedmiot.",
-		"count": count,
-	})
+func get_inventory_entries() -> Array[Dictionary]:
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service and inventory_service.has_method("get_menu_entries"):
+		return inventory_service.call("get_menu_entries", inventory)
+	return []
 
 
-func consume_item(item_name: String, count: int = 1) -> bool:
-	for i in range(inventory.size()):
-		var item: Dictionary = inventory[i]
-		if str(item.get("name", "")) != item_name:
-			continue
-		var current_count: int = int(item.get("count", 0))
-		if current_count < count:
-			return false
-		current_count -= count
-		item["count"] = current_count
-		inventory[i] = item
-		return true
-	return false
+func add_item(item_ref: String, count: int = 1, _description: String = "") -> void:
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service and inventory_service.has_method("add_item_to_inventory"):
+		inventory = inventory_service.call("add_item_to_inventory", inventory, item_ref, count)
+		inventory_changed.emit()
+
+
+func consume_item(item_ref: String, count: int = 1) -> bool:
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service == null or not inventory_service.has_method("consume_item_from_inventory"):
+		return false
+	var result: Dictionary = inventory_service.call("consume_item_from_inventory", inventory, item_ref, count)
+	if not bool(result.get("success", false)):
+		return false
+	inventory = result.get("inventory", inventory)
+	inventory_changed.emit()
+	return true
+
+
+func use_item(item_ref: String) -> Dictionary:
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service == null or not inventory_service.has_method("use_item"):
+		return {"success": false, "message": "InventoryService niedostepny."}
+	var result: Dictionary = inventory_service.call("use_item", self, inventory, item_ref)
+	if bool(result.get("success", false)):
+		inventory = result.get("inventory", inventory)
+		inventory_changed.emit()
+	return result
+
+
+func _normalize_inventory() -> void:
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service and inventory_service.has_method("normalize_inventory"):
+		inventory = inventory_service.call("normalize_inventory", inventory)
+
+
+func _get_inventory_service() -> Node:
+	var core_manager: Node = get_node_or_null("/root/CoreManager")
+	if core_manager and core_manager.has_method("get_singleton"):
+		var service: Variant = core_manager.call("get_singleton", "InventoryService")
+		if service is Node:
+			return service
+	return get_node_or_null("/root/InventoryService")

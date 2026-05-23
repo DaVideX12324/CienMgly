@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "ether"
+display_name = "Eter"
+description = "Przywraca 20 SP."
+stackable = true
+max_stack = 99
+consumable = true
+usable_in_menu = true
+usable_in_combat = true
+sp_restore = 20

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "focus_tonic"
+display_name = "Tonik Skupienia"
+description = "Przywraca 25 TP."
+stackable = true
+max_stack = 99
+consumable = true
+usable_in_menu = false
+usable_in_combat = true
+tp_restore = 25
