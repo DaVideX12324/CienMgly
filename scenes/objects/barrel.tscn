@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://jppou3a7nbbw"]
+
+[ext_resource type="Script" uid="uid://yy4qagy8712y" path="res://modules/quiz_rpg/scripts/interactables/barrel.gd" id="1_1yh26"]
+[ext_resource type="Texture2D" uid="uid://qvvpcl7op75x" path="res://modules/quiz_rpg/assets/textures/atlases/tunels_textures/Individual_Props/barrel_open.png" id="4_3ju85"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
+radius = 3.0
+height = 16.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jgk6k"]
+radius = 9.0
+height = 22.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 28.0
+
+[node name="barrel" type="CharacterBody2D" groups=["destructible"]]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_1yh26")
+health = 6.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+y_sort_enabled = true
+texture = ExtResource("4_3ju85")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+y_sort_enabled = true
+position = Vector2(0, 3)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_fulqv")
+
+[node name="DamageHitbox" type="Area2D" parent="."]
+y_sort_enabled = true
+collision_layer = 16777216
+collision_mask = 16777216
+
+[node name="DamageHitbox" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_jgk6k")
+
+[node name="DamageNumbersOrigin" type="Node2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="InteractionArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+shape = SubResource("CircleShape2D_interaction")
+
+[connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
+[connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]

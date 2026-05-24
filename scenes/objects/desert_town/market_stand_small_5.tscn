@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://8bnsifeoir2u"]
+
+[ext_resource type="Texture2D" uid="uid://de2rx41uwsp1s" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/MarketStand_Small_5.png" id="1_pm2vs"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pm2vs"]
+size = Vector2(52, 8)
+
+[node name="MarketStand_Small_5" type="StaticBody2D"]
+y_sort_enabled = true
+
+[node name="MarketStand_Small_5" type="Sprite2D" parent="."]
+position = Vector2(31, -10)
+texture = ExtResource("1_pm2vs")
+offset = Vector2(0, -20)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(31, -10)
+shape = SubResource("RectangleShape2D_pm2vs")

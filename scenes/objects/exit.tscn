@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://dt0bs6sgm4t11"]
+
+[ext_resource type="Script" uid="uid://br81r73cim5yh" path="res://scripts/interactables/exit_building.gd" id="1_ilbk5"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ilbk5"]
+
+[node name="Exit" type="Node2D"]
+
+[node name="Exit" type="Area2D" parent="." node_paths=PackedStringArray("target_area")]
+position = Vector2(-441.96228, -347.77356)
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_ilbk5")
+target_area = NodePath("../To")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+position = Vector2(414.96228, 333.77356)
+shape = SubResource("RectangleShape2D_ilbk5")
+
+[node name="To" type="Area2D" parent="."]
+position = Vector2(10, 11)
+
+[connection signal="body_entered" from="Exit" to="Exit" method="_on_body_entered"]

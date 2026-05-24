@@ -1,0 +1,76 @@
+[gd_scene load_steps=18 format=3 uid="uid://dbfp85hgt2oks"]
+
+[ext_resource type="Texture2D" uid="uid://dv1ai8rii8muw" path="res://assets/textures/atlases/Chests/RPG Chests.png" id="1_3wgf6"]
+[ext_resource type="Script" uid="uid://436bh13tck8b" path="res://scripts/interactables/chest.gd" id="2_ashfb"]
+[ext_resource type="Script" uid="uid://chcswcrnxvho4" path="res://scripts/items/Item.gd" id="3_7m2ut"]
+[ext_resource type="Resource" uid="uid://dcjmehik3xw6u" path="res://resources/weapons/staff/weapon_staff_3.tres" id="4_7m2ut"]
+[ext_resource type="Resource" uid="uid://biw1oe1i6vume" path="res://resources/armour/Ring/ring_3.tres" id="5_l4f3u"]
+[ext_resource type="Resource" uid="uid://cv6qyi3wl1fy3" path="res://resources/armour/Necklace/necklace_3.tres" id="6_dwkue"]
+[ext_resource type="Resource" uid="uid://dvn5knwt5v34s" path="res://resources/weapons/talisman/weapon_talisman_3.tres" id="7_m214p"]
+[ext_resource type="Resource" uid="uid://ch04dvgxjjwva" path="res://resources/armour/Passive/passive_3.tres" id="8_4xpp4"]
+[ext_resource type="Script" uid="uid://m2rhuiyxfdun" path="res://scripts/systems/drop_table/loot_table.gd" id="8_t4y7c"]
+[ext_resource type="Resource" uid="uid://bl5pkvdm0wdfa" path="res://resources/weapons/wand/weapon_wand_3.tres" id="9_t4y7c"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bla77"]
+size = Vector2(12, 5)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3wgf6"]
+atlas = ExtResource("1_3wgf6")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ashfb"]
+atlas = ExtResource("1_3wgf6")
+region = Rect2(128, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7m2ut"]
+atlas = ExtResource("1_3wgf6")
+region = Rect2(128, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l4f3u"]
+atlas = ExtResource("1_3wgf6")
+region = Rect2(128, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_5qwxn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3wgf6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ashfb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7m2ut")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l4f3u")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[sub_resource type="Resource" id="Resource_7m2ut"]
+script = ExtResource("8_t4y7c")
+entries = Array[ExtResource("3_7m2ut")]([ExtResource("4_7m2ut"), ExtResource("5_l4f3u"), ExtResource("6_dwkue"), ExtResource("7_m214p"), ExtResource("8_4xpp4"), ExtResource("9_t4y7c")])
+metadata/_custom_type_script = "uid://m2rhuiyxfdun"
+
+[node name="ClosedChest" type="StaticBody2D"]
+y_sort_enabled = true
+scale = Vector2(1.25, 1.25)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4.5)
+shape = SubResource("RectangleShape2D_bla77")
+
+[node name="Chest" type="AnimatedSprite2D" parent="."]
+texture_repeat = 1
+scale = Vector2(0.99999994, 0.99999994)
+sprite_frames = SubResource("SpriteFrames_5qwxn")
+animation = &"open"
+frame = 1
+script = ExtResource("2_ashfb")
+lock_id = "AncientRuins_1"
+loot_table = SubResource("Resource_7m2ut")
+
+[connection signal="animation_finished" from="Chest" to="Chest" method="_on_animation_finished"]

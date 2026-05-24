@@ -1,0 +1,266 @@
+{
+  "colors": {
+	"name": "Liberated Palette",
+	"authors": [
+      "Eliza Wyatt (DeathsDarling)"
+	],
+	"urls": [
+      "https://github.com/ElizaWy/LPC/wiki/Style-Guide#color-palette"
+	],
+	"licenses": [
+      "OGA-BY 3.0"
+	],
+	"notes": [
+      "Original palette made for the LPC set, by Eliza Wyatt."
+	]
+  },
+  "anatomy.body.male": {
+	"notes": [
+	  "see details at https://opengameart.org/content/lpc-character-bases",
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "bluecarrot16",
+	  "Benjamin K. Smith (BenCreating)",
+	  "Evert",
+	  "Eliza Wyatt (ElizaWy)",
+	  "TheraHedwig",
+	  "MuffinElZangano",
+	  "Durrani",
+	  "Johannes Sjölund (wulax)",
+      "Stephen Challener (Redshrike)"
+	],
+	"licenses": [
+	  "CC-BY-SA 3.0",
+      "GPL 3.0"
+	],
+	"urls": [
+	  "https://opengameart.org/content/lpc-jump-expanded",
+	  "https://opengameart.org/content/lpc-revised-character-basics",
+	  "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles",
+	  "https://opengameart.org/content/lpc-be-seated",
+	  "https://opengameart.org/content/lpc-runcycle-for-male-muscular-and-pregnant-character-bases-with-modular-heads",
+	  "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites",
+	  "https://opengameart.org/content/lpc-character-bases",
+	  "https://opengameart.org/content/lpc-male-jumping-animation-by-durrani",
+      "https://opengameart.org/content/lpc-runcycle-and-diagonal-walkcycle"
+	],
+	"name": "Male"
+  },
+  "anatomy.head.human_male_elderly": {
+	"notes": [
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "Benjamin K. Smith (BenCreating)",
+	  "Eliza Wyatt (ElizaWy)",
+      "Stephen Challener (Redshrike)"
+	],
+	"licenses": [
+	  "OGA-BY 3.0",
+      "CC-BY 3.0"
+	],
+	"urls": [
+	  "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles",
+	  "https://opengameart.org/content/lpc-character-bases",
+      "https://opengameart.org/content/lpc-revised-elders"
+	],
+	"name": "Human Male Elderly"
+  },
+  "anatomy.ears.big": {
+	"notes": [
+	  "adapted to v3 base by bluecarrot16",
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "bluecarrot16",
+	  "Thane Brimhall (pennomi)",
+      "Matthew Krohn (makrohn)"
+	],
+	"licenses": [
+	  "GPL 3.0",
+      "CC-BY-SA 3.0"
+	],
+	"urls": [
+	  "http://opengameart.org/content/lpc-clothing-updates",
+      "https://opengameart.org/content/lpc-base-character-expressions"
+	],
+	"name": "Big"
+  },
+  "anatomy.nose.big": {
+	"notes": [
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "Thane Brimhall (pennomi)",
+      "Matthew Krohn (makrohn)"
+	],
+	"licenses": [
+	  "GPL 3.0",
+      "CC-BY-SA 3.0"
+	],
+	"urls": [
+      "https://opengameart.org/content/lpc-base-character-expressions"
+	],
+	"name": "Big"
+  },
+  "anatomy.hair.dreadlocks_long": {
+	"notes": [
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+      "bluecarrot16"
+	],
+	"licenses": [
+      "CC0"
+	],
+	"urls": [
+      "https://opengameart.org/content/lpc-hair"
+	],
+	"name": "Dreadlocks Long"
+  },
+  "anatomy.wrinkles.big": {
+	"notes": [
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+      "bluecarrot16"
+	],
+	"licenses": [
+      "CC0"
+	],
+	"urls": [],
+	"name": "Wrinkles"
+  },
+  "anatomy.shadow.shadow": {
+	"notes": [
+	  "original male pants by wulax",
+	  "edited for female by Joe White",
+	  "recolors by JaidynReiman",
+	  "walkcycle adapted to pregnant base by ElizaWy",
+	  "remaining animations, recolors and edits to v3 base by bluecarrot16",
+	  "teem body by Redshrike",
+	  "teen legs by ElizaWy derived from base",
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "bluecarrot16",
+	  "ElizaWy",
+	  "David Conway Jr. (JaidynReiman)",
+	  "Joe White",
+	  "Matthew Krohn (makrohn)",
+	  "Johannes Sjölund (wulax)",
+	  "Nila122",
+      "Stephen Challener (Redshrike)"
+	],
+	"licenses": [
+	  "CC-BY-SA 3.0",
+      "GPL 3.0"
+	],
+	"urls": [
+	  "https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles",
+	  "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites",
+	  "http://opengameart.org/content/lpc-clothing-updates",
+	  "https://opengameart.org/content/more-lpc-clothes-and-hair",
+	  "https://opengameart.org/content/lpc-pregnancy-bases-maternity-wear",
+	  "https://opengameart.org/content/lpc-teen-unisex-base-clothes",
+      "https://opengameart.org/content/lpc-clothes-for-children"
+	],
+	"name": "Shadow"
+  },
+  "clothes.torso3.tabard": {
+	"notes": [
+	  "original by wulax",
+	  "edited to female base by makrohn and JaidynReiman",
+	  "edited to v3 base by bluecarrot16",
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "bluecarrot16",
+	  "David Conway Jr. (JaidynReiman)",
+	  "Matthew Krohn (makrohn)",
+      "Johannes Sjölund (wulax)"
+	],
+	"licenses": [
+	  "CC-BY-SA 3.0",
+      "GPL 3.0"
+	],
+	"urls": [
+	  "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites",
+	  "http://opengameart.org/content/lpc-clothing-updates",
+      "https://opengameart.org/content/lpc-combat-armor-for-women"
+	],
+	"name": "Tabard"
+  },
+  "clothes.skirts.plain": {
+	"notes": [
+	  "original by wulax",
+	  "edited for female base by pvigier",
+	  "edited for v3 base by bluecarrot16",
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "bluecarrot16",
+	  "Pierre Vigier (pvigier)",
+      "Johannes Sjölund (wulax)"
+	],
+	"licenses": [
+	  "CC-BY-SA 3.0",
+      "GPL 3.0"
+	],
+	"urls": [
+      "https://opengameart.org/content/lpc-medieval-fantasy-character-sprites"
+	],
+	"name": "Plain"
+  },
+  "clothes.feet.sandals": {
+	"notes": [
+	  "edited for v3 bases by bluecarrot16",
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+	  "Nila122",
+	  "David Conway Jr. (JaidynReiman)",
+	  "Matthew Krohn (makrohn)",
+      "Johannes Sjölund (wulax)"
+	],
+	"licenses": [
+	  "CC-BY-SA 3.0",
+	  "GPL 2.0",
+      "GPL 3.0"
+	],
+	"urls": [
+	  "http://opengameart.org/content/lpc-clothing-updates",
+      "https://opengameart.org/content/lpc-roman-armor"
+	],
+	"name": "Sandals"
+  },
+  "equipment.staffs.loop": {
+	"notes": [
+      "2023-12 [napsio]: minimized colors to 6 for each material and fixed broken colors"
+	],
+	"authors": [
+	  "napsio",
+      "bluecarrot16"
+	],
+	"licenses": [
+	  "OGA-BY 3.0+",
+	  "GPL 3.0",
+      "CC-BY 4.0"
+	],
+	"urls": [
+      "https://opengameart.org/content/lpc-more-weapons"
+	],
+	"name": "Loop"
+  }
+}

@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://lbp5gy0ogj73"]
+
+[ext_resource type="Script" uid="uid://di0oj3837w7hf" path="res://scripts/interactables/enter_building.gd" id="1_sxkfp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ltkme"]
+
+[node name="Enter" type="Node2D"]
+
+[node name="Enter" type="Area2D" parent="." node_paths=PackedStringArray("target_area")]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_sxkfp")
+target_area = NodePath("../To")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Enter"]
+position = Vector2(-31, 29)
+shape = SubResource("RectangleShape2D_ltkme")
+
+[node name="To" type="Area2D" parent="."]
+position = Vector2(51, -40)
+
+[connection signal="body_entered" from="Enter" to="Enter" method="_on_body_entered"]

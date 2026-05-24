@@ -1113,8 +1113,13 @@ func _delta_sign(value: int) -> String:
 
 func _save_game() -> void:
 	if _gm and _gm.has_method("save_game"):
-		_gm.save_game()
-	_show_toast("Zapisano.")
+		if _gm.save_game():
+			_show_toast("Zapisano.")
+		else:
+			_mode = "save_slots"
+			_save_slot_index = 0
+			_show_save_panel()
+			_show_toast("Wybierz slot zapisu.")
 
 
 func _show_toast(text: String) -> void:

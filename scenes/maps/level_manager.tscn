@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dubf5ipl4hps0"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/level_manager.gd" id="1_505ii"]
+
+[node name="level_manager" type="Node2D"]
+script = ExtResource("1_505ii")

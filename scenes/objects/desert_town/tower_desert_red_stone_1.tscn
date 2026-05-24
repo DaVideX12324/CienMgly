@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://cccaifepoijvs"]
+
+[ext_resource type="Texture2D" uid="uid://b1rtdi1m3lrs6" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/Tower_Desert_RedStone_1.png" id="1_f1jaq"]
+
+[node name="Tower_Desert_RedStone_1" type="StaticBody2D"]
+y_sort_enabled = true
+
+[node name="Tower_Desert_RedStone_1" type="Sprite2D" parent="."]
+y_sort_enabled = true
+position = Vector2(0, 7)
+texture = ExtResource("1_f1jaq")
+offset = Vector2(0, -85)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(0, -78)
+polygon = PackedVector2Array(-23, 89, -22, 91, -17, 96, -11, 99, -8, 99, -8, 88, 8, 88, 8, 95, 8, 99, 12, 99, 18, 95, 22, 91, 23, 89, 20, 84, 14, 80, 8, 78, 0, 77, -8, 78, -14, 79, -20, 84)

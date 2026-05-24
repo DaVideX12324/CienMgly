@@ -53,7 +53,7 @@ func exit_module() -> void:
 func _register_singletons() -> void:
 	var core_manager := get_node_or_null("/root/CoreManager")
 	var use_core_manager := core_manager != null and core_manager.has_method("register_singleton")
-	for singleton_name in ["GameManager", "DifficultyManager", "PlayerStats", "InventoryService"]:
+	for singleton_name in ["GameManager", "SaveManager", "LootManager", "DifficultyManager", "PlayerStats", "InventoryService", "LevelStateManager"]:
 		var singleton_node := get_node_or_null(singleton_name)
 		if not singleton_node:
 			continue

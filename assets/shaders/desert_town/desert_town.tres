@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://suegyf210usi"]
+
+[ext_resource type="Shader" uid="uid://y02dcgrbwigk" path="res://assets/shaders/desert_town/desert_town.gdshader" id="1_uq5p3"]
+
+[resource]
+shader = ExtResource("1_uq5p3")
+shader_parameter/player_position = Vector2(0, 0)
+shader_parameter/circle_radius = 17.0000008075
+shader_parameter/min_alpha = 0.162000007695
+shader_parameter/max_alpha = 1.0
+shader_parameter/smoothness = 2.38500011002762

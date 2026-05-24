@@ -1,24 +1,15 @@
 [gd_scene format=3 uid="uid://worldmap001"]
 
-[ext_resource type="PackedScene" uid="uid://player001" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/knowledge_guardian.tscn" id="2_enemy_guardian"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/algorithm_master.tscn" id="3_enemy_algorithm"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/bit_dragon.tscn" id="4_enemy_dragon"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/math_golem.tscn" id="5_enemy_golem"]
-[ext_resource type="PackedScene" uid="uid://hud001" path="res://modules/quiz_rpg/scenes/ui/hud.tscn" id="6_hud"]
-[ext_resource type="PackedScene" uid="uid://pause001" path="res://modules/quiz_rpg/scenes/ui/pause_menu.tscn" id="7_pause"]
 [ext_resource type="Script" uid="uid://ci68o7cegjh0l" path="res://modules/quiz_rpg/scripts/quiz/quiz_door.gd" id="8_door"]
 [ext_resource type="Script" uid="uid://bs5rhaoxq4kig" path="res://modules/quiz_rpg/scripts/maps/world_map.gd" id="9_map"]
 
 [node name="WorldMap" type="Node2D" unique_id=967044016]
 script = ExtResource("9_map")
 zoom_percent = 300.0
-
-[node name="Player" parent="." unique_id=732732896 instance=ExtResource("1_player")]
-
-[node name="HUD" parent="." unique_id=452503120 instance=ExtResource("6_hud")]
-
-[node name="PauseMenu" parent="." unique_id=1233590681 instance=ExtResource("7_pause")]
 
 [node name="Enemies" type="Node2D" parent="." unique_id=113386221]
 

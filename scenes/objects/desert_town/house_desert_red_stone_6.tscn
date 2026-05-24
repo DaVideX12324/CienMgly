@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://cc62jfp6gexrf"]
+
+[ext_resource type="Texture2D" uid="uid://dmpq5lj1cmm8l" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_6.png" id="1_abqxc"]
+[ext_resource type="Texture2D" uid="uid://w2ft4iw5ynnt" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_6_Inner.png" id="2_nyeb1"]
+[ext_resource type="Texture2D" uid="uid://biv5r2nfq6sqg" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_6_Back_Right.png" id="3_g5sfe"]
+[ext_resource type="Texture2D" uid="uid://b3eh4gmsi3f36" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_6_Back_Left.png" id="4_jhcmk"]
+
+[node name="House_Desert_RedStone_6" type="StaticBody2D"]
+y_sort_enabled = true
+
+[node name="House_Desert_RedStone_6" type="Sprite2D" parent="."]
+position = Vector2(85, -7)
+texture = ExtResource("1_abqxc")
+offset = Vector2(0, -65)
+
+[node name="House_Desert_RedStone_6_Inner" type="Sprite2D" parent="."]
+position = Vector2(126, -17)
+texture = ExtResource("2_nyeb1")
+offset = Vector2(-41, -55)
+
+[node name="House_Desert_RedStone_6_Back_Right" type="Sprite2D" parent="."]
+position = Vector2(150, -25)
+texture = ExtResource("3_g5sfe")
+offset = Vector2(-65, -47)
+
+[node name="House_Desert_RedStone_6_Back_Left" type="Sprite2D" parent="."]
+position = Vector2(8, -30)
+texture = ExtResource("4_jhcmk")
+offset = Vector2(77, -42)
+
+[node name="CollisionShape2D" type="CollisionPolygon2D" parent="."]
+position = Vector2(0, 1)
+polygon = PackedVector2Array(1, -29, 17, -29, 17, -15, 50, -15, 51, -15, 51, -6, 119, -6, 119, -15, 133, -15, 133, -23, 157, -23, 160, -22, 167, -22, 165, -25, 165, -57, 133, -57, 133, -95, 1, -95)

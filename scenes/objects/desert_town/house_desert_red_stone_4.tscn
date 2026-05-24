@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://c4vfn58r18lrs"]
+
+[ext_resource type="Texture2D" uid="uid://vrsn3nvnhpmv" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_4.png" id="1_v40ti"]
+
+[node name="House_Desert_RedStone_4" type="StaticBody2D"]
+y_sort_enabled = true
+
+[node name="House_Desert_RedStone_4" type="Sprite2D" parent="."]
+position = Vector2(72, -32)
+texture = ExtResource("1_v40ti")
+offset = Vector2(-5, -32)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(14, -9, 64, -9, 64, -5, 134, -5, 134, -80, 10, -80, 10, -9)
