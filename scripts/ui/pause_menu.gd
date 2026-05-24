@@ -36,6 +36,10 @@ const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "
 @onready var confirm_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel
 @onready var confirm_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/ConfirmLabel
 @onready var confirm_options_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/OptionsVBox
+@onready var save_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel
+@onready var save_hint_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveHintLabel
+@onready var save_slots_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox
+@onready var save_footer_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/FooterLabel
 
 var _gm: Node = null
 var _ps: Node = null
@@ -65,11 +69,14 @@ var _status_bar_rows: Array[Control] = []
 var _status_stat_rows: Array[Control] = []
 var _status_equip_rows: Array[Control] = []
 var _confirm_rows: Array[Control] = []
+var _save_slot_rows: Array[Control] = []
 var _current_item_entries: Array[Dictionary] = []
 var _current_skill_entries: Array[Dictionary] = []
 var _current_equip_entries: Array[Dictionary] = []
+var _save_slot_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
+var _save_slot_index: int = 0
 
 
 func _ready() -> void:
@@ -100,6 +107,9 @@ func _input(event: InputEvent) -> void:
 	if _mode == "confirm_exit":
 		if _handle_confirm_input(event):
 			get_viewport().set_input_as_handled()
+		return
+	if _mode == "save_slots" and _handle_save_slots_input(event):
+		get_viewport().set_input_as_handled()
 		return
 	if _mode == "items_list" and _handle_item_tab_input(event):
 		get_viewport().set_input_as_handled()
@@ -147,6 +157,9 @@ func _handle_close_input(event: InputEvent) -> bool:
 	match _mode:
 		"left_menu":
 			_toggle_pause()
+		"save_slots":
+			_mode = "left_menu"
+			_show_default_party_panel()
 		"items_list":
 			_mode = "left_menu"
 			_show_default_party_panel()
@@ -220,6 +233,16 @@ func _handle_item_tab_input(event: InputEvent) -> bool:
 	return false
 
 
+func _handle_save_slots_input(event: InputEvent) -> bool:
+	if _is_nav_right(event):
+		_add_save_slot()
+		return true
+	if _is_nav_left(event):
+		_delete_selected_save_slot()
+		return true
+	return false
+
+
 func _move_selection(delta: int) -> void:
 	match _mode:
 		"left_menu":
@@ -236,6 +259,11 @@ func _move_selection(delta: int) -> void:
 				return
 			_party_index = wrapi(_party_index + delta, 0, visible_party_count)
 			_refresh_party_rows()
+		"save_slots":
+			if _save_slot_entries.is_empty():
+				return
+			_save_slot_index = wrapi(_save_slot_index + delta, 0, _save_slot_entries.size())
+			_refresh_save_slot_rows()
 		"skills_list":
 			if _current_skill_entries.is_empty():
 				return
@@ -293,6 +321,8 @@ func _accept_current() -> void:
 			_show_status_panel()
 		"confirm_exit":
 			_confirm_exit_choice()
+		"save_slots":
+			_save_to_selected_slot()
 
 
 func _accept_left_menu() -> void:
@@ -314,7 +344,9 @@ func _accept_left_menu() -> void:
 			_party_index = 0
 			_show_party_select_panel("Wybierz postac do statusu")
 		4:
-			_save_game()
+			_mode = "save_slots"
+			_save_slot_index = 0
+			_show_save_panel()
 		5:
 			_mode = "confirm_exit"
 			_confirm_index = 1
@@ -459,6 +491,13 @@ func _show_confirm_panel() -> void:
 	_rebuild_confirm_rows()
 
 
+func _show_save_panel() -> void:
+	_show_panel("save")
+	context_title_label.text = "Zapis gry"
+	save_hint_label.text = "Enter/Z: zapisz    A/Left: usun slot    D/Right: dodaj slot    X/Esc: wroc"
+	_rebuild_save_slots()
+
+
 func _show_panel(panel_name: String) -> void:
 	party_panel.visible = panel_name == "party"
 	items_panel.visible = panel_name == "items"
@@ -466,6 +505,7 @@ func _show_panel(panel_name: String) -> void:
 	equipment_panel.visible = panel_name == "equipment"
 	status_panel.visible = panel_name == "status"
 	confirm_panel.visible = panel_name == "confirm"
+	save_panel.visible = panel_name == "save"
 
 
 func _cache_scene_rows() -> void:
@@ -481,6 +521,7 @@ func _cache_scene_rows() -> void:
 	_status_stat_rows = _collect_rows(status_stats_vbox)
 	_status_equip_rows = _collect_rows(status_equip_vbox)
 	_confirm_rows = _collect_rows(confirm_options_vbox)
+	_save_slot_rows = _collect_rows(save_slots_vbox)
 
 
 func _refresh_left_menu_rows() -> void:
@@ -658,6 +699,76 @@ func _refresh_confirm_rows() -> void:
 	_set_row_selection(_confirm_rows, _confirm_index)
 
 
+func _rebuild_save_slots() -> void:
+	_save_slot_entries.clear()
+	if _gm and _gm.has_method("get_save_slots_summary"):
+		_save_slot_entries = _gm.get_save_slots_summary()
+	_ensure_save_slot_row_capacity(_save_slot_entries.size())
+	for index: int in range(_save_slot_rows.size()):
+		var row: Control = _save_slot_rows[index]
+		var has_entry: bool = index < _save_slot_entries.size()
+		row.visible = has_entry
+		if has_entry:
+			_populate_save_slot_row(row, _save_slot_entries[index])
+	if not _save_slot_entries.is_empty():
+		_save_slot_index = clampi(_save_slot_index, 0, _save_slot_entries.size() - 1)
+	_refresh_save_slot_rows()
+
+
+func _refresh_save_slot_rows() -> void:
+	_set_row_selection(_save_slot_rows, _save_slot_index)
+	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
+		save_footer_label.text = ""
+		return
+	var slot_entry: Dictionary = _save_slot_entries[_save_slot_index]
+	if bool(slot_entry.get("exists", false)):
+		save_footer_label.text = "%s\n%s\n%s" % [
+			str(slot_entry.get("title", "")),
+			str(slot_entry.get("subtitle", "")),
+			str(slot_entry.get("detail", "")),
+		]
+	else:
+		save_footer_label.text = "Pusty slot. Enter/Z zapisze aktualna gre do tego miejsca."
+
+
+func _populate_save_slot_row(row: Control, slot_entry: Dictionary) -> void:
+	var left_text: String = str(slot_entry.get("slot_name", "Slot"))
+	var right_text: String = ""
+	if bool(slot_entry.get("exists", false)):
+		left_text = "%s  %s" % [left_text, str(slot_entry.get("title", ""))]
+		right_text = str(slot_entry.get("time_text", ""))
+	else:
+		left_text = "%s  Pusty slot" % left_text
+	_set_simple_row(row, left_text, right_text)
+
+
+func _save_to_selected_slot() -> void:
+	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
+		return
+	if _gm and _gm.has_method("save_game") and _gm.save_game(_save_slot_index):
+		_show_save_panel()
+		_show_toast("Zapisano do slotu %d." % (_save_slot_index + 1))
+
+
+func _add_save_slot() -> void:
+	if _gm == null or not _gm.has_method("add_save_slot"):
+		return
+	_save_slot_index = int(_gm.add_save_slot())
+	_show_save_panel()
+	_show_toast("Dodano slot %d." % (_save_slot_index + 1))
+
+
+func _delete_selected_save_slot() -> void:
+	if _gm == null or not _gm.has_method("delete_save_slot"):
+		return
+	if _gm.delete_save_slot(_save_slot_index):
+		_save_slot_index = maxi(0, _save_slot_index - 1)
+		_show_save_panel()
+		_show_toast("Usunieto slot.")
+	else:
+		_show_toast("Nie mozna usunac tego slotu.")
+
+
 func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars: bool) -> void:
 	var portrait: TextureRect = target.get_node("Portrait") as TextureRect
 	var name_label: Label = target.get_node("InfoVBox/NameLabel") as Label
@@ -739,6 +850,8 @@ func _get_visible_row_count(rows: Array[Control]) -> int:
 
 func _collect_rows(container: Node) -> Array[Control]:
 	var rows: Array[Control] = []
+	if container == null:
+		return rows
 	for child: Node in container.get_children():
 		if child is Control:
 			rows.append(child as Control)
@@ -758,6 +871,21 @@ func _ensure_party_row_capacity(members: Array[Dictionary]) -> void:
 		party_list_vbox.add_child(new_row)
 		_party_rows.append(new_row)
 	_apply_party_rows_scaling(_party_rows)
+
+
+func _ensure_save_slot_row_capacity(required_count: int) -> void:
+	if required_count <= _save_slot_rows.size() or _save_slot_rows.is_empty():
+		return
+	var template: Control = _save_slot_rows[0]
+	for index: int in range(_save_slot_rows.size(), required_count):
+		var new_row: Control = template.duplicate() as Control
+		if new_row == null:
+			continue
+		new_row.name = "SaveSlotRow%d" % index
+		new_row.visible = false
+		save_slots_vbox.add_child(new_row)
+		_save_slot_rows.append(new_row)
+	_apply_row_scaling(_save_slot_rows)
 
 
 func _get_equipped_item_name(item_id: String) -> String:
@@ -844,6 +972,8 @@ func _on_player_data_changed() -> void:
 				_show_status_panel()
 			else:
 				_show_party_select_panel("Wybierz postac do statusu")
+		"save_slots":
+			_show_save_panel()
 
 
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:
@@ -865,6 +995,7 @@ func _apply_scaling() -> void:
 	_apply_row_scaling(_status_stat_rows)
 	_apply_row_scaling(_status_equip_rows)
 	_apply_row_scaling(_confirm_rows)
+	_apply_row_scaling(_save_slot_rows)
 	_apply_party_rows_scaling(_party_rows)
 	_apply_bar_rows_scaling(_status_bar_rows)
 	_apply_actor_header_scaling(skills_actor_header)

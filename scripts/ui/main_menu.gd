@@ -44,7 +44,7 @@ func _connect_buttons() -> void:
 
 func _update_load_button() -> void:
 	var gm := _get_module_singleton("GameManager")
-	load_game_btn.disabled = not FileAccess.file_exists(gm.SAVE_PATH) if gm else true
+	load_game_btn.disabled = not gm.has_any_save() if gm and gm.has_method("has_any_save") else true
 
 
 func _style_menu() -> void:
@@ -63,7 +63,7 @@ func _on_load_game() -> void:
 	var gm := _get_module_singleton("GameManager")
 	if not gm:
 		return
-	if gm.load_game():
+	if gm.load_game(-1):
 		gm.change_state(gm.GameState.EXPLORING)
 	else:
 		push_warning("Nie udalo sie wczytac gry!")

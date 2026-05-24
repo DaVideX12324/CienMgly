@@ -80,6 +80,7 @@ size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
 [node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow0" unique_id=494030572]
+visible = false
 layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow0/Control" unique_id=950087935]
@@ -115,9 +116,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow1" unique_id=2014808789]
+[node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow1" unique_id=1497221613]
 visible = false
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow1/Control" unique_id=111768149]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow1" unique_id=521267298]
 layout_mode = 2
@@ -146,9 +153,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow2" unique_id=174337866]
+[node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow2" unique_id=1592947394]
 visible = false
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow2/Control" unique_id=1796327778]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow2" unique_id=631506323]
 layout_mode = 2
@@ -177,9 +190,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow3" unique_id=1605075630]
+[node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow3" unique_id=1117298056]
 visible = false
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow3/Control" unique_id=1712404335]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow3" unique_id=696103934]
 layout_mode = 2
@@ -208,9 +227,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow4" unique_id=142854198]
+[node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow4" unique_id=938462685]
 visible = false
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow4/Control" unique_id=980367323]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow4" unique_id=1920331729]
 layout_mode = 2
@@ -239,9 +264,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow5" unique_id=161536189]
+[node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow5" unique_id=157771863]
 visible = false
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow5/Control" unique_id=1565343684]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow5" unique_id=733816097]
 layout_mode = 2
@@ -317,9 +348,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0" unique_id=139002560]
-visible = false
+[node name="Control" type="Control" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0" unique_id=682342145]
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Control" unique_id=139002560]
+layout_mode = 0
+offset_top = 81.0
+offset_right = 1255.0
+offset_bottom = 88.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0" unique_id=167183773]
 layout_mode = 2
@@ -403,9 +439,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1" unique_id=708108975]
-visible = false
+[node name="Control" type="Control" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1" unique_id=322804648]
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Control" unique_id=2014537761]
+layout_mode = 0
+offset_top = 81.0
+offset_right = 1255.0
+offset_bottom = 88.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1" unique_id=767807752]
 layout_mode = 2
@@ -2621,3 +2662,119 @@ text = "N Nie"
 [node name="RightLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=53236737]
 layout_mode = 2
 horizontal_alignment = 2
+
+[node name="SavePanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="SaveHintLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="SaveSlotsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="SaveSlotRow0" type="PanelContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow0"]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow0"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow0/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 1  Pusty slot"
+
+[node name="RightLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow"]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SaveSlotRow1" type="PanelContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow1"]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow1"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow1/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 2  Pusty slot"
+
+[node name="RightLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow"]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SaveSlotRow2" type="PanelContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow2"]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow2"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow2/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 3  Pusty slot"
+
+[node name="RightLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel/SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow"]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="FooterLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SavePanel"]
+layout_mode = 2
+autowrap_mode = 3
