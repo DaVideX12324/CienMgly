@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="QuizRpgItemData" format=3 uid="uid://dj7eigkbq3grm"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
 [resource]
 script = ExtResource("1_qrpg_item")
@@ -14,4 +14,4 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "body"
-def_bonus = 4
+def_bonus = 100

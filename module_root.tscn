@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://dw12dlix7uotd" path="res://modules/quiz_rpg/autoloads/difficulty_manager.gd" id="3_od5kb"]
 [ext_resource type="Script" uid="uid://ukwvwlmvx5yj" path="res://modules/quiz_rpg/autoloads/player_stats.gd" id="4_d2768"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/autoloads/inventory_service.gd" id="5_inventory"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/heroes/hero_bohater.tres" id="6_hero_bohater"]
 
 [node name="QuizRPGModule" type="Node" unique_id=1501087792]
 script = ExtResource("1")
@@ -17,6 +18,7 @@ script = ExtResource("3_od5kb")
 
 [node name="PlayerStats" type="Node" parent="." unique_id=1352899383]
 script = ExtResource("4_d2768")
+hero_party_data = [ExtResource("6_hero_bohater")]
 
 [node name="InventoryService" type="Node" parent="." unique_id=627145881]
 script = ExtResource("5_inventory")

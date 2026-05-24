@@ -4,19 +4,27 @@ class_name EnemyBase
 ## Bazowa klasa przeciwnika — patroluje, wykrywa gracza, inicjuje walke quizowa.
 ## Programmer art: rysowany kodem jesli brak sprite frames.
 
+const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_data.gd")
+
+@export var enemy_data: QuizRpgEnemyData
+@export_group("Identity")
 @export var enemy_name: String = "Przeciwnik"
 @export var quiz_id: String = "default"
 @export var quiz_category: String = "ogolne"
+@export_group("Combat")
 @export var question_count: int = 3
 @export var hp: int = 50
 @export var max_hp: int = 50
 @export var damage_on_wrong: int = 15
 @export var xp_reward: int = 50
+@export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
 @export var is_boss: bool = false
+@export_group("Movement")
 @export var patrol_speed: float = 80.0
 @export var detection_radius: float = 150.0
+@export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
 
 enum State { IDLE, PATROL, CHASING, COMBAT, DEFEATED }
@@ -44,6 +52,7 @@ var _gm: Node   # GameManager
 
 
 func _ready() -> void:
+	_apply_enemy_data()
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
@@ -70,6 +79,31 @@ func _ready() -> void:
 			pos + Vector2(0, -60),
 			pos + Vector2(0, 60),
 		]
+
+
+func _apply_enemy_data() -> void:
+	if enemy_data == null:
+		hp = maxi(hp, 1)
+		max_hp = maxi(max_hp, 1)
+		hp = mini(hp, max_hp)
+		encounter_tier = clampi(encounter_tier, 1, 5)
+		return
+	enemy_name = enemy_data.enemy_name
+	quiz_id = enemy_data.quiz_id
+	quiz_category = enemy_data.quiz_category
+	question_count = enemy_data.question_count
+	max_hp = maxi(enemy_data.max_hp, 1)
+	hp = max_hp
+	damage_on_wrong = maxi(enemy_data.damage_on_wrong, 0)
+	xp_reward = maxi(enemy_data.xp_reward, 0)
+	encounter_tier = clampi(enemy_data.encounter_tier, 1, 5)
+	min_encounter_size = maxi(enemy_data.min_encounter_size, 1)
+	max_encounter_size = maxi(enemy_data.max_encounter_size, min_encounter_size)
+	is_boss = enemy_data.is_boss
+	patrol_speed = enemy_data.patrol_speed
+	detection_radius = enemy_data.detection_radius
+	body_color = enemy_data.body_color
+	shape_type = enemy_data.shape_type
 
 
 func _physics_process(delta: float) -> void:

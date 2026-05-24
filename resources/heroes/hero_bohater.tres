@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="QuizRpgHeroData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/heroes/hero_data.gd" id="1_hero_data"]
+[ext_resource type="PackedScene" uid="uid://player001" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="2_player_scene"]
+
+[resource]
+script = ExtResource("1_hero_data")
+hero_id = "bohater"
+display_name = "Bohater"
+actor_scene = ExtResource("2_player_scene")
+base_level = 1
+base_hp = 100
+base_sp = 100
+base_tp = 100
+base_atk = 10
+base_def = 8
+default_weapon_id = "training_sword"
+default_shield_id = "wooden_shield"
+default_head_id = "cloth_cap"
+default_body_id = "adventurer_tunic"
+default_accessory_id = "lucky_charm"

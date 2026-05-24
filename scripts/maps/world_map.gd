@@ -7,6 +7,7 @@ const MAP_W := 1200.0
 const MAP_H := 900.0
 const TILE_SIZE := 32
 const WALL_THICKNESS := 16.0
+const DEFAULT_FOLLOW_SPACING := 28.0
 
 @export_range(50.0, 300.0, 5.0) var zoom_percent := 100.0
 
@@ -31,9 +32,13 @@ var _flowers: Array[Dictionary] = []
 var _rocks: Array[Vector2] = []
 var _grass_patches: Array[Dictionary] = []
 var _path_points: Array[Vector2] = []
+var _ps: Node = null
+var _follower_root: Node2D = null
+var _follower_count: int = -1
 
 
 func _ready() -> void:
+	_ps = CoreManager.get_singleton("PlayerStats")
 	# Ustaw seed na stały, żeby mapa wyglądała tak samo zawsze
 	var rng = RandomNumberGenerator.new()
 	rng.seed = 42
@@ -49,6 +54,9 @@ func _ready() -> void:
 	_create_wall_colliders()
 	_setup_camera()
 	_connect_camera_updates()
+	_setup_party_followers()
+	if _ps and _ps.has_signal("party_changed") and not _ps.party_changed.is_connected(_on_party_changed):
+		_ps.party_changed.connect(_on_party_changed)
 
 	queue_redraw()
 
@@ -258,6 +266,53 @@ func _on_resolution_changed(_new_resolution: Vector2i) -> void:
 	var camera := get_node_or_null("Player/Camera2D") as Camera2D
 	if camera:
 		_update_camera_zoom(camera)
+
+
+func _on_party_changed() -> void:
+	_setup_party_followers()
+
+
+func _setup_party_followers() -> void:
+	var leader := get_node_or_null("Player") as CharacterBody2D
+	if leader == null:
+		return
+	if _ps == null or not _ps.has_method("get_party_members"):
+		return
+	var members: Array[Dictionary] = _ps.get_party_members()
+	if not members.is_empty() and leader.has_method("apply_hero_data"):
+		leader.call("apply_hero_data", members[0])
+	var desired_follower_count: int = maxi(members.size() - 1, 0)
+	if _follower_root == null:
+		_follower_root = get_node_or_null("PartyFollowers") as Node2D
+		if _follower_root == null:
+			_follower_root = Node2D.new()
+			_follower_root.name = "PartyFollowers"
+			add_child(_follower_root)
+	if desired_follower_count == _follower_count:
+		return
+	for child: Node in _follower_root.get_children():
+		child.queue_free()
+	var current_leader: CharacterBody2D = leader
+	for member_index: int in range(1, members.size()):
+		var member: Dictionary = members[member_index]
+		var follower_scene: PackedScene = member.get("actor_scene") as PackedScene
+		if follower_scene == null:
+			follower_scene = load("res://modules/quiz_rpg/scenes/player/player.tscn") as PackedScene
+		if follower_scene == null:
+			continue
+		var follower_instance: Node = follower_scene.instantiate()
+		if not (follower_instance is CharacterBody2D):
+			continue
+		var follower := follower_instance as CharacterBody2D
+		follower.name = "Follower%d" % member_index
+		_follower_root.add_child(follower)
+		follower.global_position = current_leader.global_position
+		if follower.has_method("apply_hero_data"):
+			follower.call("apply_hero_data", member)
+		if follower.has_method("set_follow_target"):
+			follower.call("set_follow_target", current_leader, DEFAULT_FOLLOW_SPACING)
+		current_leader = follower
+	_follower_count = desired_follower_count
 
 
 func _update_camera_zoom(camera: Camera2D) -> void:

@@ -1545,6 +1545,10 @@ func _calculate_player_damage_taken(raw_damage: int, enemy_tier: int, defending_
 
 
 func _get_encounter_tier() -> int:
+	if enemy != null:
+		var direct_tier: Variant = enemy.get("encounter_tier")
+		if direct_tier is int:
+			return clampi(int(direct_tier), 1, 5)
 	if enemy != null and bool(enemy.get("is_boss")):
 		return clampi(_diff_range.y, 1, 5)
 	return clampi(int(round(float(_diff_range.x + _diff_range.y) * 0.5)), 1, 5)

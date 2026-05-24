@@ -1,5 +1,7 @@
 extends Node
 
+const QuizRpgHeroData = preload("res://modules/quiz_rpg/scripts/heroes/hero_data.gd")
+
 ## PlayerStats — moduł QuizRPG
 ## Przechowuje statystyki gracza: HP, XP, poziom, punkty, nagrody.
 ## Dostępny przez: CoreManager.get_singleton("PlayerStats")
@@ -26,6 +28,8 @@ const EQUIPMENT_LABELS := {
 	"body": "Cialo",
 	"accessory": "Akcesorium",
 }
+
+@export var hero_party_data: Array[QuizRpgHeroData] = []
 
 var player_name: String    = "Bohater"
 var level: int             = 1
@@ -481,7 +485,12 @@ func clear_member_equipment(member_index: int) -> void:
 
 func _ensure_party_defaults() -> void:
 	if party.is_empty():
-		party.append(_build_default_party_member())
+		if hero_party_data.is_empty():
+			party.append(_build_default_party_member())
+		else:
+			for hero_data: QuizRpgHeroData in hero_party_data:
+				if hero_data:
+					party.append(hero_data.build_member_data())
 	for index: int in range(party.size()):
 		var member: Dictionary = party[index]
 		if not member.has("equipment") or not (member.get("equipment") is Dictionary):
@@ -507,6 +516,12 @@ func _ensure_party_defaults() -> void:
 			member["base_def"] = 8
 		if not member.has("portrait"):
 			member["portrait"] = null
+		if not member.has("actor_scene"):
+			member["actor_scene"] = null
+		if not member.has("sprite_frames"):
+			member["sprite_frames"] = null
+		if not member.has("body_color"):
+			member["body_color"] = Color(0.2, 0.6, 1.0)
 		party[index] = member
 
 
