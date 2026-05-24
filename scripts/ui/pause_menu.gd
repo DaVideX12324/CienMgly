@@ -274,6 +274,7 @@ func _move_selection(delta: int) -> void:
 				return
 			_equip_slot_index = wrapi(_equip_slot_index + delta, 0, _equip_slot_rows.size())
 			_refresh_equipment_slot_rows()
+			_rebuild_equipment_item_rows()
 		"equip_item_list":
 			if _current_equip_entries.is_empty():
 				return
@@ -631,7 +632,8 @@ func _rebuild_equip_action_rows() -> void:
 
 
 func _refresh_equip_action_rows() -> void:
-	_set_row_selection(_equip_action_rows, _equip_action_index)
+	var selected_index: int = _equip_action_index if _mode == "equip_actions" else -1
+	_set_row_selection(_equip_action_rows, selected_index)
 
 
 func _rebuild_equipment_slots() -> void:
@@ -650,7 +652,8 @@ func _rebuild_equipment_slots() -> void:
 
 
 func _refresh_equipment_slot_rows() -> void:
-	_set_row_selection(_equip_slot_rows, _equip_slot_index)
+	var selected_index: int = _equip_slot_index if _mode == "equip_slots" else -1
+	_set_row_selection(_equip_slot_rows, selected_index)
 
 
 func _rebuild_equipment_item_rows() -> void:
