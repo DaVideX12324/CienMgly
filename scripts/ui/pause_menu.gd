@@ -42,6 +42,10 @@ const EQUIP_ACTIONS: Array[String] = ["Zmien", "Optymalizuj", "Wyczysc"]
 @onready var confirm_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel
 @onready var confirm_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/ConfirmLabel
 @onready var confirm_options_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/OptionsVBox
+@onready var simple_row_template: PanelContainer = $PauseRoot/Templates/SimpleRowTemplate
+@onready var bar_row_template: HBoxContainer = $PauseRoot/Templates/BarRowTemplate
+@onready var party_row_template: PanelContainer = $PauseRoot/Templates/PartyRowTemplate
+@onready var actor_header_template: HBoxContainer = $PauseRoot/Templates/ActorHeaderTemplate
 
 var _gm: Node = null
 var _ps: Node = null
@@ -682,139 +686,89 @@ func _refresh_confirm_rows() -> void:
 func _build_actor_header(target: HBoxContainer, member: Dictionary, show_bars: bool) -> void:
 	for child: Node in target.get_children():
 		child.queue_free()
-	var portrait: TextureRect = TextureRect.new()
-	portrait.custom_minimum_size = Vector2(_ui_px(128), _ui_px(128))
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var header: HBoxContainer = actor_header_template.duplicate() as HBoxContainer
+	header.visible = true
+	_apply_actor_header_scaling(header)
+	var portrait: TextureRect = header.get_node("Portrait") as TextureRect
+	var info_box: VBoxContainer = header.get_node("InfoVBox") as VBoxContainer
+	var name_label: Label = header.get_node("InfoVBox/NameLabel") as Label
+	var hp_row: HBoxContainer = header.get_node("InfoVBox/HPRow") as HBoxContainer
+	var sp_row: HBoxContainer = header.get_node("InfoVBox/SPRow") as HBoxContainer
 	portrait.texture = member.get("portrait") as Texture2D
-	target.add_child(portrait)
-	var info_box: VBoxContainer = VBoxContainer.new()
-	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info_box.add_theme_constant_override("separation", _ui_px(6))
-	var name_label: Label = Label.new()
 	name_label.text = "%s  LV %d" % [str(member.get("name", "Bohater")), int(member.get("level", 1))]
-	name_label.add_theme_font_size_override("font_size", _ui_px(22))
-	info_box.add_child(name_label)
-	if show_bars:
-		info_box.add_child(_create_bar_row("Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1))))
-		info_box.add_child(_create_bar_row("Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1))))
-	else:
-		var hp_label: Label = Label.new()
-		hp_label.text = "Zycie %d/%d" % [int(member.get("hp", 0)), int(member.get("max_hp", 1))]
-		info_box.add_child(hp_label)
-		var sp_label: Label = Label.new()
-		sp_label.text = "Mana %d/%d" % [int(member.get("sp", 0)), int(member.get("max_sp", 1))]
-		info_box.add_child(sp_label)
-	target.add_child(info_box)
+	_populate_bar_row(hp_row, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+	_populate_bar_row(sp_row, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	if not show_bars:
+		var hp_value: Label = hp_row.get_node("BarValue") as Label
+		var sp_value: Label = sp_row.get_node("BarValue") as Label
+		var hp_progress: ProgressBar = hp_row.get_node("BarProgress") as ProgressBar
+		var sp_progress: ProgressBar = sp_row.get_node("BarProgress") as ProgressBar
+		hp_progress.visible = false
+		sp_progress.visible = false
+		hp_value.text = "%d/%d" % [int(member.get("hp", 0)), int(member.get("max_hp", 1))]
+		sp_value.text = "%d/%d" % [int(member.get("sp", 0)), int(member.get("max_sp", 1))]
+	target.add_child(header)
 
 
 func _create_party_row(member: Dictionary) -> PanelContainer:
-	var row: PanelContainer = PanelContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", _ui_px(10))
-	margin.add_theme_constant_override("margin_top", _ui_px(8))
-	margin.add_theme_constant_override("margin_right", _ui_px(10))
-	margin.add_theme_constant_override("margin_bottom", _ui_px(8))
-	var content: HBoxContainer = HBoxContainer.new()
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", _ui_px(12))
-	var portrait: TextureRect = TextureRect.new()
-	portrait.custom_minimum_size = Vector2(_ui_px(64), _ui_px(64))
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var row: PanelContainer = party_row_template.duplicate() as PanelContainer
+	row.visible = true
+	_apply_party_row_scaling(row)
+	var portrait: TextureRect = row.get_node("Margin/ContentRow/Portrait") as TextureRect
+	var name_label: Label = row.get_node("Margin/ContentRow/NameLabel") as Label
+	var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
+	var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
+	var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
 	portrait.texture = member.get("portrait") as Texture2D
-	var name_label: Label = Label.new()
 	name_label.text = str(member.get("name", "Bohater"))
-	name_label.custom_minimum_size = Vector2(_ui_px(160), 0)
-	var level_label: Label = Label.new()
 	level_label.text = "LV %d" % int(member.get("level", 1))
-	level_label.custom_minimum_size = Vector2(_ui_px(70), 0)
-	var hp_row: Control = _create_bar_row("ZYCIE", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
-	hp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
-	var sp_row: Control = _create_bar_row("MANA", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	sp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
-	content.add_child(portrait)
-	content.add_child(name_label)
-	content.add_child(level_label)
-	content.add_child(hp_row)
-	content.add_child(sp_row)
-	margin.add_child(content)
-	row.add_child(margin)
+	_populate_bar_row(hp_row, "ZYCIE", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+	_populate_bar_row(sp_row, "MANA", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
 	return row
 
 
 func _create_bar_row(label_text: String, value: int, max_value: int) -> HBoxContainer:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", _ui_px(8))
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(_ui_px(70), 0)
-	var bar: ProgressBar = ProgressBar.new()
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.max_value = maxi(max_value, 1)
-	bar.value = clampi(value, 0, maxi(max_value, 1))
-	var value_label: Label = Label.new()
-	value_label.text = "%d/%d" % [value, max_value]
-	value_label.custom_minimum_size = Vector2(_ui_px(90), 0)
-	row.add_child(label)
-	row.add_child(bar)
-	row.add_child(value_label)
+	var row: HBoxContainer = bar_row_template.duplicate() as HBoxContainer
+	row.visible = true
+	_apply_bar_row_scaling(row)
+	_populate_bar_row(row, label_text, value, max_value)
 	return row
 
 
 func _create_simple_row(left_text: String, right_text: String, disabled: bool = false) -> PanelContainer:
-	var row: PanelContainer = PanelContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var margin: MarginContainer = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", _ui_px(8))
-	margin.add_theme_constant_override("margin_top", _ui_px(6))
-	margin.add_theme_constant_override("margin_right", _ui_px(8))
-	margin.add_theme_constant_override("margin_bottom", _ui_px(6))
-	var content: HBoxContainer = HBoxContainer.new()
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", _ui_px(10))
-	var left_label: Label = Label.new()
-	left_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var row: PanelContainer = simple_row_template.duplicate() as PanelContainer
+	row.visible = true
+	_apply_simple_row_scaling(row)
+	var left_label: Label = row.get_node("Margin/ContentRow/LeftLabel") as Label
+	var right_label: Label = row.get_node("Margin/ContentRow/RightLabel") as Label
 	left_label.text = left_text
-	left_label.add_theme_font_size_override("font_size", _ui_px(18))
-	var right_label: Label = Label.new()
-	right_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	right_label.text = right_text
-	right_label.add_theme_font_size_override("font_size", _ui_px(17))
-	if disabled:
-		var muted: Color = Color(0.55, 0.55, 0.6)
-		left_label.add_theme_color_override("font_color", muted)
-		right_label.add_theme_color_override("font_color", muted)
-		row.set_meta("disabled", true)
-	content.add_child(left_label)
-	content.add_child(right_label)
-	margin.add_child(content)
-	row.add_child(margin)
+	row.set_meta("disabled", disabled)
 	return row
 
 
 func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
-	var active_style: StyleBoxFlat = StyleBoxFlat.new()
-	active_style.bg_color = Color(0, 0, 0, 0)
-	active_style.border_width_bottom = _ui_px(2)
-	active_style.border_color = Color.WHITE
-	var inactive_style: StyleBoxFlat = StyleBoxFlat.new()
-	inactive_style.bg_color = Color(0, 0, 0, 0)
 	for index: int in range(rows.size()):
 		var row: Control = rows[index]
-		var left_label: Label = row.find_child("*", false, false) as Label
+		var underline: CanvasItem = row.get_node_or_null("SelectionUnderline") as CanvasItem
 		var labels: Array = row.find_children("*", "Label", true, false)
+		var is_selected: bool = index == selected_index
+		var target_modulate: Color = Color.WHITE if is_selected else Color(0.65, 0.65, 0.7)
+		if bool(row.get_meta("disabled", false)):
+			target_modulate = Color(0.55, 0.55, 0.6)
 		for label_value: Variant in labels:
-			var label: Label = label_value
-			var color_value: Color = Color.WHITE if index == selected_index else Color(0.65, 0.65, 0.7)
-			if bool(row.get_meta("disabled", false)):
-				color_value = Color(0.55, 0.55, 0.6)
-			label.add_theme_color_override("font_color", color_value)
-		if index == selected_index:
-			row.add_theme_stylebox_override("panel", active_style)
-		else:
-			row.add_theme_stylebox_override("panel", inactive_style)
+			var label: Label = label_value as Label
+			label.self_modulate = target_modulate
+		var textures: Array = row.find_children("*", "TextureRect", true, false)
+		for texture_value: Variant in textures:
+			var texture_rect: TextureRect = texture_value as TextureRect
+			texture_rect.self_modulate = target_modulate
+		var progress_bars: Array = row.find_children("*", "ProgressBar", true, false)
+		for progress_value: Variant in progress_bars:
+			var progress_bar: ProgressBar = progress_value as ProgressBar
+			progress_bar.self_modulate = target_modulate
+		if underline:
+			underline.visible = is_selected
 
 
 func _get_equipped_item_name(item_id: String) -> String:
@@ -908,12 +862,18 @@ func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:
 
 
 func _apply_scaling() -> void:
-	left_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_panel.size_flags_stretch_ratio = 3.0
-	right_panel.size_flags_stretch_ratio = 7.0
 	context_title_label.add_theme_font_size_override("font_size", _ui_px(28))
+	var title_label: Label = left_panel.get_node("Margin/LeftVBox/TitleLabel") as Label
+	title_label.add_theme_font_size_override("font_size", _ui_px(26))
 	toast_label.add_theme_font_size_override("font_size", _ui_px(18))
+	simple_row_template.custom_minimum_size.y = _ui_px(38)
+	(simple_row_template.get_node("SelectionUnderline") as ColorRect).offset_top = -_ui_px(2)
+	party_row_template.custom_minimum_size.y = _ui_px(88)
+	(party_row_template.get_node("SelectionUnderline") as ColorRect).offset_top = -_ui_px(2)
+	_apply_simple_row_scaling(simple_row_template)
+	_apply_bar_row_scaling(bar_row_template)
+	_apply_party_row_scaling(party_row_template)
+	_apply_actor_header_scaling(actor_header_template)
 
 
 func _get_inventory_service() -> Node:
@@ -933,6 +893,76 @@ func _ui_px(value: int) -> int:
 	if ui_scale_service and ui_scale_service.has_method("px"):
 		return int(ui_scale_service.call("px", value))
 	return value
+
+
+func _apply_simple_row_scaling(row: PanelContainer) -> void:
+	var margin: MarginContainer = row.get_node("Margin") as MarginContainer
+	var content: HBoxContainer = row.get_node("Margin/ContentRow") as HBoxContainer
+	var left_label: Label = row.get_node("Margin/ContentRow/LeftLabel") as Label
+	var right_label: Label = row.get_node("Margin/ContentRow/RightLabel") as Label
+	margin.add_theme_constant_override("margin_left", _ui_px(8))
+	margin.add_theme_constant_override("margin_top", _ui_px(6))
+	margin.add_theme_constant_override("margin_right", _ui_px(8))
+	margin.add_theme_constant_override("margin_bottom", _ui_px(6))
+	content.add_theme_constant_override("separation", _ui_px(10))
+	left_label.add_theme_font_size_override("font_size", _ui_px(18))
+	right_label.add_theme_font_size_override("font_size", _ui_px(17))
+
+
+func _apply_bar_row_scaling(row: HBoxContainer) -> void:
+	var label: Label = row.get_node("BarLabel") as Label
+	var value_label: Label = row.get_node("BarValue") as Label
+	row.add_theme_constant_override("separation", _ui_px(8))
+	label.custom_minimum_size = Vector2(_ui_px(70), 0)
+	value_label.custom_minimum_size = Vector2(_ui_px(90), 0)
+
+
+func _apply_party_row_scaling(row: PanelContainer) -> void:
+	var margin: MarginContainer = row.get_node("Margin") as MarginContainer
+	var content: HBoxContainer = row.get_node("Margin/ContentRow") as HBoxContainer
+	var portrait: TextureRect = row.get_node("Margin/ContentRow/Portrait") as TextureRect
+	var name_label: Label = row.get_node("Margin/ContentRow/NameLabel") as Label
+	var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
+	var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
+	var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
+	margin.add_theme_constant_override("margin_left", _ui_px(10))
+	margin.add_theme_constant_override("margin_top", _ui_px(8))
+	margin.add_theme_constant_override("margin_right", _ui_px(10))
+	margin.add_theme_constant_override("margin_bottom", _ui_px(8))
+	content.add_theme_constant_override("separation", _ui_px(12))
+	portrait.custom_minimum_size = Vector2(_ui_px(64), _ui_px(64))
+	name_label.custom_minimum_size = Vector2(_ui_px(160), 0)
+	level_label.custom_minimum_size = Vector2(_ui_px(70), 0)
+	hp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
+	sp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
+	_apply_bar_row_scaling(hp_row)
+	_apply_bar_row_scaling(sp_row)
+
+
+func _apply_actor_header_scaling(header: HBoxContainer) -> void:
+	var portrait: TextureRect = header.get_node("Portrait") as TextureRect
+	var info_box: VBoxContainer = header.get_node("InfoVBox") as VBoxContainer
+	var name_label: Label = header.get_node("InfoVBox/NameLabel") as Label
+	var hp_row: HBoxContainer = header.get_node("InfoVBox/HPRow") as HBoxContainer
+	var sp_row: HBoxContainer = header.get_node("InfoVBox/SPRow") as HBoxContainer
+	header.add_theme_constant_override("separation", _ui_px(12))
+	portrait.custom_minimum_size = Vector2(_ui_px(128), _ui_px(128))
+	info_box.add_theme_constant_override("separation", _ui_px(6))
+	name_label.add_theme_font_size_override("font_size", _ui_px(22))
+	_apply_bar_row_scaling(hp_row)
+	_apply_bar_row_scaling(sp_row)
+
+
+func _populate_bar_row(row: HBoxContainer, label_text: String, value: int, max_value: int) -> void:
+	var label: Label = row.get_node("BarLabel") as Label
+	var progress_bar: ProgressBar = row.get_node("BarProgress") as ProgressBar
+	var value_label: Label = row.get_node("BarValue") as Label
+	var safe_max: int = maxi(max_value, 1)
+	label.text = label_text
+	progress_bar.visible = true
+	progress_bar.max_value = safe_max
+	progress_bar.value = clampi(value, 0, safe_max)
+	value_label.text = "%d/%d" % [value, max_value]
 
 
 func _is_accept(event: InputEvent) -> bool:

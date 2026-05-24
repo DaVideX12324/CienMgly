@@ -41,6 +41,7 @@ theme_override_constants/separation = 20
 [node name="LeftPanel" type="PanelContainer" parent="PauseRoot/MainRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel"]
 layout_mode = 2
@@ -70,6 +71,7 @@ text = ""
 [node name="RightPanel" type="PanelContainer" parent="PauseRoot/MainRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_stretch_ratio = 7.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel"]
 layout_mode = 2
@@ -242,3 +244,235 @@ text = "Zakonczyc gre?"
 [node name="OptionsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
+
+[node name="Templates" type="Control" parent="PauseRoot"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SimpleRowTemplate" type="PanelContainer" parent="PauseRoot/Templates"]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 0
+offset_right = 520.0
+offset_bottom = 38.0
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/Templates/SimpleRowTemplate"]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+grow_horizontal = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/Templates/SimpleRowTemplate"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="PauseRoot/Templates/SimpleRowTemplate/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="PauseRoot/Templates/SimpleRowTemplate/Margin/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Lewy tekst"
+
+[node name="RightLabel" type="Label" parent="PauseRoot/Templates/SimpleRowTemplate/Margin/ContentRow"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "Prawy tekst"
+
+[node name="BarRowTemplate" type="HBoxContainer" parent="PauseRoot/Templates"]
+visible = false
+layout_mode = 0
+offset_right = 420.0
+offset_bottom = 26.0
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PauseRoot/Templates/BarRowTemplate"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "BAR"
+
+[node name="BarProgress" type="ProgressBar" parent="PauseRoot/Templates/BarRowTemplate"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="PauseRoot/Templates/BarRowTemplate"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
+
+[node name="PartyRowTemplate" type="PanelContainer" parent="PauseRoot/Templates"]
+visible = false
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 0
+offset_right = 980.0
+offset_bottom = 88.0
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/Templates/PartyRowTemplate"]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+grow_horizontal = 2
+color = Color(1, 1, 1, 1)
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/Templates/PartyRowTemplate"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="ContentRow" type="HBoxContainer" parent="PauseRoot/Templates/PartyRowTemplate/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Portrait" type="TextureRect" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "Bohater"
+
+[node name="LevelLabel" type="Label" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "LV 1"
+
+[node name="HPRow" type="HBoxContainer" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow/HPRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "ZYCIE"
+
+[node name="BarProgress" type="ProgressBar" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow/HPRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow/HPRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
+
+[node name="SPRow" type="HBoxContainer" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow/SPRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "MANA"
+
+[node name="BarProgress" type="ProgressBar" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow/SPRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="PauseRoot/Templates/PartyRowTemplate/Margin/ContentRow/SPRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
+
+[node name="ActorHeaderTemplate" type="HBoxContainer" parent="PauseRoot/Templates"]
+visible = false
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 150.0
+theme_override_constants/separation = 12
+
+[node name="Portrait" type="TextureRect" parent="PauseRoot/Templates/ActorHeaderTemplate"]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="InfoVBox" type="VBoxContainer" parent="PauseRoot/Templates/ActorHeaderTemplate"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox"]
+layout_mode = 2
+text = "Bohater LV 1"
+
+[node name="HPRow" type="HBoxContainer" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox/HPRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Zycie"
+
+[node name="BarProgress" type="ProgressBar" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox/HPRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox/HPRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
+
+[node name="SPRow" type="HBoxContainer" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox/SPRow"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Mana"
+
+[node name="BarProgress" type="ProgressBar" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox/SPRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="PauseRoot/Templates/ActorHeaderTemplate/InfoVBox/SPRow"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
