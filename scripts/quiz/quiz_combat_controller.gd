@@ -136,7 +136,7 @@ func setup(
 	enemy_max_hp = p_enemy.max_hp
 	enemy_name_str = p_enemy.enemy_name
 	enemy_base_damage = p_enemy.damage_on_wrong
-	player_base_damage = 20
+	player_base_damage = _get_player_attack_power()
 	_roll_enemy_party()
 	if is_node_ready():
 		_setup_enemy_display()
@@ -284,6 +284,7 @@ func _start_player_turn() -> void:
 	_set_quiz_layout_active(false)
 	phase = Phase.ACTION_SELECT
 	turn_label.text = "Tura %d - Twoj ruch" % turn_number
+	player_base_damage = _get_player_attack_power()
 	if _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	action_panel.visible = true
@@ -987,6 +988,7 @@ func _enemy_turn() -> void:
 		_refresh_enemy_header()
 		await get_tree().create_timer(0.5).timeout
 		var raw_damage := int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8
+		var enemy_tier: int = int(enemy_unit.get("tier", _get_encounter_tier()))
 		var actual_damage: int
 		if defending and quiz_correct:
 			actual_damage = 0
@@ -995,24 +997,36 @@ func _enemy_turn() -> void:
 			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
 		elif defending and not quiz_correct:
-			actual_damage = int(raw_damage * 0.5)
+			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier, 0.5)
 			if _ps:
 				_ps.take_damage(actual_damage)
 			_gain_party_tp(0, actual_damage)
-			result_label.text = "%s zadaje %d HP" % [enemy_label, actual_damage]
-			result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
-			_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
+			if actual_damage <= 0:
+				result_label.text = "%s odbija sie od obrony!" % enemy_label
+				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
+			else:
+				result_label.text = "%s zadaje %d HP" % [enemy_label, actual_damage]
+				result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
+				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
 		else:
-			actual_damage = raw_damage
+			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier)
 			if _ps:
 				_ps.take_damage(actual_damage)
 			_gain_party_tp(0, actual_damage)
-			result_label.text = "%s atakuje! -%d HP" % [enemy_label, actual_damage]
-			result_label.add_theme_color_override("font_color", Color.RED)
-			_flash_sprite(player_sprite_node, Color.RED)
-			HitParticles.create_at(player, player.global_position, Color.RED, 6)
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
+			if actual_damage <= 0:
+				result_label.text = "%s nie przebija pancerza!" % enemy_label
+				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
+			else:
+				result_label.text = "%s atakuje! -%d HP" % [enemy_label, actual_damage]
+				result_label.add_theme_color_override("font_color", Color.RED)
+				_flash_sprite(player_sprite_node, Color.RED)
+				HitParticles.create_at(player, player.global_position, Color.RED, 6)
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
 		_update_hp_bars()
 		_refresh_stats_panel()
 		await get_tree().create_timer(1.0).timeout
@@ -1499,6 +1513,7 @@ func _roll_enemy_party() -> void:
 			"hp": unit_hp,
 			"max_hp": unit_hp,
 			"damage": unit_damage,
+			"tier": _get_encounter_tier(),
 		})
 	_active_enemy_index = 0
 	_bonus_xp_reward = maxi(0, encounter_count - 1) * enemy.xp_reward
@@ -1515,6 +1530,24 @@ func _refresh_enemy_cache() -> void:
 	if battle_background and battle_background.has_method("refresh_units"):
 		battle_background.call("refresh_units", _enemy_units)
 	_sync_enemy_displays()
+
+
+func _get_player_attack_power() -> int:
+	if _ps and _ps.has_method("get_member_total_atk"):
+		return maxi(int(_ps.get_member_total_atk(0)), 1)
+	return player_base_damage
+
+
+func _calculate_player_damage_taken(raw_damage: int, enemy_tier: int, defending_multiplier: float = 1.0) -> int:
+	if _ps and _ps.has_method("calculate_incoming_damage"):
+		return int(_ps.calculate_incoming_damage(raw_damage, enemy_tier, defending_multiplier, 0))
+	return maxi(0, int(round(float(raw_damage) * maxf(defending_multiplier, 0.0))))
+
+
+func _get_encounter_tier() -> int:
+	if enemy != null and bool(enemy.get("is_boss")):
+		return clampi(_diff_range.y, 1, 5)
+	return clampi(int(round(float(_diff_range.x + _diff_range.y) * 0.5)), 1, 5)
 
 
 func _find_next_alive_enemy_index(start_index: int = 0) -> int:

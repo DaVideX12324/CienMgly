@@ -14,6 +14,8 @@ signal party_changed()
 
 const BASE_HP          := 100
 const HP_PER_LEVEL     := 20
+const ATK_PER_LEVEL    := 1
+const DEF_PER_LEVEL    := 1
 const BASE_XP_TO_LEVEL := 100
 const XP_GROWTH        := 1.5
 const EQUIPMENT_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
@@ -355,7 +357,7 @@ func get_member_total_atk(member_index: int) -> int:
 	if member_index < 0 or member_index >= party.size():
 		return 0
 	var member: Dictionary = party[member_index]
-	var total_atk: int = int(member.get("base_atk", 0))
+	var total_atk: int = int(member.get("base_atk", 0)) + _get_member_level_bonus(member, ATK_PER_LEVEL)
 	for slot_name: String in EQUIPMENT_SLOTS:
 		total_atk += int(_get_equipped_stat_bonus(member, slot_name, "atk_bonus"))
 	return total_atk
@@ -365,10 +367,21 @@ func get_member_total_def(member_index: int) -> int:
 	if member_index < 0 or member_index >= party.size():
 		return 0
 	var member: Dictionary = party[member_index]
-	var total_def: int = int(member.get("base_def", 0))
+	var total_def: int = int(member.get("base_def", 0)) + _get_member_level_bonus(member, DEF_PER_LEVEL)
 	for slot_name: String in EQUIPMENT_SLOTS:
 		total_def += int(_get_equipped_stat_bonus(member, slot_name, "def_bonus"))
 	return total_def
+
+
+func calculate_incoming_damage(raw_damage: int, enemy_tier: int = 1, defending_multiplier: float = 1.0, member_index: int = 0) -> int:
+	var clamped_tier: int = clampi(enemy_tier, 1, 5)
+	var defense: int = get_member_total_def(member_index)
+	var scaled_raw: int = raw_damage + int(round(float(clamped_tier) * 4.0))
+	var mitigation: float = (float(defense) * 0.55) / float(clamped_tier)
+	var damage_after_armor: int = int(round(float(scaled_raw) - mitigation))
+	var final_damage: int = int(floor(float(damage_after_armor) * maxf(defending_multiplier, 0.0)))
+	var minimum_damage: int = 0 if clamped_tier <= 2 else 1
+	return maxi(minimum_damage, final_damage)
 
 
 func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Array[Dictionary]:
@@ -537,6 +550,10 @@ func _build_default_party_member() -> Dictionary:
 			"accessory": "",
 		},
 	}
+
+
+func _get_member_level_bonus(member: Dictionary, per_level: int) -> int:
+	return maxi(int(member.get("level", 1)) - 1, 0) * per_level
 
 
 func _get_equipped_stat_bonus(member: Dictionary, slot_name: String, stat_name: String) -> int:
