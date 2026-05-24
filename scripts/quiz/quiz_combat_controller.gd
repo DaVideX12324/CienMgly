@@ -111,6 +111,7 @@ var _pending_skill_data: Dictionary = {}
 var _target_entries: Array[Dictionary] = []
 var _target_rows: Array[PanelContainer] = []
 var _target_selected_idx: int = 0
+var _hovered_enemy_slot_index: int = -1
 var _ps: Node
 var _dm: Node
 var _gm: Node
@@ -204,6 +205,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if phase == Phase.TARGET_SELECT:
+		if event is InputEventMouseButton:
+			var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+			if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+				if _hovered_enemy_slot_index >= 0:
+					var hovered_target_index: int = _find_target_row_index_for_enemy(_hovered_enemy_slot_index)
+					if hovered_target_index >= 0:
+						_target_selected_idx = hovered_target_index
+						_refresh_target_selection()
+						_confirm_target_selection()
+						get_viewport().set_input_as_handled()
+						return
 		if _is_menu_down(event):
 			_navigate_target_list(1)
 			get_viewport().set_input_as_handled()
@@ -324,6 +336,7 @@ func _close_list_menu() -> void:
 
 func _open_target_menu() -> void:
 	phase = Phase.TARGET_SELECT
+	_hovered_enemy_slot_index = -1
 	_target_entries.clear()
 	_target_rows.clear()
 	for child in target_list_vbox.get_children():
@@ -397,6 +410,7 @@ func _show_target_panel() -> void:
 
 func _hide_target_panel() -> void:
 	target_panel.visible = false
+	_hovered_enemy_slot_index = -1
 	for child in target_list_vbox.get_children():
 		child.queue_free()
 	_target_entries.clear()
@@ -1313,6 +1327,7 @@ func _on_enemy_slot_hover(slot_index: int) -> void:
 		return
 	if slot_index < 0 or slot_index >= _enemy_units.size():
 		return
+	_hovered_enemy_slot_index = slot_index
 	var target_index: int = _find_target_row_index_for_enemy(slot_index)
 	if target_index < 0:
 		return
