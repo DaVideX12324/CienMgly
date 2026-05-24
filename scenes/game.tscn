@@ -1,18 +1,19 @@
 [gd_scene format=3 uid="uid://d2m7bsefo8m87"]
 
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/maps/level_manager.tscn" id="1_level_manager"]
+[ext_resource type="PackedScene" uid="uid://dubf5ipl4hps0" path="res://modules/quiz_rpg/scenes/maps/level_manager.tscn" id="1_level_manager"]
 [ext_resource type="PackedScene" uid="uid://player001" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://modules/quiz_rpg/scenes/ui/hud.tscn" id="3_hud"]
 [ext_resource type="PackedScene" uid="uid://pause001" path="res://modules/quiz_rpg/scenes/ui/pause_menu.tscn" id="4_pause"]
 
-[node name="Game" type="Node2D"]
+[node name="Game" type="Node2D" unique_id=1181518199]
+y_sort_enabled = true
 
-[node name="level_manager" parent="." instance=ExtResource("1_level_manager")]
+[node name="level_manager" parent="." unique_id=1528051144 instance=ExtResource("1_level_manager")]
 
-[node name="PartyFollowers" type="Node2D" parent="."]
+[node name="PartyFollowers" type="Node2D" parent="." unique_id=1794385668]
 
-[node name="Player" parent="." instance=ExtResource("2_player")]
+[node name="Player" parent="." unique_id=444877758 instance=ExtResource("2_player")]
 
-[node name="HUD" parent="." instance=ExtResource("3_hud")]
+[node name="HUD" parent="." unique_id=283570389 instance=ExtResource("3_hud")]
 
-[node name="PauseMenu" parent="." instance=ExtResource("4_pause")]
+[node name="PauseMenu" parent="." unique_id=1140821032 instance=ExtResource("4_pause")]

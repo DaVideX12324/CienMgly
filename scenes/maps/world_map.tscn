@@ -11,6 +11,11 @@
 script = ExtResource("9_map")
 zoom_percent = 300.0
 
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="Spawn" type="Marker2D" parent="Spawns"]
+position = Vector2(0, 80)
+
 [node name="Enemies" type="Node2D" parent="." unique_id=113386221]
 
 [node name="Enemy1" parent="Enemies" unique_id=2051335577 instance=ExtResource("2_enemy_guardian")]

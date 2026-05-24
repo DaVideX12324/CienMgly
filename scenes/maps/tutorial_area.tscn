@@ -3,6 +3,7 @@
 [ext_resource type="TileSet" uid="uid://dis32q3fbs00h" path="res://modules/quiz_rpg/assets/textures/tilesets/tutorial_area.tres" id="2_bmcky"]
 [ext_resource type="PackedScene" uid="uid://ch5sbpevr0xqk" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_horizontal.tscn" id="4_1gyrv"]
 [ext_resource type="PackedScene" uid="uid://c8m5o1lxci0um" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_vertical_short.tscn" id="5_5qsod"]
+[ext_resource type="Script" uid="uid://d3wum0v53cis4" path="res://modules/quiz_rpg/scripts/maps/tutorial_area.gd" id="6_bmcky"]
 [ext_resource type="PackedScene" uid="uid://jppou3a7nbbw" path="res://modules/quiz_rpg/scenes/objects/barrel.tscn" id="12_1duei"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_mkloh"]
@@ -11,8 +12,12 @@ polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3, 4), PackedInt32
 outlines = Array[PackedVector2Array]([PackedVector2Array(-96, -96, -96, 57, 144, 57, 144, 9, 320, 9, 320, -38, 400, -38, 400, 57, 656, 57, 656, -40, 672, -40, 672, 80, 384, 80, 384, -16, 336, -16, 336, 31, 160, 32, 160, 64, 320, 64, 320, 144, 752, 145, 752, -144, 672, -144, 672, -80, 656, -80, 656, -144, 400, -144, 400, -64, 320, -64, 320, -96, 208, -96, 208, -135, 303, -135, 303, -192, 144, -192, 144, -136, 176, -136, 176, -96), PackedVector2Array(-95, -304, 304, -304, 304, -225, 129, -224, 127, -129, -96, -128)])
 agent_radius = 0.0
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ebprv"]
+size = Vector2(78, 20)
+
 [node name="TutorialArea" type="Node2D" unique_id=1584989756]
 y_sort_enabled = true
+script = ExtResource("6_bmcky")
 
 [node name="Floor" type="TileMapLayer" parent="." unique_id=819309960 groups=["tilemap"]]
 z_index = -2
@@ -103,3 +108,9 @@ position = Vector2(85, 37)
 
 [node name="barrel17" parent="Destructibles" unique_id=273529423 instance=ExtResource("12_1duei")]
 position = Vector2(116, 27)
+
+[node name="enter_next_level" type="Area2D" parent="." unique_id=673098543]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="enter_next_level" unique_id=1870227324]
+position = Vector2(920, -319)
+shape = SubResource("RectangleShape2D_ebprv")

@@ -56,6 +56,8 @@ func search_barrel(drop_chance: float = -1.0) -> Dictionary:
 
 
 func show_loot_popup(result: Dictionary) -> void:
+	if not bool(result.get("found", false)):
+		return
 	_ensure_popup()
 	_popup_title.text = str(result.get("title", "Loot"))
 	_popup_message.text = str(result.get("message", ""))

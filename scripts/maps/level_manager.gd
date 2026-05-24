@@ -17,13 +17,13 @@ func _ready() -> void:
 		var pending: Dictionary = save_manager.call("consume_pending_level_load")
 		var pending_level := str(pending.get("level_path", INITIAL_LEVEL_PATH))
 		var pending_spawn := str(pending.get("spawn_name", DEFAULT_SPAWN_NAME))
-		load_level_direct(pending_level, pending_spawn)
+		await load_level_direct(pending_level, pending_spawn)
 		return
-	load_level_direct(INITIAL_LEVEL_PATH, DEFAULT_SPAWN_NAME)
+	await load_level_direct(INITIAL_LEVEL_PATH, DEFAULT_SPAWN_NAME)
 
 
 func change_level(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -> void:
-	load_level_direct(level_path, spawn_name)
+	await load_level_direct(level_path, spawn_name)
 
 
 func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -> void:

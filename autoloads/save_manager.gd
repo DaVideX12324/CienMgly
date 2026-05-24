@@ -64,16 +64,14 @@ func load_game(slot_index: int = -1) -> bool:
 	current_save_slot = slot_index
 	_restore_global_state(slot_data)
 	_has_pending_level_load = true
-	_pending_level_path = str(slot_data.get("current_level", slot_data.get("level_path", INITIAL_LEVEL_PATH)))
+	_pending_level_path = _resolve_level_path_from_save(slot_data)
 	_pending_spawn_name = str(slot_data.get("spawn_point", "Spawn"))
 
 	var gm := _get_game_manager()
 	if gm:
 		gm.set("total_play_time_seconds", float(slot_data.get("play_time_seconds", 0)))
-		var scene_path: String = _normalize_scene_path(str(slot_data.get("current_scene", slot_data.get("current_map", GAME_SCENE_PATH))))
-		if scene_path != "":
-			gm.call("change_state", 1)
-			gm.call("transition_to_scene", scene_path)
+		gm.call("change_state", 1)
+		gm.call("transition_to_scene", GAME_SCENE_PATH)
 
 	load_completed.emit(slot_index)
 	is_loading = false
@@ -219,6 +217,9 @@ func _build_save_data(slot_index: int) -> Dictionary:
 		spawn_point = str(level_manager.get("current_spawn_name"))
 		if spawn_point == "":
 			spawn_point = "Spawn"
+	elif current_scene.begins_with("res://modules/quiz_rpg/scenes/maps/"):
+		current_level = _normalize_level_path(current_scene)
+		current_scene = GAME_SCENE_PATH
 
 	return {
 		"version": SAVE_VERSION,
@@ -328,7 +329,7 @@ func _build_slot_summary(slot_index: int, slot_data: Dictionary) -> Dictionary:
 
 
 func _format_map_name(scene_path: String) -> String:
-	scene_path = _normalize_scene_path(scene_path)
+	scene_path = _normalize_level_path(scene_path)
 	if scene_path == "":
 		return "Nieznana lokacja"
 	if scene_path == GAME_SCENE_PATH or scene_path == LEGACY_WORLD_MAP_SCENE_PATH:
@@ -427,3 +428,20 @@ func _normalize_scene_path(scene_path: String) -> String:
 	if scene_path == LEGACY_WORLD_MAP_SCENE_PATH:
 		return GAME_SCENE_PATH
 	return scene_path
+
+
+func _normalize_level_path(level_path: String) -> String:
+	if level_path == "" or level_path == GAME_SCENE_PATH:
+		return INITIAL_LEVEL_PATH
+	return level_path
+
+
+func _resolve_level_path_from_save(slot_data: Dictionary) -> String:
+	var level_path := str(slot_data.get("current_level", ""))
+	if level_path == "":
+		level_path = str(slot_data.get("level_path", ""))
+	if level_path == "":
+		level_path = str(slot_data.get("current_map", ""))
+	if level_path == "":
+		level_path = str(slot_data.get("current_scene", ""))
+	return _normalize_level_path(level_path)
