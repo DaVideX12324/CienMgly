@@ -182,6 +182,11 @@ func _process(delta: float) -> void:
 		_quiz_panel_controller.tick(delta)
 
 
+func _input(event: InputEvent) -> void:
+	if _handle_hovered_enemy_click(event):
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if phase == Phase.COMBAT_END and event.is_action_pressed("ui_accept"):
 		_victory_skip = true
@@ -205,17 +210,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if phase == Phase.TARGET_SELECT:
-		if event is InputEventMouseButton:
-			var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-			if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
-				if _hovered_enemy_slot_index >= 0:
-					var hovered_target_index: int = _find_target_row_index_for_enemy(_hovered_enemy_slot_index)
-					if hovered_target_index >= 0:
-						_target_selected_idx = hovered_target_index
-						_refresh_target_selection()
-						_confirm_target_selection()
-						get_viewport().set_input_as_handled()
-						return
 		if _is_menu_down(event):
 			_navigate_target_list(1)
 			get_viewport().set_input_as_handled()
@@ -259,6 +253,25 @@ func _unhandled_input(event: InputEvent) -> void:
 	if phase == Phase.QUIZ and _quiz_panel_controller and _quiz_panel_controller.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
+
+
+func _handle_hovered_enemy_click(event: InputEvent) -> bool:
+	if phase != Phase.TARGET_SELECT:
+		return false
+	if not (event is InputEventMouseButton):
+		return false
+	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
+		return false
+	if _hovered_enemy_slot_index < 0:
+		return false
+	var hovered_target_index: int = _find_target_row_index_for_enemy(_hovered_enemy_slot_index)
+	if hovered_target_index < 0:
+		return false
+	_target_selected_idx = hovered_target_index
+	_refresh_target_selection()
+	_confirm_target_selection()
+	return true
 
 
 func _start_player_turn() -> void:

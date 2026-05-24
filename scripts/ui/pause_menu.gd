@@ -468,11 +468,10 @@ func _show_equipment_panel() -> void:
 	equipment_stats_label.text = "ATK %d   DEF %d" % [_ps.get_member_total_atk(_selected_member_index), _ps.get_member_total_def(_selected_member_index)]
 	_rebuild_equip_action_rows()
 	_rebuild_equipment_slots()
+	_rebuild_equipment_item_rows()
 	if _mode == "equip_item_list":
-		_rebuild_equipment_item_rows()
+		equipment_footer_label.text = str(_current_equip_entries[_equip_item_index].get("description", "")) if _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size() else ""
 	else:
-		_hide_rows(_equip_item_rows)
-		_current_equip_entries.clear()
 		equipment_footer_label.text = "Enter/Z: wybierz    X/Esc: wroc"
 
 
@@ -656,21 +655,38 @@ func _refresh_equipment_slot_rows() -> void:
 
 func _rebuild_equipment_item_rows() -> void:
 	_current_equip_entries.clear()
-	_current_equip_entries = _ps.get_equippable_entries_for_slot(_selected_member_index, _selected_slot_name) if _ps and _ps.has_method("get_equippable_entries_for_slot") else []
+	var slot_name: String = _get_equipment_preview_slot_name()
+	if _ps and _ps.has_method("get_equippable_entries_for_slot") and slot_name != "":
+		_current_equip_entries = _ps.get_equippable_entries_for_slot(_selected_member_index, slot_name)
+	var items_selectable: bool = _mode == "equip_item_list"
 	for index: int in range(_equip_item_rows.size()):
 		var row: Control = _equip_item_rows[index]
 		var has_entry: bool = index < _current_equip_entries.size()
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = _current_equip_entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry))
+			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry), not items_selectable)
 	_refresh_equipment_item_rows()
 
 
 func _refresh_equipment_item_rows() -> void:
-	_set_row_selection(_equip_item_rows, _equip_item_index)
-	if _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size():
+	var selected_index: int = _equip_item_index if _mode == "equip_item_list" else -1
+	_set_row_selection(_equip_item_rows, selected_index)
+	if _mode == "equip_item_list" and _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size():
 		equipment_footer_label.text = str(_current_equip_entries[_equip_item_index].get("description", ""))
+
+
+func _get_equipment_preview_slot_name() -> String:
+	if _mode == "equip_item_list" and _selected_slot_name != "":
+		return _selected_slot_name
+	var slots: Array = _ps.get_equipment_slots() if _ps and _ps.has_method("get_equipment_slots") else []
+	if _mode == "equip_slots" and _equip_slot_index >= 0 and _equip_slot_index < slots.size():
+		return str(slots[_equip_slot_index])
+	if _selected_slot_name != "":
+		return _selected_slot_name
+	if not slots.is_empty():
+		return str(slots[0])
+	return ""
 
 
 func _rebuild_status_panel(member: Dictionary) -> void:
@@ -812,7 +828,7 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 		var row: Control = rows[index]
 		if not row.visible:
 			continue
-		var underline: CanvasItem = _get_row_selection_underline(row)
+		var underline: CanvasItem = _ensure_row_selection_underline(row)
 		var labels: Array = row.find_children("*", "Label", true, false)
 		var is_selected: bool = index == selected_index
 		var target_modulate: Color = Color.WHITE if is_selected else Color(0.65, 0.65, 0.7)
@@ -1009,7 +1025,7 @@ func _apply_row_scaling(rows: Array[Control]) -> void:
 		var content: HBoxContainer = row.get_node_or_null("Margin/ContentRow") as HBoxContainer
 		var left_label: Label = row.get_node_or_null("Margin/ContentRow/LeftLabel") as Label
 		var right_label: Label = row.get_node_or_null("Margin/ContentRow/RightLabel") as Label
-		var underline: ColorRect = _get_row_selection_underline(row) as ColorRect
+		var underline: ColorRect = _ensure_row_selection_underline(row)
 		if margin:
 			margin.add_theme_constant_override("margin_left", _ui_px(8))
 			margin.add_theme_constant_override("margin_top", _ui_px(6))
@@ -1034,7 +1050,7 @@ func _apply_party_rows_scaling(rows: Array[Control]) -> void:
 		var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
 		var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
 		var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
-		var underline: ColorRect = _get_row_selection_underline(row) as ColorRect
+		var underline: ColorRect = _ensure_row_selection_underline(row)
 		margin.add_theme_constant_override("margin_left", _ui_px(10))
 		margin.add_theme_constant_override("margin_top", _ui_px(8))
 		margin.add_theme_constant_override("margin_right", _ui_px(10))
@@ -1090,6 +1106,36 @@ func _configure_selection_underline(underline: ColorRect, row: Control) -> void:
 	underline.offset_right = float(-side_margin)
 	underline.offset_bottom = 0.0
 	underline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+
+func _ensure_row_selection_underline(row: Control) -> ColorRect:
+	var underline: ColorRect = _get_row_selection_underline(row) as ColorRect
+	if underline:
+		return underline
+	var underline_host: Control = row.get_node_or_null("Control") as Control
+	if underline_host == null:
+		underline_host = Control.new()
+		underline_host.name = "SelectionOverlay"
+		underline_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		underline_host.anchor_left = 0.0
+		underline_host.anchor_top = 0.0
+		underline_host.anchor_right = 1.0
+		underline_host.anchor_bottom = 1.0
+		underline_host.offset_left = 0.0
+		underline_host.offset_top = 0.0
+		underline_host.offset_right = 0.0
+		underline_host.offset_bottom = 0.0
+		row.add_child(underline_host)
+		row.move_child(underline_host, 0)
+		if row.owner:
+			underline_host.owner = row.owner
+	underline = ColorRect.new()
+	underline.name = "SelectionUnderline"
+	underline.visible = false
+	underline_host.add_child(underline)
+	if row.owner:
+		underline.owner = row.owner
+	return underline
 
 
 func _get_row_selection_underline(row: Control) -> CanvasItem:
