@@ -1,26 +1,84 @@
 [gd_scene format=3 uid="uid://player001"]
 
 [ext_resource type="Script" uid="uid://d382dc0bji8wj" path="res://modules/quiz_rpg/scripts/player/player.gd" id="1_player"]
+[ext_resource type="Texture2D" uid="uid://c0py8xjol7ay3" path="res://modules/quiz_rpg/assets/textures/atlases/Soldier/Soldier-Idle.png" id="2_72pln"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_r0dpv"]
+atlas = ExtResource("2_72pln")
+region = Rect2(0, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_urt8w"]
+atlas = ExtResource("2_72pln")
+region = Rect2(100, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_evvbw"]
+atlas = ExtResource("2_72pln")
+region = Rect2(200, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mudui"]
+atlas = ExtResource("2_72pln")
+region = Rect2(300, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gu1ub"]
+atlas = ExtResource("2_72pln")
+region = Rect2(400, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ya8hb"]
+atlas = ExtResource("2_72pln")
+region = Rect2(500, 0, 100, 100)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_juece"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_r0dpv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_urt8w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_evvbw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mudui")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gu1ub")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ya8hb")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(14, 8)
+size = Vector2(7, 6)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_interact"]
-radius = 30.0
+radius = 19.0
 
 [node name="Player" type="CharacterBody2D" unique_id=921874676 groups=["player"]]
+y_sort_enabled = true
 collision_mask = 6
 motion_mode = 1
 script = ExtResource("1_player")
+speed = 100.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1377984551]
-position = Vector2(0, -8)
+y_sort_enabled = true
+sprite_frames = SubResource("SpriteFrames_juece")
+animation = &"idle"
+frame_progress = 0.33123437
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=2099671777]
+zoom = Vector2(4, 4)
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=501759005]
+position = Vector2(0.5, 4)
 shape = SubResource("RectangleShape2D_player")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=965442546]

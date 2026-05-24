@@ -79,7 +79,7 @@ func _interact() -> void:
 	if remove_after_interaction:
 		_play_death_and_free()
 
-	if loot_manager and loot_manager.has_method("show_loot_popup"):
+	if bool(loot_result.get("found", false)) and loot_manager and loot_manager.has_method("show_loot_popup"):
 		loot_manager.call("show_loot_popup", loot_result)
 
 
