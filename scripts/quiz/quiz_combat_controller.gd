@@ -103,7 +103,7 @@ var _action_menu_open := false
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
 var _list_menu_entries: Array[Dictionary] = []
-var _list_menu_rows: Array[HBoxContainer] = []
+var _list_menu_rows: Array[Control] = []
 var _list_selected_idx: int = 0
 var _selected_skill_data: Dictionary = {}
 var _selected_item_data: Dictionary = {}
@@ -598,7 +598,7 @@ func _navigate_list(delta: int) -> void:
 func _confirm_list_selection() -> void:
 	if _list_selected_idx < 0 or _list_selected_idx >= _list_menu_entries.size():
 		return
-	var row: HBoxContainer = _list_menu_rows[_list_selected_idx]
+	var row: Control = _list_menu_rows[_list_selected_idx]
 	if row.get_meta("disabled", false):
 		return
 	var entry: Dictionary = _list_menu_entries[_list_selected_idx]
@@ -613,15 +613,27 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 		child.queue_free()
 	_list_menu_rows.clear()
 	for entry in entries:
-		var row: HBoxContainer = HBoxContainer.new()
+		var row: PanelContainer = PanelContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		row.add_theme_constant_override("separation", 12)
+		row.custom_minimum_size = Vector2(0.0, _ui_scale_px(38))
+		var margin: MarginContainer = MarginContainer.new()
+		margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		margin.add_theme_constant_override("margin_left", _ui_scale_px(8))
+		margin.add_theme_constant_override("margin_top", _ui_scale_px(6))
+		margin.add_theme_constant_override("margin_right", _ui_scale_px(8))
+		margin.add_theme_constant_override("margin_bottom", _ui_scale_px(6))
+		var content: HBoxContainer = HBoxContainer.new()
+		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		content.add_theme_constant_override("separation", _ui_scale_px(12))
 		var name_label: Label = Label.new()
+		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.text = str(entry.get("name", "---"))
 		name_label.add_theme_font_size_override("font_size", _ui_scale_px(18))
 		var value_label: Label = Label.new()
+		value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		value_label.add_theme_font_size_override("font_size", _ui_scale_px(16))
 		var disabled: bool = false
@@ -644,8 +656,10 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 			name_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
 			value_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
 		row.set_meta("disabled", disabled)
-		row.add_child(name_label)
-		row.add_child(value_label)
+		content.add_child(name_label)
+		content.add_child(value_label)
+		margin.add_child(content)
+		row.add_child(margin)
 		row.gui_input.connect(func(event: InputEvent, idx := _list_menu_rows.size()): _on_list_row_gui_input(event, idx))
 		row.mouse_entered.connect(func(idx := _list_menu_rows.size()): _on_list_row_hover(idx))
 		list_box.add_child(row)
@@ -682,12 +696,24 @@ func _refresh_list_selection() -> void:
 	active_style.bg_color = Color(0, 0, 0, 0)
 	active_style.border_width_bottom = 2
 	active_style.border_color = UI_ACCENT
+	var selected_color: Color = UI_TEXT_PRIMARY
+	var idle_color: Color = Color(0.7, 0.7, 0.76)
+	var disabled_color: Color = Color(0.55, 0.55, 0.6)
 	for i in range(_list_menu_rows.size()):
-		var row: HBoxContainer = _list_menu_rows[i]
+		var row: Control = _list_menu_rows[i]
+		var is_selected: bool = i == _list_selected_idx
+		var target_color: Color = selected_color if is_selected else idle_color
+		if bool(row.get_meta("disabled", false)):
+			target_color = disabled_color
 		if i == _list_selected_idx:
 			row.add_theme_stylebox_override("panel", active_style)
 		else:
 			row.remove_theme_stylebox_override("panel")
+		var labels: Array = row.find_children("*", "Label", true, false)
+		for label_value: Variant in labels:
+			var label: Label = label_value as Label
+			if label:
+				label.self_modulate = target_color
 	_update_list_description()
 
 
