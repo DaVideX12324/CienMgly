@@ -1198,7 +1198,7 @@ func _setup_enemy_display() -> void:
 	_enemy_displays.clear()
 	for i in range(units.size()):
 		var source_enemy: Node2D = enemy
-		var display: EnemyBattleDisplay = _create_enemy_display_clone(source_enemy)
+		var display: Node2D = _create_enemy_display_clone(source_enemy)
 		var unit_data: Dictionary = units[i]
 		display.sync_hp(int(unit_data.get("hp", source_enemy.hp)))
 		display.max_hp = int(unit_data.get("max_hp", source_enemy.max_hp))
@@ -1217,8 +1217,8 @@ func _setup_enemy_display() -> void:
 	_sync_enemy_displays()
 
 
-func _create_enemy_display_clone(source: EnemyBase) -> EnemyBattleDisplay:
-	var display: EnemyBattleDisplay = EnemyBattleDisplayScript.new() as EnemyBattleDisplay
+func _create_enemy_display_clone(source: Node2D) -> Node2D:
+	var display: Node2D = EnemyBattleDisplayScript.new() as Node2D
 	display.body_color = source.body_color
 	display.shape_type = int(source.shape_type)
 	display.hp = source.hp
@@ -1259,7 +1259,7 @@ func _sync_enemy_display_hit(enemy_index: int) -> void:
 	_sync_enemy_displays()
 	if enemy_index < 0 or enemy_index >= _enemy_displays.size():
 		return
-	var display: EnemyBattleDisplay = _enemy_displays[enemy_index] as EnemyBattleDisplay
+	var display: Node2D = _enemy_displays[enemy_index] as Node2D
 	if display == null:
 		return
 	display.flash_damage()
@@ -1268,7 +1268,7 @@ func _sync_enemy_display_hit(enemy_index: int) -> void:
 func _dodge_enemy_display(enemy_index: int) -> void:
 	if enemy_index < 0 or enemy_index >= _enemy_displays.size():
 		return
-	var display: EnemyBattleDisplay = _enemy_displays[enemy_index] as EnemyBattleDisplay
+	var display: Node2D = _enemy_displays[enemy_index] as Node2D
 	if display == null:
 		return
 	var original_position: Vector2 = display.position
@@ -1326,9 +1326,9 @@ func _refresh_enemy_slot_highlight() -> void:
 		var wrapper: Control = _enemy_active_layout_slots[slot_index].get("wrapper", null) as Control
 		var slot: Control = _enemy_active_layout_slots[slot_index].get("slot", null) as Control
 		var hp_bar: ProgressBar = _enemy_active_layout_slots[slot_index].get("bar", null) as ProgressBar
-		var display: EnemyBattleDisplay = null
+		var display: Node2D = null
 		if slot_index < _enemy_displays.size():
-			display = _enemy_displays[slot_index] as EnemyBattleDisplay
+			display = _enemy_displays[slot_index] as Node2D
 		if wrapper == null or slot == null:
 			continue
 		var focused: bool = target_select_active and slot_index == focused_enemy_index
