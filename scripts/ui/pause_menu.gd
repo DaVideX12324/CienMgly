@@ -69,6 +69,7 @@ var _current_item_entries: Array[Dictionary] = []
 var _current_skill_entries: Array[Dictionary] = []
 var _current_equip_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
+var _party_rows_selectable: bool = false
 
 
 func _ready() -> void:
@@ -230,9 +231,10 @@ func _move_selection(delta: int) -> void:
 			_items_index = wrapi(_items_index + delta, 0, _current_item_entries.size())
 			_refresh_item_rows()
 		"item_target_select", "skills_party_select", "equip_party_select", "status_party_select":
-			if _party_rows.is_empty():
+			var visible_party_count: int = _get_visible_row_count(_party_rows)
+			if visible_party_count <= 0:
 				return
-			_party_index = wrapi(_party_index + delta, 0, _party_rows.size())
+			_party_index = wrapi(_party_index + delta, 0, visible_party_count)
 			_refresh_party_rows()
 		"skills_list":
 			if _current_skill_entries.is_empty():
@@ -399,6 +401,7 @@ func _show_default_party_panel() -> void:
 	_show_panel("party")
 	context_title_label.text = "Druzyna"
 	party_hint_label.text = ""
+	_party_rows_selectable = false
 	_refresh_left_menu_rows()
 	_rebuild_party_rows(false)
 
@@ -407,6 +410,7 @@ func _show_party_select_panel(title_text: String) -> void:
 	_show_panel("party")
 	context_title_label.text = title_text
 	party_hint_label.text = "Enter/Z: potwierdz    X/Esc: wroc"
+	_party_rows_selectable = true
 	_rebuild_party_rows(true)
 
 
@@ -484,7 +488,9 @@ func _refresh_left_menu_rows() -> void:
 
 
 func _rebuild_party_rows(_selectable: bool) -> void:
+	_party_rows_selectable = _selectable
 	var members: Array[Dictionary] = _ps.get_party_members() if _ps and _ps.has_method("get_party_members") else []
+	_ensure_party_row_capacity(members)
 	for index: int in range(_party_rows.size()):
 		var row: Control = _party_rows[index]
 		var has_member: bool = index < members.size()
@@ -497,7 +503,7 @@ func _rebuild_party_rows(_selectable: bool) -> void:
 
 
 func _refresh_party_rows() -> void:
-	_set_row_selection(_party_rows, _party_index)
+	_set_row_selection(_party_rows, _party_index if _party_rows_selectable else -1)
 
 
 func _rebuild_item_tabs() -> void:
@@ -695,7 +701,7 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 		var row: Control = rows[index]
 		if not row.visible:
 			continue
-		var underline: CanvasItem = row.get_node_or_null("SelectionUnderline") as CanvasItem
+		var underline: CanvasItem = _get_row_selection_underline(row)
 		var labels: Array = row.find_children("*", "Label", true, false)
 		var is_selected: bool = index == selected_index
 		var target_modulate: Color = Color.WHITE if is_selected else Color(0.65, 0.65, 0.7)
@@ -723,12 +729,35 @@ func _hide_rows(rows: Array[Control]) -> void:
 		row.visible = false
 
 
+func _get_visible_row_count(rows: Array[Control]) -> int:
+	var count: int = 0
+	for row: Control in rows:
+		if row.visible:
+			count += 1
+	return count
+
+
 func _collect_rows(container: Node) -> Array[Control]:
 	var rows: Array[Control] = []
 	for child: Node in container.get_children():
 		if child is Control:
 			rows.append(child as Control)
 	return rows
+
+
+func _ensure_party_row_capacity(members: Array[Dictionary]) -> void:
+	if members.size() <= _party_rows.size() or _party_rows.is_empty():
+		return
+	var template: Control = _party_rows[0]
+	for index: int in range(_party_rows.size(), members.size()):
+		var new_row: Control = template.duplicate() as Control
+		if new_row == null:
+			continue
+		new_row.name = "PartyRow%d" % index
+		new_row.visible = false
+		party_list_vbox.add_child(new_row)
+		_party_rows.append(new_row)
+	_apply_party_rows_scaling(_party_rows)
 
 
 func _get_equipped_item_name(item_id: String) -> String:
@@ -849,7 +878,7 @@ func _apply_row_scaling(rows: Array[Control]) -> void:
 		var content: HBoxContainer = row.get_node_or_null("Margin/ContentRow") as HBoxContainer
 		var left_label: Label = row.get_node_or_null("Margin/ContentRow/LeftLabel") as Label
 		var right_label: Label = row.get_node_or_null("Margin/ContentRow/RightLabel") as Label
-		var underline: ColorRect = row.get_node_or_null("SelectionUnderline") as ColorRect
+		var underline: ColorRect = _get_row_selection_underline(row) as ColorRect
 		if margin:
 			margin.add_theme_constant_override("margin_left", _ui_px(8))
 			margin.add_theme_constant_override("margin_top", _ui_px(6))
@@ -874,7 +903,7 @@ func _apply_party_rows_scaling(rows: Array[Control]) -> void:
 		var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
 		var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
 		var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
-		var underline: ColorRect = row.get_node_or_null("SelectionUnderline") as ColorRect
+		var underline: ColorRect = _get_row_selection_underline(row) as ColorRect
 		margin.add_theme_constant_override("margin_left", _ui_px(10))
 		margin.add_theme_constant_override("margin_top", _ui_px(8))
 		margin.add_theme_constant_override("margin_right", _ui_px(10))
@@ -910,6 +939,17 @@ func _configure_selection_underline(underline: ColorRect, row: Control) -> void:
 	var side_margin: int = _ui_px(8)
 	underline.color = Color.WHITE
 	underline.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var underline_parent: Control = underline.get_parent() as Control
+	if underline_parent and underline_parent != row:
+		underline_parent.anchor_left = 0.0
+		underline_parent.anchor_top = 0.0
+		underline_parent.anchor_right = 1.0
+		underline_parent.anchor_bottom = 1.0
+		underline_parent.offset_left = 0.0
+		underline_parent.offset_top = 0.0
+		underline_parent.offset_right = 0.0
+		underline_parent.offset_bottom = 0.0
+		underline_parent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	underline.anchor_left = 0.0
 	underline.anchor_top = 1.0
 	underline.anchor_right = 1.0
@@ -919,6 +959,13 @@ func _configure_selection_underline(underline: ColorRect, row: Control) -> void:
 	underline.offset_right = float(-side_margin)
 	underline.offset_bottom = 0.0
 	underline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+
+
+func _get_row_selection_underline(row: Control) -> CanvasItem:
+	var direct: CanvasItem = row.get_node_or_null("SelectionUnderline") as CanvasItem
+	if direct:
+		return direct
+	return row.find_child("SelectionUnderline", true, false) as CanvasItem
 
 
 func _apply_actor_header_scaling(header: HBoxContainer) -> void:

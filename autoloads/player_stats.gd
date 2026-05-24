@@ -197,9 +197,9 @@ func load_save_data(data: Dictionary) -> void:
 	total_wrong   = data.get("total_wrong", 0)
 	rewards.assign(data.get("rewards", []))
 	rng_bonus     = data.get("rng_bonus", 0.0)
-	skills = data.get("skills", skills).duplicate(true)
-	inventory = data.get("inventory", inventory).duplicate(true)
-	party = data.get("party", party).duplicate(true)
+	skills = _to_dictionary_array(data.get("skills", skills.duplicate(true)))
+	inventory = _to_dictionary_array(data.get("inventory", inventory.duplicate(true)))
+	party = _to_dictionary_array(data.get("party", party.duplicate(true)))
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
@@ -236,6 +236,16 @@ func get_inventory_entries() -> Array[Dictionary]:
 func get_party_members() -> Array[Dictionary]:
 	_sync_primary_party_member()
 	return party.duplicate(true)
+
+
+func _to_dictionary_array(value: Variant) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if not (value is Array):
+		return result
+	for entry: Variant in value:
+		if entry is Dictionary:
+			result.append((entry as Dictionary).duplicate(true))
+	return result
 
 
 func get_party_member(index: int) -> Dictionary:
@@ -311,6 +321,10 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 	}
 	if bool(result.get("success", false)):
 		_sync_primary_party_member()
+		result["member_name"] = str(member.get("name", "Bohater"))
+		result["member_hp"] = int(member.get("hp", 0))
+		result["member_sp"] = int(member.get("sp", 0))
+		result["member_tp"] = int(member.get("tp", 0))
 	return result
 
 

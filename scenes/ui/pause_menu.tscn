@@ -79,9 +79,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow0" unique_id=1891463004]
-visible = false
+[node name="Control" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow0" unique_id=494030572]
 layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow0/Control" unique_id=950087935]
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox/MenuRow0" unique_id=1292161213]
 layout_mode = 2
