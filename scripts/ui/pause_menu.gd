@@ -84,6 +84,7 @@ func _ready() -> void:
 	_ps = CoreManager.get_singleton("PlayerStats")
 	pause_root.visible = false
 	_cache_scene_rows()
+	_bind_mouse_interactions()
 	_apply_scaling()
 	_show_default_party_panel()
 	if _ps:
@@ -524,6 +525,164 @@ func _cache_scene_rows() -> void:
 	_save_slot_rows = _collect_rows(save_slots_vbox)
 
 
+func _bind_mouse_interactions() -> void:
+	_bind_rows_mouse(_menu_rows, "menu")
+	_bind_rows_mouse(_party_rows, "party")
+	_bind_rows_mouse(_item_tab_rows, "item_tab")
+	_bind_rows_mouse(_item_rows, "item")
+	_bind_rows_mouse(_skill_rows, "skill")
+	_bind_rows_mouse(_equip_action_rows, "equip_action")
+	_bind_rows_mouse(_equip_slot_rows, "equip_slot")
+	_bind_rows_mouse(_equip_item_rows, "equip_item")
+	_bind_rows_mouse(_confirm_rows, "confirm")
+	_bind_rows_mouse(_save_slot_rows, "save_slot")
+
+
+func _bind_rows_mouse(rows: Array[Control], role: String) -> void:
+	for row: Control in rows:
+		_bind_row_mouse(row, role)
+
+
+func _bind_row_mouse(row: Control, role: String) -> void:
+	if row == null:
+		return
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	if not bool(row.get_meta("mouse_bound", false)):
+		var hover_callable: Callable = Callable(self, "_on_mouse_row_hover").bind(role, row)
+		if not row.mouse_entered.is_connected(hover_callable):
+			row.mouse_entered.connect(hover_callable)
+		var input_callable: Callable = Callable(self, "_on_mouse_row_input").bind(role, row)
+		if not row.gui_input.is_connected(input_callable):
+			row.gui_input.connect(input_callable)
+		row.set_meta("mouse_bound", true)
+
+
+func _on_mouse_row_hover(role: String, row: Control) -> void:
+	if not _paused or row == null or not row.visible:
+		return
+	match role:
+		"menu":
+			var row_index: int = _menu_rows.find(row)
+			if row_index >= 0:
+				_left_menu_index = row_index
+				_refresh_left_menu_rows()
+		"party":
+			if not _is_party_selection_mode():
+				return
+			var row_index: int = _party_rows.find(row)
+			if row_index >= 0:
+				_party_index = row_index
+				_refresh_party_rows()
+		"item_tab":
+			if _mode != "items_list":
+				return
+			var row_index: int = _item_tab_rows.find(row)
+			if row_index >= 0 and row_index != _tab_index:
+				_tab_index = row_index
+				_items_index = 0
+				_show_items_panel()
+		"item":
+			if _mode != "items_list":
+				return
+			var row_index: int = _item_rows.find(row)
+			if row_index >= 0 and row_index < _current_item_entries.size():
+				_items_index = row_index
+				_refresh_item_rows()
+		"skill":
+			if _mode != "skills_list":
+				return
+			var row_index: int = _skill_rows.find(row)
+			if row_index >= 0 and row_index < _current_skill_entries.size():
+				_skills_index = row_index
+				_refresh_skill_rows()
+		"equip_action":
+			if _mode != "equip_actions":
+				return
+			var row_index: int = _equip_action_rows.find(row)
+			if row_index >= 0:
+				_equip_action_index = row_index
+				_refresh_equip_action_rows()
+		"equip_slot":
+			if _mode != "equip_slots":
+				return
+			var row_index: int = _equip_slot_rows.find(row)
+			if row_index >= 0:
+				_equip_slot_index = row_index
+				_refresh_equipment_slot_rows()
+				_rebuild_equipment_item_rows()
+		"equip_item":
+			if _mode != "equip_item_list":
+				return
+			var row_index: int = _equip_item_rows.find(row)
+			if row_index >= 0 and row_index < _current_equip_entries.size():
+				_equip_item_index = row_index
+				_refresh_equipment_item_rows()
+		"confirm":
+			if _mode != "confirm_exit":
+				return
+			var row_index: int = _confirm_rows.find(row)
+			if row_index >= 0:
+				_confirm_index = row_index
+				_refresh_confirm_rows()
+		"save_slot":
+			if _mode != "save_slots":
+				return
+			var row_index: int = _save_slot_rows.find(row)
+			if row_index >= 0 and row_index < _save_slot_entries.size():
+				_save_slot_index = row_index
+				_refresh_save_slot_rows()
+
+
+func _on_mouse_row_input(event: InputEvent, role: String, row: Control) -> void:
+	if not _paused or row == null or not row.visible:
+		return
+	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+	if mouse_event == null or not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	_on_mouse_row_hover(role, row)
+	match role:
+		"menu":
+			_accept_left_menu()
+		"party":
+			if _is_party_selection_mode():
+				_accept_current()
+		"item_tab":
+			pass
+		"item":
+			if _mode == "items_list":
+				_accept_items_list()
+		"skill":
+			if _mode == "skills_list":
+				_use_selected_skill()
+		"equip_action":
+			if equipment_panel.visible:
+				_mode = "equip_actions"
+				_refresh_equip_action_rows()
+				_accept_equip_action()
+		"equip_slot":
+			if _mode == "equip_slots":
+				var slots: Array = _ps.get_equipment_slots() if _ps and _ps.has_method("get_equipment_slots") else []
+				if _equip_slot_index >= 0 and _equip_slot_index < slots.size():
+					_selected_slot_name = str(slots[_equip_slot_index])
+					_mode = "equip_item_list"
+					_equip_item_index = 0
+					_show_equipment_panel()
+		"equip_item":
+			if _mode == "equip_item_list":
+				_accept_equip_item()
+		"confirm":
+			if _mode == "confirm_exit":
+				_confirm_exit_choice()
+		"save_slot":
+			if _mode == "save_slots":
+				_save_to_selected_slot()
+	get_viewport().set_input_as_handled()
+
+
+func _is_party_selection_mode() -> bool:
+	return _mode == "item_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select"
+
+
 func _refresh_left_menu_rows() -> void:
 	_set_row_selection(_menu_rows, _left_menu_index)
 
@@ -888,6 +1047,7 @@ func _ensure_party_row_capacity(members: Array[Dictionary]) -> void:
 		new_row.name = "PartyRow%d" % index
 		new_row.visible = false
 		party_list_vbox.add_child(new_row)
+		_bind_row_mouse(new_row, "party")
 		_party_rows.append(new_row)
 	_apply_party_rows_scaling(_party_rows)
 
@@ -903,6 +1063,7 @@ func _ensure_save_slot_row_capacity(required_count: int) -> void:
 		new_row.name = "SaveSlotRow%d" % index
 		new_row.visible = false
 		save_slots_vbox.add_child(new_row)
+		_bind_row_mouse(new_row, "save_slot")
 		_save_slot_rows.append(new_row)
 	_apply_row_scaling(_save_slot_rows)
 
