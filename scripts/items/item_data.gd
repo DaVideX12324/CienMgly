@@ -11,7 +11,7 @@ class_name QuizRpgItemData
 @export var consumable: bool = true
 @export var usable_in_menu: bool = true
 @export var usable_in_combat: bool = true
-@export_enum("", "weapon", "shield", "head", "body", "accessory") var equip_slot: String = ""
+@export var equip_slot: String = ""
 @export var heal_amount: int = 0
 @export var sp_restore: int = 0
 @export var tp_restore: int = 0
