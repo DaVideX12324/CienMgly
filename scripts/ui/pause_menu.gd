@@ -657,14 +657,16 @@ func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars
 	var name_label: Label = target.get_node("InfoVBox/NameLabel") as Label
 	var hp_row: HBoxContainer = target.get_node("InfoVBox/HPRow") as HBoxContainer
 	var sp_row: HBoxContainer = target.get_node("InfoVBox/SPRow") as HBoxContainer
-	var hp_progress: ProgressBar = hp_row.get_node("BarProgress") as ProgressBar
-	var sp_progress: ProgressBar = sp_row.get_node("BarProgress") as ProgressBar
+	var hp_progress: Range = hp_row.get_node("BarProgress") as Range
+	var sp_progress: Range = sp_row.get_node("BarProgress") as Range
 	portrait.texture = member.get("portrait") as Texture2D
 	name_label.text = "%s  LV %d" % [str(member.get("name", "Bohater")), int(member.get("level", 1))]
 	_populate_bar_row(hp_row, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 	_populate_bar_row(sp_row, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	hp_progress.visible = show_bars
-	sp_progress.visible = show_bars
+	if hp_progress:
+		(hp_progress as Control).visible = show_bars
+	if sp_progress:
+		(sp_progress as Control).visible = show_bars
 
 
 func _populate_party_row(row: Control, member: Dictionary) -> void:
@@ -707,11 +709,11 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 			var texture_rect: TextureRect = texture_value as TextureRect
 			if texture_rect:
 				texture_rect.self_modulate = target_modulate
-		var progress_bars: Array = row.find_children("*", "TextureProgressBar", true, false)
+		var progress_bars: Array = row.find_children("*", "Range", true, false)
 		for progress_value: Variant in progress_bars:
-			var progress_bar: TextureProgressBar = progress_value as TextureProgressBar
+			var progress_bar: Range = progress_value as Range
 			if progress_bar:
-				progress_bar.self_modulate = target_modulate
+				(progress_bar as Control).self_modulate = target_modulate
 		if underline:
 			underline.visible = is_selected
 
@@ -935,13 +937,14 @@ func _apply_actor_header_scaling(header: HBoxContainer) -> void:
 
 func _populate_bar_row(row: HBoxContainer, label_text: String, value: int, max_value: int) -> void:
 	var label: Label = row.get_node("BarLabel") as Label
-	var progress_bar: TextureProgressBar = row.get_node("BarProgress") as TextureProgressBar
+	var progress_bar: Range = row.get_node("BarProgress") as Range
 	var value_label: Label = row.get_node("BarValue") as Label
 	var safe_max: int = maxi(max_value, 1)
 	label.text = label_text
-	progress_bar.visible = true
-	progress_bar.max_value = safe_max
-	progress_bar.value = clampi(value, 0, safe_max)
+	if progress_bar:
+		(progress_bar as Control).visible = true
+		progress_bar.max_value = safe_max
+		progress_bar.value = clampi(value, 0, safe_max)
 	value_label.text = "%d/%d" % [value, max_value]
 
 
