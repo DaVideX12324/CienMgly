@@ -168,6 +168,7 @@ text = "Przeciwnicy"
 horizontal_alignment = 1
 
 [node name="EnemyNameLabel" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=711721997]
+visible = false
 layout_mode = 2
 text = "Przeciwnicy"
 horizontal_alignment = 1
@@ -186,7 +187,7 @@ alignment = 1
 [node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1" unique_id=971464970]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_constants/separation = 18
+theme_override_constants/separation = 30
 alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1908863979]
@@ -195,26 +196,13 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=658252826]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="TargetCursor" type="Label" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=1521527078]
-visible = false
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -24.0
-offset_top = -28.0
-offset_right = 24.0
-offset_bottom = -8.0
-grow_horizontal = 2
-text = "v"
-horizontal_alignment = 1
-
 [node name="TargetHighlight" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=470500810]
 visible = false
+z_index = 5
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -222,6 +210,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="TargetCursor" type="Label" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1521527078]
+layout_mode = 0
+offset_top = -24.0
+offset_right = 150.0
+offset_bottom = -4.0
+grow_horizontal = 2
+text = "▼"
+horizontal_alignment = 1
 
 [node name="HighlightFill" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=221059475]
 layout_mode = 1
@@ -310,7 +307,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=452001507]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -328,7 +325,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=1308029390]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -346,7 +343,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=1371240813]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -364,7 +361,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=2014095328]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -383,7 +380,7 @@ alignment = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2" unique_id=701350609]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_constants/separation = 18
+theme_override_constants/separation = 30
 alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=267635856]
@@ -392,7 +389,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=35175901]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -410,7 +407,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=1923917040]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -428,7 +425,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=829799068]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -446,7 +443,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=984312419]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -464,7 +461,7 @@ layout_mode = 2
 alignment = 1
 
 [node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=1625721205]
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
@@ -769,10 +766,10 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
 
 [node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=568404965]
 layout_mode = 2
-theme_override_constants/margin_left = 6
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 6
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
 
 [node name="TargetPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1100172619]
 visible = false

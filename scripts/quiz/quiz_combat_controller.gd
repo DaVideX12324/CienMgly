@@ -298,7 +298,7 @@ func _open_skills_menu() -> void:
 
 func _open_items_menu() -> void:
 	_list_menu_mode = "items"
-	_list_menu_entries = _ps.inventory.duplicate(true) if _ps and _ps.get("inventory") is Array else []
+	_list_menu_entries = _ps.get_inventory_entries() if _ps and _ps.has_method("get_inventory_entries") else []
 	_list_selected_idx = 0
 	_build_list_menu(items_list_vbox, _list_menu_entries, false)
 	items_panel.visible = true
@@ -612,7 +612,7 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 		else:
 			var count: int = int(entry.get("count", 0))
 			value_label.text = "x%d" % count
-			disabled = count <= 0
+			disabled = count <= 0 or not bool(entry.get("usable_in_combat", true))
 		if disabled:
 			name_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
 			value_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
@@ -743,22 +743,38 @@ func _consume_skill_cost(skill_data: Dictionary) -> void:
 func _use_item(item_data: Dictionary) -> void:
 	if _ps == null:
 		return
-	var item_name: String = str(item_data.get("name", "Przedmiot"))
-	if _ps.has_method("consume_item") and not _ps.consume_item(item_name, 1):
+	var item_id: String = str(item_data.get("item_id", ""))
+	if item_id == "":
 		return
+	if not _ps.has_method("use_item"):
+		return
+	var use_result: Dictionary = _ps.use_item(item_id)
+	if not bool(use_result.get("success", false)):
+		return
+	var item_name: String = str(use_result.get("name", item_data.get("name", "Przedmiot")))
 	_selected_item_data = item_data.duplicate(true)
 	_close_list_menu()
 	phase = Phase.PLAYER_RESULT
-	var heal_amount: int = int(item_data.get("heal_amount", 25))
+	var heal_amount: int = int(use_result.get("heal_amount", 0))
+	var sp_restore: int = int(use_result.get("sp_restore", 0))
+	var tp_restore: int = int(use_result.get("tp_restore", 0))
+	var effect_parts: Array[String] = []
 	if heal_amount > 0:
-		_ps.heal(heal_amount)
-		result_label.text = "%s: +%d HP" % [item_name, heal_amount]
+		effect_parts.append("+%d HP" % heal_amount)
 		result_label.add_theme_color_override("font_color", Color.GREEN)
 		_flash_sprite(player_sprite_node, Color.GREEN)
 		FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % heal_amount, Color.GREEN, 14)
-	else:
-		result_label.text = "Uzyto %s" % item_name
+	if sp_restore > 0:
+		_restore_party_sp(0, sp_restore)
+		effect_parts.append("+%d SP" % sp_restore)
+	if tp_restore > 0:
+		_restore_party_tp(0, tp_restore)
+		effect_parts.append("+%d TP" % tp_restore)
+	if effect_parts.is_empty():
+		result_label.text = str(use_result.get("message", "Uzyto %s" % item_name))
 		result_label.add_theme_color_override("font_color", Color.WHITE)
+	else:
+		result_label.text = "%s: %s" % [item_name, ", ".join(effect_parts)]
 	result_label.visible = true
 	_refresh_stats_panel()
 	_update_hp_bars()
@@ -1645,6 +1661,22 @@ func _consume_party_sp(index: int, amount: int) -> void:
 		return
 	var member := _party_state[index]
 	member["sp"] = clampi(int(member.get("sp", 0)) - maxi(amount, 0), 0, int(member.get("sp_max", PARTY_SKILL_SP_MAX)))
+	_party_state[index] = member
+
+
+func _restore_party_sp(index: int, amount: int) -> void:
+	if index < 0 or index >= _party_state.size():
+		return
+	var member := _party_state[index]
+	member["sp"] = clampi(int(member.get("sp", 0)) + maxi(amount, 0), 0, int(member.get("sp_max", PARTY_SKILL_SP_MAX)))
+	_party_state[index] = member
+
+
+func _restore_party_tp(index: int, amount: int) -> void:
+	if index < 0 or index >= _party_state.size():
+		return
+	var member := _party_state[index]
+	member["tp"] = clampi(int(member.get("tp", 0)) + maxi(amount, 0), 0, int(member.get("tp_max", PARTY_TP_MAX)))
 	_party_state[index] = member
 
 

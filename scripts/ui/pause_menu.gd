@@ -5,6 +5,7 @@ extends CanvasLayer
 @onready var panel: PanelContainer = $Panel
 @onready var resume_btn: Button = $Panel/VBoxContainer/ResumeBtn
 @onready var save_btn: Button = $Panel/VBoxContainer/SaveBtn
+@onready var inventory_btn: Button = $Panel/VBoxContainer/InventoryBtn
 @onready var stats_btn: Button = $Panel/VBoxContainer/StatsBtn
 @onready var menu_btn: Button = $Panel/VBoxContainer/MenuBtn
 
@@ -17,6 +18,7 @@ func _ready() -> void:
 	panel.visible = false
 	resume_btn.pressed.connect(_on_resume)
 	save_btn.pressed.connect(_on_save)
+	inventory_btn.pressed.connect(_on_inventory)
 	stats_btn.pressed.connect(_on_stats)
 	menu_btn.pressed.connect(_on_menu)
 
@@ -53,6 +55,11 @@ func _on_save() -> void:
 func _on_stats() -> void:
 	var stats_scene = preload("res://modules/quiz_rpg/scenes/ui/stats_screen.tscn").instantiate()
 	add_child(stats_scene)
+
+
+func _on_inventory() -> void:
+	var inventory_scene: Control = preload("res://modules/quiz_rpg/scenes/ui/inventory_screen.tscn").instantiate()
+	add_child(inventory_scene)
 
 
 func _on_menu() -> void:

@@ -1,0 +1,119 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/inventory_screen.gd" id="1_inventory"]
+
+[node name="InventoryScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_inventory")
+
+[node name="DimOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -360.0
+offset_top = -230.0
+offset_right = 360.0
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Ekwipunek"
+horizontal_alignment = 1
+
+[node name="ContentRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="ItemList" type="ItemList" parent="Panel/MarginContainer/VBoxContainer/ContentRow"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+select_mode = 0
+
+[node name="DetailsPanel" type="PanelContainer" parent="Panel/MarginContainer/VBoxContainer/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DetailsMargin" type="MarginContainer" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="DetailsVBox" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ItemNameLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin/DetailsVBox"]
+layout_mode = 2
+text = "Przedmiot"
+
+[node name="CountLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin/DetailsVBox"]
+layout_mode = 2
+text = "Ilosc: 0"
+
+[node name="EffectLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin/DetailsVBox"]
+layout_mode = 2
+text = ""
+autowrap_mode = 3
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin/DetailsVBox"]
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = ""
+
+[node name="ResultLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = ""
+autowrap_mode = 3
+
+[node name="ButtonRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="UseBtn" type="Button" parent="Panel/MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Uzyj"
+
+[node name="CloseBtn" type="Button" parent="Panel/MarginContainer/VBoxContainer/ButtonRow"]
+layout_mode = 2
+text = "Zamknij"
