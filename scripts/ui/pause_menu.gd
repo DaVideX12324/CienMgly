@@ -1,13 +1,7 @@
 extends CanvasLayer
 
-const LEFT_MENU_ITEMS: Array[String] = ["Przedmioty", "Umiejetnosci", "Ekwipunek", "Status", "Zapisz", "Zakoncz gre"]
-const ITEM_TABS: Array[Dictionary] = [
-	{"label": "Przedmioty", "category": "item"},
-	{"label": "Bron", "category": "hand"},
-	{"label": "Czesci", "category": "part"},
-	{"label": "Kluczowe", "category": "key"},
-]
-const EQUIP_ACTIONS: Array[String] = ["Zmien", "Optymalizuj", "Wyczysc"]
+const ITEM_TAB_CATEGORIES: Array[String] = ["item", "hand", "part", "key"]
+const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 
 @onready var pause_root: Control = $PauseRoot
 @onready var left_panel: PanelContainer = $PauseRoot/MainRow/LeftPanel
@@ -42,10 +36,6 @@ const EQUIP_ACTIONS: Array[String] = ["Zmien", "Optymalizuj", "Wyczysc"]
 @onready var confirm_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel
 @onready var confirm_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/ConfirmLabel
 @onready var confirm_options_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel/OptionsVBox
-@onready var simple_row_template: PanelContainer = $PauseRoot/Templates/SimpleRowTemplate
-@onready var bar_row_template: HBoxContainer = $PauseRoot/Templates/BarRowTemplate
-@onready var party_row_template: PanelContainer = $PauseRoot/Templates/PartyRowTemplate
-@onready var actor_header_template: HBoxContainer = $PauseRoot/Templates/ActorHeaderTemplate
 
 var _gm: Node = null
 var _ps: Node = null
@@ -65,11 +55,15 @@ var _selected_slot_name: String = ""
 var _pending_item_id: String = ""
 var _menu_rows: Array[Control] = []
 var _party_rows: Array[Control] = []
+var _item_tab_rows: Array[Control] = []
 var _item_rows: Array[Control] = []
 var _skill_rows: Array[Control] = []
 var _equip_action_rows: Array[Control] = []
 var _equip_slot_rows: Array[Control] = []
 var _equip_item_rows: Array[Control] = []
+var _status_bar_rows: Array[Control] = []
+var _status_stat_rows: Array[Control] = []
+var _status_equip_rows: Array[Control] = []
 var _confirm_rows: Array[Control] = []
 var _current_item_entries: Array[Dictionary] = []
 var _current_skill_entries: Array[Dictionary] = []
@@ -81,8 +75,8 @@ func _ready() -> void:
 	_gm = CoreManager.get_singleton("GameManager")
 	_ps = CoreManager.get_singleton("PlayerStats")
 	pause_root.visible = false
-	_build_left_menu()
-	_rebuild_party_rows(false)
+	_cache_scene_rows()
+	_apply_scaling()
 	_show_default_party_panel()
 	if _ps:
 		if _ps.has_signal("inventory_changed"):
@@ -91,7 +85,6 @@ func _ready() -> void:
 			_ps.party_changed.connect(_on_player_data_changed)
 		if _ps.has_signal("hp_changed"):
 			_ps.hp_changed.connect(_on_player_hp_changed)
-	_apply_scaling()
 
 
 func _input(event: InputEvent) -> void:
@@ -145,7 +138,6 @@ func _toggle_pause() -> void:
 		_mode = "left_menu"
 		_left_menu_index = 0
 		_show_default_party_panel()
-		_refresh_left_menu()
 
 
 func _handle_close_input(event: InputEvent) -> bool:
@@ -215,12 +207,12 @@ func _handle_confirm_input(event: InputEvent) -> bool:
 
 func _handle_item_tab_input(event: InputEvent) -> bool:
 	if _is_prev_tab(event):
-		_tab_index = (_tab_index - 1 + ITEM_TABS.size()) % ITEM_TABS.size()
+		_tab_index = (_tab_index - 1 + ITEM_TAB_CATEGORIES.size()) % ITEM_TAB_CATEGORIES.size()
 		_items_index = 0
 		_show_items_panel()
 		return true
 	if _is_next_tab(event):
-		_tab_index = (_tab_index + 1) % ITEM_TABS.size()
+		_tab_index = (_tab_index + 1) % ITEM_TAB_CATEGORIES.size()
 		_items_index = 0
 		_show_items_panel()
 		return true
@@ -230,12 +222,11 @@ func _handle_item_tab_input(event: InputEvent) -> bool:
 func _move_selection(delta: int) -> void:
 	match _mode:
 		"left_menu":
-			_left_menu_index = wrapi(_left_menu_index + delta, 0, LEFT_MENU_ITEMS.size())
-			_refresh_left_menu()
+			_left_menu_index = wrapi(_left_menu_index + delta, 0, _menu_rows.size())
 		"items_list":
-			if _item_rows.is_empty():
+			if _current_item_entries.is_empty():
 				return
-			_items_index = wrapi(_items_index + delta, 0, _item_rows.size())
+			_items_index = wrapi(_items_index + delta, 0, _current_item_entries.size())
 			_refresh_item_rows()
 		"item_target_select", "skills_party_select", "equip_party_select", "status_party_select":
 			if _party_rows.is_empty():
@@ -243,7 +234,7 @@ func _move_selection(delta: int) -> void:
 			_party_index = wrapi(_party_index + delta, 0, _party_rows.size())
 			_refresh_party_rows()
 		"skills_list":
-			if _skill_rows.is_empty():
+			if _current_skill_entries.is_empty():
 				return
 			_skills_index = _find_next_enabled_skill_index(_skills_index, delta)
 			_refresh_skill_rows()
@@ -253,14 +244,14 @@ func _move_selection(delta: int) -> void:
 			_equip_slot_index = wrapi(_equip_slot_index + delta, 0, _equip_slot_rows.size())
 			_refresh_equipment_slot_rows()
 		"equip_item_list":
-			if _equip_item_rows.is_empty():
+			if _current_equip_entries.is_empty():
 				return
-			_equip_item_index = wrapi(_equip_item_index + delta, 0, _equip_item_rows.size())
+			_equip_item_index = wrapi(_equip_item_index + delta, 0, _current_equip_entries.size())
 			_refresh_equipment_item_rows()
 
 
 func _move_equip_action(delta: int) -> void:
-	_equip_action_index = wrapi(_equip_action_index + delta, 0, EQUIP_ACTIONS.size())
+	_equip_action_index = wrapi(_equip_action_index + delta, 0, _equip_action_rows.size())
 	_refresh_equip_action_rows()
 
 
@@ -401,7 +392,6 @@ func _confirm_exit_choice() -> void:
 	else:
 		_mode = "left_menu"
 		_show_default_party_panel()
-		_refresh_left_menu()
 
 
 func _show_default_party_panel() -> void:
@@ -428,7 +418,7 @@ func _show_items_panel() -> void:
 func _show_skills_panel() -> void:
 	_show_panel("skills")
 	context_title_label.text = "Umiejetnosci"
-	_build_actor_header(skills_actor_header, _ps.get_party_member(_selected_member_index), true)
+	_populate_actor_header(skills_actor_header, _ps.get_party_member(_selected_member_index), true)
 	_rebuild_skill_rows()
 
 
@@ -436,15 +426,15 @@ func _show_equipment_panel() -> void:
 	_show_panel("equipment")
 	context_title_label.text = "Ekwipunek"
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
-	_build_actor_header(equipment_actor_header, member, false)
+	_populate_actor_header(equipment_actor_header, member, false)
 	equipment_stats_label.text = "ATK %d   DEF %d" % [_ps.get_member_total_atk(_selected_member_index), _ps.get_member_total_def(_selected_member_index)]
 	_rebuild_equip_action_rows()
 	_rebuild_equipment_slots()
 	if _mode == "equip_item_list":
 		_rebuild_equipment_item_rows()
 	else:
-		for child: Node in equip_items_vbox.get_children():
-			child.queue_free()
+		_hide_rows(_equip_item_rows)
+		_current_equip_entries.clear()
 		equipment_footer_label.text = "Enter/Z: wybierz    X/Esc: wroc"
 
 
@@ -452,7 +442,7 @@ func _show_status_panel() -> void:
 	_show_panel("status")
 	context_title_label.text = "Status"
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
-	_build_actor_header(status_actor_header, member, false)
+	_populate_actor_header(status_actor_header, member, false)
 	_rebuild_status_panel(member)
 
 
@@ -472,33 +462,32 @@ func _show_panel(panel_name: String) -> void:
 	confirm_panel.visible = panel_name == "confirm"
 
 
-func _build_left_menu() -> void:
-	for child: Node in menu_list_vbox.get_children():
-		child.queue_free()
-	_menu_rows.clear()
-	for item_text: String in LEFT_MENU_ITEMS:
-		var row: PanelContainer = _create_simple_row(item_text, "")
-		menu_list_vbox.add_child(row)
-		_menu_rows.append(row)
-	_refresh_left_menu()
+func _cache_scene_rows() -> void:
+	_menu_rows = _collect_rows(menu_list_vbox)
+	_party_rows = _collect_rows(party_list_vbox)
+	_item_tab_rows = _collect_rows(items_tabs_row)
+	_item_rows = _collect_rows(items_list_vbox)
+	_skill_rows = _collect_rows(skills_list_vbox)
+	_equip_action_rows = _collect_rows(equip_actions_row)
+	_equip_slot_rows = _collect_rows(equip_slots_vbox)
+	_equip_item_rows = _collect_rows(equip_items_vbox)
+	_status_bar_rows = _collect_rows(status_bars_vbox)
+	_status_stat_rows = _collect_rows(status_stats_vbox)
+	_status_equip_rows = _collect_rows(status_equip_vbox)
+	_confirm_rows = _collect_rows(confirm_options_vbox)
 
 
-func _refresh_left_menu() -> void:
-	_set_row_selection(_menu_rows, _left_menu_index)
-
-
-func _rebuild_party_rows(selectable: bool) -> void:
-	for child: Node in party_list_vbox.get_children():
-		child.queue_free()
-	_party_rows.clear()
+func _rebuild_party_rows(_selectable: bool) -> void:
 	var members: Array[Dictionary] = _ps.get_party_members() if _ps and _ps.has_method("get_party_members") else []
-	for member: Dictionary in members:
-		var row: PanelContainer = _create_party_row(member)
-		party_list_vbox.add_child(row)
-		_party_rows.append(row)
+	for index: int in range(_party_rows.size()):
+		var row: Control = _party_rows[index]
+		var has_member: bool = index < members.size()
+		row.visible = has_member
+		if has_member:
+			_populate_party_row(row, members[index])
+	if not members.is_empty():
+		_party_index = clampi(_party_index, 0, min(members.size(), _party_rows.size()) - 1)
 	_refresh_party_rows()
-	if not selectable and not _party_rows.is_empty():
-		_set_row_selection(_party_rows, 0)
 
 
 func _refresh_party_rows() -> void:
@@ -506,36 +495,26 @@ func _refresh_party_rows() -> void:
 
 
 func _rebuild_item_tabs() -> void:
-	for child: Node in items_tabs_row.get_children():
-		child.queue_free()
-	var tab_rows: Array[Control] = []
-	for tab_data: Dictionary in ITEM_TABS:
-		var row: PanelContainer = _create_simple_row(str(tab_data.get("label", "")), "")
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		items_tabs_row.add_child(row)
-		tab_rows.append(row)
-	_set_row_selection(tab_rows, _tab_index)
+	_set_row_selection(_item_tab_rows, _tab_index)
 
 
 func _rebuild_item_rows() -> void:
-	for child: Node in items_list_vbox.get_children():
-		child.queue_free()
-	_item_rows.clear()
 	_current_item_entries.clear()
-	var category: String = str(ITEM_TABS[_tab_index].get("category", "item"))
+	var category: String = ITEM_TAB_CATEGORIES[_tab_index] if _tab_index < ITEM_TAB_CATEGORIES.size() else "item"
 	var entries: Array[Dictionary] = _ps.get_items_by_category(category) if _ps and _ps.has_method("get_items_by_category") else []
-	for entry: Dictionary in entries:
-		var row: PanelContainer = _create_simple_row(str(entry.get("name", "---")), ":%d" % int(entry.get("count", 0)))
-		items_list_vbox.add_child(row)
-		_item_rows.append(row)
-		_current_item_entries.append(entry)
-	if _item_rows.is_empty():
+	for index: int in range(_item_rows.size()):
+		var row: Control = _item_rows[index]
+		var has_entry: bool = index < entries.size()
+		row.visible = has_entry
+		if has_entry:
+			var entry: Dictionary = entries[index]
+			_set_simple_row(row, str(entry.get("name", "---")), ":%d" % int(entry.get("count", 0)), false)
+			_current_item_entries.append(entry)
+	if _current_item_entries.is_empty():
 		items_footer_label.text = "Brak przedmiotow w tej zakladce."
 	else:
-		_items_index = clampi(_items_index, 0, _item_rows.size() - 1)
-		_set_row_selection(_item_rows, _items_index)
-		var selected: Dictionary = _current_item_entries[_items_index]
-		items_footer_label.text = str(selected.get("description", ""))
+		_items_index = clampi(_items_index, 0, _current_item_entries.size() - 1)
+		_refresh_item_rows()
 
 
 func _refresh_item_rows() -> void:
@@ -545,34 +524,33 @@ func _refresh_item_rows() -> void:
 
 
 func _rebuild_skill_rows() -> void:
-	for child: Node in skills_list_vbox.get_children():
-		child.queue_free()
-	_skill_rows.clear()
 	_current_skill_entries.clear()
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
 	var member_sp: int = int(member.get("sp", 0))
 	var member_tp: int = int(member.get("tp", 0))
 	var skills: Array = _ps.skills if _ps and _ps.get("skills") is Array else []
-	for skill_value: Variant in skills:
-		var skill: Dictionary = skill_value
-		var cost_text: String = "-"
-		var disabled: bool = false
-		if int(skill.get("sp_cost", 0)) > 0:
-			cost_text = "SP %d" % int(skill.get("sp_cost", 0))
-			disabled = member_sp < int(skill.get("sp_cost", 0))
-		elif int(skill.get("tp_cost", 0)) > 0:
-			cost_text = "TP %d" % int(skill.get("tp_cost", 0))
-			disabled = member_tp < int(skill.get("tp_cost", 0))
-		var row: PanelContainer = _create_simple_row("[*] %s" % str(skill.get("name", "---")), cost_text, disabled)
-		skills_list_vbox.add_child(row)
-		_skill_rows.append(row)
-		var skill_copy: Dictionary = skill.duplicate(true)
-		skill_copy["disabled"] = disabled
-		_current_skill_entries.append(skill_copy)
-	if _skill_rows.is_empty():
+	for index: int in range(_skill_rows.size()):
+		var row: Control = _skill_rows[index]
+		var has_skill: bool = index < skills.size()
+		row.visible = has_skill
+		if has_skill:
+			var skill: Dictionary = skills[index]
+			var cost_text: String = "-"
+			var disabled: bool = false
+			if int(skill.get("sp_cost", 0)) > 0:
+				cost_text = "SP %d" % int(skill.get("sp_cost", 0))
+				disabled = member_sp < int(skill.get("sp_cost", 0))
+			elif int(skill.get("tp_cost", 0)) > 0:
+				cost_text = "TP %d" % int(skill.get("tp_cost", 0))
+				disabled = member_tp < int(skill.get("tp_cost", 0))
+			_set_simple_row(row, "[*] %s" % str(skill.get("name", "---")), cost_text, disabled)
+			var skill_copy: Dictionary = skill.duplicate(true)
+			skill_copy["disabled"] = disabled
+			_current_skill_entries.append(skill_copy)
+	if _current_skill_entries.is_empty():
 		skills_footer_label.text = "Brak umiejetnosci."
 		return
-	_skills_index = _find_next_enabled_skill_index(clampi(_skills_index, 0, _skill_rows.size() - 1), 1, true)
+	_skills_index = _find_next_enabled_skill_index(clampi(_skills_index, 0, _current_skill_entries.size() - 1), 1, true)
 	_refresh_skill_rows()
 
 
@@ -597,14 +575,6 @@ func _find_next_enabled_skill_index(start_index: int, delta: int, allow_current:
 
 
 func _rebuild_equip_action_rows() -> void:
-	for child: Node in equip_actions_row.get_children():
-		child.queue_free()
-	_equip_action_rows.clear()
-	for action_text: String in EQUIP_ACTIONS:
-		var row: PanelContainer = _create_simple_row(action_text, "")
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		equip_actions_row.add_child(row)
-		_equip_action_rows.append(row)
 	_refresh_equip_action_rows()
 
 
@@ -613,16 +583,17 @@ func _refresh_equip_action_rows() -> void:
 
 
 func _rebuild_equipment_slots() -> void:
-	for child: Node in equip_slots_vbox.get_children():
-		child.queue_free()
-	_equip_slot_rows.clear()
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
 	var equipment: Dictionary = member.get("equipment", {})
-	for slot_name: String in _ps.get_equipment_slots():
-		var equipped_name: String = _get_equipped_item_name(str(equipment.get(slot_name, "")))
-		var row: PanelContainer = _create_simple_row(_ps.get_equipment_label(slot_name), equipped_name)
-		equip_slots_vbox.add_child(row)
-		_equip_slot_rows.append(row)
+	var slots: Array = _ps.get_equipment_slots()
+	for index: int in range(_equip_slot_rows.size()):
+		var row: Control = _equip_slot_rows[index]
+		var has_slot: bool = index < slots.size()
+		row.visible = has_slot
+		if has_slot:
+			var slot_name: String = str(slots[index])
+			var equipped_name: String = _get_equipped_item_name(str(equipment.get(slot_name, "")))
+			_set_simple_row(row, _ps.get_equipment_label(slot_name), equipped_name)
 	_refresh_equipment_slot_rows()
 
 
@@ -631,16 +602,15 @@ func _refresh_equipment_slot_rows() -> void:
 
 
 func _rebuild_equipment_item_rows() -> void:
-	for child: Node in equip_items_vbox.get_children():
-		child.queue_free()
-	_equip_item_rows.clear()
 	_current_equip_entries.clear()
 	_current_equip_entries = _ps.get_equippable_entries_for_slot(_selected_member_index, _selected_slot_name) if _ps and _ps.has_method("get_equippable_entries_for_slot") else []
-	for entry: Dictionary in _current_equip_entries:
-		var delta_text: String = _get_equipment_delta_text(entry)
-		var row: PanelContainer = _create_simple_row(str(entry.get("name", "---")), delta_text)
-		equip_items_vbox.add_child(row)
-		_equip_item_rows.append(row)
+	for index: int in range(_equip_item_rows.size()):
+		var row: Control = _equip_item_rows[index]
+		var has_entry: bool = index < _current_equip_entries.size()
+		row.visible = has_entry
+		if has_entry:
+			var entry: Dictionary = _current_equip_entries[index]
+			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry))
 	_refresh_equipment_item_rows()
 
 
@@ -651,31 +621,24 @@ func _refresh_equipment_item_rows() -> void:
 
 
 func _rebuild_status_panel(member: Dictionary) -> void:
-	for child: Node in status_bars_vbox.get_children():
-		child.queue_free()
-	for child: Node in status_stats_vbox.get_children():
-		child.queue_free()
-	for child: Node in status_equip_vbox.get_children():
-		child.queue_free()
 	var exp_to_next: int = _ps.xp_to_next_level() if _ps and _selected_member_index == 0 else 0
 	status_info_label.text = "LV %d   Exp %d   Do nastepnego poziomu %d" % [int(member.get("level", 1)), _ps.xp if _selected_member_index == 0 and _ps else 0, exp_to_next]
-	status_bars_vbox.add_child(_create_bar_row("Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1))))
-	status_bars_vbox.add_child(_create_bar_row("Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1))))
-	status_stats_vbox.add_child(_create_simple_row("ATK", str(_ps.get_member_total_atk(_selected_member_index)), false))
-	status_stats_vbox.add_child(_create_simple_row("DEF", str(_ps.get_member_total_def(_selected_member_index)), false))
+	if _status_bar_rows.size() >= 2:
+		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	if _status_stat_rows.size() >= 2:
+		_set_simple_row(_status_stat_rows[0], "ATK", str(_ps.get_member_total_atk(_selected_member_index)))
+		_set_simple_row(_status_stat_rows[1], "DEF", str(_ps.get_member_total_def(_selected_member_index)))
 	var equipment: Dictionary = member.get("equipment", {})
-	for slot_name: String in _ps.get_equipment_slots():
-		status_equip_vbox.add_child(_create_simple_row(_ps.get_equipment_label(slot_name), _get_equipped_item_name(str(equipment.get(slot_name, ""))), false))
+	for index: int in range(_status_equip_rows.size()):
+		var slot_name: String = STATUS_EQUIP_SLOTS[index] if index < STATUS_EQUIP_SLOTS.size() else ""
+		var row: Control = _status_equip_rows[index]
+		row.visible = slot_name != ""
+		if slot_name != "":
+			_set_simple_row(row, _ps.get_equipment_label(slot_name), _get_equipped_item_name(str(equipment.get(slot_name, ""))))
 
 
 func _rebuild_confirm_rows() -> void:
-	for child: Node in confirm_options_vbox.get_children():
-		child.queue_free()
-	_confirm_rows.clear()
-	for option_text: String in ["T Tak", "N Nie"]:
-		var row: PanelContainer = _create_simple_row(option_text, "")
-		confirm_options_vbox.add_child(row)
-		_confirm_rows.append(row)
 	_refresh_confirm_rows()
 
 
@@ -683,37 +646,22 @@ func _refresh_confirm_rows() -> void:
 	_set_row_selection(_confirm_rows, _confirm_index)
 
 
-func _build_actor_header(target: HBoxContainer, member: Dictionary, show_bars: bool) -> void:
-	for child: Node in target.get_children():
-		child.queue_free()
-	var header: HBoxContainer = actor_header_template.duplicate() as HBoxContainer
-	header.visible = true
-	_apply_actor_header_scaling(header)
-	var portrait: TextureRect = header.get_node("Portrait") as TextureRect
-	var info_box: VBoxContainer = header.get_node("InfoVBox") as VBoxContainer
-	var name_label: Label = header.get_node("InfoVBox/NameLabel") as Label
-	var hp_row: HBoxContainer = header.get_node("InfoVBox/HPRow") as HBoxContainer
-	var sp_row: HBoxContainer = header.get_node("InfoVBox/SPRow") as HBoxContainer
+func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars: bool) -> void:
+	var portrait: TextureRect = target.get_node("Portrait") as TextureRect
+	var name_label: Label = target.get_node("InfoVBox/NameLabel") as Label
+	var hp_row: HBoxContainer = target.get_node("InfoVBox/HPRow") as HBoxContainer
+	var sp_row: HBoxContainer = target.get_node("InfoVBox/SPRow") as HBoxContainer
+	var hp_progress: ProgressBar = hp_row.get_node("BarProgress") as ProgressBar
+	var sp_progress: ProgressBar = sp_row.get_node("BarProgress") as ProgressBar
 	portrait.texture = member.get("portrait") as Texture2D
 	name_label.text = "%s  LV %d" % [str(member.get("name", "Bohater")), int(member.get("level", 1))]
 	_populate_bar_row(hp_row, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 	_populate_bar_row(sp_row, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	if not show_bars:
-		var hp_value: Label = hp_row.get_node("BarValue") as Label
-		var sp_value: Label = sp_row.get_node("BarValue") as Label
-		var hp_progress: ProgressBar = hp_row.get_node("BarProgress") as ProgressBar
-		var sp_progress: ProgressBar = sp_row.get_node("BarProgress") as ProgressBar
-		hp_progress.visible = false
-		sp_progress.visible = false
-		hp_value.text = "%d/%d" % [int(member.get("hp", 0)), int(member.get("max_hp", 1))]
-		sp_value.text = "%d/%d" % [int(member.get("sp", 0)), int(member.get("max_sp", 1))]
-	target.add_child(header)
+	hp_progress.visible = show_bars
+	sp_progress.visible = show_bars
 
 
-func _create_party_row(member: Dictionary) -> PanelContainer:
-	var row: PanelContainer = party_row_template.duplicate() as PanelContainer
-	row.visible = true
-	_apply_party_row_scaling(row)
+func _populate_party_row(row: Control, member: Dictionary) -> void:
 	var portrait: TextureRect = row.get_node("Margin/ContentRow/Portrait") as TextureRect
 	var name_label: Label = row.get_node("Margin/ContentRow/NameLabel") as Label
 	var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
@@ -724,32 +672,21 @@ func _create_party_row(member: Dictionary) -> PanelContainer:
 	level_label.text = "LV %d" % int(member.get("level", 1))
 	_populate_bar_row(hp_row, "ZYCIE", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 	_populate_bar_row(sp_row, "MANA", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	return row
 
 
-func _create_bar_row(label_text: String, value: int, max_value: int) -> HBoxContainer:
-	var row: HBoxContainer = bar_row_template.duplicate() as HBoxContainer
-	row.visible = true
-	_apply_bar_row_scaling(row)
-	_populate_bar_row(row, label_text, value, max_value)
-	return row
-
-
-func _create_simple_row(left_text: String, right_text: String, disabled: bool = false) -> PanelContainer:
-	var row: PanelContainer = simple_row_template.duplicate() as PanelContainer
-	row.visible = true
-	_apply_simple_row_scaling(row)
+func _set_simple_row(row: Control, left_text: String, right_text: String, disabled: bool = false) -> void:
 	var left_label: Label = row.get_node("Margin/ContentRow/LeftLabel") as Label
 	var right_label: Label = row.get_node("Margin/ContentRow/RightLabel") as Label
 	left_label.text = left_text
 	right_label.text = right_text
 	row.set_meta("disabled", disabled)
-	return row
 
 
 func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 	for index: int in range(rows.size()):
 		var row: Control = rows[index]
+		if not row.visible:
+			continue
 		var underline: CanvasItem = row.get_node_or_null("SelectionUnderline") as CanvasItem
 		var labels: Array = row.find_children("*", "Label", true, false)
 		var is_selected: bool = index == selected_index
@@ -769,6 +706,19 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 			progress_bar.self_modulate = target_modulate
 		if underline:
 			underline.visible = is_selected
+
+
+func _hide_rows(rows: Array[Control]) -> void:
+	for row: Control in rows:
+		row.visible = false
+
+
+func _collect_rows(container: Node) -> Array[Control]:
+	var rows: Array[Control] = []
+	for child: Node in container.get_children():
+		if child is Control:
+			rows.append(child as Control)
+	return rows
 
 
 func _get_equipped_item_name(item_id: String) -> String:
@@ -866,47 +816,75 @@ func _apply_scaling() -> void:
 	var title_label: Label = left_panel.get_node("Margin/LeftVBox/TitleLabel") as Label
 	title_label.add_theme_font_size_override("font_size", _ui_px(26))
 	toast_label.add_theme_font_size_override("font_size", _ui_px(18))
-	simple_row_template.custom_minimum_size.y = _ui_px(38)
-	(simple_row_template.get_node("SelectionUnderline") as ColorRect).offset_top = -_ui_px(2)
-	party_row_template.custom_minimum_size.y = _ui_px(88)
-	(party_row_template.get_node("SelectionUnderline") as ColorRect).offset_top = -_ui_px(2)
-	_apply_simple_row_scaling(simple_row_template)
-	_apply_bar_row_scaling(bar_row_template)
-	_apply_party_row_scaling(party_row_template)
-	_apply_actor_header_scaling(actor_header_template)
+	_apply_row_scaling(_menu_rows)
+	_apply_row_scaling(_item_tab_rows)
+	_apply_row_scaling(_item_rows)
+	_apply_row_scaling(_skill_rows)
+	_apply_row_scaling(_equip_action_rows)
+	_apply_row_scaling(_equip_slot_rows)
+	_apply_row_scaling(_equip_item_rows)
+	_apply_row_scaling(_status_stat_rows)
+	_apply_row_scaling(_status_equip_rows)
+	_apply_row_scaling(_confirm_rows)
+	_apply_party_rows_scaling(_party_rows)
+	_apply_bar_rows_scaling(_status_bar_rows)
+	_apply_actor_header_scaling(skills_actor_header)
+	_apply_actor_header_scaling(equipment_actor_header)
+	_apply_actor_header_scaling(status_actor_header)
 
 
-func _get_inventory_service() -> Node:
-	var core_manager: Node = get_node_or_null("/root/CoreManager")
-	if core_manager and core_manager.has_method("get_singleton"):
-		var service: Variant = core_manager.call("get_singleton", "InventoryService")
-		if service is Node:
-			return service
-	return get_node_or_null("/root/InventoryService")
+func _apply_row_scaling(rows: Array[Control]) -> void:
+	for row: Control in rows:
+		var margin: MarginContainer = row.get_node_or_null("Margin") as MarginContainer
+		var content: HBoxContainer = row.get_node_or_null("Margin/ContentRow") as HBoxContainer
+		var left_label: Label = row.get_node_or_null("Margin/ContentRow/LeftLabel") as Label
+		var right_label: Label = row.get_node_or_null("Margin/ContentRow/RightLabel") as Label
+		var underline: ColorRect = row.get_node_or_null("SelectionUnderline") as ColorRect
+		if margin:
+			margin.add_theme_constant_override("margin_left", _ui_px(8))
+			margin.add_theme_constant_override("margin_top", _ui_px(6))
+			margin.add_theme_constant_override("margin_right", _ui_px(8))
+			margin.add_theme_constant_override("margin_bottom", _ui_px(6))
+		if content:
+			content.add_theme_constant_override("separation", _ui_px(10))
+		if left_label:
+			left_label.add_theme_font_size_override("font_size", _ui_px(18))
+		if right_label:
+			right_label.add_theme_font_size_override("font_size", _ui_px(17))
+		if underline:
+			underline.offset_top = -_ui_px(2)
 
 
-func _ui_px(value: int) -> int:
-	var ui_scale_manager: Node = get_node_or_null("/root/UIScaleManager")
-	if ui_scale_manager and ui_scale_manager.has_method("px"):
-		return int(ui_scale_manager.call("px", value))
-	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
-	if ui_scale_service and ui_scale_service.has_method("px"):
-		return int(ui_scale_service.call("px", value))
-	return value
+func _apply_party_rows_scaling(rows: Array[Control]) -> void:
+	for row: Control in rows:
+		var margin: MarginContainer = row.get_node("Margin") as MarginContainer
+		var content: HBoxContainer = row.get_node("Margin/ContentRow") as HBoxContainer
+		var portrait: TextureRect = row.get_node("Margin/ContentRow/Portrait") as TextureRect
+		var name_label: Label = row.get_node("Margin/ContentRow/NameLabel") as Label
+		var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
+		var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
+		var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
+		var underline: ColorRect = row.get_node_or_null("SelectionUnderline") as ColorRect
+		margin.add_theme_constant_override("margin_left", _ui_px(10))
+		margin.add_theme_constant_override("margin_top", _ui_px(8))
+		margin.add_theme_constant_override("margin_right", _ui_px(10))
+		margin.add_theme_constant_override("margin_bottom", _ui_px(8))
+		content.add_theme_constant_override("separation", _ui_px(12))
+		portrait.custom_minimum_size = Vector2(_ui_px(64), _ui_px(64))
+		name_label.custom_minimum_size = Vector2(_ui_px(160), 0)
+		level_label.custom_minimum_size = Vector2(_ui_px(70), 0)
+		hp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
+		sp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
+		_apply_bar_row_scaling(hp_row)
+		_apply_bar_row_scaling(sp_row)
+		if underline:
+			underline.offset_top = -_ui_px(2)
 
 
-func _apply_simple_row_scaling(row: PanelContainer) -> void:
-	var margin: MarginContainer = row.get_node("Margin") as MarginContainer
-	var content: HBoxContainer = row.get_node("Margin/ContentRow") as HBoxContainer
-	var left_label: Label = row.get_node("Margin/ContentRow/LeftLabel") as Label
-	var right_label: Label = row.get_node("Margin/ContentRow/RightLabel") as Label
-	margin.add_theme_constant_override("margin_left", _ui_px(8))
-	margin.add_theme_constant_override("margin_top", _ui_px(6))
-	margin.add_theme_constant_override("margin_right", _ui_px(8))
-	margin.add_theme_constant_override("margin_bottom", _ui_px(6))
-	content.add_theme_constant_override("separation", _ui_px(10))
-	left_label.add_theme_font_size_override("font_size", _ui_px(18))
-	right_label.add_theme_font_size_override("font_size", _ui_px(17))
+func _apply_bar_rows_scaling(rows: Array[Control]) -> void:
+	for row: Control in rows:
+		if row is HBoxContainer:
+			_apply_bar_row_scaling(row as HBoxContainer)
 
 
 func _apply_bar_row_scaling(row: HBoxContainer) -> void:
@@ -915,28 +893,6 @@ func _apply_bar_row_scaling(row: HBoxContainer) -> void:
 	row.add_theme_constant_override("separation", _ui_px(8))
 	label.custom_minimum_size = Vector2(_ui_px(70), 0)
 	value_label.custom_minimum_size = Vector2(_ui_px(90), 0)
-
-
-func _apply_party_row_scaling(row: PanelContainer) -> void:
-	var margin: MarginContainer = row.get_node("Margin") as MarginContainer
-	var content: HBoxContainer = row.get_node("Margin/ContentRow") as HBoxContainer
-	var portrait: TextureRect = row.get_node("Margin/ContentRow/Portrait") as TextureRect
-	var name_label: Label = row.get_node("Margin/ContentRow/NameLabel") as Label
-	var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
-	var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
-	var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
-	margin.add_theme_constant_override("margin_left", _ui_px(10))
-	margin.add_theme_constant_override("margin_top", _ui_px(8))
-	margin.add_theme_constant_override("margin_right", _ui_px(10))
-	margin.add_theme_constant_override("margin_bottom", _ui_px(8))
-	content.add_theme_constant_override("separation", _ui_px(12))
-	portrait.custom_minimum_size = Vector2(_ui_px(64), _ui_px(64))
-	name_label.custom_minimum_size = Vector2(_ui_px(160), 0)
-	level_label.custom_minimum_size = Vector2(_ui_px(70), 0)
-	hp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
-	sp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
-	_apply_bar_row_scaling(hp_row)
-	_apply_bar_row_scaling(sp_row)
 
 
 func _apply_actor_header_scaling(header: HBoxContainer) -> void:
@@ -963,6 +919,25 @@ func _populate_bar_row(row: HBoxContainer, label_text: String, value: int, max_v
 	progress_bar.max_value = safe_max
 	progress_bar.value = clampi(value, 0, safe_max)
 	value_label.text = "%d/%d" % [value, max_value]
+
+
+func _get_inventory_service() -> Node:
+	var core_manager: Node = get_node_or_null("/root/CoreManager")
+	if core_manager and core_manager.has_method("get_singleton"):
+		var service: Variant = core_manager.call("get_singleton", "InventoryService")
+		if service is Node:
+			return service
+	return get_node_or_null("/root/InventoryService")
+
+
+func _ui_px(value: int) -> int:
+	var ui_scale_manager: Node = get_node_or_null("/root/UIScaleManager")
+	if ui_scale_manager and ui_scale_manager.has_method("px"):
+		return int(ui_scale_manager.call("px", value))
+	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
+	if ui_scale_service and ui_scale_service.has_method("px"):
+		return int(ui_scale_service.call("px", value))
+	return value
 
 
 func _is_accept(event: InputEvent) -> bool:
