@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://eq0y6pmpl2vc"]
+
+[ext_resource type="Texture2D" uid="uid://bbn4e6358318y" path="res://modules/quiz_rpg/assets/textures/atlases/Chests/RPG Chests.png" id="1_udnj4"]
+[ext_resource type="Script" uid="uid://436bh13tck8b" path="res://modules/quiz_rpg/scripts/interactables/chest.gd" id="2_egk45"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bla77"]
+size = Vector2(12, 5)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 30.0
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tyb4q"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(192, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g1mrt"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(192, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_41j0s"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(192, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nxdj6"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(192, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_5qwxn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tyb4q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g1mrt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_41j0s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nxdj6")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[node name="ClosedChest" type="StaticBody2D"]
+y_sort_enabled = true
+scale = Vector2(1.25, 1.25)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4.5)
+shape = SubResource("RectangleShape2D_bla77")
+
+[node name="Chest" type="AnimatedSprite2D" parent="."]
+texture_repeat = 1
+scale = Vector2(0.99999994, 0.99999994)
+sprite_frames = SubResource("SpriteFrames_5qwxn")
+animation = &"open"
+frame = 1
+script = ExtResource("2_egk45")
+lock_id = "tutorial_1"
+chest_item_id = "potion"
+chest_item_count = 1
+
+[node name="InteractionArea" type="Area2D" parent="Chest"]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Chest/InteractionArea"]
+shape = SubResource("CircleShape2D_interaction")
+
+[connection signal="animation_finished" from="Chest" to="Chest" method="_on_animation_finished"]
+[connection signal="body_entered" from="Chest/InteractionArea" to="Chest" method="_on_interaction_area_body_entered"]
+[connection signal="body_exited" from="Chest/InteractionArea" to="Chest" method="_on_interaction_area_body_exited"]

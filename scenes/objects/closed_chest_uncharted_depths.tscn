@@ -1,0 +1,70 @@
+[gd_scene load_steps=13 format=3 uid="uid://bpqjanlkeksnx"]
+
+[ext_resource type="Texture2D" uid="uid://dv1ai8rii8muw" path="res://assets/textures/atlases/Chests/RPG Chests.png" id="1_sy8qs"]
+[ext_resource type="Script" uid="uid://436bh13tck8b" path="res://scripts/interactables/chest.gd" id="2_yafby"]
+[ext_resource type="Script" uid="uid://chcswcrnxvho4" path="res://scripts/items/Item.gd" id="3_6uu74"]
+[ext_resource type="Resource" uid="uid://dwkhuvjslqc16" path="res://resources/items/quest/dark_crystal.tres" id="4_fn8x1"]
+[ext_resource type="Script" uid="uid://m2rhuiyxfdun" path="res://scripts/systems/drop_table/loot_table.gd" id="8_r8tfi"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bla77"]
+size = Vector2(12, 5)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v5vqs"]
+atlas = ExtResource("1_sy8qs")
+region = Rect2(256, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e7mfh"]
+atlas = ExtResource("1_sy8qs")
+region = Rect2(256, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7xhwt"]
+atlas = ExtResource("1_sy8qs")
+region = Rect2(256, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fn8x1"]
+atlas = ExtResource("1_sy8qs")
+region = Rect2(256, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_5qwxn"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v5vqs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e7mfh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7xhwt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fn8x1")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[sub_resource type="Resource" id="Resource_fn8x1"]
+script = ExtResource("8_r8tfi")
+entries = Array[ExtResource("3_6uu74")]([ExtResource("4_fn8x1")])
+metadata/_custom_type_script = "uid://m2rhuiyxfdun"
+
+[node name="ClosedChest" type="StaticBody2D"]
+y_sort_enabled = true
+scale = Vector2(1.25, 1.25)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4.5)
+shape = SubResource("RectangleShape2D_bla77")
+
+[node name="Chest" type="AnimatedSprite2D" parent="."]
+texture_repeat = 1
+scale = Vector2(0.99999994, 0.99999994)
+sprite_frames = SubResource("SpriteFrames_5qwxn")
+animation = &"open"
+script = ExtResource("2_yafby")
+lock_id = "uncharted_depths_1"
+loot_table = SubResource("Resource_fn8x1")
+
+[connection signal="animation_finished" from="Chest" to="Chest" method="_on_animation_finished"]

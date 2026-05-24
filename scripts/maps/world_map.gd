@@ -234,7 +234,7 @@ func _add_wall_body(pos: Vector2, size: Vector2) -> void:
 
 
 func _setup_camera() -> void:
-	var camera := get_node_or_null("Player/Camera2D") as Camera2D
+	var camera := _get_player_camera()
 	if camera == null:
 		return
 
@@ -257,13 +257,13 @@ func _connect_camera_updates() -> void:
 
 
 func _on_viewport_size_changed() -> void:
-	var camera := get_node_or_null("Player/Camera2D") as Camera2D
+	var camera := _get_player_camera()
 	if camera:
 		_update_camera_zoom(camera)
 
 
 func _on_resolution_changed(_new_resolution: Vector2i) -> void:
-	var camera := get_node_or_null("Player/Camera2D") as Camera2D
+	var camera := _get_player_camera()
 	if camera:
 		_update_camera_zoom(camera)
 
@@ -273,7 +273,7 @@ func _on_party_changed() -> void:
 
 
 func _setup_party_followers() -> void:
-	var leader := get_node_or_null("Player") as CharacterBody2D
+	var leader := _get_player_node()
 	if leader == null:
 		return
 	if _ps == null or not _ps.has_method("get_party_members"):
@@ -283,11 +283,12 @@ func _setup_party_followers() -> void:
 		leader.call("apply_hero_data", members[0])
 	var desired_follower_count: int = maxi(members.size() - 1, 0)
 	if _follower_root == null:
-		_follower_root = get_node_or_null("PartyFollowers") as Node2D
+		_follower_root = _get_follower_root()
 		if _follower_root == null:
 			_follower_root = Node2D.new()
 			_follower_root.name = "PartyFollowers"
-			add_child(_follower_root)
+			var parent_node: Node = get_parent() if get_parent() != null else self
+			parent_node.add_child(_follower_root)
 	if desired_follower_count == _follower_count:
 		return
 	for child: Node in _follower_root.get_children():
@@ -318,3 +319,32 @@ func _setup_party_followers() -> void:
 func _update_camera_zoom(camera: Camera2D) -> void:
 	var zoom_scalar := clampf(zoom_percent / 100.0, 0.5, 3.0)
 	camera.zoom = Vector2.ONE * zoom_scalar
+
+
+func _get_player_node() -> CharacterBody2D:
+	var direct_player := get_node_or_null("Player") as CharacterBody2D
+	if direct_player != null:
+		return direct_player
+	var parent_node: Node = get_parent()
+	if parent_node != null:
+		var sibling_player := parent_node.get_node_or_null("Player") as CharacterBody2D
+		if sibling_player != null:
+			return sibling_player
+	return null
+
+
+func _get_player_camera() -> Camera2D:
+	var player_node: CharacterBody2D = _get_player_node()
+	if player_node == null:
+		return null
+	return player_node.get_node_or_null("Camera2D") as Camera2D
+
+
+func _get_follower_root() -> Node2D:
+	var local_root := get_node_or_null("PartyFollowers") as Node2D
+	if local_root != null:
+		return local_root
+	var parent_node: Node = get_parent()
+	if parent_node != null:
+		return parent_node.get_node_or_null("PartyFollowers") as Node2D
+	return null

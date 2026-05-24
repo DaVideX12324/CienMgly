@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://6xjayrk5qpxu"]
+
+[ext_resource type="Texture2D" uid="uid://cvg7mu53a1a62" path="res://assets/textures/atlases/Dungeon tileset/Dungeon tileset.png" id="1_yar34"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uw3m6"]
+size = Vector2(32, 0.25)
+
+[node name="Door" type="StaticBody2D"]
+collision_mask = 7
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_yar34")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-8, -113.125)
+shape = SubResource("RectangleShape2D_uw3m6")

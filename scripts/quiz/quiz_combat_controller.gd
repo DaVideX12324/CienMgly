@@ -620,7 +620,8 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 		row.mouse_filter = Control.MOUSE_FILTER_STOP
 		row.custom_minimum_size = Vector2(0.0, _ui_scale_px(38))
 		var margin: MarginContainer = MarginContainer.new()
-		margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		margin.mouse_filter = Control.MOUSE_FILTER_STOP
 		margin.add_theme_constant_override("margin_left", _ui_scale_px(8))
 		margin.add_theme_constant_override("margin_top", _ui_scale_px(6))
 		margin.add_theme_constant_override("margin_right", _ui_scale_px(8))
@@ -662,8 +663,11 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 		content.add_child(value_label)
 		margin.add_child(content)
 		row.add_child(margin)
-		row.gui_input.connect(func(event: InputEvent, idx := _list_menu_rows.size()): _on_list_row_gui_input(event, idx))
-		row.mouse_entered.connect(func(idx := _list_menu_rows.size()): _on_list_row_hover(idx))
+		var row_index: int = _list_menu_rows.size()
+		row.gui_input.connect(func(event: InputEvent): _on_list_row_gui_input(event, row_index))
+		row.mouse_entered.connect(func(): _on_list_row_hover(row_index))
+		margin.gui_input.connect(func(event: InputEvent): _on_list_row_gui_input(event, row_index))
+		margin.mouse_entered.connect(func(): _on_list_row_hover(row_index))
 		list_box.add_child(row)
 		_list_menu_rows.append(row)
 	_refresh_list_selection()

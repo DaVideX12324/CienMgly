@@ -1,0 +1,60 @@
+[gd_scene load_steps=7 format=3 uid="uid://kqrlbpqkd5sr"]
+
+[ext_resource type="Texture2D" uid="uid://b6848l7obhsvc" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7.png" id="1_e8wm6"]
+[ext_resource type="Texture2D" uid="uid://n772kbb3erf7" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_pillars.png" id="2_f3dug"]
+[ext_resource type="Texture2D" uid="uid://b0yprjjpodyta" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_right.png" id="2_ohqku"]
+[ext_resource type="Texture2D" uid="uid://c6sxa6gygqoq" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_pillars_back.png" id="3_6sqbv"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6sqbv"]
+size = Vector2(13, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wbbss"]
+size = Vector2(10, 4.5)
+
+[node name="House_Desert_RedStone_7" type="StaticBody2D"]
+y_sort_enabled = true
+
+[node name="House_Desert_RedStone_7" type="Sprite2D" parent="."]
+y_sort_enabled = true
+position = Vector2(0, 5)
+texture = ExtResource("1_e8wm6")
+offset = Vector2(1, -18)
+region_enabled = true
+region_rect = Rect2(0, 0, 156, 137)
+
+[node name="House_Desert_RedStone_7_right" type="Sprite2D" parent="."]
+position = Vector2(36, 37)
+texture = ExtResource("2_ohqku")
+offset = Vector2(-35, -50)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+y_sort_enabled = true
+position = Vector2(1, -13)
+polygon = PackedVector2Array(-71, -44.5, -71, 16.5, -71, 25.5, -69, 25.5, -68, 26.5, -68, 29.5, -43, 29.5, -43, 31.5, -36, 35.5, -27, 38.5, -18, 38.5, -17, 42.5, -13, 45.5, -9, 46.5, -5, 46, -5, 56.5, 75, 56.5, 75, -44.5)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+y_sort_enabled = true
+position = Vector2(-53, 17)
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(116.5, 36)
+shape = SubResource("RectangleShape2D_6sqbv")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(61.5, 36)
+shape = SubResource("RectangleShape2D_6sqbv")
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D"]
+y_sort_enabled = true
+position = Vector2(74, 29)
+texture = ExtResource("2_f3dug")
+offset = Vector2(-20, -59)
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(-18, 11.25)
+shape = SubResource("RectangleShape2D_wbbss")
+
+[node name="Sprite2D2" type="Sprite2D" parent="StaticBody2D"]
+position = Vector2(-13, 6)
+texture = ExtResource("3_6sqbv")
+offset = Vector2(67, -36)

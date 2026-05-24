@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://d2m7bsefo8m87"]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/maps/level_manager.tscn" id="1_level_manager"]
+[ext_resource type="PackedScene" uid="uid://player001" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://hud001" path="res://modules/quiz_rpg/scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://pause001" path="res://modules/quiz_rpg/scenes/ui/pause_menu.tscn" id="4_pause"]
+
+[node name="Game" type="Node2D"]
+
+[node name="level_manager" parent="." instance=ExtResource("1_level_manager")]
+
+[node name="PartyFollowers" type="Node2D" parent="."]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("4_pause")]
