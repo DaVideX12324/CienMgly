@@ -13,6 +13,7 @@ const PARTY_TP_MAX := 100
 const SKILL_SP_COST := 20
 const ATTACK_HIT_CHANCE_CORRECT := 0.8
 const ATTACK_HIT_CHANCE_WRONG := 0.2
+const FLEE_SUCCESS_CHANCE := 0.8
 const COMMAND_PANEL_WIDTH_DEFAULT := 180.0
 const PARTY_PANEL_WIDTH_DEFAULT := 1080.0
 const COMMAND_PANEL_WIDTH_MIN := 180.0
@@ -957,7 +958,7 @@ func _resolve_heal(correct: bool) -> void:
 
 
 func _try_flee() -> void:
-	if _ps and _ps.roll_with_bonus(0.30):
+	if randf() < FLEE_SUCCESS_CHANCE:
 		result_label.visible = true
 		result_label.text = "Uciekasz!"
 		result_label.add_theme_color_override("font_color", Color.WHITE)

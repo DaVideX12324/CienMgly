@@ -4,6 +4,10 @@ signal answered(result: Dictionary, submitted_answer: Dictionary)
 
 const TEXT_PRIMARY := Color(0.95, 0.95, 0.98)
 const TEXT_SECONDARY := Color(0.65, 0.65, 0.72)
+const FEEDBACK_CORRECT_FILL := Color(0.12, 0.42, 0.18, 0.95)
+const FEEDBACK_CORRECT_BORDER := Color(0.3, 1.0, 0.4, 1.0)
+const FEEDBACK_WRONG_FILL := Color(0.42, 0.12, 0.12, 0.95)
+const FEEDBACK_WRONG_BORDER := Color(1.0, 0.3, 0.3, 1.0)
 
 var command_vbox: VBoxContainer
 var quiz_panel: VBoxContainer
@@ -273,6 +277,7 @@ func get_desired_panel_width() -> float:
 func show_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
 	result_label.visible = true
 	correct_answer_label.visible = false
+	_show_correct_answer()
 	if bool(result.get("correct", false)):
 		result_label.text = "Poprawnie!"
 		result_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
@@ -281,20 +286,23 @@ func show_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
 		if bool(result.get("timed_out", false)):
 			result_label.text = "Czas minal!"
 		result_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-		_show_correct_answer()
 
 	match str(_current_question.get("type", "multiple_choice")):
 		"multiple_choice":
 			var correct_index := int(result.get("correct_index", -1))
 			if correct_index >= 0 and correct_index < mc_buttons.size():
-				mc_buttons[correct_index].add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+				_apply_choice_feedback(mc_buttons[correct_index], true)
 			var picked := int(submitted_answer.get("index", -1))
 			if not bool(result.get("correct", false)) and picked >= 0 and picked < mc_buttons.size():
-				mc_buttons[picked].add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+				_apply_choice_feedback(mc_buttons[picked], false)
 		"true_false":
 			var correct_tf_index := int(result.get("correct_index", -1))
 			if correct_tf_index >= 0 and correct_tf_index < tf_buttons.size():
-				tf_buttons[correct_tf_index].add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+				_apply_choice_feedback(tf_buttons[correct_tf_index], true)
+			if not bool(result.get("correct", false)) and submitted_answer.has("value"):
+				var picked_tf_index: int = 0 if bool(submitted_answer.get("value", false)) else 1
+				if picked_tf_index >= 0 and picked_tf_index < tf_buttons.size():
+					_apply_choice_feedback(tf_buttons[picked_tf_index], false)
 
 
 func answer_multiple_choice(index: int) -> Dictionary:
@@ -363,7 +371,7 @@ func _build_mc(question: Dictionary) -> void:
 			btn.disabled = false
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
 			btn.set_meta("base_text", str(answers[i]))
-			btn.remove_theme_color_override("font_color")
+			_clear_choice_feedback(btn)
 			if not btn.mouse_entered.is_connected(_on_mc_button_hover.bind(i)):
 				btn.mouse_entered.connect(_on_mc_button_hover.bind(i))
 		else:
@@ -381,7 +389,7 @@ func _build_tf() -> void:
 	for i in range(tf_buttons.size()):
 		var btn: Button = tf_buttons[i]
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
-		btn.remove_theme_color_override("font_color")
+		_clear_choice_feedback(btn)
 		if not btn.mouse_entered.is_connected(_on_tf_button_hover.bind(i)):
 			btn.mouse_entered.connect(_on_tf_button_hover.bind(i))
 	_refresh_tf_selection()
@@ -548,8 +556,42 @@ func _show_correct_answer() -> void:
 	var answer_text := QuizManager.get_correct_answer_text(_current_question)
 	if answer_text == "":
 		return
-	correct_answer_label.text = answer_text
+	correct_answer_label.text = "Poprawna odpowiedz: %s" % answer_text
 	correct_answer_label.visible = true
+
+
+func _apply_choice_feedback(button: Button, is_correct: bool) -> void:
+	if button == null:
+		return
+	var fill_color: Color = FEEDBACK_CORRECT_FILL if is_correct else FEEDBACK_WRONG_FILL
+	var border_color: Color = FEEDBACK_CORRECT_BORDER if is_correct else FEEDBACK_WRONG_BORDER
+	var font_color: Color = Color.WHITE if is_correct else Color(1.0, 0.92, 0.92)
+	button.add_theme_color_override("font_color", font_color)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state_name, _make_feedback_stylebox(fill_color, border_color))
+
+
+func _clear_choice_feedback(button: Button) -> void:
+	if button == null:
+		return
+	button.remove_theme_color_override("font_color")
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.remove_theme_stylebox_override(state_name)
+
+
+func _make_feedback_stylebox(fill_color: Color, border_color: Color) -> StyleBoxFlat:
+	var style_box := StyleBoxFlat.new()
+	style_box.bg_color = fill_color
+	style_box.border_width_left = 2
+	style_box.border_width_top = 2
+	style_box.border_width_right = 2
+	style_box.border_width_bottom = 2
+	style_box.border_color = border_color
+	style_box.corner_radius_top_left = 3
+	style_box.corner_radius_top_right = 3
+	style_box.corner_radius_bottom_left = 3
+	style_box.corner_radius_bottom_right = 3
+	return style_box
 
 
 func _measure_label_width(label: Label) -> float:
