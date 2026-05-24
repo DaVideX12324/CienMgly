@@ -223,6 +223,7 @@ func _move_selection(delta: int) -> void:
 	match _mode:
 		"left_menu":
 			_left_menu_index = wrapi(_left_menu_index + delta, 0, _menu_rows.size())
+			_refresh_left_menu_rows()
 		"items_list":
 			if _current_item_entries.is_empty():
 				return
@@ -398,6 +399,7 @@ func _show_default_party_panel() -> void:
 	_show_panel("party")
 	context_title_label.text = "Druzyna"
 	party_hint_label.text = ""
+	_refresh_left_menu_rows()
 	_rebuild_party_rows(false)
 
 
@@ -475,6 +477,10 @@ func _cache_scene_rows() -> void:
 	_status_stat_rows = _collect_rows(status_stats_vbox)
 	_status_equip_rows = _collect_rows(status_equip_vbox)
 	_confirm_rows = _collect_rows(confirm_options_vbox)
+
+
+func _refresh_left_menu_rows() -> void:
+	_set_row_selection(_menu_rows, _left_menu_index)
 
 
 func _rebuild_party_rows(_selectable: bool) -> void:
@@ -699,11 +705,13 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 		var textures: Array = row.find_children("*", "TextureRect", true, false)
 		for texture_value: Variant in textures:
 			var texture_rect: TextureRect = texture_value as TextureRect
-			texture_rect.self_modulate = target_modulate
-		var progress_bars: Array = row.find_children("*", "ProgressBar", true, false)
+			if texture_rect:
+				texture_rect.self_modulate = target_modulate
+		var progress_bars: Array = row.find_children("*", "TextureProgressBar", true, false)
 		for progress_value: Variant in progress_bars:
-			var progress_bar: ProgressBar = progress_value as ProgressBar
-			progress_bar.self_modulate = target_modulate
+			var progress_bar: TextureProgressBar = progress_value as TextureProgressBar
+			if progress_bar:
+				progress_bar.self_modulate = target_modulate
 		if underline:
 			underline.visible = is_selected
 
@@ -852,7 +860,7 @@ func _apply_row_scaling(rows: Array[Control]) -> void:
 		if right_label:
 			right_label.add_theme_font_size_override("font_size", _ui_px(17))
 		if underline:
-			underline.offset_top = -_ui_px(2)
+			_configure_selection_underline(underline, row)
 
 
 func _apply_party_rows_scaling(rows: Array[Control]) -> void:
@@ -878,7 +886,7 @@ func _apply_party_rows_scaling(rows: Array[Control]) -> void:
 		_apply_bar_row_scaling(hp_row)
 		_apply_bar_row_scaling(sp_row)
 		if underline:
-			underline.offset_top = -_ui_px(2)
+			_configure_selection_underline(underline, row)
 
 
 func _apply_bar_rows_scaling(rows: Array[Control]) -> void:
@@ -893,6 +901,22 @@ func _apply_bar_row_scaling(row: HBoxContainer) -> void:
 	row.add_theme_constant_override("separation", _ui_px(8))
 	label.custom_minimum_size = Vector2(_ui_px(70), 0)
 	value_label.custom_minimum_size = Vector2(_ui_px(90), 0)
+
+
+func _configure_selection_underline(underline: ColorRect, row: Control) -> void:
+	var thickness: int = _ui_px(2)
+	var side_margin: int = _ui_px(8)
+	underline.color = Color.WHITE
+	underline.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	underline.anchor_left = 0.0
+	underline.anchor_top = 1.0
+	underline.anchor_right = 1.0
+	underline.anchor_bottom = 1.0
+	underline.offset_left = float(side_margin)
+	underline.offset_top = float(-thickness)
+	underline.offset_right = float(-side_margin)
+	underline.offset_bottom = 0.0
+	underline.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 
 func _apply_actor_header_scaling(header: HBoxContainer) -> void:
@@ -911,7 +935,7 @@ func _apply_actor_header_scaling(header: HBoxContainer) -> void:
 
 func _populate_bar_row(row: HBoxContainer, label_text: String, value: int, max_value: int) -> void:
 	var label: Label = row.get_node("BarLabel") as Label
-	var progress_bar: ProgressBar = row.get_node("BarProgress") as ProgressBar
+	var progress_bar: TextureProgressBar = row.get_node("BarProgress") as TextureProgressBar
 	var value_label: Label = row.get_node("BarValue") as Label
 	var safe_max: int = maxi(max_value, 1)
 	label.text = label_text

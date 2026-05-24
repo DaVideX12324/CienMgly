@@ -1,8 +1,17 @@
 [gd_scene format=3 uid="uid://pause001"]
 
 [ext_resource type="Script" uid="uid://57epnewuopvb" path="res://modules/quiz_rpg/scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Texture2D" uid="uid://ci6a4ydqycn4v" path="res://modules/quiz_rpg/resources/ui/pause_menu_HP_progress.tres" id="2_a3858"]
+[ext_resource type="Texture2D" uid="uid://u0p6cairbxel" path="res://modules/quiz_rpg/resources/ui/pause_menu_SP_progress.tres" id="3_ba2in"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[sub_resource type="Gradient" id="Gradient_hkbcu"]
+offsets = PackedFloat32Array(0.0063091484, 1)
+colors = PackedColorArray(0, 0.36913243, 3.85046e-07, 1, 0.14901961, 1, 0.14901961, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8jlx1"]
+gradient = SubResource("Gradient_hkbcu")
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=716895248]
 process_mode = 3
@@ -10,7 +19,6 @@ layer = 20
 script = ExtResource("1_pause")
 
 [node name="PauseRoot" type="Control" parent="." unique_id=604391271]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -296,10 +304,9 @@ layout_mode = 2
 [node name="PartyListVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel" unique_id=1932906304]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 15
 
 [node name="PartyRow0" type="PanelContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox" unique_id=159255315]
-visible = true
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -347,11 +354,14 @@ custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "ZYCIE"
 
-[node name="BarProgress" type="ProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=472119949]
+[node name="BarProgress" type="TextureProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=139498398]
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 value = 50.0
-show_percentage = false
+nine_patch_stretch = true
+texture_progress = ExtResource("2_a3858")
 
 [node name="BarValue" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=989536510]
 custom_minimum_size = Vector2(90, 0)
@@ -368,11 +378,14 @@ custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "MANA"
 
-[node name="BarProgress" type="ProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=974378496]
+[node name="BarProgress" type="TextureProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=1923495597]
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 value = 50.0
-show_percentage = false
+nine_patch_stretch = true
+texture_progress = ExtResource("3_ba2in")
 
 [node name="BarValue" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=1157114204]
 custom_minimum_size = Vector2(90, 0)
@@ -380,7 +393,6 @@ layout_mode = 2
 text = "50/100"
 
 [node name="PartyRow1" type="PanelContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox" unique_id=2140494674]
-visible = true
 custom_minimum_size = Vector2(0, 88)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -428,11 +440,14 @@ custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "ZYCIE"
 
-[node name="BarProgress" type="ProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=463082899]
+[node name="BarProgress" type="TextureProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1309650356]
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 value = 50.0
-show_percentage = false
+nine_patch_stretch = true
+texture_progress = SubResource("GradientTexture1D_8jlx1")
 
 [node name="BarValue" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=974570345]
 custom_minimum_size = Vector2(90, 0)
@@ -449,11 +464,14 @@ custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 text = "MANA"
 
-[node name="BarProgress" type="ProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=2116388612]
+[node name="BarProgress" type="TextureProgressBar" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=2103922290]
+custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
 value = 50.0
-show_percentage = false
+nine_patch_stretch = true
+texture_progress = ExtResource("3_ba2in")
 
 [node name="BarValue" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel/PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=487624691]
 custom_minimum_size = Vector2(90, 0)
