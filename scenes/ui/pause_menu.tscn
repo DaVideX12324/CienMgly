@@ -1,49 +1,244 @@
 [gd_scene format=3 uid="uid://pause001"]
 
-[ext_resource type="Script" uid="uid://cvrmoxqtuqm47" path="res://modules/quiz_rpg/scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/pause_menu.gd" id="1_pause"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 layer = 20
 process_mode = 3
 script = ExtResource("1_pause")
 
-[node name="Panel" type="PanelContainer" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -130.0
-offset_top = -130.0
-offset_right = 130.0
-offset_bottom = 130.0
+[node name="PauseRoot" type="Control" parent="."]
 visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+[node name="Background" type="ColorRect" parent="PauseRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="MainRow" type="HBoxContainer" parent="PauseRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 28.0
+offset_right = -28.0
+offset_bottom = -28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="LeftPanel" type="PanelContainer" parent="PauseRoot/MainRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="LeftVBox" type="VBoxContainer" parent="PauseRoot/MainRow/LeftPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox"]
+layout_mode = 2
+text = "Menu"
+
+[node name="MenuListVBox" type="VBoxContainer" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="ToastLabel" type="Label" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="RightPanel" type="PanelContainer" parent="PauseRoot/MainRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="RightVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="ContextTitleLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox"]
+layout_mode = 2
+text = "Druzyna"
+
+[node name="ContextBody" type="Control" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PartyPanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PartyHintLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel"]
+layout_mode = 2
+text = ""
+
+[node name="PartyListVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/PartyPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="ItemsPanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TabsRow" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ItemsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ListVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ItemsPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="FooterLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ItemsPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="SkillsPanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ActorHeader" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SkillsPanel"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+[node name="ListVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SkillsPanel"]
 layout_mode = 2
-text = "Pauza"
-horizontal_alignment = 1
+size_flags_vertical = 3
+theme_override_constants/separation = 6
 
-[node name="ResumeBtn" type="Button" parent="Panel/VBoxContainer"]
+[node name="FooterLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/SkillsPanel"]
 layout_mode = 2
-text = "Wznow"
+autowrap_mode = 3
+text = ""
 
-[node name="SaveBtn" type="Button" parent="Panel/VBoxContainer"]
-layout_mode = 2
-text = "Zapisz Gre"
+[node name="EquipmentPanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
 
-[node name="InventoryBtn" type="Button" parent="Panel/VBoxContainer"]
+[node name="ActorHeader" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/EquipmentPanel"]
 layout_mode = 2
-text = "Ekwipunek"
+theme_override_constants/separation = 12
 
-[node name="StatsBtn" type="Button" parent="Panel/VBoxContainer"]
+[node name="EquipStatsLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/EquipmentPanel"]
 layout_mode = 2
-text = "Statystyki"
+text = ""
 
-[node name="MenuBtn" type="Button" parent="Panel/VBoxContainer"]
+[node name="EquipActionRow" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/EquipmentPanel"]
 layout_mode = 2
-text = "Wyjdz do Menu"
+theme_override_constants/separation = 10
+
+[node name="EquipSlotsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/EquipmentPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="EquipItemsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/EquipmentPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="FooterLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/EquipmentPanel"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="StatusPanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ActorHeader" type="HBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatusInfoLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/StatusPanel"]
+layout_mode = 2
+text = ""
+
+[node name="StatusBarsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StatusStatsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StatusEquipVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/StatusPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ConfirmPanel" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="ConfirmLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel"]
+layout_mode = 2
+text = "Zakonczyc gre?"
+
+[node name="OptionsVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody/ConfirmPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8

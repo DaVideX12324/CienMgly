@@ -5,14 +5,18 @@ class_name QuizRpgItemData
 @export var display_name: String = ""
 @export_multiline var description: String = ""
 @export var icon: Texture2D
+@export_enum("item", "hand", "part", "key") var category: String = "item"
 @export var stackable: bool = true
 @export_range(1, 999, 1) var max_stack: int = 99
 @export var consumable: bool = true
 @export var usable_in_menu: bool = true
 @export var usable_in_combat: bool = true
+@export_enum("", "weapon", "shield", "head", "body", "accessory") var equip_slot: String = ""
 @export var heal_amount: int = 0
 @export var sp_restore: int = 0
 @export var tp_restore: int = 0
+@export var atk_bonus: int = 0
+@export var def_bonus: int = 0
 
 
 func get_effect_summary() -> String:

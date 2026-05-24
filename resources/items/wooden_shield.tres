@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "wooden_shield"
+display_name = "Drewniana Tarcza"
+description = "Lekka tarcza, ale lepsza niz nic."
+category = "hand"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "shield"
+def_bonus = 3

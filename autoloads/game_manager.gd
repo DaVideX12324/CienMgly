@@ -106,6 +106,11 @@ func new_game() -> void:
 	transition_to_scene("res://modules/quiz_rpg/scenes/maps/world_map.tscn")
 
 
+func return_to_main_menu() -> void:
+	change_state(GameState.MENU)
+	transition_to_scene("res://modules/quiz_rpg/scenes/ui/main_menu.tscn")
+
+
 func log_debug(message: Variant, category: String = "GENERAL") -> void:
 	if OS.is_debug_build():
 		print("[RPG][%s] %s" % [category.to_upper(), str(message)])
