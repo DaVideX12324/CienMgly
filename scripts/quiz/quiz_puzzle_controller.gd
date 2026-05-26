@@ -89,7 +89,7 @@ func _ready() -> void:
 		return
 
 	_update_progress()
-	_show_question(first_q)
+	call_deferred("_show_question", first_q)
 
 
 func _should_auto_solve_puzzle(diff_range: Vector2i) -> bool:
@@ -132,7 +132,8 @@ func _show_question(q: Dictionary) -> void:
 		_active_overlay.queue_free()
 	var overlay := QuizOverlayScene.instantiate()
 	_active_overlay = overlay
-	get_parent().add_child(overlay)
+	get_parent().add_child.call_deferred(overlay)
+	await overlay.ready
 	var time_limit = overlay.calculate_time(q, 18.0, 1)
 	var overlay_title := title_label.text if title_label else "Zagadka"
 	overlay.answered.connect(_on_overlay_answered)
