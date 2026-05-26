@@ -41,7 +41,7 @@ func _ready() -> void:
 	_ps = CoreManager.get_singleton("PlayerStats")
 	# Ustaw seed na stały, żeby mapa wyglądała tak samo zawsze
 	var rng = RandomNumberGenerator.new()
-	rng.seed = 67
+	rng.seed = 42
 
 	# Generuj dekoracje
 	_generate_trees(rng, 25)
