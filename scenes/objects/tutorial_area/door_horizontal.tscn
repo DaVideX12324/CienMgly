@@ -100,30 +100,28 @@ size = Vector2(32, 10)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_d2vn2"]
 size = Vector2(32, 32)
 
-[node name="Door_horizontal" type="StaticBody2D"]
+[node name="Door_horizontal" type="StaticBody2D" unique_id=1332259661]
+collision_layer = 4
+collision_mask = 4
 script = ExtResource("1_tinro")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1262337861]
 position = Vector2(0, -16)
 texture = ExtResource("1_30asa")
 hframes = 2
 region_enabled = true
 region_rect = Rect2(48, 112, 96, 32)
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_21lwg")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1547262257]
+libraries/ = SubResource("AnimationLibrary_21lwg")
 
-[node name="CollisionDoors" type="CollisionShape2D" parent="."]
+[node name="CollisionDoors" type="CollisionShape2D" parent="." unique_id=480105320]
 position = Vector2(0, -11)
 shape = SubResource("RectangleShape2D_sv0ti")
 
-[node name="PlayerDetection" type="Area2D" parent="."]
-collision_layer = 4
-collision_mask = 4
+[node name="PlayerDetection" type="Area2D" parent="." unique_id=1518807002]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetection"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetection" unique_id=1163945027]
 position = Vector2(0, -16)
 shape = SubResource("RectangleShape2D_d2vn2")
 

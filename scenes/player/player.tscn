@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d382dc0bji8wj" path="res://modules/quiz_rpg/scripts/player/player.gd" id="1_player"]
 [ext_resource type="Texture2D" uid="uid://c0py8xjol7ay3" path="res://modules/quiz_rpg/assets/textures/atlases/Soldier/Soldier-Idle.png" id="2_72pln"]
+[ext_resource type="Texture2D" uid="uid://ck8rvsc4fudby" path="res://modules/quiz_rpg/assets/textures/atlases/Soldier/Soldier-Walk.png" id="3_r0dpv"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r0dpv"]
 atlas = ExtResource("2_72pln")
@@ -27,6 +28,38 @@ region = Rect2(400, 0, 100, 100)
 atlas = ExtResource("2_72pln")
 region = Rect2(500, 0, 100, 100)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_juece"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(0, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8kiho"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(100, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3i0fe"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(200, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rcwkp"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(300, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mmfqf"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(400, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_551fg"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(500, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0dmro"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(600, 0, 100, 100)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4cx37"]
+atlas = ExtResource("3_r0dpv")
+region = Rect2(700, 0, 100, 100)
+
 [sub_resource type="SpriteFrames" id="SpriteFrames_juece"]
 animations = [{
 "frames": [{
@@ -51,10 +84,40 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_juece")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8kiho")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3i0fe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rcwkp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mmfqf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_551fg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0dmro")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4cx37")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 8.0
 }]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(7, 6)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_r0dpv"]
+radius = 3.0
+height = 10.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_interact"]
 radius = 19.0
@@ -63,25 +126,26 @@ radius = 19.0
 y_sort_enabled = true
 collision_mask = 6
 motion_mode = 1
+platform_on_leave = 2
 script = ExtResource("1_player")
 speed = 100.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1377984551]
 y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_juece")
-animation = &"idle"
-frame_progress = 0.33123437
+animation = &"walk"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=2099671777]
 zoom = Vector2(4, 4)
-position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=501759005]
-position = Vector2(0.5, 4)
-shape = SubResource("RectangleShape2D_player")
+position = Vector2(0, 4.5)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_r0dpv")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=965442546]
+visible = false
 collision_layer = 0
 collision_mask = 4
 

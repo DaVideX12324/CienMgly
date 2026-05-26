@@ -47,6 +47,8 @@ func get_menu_entries(raw_inventory: Array) -> Array[Dictionary]:
 			"name": item_data.display_name,
 			"description": item_data.description,
 			"count": int(entry.get("count", 0)),
+			"stackable": item_data.stackable,
+			"display_count": _format_display_count(item_data, int(entry.get("count", 0))),
 			"category": item_data.category,
 			"equip_slot": item_data.equip_slot,
 			"heal_amount": item_data.heal_amount,
@@ -200,3 +202,9 @@ func _append_or_stack(inventory: Array[Dictionary], item_id: String, count: int)
 		"item_id": item_id,
 		"count": count,
 	})
+
+
+func _format_display_count(item_data: QuizRpgItemData, count: int) -> String:
+	if not item_data.stackable:
+		return "X"
+	return str(maxi(count, 0))

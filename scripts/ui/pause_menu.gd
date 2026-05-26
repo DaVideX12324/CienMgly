@@ -720,7 +720,7 @@ func _rebuild_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), ":%d" % int(entry.get("count", 0)), false)
+			_set_simple_row(row, str(entry.get("name", "---")), ":%s" % str(entry.get("display_count", int(entry.get("count", 0)))), false)
 			_current_item_entries.append(entry)
 	if _current_item_entries.is_empty():
 		items_footer_label.text = "Brak przedmiotow w tej zakladce."
