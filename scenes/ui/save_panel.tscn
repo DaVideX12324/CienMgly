@@ -1,0 +1,130 @@
+[gd_scene format=3 uid="uid://ddsk0jw6shqvq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[node name="SavePanel" type="VBoxContainer" unique_id=2119516108]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="SaveHintLabel" type="Label" parent="." unique_id=1013779242]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="SaveSlotsVBox" type="VBoxContainer" parent="." unique_id=2078188669]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="SaveSlotRow0" type="PanelContainer" parent="SaveSlotsVBox" unique_id=1302290392]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="SaveSlotsVBox/SaveSlotRow0" unique_id=852983533]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBox/SaveSlotRow0/Control" unique_id=772426522]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="SaveSlotsVBox/SaveSlotRow0" unique_id=1444207384]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBox/SaveSlotRow0/Margin" unique_id=2107599933]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=798754985]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 1  Pusty slot"
+
+[node name="RightLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=1078069613]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SaveSlotRow1" type="PanelContainer" parent="SaveSlotsVBox" unique_id=64022233]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="SaveSlotsVBox/SaveSlotRow1" unique_id=164302893]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBox/SaveSlotRow1/Control" unique_id=1478332982]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="SaveSlotsVBox/SaveSlotRow1" unique_id=947826247]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBox/SaveSlotRow1/Margin" unique_id=1793963391]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=218323630]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 2  Pusty slot"
+
+[node name="RightLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=1000320678]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SaveSlotRow2" type="PanelContainer" parent="SaveSlotsVBox" unique_id=821994338]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="SaveSlotsVBox/SaveSlotRow2" unique_id=909900459]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBox/SaveSlotRow2/Control" unique_id=1950940888]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="SaveSlotsVBox/SaveSlotRow2" unique_id=32065567]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBox/SaveSlotRow2/Margin" unique_id=1831535745]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=742675859]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 3  Pusty slot"
+
+[node name="RightLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=1552980373]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="FooterLabel" type="Label" parent="." unique_id=887966132]
+layout_mode = 2
+autowrap_mode = 3

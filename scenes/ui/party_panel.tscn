@@ -1,0 +1,225 @@
+[gd_scene format=3 uid="uid://cwva0kpx3f8en"]
+
+[ext_resource type="Texture2D" uid="uid://ci6a4ydqycn4v" path="res://modules/quiz_rpg/resources/ui/pause_menu_HP_progress.tres" id="1_ncvew"]
+[ext_resource type="Texture2D" uid="uid://u0p6cairbxel" path="res://modules/quiz_rpg/resources/ui/pause_menu_SP_progress.tres" id="2_6vp7q"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[sub_resource type="Gradient" id="Gradient_hkbcu"]
+offsets = PackedFloat32Array(0.0063091484, 1)
+colors = PackedColorArray(0, 0.36913243, 3.85046e-07, 1, 0.14901961, 1, 0.14901961, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8jlx1"]
+gradient = SubResource("Gradient_hkbcu")
+
+[node name="PartyPanel" type="VBoxContainer" unique_id=1577505588]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="PartyHintLabel" type="Label" parent="." unique_id=1002393843]
+layout_mode = 2
+
+[node name="PartyListVBox" type="VBoxContainer" parent="." unique_id=698156749]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="PartyRow0" type="PanelContainer" parent="PartyListVBox" unique_id=1903903725]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="PartyListVBox/PartyRow0" unique_id=1690042994]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PartyListVBox/PartyRow0/Control" unique_id=223795629]
+visible = false
+layout_mode = 0
+offset_top = 81.0
+offset_right = 1255.0
+offset_bottom = 88.0
+
+[node name="Margin" type="MarginContainer" parent="PartyListVBox/PartyRow0" unique_id=1276957296]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="ContentRow" type="HBoxContainer" parent="PartyListVBox/PartyRow0/Margin" unique_id=1135326047]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Portrait" type="TextureRect" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=368401500]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=1980509735]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Bohater"
+
+[node name="LevelLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=893253877]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "LV 1"
+
+[node name="HPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=571560188]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=1758450638]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "ZYCIE"
+
+[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=235435160]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 50.0
+nine_patch_stretch = true
+texture_progress = ExtResource("1_ncvew")
+
+[node name="BarValue" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=937053030]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "50/100"
+
+[node name="SPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=1065790764]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=1471744122]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "MANA"
+
+[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=522337450]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 50.0
+nine_patch_stretch = true
+texture_progress = ExtResource("2_6vp7q")
+
+[node name="BarValue" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=2122384789]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "50/100"
+
+[node name="PartyRow1" type="PanelContainer" parent="PartyListVBox" unique_id=1952016337]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="PartyListVBox/PartyRow1" unique_id=1273433892]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="PartyListVBox/PartyRow1/Control" unique_id=509799483]
+visible = false
+layout_mode = 0
+offset_top = 81.0
+offset_right = 1255.0
+offset_bottom = 88.0
+
+[node name="Margin" type="MarginContainer" parent="PartyListVBox/PartyRow1" unique_id=1671061312]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="ContentRow" type="HBoxContainer" parent="PartyListVBox/PartyRow1/Margin" unique_id=1958015330]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Portrait" type="TextureRect" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=1853684910]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=475283320]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Towarzysz"
+
+[node name="LevelLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=43141695]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "LV 1"
+
+[node name="HPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=1736342157]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1485807893]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "ZYCIE"
+
+[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1793299602]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 50.0
+nine_patch_stretch = true
+texture_progress = SubResource("GradientTexture1D_8jlx1")
+
+[node name="BarValue" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=231498647]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "50/100"
+
+[node name="SPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=1578718037]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=1650402139]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "MANA"
+
+[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=953737951]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 50.0
+nine_patch_stretch = true
+texture_progress = ExtResource("2_6vp7q")
+
+[node name="BarValue" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=1212491405]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "50/100"

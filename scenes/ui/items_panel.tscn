@@ -1,0 +1,585 @@
+[gd_scene format=3 uid="uid://baci8ucyndnmr"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[node name="ItemsPanel" type="VBoxContainer" unique_id=781489209]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TabsRow" type="HBoxContainer" parent="." unique_id=1950391741]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TabRow0" type="PanelContainer" parent="TabsRow" unique_id=1428408517]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="TabsRow/TabRow0" unique_id=337630208]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="TabsRow/TabRow0/Control" unique_id=373477252]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="TabsRow/TabRow0" unique_id=950998948]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="TabsRow/TabRow0/Margin" unique_id=2143036096]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="TabsRow/TabRow0/Margin/ContentRow" unique_id=1641005842]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Przedmioty"
+
+[node name="RightLabel" type="Label" parent="TabsRow/TabRow0/Margin/ContentRow" unique_id=777189435]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="TabRow1" type="PanelContainer" parent="TabsRow" unique_id=1438951585]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="TabsRow/TabRow1" unique_id=299786722]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="TabsRow/TabRow1/Control" unique_id=509604554]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="TabsRow/TabRow1" unique_id=1015168890]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="TabsRow/TabRow1/Margin" unique_id=1747377363]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="TabsRow/TabRow1/Margin/ContentRow" unique_id=112503414]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bron"
+
+[node name="RightLabel" type="Label" parent="TabsRow/TabRow1/Margin/ContentRow" unique_id=1252015414]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="TabRow2" type="PanelContainer" parent="TabsRow" unique_id=906200031]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="TabsRow/TabRow2" unique_id=127967070]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="TabsRow/TabRow2/Control" unique_id=1357449428]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="TabsRow/TabRow2" unique_id=813601392]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="TabsRow/TabRow2/Margin" unique_id=1456850726]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="TabsRow/TabRow2/Margin/ContentRow" unique_id=1436795622]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Czesci"
+
+[node name="RightLabel" type="Label" parent="TabsRow/TabRow2/Margin/ContentRow" unique_id=2063089894]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="TabRow3" type="PanelContainer" parent="TabsRow" unique_id=1143969346]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="TabsRow/TabRow3" unique_id=631398640]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="TabsRow/TabRow3/Control" unique_id=1322375863]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="TabsRow/TabRow3" unique_id=1376898653]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="TabsRow/TabRow3/Margin" unique_id=1796085974]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="TabsRow/TabRow3/Margin/ContentRow" unique_id=245959931]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Kluczowe"
+
+[node name="RightLabel" type="Label" parent="TabsRow/TabRow3/Margin/ContentRow" unique_id=361357403]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ListVBox" type="VBoxContainer" parent="." unique_id=409938608]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="ItemRow0" type="PanelContainer" parent="ListVBox" unique_id=2030601699]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow0" unique_id=1985389718]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow0/Control" unique_id=721917589]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow0" unique_id=1766905757]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow0/Margin" unique_id=1620404133]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow0/Margin/ContentRow" unique_id=675246633]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow0/Margin/ContentRow" unique_id=1162202111]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow1" type="PanelContainer" parent="ListVBox" unique_id=220881734]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow1" unique_id=63302821]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow1/Control" unique_id=1976329368]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow1" unique_id=1144930235]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow1/Margin" unique_id=1620515682]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow1/Margin/ContentRow" unique_id=382550215]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow1/Margin/ContentRow" unique_id=851038792]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow2" type="PanelContainer" parent="ListVBox" unique_id=204854448]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow2" unique_id=509649558]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow2/Control" unique_id=651604570]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow2" unique_id=1636375602]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow2/Margin" unique_id=1952240151]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow2/Margin/ContentRow" unique_id=538837349]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow2/Margin/ContentRow" unique_id=1336331061]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow3" type="PanelContainer" parent="ListVBox" unique_id=566097744]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow3" unique_id=1884479830]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow3/Control" unique_id=1771511702]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow3" unique_id=908083567]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow3/Margin" unique_id=2017065176]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow3/Margin/ContentRow" unique_id=2095464874]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow3/Margin/ContentRow" unique_id=167850444]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow4" type="PanelContainer" parent="ListVBox" unique_id=1384912814]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow4" unique_id=1178186616]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow4/Control" unique_id=1479729654]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow4" unique_id=299881916]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow4/Margin" unique_id=2069957359]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow4/Margin/ContentRow" unique_id=1605544860]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow4/Margin/ContentRow" unique_id=1482525728]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow5" type="PanelContainer" parent="ListVBox" unique_id=1851001813]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow5" unique_id=369423284]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow5/Control" unique_id=1006944117]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow5" unique_id=728980182]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow5/Margin" unique_id=1674466592]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow5/Margin/ContentRow" unique_id=69553603]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow5/Margin/ContentRow" unique_id=131012355]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow6" type="PanelContainer" parent="ListVBox" unique_id=1347783661]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow6" unique_id=655377358]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow6/Control" unique_id=2086836188]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow6" unique_id=1550585793]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow6/Margin" unique_id=482258052]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow6/Margin/ContentRow" unique_id=471852078]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow6/Margin/ContentRow" unique_id=1569736970]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow7" type="PanelContainer" parent="ListVBox" unique_id=1304419478]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow7" unique_id=1900604]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow7/Control" unique_id=406375093]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow7" unique_id=305934234]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow7/Margin" unique_id=434621821]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow7/Margin/ContentRow" unique_id=69494271]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow7/Margin/ContentRow" unique_id=597769527]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow8" type="PanelContainer" parent="ListVBox" unique_id=1868553029]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow8" unique_id=1601833814]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow8/Control" unique_id=964879005]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow8" unique_id=482277074]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow8/Margin" unique_id=1335543279]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow8/Margin/ContentRow" unique_id=2097421294]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow8/Margin/ContentRow" unique_id=75885585]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow9" type="PanelContainer" parent="ListVBox" unique_id=21087582]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow9" unique_id=1800995585]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow9/Control" unique_id=2092710971]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow9" unique_id=2040016128]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow9/Margin" unique_id=1356785172]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow9/Margin/ContentRow" unique_id=924350802]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow9/Margin/ContentRow" unique_id=599715339]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow10" type="PanelContainer" parent="ListVBox" unique_id=1212413617]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow10" unique_id=152431624]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow10/Control" unique_id=577012519]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow10" unique_id=1623188834]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow10/Margin" unique_id=1262988125]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow10/Margin/ContentRow" unique_id=1732125514]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow10/Margin/ContentRow" unique_id=671770559]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ItemRow11" type="PanelContainer" parent="ListVBox" unique_id=2020135586]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBox/ItemRow11" unique_id=1455718278]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBox/ItemRow11/Control" unique_id=1594715738]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBox/ItemRow11" unique_id=258400960]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBox/ItemRow11/Margin" unique_id=434680549]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBox/ItemRow11/Margin/ContentRow" unique_id=1183169658]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBox/ItemRow11/Margin/ContentRow" unique_id=2032741786]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="FooterLabel" type="Label" parent="." unique_id=1673693072]
+layout_mode = 2
+autowrap_mode = 3

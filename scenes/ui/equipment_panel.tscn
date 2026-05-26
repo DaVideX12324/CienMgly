@@ -1,0 +1,724 @@
+[gd_scene format=3 uid="uid://xd5v3vdabdmn"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[node name="EquipmentPanel" type="VBoxContainer" unique_id=420274983]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="ActorHeader" type="HBoxContainer" parent="." unique_id=1879929047]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Portrait" type="TextureRect" parent="ActorHeader" unique_id=706705855]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="InfoVBox" type="VBoxContainer" parent="ActorHeader" unique_id=1496170630]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="ActorHeader/InfoVBox" unique_id=1653970255]
+layout_mode = 2
+text = "Bohater LV 1"
+
+[node name="HPRow" type="HBoxContainer" parent="ActorHeader/InfoVBox" unique_id=816993303]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=111093384]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Zycie"
+
+[node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/HPRow" unique_id=1005126931]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=376139188]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
+
+[node name="SPRow" type="HBoxContainer" parent="ActorHeader/InfoVBox" unique_id=1420082718]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=401452606]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Mana"
+
+[node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/SPRow" unique_id=1024181917]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 50.0
+show_percentage = false
+
+[node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=1395977082]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+text = "50/100"
+
+[node name="EquipStatsLabel" type="Label" parent="." unique_id=2020788746]
+layout_mode = 2
+
+[node name="EquipActionRow" type="HBoxContainer" parent="." unique_id=44518610]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EquipActionRow0" type="PanelContainer" parent="EquipActionRow" unique_id=487606832]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipActionRow/EquipActionRow0" unique_id=288850970]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipActionRow/EquipActionRow0/Control" unique_id=926533754]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipActionRow/EquipActionRow0" unique_id=2080770095]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipActionRow/EquipActionRow0/Margin" unique_id=2060582715]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipActionRow/EquipActionRow0/Margin/ContentRow" unique_id=97614374]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Zmien"
+
+[node name="RightLabel" type="Label" parent="EquipActionRow/EquipActionRow0/Margin/ContentRow" unique_id=492576085]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipActionRow1" type="PanelContainer" parent="EquipActionRow" unique_id=66500270]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipActionRow/EquipActionRow1" unique_id=1762139419]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipActionRow/EquipActionRow1/Control" unique_id=1234085548]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipActionRow/EquipActionRow1" unique_id=43363732]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipActionRow/EquipActionRow1/Margin" unique_id=362390682]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipActionRow/EquipActionRow1/Margin/ContentRow" unique_id=1355658777]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Optymalizuj"
+
+[node name="RightLabel" type="Label" parent="EquipActionRow/EquipActionRow1/Margin/ContentRow" unique_id=222166521]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipActionRow2" type="PanelContainer" parent="EquipActionRow" unique_id=1999391248]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipActionRow/EquipActionRow2" unique_id=757517725]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipActionRow/EquipActionRow2/Control" unique_id=44705326]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipActionRow/EquipActionRow2" unique_id=278813014]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipActionRow/EquipActionRow2/Margin" unique_id=1426504024]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipActionRow/EquipActionRow2/Margin/ContentRow" unique_id=1889183301]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wyczysc"
+
+[node name="RightLabel" type="Label" parent="EquipActionRow/EquipActionRow2/Margin/ContentRow" unique_id=1552670679]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipSlotsVBox" type="VBoxContainer" parent="." unique_id=1373446833]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="EquipSlotRow0" type="PanelContainer" parent="EquipSlotsVBox" unique_id=1764505066]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipSlotsVBox/EquipSlotRow0" unique_id=634191049]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipSlotsVBox/EquipSlotRow0/Control" unique_id=354786423]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipSlotsVBox/EquipSlotRow0" unique_id=725413397]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipSlotsVBox/EquipSlotRow0/Margin" unique_id=991171683]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow0/Margin/ContentRow" unique_id=1650036977]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow0/Margin/ContentRow" unique_id=1116175022]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipSlotRow1" type="PanelContainer" parent="EquipSlotsVBox" unique_id=1220019335]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipSlotsVBox/EquipSlotRow1" unique_id=646774584]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipSlotsVBox/EquipSlotRow1/Control" unique_id=50588428]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipSlotsVBox/EquipSlotRow1" unique_id=1681595704]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipSlotsVBox/EquipSlotRow1/Margin" unique_id=420930877]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow1/Margin/ContentRow" unique_id=1607028692]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow1/Margin/ContentRow" unique_id=1504025958]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipSlotRow2" type="PanelContainer" parent="EquipSlotsVBox" unique_id=1530593986]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipSlotsVBox/EquipSlotRow2" unique_id=2142905524]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipSlotsVBox/EquipSlotRow2/Control" unique_id=2145932628]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipSlotsVBox/EquipSlotRow2" unique_id=206494960]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipSlotsVBox/EquipSlotRow2/Margin" unique_id=2101034124]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow2/Margin/ContentRow" unique_id=341701380]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow2/Margin/ContentRow" unique_id=374356284]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipSlotRow3" type="PanelContainer" parent="EquipSlotsVBox" unique_id=1066942737]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipSlotsVBox/EquipSlotRow3" unique_id=1153284740]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipSlotsVBox/EquipSlotRow3/Control" unique_id=1042984750]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipSlotsVBox/EquipSlotRow3" unique_id=610146110]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipSlotsVBox/EquipSlotRow3/Margin" unique_id=1779546823]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow3/Margin/ContentRow" unique_id=1167118183]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow3/Margin/ContentRow" unique_id=1761210985]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipSlotRow4" type="PanelContainer" parent="EquipSlotsVBox" unique_id=1037461070]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipSlotsVBox/EquipSlotRow4" unique_id=1878002937]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipSlotsVBox/EquipSlotRow4/Control" unique_id=796954303]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipSlotsVBox/EquipSlotRow4" unique_id=1933227421]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipSlotsVBox/EquipSlotRow4/Margin" unique_id=1803851786]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow4/Margin/ContentRow" unique_id=540084244]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipSlotsVBox/EquipSlotRow4/Margin/ContentRow" unique_id=1686322372]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemsVBox" type="VBoxContainer" parent="." unique_id=1678672266]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="EquipItemRow0" type="PanelContainer" parent="EquipItemsVBox" unique_id=1440284888]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow0" unique_id=1764514946]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow0/Control" unique_id=657463463]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow0" unique_id=874019144]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow0/Margin" unique_id=2114020530]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow0/Margin/ContentRow" unique_id=350389685]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow0/Margin/ContentRow" unique_id=1799322364]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow1" type="PanelContainer" parent="EquipItemsVBox" unique_id=736154838]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow1" unique_id=1695571422]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow1/Control" unique_id=1021089666]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow1" unique_id=790182781]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow1/Margin" unique_id=544666699]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow1/Margin/ContentRow" unique_id=1422638551]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow1/Margin/ContentRow" unique_id=99894113]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow2" type="PanelContainer" parent="EquipItemsVBox" unique_id=763469991]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow2" unique_id=481634960]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow2/Control" unique_id=1872869551]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow2" unique_id=496280147]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow2/Margin" unique_id=928302591]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow2/Margin/ContentRow" unique_id=239396069]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow2/Margin/ContentRow" unique_id=655954023]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow3" type="PanelContainer" parent="EquipItemsVBox" unique_id=370855571]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow3" unique_id=1015450586]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow3/Control" unique_id=2023031632]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow3" unique_id=2040324672]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow3/Margin" unique_id=1025405615]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow3/Margin/ContentRow" unique_id=1217256596]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow3/Margin/ContentRow" unique_id=94000159]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow4" type="PanelContainer" parent="EquipItemsVBox" unique_id=1592839431]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow4" unique_id=2091394281]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow4/Control" unique_id=2122503028]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow4" unique_id=1773863621]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow4/Margin" unique_id=1530572749]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow4/Margin/ContentRow" unique_id=1952648575]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow4/Margin/ContentRow" unique_id=872928535]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow5" type="PanelContainer" parent="EquipItemsVBox" unique_id=1177059727]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow5" unique_id=747715747]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow5/Control" unique_id=184936737]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow5" unique_id=15770923]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow5/Margin" unique_id=1601358244]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow5/Margin/ContentRow" unique_id=1806999556]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow5/Margin/ContentRow" unique_id=1566469749]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow6" type="PanelContainer" parent="EquipItemsVBox" unique_id=1689618327]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow6" unique_id=1950978757]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow6/Control" unique_id=995913238]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow6" unique_id=154473260]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow6/Margin" unique_id=587004919]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow6/Margin/ContentRow" unique_id=1714650644]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow6/Margin/ContentRow" unique_id=999279332]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow7" type="PanelContainer" parent="EquipItemsVBox" unique_id=613383731]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow7" unique_id=847803063]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow7/Control" unique_id=891594815]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow7" unique_id=206194707]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow7/Margin" unique_id=33141067]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow7/Margin/ContentRow" unique_id=869642824]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow7/Margin/ContentRow" unique_id=701533830]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow8" type="PanelContainer" parent="EquipItemsVBox" unique_id=863087708]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow8" unique_id=1931331379]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow8/Control" unique_id=1382257525]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow8" unique_id=1609020602]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow8/Margin" unique_id=910385986]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow8/Margin/ContentRow" unique_id=1792443359]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow8/Margin/ContentRow" unique_id=964277603]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="EquipItemRow9" type="PanelContainer" parent="EquipItemsVBox" unique_id=768288165]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="EquipItemsVBox/EquipItemRow9" unique_id=883342789]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="EquipItemsVBox/EquipItemRow9/Control" unique_id=1473598610]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="EquipItemsVBox/EquipItemRow9" unique_id=1276137841]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="EquipItemsVBox/EquipItemRow9/Margin" unique_id=229451882]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="EquipItemsVBox/EquipItemRow9/Margin/ContentRow" unique_id=2138417875]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="EquipItemsVBox/EquipItemRow9/Margin/ContentRow" unique_id=1146964696]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="FooterLabel" type="Label" parent="." unique_id=1947049871]
+layout_mode = 2
+autowrap_mode = 3
