@@ -65,13 +65,13 @@ func _physics_process(delta: float) -> void:
 	if input != Vector2.ZERO:
 		facing_direction = input.normalized()
 		_is_moving = true
-		_bob_time += delta * 10.0
 		if not _use_programmer_art:
+			_bob_time += delta * 10.0
 			_update_sprite_animation("walk")
 	else:
 		_is_moving = false
-		_bob_time = 0.0
 		if not _use_programmer_art:
+			_bob_time = 0.0
 			_update_sprite_animation("idle")
 
 	if _use_programmer_art:

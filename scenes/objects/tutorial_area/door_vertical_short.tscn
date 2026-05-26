@@ -100,29 +100,35 @@ size = Vector2(8, 49)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lgsim"]
 size = Vector2(14, 49)
 
-[node name="Door_Vertical_short" type="StaticBody2D"]
+[node name="Door_Vertical_short" type="StaticBody2D" unique_id=190461685]
+collision_layer = 4
+collision_mask = 4
 script = ExtResource("1_cn1ks")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1312484430]
 texture = ExtResource("1_uhdoh")
 hframes = 2
 region_enabled = true
 region_rect = Rect2(256, 80, 32, 64)
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_juxil")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1687134915]
+libraries/ = SubResource("AnimationLibrary_juxil")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1650312762]
 position = Vector2(0, 11.5)
 shape = SubResource("RectangleShape2D_i4cbi")
 
-[node name="PlayerDetection" type="Area2D" parent="."]
-collision_layer = 4
-collision_mask = 4
+[node name="CollisionShape2D2" type="CollisionPolygon2D" parent="." unique_id=242773102]
+position = Vector2(0, 11.5)
+polygon = PackedVector2Array(-4, -3.5, -6, -6.5, -6, -30.5, 6, -30.5, 6, -6.5, 4, -3.5)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetection"]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=860846541]
+z_index = 1
+polygon = PackedVector2Array(-4, 36, -2, 35, 2, 35, 4, 36, 5, 37, 6, 39, -6, 39, -5, 37)
+
+[node name="PlayerDetection" type="Area2D" parent="." unique_id=1126347246]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetection" unique_id=1819626222]
 position = Vector2(0, 11.5)
 shape = SubResource("RectangleShape2D_lgsim")
 

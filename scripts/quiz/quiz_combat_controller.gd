@@ -653,7 +653,8 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 				value_label.text = "-"
 		else:
 			var count: int = int(entry.get("count", 0))
-			value_label.text = "x%d" % count
+			var display_count: String = str(entry.get("display_count", count))
+			value_label.text = "X" if display_count == "X" else "x%s" % display_count
 			disabled = count <= 0 or not bool(entry.get("usable_in_combat", true))
 		if disabled:
 			name_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))

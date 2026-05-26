@@ -9,6 +9,7 @@
 y_sort_enabled = true
 
 [node name="level_manager" parent="." unique_id=1528051144 instance=ExtResource("1_level_manager")]
+y_sort_enabled = true
 
 [node name="PartyFollowers" type="Node2D" parent="." unique_id=1794385668]
 

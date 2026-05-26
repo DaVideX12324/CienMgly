@@ -37,8 +37,9 @@ func _refresh_inventory(reset_message: bool = true) -> void:
 		_entries = _ps.get_inventory_entries()
 	for entry: Dictionary in _entries:
 		var item_name: String = str(entry.get("name", "---"))
-		var count: int = int(entry.get("count", 0))
-		item_list.add_item("%s  x%d" % [item_name, count])
+		var display_count: String = str(entry.get("display_count", int(entry.get("count", 0))))
+		var count_text: String = "X" if display_count == "X" else "x%s" % display_count
+		item_list.add_item("%s  %s" % [item_name, count_text])
 	if not _entries.is_empty():
 		_select_index(0)
 	else:
@@ -61,7 +62,7 @@ func _select_index(index: int) -> void:
 	item_list.select(index)
 	var entry: Dictionary = _entries[index]
 	item_name_label.text = str(entry.get("name", "---"))
-	count_label.text = "Ilosc: %d" % int(entry.get("count", 0))
+	count_label.text = "Ilosc: %s" % str(entry.get("display_count", int(entry.get("count", 0))))
 	effect_label.text = str(entry.get("effect_summary", ""))
 	description_label.text = str(entry.get("description", ""))
 	var can_use: bool = int(entry.get("count", 0)) > 0 and bool(entry.get("usable_in_menu", true))

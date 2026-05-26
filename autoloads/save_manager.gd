@@ -5,7 +5,7 @@ signal load_completed(slot_index: int)
 signal save_failed(message: String)
 signal save_slots_changed
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 const SAVE_DIR := "user://quiz_rpg_saves"
 const SLOT_CONFIG_PATH := "user://quiz_rpg_saves/slots.json"
 const DEFAULT_SAVE_SLOT_COUNT := 3
@@ -28,10 +28,12 @@ func _ready() -> void:
 func save_game(slot_index: int = -1) -> bool:
 	if slot_index < 0:
 		slot_index = current_save_slot
-	if slot_index < 0:
+	var slot_count: int = get_slot_count()
+	if slot_index < 0 or slot_index >= slot_count:
 		save_failed.emit("Najpierw wybierz slot zapisu.")
 		return false
 	current_save_slot = slot_index
+	_ensure_save_dir()
 
 	var save_data: Dictionary = _build_save_data(slot_index)
 	var file := FileAccess.open(_get_slot_path(slot_index), FileAccess.WRITE)
@@ -79,7 +81,7 @@ func load_game(slot_index: int = -1) -> bool:
 
 
 func start_new_game(slot_index: int = 0) -> void:
-	current_save_slot = -1
+	current_save_slot = clampi(slot_index, 0, get_slot_count() - 1)
 	_has_pending_level_load = false
 	_pending_level_path = INITIAL_LEVEL_PATH
 	_pending_spawn_name = "Spawn"
@@ -191,7 +193,7 @@ func load_slot_file(slot_index: int) -> Dictionary:
 	if parse_error != OK:
 		return {}
 	if json.data is Dictionary:
-		return (json.data as Dictionary).duplicate(true)
+		return _normalize_loaded_save_data((json.data as Dictionary).duplicate(true))
 	return {}
 
 
@@ -220,6 +222,7 @@ func _build_save_data(slot_index: int) -> Dictionary:
 	elif current_scene.begins_with("res://modules/quiz_rpg/scenes/maps/"):
 		current_level = _normalize_level_path(current_scene)
 		current_scene = GAME_SCENE_PATH
+	var player_stats_data: Dictionary = ps.get_save_data() if ps and ps.has_method("get_save_data") else {}
 
 	return {
 		"version": SAVE_VERSION,
@@ -230,13 +233,10 @@ func _build_save_data(slot_index: int) -> Dictionary:
 		"current_scene": current_scene,
 		"current_level": current_level,
 		"spawn_point": spawn_point,
-		"player": ps.get_save_data() if ps and ps.has_method("get_save_data") else {},
-		"player_stats": ps.get_save_data() if ps and ps.has_method("get_save_data") else {},
+		"player_stats": player_stats_data,
 		"quiz_progress": QuizManager.get_save_data(),
 		"difficulty": dm.get_save_data() if dm and dm.has_method("get_save_data") else {},
 		"level_states": level_state_manager.serialize() if level_state_manager and level_state_manager.has_method("serialize") else {},
-		"inventory": _serialize_inventory_placeholder(ps),
-		"equipment": _serialize_equipment_placeholder(ps),
 		"quests": {},
 		"currency": {},
 		"world": {},
@@ -247,6 +247,7 @@ func _restore_global_state(save_data: Dictionary) -> void:
 	var ps := _get_singleton("PlayerStats")
 	var dm := _get_singleton("DifficultyManager")
 	var level_state_manager := _get_singleton("LevelStateManager")
+	save_data = _normalize_loaded_save_data(save_data)
 	if level_state_manager:
 		if save_data.has("level_states") and level_state_manager.has_method("deserialize"):
 			level_state_manager.deserialize(save_data.get("level_states", {}))
@@ -270,27 +271,6 @@ func _reset_global_state() -> void:
 		dm.reset()
 	if level_state_manager and level_state_manager.has_method("reset"):
 		level_state_manager.reset()
-
-
-func _serialize_inventory_placeholder(ps: Node) -> Dictionary:
-	if ps == null:
-		return {}
-	var inventory_value: Variant = ps.get("inventory")
-	return {
-		"items": inventory_value.duplicate(true) if inventory_value is Array else [],
-	}
-
-
-func _serialize_equipment_placeholder(ps: Node) -> Dictionary:
-	if ps == null:
-		return {}
-	var party_value: Variant = ps.get("party")
-	if not (party_value is Array):
-		return {}
-	var party: Array = party_value as Array
-	if party.is_empty() or not (party[0] is Dictionary):
-		return {}
-	return (party[0] as Dictionary).get("equipment", {}).duplicate(true)
 
 
 func _build_slot_summary(slot_index: int, slot_data: Dictionary) -> Dictionary:
@@ -445,3 +425,43 @@ func _resolve_level_path_from_save(slot_data: Dictionary) -> String:
 	if level_path == "":
 		level_path = str(slot_data.get("current_scene", ""))
 	return _normalize_level_path(level_path)
+
+
+func _normalize_loaded_save_data(raw_data: Dictionary) -> Dictionary:
+	var data: Dictionary = raw_data.duplicate(true)
+	var normalized_player_stats: Dictionary = {}
+	if data.get("player_stats", null) is Dictionary:
+		normalized_player_stats = (data.get("player_stats", {}) as Dictionary).duplicate(true)
+	elif data.get("player", null) is Dictionary:
+		normalized_player_stats = (data.get("player", {}) as Dictionary).duplicate(true)
+
+	var legacy_inventory: Variant = data.get("inventory", null)
+	if not normalized_player_stats.has("inventory") and legacy_inventory is Dictionary:
+		var legacy_items: Variant = (legacy_inventory as Dictionary).get("items", [])
+		if legacy_items is Array:
+			normalized_player_stats["inventory"] = (legacy_items as Array).duplicate(true)
+
+	var legacy_equipment: Variant = data.get("equipment", null)
+	if legacy_equipment is Dictionary:
+		var party_value: Variant = normalized_player_stats.get("party", [])
+		var normalized_party: Array = []
+		if party_value is Array:
+			normalized_party = (party_value as Array).duplicate(true)
+		if normalized_party.is_empty():
+			normalized_party.append({
+				"equipment": (legacy_equipment as Dictionary).duplicate(true),
+			})
+		elif normalized_party[0] is Dictionary and not (normalized_party[0] as Dictionary).has("equipment"):
+			var first_member: Dictionary = (normalized_party[0] as Dictionary).duplicate(true)
+			first_member["equipment"] = (legacy_equipment as Dictionary).duplicate(true)
+			normalized_party[0] = first_member
+		normalized_player_stats["party"] = normalized_party
+
+	data["player_stats"] = normalized_player_stats
+	data["current_level"] = _resolve_level_path_from_save(data)
+	data["current_scene"] = GAME_SCENE_PATH
+	if str(data.get("spawn_point", "")) == "":
+		data["spawn_point"] = "Spawn"
+	if not data.has("version"):
+		data["version"] = 1
+	return data
