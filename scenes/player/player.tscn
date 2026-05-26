@@ -136,7 +136,7 @@ sprite_frames = SubResource("SpriteFrames_juece")
 animation = &"walk"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=2099671777]
-zoom = Vector2(4, 4)
+zoom = Vector2(5, 5)
 position_smoothing_speed = 8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=501759005]
