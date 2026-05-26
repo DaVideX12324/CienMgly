@@ -40,6 +40,7 @@ func _ready() -> void:
 	if _use_programmer_art:
 		if sprite:
 			sprite.visible = false
+	_connect_interaction_area()
 	_record_trail_position()
 	if is_party_follower:
 		_setup_as_follower()
@@ -166,7 +167,9 @@ func _direction_name() -> String:
 func _try_interact() -> void:
 	if nearby_interactables.is_empty():
 		return
-	var closest = nearby_interactables[0]
+	var closest: Node2D = _find_closest_interactable()
+	if closest == null:
+		return
 	if closest.has_method("interact"):
 		closest.interact(self)
 
@@ -221,6 +224,20 @@ func _setup_as_follower() -> void:
 		interaction_area.monitorable = false
 
 
+func _connect_interaction_area() -> void:
+	var interaction_area := get_node_or_null("InteractionArea") as Area2D
+	if interaction_area == null:
+		return
+	if not interaction_area.body_entered.is_connected(_on_interaction_area_body_entered):
+		interaction_area.body_entered.connect(_on_interaction_area_body_entered)
+	if not interaction_area.body_exited.is_connected(_on_interaction_area_body_exited):
+		interaction_area.body_exited.connect(_on_interaction_area_body_exited)
+	if not interaction_area.area_entered.is_connected(_on_interaction_area_area_entered):
+		interaction_area.area_entered.connect(_on_interaction_area_area_entered)
+	if not interaction_area.area_exited.is_connected(_on_interaction_area_area_exited):
+		interaction_area.area_exited.connect(_on_interaction_area_area_exited)
+
+
 func _get_follow_input() -> Vector2:
 	if _follow_target == null:
 		return Vector2.ZERO
@@ -240,8 +257,26 @@ func _record_trail_position() -> void:
 			_trail_points.pop_front()
 
 
+func _find_closest_interactable() -> Node2D:
+	var closest: Node2D = null
+	var closest_distance: float = INF
+	for candidate_value: Variant in nearby_interactables:
+		if not (candidate_value is Node2D):
+			continue
+		var candidate: Node2D = candidate_value as Node2D
+		if candidate == null or not is_instance_valid(candidate):
+			continue
+		if not candidate.has_method("interact"):
+			continue
+		var distance: float = global_position.distance_squared_to(candidate.global_position)
+		if distance < closest_distance:
+			closest_distance = distance
+			closest = candidate
+	return closest
+
+
 func _on_interaction_area_body_entered(body: Node2D) -> void:
-	if body.is_in_group("interactable"):
+	if body.is_in_group("interactable") and not nearby_interactables.has(body):
 		nearby_interactables.append(body)
 
 
@@ -250,7 +285,7 @@ func _on_interaction_area_body_exited(body: Node2D) -> void:
 
 
 func _on_interaction_area_area_entered(area: Area2D) -> void:
-	if area.is_in_group("interactable"):
+	if area.is_in_group("interactable") and not nearby_interactables.has(area):
 		nearby_interactables.append(area)
 
 
