@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://c4mhyedx4g1d2"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[node name="ConfirmPanel" type="VBoxContainer" unique_id=1250960308]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="ConfirmLabel" type="Label" parent="." unique_id=153808172]
+layout_mode = 2
+text = "Zakonczyc gre?"
+
+[node name="OptionsVBox" type="VBoxContainer" parent="." unique_id=920138329]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ConfirmRow0" type="PanelContainer" parent="OptionsVBox" unique_id=2093508448]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="OptionsVBox/ConfirmRow0" unique_id=1866903008]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBox/ConfirmRow0/Control" unique_id=1604702890]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="OptionsVBox/ConfirmRow0" unique_id=605378637]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="OptionsVBox/ConfirmRow0/Margin" unique_id=722719515]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="OptionsVBox/ConfirmRow0/Margin/ContentRow" unique_id=703578371]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "T Tak"
+
+[node name="RightLabel" type="Label" parent="OptionsVBox/ConfirmRow0/Margin/ContentRow" unique_id=1620646605]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ConfirmRow1" type="PanelContainer" parent="OptionsVBox" unique_id=720875122]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="OptionsVBox/ConfirmRow1" unique_id=1219917244]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBox/ConfirmRow1/Control" unique_id=1885901334]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="OptionsVBox/ConfirmRow1" unique_id=2046400099]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="OptionsVBox/ConfirmRow1/Margin" unique_id=1195302532]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=1792823979]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "N Nie"
+
+[node name="RightLabel" type="Label" parent="OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=510624011]
+layout_mode = 2
+horizontal_alignment = 2

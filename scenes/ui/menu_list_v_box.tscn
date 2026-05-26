@@ -1,0 +1,235 @@
+[gd_scene format=3 uid="uid://cfsyhntk1027k"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[node name="MenuListVBox" type="VBoxContainer" unique_id=464216917]
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="MenuRow0" type="PanelContainer" parent="." unique_id=1557557010]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow0" unique_id=1315577780]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow0/Control" unique_id=1080578608]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow0" unique_id=1660242314]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow0/Margin" unique_id=1935800117]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow0/Margin/ContentRow" unique_id=1518849723]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Przedmioty"
+
+[node name="RightLabel" type="Label" parent="MenuRow0/Margin/ContentRow" unique_id=1139799907]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="MenuRow1" type="PanelContainer" parent="." unique_id=650527609]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow1" unique_id=1936613169]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow1/Control" unique_id=1241425181]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow1" unique_id=1822538351]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow1/Margin" unique_id=1476484567]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow1/Margin/ContentRow" unique_id=991845808]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Umiejetnosci"
+
+[node name="RightLabel" type="Label" parent="MenuRow1/Margin/ContentRow" unique_id=1980612895]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="MenuRow2" type="PanelContainer" parent="." unique_id=709282407]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow2" unique_id=357302764]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow2/Control" unique_id=637698590]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow2" unique_id=746100011]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow2/Margin" unique_id=2147229927]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow2/Margin/ContentRow" unique_id=1681948547]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Ekwipunek"
+
+[node name="RightLabel" type="Label" parent="MenuRow2/Margin/ContentRow" unique_id=344262970]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="MenuRow3" type="PanelContainer" parent="." unique_id=1939065701]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow3" unique_id=1745759281]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow3/Control" unique_id=930461562]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow3" unique_id=360577903]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow3/Margin" unique_id=1461718713]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow3/Margin/ContentRow" unique_id=1105031298]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Status"
+
+[node name="RightLabel" type="Label" parent="MenuRow3/Margin/ContentRow" unique_id=2122648051]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="MenuRow4" type="PanelContainer" parent="." unique_id=701988744]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow4" unique_id=1463074200]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow4/Control" unique_id=1926462060]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow4" unique_id=1700776055]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow4/Margin" unique_id=1477104421]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow4/Margin/ContentRow" unique_id=790083030]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Zapisz"
+
+[node name="RightLabel" type="Label" parent="MenuRow4/Margin/ContentRow" unique_id=76771338]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="MenuRow5" type="PanelContainer" parent="." unique_id=1741259945]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow5" unique_id=2120059808]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow5/Control" unique_id=1216454361]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow5" unique_id=56892288]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow5/Margin" unique_id=1681521136]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow5/Margin/ContentRow" unique_id=1380568797]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Zakoncz gre"
+
+[node name="RightLabel" type="Label" parent="MenuRow5/Margin/ContentRow" unique_id=1737714153]
+layout_mode = 2
+horizontal_alignment = 2
