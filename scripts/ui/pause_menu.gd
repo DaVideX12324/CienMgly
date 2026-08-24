@@ -9,37 +9,37 @@ const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "
 @onready var menu_list_vbox: VBoxContainer = $PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox
 @onready var toast_label: Label = $PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/ToastLabel
 @onready var context_title_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextTitleLabel
-@onready var party_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/PartyPanel
-@onready var party_hint_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/PartyPanel/PartyHintLabel
-@onready var party_list_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/PartyPanel/PartyListVBox
-@onready var items_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ItemsPanel
-@onready var items_tabs_row: HBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ItemsPanel/TabsRow
-@onready var items_list_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ItemsPanel/ListVBox
-@onready var items_footer_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ItemsPanel/FooterLabel
-@onready var skills_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SkillsPanel
-@onready var skills_actor_header: HBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SkillsPanel/ActorHeader
-@onready var skills_list_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SkillsPanel/ListVBox
-@onready var skills_footer_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SkillsPanel/FooterLabel
-@onready var equipment_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel
-@onready var equipment_actor_header: HBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel/ActorHeader
-@onready var equipment_stats_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel/EquipStatsLabel
-@onready var equip_actions_row: HBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel/EquipActionRow
-@onready var equip_slots_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel/EquipSlotsVBox
-@onready var equip_items_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel/EquipItemsVBox
-@onready var equipment_footer_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/EquipmentPanel/FooterLabel
-@onready var status_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/StatusPanel
-@onready var status_actor_header: HBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/StatusPanel/ActorHeader
-@onready var status_info_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/StatusPanel/StatusInfoLabel
-@onready var status_bars_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/StatusPanel/StatusBarsVBox
-@onready var status_stats_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/StatusPanel/StatusStatsVBox
-@onready var status_equip_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/StatusPanel/StatusEquipVBox
-@onready var confirm_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ConfirmPanel
-@onready var confirm_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ConfirmPanel/ConfirmLabel
-@onready var confirm_options_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ConfirmPanel/OptionsVBox
-@onready var save_panel: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SavePanel
-@onready var save_hint_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SavePanel/SaveHintLabel
-@onready var save_slots_vbox: VBoxContainer = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SavePanel/SaveSlotsVBox
-@onready var save_footer_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/SavePanel/FooterLabel
+var party_panel: VBoxContainer
+var party_hint_label: Label
+var party_list_vbox: VBoxContainer
+var items_panel: VBoxContainer
+var items_tabs_row: HBoxContainer
+var items_list_vbox: VBoxContainer
+var items_footer_label: Label
+var skills_panel: VBoxContainer
+var skills_actor_header: HBoxContainer
+var skills_list_vbox: VBoxContainer
+var skills_footer_label: Label
+var equipment_panel: VBoxContainer
+var equipment_actor_header: HBoxContainer
+var equipment_stats_label: Label
+var equip_actions_row: HBoxContainer
+var equip_slots_vbox: VBoxContainer
+var equip_items_vbox: VBoxContainer
+var equipment_footer_label: Label
+var status_panel: VBoxContainer
+var status_actor_header: HBoxContainer
+var status_info_label: Label
+var status_bars_vbox: VBoxContainer
+var status_stats_vbox: VBoxContainer
+var status_equip_vbox: VBoxContainer
+var confirm_panel: VBoxContainer
+var confirm_label: Label
+var confirm_options_vbox: VBoxContainer
+var save_panel: VBoxContainer
+var save_hint_label: Label
+var save_slots_vbox: VBoxContainer
+var save_footer_label: Label
 
 var _gm: Node = null
 var _ps: Node = null
@@ -82,6 +82,7 @@ var _save_slot_index: int = 0
 func _ready() -> void:
 	_gm = CoreManager.get_singleton("GameManager")
 	_ps = CoreManager.get_singleton("PlayerStats")
+	_cache_panel_nodes()
 	pause_root.visible = false
 	_cache_scene_rows()
 	_bind_mouse_interactions()
@@ -94,6 +95,41 @@ func _ready() -> void:
 			_ps.party_changed.connect(_on_player_data_changed)
 		if _ps.has_signal("hp_changed"):
 			_ps.hp_changed.connect(_on_player_hp_changed)
+
+
+func _cache_panel_nodes() -> void:
+	party_panel = pause_root.find_child("PartyPanel", true, false) as VBoxContainer
+	items_panel = pause_root.find_child("ItemsPanel", true, false) as VBoxContainer
+	skills_panel = pause_root.find_child("SkillsPanel", true, false) as VBoxContainer
+	equipment_panel = pause_root.find_child("EquipmentPanel", true, false) as VBoxContainer
+	status_panel = pause_root.find_child("StatusPanel", true, false) as VBoxContainer
+	confirm_panel = pause_root.find_child("ConfirmPanel", true, false) as VBoxContainer
+	save_panel = pause_root.find_child("SavePanel", true, false) as VBoxContainer
+
+	party_hint_label = party_panel.find_child("PartyHintLabel", true, false) as Label if party_panel else null
+	party_list_vbox = party_panel.find_child("PartyListVBox", true, false) as VBoxContainer if party_panel else null
+	items_tabs_row = items_panel.find_child("TabsRow", true, false) as HBoxContainer if items_panel else null
+	items_list_vbox = items_panel.find_child("ListVBox", true, false) as VBoxContainer if items_panel else null
+	items_footer_label = items_panel.find_child("FooterLabel", true, false) as Label if items_panel else null
+	skills_actor_header = skills_panel.find_child("ActorHeader", true, false) as HBoxContainer if skills_panel else null
+	skills_list_vbox = skills_panel.find_child("ListVBox", true, false) as VBoxContainer if skills_panel else null
+	skills_footer_label = skills_panel.find_child("FooterLabel", true, false) as Label if skills_panel else null
+	equipment_actor_header = equipment_panel.find_child("ActorHeader", true, false) as HBoxContainer if equipment_panel else null
+	equipment_stats_label = equipment_panel.find_child("EquipStatsLabel", true, false) as Label if equipment_panel else null
+	equip_actions_row = equipment_panel.find_child("EquipActionRow", true, false) as HBoxContainer if equipment_panel else null
+	equip_slots_vbox = equipment_panel.find_child("EquipSlotsVBox", true, false) as VBoxContainer if equipment_panel else null
+	equip_items_vbox = equipment_panel.find_child("EquipItemsVBox", true, false) as VBoxContainer if equipment_panel else null
+	equipment_footer_label = equipment_panel.find_child("FooterLabel", true, false) as Label if equipment_panel else null
+	status_actor_header = status_panel.find_child("ActorHeader", true, false) as HBoxContainer if status_panel else null
+	status_info_label = status_panel.find_child("StatusInfoLabel", true, false) as Label if status_panel else null
+	status_bars_vbox = status_panel.find_child("StatusBarsVBox", true, false) as VBoxContainer if status_panel else null
+	status_stats_vbox = status_panel.find_child("StatusStatsVBox", true, false) as VBoxContainer if status_panel else null
+	status_equip_vbox = status_panel.find_child("StatusEquipVBox", true, false) as VBoxContainer if status_panel else null
+	confirm_label = confirm_panel.find_child("ConfirmLabel", true, false) as Label if confirm_panel else null
+	confirm_options_vbox = confirm_panel.find_child("OptionsVBox", true, false) as VBoxContainer if confirm_panel else null
+	save_hint_label = save_panel.find_child("SaveHintLabel", true, false) as Label if save_panel else null
+	save_slots_vbox = save_panel.find_child("SaveSlotsVBox", true, false) as VBoxContainer if save_panel else null
+	save_footer_label = save_panel.find_child("FooterLabel", true, false) as Label if save_panel else null
 
 
 func _input(event: InputEvent) -> void:
