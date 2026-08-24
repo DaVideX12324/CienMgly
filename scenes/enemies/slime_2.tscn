@@ -1,18 +1,18 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="enemy.tscn" id="1_base"]
-[ext_resource type="Script" path="../../scripts/enemies/bandit_1.gd" id="2_script"]
-[ext_resource type="SpriteFrames" path="../../resources/enemies/enemy_bandit_1.tres" id="3_frames"]
+[ext_resource type="Script" path="../../scripts/enemies/slime_2.gd" id="2_script"]
+[ext_resource type="SpriteFrames" path="../../resources/enemies/enemy_slime_2.tres" id="3_frames"]
 
 [node name="Enemy" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
-enemy_name = "Bandit 1"
+enemy_name = "Slime 2"
 quiz_id = "ogolne"
 quiz_category = "ogolne"
-hp = 50
-max_hp = 50
-damage_on_wrong = 12
-xp_reward = 45
+hp = 60
+max_hp = 60
+damage_on_wrong = 10
+xp_reward = 50
 encounter_tier = 1
 patrol_speed = 60.0
 is_boss = false

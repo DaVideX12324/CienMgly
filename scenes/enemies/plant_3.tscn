@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://b2jj0w0kvyb7a"]
+
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://5cryx25rjhp3" path="res://modules/quiz_rpg/scripts/enemies/plant_3.gd" id="2_script"]
+[ext_resource type="SpriteFrames" uid="uid://3cc2aiayr8hv" path="res://modules/quiz_rpg/resources/enemies/enemy_plant_3.tres" id="3_frames"]
+
+[node name="Enemy" unique_id=1431023595 instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+enemy_name = "Plant 3"
+quiz_id = "ogolne"
+hp = 60
+max_hp = 60
+damage_on_wrong = 10
+encounter_tier = 1
+patrol_speed = 60.0
+
+[node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
+sprite_frames = ExtResource("3_frames")
+animation = &"attack_down"
