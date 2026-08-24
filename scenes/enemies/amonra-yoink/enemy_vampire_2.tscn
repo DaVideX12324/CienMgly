@@ -1,0 +1,137 @@
+[gd_scene load_steps=11 format=3 uid="uid://hm60yo5ln0eb"]
+
+[ext_resource type="Script" uid="uid://dkmd6786ce3wo" path="res://scripts/characters/enemy_vampire_2.gd" id="1_nlvwj"]
+[ext_resource type="SpriteFrames" uid="uid://bj727dlcwoqut" path="res://resources/enemies/enemy_vampire_2.tres" id="2_2ik4t"]
+[ext_resource type="Resource" uid="uid://mi1sg7piwygi" path="res://resources/loot_tables/vampire_2_loot.tres" id="2_k5vf3"]
+[ext_resource type="FontFile" uid="uid://npmuhl5101my" path="res://assets/fonts/upheavtt.ttf" id="2_nlvwj"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wkvlm"]
+radius = 4.0
+height = 14.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_5u2x0"]
+radius = 16.0
+height = 60.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_426dx"]
+radius = 16.0
+height = 58.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fulqv"]
+radius = 166.19266
+
+[sub_resource type="LabelSettings" id="LabelSettings_fulqv"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_nlvwj"]
+radius = 6.0
+height = 28.0
+
+[node name="enemy_vampire_2" type="CharacterBody2D" groups=["enemy"]]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_nlvwj")
+attack_type = 2
+attack_frames_2way = Array[int]([])
+attack_frames_up = Array[int]([8, 9, 10])
+attack_frames_down = Array[int]([8, 9, 10])
+attack_frames_left = Array[int]([8, 9, 10])
+attack_frames_right = Array[int]([8, 9, 10])
+loot_table = ExtResource("2_k5vf3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_wkvlm")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
+[node name="DamageHitbox" type="Area2D" parent="."]
+collision_layer = 8388608
+collision_mask = 8388608
+
+[node name="ShapeUp" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(0, -17)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_5u2x0")
+
+[node name="ShapeDown" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(0, 3)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_5u2x0")
+
+[node name="ShapeLeft" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(-12.5, -6)
+shape = SubResource("CapsuleShape2D_426dx")
+
+[node name="ShapeRight" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(12.5, -6)
+shape = SubResource("CapsuleShape2D_426dx")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0.5, -8)
+sprite_frames = ExtResource("2_2ik4t")
+animation = &"attack_down"
+
+[node name="VisionRange" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2147483648
+
+[node name="Hitbox" type="CollisionShape2D" parent="VisionRange"]
+position = Vector2(1, -1)
+shape = SubResource("CircleShape2D_fulqv")
+debug_color = Color(1, 1, 1, 0)
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(0, 147)
+collision_mask = 2147483649
+collide_with_areas = true
+
+[node name="DamageNumbersOrigin" type="Node2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="LevelLabel" type="Label" parent="."]
+z_index = 1
+layout_direction = 2
+offset_left = -20.0
+offset_top = -27.0
+offset_right = 20.0
+offset_bottom = -12.0
+pivot_offset = Vector2(20, 8)
+theme_override_constants/line_spacing = 1
+theme_override_fonts/font = ExtResource("2_nlvwj")
+label_settings = SubResource("LabelSettings_fulqv")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="isElite" type="Label" parent="LevelLabel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = -0.66700006
+anchor_right = 0.5
+anchor_bottom = -0.66700006
+offset_left = -8.0
+offset_top = -7.994999
+offset_right = 8.0
+offset_bottom = 8.005001
+pivot_offset = Vector2(8, 8)
+theme_override_fonts/font = ExtResource("2_nlvwj")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hurtbox" type="Area2D" parent="."]
+visible = false
+collision_layer = 16777216
+collision_mask = 16777216
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -9)
+shape = SubResource("CapsuleShape2D_nlvwj")
+
+[connection signal="body_entered" from="DamageHitbox" to="." method="_on_damage_hitbox_body_entered"]
+[connection signal="body_exited" from="DamageHitbox" to="." method="_on_damage_hitbox_body_exited"]

@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/knowledge_guardian.tscn" id="2_enemy_guardian"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/algorithm_master.tscn" id="3_enemy_algorithm"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/bit_dragon.tscn" id="4_enemy_dragon"]
+[ext_resource type="PackedScene" uid="uid://jtprtq8vcx5t" path="res://modules/quiz_rpg/scenes/enemies/slime_green.tscn" id="4_enemy_dragon"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/math_golem.tscn" id="5_enemy_golem"]
 [ext_resource type="Script" uid="uid://ci68o7cegjh0l" path="res://modules/quiz_rpg/scripts/quiz/quiz_door.gd" id="8_door"]
 [ext_resource type="Script" uid="uid://bs5rhaoxq4kig" path="res://modules/quiz_rpg/scripts/maps/world_map.gd" id="9_map"]

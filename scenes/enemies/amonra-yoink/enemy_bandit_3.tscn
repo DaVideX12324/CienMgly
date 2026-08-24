@@ -1,0 +1,140 @@
+[gd_scene load_steps=11 format=3 uid="uid://c5mel7ximeiac"]
+
+[ext_resource type="Script" uid="uid://bbcv6gh4udyai" path="res://scripts/characters/enemy_bandit_3.gd" id="1_b32qp"]
+[ext_resource type="Resource" uid="uid://d4dehcexscb5r" path="res://resources/loot_tables/bandit_3_loot.tres" id="2_h1miu"]
+[ext_resource type="SpriteFrames" uid="uid://b38dmnkdtat4c" path="res://resources/enemies/enemy_bandit_3.tres" id="3_h1miu"]
+[ext_resource type="FontFile" uid="uid://npmuhl5101my" path="res://assets/fonts/upheavtt.ttf" id="4_45t0p"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
+radius = 4.0
+height = 14.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jgk6k"]
+radius = 12.0
+height = 38.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8bwjp"]
+radius = 16.0
+height = 40.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fulqv"]
+radius = 166.19266
+
+[sub_resource type="LabelSettings" id="LabelSettings_fulqv"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_b32qp"]
+radius = 6.0
+height = 24.0
+
+[node name="enemy_bandit_3" type="CharacterBody2D" groups=["enemy"]]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_b32qp")
+attack_type = 2
+attack_frames_2way = Array[int]([])
+attack_frames_up = Array[int]([3, 4, 5, 6])
+attack_frames_down = Array[int]([3, 4, 5, 6])
+attack_frames_left = Array[int]([3, 4, 5, 6])
+attack_frames_right = Array[int]([3, 4, 5, 6])
+loot_table = ExtResource("2_h1miu")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, 2)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_fulqv")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
+[node name="DamageHitbox" type="Area2D" parent="."]
+collision_layer = 8388608
+collision_mask = 8388608
+
+[node name="ShapeUp" type="CollisionShape2D" parent="DamageHitbox"]
+visible = false
+position = Vector2(0, -12)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_jgk6k")
+
+[node name="ShapeDown" type="CollisionShape2D" parent="DamageHitbox"]
+visible = false
+position = Vector2(0, 4)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_jgk6k")
+
+[node name="ShapeLeft" type="CollisionShape2D" parent="DamageHitbox"]
+visible = false
+position = Vector2(-10, -6)
+shape = SubResource("CapsuleShape2D_8bwjp")
+
+[node name="ShapeRight" type="CollisionShape2D" parent="DamageHitbox"]
+visible = false
+position = Vector2(10, -7)
+shape = SubResource("CapsuleShape2D_8bwjp")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0.5, -7)
+sprite_frames = ExtResource("3_h1miu")
+animation = &"attack_down"
+
+[node name="VisionRange" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2147483648
+
+[node name="Hitbox" type="CollisionShape2D" parent="VisionRange"]
+position = Vector2(1, -1)
+shape = SubResource("CircleShape2D_fulqv")
+debug_color = Color(1, 1, 1, 0)
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(0, 147)
+collision_mask = 2147483649
+collide_with_areas = true
+
+[node name="DamageNumbersOrigin" type="Node2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="LevelLabel" type="Label" parent="."]
+z_index = 1
+layout_direction = 2
+offset_left = -20.0
+offset_top = -27.0
+offset_right = 20.0
+offset_bottom = -12.0
+pivot_offset = Vector2(20, 8)
+theme_override_constants/line_spacing = 1
+theme_override_fonts/font = ExtResource("4_45t0p")
+label_settings = SubResource("LabelSettings_fulqv")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="isElite" type="Label" parent="LevelLabel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = -0.66700006
+anchor_right = 0.5
+anchor_bottom = -0.66700006
+offset_left = -8.0
+offset_top = -7.994999
+offset_right = 8.0
+offset_bottom = 8.005001
+pivot_offset = Vector2(8, 8)
+theme_override_fonts/font = ExtResource("4_45t0p")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 16777216
+collision_mask = 16777216
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -7)
+shape = SubResource("CapsuleShape2D_b32qp")
+
+[connection signal="body_entered" from="DamageHitbox" to="." method="_on_damage_hitbox_body_entered"]
+[connection signal="body_exited" from="DamageHitbox" to="." method="_on_damage_hitbox_body_exited"]

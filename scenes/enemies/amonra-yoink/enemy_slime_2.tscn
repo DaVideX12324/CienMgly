@@ -1,0 +1,118 @@
+[gd_scene load_steps=10 format=3 uid="uid://bl50gekhhsedm"]
+
+[ext_resource type="Script" uid="uid://cj48gs508aa32" path="res://scripts/characters/enemy_slime_2.gd" id="1_e88el"]
+[ext_resource type="Resource" uid="uid://cd7xam5uibf5k" path="res://resources/loot_tables/slime_2_loot.tres" id="2_18mva"]
+[ext_resource type="SpriteFrames" uid="uid://c534wr8xf1f5" path="res://resources/enemies/enemy_slime_2.tres" id="2_e88el"]
+[ext_resource type="FontFile" uid="uid://npmuhl5101my" path="res://assets/fonts/upheavtt.ttf" id="4_th3ac"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u63r2"]
+radius = 5.0
+height = 16.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8bwjp"]
+radius = 21.0
+height = 55.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fulqv"]
+radius = 166.19266
+
+[sub_resource type="LabelSettings" id="LabelSettings_fulqv"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e88el"]
+radius = 7.0
+height = 16.0
+
+[node name="enemy_slime_2" type="CharacterBody2D" groups=["enemy"]]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_e88el")
+attack_type = 2
+attack_frames_2way = Array[int]([])
+attack_frames_up = Array[int]([4, 5, 6])
+attack_frames_down = Array[int]([4, 5, 6])
+attack_frames_left = Array[int]([4, 5, 6])
+attack_frames_right = Array[int]([0, 0, 0])
+loot_table = ExtResource("2_18mva")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0.5, 2)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_u63r2")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
+[node name="DamageHitbox" type="Area2D" parent="."]
+collision_layer = 8388608
+collision_mask = 8388608
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(0.5, 0)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_8bwjp")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0.05, 0)
+sprite_frames = ExtResource("2_e88el")
+animation = &"attack_down"
+
+[node name="VisionRange" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2147483648
+
+[node name="Hitbox" type="CollisionShape2D" parent="VisionRange"]
+shape = SubResource("CircleShape2D_fulqv")
+debug_color = Color(1, 1, 1, 0)
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(0, 147)
+collision_mask = 2147483649
+collide_with_areas = true
+
+[node name="DamageNumbersOrigin" type="Node2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="LevelLabel" type="Label" parent="."]
+z_index = 1
+layout_direction = 2
+offset_left = -20.0
+offset_top = -27.0
+offset_right = 20.0
+offset_bottom = -12.0
+pivot_offset = Vector2(20, 8)
+theme_override_constants/line_spacing = 1
+theme_override_fonts/font = ExtResource("4_th3ac")
+label_settings = SubResource("LabelSettings_fulqv")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="isElite" type="Label" parent="LevelLabel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = -0.66700006
+anchor_right = 0.5
+anchor_bottom = -0.66700006
+offset_left = -8.0
+offset_top = -7.994999
+offset_right = 8.0
+offset_bottom = 8.005001
+pivot_offset = Vector2(8, 8)
+theme_override_fonts/font = ExtResource("4_th3ac")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 16777216
+collision_mask = 16777216
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_e88el")
+
+[connection signal="body_entered" from="DamageHitbox" to="." method="_on_damage_hitbox_body_entered"]
+[connection signal="body_exited" from="DamageHitbox" to="." method="_on_damage_hitbox_body_exited"]
