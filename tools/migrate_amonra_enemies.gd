@@ -73,7 +73,7 @@ func _migrate_one(source_path: String) -> bool:
 	var damage_per_hit := _extract_float(text, "damage_per_hit", 5.0)
 
 	var is_boss := slug.find("strong") != -1 or slug.find("boss") != -1
-	var sprite_slug := FALLBACK_SPRITE_SOURCE.get(slug, slug)
+	var sprite_slug :String = FALLBACK_SPRITE_SOURCE.get(slug, slug)
 	var sprite_res_path := "%senemy_%s.tres" % [SPRITES_DIR, sprite_slug]
 
 	if not FileAccess.file_exists(sprite_res_path):
