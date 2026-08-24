@@ -3,7 +3,6 @@
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="ItemsPanel" type="VBoxContainer" unique_id=781489209]
-visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -44,10 +43,12 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="TabsRow/TabRow0/Margin/ContentRow" unique_id=1641005842]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 text = "Przedmioty"
 
 [node name="RightLabel" type="Label" parent="TabsRow/TabRow0/Margin/ContentRow" unique_id=777189435]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="TabRow1" type="PanelContainer" parent="TabsRow" unique_id=1438951585]
@@ -79,10 +80,12 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="TabsRow/TabRow1/Margin/ContentRow" unique_id=112503414]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 text = "Bron"
 
 [node name="RightLabel" type="Label" parent="TabsRow/TabRow1/Margin/ContentRow" unique_id=1252015414]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="TabRow2" type="PanelContainer" parent="TabsRow" unique_id=906200031]
@@ -114,10 +117,12 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="TabsRow/TabRow2/Margin/ContentRow" unique_id=1436795622]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Czesci"
+theme_override_font_sizes/font_size = 25
+text = "Ekwipunek"
 
 [node name="RightLabel" type="Label" parent="TabsRow/TabRow2/Margin/ContentRow" unique_id=2063089894]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="TabRow3" type="PanelContainer" parent="TabsRow" unique_id=1143969346]
@@ -149,10 +154,12 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="TabsRow/TabRow3/Margin/ContentRow" unique_id=245959931]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 text = "Kluczowe"
 
 [node name="RightLabel" type="Label" parent="TabsRow/TabRow3/Margin/ContentRow" unique_id=361357403]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ListVBox" type="VBoxContainer" parent="." unique_id=409938608]
@@ -190,9 +197,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow0/Margin/ContentRow" unique_id=675246633]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow0/Margin/ContentRow" unique_id=1162202111]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow1" type="PanelContainer" parent="ListVBox" unique_id=220881734]
@@ -225,9 +234,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow1/Margin/ContentRow" unique_id=382550215]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow1/Margin/ContentRow" unique_id=851038792]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow2" type="PanelContainer" parent="ListVBox" unique_id=204854448]
@@ -260,9 +271,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow2/Margin/ContentRow" unique_id=538837349]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow2/Margin/ContentRow" unique_id=1336331061]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow3" type="PanelContainer" parent="ListVBox" unique_id=566097744]
@@ -295,9 +308,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow3/Margin/ContentRow" unique_id=2095464874]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow3/Margin/ContentRow" unique_id=167850444]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow4" type="PanelContainer" parent="ListVBox" unique_id=1384912814]
@@ -330,9 +345,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow4/Margin/ContentRow" unique_id=1605544860]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow4/Margin/ContentRow" unique_id=1482525728]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow5" type="PanelContainer" parent="ListVBox" unique_id=1851001813]
@@ -365,9 +382,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow5/Margin/ContentRow" unique_id=69553603]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow5/Margin/ContentRow" unique_id=131012355]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow6" type="PanelContainer" parent="ListVBox" unique_id=1347783661]
@@ -400,9 +419,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow6/Margin/ContentRow" unique_id=471852078]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow6/Margin/ContentRow" unique_id=1569736970]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow7" type="PanelContainer" parent="ListVBox" unique_id=1304419478]
@@ -435,9 +456,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow7/Margin/ContentRow" unique_id=69494271]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow7/Margin/ContentRow" unique_id=597769527]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow8" type="PanelContainer" parent="ListVBox" unique_id=1868553029]
@@ -470,9 +493,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow8/Margin/ContentRow" unique_id=2097421294]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow8/Margin/ContentRow" unique_id=75885585]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow9" type="PanelContainer" parent="ListVBox" unique_id=21087582]
@@ -505,9 +530,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow9/Margin/ContentRow" unique_id=924350802]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow9/Margin/ContentRow" unique_id=599715339]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow10" type="PanelContainer" parent="ListVBox" unique_id=1212413617]
@@ -540,9 +567,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow10/Margin/ContentRow" unique_id=1732125514]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow10/Margin/ContentRow" unique_id=671770559]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="ItemRow11" type="PanelContainer" parent="ListVBox" unique_id=2020135586]
@@ -575,9 +604,11 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="ListVBox/ItemRow11/Margin/ContentRow" unique_id=1183169658]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 25
 
 [node name="RightLabel" type="Label" parent="ListVBox/ItemRow11/Margin/ContentRow" unique_id=2032741786]
 layout_mode = 2
+theme_override_font_sizes/font_size = 25
 horizontal_alignment = 2
 
 [node name="FooterLabel" type="Label" parent="." unique_id=1673693072]

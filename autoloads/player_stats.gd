@@ -1,7 +1,5 @@
 extends Node
 
-const QuizRpgHeroData = preload("res://modules/quiz_rpg/scripts/heroes/hero_data.gd")
-
 ## PlayerStats — moduł QuizRPG
 ## Przechowuje statystyki gracza: HP, XP, poziom, punkty, nagrody.
 ## Dostępny przez: CoreManager.get_singleton("PlayerStats")

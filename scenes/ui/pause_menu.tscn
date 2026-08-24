@@ -103,27 +103,55 @@ size_flags_vertical = 3
 [node name="PartyPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=1577505588 instance=ExtResource("3_s4glr")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="ItemsPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=781489209 instance=ExtResource("4_uqdl8")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="SkillsPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=67562435 instance=ExtResource("5_j6n5y")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="EquipmentPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=420274983 instance=ExtResource("6_0dsej")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="StatusPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=1379284490 instance=ExtResource("7_kuvrd")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="ConfirmPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=1250960308 instance=ExtResource("8_ddwuj")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
 
 [node name="SavePanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=2119516108 instance=ExtResource("9_vaqrp")]
 layout_mode = 0
 anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
