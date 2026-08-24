@@ -1,0 +1,162 @@
+[gd_scene load_steps=12 format=3 uid="uid://db3w25af2rh3k"]
+
+[ext_resource type="Script" uid="uid://d2tho71b3uxyh" path="res://scripts/characters/enemy_warhog.gd" id="1_eq0pc"]
+[ext_resource type="Resource" uid="uid://c3xqr4u28hk6n" path="res://resources/loot_tables/warhog_loot.tres" id="2_sxk5o"]
+[ext_resource type="SpriteFrames" uid="uid://bjx77wr2i5rp8" path="res://resources/enemies/enemy_warhog.tres" id="4_4snnx"]
+[ext_resource type="FontFile" uid="uid://npmuhl5101my" path="res://assets/fonts/upheavtt.ttf" id="9_ua68m"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
+radius = 8.0
+height = 18.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u63r2"]
+radius = 4.5
+height = 20.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jgk6k"]
+radius = 9.0
+height = 22.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8bwjp"]
+height = 22.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fulqv"]
+radius = 166.19266
+
+[sub_resource type="LabelSettings" id="LabelSettings_fulqv"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sxk5o"]
+radius = 7.0
+height = 24.0
+
+[node name="enemy_warhog" type="CharacterBody2D" groups=["enemy"]]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_eq0pc")
+charge_cooldown_min = 7.0
+charge_cooldown_max = 30.0
+charge_speed = 200.0
+charge_stun_min = 1.0
+charge_stun_max = 3.0
+health = 15.0
+attack_type = 2
+attack_frames_2way = Array[int]([])
+attack_frames_up = Array[int]([3, 4])
+attack_frames_down = Array[int]([3, 4])
+attack_frames_left = Array[int]([3, 4])
+attack_frames_right = Array[int]([3, 4])
+loot_table = ExtResource("2_sxk5o")
+
+[node name="CollisionUp" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_fulqv")
+
+[node name="CollisionDown" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_fulqv")
+
+[node name="CollisionLeft" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(-1.5, 5.5)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_u63r2")
+
+[node name="CollisionRight" type="CollisionShape2D" parent="."]
+visible = false
+position = Vector2(-3.5, 5.5)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_u63r2")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+
+[node name="DamageHitbox" type="Area2D" parent="."]
+collision_layer = 8388608
+collision_mask = 8388608
+
+[node name="ShapeDown" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(0, 2)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_jgk6k")
+
+[node name="ShapeUp" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(0, -8)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_jgk6k")
+
+[node name="ShapeLeft" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(-15, -1)
+shape = SubResource("CapsuleShape2D_8bwjp")
+
+[node name="ShapeRight" type="CollisionShape2D" parent="DamageHitbox"]
+position = Vector2(10, -1)
+shape = SubResource("CapsuleShape2D_8bwjp")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-2.5, -8)
+sprite_frames = ExtResource("4_4snnx")
+animation = &"attack_down"
+
+[node name="VisionRange" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2147483648
+
+[node name="Hitbox" type="CollisionShape2D" parent="VisionRange"]
+shape = SubResource("CircleShape2D_fulqv")
+debug_color = Color(1, 1, 1, 0)
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(0, 147)
+collision_mask = 2147483649
+collide_with_areas = true
+
+[node name="DamageNumbersOrigin" type="Node2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="LevelLabel" type="Label" parent="."]
+z_index = 1
+layout_direction = 2
+offset_left = -20.0
+offset_top = -27.0
+offset_right = 20.0
+offset_bottom = -12.0
+pivot_offset = Vector2(20, 8)
+theme_override_constants/line_spacing = 1
+theme_override_fonts/font = ExtResource("9_ua68m")
+label_settings = SubResource("LabelSettings_fulqv")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="isElite" type="Label" parent="LevelLabel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = -0.66700006
+anchor_right = 0.5
+anchor_bottom = -0.66700006
+offset_left = -8.0
+offset_top = -7.994999
+offset_right = 8.0
+offset_bottom = 8.005001
+pivot_offset = Vector2(8, 8)
+theme_override_fonts/font = ExtResource("9_ua68m")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 16777216
+collision_mask = 16777216
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_sxk5o")
+
+[connection signal="body_entered" from="DamageHitbox" to="." method="_on_damage_hitbox_body_entered"]
+[connection signal="body_exited" from="DamageHitbox" to="." method="_on_damage_hitbox_body_exited"]

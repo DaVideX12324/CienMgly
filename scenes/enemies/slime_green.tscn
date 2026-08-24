@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://bssxqs6u8eoja" path="res://modules/quiz_rpg/scripts/enemies/bit_dragon.gd" id="2_script"]
-[ext_resource type="SpriteFrames" uid="uid://b41vax46iknjy" path="res://modules/quiz_rpg/resources/enemies/enemy_skeleton.tres" id="3_qwm3x"]
+[ext_resource type="SpriteFrames" uid="uid://hakd74l6xj11" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_qwm3x"]
 
 [node name="Enemy" unique_id=1773527378 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -21,4 +21,4 @@ shape_type = 4
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -16)
 sprite_frames = ExtResource("3_qwm3x")
-animation = &"death"
+animation = &"attack_down"
