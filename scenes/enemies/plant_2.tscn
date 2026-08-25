@@ -1,21 +1,41 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://00vo8ygf2od4"]
 
-[ext_resource type="PackedScene" path="enemy.tscn" id="1_base"]
-[ext_resource type="Script" path="../../scripts/enemies/plant_2.gd" id="2_script"]
-[ext_resource type="SpriteFrames" path="../../resources/enemies/enemy_plant_2.tres" id="3_frames"]
+[ext_resource type="Script" uid="uid://d2t82n1k4pny0" path="res://modules/quiz_rpg/scripts/enemies/plant_2.gd" id="2_script"]
+[ext_resource type="SpriteFrames" uid="uid://b2dd87hhojfgw" path="res://modules/quiz_rpg/resources/enemies/enemy_plant_2.tres" id="3_frames"]
 
-[node name="Enemy" instance=ExtResource("1_base")]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_tbjrv"]
+radius = 3.0
+height = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
+radius = 150.0
+
+[node name="Enemy" type="CharacterBody2D" unique_id=1936213422 groups=["enemies", "interactable"]]
+collision_layer = 2
+collision_mask = 5
+motion_mode = 1
+platform_on_leave = 2
 script = ExtResource("2_script")
 enemy_name = "Plant 2"
 quiz_id = "ogolne"
-quiz_category = "ogolne"
 hp = 60
 max_hp = 60
 damage_on_wrong = 10
-xp_reward = 50
 encounter_tier = 1
 patrol_speed = 60.0
-is_boss = false
 
-[node name="AnimatedSprite2D" parent="." index="0"]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1014503738]
+position = Vector2(0, -8)
 sprite_frames = ExtResource("3_frames")
+animation = &"attack_down"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
+visible = false
+position = Vector2(0, 3)
+shape = SubResource("CapsuleShape2D_tbjrv")
+
+[node name="DetectionArea" type="Area2D" parent="." unique_id=2045348945]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1963073735]
+shape = SubResource("CircleShape2D_detect")
