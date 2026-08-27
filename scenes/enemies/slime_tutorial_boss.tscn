@@ -28,6 +28,7 @@ patrol_speed = 65.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1014503738]
 position = Vector2(0, -8)
+scale = Vector2(2.5, 2.5)
 sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
 
@@ -35,6 +36,7 @@ animation = &"attack_down"
 visible = false
 position = Vector2(0, 2.8648145)
 rotation = 1.5707964
+scale = Vector2(2.5, 2.5)
 shape = SubResource("CapsuleShape2D_l38ft")
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=2045348945]

@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" load_steps=150 format=3 uid="uid://b38dmnkdtat4c"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://b38dmnkdtat4c"]
 
-[ext_resource type="Texture2D" uid="uid://bqcb3n13hvf4v" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_attack_with_shadow.png" id="1_2bgvd"]
-[ext_resource type="Texture2D" uid="uid://cgyxx16gpqvcw" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Death_with_shadow.png" id="2_qod0f"]
-[ext_resource type="Texture2D" uid="uid://cwdni7cjx7vpf" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Hurt_with_shadow.png" id="3_qod0f"]
-[ext_resource type="Texture2D" uid="uid://djhlxxq7bq1io" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Idle_with_shadow.png" id="4_2bgvd"]
-[ext_resource type="Texture2D" uid="uid://dtqxdwasm1w41" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Walk_with_shadow.png" id="5_qp2xr"]
+[ext_resource type="Texture2D" uid="uid://dowwnt4cvj6un" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_attack_with_shadow.png" id="1_2bgvd"]
+[ext_resource type="Texture2D" uid="uid://dms716sc7u1aj" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Death_with_shadow.png" id="2_qod0f"]
+[ext_resource type="Texture2D" uid="uid://6lasnr3vvpi8" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Hurt_with_shadow.png" id="3_qod0f"]
+[ext_resource type="Texture2D" uid="uid://cbpxusjh5rtu1" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Idle_with_shadow.png" id="4_2bgvd"]
+[ext_resource type="Texture2D" uid="uid://clci5tmx26i6m" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl3/With_shadow/Swordsman_lvl3_Walk_with_shadow.png" id="5_qp2xr"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_qp2xr"]
 atlas = ExtResource("1_2bgvd")
@@ -609,7 +609,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_uwdn5")
 }],
-"loop": false,
+"loop": 0,
 "name": &"attack_down",
 "speed": 7.0
 }, {
@@ -638,7 +638,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_8qh8m")
 }],
-"loop": false,
+"loop": 0,
 "name": &"attack_left",
 "speed": 7.0
 }, {
@@ -667,7 +667,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_petlo")
 }],
-"loop": false,
+"loop": 0,
 "name": &"attack_right",
 "speed": 7.0
 }, {
@@ -696,7 +696,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_3d4kq")
 }],
-"loop": false,
+"loop": 0,
 "name": &"attack_up",
 "speed": 7.0
 }, {
@@ -722,7 +722,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_6s214")
 }],
-"loop": false,
+"loop": 0,
 "name": &"death_down",
 "speed": 7.0
 }, {
@@ -748,7 +748,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_kt862")
 }],
-"loop": false,
+"loop": 0,
 "name": &"death_left",
 "speed": 7.0
 }, {
@@ -774,7 +774,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_wata0")
 }],
-"loop": false,
+"loop": 0,
 "name": &"death_right",
 "speed": 7.0
 }, {
@@ -800,7 +800,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_xvqnc")
 }],
-"loop": false,
+"loop": 0,
 "name": &"death_up",
 "speed": 7.0
 }, {
@@ -820,7 +820,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_2fqls")
 }],
-"loop": false,
+"loop": 0,
 "name": &"hurt_down",
 "speed": 7.0
 }, {
@@ -840,7 +840,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_8ue0s")
 }],
-"loop": false,
+"loop": 0,
 "name": &"hurt_left",
 "speed": 7.0
 }, {
@@ -860,7 +860,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_avsnu")
 }],
-"loop": false,
+"loop": 0,
 "name": &"hurt_right",
 "speed": 7.0
 }, {
@@ -880,7 +880,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_plpdw")
 }],
-"loop": false,
+"loop": 0,
 "name": &"hurt_up",
 "speed": 7.0
 }, {
@@ -921,7 +921,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_gy0jw")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_down",
 "speed": 7.0
 }, {
@@ -962,7 +962,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_lboih")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_left",
 "speed": 6.0
 }, {
@@ -1003,7 +1003,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_3nf2m")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_right",
 "speed": 7.0
 }, {
@@ -1020,7 +1020,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_cc0f3")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle_up",
 "speed": 4.0
 }, {
@@ -1043,7 +1043,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_g2xaj")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_down",
 "speed": 7.0
 }, {
@@ -1066,7 +1066,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_0cagh")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_left",
 "speed": 7.0
 }, {
@@ -1089,7 +1089,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_clbm5")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_right",
 "speed": 7.0
 }, {
@@ -1112,7 +1112,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_nnxmb")
 }],
-"loop": true,
+"loop": 1,
 "name": &"walk_up",
 "speed": 7.0
 }]
