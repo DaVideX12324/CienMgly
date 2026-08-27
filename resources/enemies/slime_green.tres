@@ -1,9 +1,9 @@
 [gd_resource type="SpriteFrames" load_steps=25 format=3 uid="uid://ddavbs47h5i8c"]
 
-[ext_resource type="Texture2D" uid="uid://dmwi4u8a36l2q" path="res://assets/textures/atlases/green_slime_enemy/SlimeGreen_Death_strip9.png" id="1_12pah"]
-[ext_resource type="Texture2D" uid="uid://4blfndrse3no" path="res://assets/textures/atlases/green_slime_enemy/SlimeGreen_Hurt_strip4.png" id="2_myk4o"]
-[ext_resource type="Texture2D" uid="uid://c2kphp1wfnp1y" path="res://assets/textures/atlases/green_slime_enemy/SlimeGreen_Idle_strip4.png" id="3_a5tue"]
-[ext_resource type="Texture2D" uid="uid://qn2fo4xjl463" path="res://assets/textures/atlases/green_slime_enemy/SlimeGreen_Movement_strip5.png" id="4_qlfwn"]
+[ext_resource type="Texture2D" uid="uid://dmwi4u8a36l2q" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Death_strip9.png" id="1_12pah"]
+[ext_resource type="Texture2D" uid="uid://4blfndrse3no" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Hurt_strip4.png" id="2_myk4o"]
+[ext_resource type="Texture2D" uid="uid://c2kphp1wfnp1y" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Idle_strip4.png" id="3_a5tue"]
+[ext_resource type="Texture2D" uid="uid://qn2fo4xjl463" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Movement_strip5.png" id="4_qlfwn"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jgk6k"]
 atlas = ExtResource("1_12pah")

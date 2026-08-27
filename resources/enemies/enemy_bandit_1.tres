@@ -3,7 +3,6 @@
 [ext_resource type="Texture2D" uid="uid://divbsh0dkuyvs" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_attack_with_shadow.png" id="1_dqn5m"]
 [ext_resource type="Texture2D" uid="uid://4ro4g70awyc7" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Death_with_shadow.png" id="2_tawnw"]
 [ext_resource type="Texture2D" uid="uid://bsblfcm5cs032" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Hurt_with_shadow.png" id="3_tu2r4"]
-[ext_resource type="Texture2D" uid="uid://baw12flt6ef0c" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Idle_with_shadow.png" id="4_gjjfq"]
 [ext_resource type="Texture2D" uid="uid://cps2t3mrrm00q" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Walk_with_shadow.png" id="5_6ua8d"]
 [ext_resource type="Texture2D" uid="uid://baw12flt6ef0c" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Idle_with_shadow.png" id="5_cjtjw"]
 
@@ -328,51 +327,51 @@ atlas = ExtResource("3_tu2r4")
 region = Rect2(256, 192, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_uhyr4"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(0, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2eenm"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(64, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_m6gjk"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(128, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_mbbno"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(192, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_pj0d4"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(256, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_02ja7"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(320, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_0wrsx"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(384, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ewa4h"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(448, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_icrm3"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(512, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_uslnr"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(576, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_l676l"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(640, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_aj8vi"]
-atlas = ExtResource("4_gjjfq")
+atlas = ExtResource("5_cjtjw")
 region = Rect2(704, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jghgv"]
