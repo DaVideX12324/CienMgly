@@ -38,6 +38,8 @@ var _use_programmer_art: bool = true
 var _anim_time: float = 0.0
 var _flash_timer: float = 0.0
 var _flash_color: Color = Color.WHITE
+var _uses_directional_animations: bool = false
+var _last_facing_dir: String = "down"
 
 enum EnemyShape { DIAMOND, CIRCLE, TRIANGLE, SQUARE, HEXAGON }
 @export var shape_type: EnemyShape = EnemyShape.DIAMOND
@@ -64,6 +66,8 @@ func _ready() -> void:
 	if sprite and sprite is AnimatedSprite2D and sprite.sprite_frames:
 		if sprite.sprite_frames.get_animation_names().size() > 0:
 			_use_programmer_art = false
+		if sprite.sprite_frames.has_animation("walk_down") or sprite.sprite_frames.has_animation("idle_down"):
+			_uses_directional_animations = true
 
 	if _use_programmer_art:
 		if sprite:
@@ -124,8 +128,41 @@ func _physics_process(delta: float) -> void:
 		State.IDLE:
 			pass
 
+	if not _use_programmer_art:
+		_update_sprite_animation()
+
 	if _use_programmer_art:
 		queue_redraw()
+
+
+func _update_sprite_animation() -> void:
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite == null or sprite.sprite_frames == null:
+		return
+
+	var moving := velocity.length() > 5.0
+
+	if _uses_directional_animations:
+		if moving:
+			_last_facing_dir = _direction_name_from_velocity(velocity)
+		var anim_name := ("walk_" if moving else "idle_") + _last_facing_dir
+		if not sprite.sprite_frames.has_animation(anim_name):
+			anim_name = "idle_" + _last_facing_dir
+		if sprite.animation != anim_name or not sprite.is_playing():
+			sprite.play(anim_name)
+	else:
+		var anim_name := "walk" if moving else "idle"
+		if not sprite.sprite_frames.has_animation(anim_name):
+			return
+		if sprite.animation != anim_name or not sprite.is_playing():
+			sprite.play(anim_name)
+		sprite.flip_h = velocity.x < 0.0
+
+
+func _direction_name_from_velocity(vel: Vector2) -> String:
+	if abs(vel.x) > abs(vel.y):
+		return "right" if vel.x > 0.0 else "left"
+	return "down" if vel.y > 0.0 else "up"
 
 
 func _draw() -> void:
