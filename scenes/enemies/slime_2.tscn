@@ -25,12 +25,10 @@ encounter_tier = 1
 patrol_speed = 60.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1014503738]
-position = Vector2(0, -8)
 sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
-visible = false
 position = Vector2(0.5, 2)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_wy7an")

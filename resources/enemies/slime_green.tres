@@ -1,9 +1,9 @@
-[gd_resource type="SpriteFrames" load_steps=25 format=3 uid="uid://ddavbs47h5i8c"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://ddavbs47h5i8c"]
 
-[ext_resource type="Texture2D" uid="uid://dmwi4u8a36l2q" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Death_strip9.png" id="1_12pah"]
-[ext_resource type="Texture2D" uid="uid://4blfndrse3no" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Hurt_strip4.png" id="2_myk4o"]
-[ext_resource type="Texture2D" uid="uid://c2kphp1wfnp1y" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Idle_strip4.png" id="3_a5tue"]
-[ext_resource type="Texture2D" uid="uid://qn2fo4xjl463" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Movement_strip5.png" id="4_qlfwn"]
+[ext_resource type="Texture2D" uid="uid://dhs8pjndgachv" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Death_strip9.png" id="1_12pah"]
+[ext_resource type="Texture2D" uid="uid://cqqfc45kp7tve" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Hurt_strip4.png" id="2_myk4o"]
+[ext_resource type="Texture2D" uid="uid://gyn7rbsx887r" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Idle_strip4.png" id="3_a5tue"]
+[ext_resource type="Texture2D" uid="uid://cs4cy17j5tpjy" path="res://assets/textures/atlases/enemies/Slime_Green/SlimeGreen_Movement_strip5.png" id="4_qlfwn"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jgk6k"]
 atlas = ExtResource("1_12pah")
@@ -109,7 +109,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_gpyvg")
 }],
-"loop": false,
+"loop": 0,
 "name": &"slime_death",
 "speed": 10.0
 }, {
@@ -126,7 +126,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_yj4uo")
 }],
-"loop": false,
+"loop": 0,
 "name": &"slime_hurt",
 "speed": 10.0
 }, {
@@ -143,7 +143,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_s0ioa")
 }],
-"loop": true,
+"loop": 1,
 "name": &"slime_idle",
 "speed": 7.0
 }, {
@@ -163,7 +163,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_flasd")
 }],
-"loop": true,
+"loop": 1,
 "name": &"slime_walk",
 "speed": 6.0
 }]
