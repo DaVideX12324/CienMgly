@@ -173,12 +173,21 @@ func _direction_name_from_velocity(vel: Vector2) -> String:
 func _has_line_of_sight_to_player() -> bool:
 	if _raycast == null or not is_instance_valid(player_ref):
 		return true
+
+	# Bardzo blisko / w srodku wroga -- raycast moze byc niestabilny przy
+	# zerowej dlugosci, wiec traktujemy to jako widoczne bez sprawdzania.
+	var distance := global_position.distance_to(player_ref.global_position)
+	if distance < 50.0:
+		return true
+
 	var to_player := player_ref.global_position - _raycast.global_position
 	_raycast.target_position = _raycast.to_local(_raycast.global_position + to_player.limit_length(300.0))
 	_raycast.force_raycast_update()
 	var collider := _raycast.get_collider()
+
+	# Brak collidera = raycast nie trafil w nic blokujace -- droga jest czysta.
 	if collider == null:
-		return global_position.distance_to(player_ref.global_position) < 100.0
+		return true
 	if collider == player_ref:
 		return true
 	if collider is Node and (collider as Node).is_in_group("player"):
@@ -269,6 +278,10 @@ func _draw_polygon_shape(center: Vector2, radius: float, sides: int, color: Colo
 
 
 func _patrol(delta: float) -> void:
+	if is_instance_valid(player_ref) and not defeated and _has_line_of_sight_to_player():
+		state = State.CHASING
+		return
+
 	if patrol_points.is_empty():
 		return
 	var target = patrol_points[current_patrol_index]
@@ -282,9 +295,11 @@ func _patrol(delta: float) -> void:
 func _chase(delta: float) -> void:
 	if not is_instance_valid(player_ref):
 		state = State.PATROL
+		velocity = Vector2.ZERO
 		return
 	if not _has_line_of_sight_to_player():
 		state = State.PATROL
+		velocity = Vector2.ZERO
 		return
 	var direction = (player_ref.global_position - global_position).normalized()
 	velocity = direction * patrol_speed * 1.3
