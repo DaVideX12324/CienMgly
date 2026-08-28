@@ -1,20 +1,14 @@
 [gd_scene format=3 uid="uid://6wam20meboxf"]
 
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://bpfyfux1v7ivg" path="res://modules/quiz_rpg/scripts/enemies/bandit_2.gd" id="2_script"]
 [ext_resource type="SpriteFrames" uid="uid://cwi3gbqn5c3ft" path="res://modules/quiz_rpg/resources/enemies/enemy_bandit_2.tres" id="3_frames"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_l51jn"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_sgoys"]
 radius = 4.0
 height = 14.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
-radius = 150.0
-
-[node name="Enemy" type="CharacterBody2D" unique_id=638939810 groups=["enemies", "interactable"]]
-collision_layer = 2
-collision_mask = 5
-motion_mode = 1
-platform_on_leave = 2
+[node name="Enemy" unique_id=419819155 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
 enemy_name = "Bandit 2"
 quiz_id = "ogolne"
@@ -25,19 +19,12 @@ xp_reward = 40
 encounter_tier = 1
 patrol_speed = 60.0
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1014503738]
-position = Vector2(0, -8)
+[node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
+position = Vector2(0.5, -8)
 sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
-visible = false
+[node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
 position = Vector2(0, 2)
 rotation = 1.5707964
-shape = SubResource("CapsuleShape2D_l51jn")
-
-[node name="DetectionArea" type="Area2D" parent="." unique_id=2045348945]
-collision_layer = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1963073735]
-shape = SubResource("CircleShape2D_detect")
+shape = SubResource("CapsuleShape2D_sgoys")
