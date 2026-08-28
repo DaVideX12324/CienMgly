@@ -3,7 +3,10 @@
 [ext_resource type="TileSet" uid="uid://dis32q3fbs00h" path="res://modules/quiz_rpg/assets/textures/tilesets/tutorial_area.tres" id="2_bmcky"]
 [ext_resource type="PackedScene" uid="uid://ch5sbpevr0xqk" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_horizontal.tscn" id="4_1gyrv"]
 [ext_resource type="PackedScene" uid="uid://c8m5o1lxci0um" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_vertical_short.tscn" id="5_5qsod"]
+[ext_resource type="PackedScene" uid="uid://bwcuob7f80y7i" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial.tscn" id="6_0m64r"]
 [ext_resource type="Script" uid="uid://d3wum0v53cis4" path="res://modules/quiz_rpg/scripts/maps/tutorial_area.gd" id="6_bmcky"]
+[ext_resource type="PackedScene" uid="uid://cng11dfvinda4" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial_boss.tscn" id="7_xwsiw"]
+[ext_resource type="PackedScene" uid="uid://c5d8veaxnfwbw" path="res://modules/quiz_rpg/scenes/enemies/slime_1.tscn" id="8_5bl0e"]
 [ext_resource type="PackedScene" uid="uid://jppou3a7nbbw" path="res://modules/quiz_rpg/scenes/objects/barrel.tscn" id="12_1duei"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_mkloh"]
@@ -115,3 +118,18 @@ position = Vector2(116, 27)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="enter_next_level" unique_id=1870227324]
 position = Vector2(920, -319)
 shape = SubResource("RectangleShape2D_ebprv")
+
+[node name="Enemy" parent="." unique_id=1280210534 instance=ExtResource("6_0m64r")]
+position = Vector2(-56, 24)
+
+[node name="Enemy2" parent="." unique_id=1438334663 instance=ExtResource("6_0m64r")]
+position = Vector2(94, -79)
+
+[node name="Enemy3" parent="." unique_id=205540593 instance=ExtResource("6_0m64r")]
+position = Vector2(266, -21)
+
+[node name="Enemy4" parent="." unique_id=103068927 instance=ExtResource("7_xwsiw")]
+position = Vector2(542, -67)
+
+[node name="Enemy5" parent="." unique_id=96031201 instance=ExtResource("8_5bl0e")]
+position = Vector2(-39, -175)

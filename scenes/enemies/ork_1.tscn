@@ -31,7 +31,6 @@ sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
-visible = false
 position = Vector2(0, 1)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_13eyl")

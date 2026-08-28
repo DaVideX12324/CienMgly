@@ -30,7 +30,6 @@ sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
-visible = false
 position = Vector2(0, 1)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_ctysm")
@@ -40,3 +39,7 @@ collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1963073735]
 shape = SubResource("CircleShape2D_detect")
+debug_color = Color(0, 0.6, 0.69803923, 0.03137255)
+
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=1842038092]
+target_position = Vector2(0, 147)
