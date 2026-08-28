@@ -26,3 +26,9 @@ collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1963073735]
 shape = SubResource("CircleShape2D_detect")
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+target_position = Vector2(0, 150)
+collision_mask = 5
+collide_with_areas = false
+collide_with_bodies = true
