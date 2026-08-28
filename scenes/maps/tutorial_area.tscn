@@ -3,10 +3,10 @@
 [ext_resource type="TileSet" uid="uid://dis32q3fbs00h" path="res://modules/quiz_rpg/assets/textures/tilesets/tutorial_area.tres" id="2_bmcky"]
 [ext_resource type="PackedScene" uid="uid://ch5sbpevr0xqk" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_horizontal.tscn" id="4_1gyrv"]
 [ext_resource type="PackedScene" uid="uid://c8m5o1lxci0um" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_vertical_short.tscn" id="5_5qsod"]
-[ext_resource type="PackedScene" uid="uid://bwcuob7f80y7i" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial.tscn" id="6_0m64r"]
+[ext_resource type="PackedScene" uid="uid://cfo7s4j1w7jhb" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial.tscn" id="6_0m64r"]
 [ext_resource type="Script" uid="uid://d3wum0v53cis4" path="res://modules/quiz_rpg/scripts/maps/tutorial_area.gd" id="6_bmcky"]
-[ext_resource type="PackedScene" uid="uid://cng11dfvinda4" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial_boss.tscn" id="7_xwsiw"]
-[ext_resource type="PackedScene" uid="uid://c5d8veaxnfwbw" path="res://modules/quiz_rpg/scenes/enemies/slime_1.tscn" id="8_5bl0e"]
+[ext_resource type="PackedScene" uid="uid://d216tx2vqfqyj" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial_boss.tscn" id="7_xwsiw"]
+[ext_resource type="PackedScene" uid="uid://bkemxuoo3jwwn" path="res://modules/quiz_rpg/scenes/enemies/slime_1.tscn" id="8_5bl0e"]
 [ext_resource type="PackedScene" uid="uid://jppou3a7nbbw" path="res://modules/quiz_rpg/scenes/objects/barrel.tscn" id="12_1duei"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_mkloh"]
@@ -51,7 +51,6 @@ y_sort_enabled = true
 position = Vector2(-8, -95)
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=812421599]
-visible = false
 navigation_polygon = SubResource("NavigationPolygon_mkloh")
 
 [node name="Spawns" type="Node2D" parent="." unique_id=713112494]
