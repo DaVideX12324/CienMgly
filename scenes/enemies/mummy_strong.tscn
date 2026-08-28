@@ -1,35 +1,31 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://dv3h4vkrpqv8u"]
 
-[ext_resource type="PackedScene" path="enemy.tscn" id="1_base"]
-[ext_resource type="Script" path="../../scripts/enemies/mummy_strong.gd" id="2_script"]
-[ext_resource type="SpriteFrames" path="../../resources/enemies/enemy_mummy.tres" id="3_frames"]
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://bldavuu80o2bl" path="res://modules/quiz_rpg/scripts/enemies/mummy_strong.gd" id="2_script"]
+[ext_resource type="SpriteFrames" uid="uid://y5ftn1jijdsy" path="res://modules/quiz_rpg/resources/enemies/enemy_mummy.tres" id="3_frames"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fix"]
-radius = 4.000
-height = 10.000
+radius = 4.0
+height = 15.0
 
-[node name="Enemy" instance=ExtResource("1_base")]
+[node name="Enemy" unique_id=1819362319 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
 enemy_name = "Mummy Strong"
 quiz_id = "ogolne"
-quiz_category = "ogolne"
-question_count = 3
 hp = 3600
 max_hp = 3600
 damage_on_wrong = 100
 xp_reward = 4550
 encounter_tier = 4
-min_encounter_size = 1
-max_encounter_size = 3
 is_boss = true
 patrol_speed = 75.0
-detection_radius = 150.0
 
-[node name="AnimatedSprite2D" parent="." index="0"]
+[node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
+scale = Vector2(1.5, 1.5)
 sprite_frames = ExtResource("3_frames")
 animation = &"hurt_down"
 
-[node name="CollisionShape2D" parent="." index="1"]
-position = Vector2(0.00, 13.00)
+[node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
+position = Vector2(0, 13)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_fix")

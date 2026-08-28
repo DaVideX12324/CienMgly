@@ -1,10 +1,10 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dq4n2axksewv0"]
 
-[ext_resource type="Texture2D" uid="uid://cf80myjl2ac3h" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Attack_with_shadow.png" id="1_lk6n8"]
-[ext_resource type="Texture2D" uid="uid://d36e2306pvf0d" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Death_with_shadow.png" id="2_qh5t7"]
-[ext_resource type="Texture2D" uid="uid://v2h1mhyxfh1n" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Hurt_with_shadow.png" id="3_ykipv"]
-[ext_resource type="Texture2D" uid="uid://bqotwwtnsk505" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Idle_with_shadow.png" id="4_bjd3d"]
-[ext_resource type="Texture2D" uid="uid://dfaprdxbdggmv" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Walk_with_shadow.png" id="5_713xb"]
+[ext_resource type="Texture2D" uid="uid://cf80myjl2ac3h" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Attack_with_shadow.png" id="1_lk6n8"]
+[ext_resource type="Texture2D" uid="uid://d36e2306pvf0d" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Death_with_shadow.png" id="2_qh5t7"]
+[ext_resource type="Texture2D" uid="uid://v2h1mhyxfh1n" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Hurt_with_shadow.png" id="3_ykipv"]
+[ext_resource type="Texture2D" uid="uid://bqotwwtnsk505" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Idle_with_shadow.png" id="4_bjd3d"]
+[ext_resource type="Texture2D" uid="uid://dfaprdxbdggmv" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Vampire/PNG/Vampires1/With_shadow/Vampires1_Walk_with_shadow.png" id="5_713xb"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bjd3d"]
 atlas = ExtResource("1_lk6n8")
