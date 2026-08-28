@@ -52,6 +52,8 @@ var _ps: Node   # PlayerStats
 var _dm: Node   # DifficultyManager
 var _gm: Node   # GameManager
 
+@onready var _raycast: RayCast2D = get_node_or_null("RayCast2D")
+
 
 func _ready() -> void:
 	_apply_enemy_data()
@@ -72,6 +74,9 @@ func _ready() -> void:
 	if _use_programmer_art:
 		if sprite:
 			sprite.visible = false
+
+	if _raycast:
+		_raycast.enabled = true
 
 	_setup_detection_area()
 
@@ -163,6 +168,22 @@ func _direction_name_from_velocity(vel: Vector2) -> String:
 	if abs(vel.x) > abs(vel.y):
 		return "right" if vel.x > 0.0 else "left"
 	return "down" if vel.y > 0.0 else "up"
+
+
+func _has_line_of_sight_to_player() -> bool:
+	if _raycast == null or not is_instance_valid(player_ref):
+		return true
+	var to_player := player_ref.global_position - _raycast.global_position
+	_raycast.target_position = _raycast.to_local(_raycast.global_position + to_player.limit_length(300.0))
+	_raycast.force_raycast_update()
+	var collider := _raycast.get_collider()
+	if collider == null:
+		return global_position.distance_to(player_ref.global_position) < 100.0
+	if collider == player_ref:
+		return true
+	if collider is Node and (collider as Node).is_in_group("player"):
+		return true
+	return false
 
 
 func _draw() -> void:
@@ -262,6 +283,9 @@ func _chase(delta: float) -> void:
 	if not is_instance_valid(player_ref):
 		state = State.PATROL
 		return
+	if not _has_line_of_sight_to_player():
+		state = State.PATROL
+		return
 	var direction = (player_ref.global_position - global_position).normalized()
 	velocity = direction * patrol_speed * 1.3
 	move_and_slide()
@@ -294,7 +318,8 @@ func _setup_detection_area() -> void:
 func _on_detection_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") and not defeated:
 		player_ref = body
-		state = State.CHASING
+		if _has_line_of_sight_to_player():
+			state = State.CHASING
 
 
 func _on_detection_area_body_exited(body: Node2D) -> void:
