@@ -1,35 +1,54 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://b8kamuteugmth"]
 
-[ext_resource type="PackedScene" path="enemy.tscn" id="1_base"]
-[ext_resource type="Script" path="../../scripts/enemies/warhog.gd" id="2_script"]
-[ext_resource type="SpriteFrames" path="../../resources/enemies/enemy_warhog.tres" id="3_frames"]
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://bopg2i0jlapkn" path="res://modules/quiz_rpg/scripts/enemies/warhog.gd" id="2_script"]
+[ext_resource type="SpriteFrames" uid="uid://bjx77wr2i5rp8" path="res://modules/quiz_rpg/resources/enemies/enemy_warhog.tres" id="3_frames"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fix"]
-radius = 8.000
-height = 18.000
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
+radius = 8.0
+height = 18.0
 
-[node name="Enemy" instance=ExtResource("1_base")]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u63r2"]
+radius = 4.5
+height = 20.0
+
+[node name="Enemy" unique_id=297522438 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
 enemy_name = "Warhog"
 quiz_id = "ogolne"
-quiz_category = "ogolne"
-question_count = 3
 hp = 30
 max_hp = 30
 damage_on_wrong = 10
 xp_reward = 35
 encounter_tier = 1
-min_encounter_size = 1
-max_encounter_size = 3
-is_boss = false
 patrol_speed = 200.0
-detection_radius = 150.0
 
-[node name="AnimatedSprite2D" parent="." index="0"]
+[node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
+position = Vector2(-2.5, -8)
 sprite_frames = ExtResource("3_frames")
-animation = &"attack_down"
+animation = &"attack_up"
 
-[node name="CollisionShape2D" parent="." index="1"]
-position = Vector2(0.00, 1.00)
+[node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
+position = Vector2(0, 1)
 rotation = 1.570796
-shape = SubResource("CapsuleShape2D_fix")
+shape = null
+
+[node name="CollisionUp" type="CollisionShape2D" parent="." index="4" unique_id=1215286441]
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_fulqv")
+
+[node name="CollisionDown" type="CollisionShape2D" parent="." index="5" unique_id=950774794]
+position = Vector2(0, 1)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_fulqv")
+
+[node name="CollisionLeft" type="CollisionShape2D" parent="." index="6" unique_id=1243664958]
+position = Vector2(-1.5, 5.5)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_u63r2")
+
+[node name="CollisionRight" type="CollisionShape2D" parent="." index="7" unique_id=766925177]
+position = Vector2(-3.5, 5.5)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_u63r2")
