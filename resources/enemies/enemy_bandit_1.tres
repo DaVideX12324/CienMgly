@@ -1,10 +1,10 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://c3g603xvt1ayl"]
 
-[ext_resource type="Texture2D" uid="uid://divbsh0dkuyvs" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_attack_with_shadow.png" id="1_dqn5m"]
-[ext_resource type="Texture2D" uid="uid://4ro4g70awyc7" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Death_with_shadow.png" id="2_tawnw"]
-[ext_resource type="Texture2D" uid="uid://bsblfcm5cs032" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Hurt_with_shadow.png" id="3_tu2r4"]
-[ext_resource type="Texture2D" uid="uid://cps2t3mrrm00q" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Walk_with_shadow.png" id="5_6ua8d"]
-[ext_resource type="Texture2D" uid="uid://baw12flt6ef0c" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Idle_with_shadow.png" id="5_cjtjw"]
+[ext_resource type="Texture2D" uid="uid://divbsh0dkuyvs" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_attack_with_shadow.png" id="1_dqn5m"]
+[ext_resource type="Texture2D" uid="uid://4ro4g70awyc7" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Death_with_shadow.png" id="2_tawnw"]
+[ext_resource type="Texture2D" uid="uid://bsblfcm5cs032" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Hurt_with_shadow.png" id="3_tu2r4"]
+[ext_resource type="Texture2D" uid="uid://cps2t3mrrm00q" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Walk_with_shadow.png" id="5_6ua8d"]
+[ext_resource type="Texture2D" uid="uid://baw12flt6ef0c" path="res://assets/textures/atlases/enemies/Bandit/PNG/Swordsman_lvl1/With_shadow/Swordsman_lvl1_Idle_with_shadow.png" id="5_cjtjw"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_kd8w1"]
 atlas = ExtResource("1_dqn5m")

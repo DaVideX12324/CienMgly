@@ -1,10 +1,10 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://3cc2aiayr8hv"]
 
-[ext_resource type="Texture2D" uid="uid://b8yyk50vbmdfs" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Attack_with_shadow.png" id="1_b23ht"]
-[ext_resource type="Texture2D" uid="uid://bdwpewppaikgy" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Death_with_shadow.png" id="2_0mvlb"]
-[ext_resource type="Texture2D" uid="uid://cxpd573n2hbbi" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Hurt_with_shadow.png" id="3_8leci"]
-[ext_resource type="Texture2D" uid="uid://d4fg7mq084vxc" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Idle_with_shadow.png" id="4_wu3bv"]
-[ext_resource type="Texture2D" uid="uid://831pjfxkb6j3" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Walk_with_shadow.png" id="5_qcasw"]
+[ext_resource type="Texture2D" uid="uid://b8yyk50vbmdfs" path="res://assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Attack_with_shadow.png" id="1_b23ht"]
+[ext_resource type="Texture2D" uid="uid://bdwpewppaikgy" path="res://assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Death_with_shadow.png" id="2_0mvlb"]
+[ext_resource type="Texture2D" uid="uid://cxpd573n2hbbi" path="res://assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Hurt_with_shadow.png" id="3_8leci"]
+[ext_resource type="Texture2D" uid="uid://d4fg7mq084vxc" path="res://assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Idle_with_shadow.png" id="4_wu3bv"]
+[ext_resource type="Texture2D" uid="uid://831pjfxkb6j3" path="res://assets/textures/atlases/enemies/plant/PNG/Plant3/With_shadow/Plant3_Walk_with_shadow.png" id="5_qcasw"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2r774"]
 atlas = ExtResource("1_b23ht")

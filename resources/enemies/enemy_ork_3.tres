@@ -1,10 +1,10 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dlmwqp26lfce2"]
 
-[ext_resource type="Texture2D" uid="uid://d37qv6f2obrxf" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_attack_with_shadow.png" id="1_3kgjx"]
-[ext_resource type="Texture2D" uid="uid://ly3dgbq0mgop" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_death_with_shadow.png" id="2_stii8"]
-[ext_resource type="Texture2D" uid="uid://stn76q06bkkq" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_hurt_with_shadow.png" id="3_nd0mw"]
-[ext_resource type="Texture2D" uid="uid://bmuualoaemie7" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_idle_with_shadow.png" id="4_tv8xg"]
-[ext_resource type="Texture2D" uid="uid://cn7tm7rgwokdf" path="res://modules/quiz_rpg/assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_walk_with_shadow.png" id="5_w8lln"]
+[ext_resource type="Texture2D" uid="uid://d37qv6f2obrxf" path="res://assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_attack_with_shadow.png" id="1_3kgjx"]
+[ext_resource type="Texture2D" uid="uid://ly3dgbq0mgop" path="res://assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_death_with_shadow.png" id="2_stii8"]
+[ext_resource type="Texture2D" uid="uid://stn76q06bkkq" path="res://assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_hurt_with_shadow.png" id="3_nd0mw"]
+[ext_resource type="Texture2D" uid="uid://bmuualoaemie7" path="res://assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_idle_with_shadow.png" id="4_tv8xg"]
+[ext_resource type="Texture2D" uid="uid://cn7tm7rgwokdf" path="res://assets/textures/atlases/enemies/Ork/PNG/Orc3/With_shadow/orc3_walk_with_shadow.png" id="5_w8lln"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2pjaa"]
 atlas = ExtResource("1_3kgjx")
