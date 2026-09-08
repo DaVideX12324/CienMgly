@@ -1266,7 +1266,12 @@ func _setup_enemy_display() -> void:
 			var slot: Control = _enemy_active_layout_slots[i].get("slot", null) as Control
 			if slot:
 				slot.add_child(display)
-				display.position = slot.size * 0.5
+				var init_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
+				if init_sz == Vector2.ZERO:
+					init_sz = Vector2(150.0, 150.0)
+				display.position = init_sz * 0.5
+				if not slot.resized.is_connected(_on_enemy_slot_resized):
+					slot.resized.connect(_on_enemy_slot_resized.bind(slot))
 			else:
 				_enemy_display_root.add_child(display)
 		else:
@@ -1612,21 +1617,6 @@ func _apply_responsive_enemy_layout() -> void:
 	var enemy_section: VBoxContainer = get_node_or_null("Battlefield/FieldContent/EnemySection") as VBoxContainer
 	if enemy_section == null or enemy_sprite_node == null:
 		return
-	var res_scale: float = _get_resolution_scale_factor()
-	var bf: Control = get_node_or_null("Battlefield") as Control
-	var bf_height: float = bf.size.y if bf != null else 852.0
-
-	enemy_section.anchor_left = 0.0
-	enemy_section.anchor_right = 1.0
-	enemy_section.anchor_top = 1.0
-	enemy_section.anchor_bottom = 1.0
-	enemy_section.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	enemy_section.grow_vertical = Control.GROW_DIRECTION_BEGIN
-
-	var bottom_margin: float = 16.0 * res_scale
-	var section_height: float = clampf(420.0 * res_scale, 280.0, bf_height * 0.58)
-	enemy_section.offset_bottom = -bottom_margin
-	enemy_section.offset_top = -(bottom_margin + section_height)
 
 	var active_count: int = _enemy_active_layout_slots.size()
 	var vp_size: Vector2 = get_viewport_rect().size
@@ -1644,26 +1634,9 @@ func _apply_responsive_enemy_layout() -> void:
 	for child in enemy_sprite_node.get_children():
 		if not str(child.name).begins_with("EnemyRow"):
 			continue
-		var is_back: bool = str(child.name) == "EnemyRow2"
 		var row_box: HBoxContainer = child.get_node_or_null("HBoxContainer") as HBoxContainer
 		if row_box:
 			row_box.add_theme_constant_override("separation", dynamic_separation)
-			var row_mult: float = 0.78 if is_back else 1.0
-			var slot_w: float = 150.0 * row_mult * res_scale
-			var slot_h: float = 150.0 * row_mult * res_scale
-			var wrap_w: float = maxf(120.0 * row_mult * res_scale, slot_w)
-			var wrap_h: float = slot_h + (24.0 * res_scale)
-
-			for wrapper_node in row_box.get_children():
-				var wrapper: Control = wrapper_node as Control
-				if wrapper == null:
-					continue
-				wrapper.custom_minimum_size = Vector2(wrap_w, wrap_h)
-				for w_child in wrapper.get_children():
-					if w_child is Control and str(w_child.name).begins_with("EnemySlot"):
-						w_child.custom_minimum_size = Vector2(slot_w, slot_h)
-					elif w_child is ProgressBar and str(w_child.name).begins_with("EnemyHPBar"):
-						w_child.custom_minimum_size = Vector2(96.0 * row_mult * res_scale, maxf(6.0, 8.0 * res_scale))
 
 	for slot_idx in range(_enemy_active_layout_slots.size()):
 		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
@@ -1671,9 +1644,25 @@ func _apply_responsive_enemy_layout() -> void:
 		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
 			var display: Node2D = _enemy_displays[slot_idx]
 			if slot:
-				display.position = slot.size * 0.5
+				var slot_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
+				if slot_sz == Vector2.ZERO:
+					slot_sz = Vector2(150.0, 150.0)
+				display.position = slot_sz * 0.5
+				if not slot.resized.is_connected(_on_enemy_slot_resized):
+					slot.resized.connect(_on_enemy_slot_resized.bind(slot))
 			var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
 			display.scale = _get_enemy_scale(slot_idx, is_focused)
+
+
+func _on_enemy_slot_resized(slot: Control) -> void:
+	if not is_instance_valid(slot):
+		return
+	var slot_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
+	if slot_sz == Vector2.ZERO:
+		return
+	for child in slot.get_children():
+		if child is Node2D:
+			child.position = slot_sz * 0.5
 
 
 func _collect_enemy_row_layouts() -> Array[Array]:
