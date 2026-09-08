@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const ITEM_TAB_CATEGORIES: Array[String] = ["item", "hand", "part", "key"]
 const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
+const HOST_OPTIONS_MENU_SCENE: String = "res://scenes/ui/options_menu.tscn"
 
 @onready var pause_root: Control = $PauseRoot
 @onready var left_panel: PanelContainer = $PauseRoot/MainRow/LeftPanel
@@ -79,6 +80,7 @@ var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
 var _state_before_pause: int = -1
 var _opened_direct_exit: bool = false
+var _options_menu: CanvasLayer = null
 
 
 func is_paused() -> bool:
@@ -126,6 +128,10 @@ func _ready() -> void:
 	_cache_scene_rows()
 	_bind_mouse_interactions()
 	_apply_scaling()
+	_resolve_options_menu()
+	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
+	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
+		ui_scale_service.scale_changed.connect(func(_f: float) -> void: _apply_scaling())
 	_show_default_party_panel()
 	if _ps:
 		if _ps.has_signal("inventory_changed"):
@@ -172,6 +178,8 @@ func _cache_panel_nodes() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _options_menu != null and is_instance_valid(_options_menu) and _options_menu.visible:
+		return
 	if not _paused:
 		if _is_cancel(event) and _gm and _gm.is_exploring():
 			_toggle_pause()
@@ -225,6 +233,8 @@ func _toggle_pause() -> void:
 		_left_menu_index = 0
 		_show_default_party_panel()
 	else:
+		if _options_menu != null and is_instance_valid(_options_menu) and _options_menu.visible:
+			_options_menu.visible = false
 		var in_combat: bool = _is_in_combat()
 		if in_combat:
 			get_tree().paused = true
@@ -278,6 +288,14 @@ func _handle_close_input(event: InputEvent) -> bool:
 			else:
 				_mode = "left_menu"
 				_show_default_party_panel()
+		"options":
+			if _options_menu != null and is_instance_valid(_options_menu) and _options_menu.visible:
+				if _options_menu.has_method("_on_close"):
+					_options_menu.call("_on_close")
+				else:
+					_options_menu.visible = false
+			_mode = "left_menu"
+			_show_default_party_panel()
 		_:
 			_mode = "left_menu"
 			_show_default_party_panel()
@@ -427,6 +445,19 @@ func _accept_current() -> void:
 
 
 func _accept_left_menu() -> void:
+	if _left_menu_index >= 0 and _left_menu_index < _menu_rows.size():
+		var row: Control = _menu_rows[_left_menu_index]
+		var label: Label = row.find_child("LeftLabel", true, false) as Label
+		var label_text: String = label.text.to_lower() if label else ""
+		if label_text.contains("opcj"):
+			_open_options_menu()
+			return
+		if label_text.contains("zako") or label_text.contains("wyj"):
+			_mode = "confirm_exit"
+			_confirm_index = 0
+			_show_confirm_panel()
+			return
+
 	match _left_menu_index:
 		0:
 			_mode = "items_list"
@@ -449,9 +480,48 @@ func _accept_left_menu() -> void:
 			_save_slot_index = 0
 			_show_save_panel()
 		5:
+			_open_options_menu()
+		6:
 			_mode = "confirm_exit"
 			_confirm_index = 0
 			_show_confirm_panel()
+
+
+func _resolve_options_menu() -> CanvasLayer:
+	if _options_menu != null and is_instance_valid(_options_menu):
+		return _options_menu
+	if ResourceLoader.exists(HOST_OPTIONS_MENU_SCENE):
+		var host_scene: PackedScene = load(HOST_OPTIONS_MENU_SCENE) as PackedScene
+		if host_scene:
+			var menu_inst: CanvasLayer = host_scene.instantiate() as CanvasLayer
+			if menu_inst:
+				menu_inst.layer = layer + 5
+				add_child(menu_inst)
+				_options_menu = menu_inst
+				if _options_menu.has_signal("closed") and not _options_menu.closed.is_connected(_on_options_menu_closed):
+					_options_menu.closed.connect(_on_options_menu_closed)
+				return _options_menu
+	return null
+
+
+func _open_options_menu() -> void:
+	var opt_menu: CanvasLayer = _resolve_options_menu()
+	if opt_menu == null:
+		_show_toast("Nie udalo sie otworzyc opcji.")
+		return
+	_mode = "options"
+	if opt_menu.has_signal("closed") and not opt_menu.closed.is_connected(_on_options_menu_closed):
+		opt_menu.closed.connect(_on_options_menu_closed)
+	if opt_menu.has_method("open"):
+		opt_menu.call("open")
+	else:
+		opt_menu.visible = true
+
+
+func _on_options_menu_closed() -> void:
+	if _mode == "options":
+		_mode = "left_menu"
+		_show_default_party_panel()
 
 
 func _accept_items_list() -> void:
