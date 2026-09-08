@@ -61,7 +61,7 @@ func _physics_process(delta: float) -> void:
 		input = _get_follow_input()
 	else:
 		input = _get_input()
-	velocity = input * speed
+	velocity = input * speed * _get_speed_multiplier()
 
 	if input != Vector2.ZERO:
 		facing_direction = input.normalized()
@@ -291,3 +291,10 @@ func _on_interaction_area_area_entered(area: Area2D) -> void:
 
 func _on_interaction_area_area_exited(area: Area2D) -> void:
 	nearby_interactables.erase(area)
+
+
+func _get_speed_multiplier() -> float:
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and "player_speed_mult" in cheat_service:
+		return float(cheat_service.player_speed_mult)
+	return 1.0

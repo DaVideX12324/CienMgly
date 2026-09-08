@@ -212,7 +212,24 @@ func _ready() -> void:
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	_update_hp_bars()
+
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and cheat_service.has_signal("instant_win_triggered"):
+		cheat_service.instant_win_triggered.connect(trigger_instant_win)
+
 	_start_player_turn()
+
+
+func trigger_instant_win() -> void:
+	if phase == Phase.COMBAT_END:
+		return
+	for unit in _enemy_units:
+		unit["hp"] = 0
+	enemy_hp = 0
+	_update_hp_bars()
+	_refresh_enemy_header()
+	_refresh_stats_panel()
+	_end_combat(true)
 
 
 func _process(delta: float) -> void:
@@ -232,6 +249,14 @@ func _input(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _is_pause_menu_open():
 		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key_event := event as InputEventKey
+		var focus_owner := get_viewport().gui_get_focus_owner()
+		var is_typing := focus_owner is LineEdit or focus_owner is TextEdit
+		if key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K):
+			trigger_instant_win()
+			get_viewport().set_input_as_handled()
+			return
 	if phase == Phase.COMBAT_END and event.is_action_pressed("ui_accept"):
 		_victory_skip = true
 		get_viewport().set_input_as_handled()
@@ -601,8 +626,6 @@ func _is_boss_encounter() -> bool:
 
 func _should_auto_resolve_quiz(allowed_types: Array) -> bool:
 	if _is_quizless_mode_enabled():
-		return true
-	if quiz_id.strip_edges() == "":
 		return true
 	var available_questions: Array = QuizManager.get_questions(quiz_id, _diff_range, 1, allowed_types)
 	return available_questions.is_empty()

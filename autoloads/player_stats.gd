@@ -140,6 +140,9 @@ func roll_with_bonus(base_chance: float) -> bool:
 
 
 func take_damage(amount: int) -> void:
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and "god_mode" in cheat_service and bool(cheat_service.god_mode):
+		return
 	hp = maxi(hp - amount, 0)
 	hp_changed.emit(hp, max_hp)
 	_sync_primary_party_member()

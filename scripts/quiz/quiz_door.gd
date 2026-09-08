@@ -3,7 +3,7 @@ extends StaticBody2D
 ## Drzwi/przejście blokowane quizem.
 ## Programmer art: rysowane kodem (zamknięte = solidne, otwarte = przeźroczyste).
 
-@export var quiz_id: String = "default"
+@export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export var required_correct: int = 3
 @export var total_questions: int = 5
