@@ -228,8 +228,47 @@ theme_override_constants/separation = 10
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 24
-text = "Zakoncz gre"
+text = "Opcje"
 
 [node name="RightLabel" type="Label" parent="MenuRow5/Margin/ContentRow" unique_id=1737714153]
 layout_mode = 2
 horizontal_alignment = 2
+
+[node name="MenuRow6" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRow6"]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRow6/Control"]
+visible = false
+layout_mode = 0
+offset_top = 35.0
+offset_right = 517.0
+offset_bottom = 38.0
+
+[node name="Margin" type="MarginContainer" parent="MenuRow6"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRow6/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRow6/Margin/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Zakoncz gre"
+
+[node name="RightLabel" type="Label" parent="MenuRow6/Margin/ContentRow"]
+layout_mode = 2
+horizontal_alignment = 2
+
