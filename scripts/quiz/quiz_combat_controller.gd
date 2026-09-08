@@ -166,6 +166,8 @@ func _ready() -> void:
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
 
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
+
 	engage_btn.pressed.connect(_on_engage_pressed)
 	run_btn.pressed.connect(_on_run_pressed)
 	engage_btn.mouse_entered.connect(func(): _highlight_action(0))
@@ -1228,7 +1230,7 @@ func _setup_enemy_display() -> void:
 	_enemy_displays.clear()
 	for i in range(units.size()):
 		var source_enemy: Node2D = enemy
-		var display: Node2D = _create_enemy_display_clone(source_enemy)
+		var display: Node2D = _create_enemy_display_clone(source_enemy, i)
 		var unit_data: Dictionary = units[i]
 		display.sync_hp(int(unit_data.get("hp", source_enemy.hp)))
 		display.max_hp = int(unit_data.get("max_hp", source_enemy.max_hp))
@@ -1244,10 +1246,11 @@ func _setup_enemy_display() -> void:
 		_enemy_displays.append(display)
 
 	_enemy_display_node = _enemy_displays[0] if not _enemy_displays.is_empty() else null
+	_apply_responsive_enemy_layout()
 	_sync_enemy_displays()
 
 
-func _create_enemy_display_clone(source: Node2D) -> Node2D:
+func _create_enemy_display_clone(source: Node2D, slot_index: int = 0) -> Node2D:
 	var display: Node2D = EnemyBattleDisplayScript.new() as Node2D
 	if display.has_method("setup_from_source"):
 		display.call("setup_from_source", source)
@@ -1256,7 +1259,7 @@ func _create_enemy_display_clone(source: Node2D) -> Node2D:
 	display.shape_type = int(source.shape_type)
 	display.hp = source.hp
 	display.max_hp = source.max_hp
-	display.scale = ENEMY_DISPLAY_SCALE_DEFAULT
+	display.scale = _get_enemy_scale(slot_index, false)
 	return display
 
 
@@ -1340,30 +1343,56 @@ func _clear_enemy_display() -> void:
 func _select_enemy_layout_slots(active_count: int) -> Array[Dictionary]:
 	var selected: Array[Dictionary] = []
 	var rows: Array[Array] = _collect_enemy_row_layouts()
-	var remaining: int = active_count
 	for row_layout in rows:
 		for slot_data in row_layout:
 			var wrapper: Control = slot_data.get("wrapper", null) as Control
 			if wrapper:
 				wrapper.visible = false
-		if remaining <= 0:
-			continue
-		var available: int = row_layout.size()
-		if available <= 0:
-			continue
-		var take_count: int = mini(remaining, available)
-		for i in range(take_count):
-			var slot_data: Dictionary = row_layout[i]
-			var wrapper: Control = slot_data.get("wrapper", null) as Control
-			var slot: Control = slot_data.get("slot", null) as Control
-			if wrapper:
-				wrapper.visible = true
-				wrapper.remove_theme_stylebox_override("panel")
-				_bind_enemy_slot_target_input(wrapper, selected.size())
-			if slot:
-				_bind_enemy_slot_target_input(slot, selected.size())
-			selected.append(slot_data)
-		remaining -= take_count
+
+	if rows.is_empty():
+		return selected
+
+	var front_row: Array = rows[0] if rows.size() > 0 else []
+	var back_row: Array = rows[1] if rows.size() > 1 else []
+
+	var front_target_count: int = active_count
+	var back_target_count: int = 0
+	if active_count == 4:
+		front_target_count = 2
+		back_target_count = 2
+	elif active_count == 5:
+		front_target_count = 3
+		back_target_count = 2
+	elif active_count > 5:
+		front_target_count = mini(front_row.size(), 5)
+		back_target_count = active_count - front_target_count
+
+	var take_front: int = mini(front_target_count, front_row.size())
+	for i in range(take_front):
+		var slot_data: Dictionary = front_row[i]
+		var wrapper: Control = slot_data.get("wrapper", null) as Control
+		var slot: Control = slot_data.get("slot", null) as Control
+		if wrapper:
+			wrapper.visible = true
+			wrapper.remove_theme_stylebox_override("panel")
+			_bind_enemy_slot_target_input(wrapper, selected.size())
+		if slot:
+			_bind_enemy_slot_target_input(slot, selected.size())
+		selected.append(slot_data)
+
+	var take_back: int = mini(back_target_count, back_row.size())
+	for i in range(take_back):
+		var slot_data: Dictionary = back_row[i]
+		var wrapper: Control = slot_data.get("wrapper", null) as Control
+		var slot: Control = slot_data.get("slot", null) as Control
+		if wrapper:
+			wrapper.visible = true
+			wrapper.remove_theme_stylebox_override("panel")
+			_bind_enemy_slot_target_input(wrapper, selected.size())
+		if slot:
+			_bind_enemy_slot_target_input(slot, selected.size())
+		selected.append(slot_data)
+
 	return selected
 
 
@@ -1392,12 +1421,12 @@ func _refresh_enemy_slot_highlight() -> void:
 			if hp_bar:
 				hp_bar.modulate = Color(1.0, 1.0, 1.0, 1.0)
 			if display:
-				display.scale = ENEMY_DISPLAY_SCALE_FOCUSED
+				display.scale = _get_enemy_scale(slot_index, true)
 		else:
 			if hp_bar:
 				hp_bar.modulate = Color(0.82, 0.82, 0.82, 1.0)
 			if display:
-				display.scale = ENEMY_DISPLAY_SCALE_DEFAULT
+				display.scale = _get_enemy_scale(slot_index, false)
 	if not target_select_active:
 		if _enemy_target_cursor_node:
 			_enemy_target_cursor_node.visible = false
@@ -1492,13 +1521,120 @@ func _ensure_enemy_target_highlight(slot: Control) -> Control:
 	return _enemy_target_highlight_node
 
 
+func _on_viewport_size_changed() -> void:
+	_apply_responsive_enemy_layout()
+
+
+func _get_resolution_scale_factor() -> float:
+	var vp_size: Vector2 = get_viewport_rect().size
+	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
+		return 1.0
+	var scale_x: float = vp_size.x / 1920.0
+	var scale_y: float = vp_size.y / 1080.0
+	return clampf(minf(scale_x, scale_y), 0.65, 2.5)
+
+
+func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
+	var res_scale: float = _get_resolution_scale_factor()
+	var is_back_row: bool = false
+	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size():
+		is_back_row = bool(_enemy_active_layout_slots[slot_index].get("is_back_row", false))
+
+	var perspective_mult: float = 0.78 if is_back_row else 1.0
+	var base_scale_val: float = 4.0 * perspective_mult * res_scale
+	if focused:
+		base_scale_val *= 1.1
+
+	return Vector2(base_scale_val, base_scale_val)
+
+
+func _apply_responsive_enemy_layout() -> void:
+	var enemy_section: VBoxContainer = get_node_or_null("Battlefield/FieldContent/EnemySection") as VBoxContainer
+	if enemy_section == null or enemy_sprite_node == null:
+		return
+	var res_scale: float = _get_resolution_scale_factor()
+	var bf: Control = get_node_or_null("Battlefield") as Control
+	var bf_height: float = bf.size.y if bf != null else 852.0
+
+	enemy_section.anchor_left = 0.0
+	enemy_section.anchor_right = 1.0
+	enemy_section.anchor_top = 1.0
+	enemy_section.anchor_bottom = 1.0
+	enemy_section.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	enemy_section.grow_vertical = Control.GROW_DIRECTION_BEGIN
+
+	var bottom_margin: float = 16.0 * res_scale
+	var section_height: float = clampf(420.0 * res_scale, 280.0, bf_height * 0.58)
+	enemy_section.offset_bottom = -bottom_margin
+	enemy_section.offset_top = -(bottom_margin + section_height)
+
+	var active_count: int = _enemy_active_layout_slots.size()
+	var vp_size: Vector2 = get_viewport_rect().size
+	var width_ratio: float = clampf(vp_size.x / 1920.0, 0.7, 2.5)
+
+	var base_separation: float = 35.0
+	if active_count <= 2:
+		base_separation = 110.0
+	elif active_count == 3:
+		base_separation = 70.0
+	elif active_count == 4:
+		base_separation = 50.0
+	var dynamic_separation: int = int(base_separation * width_ratio)
+
+	for child in enemy_sprite_node.get_children():
+		if not str(child.name).begins_with("EnemyRow"):
+			continue
+		var is_back: bool = str(child.name) == "EnemyRow2"
+		var row_box: HBoxContainer = child.get_node_or_null("HBoxContainer") as HBoxContainer
+		if row_box:
+			row_box.add_theme_constant_override("separation", dynamic_separation)
+			var row_mult: float = 0.78 if is_back else 1.0
+			var slot_w: float = 150.0 * row_mult * res_scale
+			var slot_h: float = 150.0 * row_mult * res_scale
+			var wrap_w: float = maxf(120.0 * row_mult * res_scale, slot_w)
+			var wrap_h: float = slot_h + (24.0 * res_scale)
+
+			for wrapper_node in row_box.get_children():
+				var wrapper: Control = wrapper_node as Control
+				if wrapper == null:
+					continue
+				wrapper.custom_minimum_size = Vector2(wrap_w, wrap_h)
+				for w_child in wrapper.get_children():
+					if w_child is Control and str(w_child.name).begins_with("EnemySlot"):
+						w_child.custom_minimum_size = Vector2(slot_w, slot_h)
+					elif w_child is ProgressBar and str(w_child.name).begins_with("EnemyHPBar"):
+						w_child.custom_minimum_size = Vector2(96.0 * row_mult * res_scale, maxf(6.0, 8.0 * res_scale))
+
+	for slot_idx in range(_enemy_active_layout_slots.size()):
+		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
+		var slot: Control = slot_data.get("slot", null) as Control
+		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
+			var display: Node2D = _enemy_displays[slot_idx]
+			if slot:
+				display.position = slot.size * 0.5
+			var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
+			display.scale = _get_enemy_scale(slot_idx, is_focused)
+
+
 func _collect_enemy_row_layouts() -> Array[Array]:
 	var rows: Array[Array] = []
 	if enemy_sprite_node == null:
 		return rows
+
+	var row_nodes: Array[Node] = []
+	var r1: Node = enemy_sprite_node.get_node_or_null("EnemyRow1")
+	var r2: Node = enemy_sprite_node.get_node_or_null("EnemyRow2")
+	if r1:
+		row_nodes.append(r1)
+	if r2:
+		row_nodes.append(r2)
 	for child in enemy_sprite_node.get_children():
-		if not str(child.name).begins_with("EnemyRow"):
-			continue
+		if str(child.name).begins_with("EnemyRow") and not child in row_nodes:
+			row_nodes.append(child)
+
+	for r_idx in range(row_nodes.size()):
+		var child: Node = row_nodes[r_idx]
+		var is_back: bool = (str(child.name) == "EnemyRow2") or (r_idx > 0)
 		var row_layout: Array[Dictionary] = []
 		var row_box: HBoxContainer = child.get_node_or_null("HBoxContainer") as HBoxContainer
 		if row_box == null:
@@ -1520,6 +1656,8 @@ func _collect_enemy_row_layouts() -> Array[Array]:
 					"wrapper": wrapper,
 					"slot": slot,
 					"bar": hp_bar,
+					"row_index": r_idx,
+					"is_back_row": is_back,
 				})
 		rows.append(row_layout)
 	return rows
