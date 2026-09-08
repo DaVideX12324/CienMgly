@@ -1,0 +1,94 @@
+[gd_scene load_steps=2 format=3 uid="uid://map_gen_preview_01"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/tools/map_generator_preview.gd" id="1_preview"]
+
+[node name="MapGeneratorPreview" type="Node2D"]
+script = ExtResource("1_preview")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.8, 0.8)
+
+[node name="LevelContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="CanvasLayer"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 260.0
+offset_bottom = 330.0
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "🗺️ Generator Map"
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="RichTextLabel" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(210, 140)
+layout_mode = 2
+bbcode_enabled = true
+text = "Inicjalizacja..."
+fit_content = true
+
+[node name="HBoxButtons" type="HBoxContainer" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BtnGenerate" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🎲 Nowy Seed (Spacja)"
+
+[node name="HBoxTypes" type="HBoxContainer" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BtnForest" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxTypes"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🌲 Las"
+
+[node name="BtnDungeon" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxTypes"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏰 Zamek"
+
+[node name="HBoxSize" type="HBoxContainer" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxSize"]
+layout_mode = 2
+text = "Rozmiar:"
+
+[node name="OptSize" type="OptionButton" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxSize"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnPlayer" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "🏃 Tryb Gracza (P)"
+
+[node name="HelpLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -36.0
+offset_right = 250.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Spacja: Nowy seed | PPM / ŚPM: Przesuwanie kamery | Kółko: Zoom | P: Spacer graczem"
+horizontal_alignment = 1
