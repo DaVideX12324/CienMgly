@@ -17,9 +17,9 @@ var question_label: Label
 var hint_label: Label
 var timer_label: Label
 var timer_bar: ProgressBar
-var mc_box: VBoxContainer
+var mc_box: Control
 var mc_buttons: Array[Button] = []
-var tf_box: VBoxContainer
+var tf_box: Control
 var tf_buttons: Array[Button] = []
 var fill_text_box: VBoxContainer
 var pattern_label: Label
@@ -59,14 +59,14 @@ func setup(p_command_vbox: VBoxContainer) -> void:
 	hint_label = quiz_panel.get_node("HintLabel") as Label
 	timer_label = quiz_panel.get_node("TimerLabel") as Label
 	timer_bar = quiz_panel.get_node("TimerBar") as ProgressBar
-	mc_box = quiz_panel.get_node("MC_Box") as VBoxContainer
+	mc_box = quiz_panel.get_node("MC_Box") as Control
 	mc_buttons = [
 		mc_box.get_node("Btn0") as Button,
 		mc_box.get_node("Btn1") as Button,
 		mc_box.get_node("Btn2") as Button,
 		mc_box.get_node("Btn3") as Button,
 	]
-	tf_box = quiz_panel.get_node("TF_Box") as VBoxContainer
+	tf_box = quiz_panel.get_node("TF_Box") as Control
 	tf_buttons = [
 		tf_box.get_node("BtnTrue") as Button,
 		tf_box.get_node("BtnFalse") as Button,
@@ -96,16 +96,16 @@ func setup(p_command_vbox: VBoxContainer) -> void:
 
 
 func apply_visual_style(button_styler: Callable) -> void:
-	question_label.add_theme_color_override("font_color", TEXT_PRIMARY)
-	question_label.add_theme_font_size_override("font_size", 18)
+	question_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
+	question_label.add_theme_font_size_override("font_size", 20)
 	hint_label.add_theme_color_override("font_color", TEXT_SECONDARY)
-	hint_label.add_theme_font_size_override("font_size", 13)
-	correct_answer_label.add_theme_color_override("font_color", TEXT_PRIMARY)
-	correct_answer_label.add_theme_font_size_override("font_size", 14)
+	hint_label.add_theme_font_size_override("font_size", 14)
+	correct_answer_label.add_theme_color_override("font_color", Color(0.35, 0.95, 0.45))
+	correct_answer_label.add_theme_font_size_override("font_size", 16)
 	for btn in mc_buttons:
 		button_styler.call(btn, 17)
 	for btn in tf_buttons:
-		button_styler.call(btn, 17)
+		button_styler.call(btn, 18)
 	button_styler.call(fill_confirm, 17)
 	button_styler.call(tiles_confirm, 17)
 	button_styler.call(match_confirm, 17)
@@ -145,41 +145,103 @@ func handle_input(event: InputEvent) -> bool:
 		return false
 	if not (event is InputEventKey) or not event.pressed or event.is_echo():
 		return false
+	var key_event: InputEventKey = event as InputEventKey
+	var key: int = int(key_event.keycode)
+
 	match str(_current_question.get("type", "multiple_choice")):
 		"multiple_choice":
-			if _is_choice_prev(event):
-				_move_mc_selection(-1)
+			# Direct number keys [1] - [4] (main keyboard & numpad)
+			if key in [KEY_1, KEY_KP_1] and mc_buttons.size() > 0 and mc_buttons[0].visible and not mc_buttons[0].disabled:
+				_mc_selected_idx = 0
+				_refresh_mc_selection()
+				_submit_answer(answer_multiple_choice(0))
 				return true
-			if _is_choice_next(event):
-				_move_mc_selection(1)
+			if key in [KEY_2, KEY_KP_2] and mc_buttons.size() > 1 and mc_buttons[1].visible and not mc_buttons[1].disabled:
+				_mc_selected_idx = 1
+				_refresh_mc_selection()
+				_submit_answer(answer_multiple_choice(1))
 				return true
+			if key in [KEY_3, KEY_KP_3] and mc_buttons.size() > 2 and mc_buttons[2].visible and not mc_buttons[2].disabled:
+				_mc_selected_idx = 2
+				_refresh_mc_selection()
+				_submit_answer(answer_multiple_choice(2))
+				return true
+			if key in [KEY_4, KEY_KP_4] and mc_buttons.size() > 3 and mc_buttons[3].visible and not mc_buttons[3].disabled:
+				_mc_selected_idx = 3
+				_refresh_mc_selection()
+				_submit_answer(answer_multiple_choice(3))
+				return true
+
+			# 2x2 Grid navigation:
+			# [0] [1]
+			# [2] [3]
+			if event.is_action_pressed("ui_left") or key in [KEY_A, KEY_LEFT]:
+				if _mc_selected_idx in [1, 3] and mc_buttons[_mc_selected_idx - 1].visible:
+					_mc_selected_idx -= 1
+					_refresh_mc_selection()
+					return true
+			elif event.is_action_pressed("ui_right") or key in [KEY_D, KEY_RIGHT]:
+				if _mc_selected_idx in [0, 2] and _mc_selected_idx + 1 < mc_buttons.size() and mc_buttons[_mc_selected_idx + 1].visible:
+					_mc_selected_idx += 1
+					_refresh_mc_selection()
+					return true
+			elif event.is_action_pressed("ui_up") or key in [KEY_W, KEY_UP]:
+				if _mc_selected_idx >= 2 and mc_buttons[_mc_selected_idx - 2].visible:
+					_mc_selected_idx -= 2
+					_refresh_mc_selection()
+					return true
+				else:
+					_move_mc_selection(-1)
+					return true
+			elif event.is_action_pressed("ui_down") or key in [KEY_S, KEY_DOWN]:
+				if _mc_selected_idx + 2 < mc_buttons.size() and mc_buttons[_mc_selected_idx + 2].visible:
+					_mc_selected_idx += 2
+					_refresh_mc_selection()
+					return true
+				else:
+					_move_mc_selection(1)
+					return true
+
 			if _is_choice_accept(event):
 				_submit_answer(answer_multiple_choice(_mc_selected_idx))
 				return true
+
 		"true_false":
-			if _is_choice_prev(event):
-				_move_tf_selection(-1)
+			if key in [KEY_1, KEY_KP_1]:
+				_tf_selected_idx = 0
+				_refresh_tf_selection()
+				_submit_answer(answer_true_false(true))
 				return true
-			if _is_choice_next(event):
+			if key in [KEY_2, KEY_KP_2]:
+				_tf_selected_idx = 1
+				_refresh_tf_selection()
+				_submit_answer(answer_true_false(false))
+				return true
+			if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right") or key in [KEY_A, KEY_D, KEY_LEFT, KEY_RIGHT]:
+				_tf_selected_idx = 1 - _tf_selected_idx
+				_refresh_tf_selection()
+				return true
+			if _is_choice_prev(event) or _is_choice_next(event):
 				_move_tf_selection(1)
 				return true
 			if _is_choice_accept(event):
 				_submit_answer(answer_true_false(_tf_selected_idx == 0))
 				return true
+
 		"fill_tiles":
-			var key_event: InputEventKey = event as InputEventKey
-			if key_event.keycode == KEY_TAB:
+			if key == KEY_TAB:
 				_active_gap = (_active_gap + 1) % max(_tile_slots.size(), 1)
 				_update_gap_highlight()
 				return true
-			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
+			if key == KEY_ENTER or key == KEY_KP_ENTER:
 				_submit_answer(answer_fill_tiles())
 				return true
+
 		"matching":
-			var key_event: InputEventKey = event as InputEventKey
-			if key_event.keycode == KEY_ENTER or key_event.keycode == KEY_KP_ENTER:
+			if key == KEY_ENTER or key == KEY_KP_ENTER:
 				_submit_answer(answer_matching())
 				return true
+
 	return false
 
 
@@ -366,11 +428,13 @@ func _build_mc(question: Dictionary) -> void:
 	for i in range(mc_buttons.size()):
 		var btn: Button = mc_buttons[i]
 		if i < answers.size():
-			btn.text = str(answers[i])
+			var prefix := "[%d] " % (i + 1)
+			var ans_str := str(answers[i])
+			btn.text = prefix + ans_str
 			btn.visible = true
 			btn.disabled = false
 			btn.mouse_filter = Control.MOUSE_FILTER_STOP
-			btn.set_meta("base_text", str(answers[i]))
+			btn.set_meta("base_text", prefix + ans_str)
 			_clear_choice_feedback(btn)
 			if not btn.mouse_entered.is_connected(_on_mc_button_hover.bind(i)):
 				btn.mouse_entered.connect(_on_mc_button_hover.bind(i))
@@ -382,10 +446,10 @@ func _build_mc(question: Dictionary) -> void:
 func _build_tf() -> void:
 	tf_box.visible = true
 	_tf_selected_idx = 0
-	tf_buttons[0].text = "Prawda"
-	tf_buttons[1].text = "Falsz"
-	tf_buttons[0].set_meta("base_text", "Prawda")
-	tf_buttons[1].set_meta("base_text", "Falsz")
+	tf_buttons[0].text = "[1] Prawda"
+	tf_buttons[1].text = "[2] Falsz"
+	tf_buttons[0].set_meta("base_text", "[1] Prawda")
+	tf_buttons[1].set_meta("base_text", "[2] Falsz")
 	for i in range(tf_buttons.size()):
 		var btn: Button = tf_buttons[i]
 		btn.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -435,18 +499,18 @@ func _move_tf_selection(delta: int) -> void:
 func _refresh_mc_selection() -> void:
 	for i in range(mc_buttons.size()):
 		var btn: Button = mc_buttons[i]
-		var base_text: String = str(btn.get_meta("base_text", btn.text)).trim_prefix("► ")
-		btn.text = ("► " if i == _mc_selected_idx and btn.visible else "") + base_text
+		var base_text: String = str(btn.get_meta("base_text", btn.text)).trim_prefix("► ").trim_prefix("   ")
+		btn.text = ("► " if i == _mc_selected_idx and btn.visible else "   ") + base_text
 		if btn.visible:
-			btn.add_theme_color_override("font_color", Color.WHITE if i == _mc_selected_idx else TEXT_PRIMARY)
+			btn.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if i == _mc_selected_idx else TEXT_PRIMARY)
 
 
 func _refresh_tf_selection() -> void:
 	for i in range(tf_buttons.size()):
 		var btn: Button = tf_buttons[i]
-		var base_text: String = str(btn.get_meta("base_text", btn.text)).trim_prefix("► ")
-		btn.text = ("► " if i == _tf_selected_idx else "") + base_text
-		btn.add_theme_color_override("font_color", Color.WHITE if i == _tf_selected_idx else TEXT_PRIMARY)
+		var base_text: String = str(btn.get_meta("base_text", btn.text)).trim_prefix("► ").trim_prefix("   ")
+		btn.text = ("► " if i == _tf_selected_idx else "   ") + base_text
+		btn.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if i == _tf_selected_idx else TEXT_PRIMARY)
 
 
 func _on_mc_button_hover(index: int) -> void:
@@ -494,15 +558,19 @@ func _build_fill_tiles(question: Dictionary) -> void:
 	_tile_slots.fill("")
 	var parts := text_with_gaps.split("___")
 	for i in range(parts.size()):
-		var label := Label.new()
-		label.text = parts[i]
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		gap_row.add_child(label)
+		if parts[i] != "":
+			var label := Label.new()
+			label.text = parts[i]
+			label.autowrap_mode = TextServer.AUTOWRAP_OFF
+			label.add_theme_font_size_override("font_size", 18)
+			label.add_theme_color_override("font_color", TEXT_PRIMARY)
+			gap_row.add_child(label)
 		if i < gaps.size():
 			var gap_button := Button.new()
 			gap_button.text = "[ ___ ]"
 			gap_button.focus_mode = Control.FOCUS_NONE
-			gap_button.custom_minimum_size = Vector2(110, 32)
+			gap_button.custom_minimum_size = Vector2(120, 36)
+			gap_button.add_theme_font_size_override("font_size", 16)
 			var gap_index := i
 			gap_button.pressed.connect(func(): _on_gap_clicked(gap_index))
 			gap_row.add_child(gap_button)
@@ -511,6 +579,8 @@ func _build_fill_tiles(question: Dictionary) -> void:
 		var tile_button := Button.new()
 		tile_button.text = str(tile)
 		tile_button.focus_mode = Control.FOCUS_NONE
+		tile_button.custom_minimum_size = Vector2(90, 36)
+		tile_button.add_theme_font_size_override("font_size", 16)
 		var tile_text := str(tile)
 		tile_button.pressed.connect(func(): _on_tile_clicked(tile_text, tile_button))
 		tile_row.add_child(tile_button)

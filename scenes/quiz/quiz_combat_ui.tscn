@@ -645,6 +645,8 @@ show_percentage = false
 [node name="QuestionLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=2052245524]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 20
 text = "Pytanie..."
 autowrap_mode = 3
 
@@ -652,49 +654,64 @@ autowrap_mode = 3
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="MC_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1793185763]
+[node name="MC_Box" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1793185763]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 8
+columns = 2
 
 [node name="Btn0" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=371378339]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-flat = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 17
+alignment = 0
 autowrap_mode = 3
 
 [node name="Btn1" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=396330636]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-flat = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 17
+alignment = 0
 autowrap_mode = 3
 
 [node name="Btn2" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=103563379]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-flat = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 17
+alignment = 0
 autowrap_mode = 3
 
 [node name="Btn3" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=405486461]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-flat = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 17
+alignment = 0
 autowrap_mode = 3
 
-[node name="TF_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=210528019]
+[node name="TF_Box" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=210528019]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
 
 [node name="BtnTrue" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=899732370]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
-flat = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
 
 [node name="BtnFalse" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=218378251]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
-flat = true
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
 
 [node name="FillText_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=538701248]
 visible = false
@@ -718,20 +735,25 @@ flat = true
 [node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1736166103]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 8
 
 [node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1502888160]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
 
 [node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=878326736]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
 
 [node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1238327094]
+custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
-text = "Zatwierdz"
-flat = true
+size_flags_horizontal = 4
+text = "Zatwierdz [Enter]"
 
 [node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1438959482]
 visible = false
@@ -1081,3 +1103,48 @@ show_percentage = false
 custom_minimum_size = Vector2(74, 0)
 layout_mode = 2
 text = "0"
+
+[node name="QuizModalOverlay" type="Control" parent="Root" unique_id=987654321]
+visible = false
+z_index = 20
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ModalDim" type="ColorRect" parent="Root/QuizModalOverlay" unique_id=987654322]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="ModalPanel" type="PanelContainer" parent="Root/QuizModalOverlay" unique_id=987654323]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -180.0
+offset_right = 500.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
+
+[node name="ModalMargin" type="MarginContainer" parent="Root/QuizModalOverlay/ModalPanel" unique_id=987654324]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="ModalVBox" type="VBoxContainer" parent="Root/QuizModalOverlay/ModalPanel/ModalMargin" unique_id=987654325]
+layout_mode = 2
+theme_override_constants/separation = 8

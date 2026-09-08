@@ -46,6 +46,9 @@ var enemy_base_damage := 15
 var player_base_damage := 20
 var turn_number := 0
 
+@onready var battle_window: PanelContainer = $BattleWindow
+@onready var quiz_modal_overlay: Control = get_node_or_null("QuizModalOverlay") as Control
+@onready var quiz_modal_vbox: VBoxContainer = get_node_or_null("QuizModalOverlay/ModalPanel/ModalMargin/ModalVBox") as VBoxContainer
 @onready var content_row: HBoxContainer  = $BattleWindow/WindowMargin/VBox/ContentRow
 @onready var command_panel_container: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel
 @onready var party_panel_container: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel
@@ -163,9 +166,11 @@ func _ready() -> void:
 		parent_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	get_tree().paused = true
 
-	_ps = CoreManager.get_singleton("PlayerStats")
-	_dm = CoreManager.get_singleton("DifficultyManager")
-	_gm = CoreManager.get_singleton("GameManager")
+	var core_mgr = get_node_or_null("/root/CoreManager")
+	if core_mgr:
+		_ps = core_mgr.get_singleton("PlayerStats")
+		_dm = core_mgr.get_singleton("DifficultyManager")
+		_gm = core_mgr.get_singleton("GameManager")
 
 	if _ps:
 		if _ps.has_signal("hp_changed"):
@@ -203,6 +208,10 @@ func _ready() -> void:
 	_quiz_panel_controller = QuizPanelController.new()
 	_quiz_panel_controller.setup(command_vbox)
 	_quiz_panel_controller.answered.connect(_on_quiz_answered)
+	_quiz_panel_controller.apply_visual_style(func(btn: Button, font_sz: int):
+		btn.add_theme_font_size_override("font_size", font_sz)
+		btn.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
+	)
 
 	if battle_background and battle_background.has_method("set_context"):
 		battle_background.call("set_context", _find_current_map_node(), enemy, player, _enemy_units)
@@ -1957,29 +1966,55 @@ func _setup_party_layout() -> void:
 		party_panel_container.custom_minimum_size = Vector2(PARTY_PANEL_WIDTH_MIN, 0)
 
 
-func _set_quiz_layout_active(active: bool, animated: bool = true) -> void:
+func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 	if command_panel_container == null or party_panel_container == null:
 		return
-	var command_ratio := COMMAND_PANEL_WIDTH_DEFAULT
-	var party_ratio := PARTY_PANEL_WIDTH_DEFAULT
+
+	var is_modal_mode := false
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and "quiz_ui_mode" in cheat_service:
+		is_modal_mode = (str(cheat_service.quiz_ui_mode) == "popup")
+
 	if active:
-		var separation := float(content_row.get_theme_constant("separation"))
-		var available_width := maxf(content_row.size.x - separation, 1.0)
-		var desired_width = _quiz_panel_controller.get_desired_panel_width() + 56.0
-		var party_min_width := maxf(party_panel_container.get_combined_minimum_size().x, PARTY_PANEL_WIDTH_MIN)
-		var command_max_width := maxf(available_width - party_min_width, COMMAND_PANEL_WIDTH_MIN)
-		var command_target_width := clampf(desired_width, COMMAND_PANEL_WIDTH_MIN, command_max_width)
-		var party_target_width := maxf(PARTY_PANEL_WIDTH_MIN, available_width - command_target_width)
-		command_ratio = command_target_width
-		party_ratio = party_target_width
-	if not animated:
-		command_panel_container.size_flags_stretch_ratio = command_ratio
-		party_panel_container.size_flags_stretch_ratio = party_ratio
-		return
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(command_panel_container, "size_flags_stretch_ratio", command_ratio, PANEL_RESIZE_DURATION)
-	tween.tween_property(party_panel_container, "size_flags_stretch_ratio", party_ratio, PANEL_RESIZE_DURATION)
+		if is_modal_mode and quiz_modal_overlay and quiz_modal_vbox:
+			quiz_modal_overlay.visible = true
+			if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
+				if _quiz_panel_controller.quiz_panel.get_parent() != quiz_modal_vbox:
+					_quiz_panel_controller.quiz_panel.reparent(quiz_modal_vbox, false)
+				if result_label and result_label.get_parent() != quiz_modal_vbox:
+					result_label.reparent(quiz_modal_vbox, false)
+				if _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != quiz_modal_vbox:
+					_quiz_panel_controller.correct_answer_label.reparent(quiz_modal_vbox, false)
+		else:
+			# Bottom bar mode: 100% full width, hide party panel, increase window height
+			party_panel_container.visible = false
+			command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			command_panel_container.size_flags_stretch_ratio = 1.0
+			command_panel_container.custom_minimum_size = Vector2(0, 0)
+			if battle_window:
+				battle_window.offset_top = -290.0
+	else:
+		# Deactivate modal if it was open
+		if quiz_modal_overlay and quiz_modal_overlay.visible:
+			quiz_modal_overlay.visible = false
+		if command_vbox:
+			if _quiz_panel_controller and _quiz_panel_controller.quiz_panel and _quiz_panel_controller.quiz_panel.get_parent() != command_vbox:
+				_quiz_panel_controller.quiz_panel.reparent(command_vbox, false)
+			if result_label and result_label.get_parent() != command_vbox:
+				result_label.reparent(command_vbox, false)
+			if _quiz_panel_controller and _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != command_vbox:
+				_quiz_panel_controller.correct_answer_label.reparent(command_vbox, false)
+
+		# Restore bottom bar layout
+		party_panel_container.visible = true
+		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		party_panel_container.size_flags_stretch_ratio = PARTY_PANEL_WIDTH_DEFAULT
+		party_panel_container.custom_minimum_size = Vector2(PARTY_PANEL_WIDTH_MIN, 0)
+		command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		command_panel_container.size_flags_stretch_ratio = COMMAND_PANEL_WIDTH_DEFAULT
+		command_panel_container.custom_minimum_size = Vector2(COMMAND_PANEL_WIDTH_MIN, 0)
+		if battle_window:
+			battle_window.offset_top = -228.0
 
 
 func _init_party_state() -> void:
