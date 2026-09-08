@@ -1,7 +1,8 @@
 extends Control
 
-const GENERATORS := {
+const GENERATORS: Dictionary = {
 	"world_map": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/world_map_battle_background.gd"),
+	"tutorial_area": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/tutorial_area_battle_background.gd"),
 	"default": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/default_battle_background.gd"),
 }
 
@@ -13,7 +14,7 @@ var _generator: RefCounted
 
 
 func _ready() -> void:
-	resized.connect(func(): queue_redraw())
+	resized.connect(func() -> void: queue_redraw())
 	_select_generator()
 
 
@@ -34,7 +35,7 @@ func refresh_units(enemy_units: Array) -> void:
 func _draw() -> void:
 	if _generator == null:
 		_select_generator()
-	var context := {
+	var context: Dictionary = {
 		"map": _map_node,
 		"enemy": _enemy,
 		"player": _player,
@@ -44,18 +45,22 @@ func _draw() -> void:
 
 
 func _select_generator() -> void:
-	var key := _map_key(_map_node)
-	var generator_script: Script = GENERATORS.get(key, GENERATORS["default"])
+	var key: String = _map_key(_map_node)
+	var generator_script: Script = GENERATORS.get(key, GENERATORS["default"]) as Script
 	_generator = generator_script.new()
 
 
 func _map_key(map_node: Node) -> String:
 	if map_node == null:
 		return "default"
-	var script := map_node.get_script() as Script
+	var script: Script = map_node.get_script() as Script
 	if script and script.resource_path.ends_with("/world_map.gd"):
 		return "world_map"
-	var node_name := str(map_node.name).to_snake_case()
+	if script and (script.resource_path.ends_with("/tutorial_area.gd") or script.resource_path.contains("tutorial_area")):
+		return "tutorial_area"
+	var node_name: String = str(map_node.name).to_snake_case()
 	if GENERATORS.has(node_name):
 		return node_name
+	if node_name.contains("tutorial"):
+		return "tutorial_area"
 	return "default"

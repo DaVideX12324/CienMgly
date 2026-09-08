@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ch5sbpevr0xqk"]
 
-[ext_resource type="Texture2D" uid="uid://dlphipshnw08u" path="res://modules/quiz_rpg/assets/textures/atlases/Dungeon tileset/Dungeon tileset.png" id="1_30asa"]
+[ext_resource type="Texture2D" uid="uid://dlphipshnw08u" path="res://assets/textures/atlases/Dungeon tileset/Dungeon tileset.png" id="1_30asa"]
 [ext_resource type="Script" uid="uid://bm5sgfqfeq3o7" path="res://modules/quiz_rpg/scripts/interactables/door.gd" id="1_tinro"]
 
 [sub_resource type="Animation" id="Animation_wjqg2"]
@@ -116,10 +116,12 @@ region_rect = Rect2(48, 112, 96, 32)
 libraries/ = SubResource("AnimationLibrary_21lwg")
 
 [node name="CollisionDoors" type="CollisionShape2D" parent="." unique_id=480105320]
+visible = false
 position = Vector2(0, -11)
 shape = SubResource("RectangleShape2D_sv0ti")
 
 [node name="PlayerDetection" type="Area2D" parent="." unique_id=1518807002]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetection" unique_id=1163945027]
 position = Vector2(0, -16)
