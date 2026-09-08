@@ -589,6 +589,12 @@ layout_mode = 2
 text = "Ucieknij"
 flat = true
 
+[node name="ExitBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698013]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+text = "Wyjście"
+flat = true
+
 [node name="ActionMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1594848201]
 layout_mode = 2
 

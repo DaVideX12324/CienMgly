@@ -82,6 +82,7 @@ var turn_number := 0
 	]
 @onready var engage_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/EngageBtn
 @onready var run_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/RunBtn
+@onready var exit_btn: Button = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/ExitBtn") as Button
 @onready var atk_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/AtkBtn
 @onready var def_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/DefBtn
 @onready var skills_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/SkillsBtn
@@ -182,8 +183,12 @@ func _ready() -> void:
 
 	engage_btn.pressed.connect(_on_engage_pressed)
 	run_btn.pressed.connect(_on_run_pressed)
+	if exit_btn:
+		exit_btn.pressed.connect(_on_exit_pressed)
 	engage_btn.mouse_entered.connect(func(): _highlight_action(0))
 	run_btn.mouse_entered.connect(func(): _highlight_action(1))
+	if exit_btn:
+		exit_btn.mouse_entered.connect(func(): _highlight_action(2))
 	_action_buttons = [atk_btn, skills_btn, def_btn, items_btn]
 	atk_btn.pressed.connect(_on_action.bind(Action.ATTACK))
 	def_btn.pressed.connect(_on_action.bind(Action.DEFEND))
@@ -1140,9 +1145,10 @@ func _highlight_action(idx: int) -> void:
 	if buttons.is_empty():
 		return
 	_selected_action_idx = clampi(idx, 0, buttons.size() - 1)
-	for btn in [engage_btn, run_btn, atk_btn, skills_btn, def_btn, items_btn]:
-		btn.text = btn.text.trim_prefix("► ")
-		btn.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
+		if btn:
+			btn.text = btn.text.trim_prefix("► ")
+			btn.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
 	var selected := buttons[_selected_action_idx]
 	selected.text = "► " + selected.text
 	selected.add_theme_color_override("font_color", Color.WHITE)
@@ -1560,7 +1566,7 @@ func _find_pause_menu_node() -> Node:
 	return null
 
 
-func _open_pause_menu() -> void:
+func _open_pause_menu(start_in_exit_confirm: bool = false) -> void:
 	var pause_menu: Node = _find_pause_menu_node()
 	if pause_menu == null:
 		var pause_scene: PackedScene = load("res://modules/quiz_rpg/scenes/ui/pause_menu.tscn") as PackedScene
@@ -1568,8 +1574,11 @@ func _open_pause_menu() -> void:
 			var new_pause: CanvasLayer = pause_scene.instantiate() as CanvasLayer
 			get_tree().current_scene.add_child(new_pause)
 			pause_menu = new_pause
-	if pause_menu and pause_menu.has_method("open_pause_menu"):
-		pause_menu.call("open_pause_menu")
+	if pause_menu:
+		if start_in_exit_confirm and pause_menu.has_method("open_confirm_exit"):
+			pause_menu.call("open_confirm_exit")
+		elif pause_menu.has_method("open_pause_menu"):
+			pause_menu.call("open_pause_menu")
 
 
 func _on_viewport_size_changed() -> void:
@@ -2049,8 +2058,8 @@ func _get_visible_action_count() -> int:
 
 func _get_visible_primary_buttons() -> Array[Button]:
 	var visible_buttons: Array[Button] = []
-	for btn in [engage_btn, run_btn]:
-		if btn.visible:
+	for btn: Button in [engage_btn, run_btn, exit_btn]:
+		if btn and btn.visible:
 			visible_buttons.append(btn)
 	return visible_buttons
 
@@ -2066,6 +2075,12 @@ func _on_run_pressed() -> void:
 	if phase != Phase.ACTION_SELECT:
 		return
 	_try_flee()
+
+
+func _on_exit_pressed() -> void:
+	if phase != Phase.ACTION_SELECT:
+		return
+	_open_pause_menu(true)
 
 
 func _get_or_create_victory_log() -> Label:
