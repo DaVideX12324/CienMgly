@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c8m5o1lxci0um"]
 
 [ext_resource type="Script" uid="uid://bm5sgfqfeq3o7" path="res://modules/quiz_rpg/scripts/interactables/door.gd" id="1_cn1ks"]
-[ext_resource type="Texture2D" uid="uid://dlphipshnw08u" path="res://modules/quiz_rpg/assets/textures/atlases/Dungeon tileset/Dungeon tileset.png" id="1_uhdoh"]
+[ext_resource type="Texture2D" uid="uid://dlphipshnw08u" path="res://assets/textures/atlases/Dungeon tileset/Dungeon tileset.png" id="1_uhdoh"]
 
 [sub_resource type="Animation" id="Animation_5078b"]
 resource_name = "Closed"
@@ -115,18 +115,22 @@ region_rect = Rect2(256, 80, 32, 64)
 libraries/ = SubResource("AnimationLibrary_juxil")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1650312762]
+visible = false
 position = Vector2(0, 11.5)
 shape = SubResource("RectangleShape2D_i4cbi")
 
 [node name="CollisionShape2D2" type="CollisionPolygon2D" parent="." unique_id=242773102]
+visible = false
 position = Vector2(0, 11.5)
 polygon = PackedVector2Array(-4, -3.5, -6, -6.5, -6, -30.5, 6, -30.5, 6, -6.5, 4, -3.5)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=860846541]
+visible = false
 z_index = 1
 polygon = PackedVector2Array(-4, 36, -2, 35, 2, 35, 4, 36, 5, 37, 6, 39, -6, 39, -5, 37)
 
 [node name="PlayerDetection" type="Area2D" parent="." unique_id=1126347246]
+visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="PlayerDetection" unique_id=1819626222]
 position = Vector2(0, 11.5)

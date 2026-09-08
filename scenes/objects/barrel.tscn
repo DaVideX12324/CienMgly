@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://jppou3a7nbbw"]
 
 [ext_resource type="Script" uid="uid://yy4qagy8712y" path="res://modules/quiz_rpg/scripts/interactables/barrel.gd" id="1_1yh26"]
-[ext_resource type="Texture2D" uid="uid://qvvpcl7op75x" path="res://modules/quiz_rpg/assets/textures/atlases/tunels_textures/Individual_Props/barrel_open.png" id="4_3ju85"]
+[ext_resource type="Texture2D" uid="uid://qvvpcl7op75x" path="res://assets/textures/atlases/tunels_textures/Individual_Props/barrel_open.png" id="4_3ju85"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
 radius = 3.0
@@ -23,12 +23,14 @@ y_sort_enabled = true
 texture = ExtResource("4_3ju85")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=253495352]
+visible = false
 y_sort_enabled = true
 position = Vector2(0, 3)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_fulqv")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=1308505288]
+visible = false
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=358694874]
