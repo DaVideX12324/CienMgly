@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3 uid="uid://proc_level_001"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/procedural_level.gd" id="1_proc"]
+
+[node name="ProceduralLevel" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_proc")
+
+[node name="Floor" type="TileMapLayer" parent="." groups=["tilemap"]]
+z_index = -2
+y_sort_enabled = true
+
+[node name="Walls" type="TileMapLayer" parent="."]
+y_sort_enabled = true
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="Spawn" type="Marker2D" parent="Spawns"]
+
+[node name="Enemies" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Objects" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
