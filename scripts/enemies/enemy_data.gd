@@ -3,7 +3,7 @@ class_name QuizRpgEnemyData
 
 @export_group("Identity")
 @export var enemy_name: String = "Przeciwnik"
-@export var quiz_id: String = "default"
+@export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export var is_boss: bool = false
 

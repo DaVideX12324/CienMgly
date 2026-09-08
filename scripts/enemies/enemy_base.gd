@@ -9,7 +9,7 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 @export var enemy_data: QuizRpgEnemyData
 @export_group("Identity")
 @export var enemy_name: String = "Przeciwnik"
-@export var quiz_id: String = "default"
+@export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export_group("Combat")
 @export var question_count: int = 3
@@ -80,6 +80,10 @@ func _ready() -> void:
 
 	_setup_detection_area()
 
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and cheat_service.has_signal("enemies_toggled"):
+		cheat_service.enemies_toggled.connect(_on_enemies_toggled)
+
 	if patrol_points.is_empty():
 		var pos = global_position
 		patrol_points = [
@@ -88,6 +92,23 @@ func _ready() -> void:
 			pos + Vector2(0, -60),
 			pos + Vector2(0, 60),
 		]
+
+
+func _are_enemies_disabled() -> bool:
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and "enemies_disabled" in cheat_service:
+		return bool(cheat_service.enemies_disabled)
+	return false
+
+
+func _on_enemies_toggled(disabled: bool) -> void:
+	if disabled:
+		if state == State.CHASING:
+			state = State.PATROL
+		velocity = Vector2.ZERO
+		player_ref = null
+		if _use_programmer_art:
+			queue_redraw()
 
 
 func _apply_enemy_data() -> void:
@@ -121,6 +142,14 @@ func _physics_process(delta: float) -> void:
 		_flash_timer -= delta
 
 	if defeated or state == State.COMBAT:
+		if _use_programmer_art:
+			queue_redraw()
+		return
+
+	if _are_enemies_disabled():
+		if state == State.CHASING:
+			state = State.PATROL
+		velocity = Vector2.ZERO
 		if _use_programmer_art:
 			queue_redraw()
 		return
@@ -331,6 +360,8 @@ func _setup_detection_area() -> void:
 
 
 func _on_detection_area_body_entered(body: Node2D) -> void:
+	if _are_enemies_disabled():
+		return
 	if body.is_in_group("player") and not defeated:
 		player_ref = body
 		if _has_line_of_sight_to_player():
@@ -344,11 +375,15 @@ func _on_detection_area_body_exited(body: Node2D) -> void:
 
 
 func interact(player: Node2D) -> void:
+	if _are_enemies_disabled():
+		return
 	if not defeated:
 		start_combat(player)
 
 
 func start_combat(player: Node2D) -> void:
+	if _are_enemies_disabled():
+		return
 	if state == State.COMBAT or defeated:
 		return
 	if _gm and _gm.is_in_quiz():

@@ -73,6 +73,10 @@ func _ready() -> void:
 	if _dm:
 		diff_range = _dm.get_difficulty_range(_category)
 
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and cheat_service.has_signal("instant_win_triggered"):
+		cheat_service.instant_win_triggered.connect(trigger_instant_win)
+
 	if _should_auto_solve_puzzle(diff_range):
 		current_correct = required_correct
 		current_question = total_questions
@@ -92,10 +96,26 @@ func _ready() -> void:
 	call_deferred("_show_question", first_q)
 
 
+func trigger_instant_win() -> void:
+	current_correct = required_correct
+	current_question = total_questions
+	_update_progress()
+	_finish(true)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		var key_event := event as InputEventKey
+		var focus_owner := get_viewport().gui_get_focus_owner()
+		var is_typing := focus_owner is LineEdit or focus_owner is TextEdit
+		if key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K):
+			trigger_instant_win()
+			get_viewport().set_input_as_handled()
+			return
+
+
 func _should_auto_solve_puzzle(diff_range: Vector2i) -> bool:
 	if _is_quizless_mode_enabled():
-		return true
-	if _quiz_id.strip_edges() == "":
 		return true
 	var available_questions: Array = QuizManager.get_questions(_quiz_id, diff_range, total_questions)
 	return available_questions.is_empty()
