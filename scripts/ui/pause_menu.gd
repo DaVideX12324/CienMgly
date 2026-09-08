@@ -78,6 +78,7 @@ var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
 var _state_before_pause: int = -1
+var _opened_direct_exit: bool = false
 
 
 func is_paused() -> bool:
@@ -87,6 +88,15 @@ func is_paused() -> bool:
 func open_pause_menu() -> void:
 	if not _paused:
 		_toggle_pause()
+
+
+func open_confirm_exit() -> void:
+	if not _paused:
+		_toggle_pause()
+	_opened_direct_exit = true
+	_mode = "confirm_exit"
+	_confirm_index = 0
+	_show_confirm_panel()
 
 
 func close_pause_menu() -> void:
@@ -205,6 +215,7 @@ func _input(event: InputEvent) -> void:
 func _toggle_pause() -> void:
 	_paused = not _paused
 	pause_root.visible = _paused
+	_opened_direct_exit = false
 	if _paused:
 		if _gm:
 			_state_before_pause = int(_gm.current_state)
@@ -260,6 +271,13 @@ func _handle_close_input(event: InputEvent) -> bool:
 		"status_view":
 			_mode = "status_party_select"
 			_show_party_select_panel("Wybierz postac do statusu")
+		"confirm_exit":
+			if _opened_direct_exit:
+				_opened_direct_exit = false
+				_toggle_pause()
+			else:
+				_mode = "left_menu"
+				_show_default_party_panel()
 		_:
 			_mode = "left_menu"
 			_show_default_party_panel()
@@ -270,22 +288,29 @@ func _handle_confirm_input(event: InputEvent) -> bool:
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
 		if key_event.pressed and not key_event.echo:
-			if key_event.keycode == KEY_T:
+			if key_event.keycode == KEY_M or key_event.keycode == KEY_T:
 				_confirm_index = 0
 				_refresh_confirm_rows()
 				_confirm_exit_choice()
 				return true
-			if key_event.keycode == KEY_N:
+			if key_event.keycode == KEY_Q or key_event.keycode == KEY_W:
 				_confirm_index = 1
 				_refresh_confirm_rows()
 				_confirm_exit_choice()
 				return true
+			if key_event.keycode == KEY_N:
+				_confirm_index = 2
+				_refresh_confirm_rows()
+				_confirm_exit_choice()
+				return true
 	if _is_nav_up(event) or _is_nav_left(event):
-		_confirm_index = 0
+		var count: int = maxi(_confirm_rows.size(), 1)
+		_confirm_index = wrapi(_confirm_index - 1, 0, count)
 		_refresh_confirm_rows()
 		return true
 	if _is_nav_down(event) or _is_nav_right(event):
-		_confirm_index = 1
+		var count: int = maxi(_confirm_rows.size(), 1)
+		_confirm_index = wrapi(_confirm_index + 1, 0, count)
 		_refresh_confirm_rows()
 		return true
 	if _is_accept(event):
@@ -425,7 +450,7 @@ func _accept_left_menu() -> void:
 			_show_save_panel()
 		5:
 			_mode = "confirm_exit"
-			_confirm_index = 1
+			_confirm_index = 0
 			_show_confirm_panel()
 
 
@@ -493,16 +518,41 @@ func _accept_equip_item() -> void:
 		_show_toast("Zmieniono wyposazenie.")
 
 
+func _cleanup_combat_ui() -> void:
+	if not get_tree() or not get_tree().root:
+		return
+	for node: Node in get_tree().root.find_children("*", "CanvasLayer", true, false):
+		if str(node.name).begins_with("QuizCombatUI"):
+			node.queue_free()
+
+
 func _confirm_exit_choice() -> void:
-	if _confirm_index == 0:
-		get_tree().paused = false
-		_paused = false
-		pause_root.visible = false
-		if _gm and _gm.has_method("return_to_main_menu"):
-			_gm.return_to_main_menu()
-	else:
-		_mode = "left_menu"
-		_show_default_party_panel()
+	match _confirm_index:
+		0:
+			_cleanup_combat_ui()
+			get_tree().paused = false
+			_paused = false
+			_state_before_pause = -1
+			pause_root.visible = false
+			if _gm and _gm.has_method("return_to_main_menu"):
+				_gm.return_to_main_menu()
+		1:
+			_cleanup_combat_ui()
+			get_tree().paused = false
+			_paused = false
+			_state_before_pause = -1
+			pause_root.visible = false
+			if CoreManager.get_active_module_id() != "":
+				CoreManager.exit_active_module()
+				return
+			get_tree().quit()
+		_:
+			if _opened_direct_exit:
+				_opened_direct_exit = false
+				_toggle_pause()
+			else:
+				_mode = "left_menu"
+				_show_default_party_panel()
 
 
 func _show_default_party_panel() -> void:
@@ -561,8 +611,8 @@ func _show_status_panel() -> void:
 
 func _show_confirm_panel() -> void:
 	_show_panel("confirm")
-	context_title_label.text = "Potwierdzenie"
-	confirm_label.text = "Zakonczyc gre?"
+	context_title_label.text = "Wyjscie"
+	confirm_label.text = "Co chcesz zrobic?"
 	_rebuild_confirm_rows()
 
 
@@ -947,6 +997,12 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 
 
 func _rebuild_confirm_rows() -> void:
+	if _confirm_rows.size() > 0:
+		_set_simple_row(_confirm_rows[0], "M Do menu glownego", "")
+	if _confirm_rows.size() > 1:
+		_set_simple_row(_confirm_rows[1], "Q Wyjscie z gry", "")
+	if _confirm_rows.size() > 2:
+		_set_simple_row(_confirm_rows[2], "N Anuluj", "")
 	_refresh_confirm_rows()
 
 
