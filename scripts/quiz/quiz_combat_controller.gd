@@ -166,6 +166,18 @@ func _ready() -> void:
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
 
+	if _ps:
+		if _ps.has_signal("hp_changed"):
+			_ps.hp_changed.connect(func(_hp: int, _max_hp: int) -> void:
+				_update_hp_bars()
+				_refresh_stats_panel()
+			)
+		if _ps.has_signal("party_changed"):
+			_ps.party_changed.connect(func() -> void:
+				_update_hp_bars()
+				_refresh_stats_panel()
+			)
+
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 
 	engage_btn.pressed.connect(_on_engage_pressed)
@@ -199,16 +211,22 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if _is_pause_menu_open():
+		return
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
 
 
 func _input(event: InputEvent) -> void:
+	if _is_pause_menu_open():
+		return
 	if _handle_hovered_enemy_click(event):
 		get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_pause_menu_open():
+		return
 	if phase == Phase.COMBAT_END and event.is_action_pressed("ui_accept"):
 		_victory_skip = true
 		get_viewport().set_input_as_handled()
@@ -259,7 +277,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_highlight_action(_selected_action_idx)
 			get_viewport().set_input_as_handled()
 			return
-		if _action_menu_open and event.is_action_pressed("ui_cancel"):
+		if _action_menu_open and _is_menu_cancel(event):
 			_show_primary_menu()
 			_highlight_action(0)
 			get_viewport().set_input_as_handled()
@@ -272,6 +290,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if phase == Phase.QUIZ and _quiz_panel_controller and _quiz_panel_controller.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
+	if _is_menu_cancel(event):
+		_open_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -1519,6 +1541,35 @@ func _ensure_enemy_target_highlight(slot: Control) -> Control:
 			old_parent.remove_child(_enemy_target_highlight_node)
 		slot.add_child(_enemy_target_highlight_node)
 	return _enemy_target_highlight_node
+
+
+func _is_pause_menu_open() -> bool:
+	var pause_menu: Node = _find_pause_menu_node()
+	if pause_menu != null and pause_menu.has_method("is_paused"):
+		return bool(pause_menu.call("is_paused"))
+	return false
+
+
+func _find_pause_menu_node() -> Node:
+	if get_tree() and get_tree().current_scene:
+		var pm: Node = get_tree().current_scene.get_node_or_null("PauseMenu")
+		if pm:
+			return pm
+	if get_tree() and get_tree().root:
+		return get_tree().root.find_child("PauseMenu", true, false)
+	return null
+
+
+func _open_pause_menu() -> void:
+	var pause_menu: Node = _find_pause_menu_node()
+	if pause_menu == null:
+		var pause_scene: PackedScene = load("res://modules/quiz_rpg/scenes/ui/pause_menu.tscn") as PackedScene
+		if pause_scene and get_tree() and get_tree().current_scene:
+			var new_pause: CanvasLayer = pause_scene.instantiate() as CanvasLayer
+			get_tree().current_scene.add_child(new_pause)
+			pause_menu = new_pause
+	if pause_menu and pause_menu.has_method("open_pause_menu"):
+		pause_menu.call("open_pause_menu")
 
 
 func _on_viewport_size_changed() -> void:

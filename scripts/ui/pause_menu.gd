@@ -77,6 +77,35 @@ var _save_slot_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
+var _state_before_pause: int = -1
+
+
+func is_paused() -> bool:
+	return _paused
+
+
+func open_pause_menu() -> void:
+	if not _paused:
+		_toggle_pause()
+
+
+func close_pause_menu() -> void:
+	if _paused:
+		_toggle_pause()
+
+
+func _is_in_combat() -> bool:
+	if _state_before_pause != -1 and _gm != null:
+		if _state_before_pause in [_gm.GameState.QUIZ_COMBAT, _gm.GameState.QUIZ_PUZZLE]:
+			return true
+	if _gm != null and _gm.has_method("is_in_quiz") and bool(_gm.is_in_quiz()):
+		return true
+	var current_scn: Node = get_tree().current_scene if get_tree() else null
+	if current_scn != null:
+		for child: Node in current_scn.get_children():
+			if child is CanvasLayer and str(child.name).begins_with("QuizCombatUI"):
+				return true
+	return false
 
 
 func _ready() -> void:
@@ -134,7 +163,7 @@ func _cache_panel_nodes() -> void:
 
 func _input(event: InputEvent) -> void:
 	if not _paused:
-		if event.is_action_pressed("ui_cancel") and _gm and _gm.is_exploring():
+		if _is_cancel(event) and _gm and _gm.is_exploring():
 			_toggle_pause()
 			get_viewport().set_input_as_handled()
 		return
@@ -176,16 +205,25 @@ func _input(event: InputEvent) -> void:
 func _toggle_pause() -> void:
 	_paused = not _paused
 	pause_root.visible = _paused
-	get_tree().paused = _paused
-	if _gm:
-		if _paused:
-			_gm.change_state(_gm.GameState.PAUSED)
-		else:
-			_gm.change_state(_gm.GameState.EXPLORING)
 	if _paused:
+		if _gm:
+			_state_before_pause = int(_gm.current_state)
+			_gm.change_state(_gm.GameState.PAUSED)
+		get_tree().paused = true
 		_mode = "left_menu"
 		_left_menu_index = 0
 		_show_default_party_panel()
+	else:
+		var in_combat: bool = _is_in_combat()
+		if in_combat:
+			get_tree().paused = true
+			if _gm:
+				_gm.change_state(_gm.GameState.QUIZ_COMBAT)
+		else:
+			get_tree().paused = false
+			if _gm:
+				_gm.change_state(_state_before_pause if _state_before_pause != -1 else _gm.GameState.EXPLORING)
+		_state_before_pause = -1
 
 
 func _handle_close_input(event: InputEvent) -> bool:
@@ -531,7 +569,10 @@ func _show_confirm_panel() -> void:
 func _show_save_panel() -> void:
 	_show_panel("save")
 	context_title_label.text = "Zapis gry"
-	save_hint_label.text = "Enter/Z: zapisz    A/Left: usun slot    D/Right: dodaj slot    X/Esc: wroc"
+	if _is_in_combat():
+		save_hint_label.text = "Zapisywanie jest niedostepne w trakcie walki.    X/Esc: wroc"
+	else:
+		save_hint_label.text = "Enter/Z: zapisz    A/Left: usun slot    D/Right: dodaj slot    X/Esc: wroc"
 	_rebuild_save_slots()
 
 
@@ -957,6 +998,9 @@ func _populate_save_slot_row(row: Control, slot_entry: Dictionary) -> void:
 
 
 func _save_to_selected_slot() -> void:
+	if _is_in_combat():
+		_show_toast("Nie mozna zapisac gry w trakcie walki.")
+		return
 	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
 		return
 	if _gm and _gm.has_method("save_game") and _gm.save_game(_save_slot_index):
@@ -965,6 +1009,9 @@ func _save_to_selected_slot() -> void:
 
 
 func _add_save_slot() -> void:
+	if _is_in_combat():
+		_show_toast("Nie mozna modyfikowac slotow w trakcie walki.")
+		return
 	if _gm == null or not _gm.has_method("add_save_slot"):
 		return
 	_save_slot_index = int(_gm.add_save_slot())
@@ -973,6 +1020,9 @@ func _add_save_slot() -> void:
 
 
 func _delete_selected_save_slot() -> void:
+	if _is_in_combat():
+		_show_toast("Nie mozna modyfikowac slotow w trakcie walki.")
+		return
 	if _gm == null or not _gm.has_method("delete_save_slot"):
 		return
 	if _gm.delete_save_slot(_save_slot_index):
