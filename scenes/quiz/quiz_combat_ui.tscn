@@ -152,16 +152,16 @@ theme_override_constants/separation = 4
 
 [node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=1837799062]
 layout_mode = 1
-anchors_preset = 14
-anchor_top = 0.5
+anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
-anchor_bottom = 0.5
-offset_top = -130.0
-offset_bottom = 130.0
+anchor_bottom = 1.0
+offset_top = -430.0
+offset_bottom = -16.0
 grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 15
-alignment = 1
+grow_vertical = 0
+theme_override_constants/separation = 12
+alignment = 2
 
 [node name="EnemyName" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=1684427100]
 visible = false
@@ -182,27 +182,27 @@ size_flags_horizontal = 3
 
 [node name="EnemyDisplayCanvas" type="Node2D" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=1973957803]
 
-[node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=550312785]
+[node name="EnemyRow2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=550312785]
 layout_mode = 2
 alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1" unique_id=971464970]
+[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2" unique_id=971464970]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 30
 alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1908863979]
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1908863979]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=658252826]
+[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=658252826]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="TargetHighlight" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=470500810]
+[node name="TargetHighlight" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=470500810]
 visible = false
 z_index = 5
 layout_mode = 1
@@ -213,7 +213,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="TargetCursor" type="Label" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1521527078]
+[node name="TargetCursor" type="Label" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1521527078]
 layout_mode = 0
 offset_top = -24.0
 offset_right = 150.0
@@ -222,7 +222,7 @@ grow_horizontal = 2
 text = "▼"
 horizontal_alignment = 1
 
-[node name="HighlightFill" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=221059475]
+[node name="HighlightFill" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=221059475]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -231,19 +231,19 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.3, 0.6, 1, 0.08)
 
-[node name="CornerTL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=644855837]
+[node name="CornerTL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=644855837]
 layout_mode = 0
 offset_right = 16.0
 offset_bottom = 3.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerTL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1875534250]
+[node name="CornerTL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1875534250]
 layout_mode = 0
 offset_right = 3.0
 offset_bottom = 16.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerTR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=808152701]
+[node name="CornerTR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=808152701]
 layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
@@ -251,7 +251,7 @@ offset_left = -16.0
 offset_bottom = 3.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerTR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1090748851]
+[node name="CornerTR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1090748851]
 layout_mode = 0
 anchor_left = 1.0
 anchor_right = 1.0
@@ -259,7 +259,7 @@ offset_left = -3.0
 offset_bottom = 16.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerBL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=715230197]
+[node name="CornerBL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=715230197]
 layout_mode = 0
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -267,7 +267,7 @@ offset_top = -3.0
 offset_right = 16.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerBL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1893925431]
+[node name="CornerBL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1893925431]
 layout_mode = 0
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -275,7 +275,7 @@ offset_top = -16.0
 offset_right = 3.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerBR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1172693026]
+[node name="CornerBR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1172693026]
 layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
@@ -285,7 +285,7 @@ offset_left = -16.0
 offset_top = -3.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="CornerBR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1795692176]
+[node name="CornerBR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1795692176]
 layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
@@ -295,7 +295,7 @@ offset_left = -3.0
 offset_top = -16.0
 color = Color(0.3, 0.6, 1, 1)
 
-[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=347917086]
+[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=347917086]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -303,17 +303,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1354719110]
+[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1354719110]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=452001507]
+[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=452001507]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=1589554787]
+[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=1589554787]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -321,17 +321,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1034919302]
+[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1034919302]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=1308029390]
+[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=1308029390]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=2085553291]
+[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=2085553291]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -339,17 +339,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=2103601440]
+[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=2103601440]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=1371240813]
+[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=1371240813]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=362736361]
+[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=362736361]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -357,17 +357,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=555046163]
+[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=555046163]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=2014095328]
+[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=2014095328]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=132120749]
+[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=132120749]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -375,27 +375,27 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="EnemyRow2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=189913761]
+[node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=189913761]
 layout_mode = 2
 alignment = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2" unique_id=701350609]
+[node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1" unique_id=701350609]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 30
 alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=267635856]
+[node name="VBoxContainer" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=267635856]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=35175901]
+[node name="EnemySlot0" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=35175901]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer" unique_id=405477884]
+[node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer" unique_id=405477884]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -403,17 +403,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1793056165]
+[node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1793056165]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=1923917040]
+[node name="EnemySlot1" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=1923917040]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer1" unique_id=1994615515]
+[node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer1" unique_id=1994615515]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -421,17 +421,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=865972905]
+[node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=865972905]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=829799068]
+[node name="EnemySlot2" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=829799068]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer2" unique_id=40865332]
+[node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer2" unique_id=40865332]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -439,17 +439,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=1184342599]
+[node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=1184342599]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=984312419]
+[node name="EnemySlot3" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=984312419]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer3" unique_id=1063495788]
+[node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer3" unique_id=1063495788]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -457,17 +457,17 @@ theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
-[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer" unique_id=563760635]
+[node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer" unique_id=563760635]
 custom_minimum_size = Vector2(120, 152)
 layout_mode = 2
 alignment = 1
 
-[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=1625721205]
+[node name="EnemySlot4" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=1625721205]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 mouse_filter = 1
 
-[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/HBoxContainer/VBoxContainer4" unique_id=2443933]
+[node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer4" unique_id=2443933]
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
