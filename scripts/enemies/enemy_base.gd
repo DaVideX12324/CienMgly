@@ -349,7 +349,11 @@ func interact(player: Node2D) -> void:
 
 
 func start_combat(player: Node2D) -> void:
-	if state == State.COMBAT:
+	if state == State.COMBAT or defeated:
+		return
+	if _gm and _gm.is_in_quiz():
+		return
+	if get_tree().paused:
 		return
 
 	state = State.COMBAT
@@ -361,18 +365,21 @@ func start_combat(player: Node2D) -> void:
 	if _gm:
 		_gm.change_state(_gm.GameState.QUIZ_COMBAT)
 
-	var diff_range := Vector2i(1, 3)
+	var diff_range: Vector2i = Vector2i(1, 3)
 	if _dm:
 		diff_range = _dm.get_difficulty_range(quiz_category)
-	var encounter_size_range := Vector2i(maxi(1, min_encounter_size), maxi(maxi(1, min_encounter_size), max_encounter_size))
+	var encounter_size_range: Vector2i = Vector2i(maxi(1, min_encounter_size), maxi(maxi(1, min_encounter_size), max_encounter_size))
 
-	var combat_canvas = preload("res://modules/quiz_rpg/scenes/quiz/quiz_combat_ui.tscn").instantiate()
-	var combat_ui = combat_canvas.get_node("Root")
+	var combat_canvas: CanvasLayer = preload("res://modules/quiz_rpg/scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
+	var combat_ui: Control = combat_canvas.get_node("Root") as Control
 	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range)
 	get_tree().current_scene.add_child(combat_canvas)
+	get_tree().paused = true
 
 
 func on_combat_finished(player_won: bool, player: Node2D) -> void:
+	if get_tree() and get_tree().paused:
+		get_tree().paused = false
 	if player.has_method("set_can_move"):
 		player.set_can_move(true)
 
@@ -381,7 +388,7 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		state = State.DEFEATED
 		if _ps:
 			_ps.add_xp(xp_reward)
-		var tween = create_tween()
+		var tween: Tween = create_tween()
 		tween.tween_property(self, "scale", Vector2(0.1, 0.1), 0.4).set_ease(Tween.EASE_IN)
 		tween.parallel().tween_property(self, "modulate:a", 0.0, 0.5)
 		await tween.finished
@@ -403,9 +410,9 @@ func take_quiz_damage(amount: int) -> void:
 	if _use_programmer_art:
 		queue_redraw()
 	else:
-		var sprite = get_node_or_null("AnimatedSprite2D")
+		var sprite: AnimatedSprite2D = get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 		if sprite:
-			var tween = create_tween()
+			var tween: Tween = create_tween()
 			tween.tween_property(sprite, "modulate", Color.RED, 0.1)
 			tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
 

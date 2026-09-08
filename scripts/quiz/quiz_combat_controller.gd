@@ -143,7 +143,25 @@ func setup(
 		_setup_enemy_display()
 
 
+func _enter_tree() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
+	if parent_canvas != null:
+		parent_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
+
+
+func _exit_tree() -> void:
+	if get_tree() and get_tree().paused:
+		get_tree().paused = false
+
+
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
+	if parent_canvas != null:
+		parent_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().paused = true
+
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_dm = CoreManager.get_singleton("DifficultyManager")
 	_gm = CoreManager.get_singleton("GameManager")
@@ -992,6 +1010,10 @@ func _enemy_turn() -> void:
 		turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
 		_active_enemy_index = enemy_index
 		_refresh_enemy_header()
+		if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
+			var active_display: Node2D = _enemy_displays[enemy_index]
+			if active_display.has_method("play_attack"):
+				active_display.call("play_attack")
 		await get_tree().create_timer(0.5).timeout
 		var raw_damage := int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8
 		var enemy_tier: int = int(enemy_unit.get("tier", _get_encounter_tier()))
@@ -1072,6 +1094,8 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 	_refresh_stats_panel()
 	enemy.hp = 0 if player_won else enemy.max_hp
 	_clear_enemy_display()
+	if get_tree() and get_tree().paused:
+		get_tree().paused = false
 	combat_finished.emit(player_won)
 	enemy.on_combat_finished(player_won, player)
 	get_parent().queue_free()
@@ -1225,7 +1249,10 @@ func _setup_enemy_display() -> void:
 
 func _create_enemy_display_clone(source: Node2D) -> Node2D:
 	var display: Node2D = EnemyBattleDisplayScript.new() as Node2D
-	display.body_color = source.body_color
+	if display.has_method("setup_from_source"):
+		display.call("setup_from_source", source)
+	else:
+		display.body_color = source.body_color
 	display.shape_type = int(source.shape_type)
 	display.hp = source.hp
 	display.max_hp = source.max_hp
@@ -1255,9 +1282,21 @@ func _sync_enemy_displays() -> void:
 			_enemy_displays[i].visible = false
 			continue
 		var unit_data: Dictionary = _enemy_units[i]
-		_enemy_displays[i].visible = int(unit_data.get("hp", 0)) > 0
-		_enemy_displays[i].max_hp = int(unit_data.get("max_hp", 1))
-		_enemy_displays[i].sync_hp(int(unit_data.get("hp", 0)))
+		var display_node: Node2D = _enemy_displays[i]
+		var is_alive: bool = int(unit_data.get("hp", 0)) > 0
+		if not is_alive:
+			if display_node.has_method("is_dying"):
+				if not display_node.call("is_dying") and display_node.visible:
+					if display_node.has_method("play_death"):
+						display_node.call("play_death")
+					else:
+						display_node.visible = false
+			else:
+				display_node.visible = false
+		else:
+			display_node.visible = true
+		display_node.max_hp = int(unit_data.get("max_hp", 1))
+		display_node.sync_hp(int(unit_data.get("hp", 0)))
 	_refresh_enemy_slot_highlight()
 
 
@@ -1268,7 +1307,12 @@ func _sync_enemy_display_hit(enemy_index: int) -> void:
 	var display: Node2D = _enemy_displays[enemy_index] as Node2D
 	if display == null:
 		return
-	display.flash_damage()
+	if display.has_method("is_dying") and display.call("is_dying"):
+		return
+	if display.has_method("play_hurt"):
+		display.call("play_hurt")
+	else:
+		display.flash_damage()
 
 
 func _dodge_enemy_display(enemy_index: int) -> void:
@@ -1886,7 +1930,7 @@ func _roll_item_drop() -> String:
 
 
 func _find_current_map_node() -> Node:
-	var node := enemy
+	var node: Node = enemy
 	while node:
 		var script := node.get_script() as Script
 		if script and script.resource_path.contains("/scripts/maps/"):

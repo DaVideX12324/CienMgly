@@ -30,9 +30,11 @@ bg_color = Color(0.15, 0.55, 1, 1)
 bg_color = Color(0.45, 0.45, 0.45, 1)
 
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
+process_mode = 3
 layer = 15
 
 [node name="Root" type="Control" parent="." unique_id=1394769950]
+process_mode = 3
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
