@@ -14,16 +14,16 @@ const SKILL_SP_COST := 20
 const ATTACK_HIT_CHANCE_CORRECT := 0.8
 const ATTACK_HIT_CHANCE_WRONG := 0.2
 const FLEE_SUCCESS_CHANCE := 0.8
-const COMMAND_PANEL_WIDTH_DEFAULT := 180.0
-const PARTY_PANEL_WIDTH_DEFAULT := 1080.0
-const COMMAND_PANEL_WIDTH_MIN := 180.0
-const PARTY_PANEL_WIDTH_MIN := 320.0
+const COMMAND_PANEL_WIDTH_DEFAULT := 1.0
+const PARTY_PANEL_WIDTH_DEFAULT := 2.2
+const COMMAND_PANEL_WIDTH_MIN := 240.0
+const PARTY_PANEL_WIDTH_MIN := 380.0
 const PANEL_RESIZE_DURATION := 0
 const UI_TEXT_PRIMARY := Color(0.95, 0.95, 0.98)
 const UI_BORDER := Color(0.25, 0.25, 0.35)
 const UI_ACCENT := Color(0.3, 0.6, 1.0)
-const ENEMY_DISPLAY_SCALE_DEFAULT := Vector2(4.0, 4.0)
-const ENEMY_DISPLAY_SCALE_FOCUSED := Vector2(4.4, 4.4)
+const ENEMY_DISPLAY_SCALE_DEFAULT := Vector2(7.2, 7.2)
+const ENEMY_DISPLAY_SCALE_FOCUSED := Vector2(7.9, 7.9)
 const QUIZ_TYPES_STANDARD := ["multiple_choice", "true_false"]
 const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_tiles", "matching"]
 
@@ -185,6 +185,11 @@ func _ready() -> void:
 			)
 
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
+	var ui_scale_service: Node = _get_ui_scale_service()
+	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
+		ui_scale_service.scale_changed.connect(func(_f: float) -> void:
+			_apply_responsive_layout()
+		)
 
 	engage_btn.pressed.connect(_on_engage_pressed)
 	run_btn.pressed.connect(_on_run_pressed)
@@ -218,6 +223,7 @@ func _ready() -> void:
 	player_name_label.text = _ps.player_name if _ps else "Bohater"
 	_setup_battlefield_visuals()
 	_setup_enemy_display()
+	_apply_responsive_layout()
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	_update_hp_bars()
@@ -598,6 +604,13 @@ func _cancel_target_selection() -> void:
 	_highlight_action(0)
 
 
+func _get_quiz_manager() -> Node:
+	var main_loop = Engine.get_main_loop()
+	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("QuizManager"):
+		return main_loop.root.get_node("QuizManager")
+	return null
+
+
 func _begin_action_quiz() -> void:
 	_hide_target_panel()
 	phase = Phase.QUIZ
@@ -606,7 +619,8 @@ func _begin_action_quiz() -> void:
 	if _should_auto_resolve_quiz(allowed_types):
 		_resolve_action(true)
 		return
-	var q: Dictionary = QuizManager.start_quiz(quiz_id, _diff_range, 1, allowed_types)
+	var qm := _get_quiz_manager()
+	var q: Dictionary = qm.start_quiz(quiz_id, _diff_range, 1, allowed_types) if qm and qm.has_method("start_quiz") else {}
 	if q.is_empty():
 		_resolve_action(true)
 		return
@@ -623,9 +637,8 @@ func _get_combat_quiz_types() -> Array:
 func _is_boss_encounter() -> bool:
 	if enemy == null:
 		return false
-	var boss_property: Variant = enemy.get("is_boss")
-	if boss_property != null:
-		return bool(boss_property)
+	if enemy.get("is_boss") != null:
+		return bool(enemy.get("is_boss"))
 	if enemy.has_meta("is_boss"):
 		return bool(enemy.get_meta("is_boss"))
 	if enemy.has_method("is_boss"):
@@ -636,7 +649,8 @@ func _is_boss_encounter() -> bool:
 func _should_auto_resolve_quiz(allowed_types: Array) -> bool:
 	if _is_quizless_mode_enabled():
 		return true
-	var available_questions: Array = QuizManager.get_questions(quiz_id, _diff_range, 1, allowed_types)
+	var qm := _get_quiz_manager()
+	var available_questions: Array = qm.get_questions(quiz_id, _diff_range, 1, allowed_types) if qm and qm.has_method("get_questions") else []
 	return available_questions.is_empty()
 
 
@@ -844,8 +858,28 @@ func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
 	return key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
 
 
+func _get_ui_scale_service() -> Node:
+	var tree: SceneTree = null
+	if is_inside_tree():
+		tree = get_tree()
+	else:
+		var main_loop = Engine.get_main_loop()
+		if main_loop is SceneTree:
+			tree = main_loop
+	if tree and tree.root and tree.root.has_node("UIScaleService"):
+		return tree.root.get_node("UIScaleService")
+	return null
+
+
+func _get_ui_scale_factor() -> float:
+	var ui_scale_service: Node = _get_ui_scale_service()
+	if ui_scale_service and "scale_factor" in ui_scale_service:
+		return float(ui_scale_service.scale_factor)
+	return 1.0
+
+
 func _ui_scale_px(base_size: int) -> int:
-	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
+	var ui_scale_service: Node = _get_ui_scale_service()
 	if ui_scale_service and ui_scale_service.has_method("px"):
 		return int(ui_scale_service.call("px", base_size))
 	return base_size
@@ -1619,7 +1653,7 @@ func _open_pause_menu(start_in_exit_confirm: bool = false) -> void:
 
 
 func _on_viewport_size_changed() -> void:
-	_apply_responsive_enemy_layout()
+	_apply_responsive_layout()
 
 
 func _get_resolution_scale_factor() -> float:
@@ -1633,16 +1667,32 @@ func _get_resolution_scale_factor() -> float:
 
 func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
 	var res_scale: float = _get_resolution_scale_factor()
+	var ui_scale: float = _get_ui_scale_factor()
+	var total_scale_factor: float = clampf(res_scale * ui_scale, 0.7, 2.5)
+
+	var active_count: int = _enemy_active_layout_slots.size()
+	var base_scale_val: float = 7.2
+	if active_count <= 1:
+		base_scale_val = 8.5
+	elif active_count == 2:
+		base_scale_val = 7.2
+	elif active_count == 3:
+		base_scale_val = 6.2
+	elif active_count == 4:
+		base_scale_val = 5.6
+	else:
+		base_scale_val = 5.2
+
 	var is_back_row: bool = false
 	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size():
 		is_back_row = bool(_enemy_active_layout_slots[slot_index].get("is_back_row", false))
 
-	var perspective_mult: float = 0.78 if is_back_row else 1.0
-	var base_scale_val: float = 4.0 * perspective_mult * res_scale
+	var perspective_mult: float = 0.82 if is_back_row else 1.0
+	var final_scale: float = base_scale_val * perspective_mult * total_scale_factor
 	if focused:
-		base_scale_val *= 1.1
+		final_scale *= 1.1
 
-	return Vector2(base_scale_val, base_scale_val)
+	return Vector2(final_scale, final_scale)
 
 
 func _apply_responsive_enemy_layout() -> void:
@@ -1654,13 +1704,13 @@ func _apply_responsive_enemy_layout() -> void:
 	var vp_size: Vector2 = get_viewport_rect().size
 	var width_ratio: float = clampf(vp_size.x / 1920.0, 0.7, 2.5)
 
-	var base_separation: float = 35.0
+	var base_separation: float = 40.0
 	if active_count <= 2:
-		base_separation = 110.0
+		base_separation = 140.0
 	elif active_count == 3:
-		base_separation = 70.0
+		base_separation = 80.0
 	elif active_count == 4:
-		base_separation = 50.0
+		base_separation = 55.0
 	var dynamic_separation: int = int(base_separation * width_ratio)
 
 	for child in enemy_sprite_node.get_children():
@@ -1670,20 +1720,156 @@ func _apply_responsive_enemy_layout() -> void:
 		if row_box:
 			row_box.add_theme_constant_override("separation", dynamic_separation)
 
+	var slot_dim: float = float(_ui_scale_px(210))
+	var hp_bar_w: float = float(_ui_scale_px(150))
+	var hp_bar_h: float = float(_ui_scale_px(12))
+
 	for slot_idx in range(_enemy_active_layout_slots.size()):
 		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
+		var wrapper: Control = slot_data.get("wrapper", null) as Control
 		var slot: Control = slot_data.get("slot", null) as Control
-		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
-			var display: Node2D = _enemy_displays[slot_idx]
-			if slot:
-				var slot_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
-				if slot_sz == Vector2.ZERO:
-					slot_sz = Vector2(150.0, 150.0)
+		var hp_bar: ProgressBar = slot_data.get("bar", null) as ProgressBar
+
+		if wrapper:
+			wrapper.custom_minimum_size = Vector2(slot_dim, slot_dim + hp_bar_h + 8.0)
+		if slot:
+			slot.custom_minimum_size = Vector2(slot_dim, slot_dim)
+			var slot_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
+			if slot_sz == Vector2.ZERO:
+				slot_sz = Vector2(slot_dim, slot_dim)
+			if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
+				var display: Node2D = _enemy_displays[slot_idx]
 				display.position = slot_sz * 0.5
-				if not slot.resized.is_connected(_on_enemy_slot_resized):
-					slot.resized.connect(_on_enemy_slot_resized.bind(slot))
-			var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
-			display.scale = _get_enemy_scale(slot_idx, is_focused)
+				var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
+				display.scale = _get_enemy_scale(slot_idx, is_focused)
+			if not slot.resized.is_connected(_on_enemy_slot_resized):
+				slot.resized.connect(_on_enemy_slot_resized.bind(slot))
+
+		if hp_bar:
+			hp_bar.custom_minimum_size = Vector2(hp_bar_w, hp_bar_h)
+			_style_enemy_progress_bar(hp_bar)
+
+
+func _style_enemy_progress_bar(hp_bar: ProgressBar) -> void:
+	if hp_bar == null:
+		return
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.25, 0.95, 0.3, 1.0)
+	fill.set_corner_radius_all(3)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.08, 0.1, 0.12, 0.95)
+	bg.border_color = Color(0.22, 0.28, 0.38, 0.9)
+	bg.set_border_width_all(1)
+	bg.set_corner_radius_all(3)
+	hp_bar.add_theme_stylebox_override("fill", fill)
+	hp_bar.add_theme_stylebox_override("background", bg)
+
+
+func _get_desired_battle_window_height(is_quiz: bool) -> float:
+	var vp_size: Vector2 = get_viewport_rect().size
+	var base_h: float = 310.0 if is_quiz else 250.0
+	var scaled_h: float = float(_ui_scale_px(int(base_h)))
+	var max_allowed: float = vp_size.y * (0.40 if is_quiz else 0.32) if vp_size.y > 0.0 else 380.0
+	return clampf(scaled_h, 220.0, max_allowed)
+
+
+func _update_window_heights(is_quiz: bool) -> void:
+	var menu_h: float = _get_desired_battle_window_height(is_quiz)
+	if battle_window:
+		battle_window.offset_top = -menu_h
+	var battlefield := get_node_or_null("Battlefield") as Control
+	if battlefield:
+		battlefield.offset_bottom = -menu_h
+
+
+func _apply_party_rows_scaling() -> void:
+	if party_panel_container:
+		var p_min_w: float = float(_ui_scale_px(int(PARTY_PANEL_WIDTH_MIN)))
+		party_panel_container.custom_minimum_size.x = p_min_w
+	var p_vbox := get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox") as VBoxContainer
+	if p_vbox:
+		p_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var row_h: float = float(_ui_scale_px(42))
+	var name_font_sz: int = _ui_scale_px(20)
+	var stat_lbl_font_sz: int = _ui_scale_px(16)
+	var val_font_sz: int = _ui_scale_px(16)
+	var name_min_w: float = float(_ui_scale_px(150))
+	var bar_w: float = float(_ui_scale_px(120))
+	var bar_h: float = float(_ui_scale_px(12))
+	var val_min_w: float = float(_ui_scale_px(85))
+
+	for row in party_rows:
+		if row == null:
+			continue
+		row.custom_minimum_size.y = row_h
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", _ui_scale_px(16))
+		var name_label := row.get_node_or_null("NameLabel") as Label
+		if name_label:
+			name_label.custom_minimum_size.x = name_min_w
+			name_label.add_theme_font_size_override("font_size", name_font_sz)
+			name_label.add_theme_color_override("font_color", Color.WHITE)
+
+		for stat_name in ["StatLP", "StatSP", "StatTP"]:
+			var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
+			if stat_box == null:
+				continue
+			stat_box.add_theme_constant_override("separation", _ui_scale_px(6))
+			var label := stat_box.get_node_or_null("Label") as Label
+			var bar := stat_box.get_node_or_null("Bar") as ProgressBar
+			var value_label := stat_box.get_node_or_null("ValueLabel") as Label
+			if label:
+				label.add_theme_font_size_override("font_size", stat_lbl_font_sz)
+				label.add_theme_color_override("font_color", Color(0.85, 0.9, 0.98))
+			if value_label:
+				value_label.custom_minimum_size.x = val_min_w
+				value_label.add_theme_font_size_override("font_size", val_font_sz)
+				value_label.add_theme_color_override("font_color", Color.WHITE)
+			if bar:
+				bar.custom_minimum_size = Vector2(bar_w, bar_h)
+				match stat_name:
+					"StatLP":
+						_style_party_progress_bar(bar, Color(0.95, 0.55, 0.1))
+					"StatSP":
+						_style_party_progress_bar(bar, Color(0.2, 0.6, 1.0))
+					"StatTP":
+						_style_party_progress_bar(bar, Color(0.2, 0.9, 0.3))
+
+
+func _apply_responsive_layout() -> void:
+	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
+	_update_window_heights(is_quiz)
+
+	# 1. Scalowanie CommandPanel
+	if command_panel_container:
+		var cmd_min_w: float = float(_ui_scale_px(int(COMMAND_PANEL_WIDTH_MIN)))
+		command_panel_container.custom_minimum_size.x = cmd_min_w if not is_quiz else 0.0
+
+	# 2. Scalowanie przycisków komend
+	var btn_h: float = float(_ui_scale_px(42))
+	var btn_font_sz: int = _ui_scale_px(18)
+	var all_menu_btns: Array[Button] = [engage_btn, run_btn]
+	if exit_btn:
+		all_menu_btns.append(exit_btn)
+	all_menu_btns.append_array([atk_btn, def_btn, skills_btn, items_btn])
+	for b in all_menu_btns:
+		if b:
+			b.custom_minimum_size.y = btn_h
+			b.add_theme_font_size_override("font_size", btn_font_sz)
+
+	# 3. Scalowanie etykiet nagłówka
+	var hdr_font_sz: int = _ui_scale_px(18)
+	if turn_label:
+		turn_label.add_theme_font_size_override("font_size", hdr_font_sz)
+	if streak_label:
+		streak_label.add_theme_font_size_override("font_size", hdr_font_sz)
+
+	# 4. Scalowanie wierszy drużyny
+	_apply_party_rows_scaling()
+
+	# 5. Scalowanie potworków i ich slotów
+	_apply_responsive_enemy_layout()
 
 
 func _on_enemy_slot_resized(slot: Control) -> void:
@@ -1860,6 +2046,7 @@ func _refresh_stats_panel() -> void:
 	if party_rows.is_empty():
 		return
 	_sync_party_member_from_player()
+	_apply_party_rows_scaling()
 	for i in range(party_rows.size()):
 		var row := party_rows[i]
 		if i < _party_state.size():
@@ -1959,11 +2146,11 @@ func _setup_party_layout() -> void:
 	if command_panel_container:
 		command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		command_panel_container.size_flags_stretch_ratio = COMMAND_PANEL_WIDTH_DEFAULT
-		command_panel_container.custom_minimum_size = Vector2(COMMAND_PANEL_WIDTH_MIN, 0)
+		command_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(COMMAND_PANEL_WIDTH_MIN)), 0)
 	if party_panel_container:
 		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		party_panel_container.size_flags_stretch_ratio = PARTY_PANEL_WIDTH_DEFAULT
-		party_panel_container.custom_minimum_size = Vector2(PARTY_PANEL_WIDTH_MIN, 0)
+		party_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(PARTY_PANEL_WIDTH_MIN)), 0)
 
 
 func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
@@ -1991,8 +2178,7 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 			command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			command_panel_container.size_flags_stretch_ratio = 1.0
 			command_panel_container.custom_minimum_size = Vector2(0, 0)
-			if battle_window:
-				battle_window.offset_top = -290.0
+			_update_window_heights(true)
 	else:
 		# Deactivate modal if it was open
 		if quiz_modal_overlay and quiz_modal_overlay.visible:
@@ -2009,12 +2195,11 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 		party_panel_container.visible = true
 		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		party_panel_container.size_flags_stretch_ratio = PARTY_PANEL_WIDTH_DEFAULT
-		party_panel_container.custom_minimum_size = Vector2(PARTY_PANEL_WIDTH_MIN, 0)
+		party_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(PARTY_PANEL_WIDTH_MIN)), 0)
 		command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		command_panel_container.size_flags_stretch_ratio = COMMAND_PANEL_WIDTH_DEFAULT
-		command_panel_container.custom_minimum_size = Vector2(COMMAND_PANEL_WIDTH_MIN, 0)
-		if battle_window:
-			battle_window.offset_top = -228.0
+		command_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(COMMAND_PANEL_WIDTH_MIN)), 0)
+		_update_window_heights(false)
 
 
 func _init_party_state() -> void:
