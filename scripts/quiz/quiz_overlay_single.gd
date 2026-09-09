@@ -12,6 +12,16 @@ const TYPE_MULTIPLIER := {
 	"matching": 1.55,
 }
 
+const MATCH_COLORS: Array[Color] = [
+	Color(0.28, 0.70, 0.98),
+	Color(0.96, 0.78, 0.22),
+	Color(0.80, 0.50, 0.96),
+	Color(0.96, 0.54, 0.28),
+	Color(0.32, 0.82, 0.88),
+	Color(0.58, 0.64, 0.96),
+]
+const MATCH_TAGS: Array[String] = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]"]
+
 @onready var panel: PanelContainer = $Panel
 @onready var vbox: VBoxContainer = $Panel/VBox
 @onready var title_label: Label = $Panel/VBox/Title
@@ -303,31 +313,31 @@ func _build_matching() -> void:
 		child.queue_free()
 	for child in match_right.get_children():
 		child.queue_free()
+	_match_selected = -1
+	_match_pairs.clear()
+	_match_left_buttons.clear()
+	_match_right_buttons.clear()
 	var left_items: Array = _question.get("left_items", [])
 	var right_items: Array = _question.get("right_items", [])
-	var font_size := UIScaleService.px(20)
 	for i in range(left_items.size()):
 		var button := Button.new()
-		button.add_theme_font_size_override("font_size", font_size)
 		button.focus_mode = Control.FOCUS_NONE
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.text = str(left_items[i])
 		var index := i
 		button.pressed.connect(func(): _on_match_left(index))
 		match_left.add_child(button)
 		_match_left_buttons.append(button)
 	for i in range(right_items.size()):
 		var button := Button.new()
-		button.add_theme_font_size_override("font_size", font_size)
 		button.focus_mode = Control.FOCUS_NONE
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.text = str(right_items[i])
 		var index := i
 		button.pressed.connect(func(): _on_match_right(index))
 		match_right.add_child(button)
 		_match_right_buttons.append(button)
+	_refresh_matching_display()
 
 
 func _on_mc_button(index: int) -> void:
@@ -414,35 +424,135 @@ func _update_gap_highlight() -> void:
 
 
 func _on_match_left(index: int) -> void:
-	_match_selected = index
-	for i in range(_match_left_buttons.size()):
-		if i == index:
-			_match_left_buttons[i].add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-		else:
-			_match_left_buttons[i].remove_theme_color_override("font_color")
+	if _locked or _resolved:
+		return
+	if _match_selected == index:
+		if _match_pairs.has(index):
+			_match_pairs.erase(index)
+		_match_selected = -1
+	else:
+		_match_selected = index
+	_refresh_matching_display()
 
 
 func _on_match_right(index: int) -> void:
-	if _match_selected < 0:
+	if _locked or _resolved:
 		return
-	var left_items: Array = _question.get("left_items", [])
-	for key in _match_pairs.keys():
-		if _match_pairs[key] == index:
+	if _match_selected >= 0:
+		for key in _match_pairs.keys():
+			if _match_pairs[key] == index:
+				_match_pairs.erase(key)
+		_match_pairs[_match_selected] = index
+		_match_selected = -1
+		_refresh_matching_display()
+	else:
+		var to_erase: Array = []
+		for key in _match_pairs.keys():
+			if _match_pairs[key] == index:
+				to_erase.append(key)
+		for key in to_erase:
 			_match_pairs.erase(key)
-			if int(key) < _match_left_buttons.size():
-				_match_left_buttons[int(key)].text = str(left_items[int(key)])
-				_match_left_buttons[int(key)].remove_theme_color_override("font_color")
-	_match_pairs[_match_selected] = index
-	if _match_selected < _match_left_buttons.size():
-		_match_left_buttons[_match_selected].text = str(left_items[_match_selected]) + " OK"
-	_match_selected = -1
-	for button in _match_left_buttons:
-		button.remove_theme_color_override("font_color")
-	for i in range(_match_right_buttons.size()):
-		if _match_pairs.values().has(i):
-			_match_right_buttons[i].add_theme_color_override("font_color", Color(0.4, 1.0, 0.5))
+		_refresh_matching_display()
+
+
+func _refresh_matching_display() -> void:
+	var left_items: Array = _question.get("left_items", [])
+	var right_items: Array = _question.get("right_items", [])
+
+	for i in range(_match_left_buttons.size()):
+		var btn: Button = _match_left_buttons[i]
+		var tag: String = MATCH_TAGS[i % MATCH_TAGS.size()]
+		var raw_left: String = str(left_items[i]) if i < left_items.size() else ""
+		var pair_color: Color = MATCH_COLORS[i % MATCH_COLORS.size()]
+		var is_matched: bool = _match_pairs.has(i)
+		var is_selected: bool = (i == _match_selected)
+
+		if is_matched:
+			var right_idx: int = int(_match_pairs[i])
+			var right_text: String = str(right_items[right_idx]) if right_idx < right_items.size() else ""
+			var right_preview := right_text
+			if right_preview.length() > 24:
+				right_preview = right_preview.substr(0, 22) + "…"
+			btn.text = "%s  %s   ➔   %s  %s" % [tag, raw_left, tag, right_preview]
+			_apply_match_card_style(btn, pair_color, true, is_selected)
+		elif is_selected:
+			btn.text = "%s ▶ %s   ➔   [ ? ]" % [tag, raw_left]
+			_apply_match_card_style(btn, pair_color, false, true)
 		else:
-			_match_right_buttons[i].remove_theme_color_override("font_color")
+			btn.text = "%s  %s" % [tag, raw_left]
+			_apply_match_card_style(btn, pair_color, false, false)
+
+	var reverse_map: Dictionary = {}
+	for left_idx in _match_pairs.keys():
+		reverse_map[int(_match_pairs[left_idx])] = int(left_idx)
+
+	for j in range(_match_right_buttons.size()):
+		var btn: Button = _match_right_buttons[j]
+		var raw_right: String = str(right_items[j]) if j < right_items.size() else ""
+
+		if reverse_map.has(j):
+			var left_idx: int = int(reverse_map[j])
+			var tag: String = MATCH_TAGS[left_idx % MATCH_TAGS.size()]
+			var pair_color: Color = MATCH_COLORS[left_idx % MATCH_COLORS.size()]
+			btn.text = "%s  %s" % [tag, raw_right]
+			_apply_match_card_style(btn, pair_color, true, false)
+		else:
+			btn.text = "[ — ]  %s" % [raw_right]
+			_apply_match_card_style(btn, Color(0.4, 0.45, 0.55), false, false)
+
+
+func _apply_match_card_style(btn: Button, color: Color, is_matched: bool, is_selected: bool) -> void:
+	var font_color: Color
+	var bg_color: Color
+	var border_color: Color
+	var border_width := 2
+
+	if is_selected:
+		font_color = Color(1.0, 0.96, 0.6)
+		bg_color = Color(color.r * 0.25, color.g * 0.25, color.b * 0.25, 0.95)
+		border_color = Color.WHITE
+	elif is_matched:
+		font_color = color.lightened(0.25)
+		bg_color = Color(color.r * 0.14, color.g * 0.14, color.b * 0.14, 0.95)
+		border_color = color
+	else:
+		font_color = Color(0.95, 0.95, 0.98)
+		bg_color = Color(0.04, 0.05, 0.08, 0.9)
+		border_color = Color(0.2, 0.24, 0.32, 0.9)
+		border_width = 1
+
+	btn.add_theme_color_override("font_color", font_color)
+	btn.add_theme_font_size_override("font_size", 16)
+	btn.custom_minimum_size = Vector2(0, 42)
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var box := StyleBoxFlat.new()
+		box.bg_color = bg_color if state != "hover" else bg_color.lightened(0.08)
+		box.border_color = border_color if state != "hover" else border_color.lightened(0.2)
+		box.set_border_width_all(border_width)
+		box.set_corner_radius_all(6)
+		box.content_margin_left = 14
+		box.content_margin_right = 14
+		box.content_margin_top = 8
+		box.content_margin_bottom = 8
+		btn.add_theme_stylebox_override(state, box)
+
+
+func _apply_choice_feedback(button: Button, is_correct: bool) -> void:
+	if button == null:
+		return
+	var fill_color := Color(0.12, 0.42, 0.18, 0.95) if is_correct else Color(0.42, 0.12, 0.12, 0.95)
+	var border_color := Color(0.3, 1.0, 0.4, 1.0) if is_correct else Color(1.0, 0.3, 0.3, 1.0)
+	var font_color: Color = Color.WHITE if is_correct else Color(1.0, 0.92, 0.92)
+	button.add_theme_color_override("font_color", font_color)
+	var box := StyleBoxFlat.new()
+	box.bg_color = fill_color
+	box.border_color = border_color
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(6)
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state_name, box)
 
 
 func _handle_result(result: Dictionary, submitted_answer: Dictionary) -> void:
@@ -480,6 +590,28 @@ func _apply_visual_feedback(result: Dictionary, submitted_answer: Dictionary) ->
 			var correct_index := int(result.get("correct_index", -1))
 			if correct_index >= 0 and correct_index < tf_buttons.size():
 				tf_buttons[correct_index].add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
+		"matching":
+			var correct_pairs: Array = _question.get("pairs", [])
+			var matched_right_indices: Dictionary = {}
+			for left_idx in range(_match_left_buttons.size()):
+				var btn_left: Button = _match_left_buttons[left_idx]
+				if _match_pairs.has(left_idx):
+					var right_idx: int = int(_match_pairs[left_idx])
+					matched_right_indices[right_idx] = left_idx
+					var is_pair_correct := false
+					for cp in correct_pairs:
+						if int(cp.get("left_index", -1)) == left_idx and int(cp.get("right_index", -1)) == right_idx:
+							is_pair_correct = true
+							break
+					_apply_choice_feedback(btn_left, is_pair_correct)
+					if right_idx >= 0 and right_idx < _match_right_buttons.size():
+						_apply_choice_feedback(_match_right_buttons[right_idx], is_pair_correct)
+				else:
+					_apply_choice_feedback(btn_left, false)
+
+			for right_idx in range(_match_right_buttons.size()):
+				if not matched_right_indices.has(right_idx):
+					_apply_choice_feedback(_match_right_buttons[right_idx], false)
 
 
 func _show_correct_answer() -> void:
