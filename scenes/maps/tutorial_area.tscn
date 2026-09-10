@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://d3wum0v53cis4" path="res://modules/quiz_rpg/scripts/maps/tutorial_area.gd" id="6_bmcky"]
 [ext_resource type="PackedScene" uid="uid://d216tx2vqfqyj" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial_boss.tscn" id="7_xwsiw"]
 [ext_resource type="PackedScene" uid="uid://bkemxuoo3jwwn" path="res://modules/quiz_rpg/scenes/enemies/slime_1.tscn" id="8_5bl0e"]
+[ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="10_5bl0e"]
 [ext_resource type="PackedScene" uid="uid://jppou3a7nbbw" path="res://modules/quiz_rpg/scenes/objects/barrel.tscn" id="12_1duei"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_mkloh"]
@@ -19,8 +20,13 @@ agent_radius = 0.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ebprv"]
 size = Vector2(78, 20)
 
+[sub_resource type="Resource" id="Resource_xwsiw"]
+script = ExtResource("10_5bl0e")
+metadata/_custom_type_script = "uid://c2e6oyqepnkc4"
+
 [node name="TutorialArea" type="Node2D" unique_id=1584989756]
 y_sort_enabled = true
+position = Vector2(304, 336)
 script = ExtResource("6_bmcky")
 
 [node name="Floor" type="TileMapLayer" parent="." unique_id=819309960 groups=["tilemap"]]
@@ -57,6 +63,7 @@ y_sort_enabled = true
 position = Vector2(-8, -95)
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=812421599]
+visible = false
 navigation_polygon = SubResource("NavigationPolygon_mkloh")
 
 [node name="Spawns" type="Node2D" parent="." unique_id=713112494]
@@ -133,10 +140,11 @@ position = Vector2(-56, 24)
 position = Vector2(94, -79)
 
 [node name="Enemy3" parent="Node2D" unique_id=205540593 instance=ExtResource("6_0m64r")]
-position = Vector2(266, -21)
+position = Vector2(170, 5)
 
 [node name="Enemy4" parent="Node2D" unique_id=103068927 instance=ExtResource("7_xwsiw")]
 position = Vector2(542, -67)
 
 [node name="Enemy5" parent="Node2D" unique_id=96031201 instance=ExtResource("8_5bl0e")]
-position = Vector2(-39, -175)
+position = Vector2(-16, -165)
+enemy_data = SubResource("Resource_xwsiw")
