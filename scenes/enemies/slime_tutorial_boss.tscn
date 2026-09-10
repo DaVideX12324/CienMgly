@@ -9,6 +9,7 @@ radius = 5.0
 height = 18.0
 
 [node name="Enemy" unique_id=786809798 instance=ExtResource("1_base")]
+y_sort_enabled = true
 script = ExtResource("2_script")
 enemy_name = "Slime Tutorial Boss"
 quiz_id = "ogolne"

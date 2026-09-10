@@ -9,6 +9,7 @@ radius = 5.0
 height = 18.0
 
 [node name="Enemy" unique_id=1491906518 instance=ExtResource("1_base")]
+y_sort_enabled = true
 script = ExtResource("2_script")
 enemy_name = "Slime Tutorial"
 quiz_id = "ogolne"
@@ -20,7 +21,7 @@ patrol_speed = 60.0
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 sprite_frames = ExtResource("3_frames")
-animation = &"slime_walk"
+animation = &"slime_idle"
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
 position = Vector2(0, -4)

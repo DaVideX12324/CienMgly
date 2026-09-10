@@ -152,12 +152,12 @@ theme_override_constants/separation = 4
 
 [node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=1837799062]
 layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
+anchors_preset = -1
+anchor_top = 0.507
 anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -375.0
-offset_bottom = -35.0
+anchor_bottom = 0.507
+offset_top = -56.810028
+offset_bottom = 271.18997
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 12

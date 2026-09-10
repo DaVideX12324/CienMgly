@@ -9,6 +9,7 @@ radius = 5.0
 height = 16.0
 
 [node name="Enemy" unique_id=1203806039 instance=ExtResource("1_base")]
+y_sort_enabled = true
 script = ExtResource("2_script")
 enemy_name = "Slime 1"
 quiz_id = "ogolne"
@@ -19,11 +20,17 @@ encounter_tier = 1
 patrol_speed = 60.0
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
-position = Vector2(-0.5, 0)
+position = Vector2(-1, -8)
 sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
-position = Vector2(0, 2)
+position = Vector2(-0.5, -6)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_fix")
+
+[node name="DetectionArea" parent="." index="2" unique_id=2045348945]
+position = Vector2(-0.5, -8)
+
+[node name="RayCast2D" parent="." index="3"]
+position = Vector2(-0.5, -8)
