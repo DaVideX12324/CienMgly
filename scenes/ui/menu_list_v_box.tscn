@@ -17,10 +17,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow0/Control" unique_id=1080578608]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow0" unique_id=1660242314]
 layout_mode = 2
@@ -55,10 +62,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow1/Control" unique_id=1241425181]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow1" unique_id=1822538351]
 layout_mode = 2
@@ -93,10 +107,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow2/Control" unique_id=637698590]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow2" unique_id=746100011]
 layout_mode = 2
@@ -131,10 +152,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow3/Control" unique_id=930461562]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow3" unique_id=360577903]
 layout_mode = 2
@@ -169,10 +197,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow4/Control" unique_id=1926462060]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow4" unique_id=1700776055]
 layout_mode = 2
@@ -207,10 +242,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow5/Control" unique_id=1216454361]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow5" unique_id=56892288]
 layout_mode = 2
@@ -245,10 +287,17 @@ layout_mode = 2
 
 [node name="SelectionUnderline" type="ColorRect" parent="MenuRow6/Control"]
 visible = false
-layout_mode = 0
-offset_top = 35.0
-offset_right = 517.0
-offset_bottom = 38.0
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
 
 [node name="Margin" type="MarginContainer" parent="MenuRow6"]
 layout_mode = 2
