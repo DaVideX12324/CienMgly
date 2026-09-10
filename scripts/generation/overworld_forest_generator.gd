@@ -4,8 +4,8 @@ extends "res://modules/quiz_rpg/scripts/generation/map_generator_base.gd"
 ## Generator mapy otwartej / lasu (Overworld) bazujacy na szumie FastNoiseLite,
 ## naturalnych polanach, wydeptanych sciezkach i zageszczeniu drzew.
 
-const FAIRY_FOREST_TILES_PATH := "res://assets/Pixel Crawler/Pixel Crawler - Fairy Environment/Pixel Crawler - Fairy Forest 1.7/Assets/Tiles.png"
-const FALLBACK_TILES_PATH := "res://assets/textures/atlases/Dungeon tileset/Dungeon tileset.png"
+const FAIRY_FOREST_TILES_PATH := "res://assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Assets/Tiles.png"
+const FALLBACK_TILES_PATH := "res://assets/textures/legacy_amonra/atlases/Dungeon tileset/Dungeon tileset.png"
 
 
 static func get_default_palette() -> Dictionary:

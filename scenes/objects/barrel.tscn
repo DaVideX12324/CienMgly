@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://jppou3a7nbbw"]
 
 [ext_resource type="Script" uid="uid://yy4qagy8712y" path="res://modules/quiz_rpg/scripts/interactables/barrel.gd" id="1_1yh26"]
-[ext_resource type="Texture2D" uid="uid://qvvpcl7op75x" path="res://assets/textures/atlases/tunels_textures/Individual_Props/barrel_open.png" id="4_3ju85"]
+[ext_resource type="Texture2D" uid="uid://qvvpcl7op75x" path="res://assets/textures/legacy_amonra/atlases/tunels_textures/Individual_Props/barrel_open.png" id="4_3ju85"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
 radius = 3.0

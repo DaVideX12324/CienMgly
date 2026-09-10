@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bbi0wuxnma4lb"]
 
-[ext_resource type="Texture2D" uid="uid://f2kpyr5ebexr" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/Well_Desert_Stone.png" id="1_50jqf"]
+[ext_resource type="Texture2D" uid="uid://f2kpyr5ebexr" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/Well_Desert_Stone.png" id="1_50jqf"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6vrm3"]
 radius = 14.0

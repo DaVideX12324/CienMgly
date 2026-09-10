@@ -1,10 +1,10 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://bj727dlcwoqut"]
 
-[ext_resource type="Texture2D" uid="uid://6dkf1dj1gs8h" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Attack_with_shadow.png" id="1_ct8lc"]
-[ext_resource type="Texture2D" uid="uid://sw161as4vplu" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Death_with_shadow.png" id="2_sk55f"]
-[ext_resource type="Texture2D" uid="uid://d0safd8aq8yov" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Hurt_with_shadow.png" id="3_6ek5m"]
-[ext_resource type="Texture2D" uid="uid://cdwgpfhnkpyty" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Idle_with_shadow.png" id="4_vu5ce"]
-[ext_resource type="Texture2D" uid="uid://cdimmsepefdlu" path="res://assets/textures/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Walk_with_shadow.png" id="5_6rg02"]
+[ext_resource type="Texture2D" uid="uid://6dkf1dj1gs8h" path="res://assets/textures/legacy_amonra/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Attack_with_shadow.png" id="1_ct8lc"]
+[ext_resource type="Texture2D" uid="uid://sw161as4vplu" path="res://assets/textures/legacy_amonra/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Death_with_shadow.png" id="2_sk55f"]
+[ext_resource type="Texture2D" uid="uid://d0safd8aq8yov" path="res://assets/textures/legacy_amonra/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Hurt_with_shadow.png" id="3_6ek5m"]
+[ext_resource type="Texture2D" uid="uid://cdwgpfhnkpyty" path="res://assets/textures/legacy_amonra/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Idle_with_shadow.png" id="4_vu5ce"]
+[ext_resource type="Texture2D" uid="uid://cdimmsepefdlu" path="res://assets/textures/legacy_amonra/atlases/enemies/Vampire/PNG/Vampires2/With_shadow/Vampires2_Walk_with_shadow.png" id="5_6rg02"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rdm64"]
 atlas = ExtResource("1_ct8lc")

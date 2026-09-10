@@ -1,9 +1,9 @@
 [gd_scene load_steps=7 format=3 uid="uid://kqrlbpqkd5sr"]
 
-[ext_resource type="Texture2D" uid="uid://b6848l7obhsvc" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7.png" id="1_e8wm6"]
-[ext_resource type="Texture2D" uid="uid://n772kbb3erf7" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_pillars.png" id="2_f3dug"]
-[ext_resource type="Texture2D" uid="uid://b0yprjjpodyta" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_right.png" id="2_ohqku"]
-[ext_resource type="Texture2D" uid="uid://c6sxa6gygqoq" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_pillars_back.png" id="3_6sqbv"]
+[ext_resource type="Texture2D" uid="uid://b6848l7obhsvc" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7.png" id="1_e8wm6"]
+[ext_resource type="Texture2D" uid="uid://n772kbb3erf7" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_pillars.png" id="2_f3dug"]
+[ext_resource type="Texture2D" uid="uid://b0yprjjpodyta" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_right.png" id="2_ohqku"]
+[ext_resource type="Texture2D" uid="uid://c6sxa6gygqoq" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_7_pillars_back.png" id="3_6sqbv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6sqbv"]
 size = Vector2(13, 5)

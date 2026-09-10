@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cb5j3krao2vwg"]
 
-[ext_resource type="Texture2D" uid="uid://2uxro3wgcp2u" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_3.png" id="1_3fsi7"]
+[ext_resource type="Texture2D" uid="uid://2uxro3wgcp2u" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_3.png" id="1_3fsi7"]
 
 [node name="House_Desert_RedStone_3" type="StaticBody2D"]
 y_sort_enabled = true

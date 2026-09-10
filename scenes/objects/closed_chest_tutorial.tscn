@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://eq0y6pmpl2vc"]
 
-[ext_resource type="Texture2D" uid="uid://bbn4e6358318y" path="res://assets/textures/atlases/Chests/RPG Chests.png" id="1_udnj4"]
+[ext_resource type="Texture2D" uid="uid://bbn4e6358318y" path="res://assets/textures/legacy_amonra/atlases/Chests/RPG Chests.png" id="1_udnj4"]
 [ext_resource type="Script" uid="uid://436bh13tck8b" path="res://modules/quiz_rpg/scripts/interactables/chest.gd" id="2_egk45"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bla77"]
