@@ -1,9 +1,9 @@
 [gd_resource type="SpriteFrames" load_steps=25 format=3 uid="uid://bbgoyuph4iori"]
 
-[ext_resource type="Texture2D" uid="uid://desooed1cerqa" path="res://assets/textures/atlases/slime_blue/SlimeBlue_Death_strip9.png" id="1_tn2t7"]
-[ext_resource type="Texture2D" uid="uid://dgqkrnmc8jld8" path="res://assets/textures/atlases/slime_blue/SlimeBlue_Hurt_strip4.png" id="2_jcr0o"]
-[ext_resource type="Texture2D" uid="uid://85r0qqv6hshj" path="res://assets/textures/atlases/slime_blue/SlimeBlue_Idle_strip4.png" id="3_oa32l"]
-[ext_resource type="Texture2D" uid="uid://kbvnaskjbe0a" path="res://assets/textures/atlases/slime_blue/SlimeBlue_Movement_strip5.png" id="4_fomni"]
+[ext_resource type="Texture2D" uid="uid://desooed1cerqa" path="res://assets/textures/legacy_amonra/atlases/slime_blue/SlimeBlue_Death_strip9.png" id="1_tn2t7"]
+[ext_resource type="Texture2D" uid="uid://dgqkrnmc8jld8" path="res://assets/textures/legacy_amonra/atlases/slime_blue/SlimeBlue_Hurt_strip4.png" id="2_jcr0o"]
+[ext_resource type="Texture2D" uid="uid://85r0qqv6hshj" path="res://assets/textures/legacy_amonra/atlases/slime_blue/SlimeBlue_Idle_strip4.png" id="3_oa32l"]
+[ext_resource type="Texture2D" uid="uid://kbvnaskjbe0a" path="res://assets/textures/legacy_amonra/atlases/slime_blue/SlimeBlue_Movement_strip5.png" id="4_fomni"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ex3bc"]
 atlas = ExtResource("1_tn2t7")

@@ -1,10 +1,10 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://bjx77wr2i5rp8"]
 
-[ext_resource type="Texture2D" uid="uid://b3b72qycfosfo" path="res://assets/textures/atlases/enemies/Warhog/Spritesheets/Warhog_Attack.png" id="1_7raqf"]
-[ext_resource type="Texture2D" uid="uid://b8usm8brgviow" path="res://assets/textures/atlases/enemies/Warhog/Spritesheets/Warhog_Death.png" id="2_ddgkw"]
-[ext_resource type="Texture2D" uid="uid://c53u55momdkli" path="res://assets/textures/atlases/enemies/Warhog/Spritesheets/Warhog_Hurt.png" id="3_8p304"]
-[ext_resource type="Texture2D" uid="uid://c3q1tc453n6sl" path="res://assets/textures/atlases/enemies/Warhog/Spritesheets/Warhog_Idle.png" id="4_dshmo"]
-[ext_resource type="Texture2D" uid="uid://balk7fxjrtrdi" path="res://assets/textures/atlases/enemies/Warhog/Spritesheets/Warhog_Walk.png" id="5_ddgkw"]
+[ext_resource type="Texture2D" uid="uid://b3b72qycfosfo" path="res://assets/textures/legacy_amonra/atlases/enemies/Warhog/Spritesheets/Warhog_Attack.png" id="1_7raqf"]
+[ext_resource type="Texture2D" uid="uid://b8usm8brgviow" path="res://assets/textures/legacy_amonra/atlases/enemies/Warhog/Spritesheets/Warhog_Death.png" id="2_ddgkw"]
+[ext_resource type="Texture2D" uid="uid://c53u55momdkli" path="res://assets/textures/legacy_amonra/atlases/enemies/Warhog/Spritesheets/Warhog_Hurt.png" id="3_8p304"]
+[ext_resource type="Texture2D" uid="uid://c3q1tc453n6sl" path="res://assets/textures/legacy_amonra/atlases/enemies/Warhog/Spritesheets/Warhog_Idle.png" id="4_dshmo"]
+[ext_resource type="Texture2D" uid="uid://balk7fxjrtrdi" path="res://assets/textures/legacy_amonra/atlases/enemies/Warhog/Spritesheets/Warhog_Walk.png" id="5_ddgkw"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ls538"]
 atlas = ExtResource("1_7raqf")

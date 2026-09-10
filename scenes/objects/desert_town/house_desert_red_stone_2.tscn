@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b54xoenja4los"]
 
-[ext_resource type="Texture2D" uid="uid://dpqn8l2f15oky" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_2.png" id="1_8rvi5"]
-[ext_resource type="Texture2D" uid="uid://e47pnulobx7o" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_2_right.png" id="2_sc7bl"]
+[ext_resource type="Texture2D" uid="uid://dpqn8l2f15oky" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_2.png" id="1_8rvi5"]
+[ext_resource type="Texture2D" uid="uid://e47pnulobx7o" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_2_right.png" id="2_sc7bl"]
 
 [node name="House_Desert_RedStone_2" type="StaticBody2D"]
 y_sort_enabled = true

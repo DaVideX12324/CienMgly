@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c8m5o1lxci0um"]
 
 [ext_resource type="Script" uid="uid://bm5sgfqfeq3o7" path="res://modules/quiz_rpg/scripts/interactables/door.gd" id="1_cn1ks"]
-[ext_resource type="Texture2D" uid="uid://dlphipshnw08u" path="res://assets/textures/atlases/Dungeon tileset/Dungeon tileset.png" id="1_uhdoh"]
+[ext_resource type="Texture2D" uid="uid://dlphipshnw08u" path="res://assets/textures/legacy_amonra/atlases/Dungeon tileset/Dungeon tileset.png" id="1_uhdoh"]
 
 [sub_resource type="Animation" id="Animation_5078b"]
 resource_name = "Closed"

@@ -4,8 +4,8 @@ extends "res://modules/quiz_rpg/scripts/generation/map_generator_base.gd"
 ## Generator wnetrz / lochow / zamkow bazujacy na pokojach (BSP / Room Placement)
 ## i korytarzach ze scianami kolizyjnymi oraz drzwiami.
 
-const CASTLE_TILES_PATH := "res://assets/Pixel Crawler/Pixel Crawler - Castle/Assets/Tiles.png"
-const FALLBACK_TILES_PATH := "res://assets/textures/atlases/Dungeon tileset/Dungeon tileset.png"
+const CASTLE_TILES_PATH := "res://assets/pixel_crawler/environments/castle/Assets/Tiles.png"
+const FALLBACK_TILES_PATH := "res://assets/textures/legacy_amonra/atlases/Dungeon tileset/Dungeon tileset.png"
 
 
 static func get_default_palette() -> Dictionary:

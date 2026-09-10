@@ -1,8 +1,8 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://b41vax46iknjy"]
 
-[ext_resource type="Texture2D" uid="uid://bdk60d3rjotfm" path="res://assets/Pixel Crawler/Pixel Crawler - Free Pack 2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png" id="1_3wo7w"]
-[ext_resource type="Texture2D" uid="uid://cr8l8q2rky6db" path="res://assets/Pixel Crawler/Pixel Crawler - Free Pack 2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Idle/Idle-Sheet.png" id="2_ujq82"]
-[ext_resource type="Texture2D" uid="uid://burtrqmiq1kyk" path="res://assets/Pixel Crawler/Pixel Crawler - Free Pack 2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Run/Run-Sheet.png" id="3_vouyg"]
+[ext_resource type="Texture2D" uid="uid://bdk60d3rjotfm" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png" id="1_3wo7w"]
+[ext_resource type="Texture2D" uid="uid://cr8l8q2rky6db" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Idle/Idle-Sheet.png" id="2_ujq82"]
+[ext_resource type="Texture2D" uid="uid://burtrqmiq1kyk" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Run/Run-Sheet.png" id="3_vouyg"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lnt3j"]
 atlas = ExtResource("1_3wo7w")

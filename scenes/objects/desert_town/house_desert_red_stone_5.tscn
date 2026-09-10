@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://c8sw0okk8ryjl"]
 
-[ext_resource type="Texture2D" uid="uid://cvjq035qpo6tl" path="res://assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_5.png" id="1_m42ss"]
+[ext_resource type="Texture2D" uid="uid://cvjq035qpo6tl" path="res://assets/textures/legacy_amonra/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_5.png" id="1_m42ss"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_m42ss"]
 size = Vector2(61, 36)
