@@ -10,6 +10,15 @@ const TREE_LEAVES := Color(0.15, 0.50, 0.15)
 const TREE_LEAVES_2 := Color(0.20, 0.55, 0.20)
 
 
+func get_enemy_layout_config() -> Dictionary:
+	return {
+		"enemy_section_height": 380.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 0.55,
+		"row1_margin_multiplier": 0.65,
+	}
+
+
 func draw_background(canvas: Control, context: Dictionary) -> void:
 	var map := context.get("map", null) as Node
 	var seed_basis := _position_seed(context.get("enemy", null))

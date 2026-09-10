@@ -10,12 +10,48 @@ const VARIANT_PATHS: Array[String] = [
 	"res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_4_chamber.jpg",
 ]
 
+const VARIANT_CONFIGS: Dictionary = {
+	0: { # variant_1_gate.jpg - niska brama, węższy łuk
+		"enemy_section_height": 305.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 1.12,
+		"row1_margin_multiplier": 1.0,
+	},
+	1: { # variant_2_training.jpg - standardowa sala treningowa
+		"enemy_section_height": 340.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 1.0,
+		"row1_margin_multiplier": 1.0,
+	},
+	2: { # variant_3_stairs.jpg - schody w tle
+		"enemy_section_height": 325.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 1.06,
+		"row1_margin_multiplier": 1.0,
+	},
+	3: { # variant_4_chamber.jpg - głęboka, przestronna sala z wysoką ścianą
+		"enemy_section_height": 380.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 0.90,
+		"row1_margin_multiplier": 0.95,
+	},
+}
+
 var _cached_texture: Texture2D = null
 var _selected_index: int = -1
 
 
 func _init() -> void:
 	_select_random_texture()
+
+
+func get_enemy_layout_config() -> Dictionary:
+	return VARIANT_CONFIGS.get(_selected_index, {
+		"enemy_section_height": 340.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 1.0,
+		"row1_margin_multiplier": 1.0,
+	})
 
 
 func _select_random_texture() -> void:
