@@ -649,19 +649,29 @@ func _show_items_panel() -> void:
 	_rebuild_item_rows()
 
 
+func _get_current_party_member() -> Dictionary:
+	if _ps and _ps.has_method("get_party_member"):
+		var m: Variant = _ps.get_party_member(_selected_member_index)
+		if m is Dictionary:
+			return m
+	return {}
+
+
 func _show_skills_panel() -> void:
 	_show_panel("skills")
 	context_title_label.text = "Umiejetnosci"
-	_populate_actor_header(skills_actor_header, _ps.get_party_member(_selected_member_index), true)
+	_populate_actor_header(skills_actor_header, _get_current_party_member(), true)
 	_rebuild_skill_rows()
 
 
 func _show_equipment_panel() -> void:
 	_show_panel("equipment")
 	context_title_label.text = "Ekwipunek"
-	var member: Dictionary = _ps.get_party_member(_selected_member_index)
+	var member: Dictionary = _get_current_party_member()
 	_populate_actor_header(equipment_actor_header, member, false)
-	equipment_stats_label.text = "ATK %d   DEF %d" % [_ps.get_member_total_atk(_selected_member_index), _ps.get_member_total_def(_selected_member_index)]
+	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
+	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
+	equipment_stats_label.text = "ATK %d   DEF %d" % [atk, def]
 	_rebuild_equip_action_rows()
 	_rebuild_equipment_slots()
 	_rebuild_equipment_item_rows()
@@ -674,7 +684,7 @@ func _show_equipment_panel() -> void:
 func _show_status_panel() -> void:
 	_show_panel("status")
 	context_title_label.text = "Status"
-	var member: Dictionary = _ps.get_party_member(_selected_member_index)
+	var member: Dictionary = _get_current_party_member()
 	_populate_actor_header(status_actor_header, member, false)
 	_rebuild_status_panel(member)
 
@@ -886,7 +896,13 @@ func _refresh_left_menu_rows() -> void:
 
 func _rebuild_party_rows(_selectable: bool) -> void:
 	_party_rows_selectable = _selectable
-	var members: Array[Dictionary] = _ps.get_party_members() if _ps and _ps.has_method("get_party_members") else []
+	var members: Array[Dictionary] = []
+	if _ps and _ps.has_method("get_party_members"):
+		var raw_members: Variant = _ps.get_party_members()
+		if raw_members is Array:
+			for item in raw_members:
+				if item is Dictionary:
+					members.append(item)
 	_ensure_party_row_capacity(members)
 	for index: int in range(_party_rows.size()):
 		var row: Control = _party_rows[index]
@@ -910,7 +926,13 @@ func _rebuild_item_tabs() -> void:
 func _rebuild_item_rows() -> void:
 	_current_item_entries.clear()
 	var category: String = ITEM_TAB_CATEGORIES[_tab_index] if _tab_index < ITEM_TAB_CATEGORIES.size() else "item"
-	var entries: Array[Dictionary] = _ps.get_items_by_category(category) if _ps and _ps.has_method("get_items_by_category") else []
+	var entries: Array[Dictionary] = []
+	if _ps and _ps.has_method("get_items_by_category"):
+		var raw_entries: Variant = _ps.get_items_by_category(category)
+		if raw_entries is Array:
+			for item in raw_entries:
+				if item is Dictionary:
+					entries.append(item)
 	for index: int in range(_item_rows.size()):
 		var row: Control = _item_rows[index]
 		var has_entry: bool = index < entries.size()
@@ -934,7 +956,7 @@ func _refresh_item_rows() -> void:
 
 func _rebuild_skill_rows() -> void:
 	_current_skill_entries.clear()
-	var member: Dictionary = _ps.get_party_member(_selected_member_index)
+	var member: Dictionary = _get_current_party_member()
 	var member_sp: int = int(member.get("sp", 0))
 	var member_tp: int = int(member.get("tp", 0))
 	var skills: Array = _ps.skills if _ps and _ps.get("skills") is Array else []
@@ -993,9 +1015,9 @@ func _refresh_equip_action_rows() -> void:
 
 
 func _rebuild_equipment_slots() -> void:
-	var member: Dictionary = _ps.get_party_member(_selected_member_index)
+	var member: Dictionary = _get_current_party_member()
 	var equipment: Dictionary = member.get("equipment", {})
-	var slots: Array = _ps.get_equipment_slots()
+	var slots: Array = _ps.get_equipment_slots() if _ps and _ps.has_method("get_equipment_slots") else []
 	for index: int in range(_equip_slot_rows.size()):
 		var row: Control = _equip_slot_rows[index]
 		var has_slot: bool = index < slots.size()
@@ -1003,7 +1025,8 @@ func _rebuild_equipment_slots() -> void:
 		if has_slot:
 			var slot_name: String = str(slots[index])
 			var equipped_name: String = _get_equipped_item_name(str(equipment.get(slot_name, "")))
-			_set_simple_row(row, _ps.get_equipment_label(slot_name), equipped_name)
+			var slot_label: String = _ps.get_equipment_label(slot_name) if _ps and _ps.has_method("get_equipment_label") else slot_name
+			_set_simple_row(row, slot_label, equipped_name)
 	_refresh_equipment_slot_rows()
 
 
@@ -1049,21 +1072,25 @@ func _get_equipment_preview_slot_name() -> String:
 
 
 func _rebuild_status_panel(member: Dictionary) -> void:
-	var exp_to_next: int = _ps.xp_to_next_level() if _ps and _selected_member_index == 0 else 0
-	status_info_label.text = "LV %d   Exp %d   Do nastepnego poziomu %d" % [int(member.get("level", 1)), _ps.xp if _selected_member_index == 0 and _ps else 0, exp_to_next]
+	var exp_to_next: int = _ps.xp_to_next_level() if _ps and _ps.has_method("xp_to_next_level") and _selected_member_index == 0 else 0
+	var current_xp: int = _ps.xp if _selected_member_index == 0 and _ps and ("xp" in _ps) else 0
+	status_info_label.text = "LV %d   Exp %d   Do nastepnego poziomu %d" % [int(member.get("level", 1)), current_xp, exp_to_next]
 	if _status_bar_rows.size() >= 2:
 		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
+	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
 	if _status_stat_rows.size() >= 2:
-		_set_simple_row(_status_stat_rows[0], "ATK", str(_ps.get_member_total_atk(_selected_member_index)))
-		_set_simple_row(_status_stat_rows[1], "DEF", str(_ps.get_member_total_def(_selected_member_index)))
+		_set_simple_row(_status_stat_rows[0], "ATK", str(atk))
+		_set_simple_row(_status_stat_rows[1], "DEF", str(def))
 	var equipment: Dictionary = member.get("equipment", {})
 	for index: int in range(_status_equip_rows.size()):
 		var slot_name: String = STATUS_EQUIP_SLOTS[index] if index < STATUS_EQUIP_SLOTS.size() else ""
 		var row: Control = _status_equip_rows[index]
 		row.visible = slot_name != ""
 		if slot_name != "":
-			_set_simple_row(row, _ps.get_equipment_label(slot_name), _get_equipped_item_name(str(equipment.get(slot_name, ""))))
+			var slot_label: String = _ps.get_equipment_label(slot_name) if _ps and _ps.has_method("get_equipment_label") else slot_name
+			_set_simple_row(row, slot_label, _get_equipped_item_name(str(equipment.get(slot_name, ""))))
 
 
 func _rebuild_confirm_rows() -> void:
