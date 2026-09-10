@@ -65,13 +65,37 @@ func _setup_animated_sprite(source_sprite: AnimatedSprite2D) -> void:
 		_animated_sprite.animation_finished.connect(_on_sprite_animation_finished)
 
 	_animated_sprite.sprite_frames = source_sprite.sprite_frames
+	_resolve_animations(source_sprite.sprite_frames)
+
+	var tex: Texture2D = null
+	if _idle_anim != "" and source_sprite.sprite_frames.has_animation(_idle_anim):
+		tex = source_sprite.sprite_frames.get_frame_texture(_idle_anim, 0)
+	elif source_sprite.sprite_frames.get_animation_names().size() > 0:
+		tex = source_sprite.sprite_frames.get_frame_texture(source_sprite.sprite_frames.get_animation_names()[0], 0)
+	var frame_h: float = float(tex.get_height()) if tex != null else 32.0
+
+	var offset_y: float = -frame_h * 0.5
+	if tex != null:
+		var img: Image = tex.get_image()
+		if img != null:
+			var max_y: int = -1
+			for y in range(img.get_height() - 1, -1, -1):
+				for x in range(img.get_width()):
+					if img.get_pixel(x, y).a > 0.05:
+						max_y = y
+						break
+				if max_y >= 0:
+					break
+			if max_y >= 0:
+				var visible_bottom_from_center: float = float(max_y + 1) - (frame_h * 0.5)
+				offset_y = -visible_bottom_from_center
+
 	_animated_sprite.centered = true
-	_animated_sprite.position = Vector2.ZERO
+	_animated_sprite.position = Vector2(0.0, offset_y)
 	_base_modulate = source_sprite.modulate
 	_animated_sprite.modulate = _base_modulate
 	_animated_sprite.visible = true
 
-	_resolve_animations(source_sprite.sprite_frames)
 	play_idle()
 
 
@@ -242,31 +266,31 @@ func _draw() -> void:
 	var hover: float = sin(_anim_time * 2.0) * 2.0
 	var draw_color: Color = body_color if _flash_timer <= 0.0 else _flash_color
 
-	draw_circle(Vector2(0, 14), 8.0, Color(0, 0, 0, 0.25))
+	draw_circle(Vector2(0, 0), 8.0, Color(0, 0, 0, 0.25))
 
 	match shape_type:
 		0:
-			_draw_diamond(Vector2(0, hover - 4.0), 12.0, 16.0, draw_color)
+			_draw_diamond(Vector2(0, hover - 18.0), 12.0, 16.0, draw_color)
 		1:
-			draw_circle(Vector2(0, hover - 4.0), 14.0, draw_color)
-			draw_arc(Vector2(0, hover - 4.0), 14.0, 0.0, TAU, 24, OUTLINE_COLOR, 2.0)
+			draw_circle(Vector2(0, hover - 18.0), 14.0, draw_color)
+			draw_arc(Vector2(0, hover - 18.0), 14.0, 0.0, TAU, 24, OUTLINE_COLOR, 2.0)
 		2:
-			_draw_triangle(Vector2(0, hover - 4.0), 16.0, draw_color)
+			_draw_triangle(Vector2(0, hover - 18.0), 16.0, draw_color)
 		3:
-			var rect: Rect2 = Rect2(-11.0, hover - 15.0, 22.0, 22.0)
+			var rect: Rect2 = Rect2(-11.0, hover - 29.0, 22.0, 22.0)
 			draw_rect(rect, draw_color)
 			draw_rect(rect, OUTLINE_COLOR, false, 2.0)
 		4:
-			_draw_polygon_shape(Vector2(0, hover - 4.0), 14.0, 6, draw_color)
+			_draw_polygon_shape(Vector2(0, hover - 18.0), 14.0, 6, draw_color)
 
-	var eye_y: float = hover - 7.0
+	var eye_y: float = hover - 21.0
 	draw_circle(Vector2(-4, eye_y), 3.0, Color.WHITE)
 	draw_circle(Vector2(4, eye_y), 3.0, Color.WHITE)
 	draw_circle(Vector2(-4, eye_y), 1.5, EYE_COLOR)
 	draw_circle(Vector2(4, eye_y), 1.5, EYE_COLOR)
 
 	if show_hp_bar:
-		var bar_y: float = hover - 22.0
+		var bar_y: float = hover - 36.0
 		var bar_w: float = 24.0
 		var bar_h: float = 3.0
 		var hp_ratio: float = float(hp) / float(max(max_hp, 1))

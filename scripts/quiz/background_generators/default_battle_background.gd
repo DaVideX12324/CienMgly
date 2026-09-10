@@ -9,6 +9,15 @@ const FLOOR_A := Color(0.10, 0.055, 0.070)
 const FLOOR_B := Color(0.045, 0.040, 0.065)
 
 
+func get_enemy_layout_config() -> Dictionary:
+	return {
+		"enemy_section_height": 330.0,
+		"enemy_section_bottom_offset": -35.0,
+		"row2_margin_multiplier": 1.0,
+		"row1_margin_multiplier": 1.0,
+	}
+
+
 func draw_background(canvas: Control, _context: Dictionary) -> void:
 	_draw_sky(canvas)
 	_draw_floor(canvas)
