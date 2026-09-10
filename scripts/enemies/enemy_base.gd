@@ -24,6 +24,9 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 @export_group("Movement")
 @export var patrol_speed: float = 80.0
 @export var detection_radius: float = 150.0
+@export_group("AI Behavior")
+@export var wander_radius: float = 100.0
+@export var memory_duration: float = 3.0
 @export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
 
@@ -32,6 +35,14 @@ var state: State = State.PATROL
 
 var patrol_points: Array[Vector2] = []
 var current_patrol_index: int = 0
+var patrol_stuck_timer: float = 0.0
+
+var wander_target: Vector2 = Vector2.ZERO
+var wander_timer: float = 0.0
+var is_idle_pause: bool = false
+var memory_timer: float = 0.0
+var last_seen_player_pos: Vector2 = Vector2.ZERO
+
 var player_ref: Node2D = null
 var defeated: bool = false
 var _use_programmer_art: bool = true
@@ -53,6 +64,7 @@ var _dm: Node   # DifficultyManager
 var _gm: Node   # GameManager
 
 @onready var _raycast: RayCast2D = get_node_or_null("RayCast2D")
+@onready var _nav_agent: NavigationAgent2D = get_node_or_null("NavigationAgent2D")
 
 
 func _ready() -> void:
@@ -84,14 +96,8 @@ func _ready() -> void:
 	if cheat_service and cheat_service.has_signal("enemies_toggled"):
 		cheat_service.enemies_toggled.connect(_on_enemies_toggled)
 
-	if patrol_points.is_empty():
-		var pos = global_position
-		patrol_points = [
-			pos + Vector2(-60, 0),
-			pos + Vector2(60, 0),
-			pos + Vector2(0, -60),
-			pos + Vector2(0, 60),
-		]
+	wander_target = global_position
+	_set_new_wander_target()
 
 
 func _are_enemies_disabled() -> bool:
@@ -309,31 +315,96 @@ func _draw_polygon_shape(center: Vector2, radius: float, sides: int, color: Colo
 func _patrol(delta: float) -> void:
 	if is_instance_valid(player_ref) and not defeated and _has_line_of_sight_to_player():
 		state = State.CHASING
+		last_seen_player_pos = player_ref.global_position
+		memory_timer = memory_duration
 		return
 
-	if patrol_points.is_empty():
+	if not patrol_points.is_empty():
+		_follow_patrol_path(delta)
+	else:
+		_idle_wander(delta)
+
+
+func _idle_wander(delta: float) -> void:
+	wander_timer -= delta
+	if is_idle_pause:
+		velocity = Vector2.ZERO
+		if wander_timer <= 0.0:
+			_set_new_wander_target()
 		return
+
+	var to_target = wander_target - global_position
+	if wander_timer <= 0.0 or to_target.length() < 12.0:
+		_set_new_wander_target()
+		return
+
+	velocity = to_target.normalized() * (patrol_speed * 0.5)
+	move_and_slide()
+
+	if is_on_wall():
+		_set_new_wander_target(get_wall_normal())
+
+
+func _set_new_wander_target(bias_normal: Vector2 = Vector2.ZERO) -> void:
+	if randf() < 0.25 and bias_normal == Vector2.ZERO:
+		is_idle_pause = true
+		wander_timer = randf_range(1.0, 2.5)
+		velocity = Vector2.ZERO
+		return
+
+	is_idle_pause = false
+	wander_timer = randf_range(2.0, 4.0)
+
+	var random_dir = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+	if bias_normal != Vector2.ZERO:
+		random_dir = (random_dir + bias_normal * 1.8).normalized()
+
+	wander_target = global_position + random_dir * randf_range(30.0, wander_radius)
+
+
+func _follow_patrol_path(delta: float) -> void:
 	var target = patrol_points[current_patrol_index]
 	var direction = (target - global_position).normalized()
 	velocity = direction * patrol_speed
 	move_and_slide()
-	if global_position.distance_to(target) < 10:
+
+	if is_on_wall():
+		patrol_stuck_timer += delta
+		if patrol_stuck_timer > 1.5:
+			patrol_stuck_timer = 0.0
+			current_patrol_index = (current_patrol_index + 1) % patrol_points.size()
+	else:
+		patrol_stuck_timer = 0.0
+
+	if global_position.distance_to(target) < 12.0:
 		current_patrol_index = (current_patrol_index + 1) % patrol_points.size()
 
 
 func _chase(delta: float) -> void:
-	if not is_instance_valid(player_ref):
-		state = State.PATROL
-		velocity = Vector2.ZERO
-		return
-	if not _has_line_of_sight_to_player():
-		state = State.PATROL
-		velocity = Vector2.ZERO
-		return
-	var direction = (player_ref.global_position - global_position).normalized()
+	if not defeated and is_instance_valid(player_ref) and _has_line_of_sight_to_player():
+		last_seen_player_pos = player_ref.global_position
+		memory_timer = memory_duration
+	else:
+		memory_timer -= delta
+		if memory_timer <= 0.0:
+			state = State.PATROL
+			velocity = Vector2.ZERO
+			_set_new_wander_target()
+			return
+
+	var move_target := last_seen_player_pos
+	if _nav_agent != null:
+		_nav_agent.target_position = last_seen_player_pos
+		if not _nav_agent.is_navigation_finished():
+			var next_pos := _nav_agent.get_next_path_position()
+			if next_pos != Vector2.ZERO:
+				move_target = next_pos
+
+	var direction := (move_target - global_position).normalized()
 	velocity = direction * patrol_speed * 1.3
 	move_and_slide()
-	if global_position.distance_to(player_ref.global_position) < 40:
+
+	if is_instance_valid(player_ref) and global_position.distance_to(player_ref.global_position) < 40.0:
 		start_combat(player_ref)
 
 
@@ -366,12 +437,13 @@ func _on_detection_area_body_entered(body: Node2D) -> void:
 		player_ref = body
 		if _has_line_of_sight_to_player():
 			state = State.CHASING
+			last_seen_player_pos = body.global_position
+			memory_timer = memory_duration
 
 
 func _on_detection_area_body_exited(body: Node2D) -> void:
 	if body == player_ref:
 		player_ref = null
-		state = State.PATROL
 
 
 func interact(player: Node2D) -> void:
