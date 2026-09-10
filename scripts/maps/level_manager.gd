@@ -49,6 +49,37 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 
 	await get_tree().process_frame
 	_place_player_at_spawn(spawn_name)
+	_play_level_music(level_path, current_level)
+
+
+func _play_level_music(level_path: String, level_node: Node) -> void:
+	var audio_service: Node = get_node_or_null("/root/AudioService")
+	if audio_service == null or not audio_service.has_method("play_music"):
+		return
+	var track := "world_map"
+	var p := level_path.to_lower()
+	if p.contains("tutorial"):
+		track = "tutorial"
+	elif p.contains("desert"):
+		track = "desert_town"
+	elif p.contains("cave"):
+		track = "cave_entrance"
+	elif p.contains("castle"):
+		track = "ancient_ruins"
+	elif p.contains("fairy"):
+		track = "fairy_forest"
+	elif p.contains("forge"):
+		track = "forge"
+	elif p.contains("garden"):
+		track = "garden"
+	elif p.contains("hideout") or p.contains("sewer"):
+		track = "tunnels"
+	elif level_node:
+		for prop in ["biome", "theme"]:
+			if prop in level_node and str(level_node.get(prop)) != "":
+				track = str(level_node.get(prop)).to_snake_case()
+				break
+	audio_service.call("play_music", track)
 
 
 func _place_player_at_spawn(spawn_name: String) -> void:

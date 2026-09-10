@@ -174,7 +174,10 @@ func _on_answer_pressed(index: int) -> void:
 		answer_buttons[i].disabled = true
 	answer_buttons[correct_idx].add_theme_color_override("font_color", Color.GREEN)
 
+	var audio := get_node_or_null("/root/AudioService")
 	if correct:
+		if audio:
+			audio.play_sfx_by_name("correct")
 		current_correct += 1
 		if _ps:
 			_ps.on_correct_answer()
@@ -187,6 +190,8 @@ func _on_answer_pressed(index: int) -> void:
 			current_correct += 1
 			feedback_label.text += " (Bonus! +1 postęp)"
 	else:
+		if audio:
+			audio.play_sfx_by_name("wrong")
 		if index >= 0 and index < answer_buttons.size():
 			answer_buttons[index].add_theme_color_override("font_color", Color.RED)
 		if _ps:
@@ -272,10 +277,15 @@ func _on_overlay_answered(result: Dictionary) -> void:
 
 
 func _finish(success: bool) -> void:
+	var audio := get_node_or_null("/root/AudioService")
 	if success:
+		if audio:
+			audio.play_sfx_by_name("victory")
 		feedback_label.text = "🔓 Otwarto!"
 		feedback_label.add_theme_color_override("font_color", Color.GOLD)
 	else:
+		if audio:
+			audio.play_sfx_by_name("defeat")
 		feedback_label.text = "🔒 Nie udało się otworzyć..."
 		feedback_label.add_theme_color_override("font_color", Color.RED)
 

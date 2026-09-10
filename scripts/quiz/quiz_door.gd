@@ -147,6 +147,9 @@ func _on_puzzle_finished(success: bool) -> void:
 
 
 func _open_door() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("door_open")
 	var col = get_node_or_null("CollisionShape2D")
 	if col:
 		col.set_deferred("disabled", true)

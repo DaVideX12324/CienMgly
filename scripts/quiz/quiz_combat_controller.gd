@@ -59,10 +59,10 @@ var turn_number := 0
 @onready var result_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ResultLabel
 @onready var player_hp_bar: ProgressBar = $Battlefield/FieldContent/PlayerSection/PlayerHPBar
 @onready var enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyNameLabel
-@onready var legacy_enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyName
 @onready var player_name_label: Label = $Battlefield/FieldContent/PlayerSection/PlayerName
+@onready var enemy_section: Control = get_node_or_null("Battlefield/FieldContent/EnemySection") as Control
 @onready var enemy_sprite_node: Control = $Battlefield/FieldContent/EnemySection/EnemySprite
-@onready var enemy_target_home_slot: Control = $Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/HBoxContainer/VBoxContainer/EnemySlot0
+@onready var enemy_target_home_slot: Control = get_node_or_null("Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0") as Control
 @onready var player_sprite_node: Control = $Battlefield/FieldContent/PlayerSection/PlayerSprite
 @onready var battle_background: Control = $Battlefield/Background
 @onready var battle_menu_overlay: Control = $Battlefield/FieldContent/BattleMenuOverlay
@@ -218,6 +218,9 @@ func _ready() -> void:
 		btn.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 	)
 
+	if battle_background and battle_background.has_signal("layout_config_changed"):
+		if not battle_background.layout_config_changed.is_connected(_on_battle_background_layout_changed):
+			battle_background.layout_config_changed.connect(_on_battle_background_layout_changed)
 	if battle_background and battle_background.has_method("set_context"):
 		battle_background.call("set_context", _find_current_map_node(), enemy, player, _enemy_units)
 	player_name_label.text = _ps.player_name if _ps else "Bohater"
@@ -231,6 +234,18 @@ func _ready() -> void:
 	var cheat_service := get_node_or_null("/root/CheatService")
 	if cheat_service and cheat_service.has_signal("instant_win_triggered"):
 		cheat_service.instant_win_triggered.connect(trigger_instant_win)
+
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		if _is_boss_encounter():
+			var bname := ""
+			if enemy.get("enemy_id") != null:
+				bname = str(enemy.get("enemy_id"))
+			elif enemy.get("enemy_name") != null:
+				bname = str(enemy.get("enemy_name")).to_lower()
+			audio.start_boss_music(bname if bname != "" else "battle_boss")
+		else:
+			audio.play_music("battle")
 
 	_start_player_turn()
 
@@ -387,6 +402,9 @@ func _start_player_turn() -> void:
 func _on_action(action: Action) -> void:
 	if phase != Phase.ACTION_SELECT:
 		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	chosen_action = action
 	if action == Action.FLEE:
 		_try_flee()
@@ -398,8 +416,16 @@ func _on_action(action: Action) -> void:
 
 
 func _open_skills_menu() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	_list_menu_mode = "skills"
-	_list_menu_entries = _ps.skills.duplicate(true) if _ps and _ps.get("skills") is Array else []
+	var entries: Array[Dictionary] = []
+	if _ps and _ps.get("skills") is Array:
+		for s in _ps.skills:
+			if s is Dictionary:
+				entries.append(s)
+	_list_menu_entries = entries
 	_list_selected_idx = 0
 	_build_list_menu(skills_list_vbox, _list_menu_entries, true)
 	skills_panel.visible = true
@@ -411,8 +437,16 @@ func _open_skills_menu() -> void:
 
 
 func _open_items_menu() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	_list_menu_mode = "items"
-	_list_menu_entries = _ps.get_inventory_entries() if _ps and _ps.has_method("get_inventory_entries") else []
+	var entries: Array[Dictionary] = []
+	if _ps and _ps.has_method("get_inventory_entries"):
+		for it in _ps.get_inventory_entries():
+			if it is Dictionary:
+				entries.append(it)
+	_list_menu_entries = entries
 	_list_selected_idx = 0
 	_build_list_menu(items_list_vbox, _list_menu_entries, false)
 	items_panel.visible = true
@@ -581,6 +615,9 @@ func _on_target_row_gui_input(event: InputEvent, index: int) -> void:
 func _confirm_target_selection() -> void:
 	if _target_selected_idx < 0 or _target_selected_idx >= _target_entries.size():
 		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	var entry: Dictionary = _target_entries[_target_selected_idx]
 	_active_enemy_index = int(entry.get("enemy_index", 0))
 	if not _pending_skill_data.is_empty():
@@ -696,6 +733,9 @@ func _confirm_list_selection() -> void:
 	var row: Control = _list_menu_rows[_list_selected_idx]
 	if row.get_meta("disabled", false):
 		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	var entry: Dictionary = _list_menu_entries[_list_selected_idx]
 	if _list_menu_mode == "skills":
 		_use_skill(entry)
@@ -965,6 +1005,12 @@ func _show_question(q: Dictionary) -> void:
 
 func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void:
 	var correct := bool(result.get("correct", false))
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		if correct:
+			audio.play_sfx_by_name("correct")
+		else:
+			audio.play_sfx_by_name("wrong")
 	var category := quiz_id
 	if _ps:
 		if correct:
@@ -1018,7 +1064,10 @@ func _resolve_attack(correct: bool) -> void:
 	var target_label := str(target.get("name", enemy_name_str))
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
 	var hit_success: bool = _ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance
+	var audio := get_node_or_null("/root/AudioService")
 	if hit_success:
+		if audio:
+			audio.play_sfx_by_name("hit")
 		var damage_multiplier: float = float(_selected_skill_data.get("damage_multiplier", 1.0))
 		var dmg: int = int(player_base_damage * damage_multiplier)
 		var crit := false
@@ -1026,6 +1075,8 @@ func _resolve_attack(correct: bool) -> void:
 			dmg = int(dmg * 1.8)
 			crit = true
 		target["hp"] = maxi(int(target.get("hp", 0)) - dmg, 0)
+		if int(target.get("hp", 0)) <= 0 and audio:
+			audio.play_sfx_by_name("enemy_death")
 		_enemy_units[_active_enemy_index] = target
 		_refresh_enemy_cache()
 		_sync_enemy_display_hit(_active_enemy_index)
@@ -1039,6 +1090,8 @@ func _resolve_attack(correct: bool) -> void:
 			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
 		HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
 	else:
+		if audio:
+			audio.play_sfx_by_name("attack")
 		var fail_type: String = ["Pudlo!", "Unik wroga!", "Blok wroga!"][randi() % 3]
 		result_label.text = fail_type
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
@@ -1048,6 +1101,9 @@ func _resolve_attack(correct: bool) -> void:
 
 func _resolve_defend(correct: bool) -> void:
 	defending = true
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("magic")
 	if correct:
 		result_label.text = "Pelna obrona!"
 		result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
@@ -1060,6 +1116,9 @@ func _resolve_defend(correct: bool) -> void:
 func _resolve_heal(correct: bool) -> void:
 	if not _ps:
 		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("magic")
 	var heal_pct: float = 0.30 if correct else 0.10
 	if not _selected_skill_data.is_empty():
 		heal_pct = float(_selected_skill_data.get("heal_ratio_correct", 0.30)) if correct else float(_selected_skill_data.get("heal_ratio_wrong", 0.10))
@@ -1115,6 +1174,9 @@ func _enemy_turn() -> void:
 		var actual_damage: int
 		if defending and quiz_correct:
 			actual_damage = 0
+			var audio := get_node_or_null("/root/AudioService")
+			if audio:
+				audio.play_sfx_by_name("hit")
 			result_label.text = "%s trafia w blok! 0 obrazen." % enemy_label
 			result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
 			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
@@ -1124,12 +1186,17 @@ func _enemy_turn() -> void:
 			if _ps:
 				_ps.take_damage(actual_damage)
 			_gain_party_tp(0, actual_damage)
+			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
+				if audio:
+					audio.play_sfx_by_name("hit")
 				result_label.text = "%s odbija sie od obrony!" % enemy_label
 				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
 			else:
+				if audio:
+					audio.play_sfx_by_name("player_damage")
 				result_label.text = "%s zadaje %d HP" % [enemy_label, actual_damage]
 				result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
 				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
@@ -1139,12 +1206,17 @@ func _enemy_turn() -> void:
 			if _ps:
 				_ps.take_damage(actual_damage)
 			_gain_party_tp(0, actual_damage)
+			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
+				if audio:
+					audio.play_sfx_by_name("hit")
 				result_label.text = "%s nie przebija pancerza!" % enemy_label
 				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
 			else:
+				if audio:
+					audio.play_sfx_by_name("player_damage")
 				result_label.text = "%s atakuje! -%d HP" % [enemy_label, actual_damage]
 				result_label.add_theme_color_override("font_color", Color.RED)
 				_flash_sprite(player_sprite_node, Color.RED)
@@ -1166,9 +1238,12 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 	_victory_skip = false
 	action_panel.visible = false
 	result_label.visible = false
+	var audio := get_node_or_null("/root/AudioService")
 	var victory_log := _get_or_create_victory_log()
 	victory_log.visible = true
 	if player_won:
+		if audio:
+			audio.play_sfx_by_name("victory")
 		var total_xp_reward :int= enemy.xp_reward + _bonus_xp_reward
 		var lvl_before :int= _ps.level if _ps else 1
 		if _ps:
@@ -1183,14 +1258,20 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		_refresh_stats_panel()
 		await _show_message_sequence(lines)
 	elif fled:
+		if audio:
+			audio.play_sfx_by_name("flee")
 		await _show_message_sequence(["Uciekasz!"])
 	else:
+		if audio:
+			audio.play_sfx_by_name("defeat")
 		await _show_message_sequence(["Porazka..."])
 	_refresh_stats_panel()
 	enemy.hp = 0 if player_won else enemy.max_hp
 	_clear_enemy_display()
 	if get_tree() and get_tree().paused:
 		get_tree().paused = false
+	if audio:
+		audio.return_to_previous_track()
 	combat_finished.emit(player_won)
 	enemy.on_combat_finished(player_won, player)
 	get_parent().queue_free()
@@ -1214,7 +1295,7 @@ func _highlight_action(idx: int) -> void:
 	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
 		if btn:
 			btn.text = btn.text.trim_prefix("► ")
-			btn.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+			btn.add_theme_color_override("font_color", Color(0.80, 0.82, 0.88))
 	var selected := buttons[_selected_action_idx]
 	selected.text = "► " + selected.text
 	selected.add_theme_color_override("font_color", Color.WHITE)
@@ -1335,7 +1416,7 @@ func _setup_enemy_display() -> void:
 				var init_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
 				if init_sz == Vector2.ZERO:
 					init_sz = Vector2(150.0, 150.0)
-				display.position = init_sz * 0.5
+				display.position = Vector2(init_sz.x * 0.5, init_sz.y - 8.0)
 				if not slot.resized.is_connected(_on_enemy_slot_resized):
 					slot.resized.connect(_on_enemy_slot_resized.bind(slot))
 			else:
@@ -1448,49 +1529,67 @@ func _select_enemy_layout_slots(active_count: int) -> Array[Dictionary]:
 			if wrapper:
 				wrapper.visible = false
 
-	if rows.is_empty():
+	if rows.is_empty() or active_count <= 0:
 		return selected
 
 	var front_row: Array = rows[0] if rows.size() > 0 else []
 	var back_row: Array = rows[1] if rows.size() > 1 else []
 
-	var front_target_count: int = active_count
-	var back_target_count: int = 0
-	if active_count == 4:
-		front_target_count = 2
-		back_target_count = 2
-	elif active_count == 5:
-		front_target_count = 3
-		back_target_count = 2
-	elif active_count > 5:
-		front_target_count = mini(front_row.size(), 5)
-		back_target_count = active_count - front_target_count
+	var front_max: int = front_row.size()
+	var back_max: int = back_row.size()
 
-	var take_front: int = mini(front_target_count, front_row.size())
-	for i in range(take_front):
-		var slot_data: Dictionary = front_row[i]
+	# Losowy przydział przeciwników do rzędów (górnego i dolnego)
+	var front_indices: Array[int] = []
+	var back_indices: Array[int] = []
+
+	for enemy_idx in range(active_count):
+		var can_front: bool = front_indices.size() < front_max
+		var can_back: bool = back_indices.size() < back_max
+		var pref_row: String = ""
+		if enemy_idx < _enemy_units.size():
+			pref_row = str(_enemy_units[enemy_idx].get("row", "")).to_lower()
+
+		if pref_row == "front" and can_front:
+			front_indices.append(enemy_idx)
+		elif (pref_row == "back" or pref_row == "rear") and can_back:
+			back_indices.append(enemy_idx)
+		elif can_front and can_back:
+			if randf() < 0.5:
+				front_indices.append(enemy_idx)
+			else:
+				back_indices.append(enemy_idx)
+		elif can_front:
+			front_indices.append(enemy_idx)
+		elif can_back:
+			back_indices.append(enemy_idx)
+
+	selected.resize(active_count)
+
+	for f_slot_idx in range(front_indices.size()):
+		var enemy_idx: int = front_indices[f_slot_idx]
+		var slot_data: Dictionary = front_row[f_slot_idx]
 		var wrapper: Control = slot_data.get("wrapper", null) as Control
 		var slot: Control = slot_data.get("slot", null) as Control
 		if wrapper:
 			wrapper.visible = true
 			wrapper.remove_theme_stylebox_override("panel")
-			_bind_enemy_slot_target_input(wrapper, selected.size())
+			_bind_enemy_slot_target_input(wrapper, enemy_idx)
 		if slot:
-			_bind_enemy_slot_target_input(slot, selected.size())
-		selected.append(slot_data)
+			_bind_enemy_slot_target_input(slot, enemy_idx)
+		selected[enemy_idx] = slot_data
 
-	var take_back: int = mini(back_target_count, back_row.size())
-	for i in range(take_back):
-		var slot_data: Dictionary = back_row[i]
+	for b_slot_idx in range(back_indices.size()):
+		var enemy_idx: int = back_indices[b_slot_idx]
+		var slot_data: Dictionary = back_row[b_slot_idx]
 		var wrapper: Control = slot_data.get("wrapper", null) as Control
 		var slot: Control = slot_data.get("slot", null) as Control
 		if wrapper:
 			wrapper.visible = true
 			wrapper.remove_theme_stylebox_override("panel")
-			_bind_enemy_slot_target_input(wrapper, selected.size())
+			_bind_enemy_slot_target_input(wrapper, enemy_idx)
 		if slot:
-			_bind_enemy_slot_target_input(slot, selected.size())
-		selected.append(slot_data)
+			_bind_enemy_slot_target_input(slot, enemy_idx)
+		selected[enemy_idx] = slot_data
 
 	return selected
 
@@ -1594,8 +1693,12 @@ func _find_target_row_index_for_enemy(enemy_index: int) -> int:
 
 func _ensure_enemy_target_cursor(slot: Control) -> Label:
 	if _enemy_target_cursor_node == null:
-		if enemy_target_home_slot:
+		if _enemy_target_highlight_node:
+			_enemy_target_cursor_node = _enemy_target_highlight_node.get_node_or_null("TargetCursor") as Label
+		if _enemy_target_cursor_node == null and enemy_target_home_slot:
 			_enemy_target_cursor_node = enemy_target_home_slot.get_node_or_null("TargetCursor") as Label
+		if _enemy_target_cursor_node == null and enemy_sprite_node:
+			_enemy_target_cursor_node = enemy_sprite_node.find_child("TargetCursor", true, false) as Label
 		if _enemy_target_cursor_node == null:
 			_enemy_target_cursor_node = slot.get_node_or_null("TargetCursor") as Label
 	if _enemy_target_cursor_node and _enemy_target_cursor_node.get_parent() != slot:
@@ -1610,6 +1713,8 @@ func _ensure_enemy_target_highlight(slot: Control) -> Control:
 	if _enemy_target_highlight_node == null:
 		if enemy_target_home_slot:
 			_enemy_target_highlight_node = enemy_target_home_slot.get_node_or_null("TargetHighlight") as Control
+		if _enemy_target_highlight_node == null and enemy_sprite_node:
+			_enemy_target_highlight_node = enemy_sprite_node.find_child("TargetHighlight", true, false) as Control
 		if _enemy_target_highlight_node == null:
 			_enemy_target_highlight_node = slot.get_node_or_null("TargetHighlight") as Control
 	if _enemy_target_highlight_node and _enemy_target_highlight_node.get_parent() != slot:
@@ -1667,8 +1772,7 @@ func _get_resolution_scale_factor() -> float:
 
 func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
 	var res_scale: float = _get_resolution_scale_factor()
-	var ui_scale: float = _get_ui_scale_factor()
-	var total_scale_factor: float = clampf(res_scale * ui_scale, 0.7, 2.5)
+	var total_scale_factor: float = clampf(res_scale, 0.7, 2.5)
 
 	var active_count: int = _enemy_active_layout_slots.size()
 	var base_scale_val: float = 7.2
@@ -1695,85 +1799,130 @@ func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
 	return Vector2(final_scale, final_scale)
 
 
+func _on_battle_background_layout_changed(_config: Dictionary) -> void:
+	_apply_responsive_enemy_layout()
+
+
 func _apply_responsive_enemy_layout() -> void:
-	var enemy_section: VBoxContainer = get_node_or_null("Battlefield/FieldContent/EnemySection") as VBoxContainer
-	if enemy_section == null or enemy_sprite_node == null:
+	if enemy_sprite_node == null:
 		return
 
 	var active_count: int = _enemy_active_layout_slots.size()
+	if active_count == 0:
+		return
+
 	var vp_size: Vector2 = get_viewport_rect().size
-	var width_ratio: float = clampf(vp_size.x / 1920.0, 0.7, 2.5)
+	var width_ratio: float = clampf(vp_size.x / 1920.0, 0.75, 2.5) if vp_size.x > 0.0 else 1.0
 
-	var base_separation: float = 40.0
+	var bg_config: Dictionary = {}
+	if battle_background and battle_background.has_method("get_enemy_layout_config"):
+		bg_config = battle_background.call("get_enemy_layout_config")
+
+	# Dopasuj pozycję i wysokość EnemySection pod profil tła
+	if enemy_section:
+		var target_h: float = float(bg_config.get("enemy_section_height", 340.0))
+		var b_offset: float = float(bg_config.get("enemy_section_bottom_offset", -35.0))
+		var res_h_scale: float = clampf(vp_size.y / 1080.0, 0.75, 2.5) if vp_size.y > 0.0 else 1.0
+		var scaled_h: float = target_h * res_h_scale
+		var scaled_b: float = b_offset * res_h_scale
+		enemy_section.anchor_top = 1.0
+		enemy_section.anchor_bottom = 1.0
+		enemy_section.offset_bottom = scaled_b
+		enemy_section.offset_top = scaled_b - scaled_h
+
+	# 1. Znajdź maksymalną skalę aktywnych potworów
+	var max_enemy_scale: float = 6.0
+	for slot_idx in range(active_count):
+		var s: float = _get_enemy_scale(slot_idx, false).x
+		if s > max_enemy_scale:
+			max_enemy_scale = s
+
+	# 2. Odstęp (separation) wprost proporcjonalny do wielkości potworów:
+	# Podstawa grafiki potworka ma ok. 36 px.
+	# Wizualna szerokość na ekranie = 36.0 * max_enemy_scale.
+	# Im potwory są większe, tym większy odstęp gwarantuje brak nakładania się na siebie.
+	var visual_w: float = 36.0 * max_enemy_scale
+	var slot_base_w: float = 150.0
+	var dynamic_gap: float = 45.0 + (max_enemy_scale * 10.0)
+	var needed_separation: float = maxf(visual_w - slot_base_w + dynamic_gap, 40.0)
+
 	if active_count <= 2:
-		base_separation = 140.0
+		needed_separation = maxf(needed_separation, 175.0 * (max_enemy_scale / 7.2))
 	elif active_count == 3:
-		base_separation = 80.0
+		needed_separation = maxf(needed_separation, 105.0 * (max_enemy_scale / 6.2))
 	elif active_count == 4:
-		base_separation = 55.0
-	var dynamic_separation: int = int(base_separation * width_ratio)
+		needed_separation = maxf(needed_separation, 75.0 * (max_enemy_scale / 5.6))
+	else:
+		needed_separation = maxf(needed_separation, 50.0)
 
+	var dynamic_separation: int = int(needed_separation * width_ratio)
+
+	# Ustaw dynamiczny odstęp i autodopasowanie w kontenerach rzędów wrogów
 	for child in enemy_sprite_node.get_children():
 		if not str(child.name).begins_with("EnemyRow"):
 			continue
-		var row_box: HBoxContainer = child.get_node_or_null("HBoxContainer") as HBoxContainer
+		var row_box: HBoxContainer = child.find_child("HBoxContainer", true, false) as HBoxContainer
 		if row_box:
-			row_box.add_theme_constant_override("separation", dynamic_separation)
+			row_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var margin_container: MarginContainer = child.find_child("MarginContainer", true, false) as MarginContainer
+			var dynamic_margin: int = 240
+			if margin_container:
+				margin_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				var is_back: bool = (str(child.name) == "EnemyRow2")
+				var base_margin: float = 460.0 if is_back else 240.0
+				var margin_mult: float = float(bg_config.get("row2_margin_multiplier", 1.0)) if is_back else float(bg_config.get("row1_margin_multiplier", 1.0))
+				var monster_radius: float = (36.0 * max_enemy_scale * 0.5)
+				dynamic_margin = int((base_margin * margin_mult + monster_radius) * (vp_size.x / 1920.0))
+				margin_container.add_theme_constant_override("margin_left", dynamic_margin)
+				margin_container.add_theme_constant_override("margin_right", dynamic_margin)
 
-	var slot_dim: float = float(_ui_scale_px(210))
-	var hp_bar_w: float = float(_ui_scale_px(150))
-	var hp_bar_h: float = float(_ui_scale_px(12))
+			var row_visible_count: int = 0
+			for wrapper_child in row_box.get_children():
+				if wrapper_child is Control and wrapper_child.visible:
+					row_visible_count += 1
+			var count_for_sep: int = row_visible_count if row_visible_count > 0 else active_count
+			var avail_w: float = margin_container.size.x if (margin_container and margin_container.size.x > 0.0) else (vp_size.x - (float(dynamic_margin) * 2.0))
+			var max_sep: float = maxf((avail_w - (count_for_sep * 150.0)) / maxf(float(count_for_sep - 1), 1.0), 20.0)
+			var row_sep: int = int(clampf(needed_separation * width_ratio, 20.0, max_sep))
+			row_box.add_theme_constant_override("separation", row_sep)
+			for wrapper_child in row_box.get_children():
+				if wrapper_child is Control:
+					wrapper_child.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					for inner in wrapper_child.get_children():
+						if inner is Control and str(inner.name).begins_with("EnemySlot"):
+							inner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
-	for slot_idx in range(_enemy_active_layout_slots.size()):
+	# 3. Aktualizuj pozycje i skale modeli w slotach (skalowanie od dołu)
+	for slot_idx in range(active_count):
 		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
-		var wrapper: Control = slot_data.get("wrapper", null) as Control
 		var slot: Control = slot_data.get("slot", null) as Control
-		var hp_bar: ProgressBar = slot_data.get("bar", null) as ProgressBar
 
-		if wrapper:
-			wrapper.custom_minimum_size = Vector2(slot_dim, slot_dim + hp_bar_h + 8.0)
 		if slot:
-			slot.custom_minimum_size = Vector2(slot_dim, slot_dim)
 			var slot_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
 			if slot_sz == Vector2.ZERO:
-				slot_sz = Vector2(slot_dim, slot_dim)
+				slot_sz = Vector2(150.0, 150.0)
 			if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
 				var display: Node2D = _enemy_displays[slot_idx]
-				display.position = slot_sz * 0.5
+				display.position = Vector2(slot_sz.x * 0.5, slot_sz.y - 8.0)
 				var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
 				display.scale = _get_enemy_scale(slot_idx, is_focused)
 			if not slot.resized.is_connected(_on_enemy_slot_resized):
 				slot.resized.connect(_on_enemy_slot_resized.bind(slot))
 
-		if hp_bar:
-			hp_bar.custom_minimum_size = Vector2(hp_bar_w, hp_bar_h)
-			_style_enemy_progress_bar(hp_bar)
 
-
-func _style_enemy_progress_bar(hp_bar: ProgressBar) -> void:
-	if hp_bar == null:
-		return
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.25, 0.95, 0.3, 1.0)
-	fill.set_corner_radius_all(3)
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.08, 0.1, 0.12, 0.95)
-	bg.border_color = Color(0.22, 0.28, 0.38, 0.9)
-	bg.set_border_width_all(1)
-	bg.set_corner_radius_all(3)
-	hp_bar.add_theme_stylebox_override("fill", fill)
-	hp_bar.add_theme_stylebox_override("background", bg)
+func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
+	pass
 
 
 func _get_desired_battle_window_height(is_quiz: bool) -> float:
 	var vp_size: Vector2 = get_viewport_rect().size
-	var base_h: float = 310.0 if is_quiz else 250.0
+	var base_h: float = 320.0 if is_quiz else 260.0
 	var scaled_h: float = float(_ui_scale_px(int(base_h)))
-	var max_allowed: float = vp_size.y * (0.40 if is_quiz else 0.32) if vp_size.y > 0.0 else 380.0
-	return clampf(scaled_h, 220.0, max_allowed)
+	var max_allowed: float = vp_size.y * (0.42 if is_quiz else 0.32) if vp_size.y > 0.0 else 380.0
+	return clampf(scaled_h, 250.0, max_allowed)
 
 
-func _update_window_heights(is_quiz: bool) -> void:
+func _update_window_heights(is_quiz: bool = false) -> void:
 	var menu_h: float = _get_desired_battle_window_height(is_quiz)
 	if battle_window:
 		battle_window.offset_top = -menu_h
@@ -1783,72 +1932,58 @@ func _update_window_heights(is_quiz: bool) -> void:
 
 
 func _apply_party_rows_scaling() -> void:
-	if party_panel_container:
-		var p_min_w: float = float(_ui_scale_px(int(PARTY_PANEL_WIDTH_MIN)))
-		party_panel_container.custom_minimum_size.x = p_min_w
-	var p_vbox := get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox") as VBoxContainer
-	if p_vbox:
-		p_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var row_h: float = float(_ui_scale_px(42))
-	var name_font_sz: int = _ui_scale_px(20)
-	var stat_lbl_font_sz: int = _ui_scale_px(16)
-	var val_font_sz: int = _ui_scale_px(16)
-	var name_min_w: float = float(_ui_scale_px(150))
-	var bar_w: float = float(_ui_scale_px(120))
-	var bar_h: float = float(_ui_scale_px(12))
-	var val_min_w: float = float(_ui_scale_px(85))
+	var row_h: float = maxf(float(_ui_scale_px(40)), 28.0)
+	var name_font_sz: int = maxi(_ui_scale_px(20), 16)
+	var stat_lbl_font_sz: int = maxi(_ui_scale_px(16), 13)
+	var val_font_sz: int = maxi(_ui_scale_px(16), 13)
+	var name_min_w: float = maxf(float(_ui_scale_px(140)), 90.0)
+	var bar_w: float = maxf(float(_ui_scale_px(100)), 60.0)
+	var bar_h: float = maxf(float(_ui_scale_px(10)), 6.0)
+	var val_min_w: float = maxf(float(_ui_scale_px(85)), 65.0)
+	var stat_sep: int = maxi(_ui_scale_px(8), 4)
+	var row_sep: int = maxi(_ui_scale_px(20), 10)
 
 	for row in party_rows:
 		if row == null:
 			continue
 		row.custom_minimum_size.y = row_h
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_theme_constant_override("separation", _ui_scale_px(16))
+		row.add_theme_constant_override("separation", row_sep)
 		var name_label := row.get_node_or_null("NameLabel") as Label
 		if name_label:
 			name_label.custom_minimum_size.x = name_min_w
 			name_label.add_theme_font_size_override("font_size", name_font_sz)
 			name_label.add_theme_color_override("font_color", Color.WHITE)
 
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		for stat_name in ["StatLP", "StatSP", "StatTP"]:
 			var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
 			if stat_box == null:
 				continue
-			stat_box.add_theme_constant_override("separation", _ui_scale_px(6))
+			stat_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			stat_box.add_theme_constant_override("separation", stat_sep)
 			var label := stat_box.get_node_or_null("Label") as Label
 			var bar := stat_box.get_node_or_null("Bar") as ProgressBar
 			var value_label := stat_box.get_node_or_null("ValueLabel") as Label
 			if label:
 				label.add_theme_font_size_override("font_size", stat_lbl_font_sz)
-				label.add_theme_color_override("font_color", Color(0.85, 0.9, 0.98))
+				label.add_theme_color_override("font_color", Color(0.85, 0.90, 0.98))
 			if value_label:
 				value_label.custom_minimum_size.x = val_min_w
 				value_label.add_theme_font_size_override("font_size", val_font_sz)
 				value_label.add_theme_color_override("font_color", Color.WHITE)
 			if bar:
+				bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 				bar.custom_minimum_size = Vector2(bar_w, bar_h)
-				match stat_name:
-					"StatLP":
-						_style_party_progress_bar(bar, Color(0.95, 0.55, 0.1))
-					"StatSP":
-						_style_party_progress_bar(bar, Color(0.2, 0.6, 1.0))
-					"StatTP":
-						_style_party_progress_bar(bar, Color(0.2, 0.9, 0.3))
 
 
 func _apply_responsive_layout() -> void:
 	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
 	_update_window_heights(is_quiz)
 
-	# 1. Scalowanie CommandPanel
-	if command_panel_container:
-		var cmd_min_w: float = float(_ui_scale_px(int(COMMAND_PANEL_WIDTH_MIN)))
-		command_panel_container.custom_minimum_size.x = cmd_min_w if not is_quiz else 0.0
-
-	# 2. Scalowanie przycisków komend
-	var btn_h: float = float(_ui_scale_px(42))
-	var btn_font_sz: int = _ui_scale_px(18)
+	# 1. Scalowanie przycisków komend
+	var btn_h: float = maxf(float(_ui_scale_px(40)), 30.0)
+	var btn_font_sz: int = maxi(_ui_scale_px(18), 14)
 	var all_menu_btns: Array[Button] = [engage_btn, run_btn]
 	if exit_btn:
 		all_menu_btns.append(exit_btn)
@@ -1858,17 +1993,17 @@ func _apply_responsive_layout() -> void:
 			b.custom_minimum_size.y = btn_h
 			b.add_theme_font_size_override("font_size", btn_font_sz)
 
-	# 3. Scalowanie etykiet nagłówka
-	var hdr_font_sz: int = _ui_scale_px(18)
+	# 2. Scalowanie etykiet nagłówka
+	var hdr_font_sz: int = maxi(_ui_scale_px(18), 14)
 	if turn_label:
 		turn_label.add_theme_font_size_override("font_size", hdr_font_sz)
 	if streak_label:
 		streak_label.add_theme_font_size_override("font_size", hdr_font_sz)
 
-	# 4. Scalowanie wierszy drużyny
+	# 3. Scalowanie wierszy drużyny
 	_apply_party_rows_scaling()
 
-	# 5. Scalowanie potworków i ich slotów
+	# 4. Scalowanie potworków i ich odstępów
 	_apply_responsive_enemy_layout()
 
 
@@ -1880,7 +2015,7 @@ func _on_enemy_slot_resized(slot: Control) -> void:
 		return
 	for child in slot.get_children():
 		if child is Node2D:
-			child.position = slot_sz * 0.5
+			child.position = Vector2(slot_sz.x * 0.5, slot_sz.y - 8.0)
 
 
 func _collect_enemy_row_layouts() -> Array[Array]:
@@ -1903,7 +2038,7 @@ func _collect_enemy_row_layouts() -> Array[Array]:
 		var child: Node = row_nodes[r_idx]
 		var is_back: bool = (str(child.name) == "EnemyRow2") or (r_idx > 0)
 		var row_layout: Array[Dictionary] = []
-		var row_box: HBoxContainer = child.get_node_or_null("HBoxContainer") as HBoxContainer
+		var row_box: HBoxContainer = child.find_child("HBoxContainer", true, false) as HBoxContainer
 		if row_box == null:
 			rows.append(row_layout)
 			continue
@@ -2046,7 +2181,6 @@ func _refresh_stats_panel() -> void:
 	if party_rows.is_empty():
 		return
 	_sync_party_member_from_player()
-	_apply_party_rows_scaling()
 	for i in range(party_rows.size()):
 		var row := party_rows[i]
 		if i < _party_state.size():
@@ -2058,46 +2192,15 @@ func _refresh_stats_panel() -> void:
 			_set_party_stat(row, "StatTP", int(member.get("tp", 0)), int(member.get("tp_max", 1)), "%d/%d" % [int(member.get("tp", 0)), int(member.get("tp_max", 1))])
 		else:
 			row.visible = false
+	_apply_party_rows_scaling()
 
 
-func _style_party_row(row: HBoxContainer) -> void:
-	if row == null:
-		return
-	var name_label := row.get_node_or_null("NameLabel") as Label
-	if name_label:
-		name_label.add_theme_font_size_override("font_size", 24)
-		name_label.add_theme_color_override("font_color", Color.WHITE)
-	for stat_name in ["StatLP", "StatSP", "StatTP"]:
-		var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
-		if stat_box == null:
-			continue
-		var label := stat_box.get_node_or_null("Label") as Label
-		var bar := stat_box.get_node_or_null("Bar") as ProgressBar
-		var value_label := stat_box.get_node_or_null("ValueLabel") as Label
-		if label:
-			label.add_theme_font_size_override("font_size", 20)
-			label.add_theme_color_override("font_color", Color.WHITE)
-		if value_label:
-			value_label.add_theme_font_size_override("font_size", 18)
-			value_label.add_theme_color_override("font_color", Color.WHITE)
-		if bar:
-			match stat_name:
-				"StatLP":
-					_style_party_progress_bar(bar, Color(0.95, 0.55, 0.1))
-				"StatSP":
-					_style_party_progress_bar(bar, Color(0.2, 0.6, 1.0))
-				"StatTP":
-					_style_party_progress_bar(bar, Color(0.2, 0.9, 0.3))
+func _style_party_row(_row: HBoxContainer) -> void:
+	pass
 
 
-func _style_party_progress_bar(bar: ProgressBar, fill_color: Color) -> void:
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = fill_color
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.15, 0.15, 0.15)
-	bar.show_percentage = false
-	bar.add_theme_stylebox_override("fill", fill)
-	bar.add_theme_stylebox_override("background", bg)
+func _style_party_progress_bar(_bar: ProgressBar, _fill_color: Color) -> void:
+	pass
 
 
 func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, corner: int) -> void:
@@ -2143,14 +2246,6 @@ func _setup_party_layout() -> void:
 		content_row.move_child(command_panel_container, 0)
 	if content_row and party_panel_container:
 		content_row.move_child(party_panel_container, 1)
-	if command_panel_container:
-		command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		command_panel_container.size_flags_stretch_ratio = COMMAND_PANEL_WIDTH_DEFAULT
-		command_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(COMMAND_PANEL_WIDTH_MIN)), 0)
-	if party_panel_container:
-		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		party_panel_container.size_flags_stretch_ratio = PARTY_PANEL_WIDTH_DEFAULT
-		party_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(PARTY_PANEL_WIDTH_MIN)), 0)
 
 
 func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
@@ -2173,12 +2268,15 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 				if _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != quiz_modal_vbox:
 					_quiz_panel_controller.correct_answer_label.reparent(quiz_modal_vbox, false)
 		else:
-			# Bottom bar mode: 100% full width, hide party panel, increase window height
+			# Bottom bar mode: hide party panel and action panel, show quiz panel across full width
 			party_panel_container.visible = false
 			command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			command_panel_container.size_flags_stretch_ratio = 1.0
 			command_panel_container.custom_minimum_size = Vector2(0, 0)
-			_update_window_heights(true)
+			if action_panel:
+				action_panel.visible = false
+			if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
+				_quiz_panel_controller.quiz_panel.visible = true
+				_quiz_panel_controller.quiz_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	else:
 		# Deactivate modal if it was open
 		if quiz_modal_overlay and quiz_modal_overlay.visible:
@@ -2191,15 +2289,15 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 			if _quiz_panel_controller and _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != command_vbox:
 				_quiz_panel_controller.correct_answer_label.reparent(command_vbox, false)
 
-		# Restore bottom bar layout
+		# Restore bottom bar layout: right panel stretches from left panel to the end
 		party_panel_container.visible = true
 		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		party_panel_container.size_flags_stretch_ratio = PARTY_PANEL_WIDTH_DEFAULT
-		party_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(PARTY_PANEL_WIDTH_MIN)), 0)
-		command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		command_panel_container.size_flags_stretch_ratio = COMMAND_PANEL_WIDTH_DEFAULT
-		command_panel_container.custom_minimum_size = Vector2(_ui_scale_px(int(COMMAND_PANEL_WIDTH_MIN)), 0)
-		_update_window_heights(false)
+		command_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		command_panel_container.custom_minimum_size = Vector2(260, 0)
+		if action_panel:
+			action_panel.visible = true
+		if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
+			_quiz_panel_controller.quiz_panel.visible = false
 
 
 func _init_party_state() -> void:
@@ -2299,6 +2397,9 @@ func _get_visible_primary_buttons() -> Array[Button]:
 func _on_engage_pressed() -> void:
 	if phase != Phase.ACTION_SELECT:
 		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	_show_action_menu()
 	_highlight_action(0)
 
@@ -2306,6 +2407,9 @@ func _on_engage_pressed() -> void:
 func _on_run_pressed() -> void:
 	if phase != Phase.ACTION_SELECT:
 		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
 	_try_flee()
 
 

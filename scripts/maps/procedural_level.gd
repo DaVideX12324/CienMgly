@@ -32,6 +32,12 @@ func _ready() -> void:
 	y_sort_enabled = true
 	_ensure_default_resources()
 	generate_level(map_seed)
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		if level_type == LevelType.DUNGEON_CASTLE:
+			audio.play_music("castle")
+		else:
+			audio.play_music("fairy_forest")
 
 
 func _ensure_default_resources() -> void:

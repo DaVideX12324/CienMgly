@@ -560,6 +560,12 @@ func _handle_result(result: Dictionary, submitted_answer: Dictionary) -> void:
 		return
 	_resolved = true
 	timer_node.stop()
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		if bool(result.get("correct", false)):
+			audio.play_sfx_by_name("correct")
+		else:
+			audio.play_sfx_by_name("wrong")
 	_apply_visual_feedback(result, submitted_answer)
 	await get_tree().create_timer(1.8).timeout
 	visible = false
