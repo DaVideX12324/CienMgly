@@ -62,6 +62,9 @@ func unlock() -> void:
 
 	is_locked = false
 	play("open")
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("chest_open")
 
 	var level_path := _get_current_level_path()
 	if level_path != "":
@@ -79,6 +82,10 @@ func _on_animation_finished() -> void:
 
 
 func drop_item() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("coin")
+
 	var player_stats := _get_module_singleton("PlayerStats")
 	if player_stats and player_stats.has_method("add_item"):
 		player_stats.call("add_item", chest_item_id, chest_item_count)
