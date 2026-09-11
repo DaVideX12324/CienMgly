@@ -76,11 +76,11 @@ const ROOT_BOTTOM_MID_RIGHT := Vector2i(4, 15)
 const ROOT_BOTTOM_BASE_RIGHT := Vector2i(4, 16)
 
 # 5. Narożniki wewnętrzne (Inner Corners):
-const CORNER_INNER_TOP_LEFT := Vector2i(1, 1)
-const ROOT_CORNER_INNER_TOP_LEFT := Vector2i(1, 10)
+const CORNER_INNER_TOP_LEFT := Vector2i(4, 4)
+const ROOT_CORNER_INNER_TOP_LEFT := Vector2i(4, 13)
 
-const CORNER_INNER_TOP_RIGHT := Vector2i(4, 1)
-const ROOT_CORNER_INNER_TOP_RIGHT := Vector2i(4, 10)
+const CORNER_INNER_TOP_RIGHT := Vector2i(1, 4)
+const ROOT_CORNER_INNER_TOP_RIGHT := Vector2i(1, 13)
 
 # Narożniki dolne wewnętrzne:
 # Gdy floor jest na NE -> lewy dolny róg pokoju, lico skały patrzy na wschód (kolumna 5)
@@ -156,16 +156,16 @@ static func generate(
 
 	result.rooms = rooms
 
-	# 3. Korytarze jaskiniowe
+	# 3. Korytarze jaskiniowe (meandrujące, organiczne tunele)
 	for i in range(rooms.size() - 1):
 		var center_a := rooms[i].get_center()
 		var center_b := rooms[i + 1].get_center()
-		carve_corridor(result.grid, center_a, center_b, corridor_width, CellType.FLOOR, rng)
+		_carve_organic_corridor(result.grid, center_a, center_b, corridor_width, rng)
 
 	if rooms.size() >= 4:
 		var loop_a := rooms[0].get_center()
 		var loop_b := rooms[rooms.size() - 2].get_center()
-		carve_corridor(result.grid, loop_a, loop_b, corridor_width, CellType.FLOOR, rng)
+		_carve_organic_corridor(result.grid, loop_a, loop_b, corridor_width, rng)
 
 	# 4. Wymuszenie minimalnej grubości murów (eliminacja zbyt cienkich ścianek < 4 w pionie i < 2 w poziomie)
 	_enforce_wall_thickness(result.grid, width, height)
@@ -202,20 +202,48 @@ static func generate(
 	return result
 
 
-## Rzeźbi komorę w granicach prostokąta (prosta górna krawędź fasady i zaokrąglone dolne narożniki)
-static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, _rng: RandomNumberGenerator) -> void:
-	carve_rect(grid, rect, CellType.FLOOR)
+## Rzeźbi komorę o naturalnych, organicznych kształtach jaskini (rdzeń eliptyczny + losowe wybrzuszenia)
+static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumberGenerator) -> void:
+	var center := rect.get_center()
+	var rx_rad := rect.size.x / 2.0
+	var ry_rad := rect.size.y / 2.0
 
-	var rx := rect.position.x
-	var ry := rect.position.y
-	var rw := rect.size.x
-	var rh := rect.size.y
+	# 1. Główny rdzeń eliptyczny
+	for y in range(rect.position.y, rect.position.y + rect.size.y):
+		for x in range(rect.position.x, rect.position.x + rect.size.x):
+			var dx := (x - center.x) / rx_rad
+			var dy := (y - center.y) / ry_rad
+			if dx * dx + dy * dy <= 1.0:
+				grid[Vector2i(x, y)] = CellType.FLOOR
 
-	# Górne narożniki pozostawiamy proste, aby fasada 3-klockowa biegła prosto i łączyła się
-	# ze ścianami bocznymi modułem skrętu bez sztucznego opadania w dół.
-	# Zaokrąglamy tylko dolne narożniki komory:
-	grid[Vector2i(rx, ry + rh - 1)] = CellType.WALL
-	grid[Vector2i(rx + rw - 1, ry + rh - 1)] = CellType.WALL
+	# 2. Dodatkowe organiczne wybrzuszenia (lobes)
+	var num_lobes := rng.randi_range(3, 5)
+	for i in range(num_lobes):
+		var angle := rng.randf_range(0.0, TAU)
+		var dist_x := rng.randf_range(0.2, 0.6) * rx_rad
+		var dist_y := rng.randf_range(0.2, 0.6) * ry_rad
+		var lobe_center := center + Vector2i(int(cos(angle) * dist_x), int(sin(angle) * dist_y))
+		var lobe_radius := rng.randi_range(2, int(min(rx_rad, ry_rad) * 0.6))
+		carve_circle(grid, lobe_center, lobe_radius, CellType.FLOOR, 100, 100)
+
+
+## Rzeźbi meandrujący, zaokrąglony korytarz jaskiniowy
+static func _carve_organic_corridor(grid: Dictionary, from: Vector2i, to: Vector2i, width: int, rng: RandomNumberGenerator) -> void:
+	var mid := (from + to) / 2
+	var dir := Vector2(to - from).normalized()
+	var normal := Vector2(-dir.y, dir.x)
+	var jitter := normal * rng.randf_range(-3.0, 3.0)
+	var mid_curved := Vector2i(mid + Vector2i(int(jitter.x), int(jitter.y)))
+	var points = [from, mid_curved, to]
+	for seg in range(points.size() - 1):
+		var p0: Vector2 = Vector2(points[seg])
+		var p1: Vector2 = Vector2(points[seg + 1])
+		var dist := p0.distance_to(p1)
+		var steps := int(dist * 2.0)
+		for s in range(steps + 1):
+			var t := float(s) / maxf(float(steps), 1.0)
+			var cur := p0.lerp(p1, t)
+			carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), width / 2 + 1, CellType.FLOOR, 100, 100)
 
 
 ## Usuwa cienkie ścianki (< 4 kratek w pionie, < 2 kratek w poziomie), łącząc komory w szerokie przejścia
@@ -394,7 +422,16 @@ static func apply_cave_tiles(
 	# 3. SPÓJNY MOTYW ŚCIAN NA POZIOMIE KOMÓR
 	var room_themes: Array[bool] = []
 	for i in range(result.rooms.size()):
-		room_themes.append(rng.randf() < 0.35)
+		var r := result.rooms[i]
+		var can_support_roots := true
+		for x in range(r.position.x, r.position.x + r.size.x):
+			if _get_vertical_wall_thickness(grid, Vector2i(x, r.position.y - 1), height) < 5:
+				can_support_roots = false
+				break
+		if can_support_roots and rng.randf() < 0.35:
+			room_themes.append(true)
+		else:
+			room_themes.append(false)
 
 	for y in range(height):
 		for x in range(width):
@@ -456,13 +493,12 @@ static func apply_cave_tiles(
 				var top_t: Vector2i
 
 				if not use_roots:
-					# Schodki w prawo i lewy koniec używają modułu idącego z wewnętrznego narożnika (Column 1):
-					if (is_west_end and not is_east_end) or right_has_step_down:
+					# Zestaw modułów schodka tylko wtedy, gdy ze skrętu przechodzi w skręt:
+					if right_has_step_down:
 						base_t = WALL_BOTTOM_BASE_LEFT # (1, 7)
 						mid_t = WALL_BOTTOM_MID_LEFT   # (1, 6)
 						top_t = WALL_BOTTOM_TOP_LEFT   # (1, 5)
-					# Schodki w lewo i prawy koniec używają Column 4:
-					elif (is_east_end and not is_west_end) or left_has_step_down:
+					elif left_has_step_down:
 						base_t = WALL_BOTTOM_BASE_RIGHT # (4, 7)
 						mid_t = WALL_BOTTOM_MID_RIGHT   # (4, 6)
 						top_t = WALL_BOTTOM_TOP_RIGHT   # (4, 5)
@@ -471,11 +507,11 @@ static func apply_cave_tiles(
 						mid_t = WALL_BOTTOM_MID[rng.randi() % WALL_BOTTOM_MID.size()]
 						top_t = WALL_BOTTOM_TOP[rng.randi() % WALL_BOTTOM_TOP.size()]
 				else:
-					if (is_west_end and not is_east_end) or right_has_step_down:
+					if right_has_step_down:
 						base_t = ROOT_BOTTOM_BASE_LEFT # (1, 16)
 						mid_t = ROOT_BOTTOM_MID_LEFT   # (1, 15)
 						top_t = ROOT_BOTTOM_TOP_LEFT   # (1, 14)
-					elif (is_east_end and not is_west_end) or left_has_step_down:
+					elif left_has_step_down:
 						base_t = ROOT_BOTTOM_BASE_RIGHT # (4, 16)
 						mid_t = ROOT_BOTTOM_MID_RIGHT   # (4, 15)
 						top_t = ROOT_BOTTOM_TOP_RIGHT   # (4, 14)
@@ -505,6 +541,29 @@ static func apply_cave_tiles(
 					if not _is_walkable(grid, p_sh):
 						var sh_t := Vector2i(5, 5) if not use_roots else Vector2i(5, 14)
 						walls_layer.set_cell(p_sh, 0, sh_t)
+
+				# Pojedynczy narożnik 90° wyrównany do góry korony ściany (Pair 8: (4, 4) i (1, 4)):
+				if is_west_end and not right_has_step_down:
+					var p_c := pos + Vector2i(-1, -2)
+					if not _is_walkable(grid, p_c):
+						var c_t: Vector2i = CORNER_INNER_TOP_LEFT if not use_roots else ROOT_CORNER_INNER_TOP_LEFT
+						walls_layer.set_cell(p_c, 0, c_t)
+					for dy in [-1, 0]:
+						var p_s := pos + Vector2i(-1, dy)
+						if not _is_walkable(grid, p_s):
+							var side_t: Vector2i = WALL_SIDE_WEST[rng.randi() % WALL_SIDE_WEST.size()] if not use_roots else ROOT_WALL_SIDE_WEST[rng.randi() % ROOT_WALL_SIDE_WEST.size()]
+							walls_layer.set_cell(p_s, 0, side_t)
+
+				if is_east_end and not left_has_step_down:
+					var p_c := pos + Vector2i(1, -2)
+					if not _is_walkable(grid, p_c):
+						var c_t: Vector2i = CORNER_INNER_TOP_RIGHT if not use_roots else ROOT_CORNER_INNER_TOP_RIGHT
+						walls_layer.set_cell(p_c, 0, c_t)
+					for dy in [-1, 0]:
+						var p_s := pos + Vector2i(1, dy)
+						if not _is_walkable(grid, p_s):
+							var side_t: Vector2i = WALL_SIDE_EAST[rng.randi() % WALL_SIDE_EAST.size()] if not use_roots else ROOT_WALL_SIDE_EAST[rng.randi() % ROOT_WALL_SIDE_EAST.size()]
+							walls_layer.set_cell(p_s, 0, side_t)
 
 				continue
 
