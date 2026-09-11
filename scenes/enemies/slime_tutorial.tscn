@@ -27,3 +27,6 @@ animation = &"slime_idle"
 position = Vector2(0, -4)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_fix")
+
+[node name="CollisionShape2D" parent="DetectionArea" parent_id_path=PackedInt32Array(2045348945) index="0" unique_id=1963073735]
+debug_color = Color(0, 0.6, 0.69803923, 0)

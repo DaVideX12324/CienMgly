@@ -134,7 +134,7 @@ shape = SubResource("RectangleShape2D_ebprv")
 [node name="Node2D" type="Node2D" parent="." unique_id=660729470]
 
 [node name="Enemy" parent="Node2D" unique_id=1280210534 instance=ExtResource("6_0m64r")]
-position = Vector2(-56, 24)
+position = Vector2(332, -40)
 
 [node name="Enemy2" parent="Node2D" unique_id=1438334663 instance=ExtResource("6_0m64r")]
 position = Vector2(94, -79)
@@ -146,5 +146,5 @@ position = Vector2(170, 5)
 position = Vector2(542, -67)
 
 [node name="Enemy5" parent="Node2D" unique_id=96031201 instance=ExtResource("8_5bl0e")]
-position = Vector2(-16, -165)
+position = Vector2(152, 30)
 enemy_data = SubResource("Resource_xwsiw")
