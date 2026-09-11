@@ -202,35 +202,20 @@ static func generate(
 	return result
 
 
-## Rzeźbi komorę o zaokrąglonych narożnikach w granicach danego prostokąta
+## Rzeźbi komorę w granicach prostokąta (prosta górna krawędź fasady i zaokrąglone dolne narożniki)
 static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, _rng: RandomNumberGenerator) -> void:
 	carve_rect(grid, rect, CellType.FLOOR)
 
-	# Zaokrąglenie narożników (2x2 ścięcie kantów jaskini, żeby ściany układały się w łuki)
 	var rx := rect.position.x
 	var ry := rect.position.y
 	var rw := rect.size.x
 	var rh := rect.size.y
 
-	# Top-left corner
-	grid[Vector2i(rx, ry)] = CellType.WALL
-	grid[Vector2i(rx + 1, ry)] = CellType.WALL
-	grid[Vector2i(rx, ry + 1)] = CellType.WALL
-
-	# Top-right corner
-	grid[Vector2i(rx + rw - 1, ry)] = CellType.WALL
-	grid[Vector2i(rx + rw - 2, ry)] = CellType.WALL
-	grid[Vector2i(rx + rw - 1, ry + 1)] = CellType.WALL
-
-	# Bottom-left corner
+	# Górne narożniki pozostawiamy proste, aby fasada 3-klockowa biegła prosto i łączyła się
+	# ze ścianami bocznymi modułem skrętu bez sztucznego opadania w dół.
+	# Zaokrąglamy tylko dolne narożniki komory:
 	grid[Vector2i(rx, ry + rh - 1)] = CellType.WALL
-	grid[Vector2i(rx + 1, ry + rh - 1)] = CellType.WALL
-	grid[Vector2i(rx, ry + rh - 2)] = CellType.WALL
-
-	# Bottom-right corner
 	grid[Vector2i(rx + rw - 1, ry + rh - 1)] = CellType.WALL
-	grid[Vector2i(rx + rw - 2, ry + rh - 1)] = CellType.WALL
-	grid[Vector2i(rx + rw - 1, ry + rh - 2)] = CellType.WALL
 
 
 ## Usuwa cienkie ścianki (< 4 kratek w pionie, < 2 kratek w poziomie), łącząc komory w szerokie przejścia
@@ -356,7 +341,6 @@ static func apply_cave_tiles(
 	var grid := result.grid
 
 	# 1. WYPEŁNIENIE VOIDU
-	# Cały obszar mapy i margines zewnętrzny wypełniamy ciemną litą skałą
 	for y in range(-4, height + 4):
 		for x in range(-4, width + 4):
 			var pos := Vector2i(x, y)
@@ -372,7 +356,6 @@ static func apply_cave_tiles(
 	var grass_candidates: Dictionary = {}
 	var near_floor: Dictionary = {}
 
-	# Rozszerzamy podłogę kamienną o 3 kratki pod ściany, żeby nie było godotowego voidu
 	for pos in grid.keys():
 		if _is_walkable(grid, pos):
 			for dy in range(-3, 4):
@@ -382,14 +365,11 @@ static func apply_cave_tiles(
 
 	for pos in near_floor.keys():
 		ground_cells.append(pos)
-		# Trawa rozszerza się także pod krawędź ścian (do 2 kratek), dzięki czemu
-		# miękkie krawędzie autotilingu mchu leżą schowane pod cieniem i korzeniami ścian!
 		var n_val := noise.get_noise_2d(float(pos.x), float(pos.y))
 		if n_val > 0.02:
 			grass_candidates[pos] = true
 
-	# Filtr 2x2 dla trawy: kafelek jest dopuszczony tylko wtedy, gdy tworzy z sąsiadami blok 2x2.
-	# Całkowicie eliminuje to twarde krawędzie 16x16 i pojedyncze kafelki 1x1.
+	# Filtr 2x2 dla trawy
 	var grass_cells: Array[Vector2i] = []
 	for p in grass_candidates.keys():
 		var is_2x2 := false
@@ -404,17 +384,14 @@ static func apply_cave_tiles(
 		if is_2x2:
 			grass_cells.append(p)
 
-	# Warstwa podstawowa: podłoga kamienna z autotilingiem
 	floor_layer.set_cells_terrain_connect(ground_cells, 0, 0, false)
 
-	# Warstwa dekoracyjna: mech/trawa z przezroczystymi krawędziami
 	if floor_decor_layer:
 		floor_decor_layer.set_cells_terrain_connect(grass_cells, 0, 1, false)
 	else:
 		floor_layer.set_cells_terrain_connect(grass_cells, 0, 1, false)
 
 	# 3. SPÓJNY MOTYW ŚCIAN NA POZIOMIE KOMÓR
-	# Przypisujemy każdej komorze motyw (Roots lub Standard Rock), aby ściany nie mieszały stylów w obrębie jednego muru
 	var room_themes: Array[bool] = []
 	for i in range(result.rooms.size()):
 		room_themes.append(rng.randf() < 0.35)
@@ -435,7 +412,6 @@ static func apply_cave_tiles(
 			var ne_floor := _is_walkable(grid, pos + Vector2i(1, -1))
 			var nw_floor := _is_walkable(grid, pos + Vector2i(-1, -1))
 
-			# Ustal motyw na podstawie najbliższej komory
 			var use_roots := false
 			if not room_themes.is_empty():
 				var closest_dist := 999999.0
@@ -447,9 +423,6 @@ static func apply_cave_tiles(
 						closest_idx = r_i
 				use_roots = room_themes[closest_idx]
 
-			# Weryfikacja pionowej grubości ściany:
-			# Ściana o grubości 4 kratek w pionie MOŻE istnieć tylko w wersji standardowej (bez kolców: 1 szczyt + 3 fasada = 4).
-			# Ściana z kolcami wymaga co najmniej 5 kratek w pionie (2 kolce + 3 fasada = 5).
 			var v_thickness := _get_vertical_wall_thickness(grid, pos, height)
 			if v_thickness < 5:
 				use_roots = false
@@ -470,19 +443,26 @@ static func apply_cave_tiles(
 					walls_layer.set_cell(pos, 0, c_t)
 					continue
 
-				var is_left_edge := e_floor or (not sw_floor and se_floor)
-				var is_right_edge := w_floor or (not se_floor and sw_floor)
+				# Wykrywanie końca ściany lub schodka w dół:
+				var is_west_end := not sw_floor
+				var is_east_end := not se_floor
+
+				# Schodki diagonalne (gdzie podłoga sąsiedniej kolumny schodzi w dół):
+				var right_has_step_down := _is_walkable(grid, pos + Vector2i(1, 2)) and not _is_walkable(grid, pos + Vector2i(1, 1))
+				var left_has_step_down := _is_walkable(grid, pos + Vector2i(-1, 2)) and not _is_walkable(grid, pos + Vector2i(-1, 1))
 
 				var base_t: Vector2i
 				var mid_t: Vector2i
 				var top_t: Vector2i
 
 				if not use_roots:
-					if is_left_edge and not is_right_edge:
+					# Schodki w prawo i lewy koniec używają modułu idącego z wewnętrznego narożnika (Column 1):
+					if (is_west_end and not is_east_end) or right_has_step_down:
 						base_t = WALL_BOTTOM_BASE_LEFT # (1, 7)
 						mid_t = WALL_BOTTOM_MID_LEFT   # (1, 6)
 						top_t = WALL_BOTTOM_TOP_LEFT   # (1, 5)
-					elif is_right_edge and not is_left_edge:
+					# Schodki w lewo i prawy koniec używają Column 4:
+					elif (is_east_end and not is_west_end) or left_has_step_down:
 						base_t = WALL_BOTTOM_BASE_RIGHT # (4, 7)
 						mid_t = WALL_BOTTOM_MID_RIGHT   # (4, 6)
 						top_t = WALL_BOTTOM_TOP_RIGHT   # (4, 5)
@@ -491,11 +471,11 @@ static func apply_cave_tiles(
 						mid_t = WALL_BOTTOM_MID[rng.randi() % WALL_BOTTOM_MID.size()]
 						top_t = WALL_BOTTOM_TOP[rng.randi() % WALL_BOTTOM_TOP.size()]
 				else:
-					if is_left_edge and not is_right_edge:
+					if (is_west_end and not is_east_end) or right_has_step_down:
 						base_t = ROOT_BOTTOM_BASE_LEFT # (1, 16)
 						mid_t = ROOT_BOTTOM_MID_LEFT   # (1, 15)
 						top_t = ROOT_BOTTOM_TOP_LEFT   # (1, 14)
-					elif is_right_edge and not is_left_edge:
+					elif (is_east_end and not is_west_end) or left_has_step_down:
 						base_t = ROOT_BOTTOM_BASE_RIGHT # (4, 16)
 						mid_t = ROOT_BOTTOM_MID_RIGHT   # (4, 15)
 						top_t = ROOT_BOTTOM_TOP_RIGHT   # (4, 14)
@@ -514,21 +494,17 @@ static func apply_cave_tiles(
 				if not _is_walkable(grid, p_top):
 					walls_layer.set_cell(p_top, 0, top_t)
 
-				# Diagonal shoulder nad schodkiem ukośnym
-				if is_right_edge and not is_left_edge:
-					var p_sh := pos + Vector2i(0, -3)
-					if not _is_walkable(grid, p_sh) and walls_layer.get_cell_atlas_coords(p_sh) == WALL_INSIDE:
-						var left_has_top := not _is_walkable(grid, pos + Vector2i(-1, -2))
-						if left_has_top:
-							var sh_t := Vector2i(5, 5) if not use_roots else Vector2i(5, 14)
-							walls_layer.set_cell(p_sh, 0, sh_t)
-				elif is_left_edge and not is_right_edge:
-					var p_sh := pos + Vector2i(0, -3)
-					if not _is_walkable(grid, p_sh) and walls_layer.get_cell_atlas_coords(p_sh) == WALL_INSIDE:
-						var right_has_top := not _is_walkable(grid, pos + Vector2i(1, -2))
-						if right_has_top:
-							var sh_t := Vector2i(0, 5) if not use_roots else Vector2i(0, 14)
-							walls_layer.set_cell(p_sh, 0, sh_t)
+				# Ukośny bark tylko przy faktycznym schodkowaniu w dół między kolumnami podłogi:
+				if right_has_step_down:
+					var p_sh := pos + Vector2i(1, -2)
+					if not _is_walkable(grid, p_sh):
+						var sh_t := Vector2i(0, 5) if not use_roots else Vector2i(0, 14)
+						walls_layer.set_cell(p_sh, 0, sh_t)
+				elif left_has_step_down:
+					var p_sh := pos + Vector2i(-1, -2)
+					if not _is_walkable(grid, p_sh):
+						var sh_t := Vector2i(5, 5) if not use_roots else Vector2i(5, 14)
+						walls_layer.set_cell(p_sh, 0, sh_t)
 
 				continue
 
