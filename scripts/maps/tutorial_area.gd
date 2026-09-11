@@ -1,6 +1,6 @@
 extends Node2D
 
-const NEXT_LEVEL_PATH := "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+const NEXT_LEVEL_PATH := "res://modules/quiz_rpg/scenes/maps/procedural_level.tscn"
 const NEXT_SPAWN_NAME := "Spawn"
 
 var _transitioning: bool = false
