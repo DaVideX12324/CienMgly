@@ -12,6 +12,10 @@ next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
 z_index = -2
 y_sort_enabled = true
 
+[node name="FloorDecor" type="TileMapLayer" parent="."]
+z_index = -1
+y_sort_enabled = true
+
 [node name="Walls" type="TileMapLayer" parent="."]
 y_sort_enabled = true
 
