@@ -7,10 +7,12 @@ class_name ProceduralLevel
 const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
 const OverworldForestGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/dungeon_generator.gd")
+const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
 
 enum LevelType {
 	FOREST_OVERWORLD,
-	DUNGEON_CASTLE
+	DUNGEON_CASTLE,
+	CAVE_DUNGEON
 }
 
 @export var level_type: LevelType = LevelType.FOREST_OVERWORLD
@@ -36,6 +38,8 @@ func _ready() -> void:
 	if audio:
 		if level_type == LevelType.DUNGEON_CASTLE:
 			audio.play_music("castle")
+		elif level_type == LevelType.CAVE_DUNGEON:
+			audio.play_music("caves")
 		else:
 			audio.play_music("fairy_forest")
 
@@ -43,7 +47,13 @@ func _ready() -> void:
 func _ensure_default_resources() -> void:
 	if enemy_scenes.is_empty():
 		var enemy_paths: Array[String] = []
-		if level_type == LevelType.FOREST_OVERWORLD:
+		if level_type == LevelType.CAVE_DUNGEON:
+			enemy_paths = [
+				"res://modules/quiz_rpg/scenes/enemies/slime_tutorial.tscn",
+				"res://modules/quiz_rpg/scenes/enemies/slime_1.tscn",
+				"res://modules/quiz_rpg/scenes/enemies/slime_tutorial_boss.tscn"
+			]
+		elif level_type == LevelType.FOREST_OVERWORLD:
 			enemy_paths = [
 				"res://modules/quiz_rpg/scenes/enemies/slime_1.tscn",
 				"res://modules/quiz_rpg/scenes/enemies/plant_1.tscn",
@@ -78,6 +88,9 @@ func generate_level(seed_val: int = 0) -> void:
 	var gen_result: RefCounted = null
 	
 	match level_type:
+		LevelType.CAVE_DUNGEON:
+			palette = CaveGeneratorScript.get_default_palette()
+			gen_result = CaveGeneratorScript.generate(map_width, map_height, actual_seed)
 		LevelType.FOREST_OVERWORLD:
 			palette = OverworldForestGeneratorScript.get_default_palette()
 			gen_result = OverworldForestGeneratorScript.generate(map_width, map_height, actual_seed)
@@ -90,16 +103,24 @@ func generate_level(seed_val: int = 0) -> void:
 	# 1. TileSet
 	var ts := custom_tileset
 	if ts == null:
-		var tex_path: String = palette.get("texture_path", "")
-		var col_tiles: Array = palette.get("collision_tiles", [])
-		ts = MapGeneratorBaseScript.create_default_tileset(tex_path, col_tiles)
+		if level_type == LevelType.CAVE_DUNGEON:
+			var cave_ts_path: String = palette.get("tileset_path", "res://modules/quiz_rpg/resources/tilemaps/caves.tres")
+			if ResourceLoader.exists(cave_ts_path):
+				ts = load(cave_ts_path) as TileSet
+		if ts == null:
+			var tex_path: String = palette.get("texture_path", "")
+			var col_tiles: Array = palette.get("collision_tiles", [])
+			ts = MapGeneratorBaseScript.create_default_tileset(tex_path, col_tiles)
 		
 	# 2. Warstwy TileMapLayer
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
 	var walls_layer := _get_or_create_layer("Walls", 0, ts)
 	
 	var rng := MapGeneratorBaseScript.create_rng(actual_seed)
-	MapGeneratorBaseScript.apply_grid_to_layers(floor_layer, walls_layer, gen_result, palette, rng)
+	if level_type == LevelType.CAVE_DUNGEON:
+		CaveGeneratorScript.apply_cave_tiles(floor_layer, walls_layer, gen_result, rng)
+	else:
+		MapGeneratorBaseScript.apply_grid_to_layers(floor_layer, walls_layer, gen_result, palette, rng)
 	
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	MapGeneratorBaseScript.spawn_entities(self, gen_result, enemy_scenes, chest_scene, door_scene)
