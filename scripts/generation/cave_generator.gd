@@ -15,10 +15,10 @@ const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tre
 # 3. Ściany zwykłe (Standard Walls):
 # Szczyt / góra: wiersz 0 (kolumny 2, 3) - 1 kafelek wysokości
 const WALL_TOP: Array[Vector2i] = [Vector2i(2, 0), Vector2i(3, 0)]
-const WALL_TOP_CORNER_LEFT := Vector2i(1, 0)
-const WALL_TOP_CORNER_RIGHT := Vector2i(4, 0)
-const WALL_TOP_SLOPE_RIGHT := Vector2i(4, 1) # Kafelek 7 z katalogu (lustro B5)
-const WALL_TOP_SLOPE_LEFT := Vector2i(1, 1)  # Kafelek 6 z katalogu (B5)
+const WALL_TOP_CORNER_LEFT := Vector2i(0, 1) # Kafelek 5 z katalogu (RED B5)
+const WALL_TOP_CORNER_RIGHT := Vector2i(5, 1) # Kafelek 8 z katalogu (RED mirror B5)
+const WALL_TOP_SLOPE_RIGHT := Vector2i(4, 1) # Kafelek 7 z katalogu (BLUE mirror B5)
+const WALL_TOP_SLOPE_LEFT := Vector2i(1, 1)  # Kafelek 6 z katalogu (BLUE B5)
 
 # Lewa ściana (zachodnia ściana pokoju, e_floor == true): kolumna 5
 const WALL_SIDE_WEST: Array[Vector2i] = [Vector2i(5, 2), Vector2i(5, 3)]
@@ -83,13 +83,13 @@ const CORNER_INNER_TOP_RIGHT := Vector2i(1, 4)
 const ROOT_CORNER_INNER_TOP_RIGHT := Vector2i(1, 13)
 
 # Narożniki dolne wewnętrzne:
-# Gdy floor jest na NE -> lewy dolny róg pokoju, lico skały patrzy na wschód (kolumna 5)
-const CORNER_INNER_BOTTOM_LEFT := Vector2i(5, 4)
-const ROOT_CORNER_INNER_BOTTOM_LEFT := Vector2i(5, 13)
+# Gdy floor jest na NE -> lewy dolny róg pokoju / BLUE lustro: kafelek 7 (4, 1)
+const CORNER_INNER_BOTTOM_LEFT := Vector2i(4, 1)
+const ROOT_CORNER_INNER_BOTTOM_LEFT := Vector2i(4, 10)
 
-# Gdy floor jest na NW -> prawy dolny róg pokoju, lico skały patrzy na zachód (kolumna 0)
-const CORNER_INNER_BOTTOM_RIGHT := Vector2i(0, 4)
-const ROOT_CORNER_INNER_BOTTOM_RIGHT := Vector2i(0, 13)
+# Gdy floor jest na NW -> prawy dolny róg pokoju / BLUE: kafelek 6 (1, 1)
+const CORNER_INNER_BOTTOM_RIGHT := Vector2i(1, 1)
+const ROOT_CORNER_INNER_BOTTOM_RIGHT := Vector2i(1, 10)
 
 # Wnętrze ściany / pełny ciemny blok litej skały
 const WALL_INSIDE := Vector2i(2, 2)
@@ -433,6 +433,8 @@ static func apply_cave_tiles(
 		else:
 			room_themes.append(false)
 
+	var alcove_floor_cells: Array[Vector2i] = []
+
 	for y in range(height):
 		for x in range(width):
 			var pos := Vector2i(x, y)
@@ -499,6 +501,11 @@ static func apply_cave_tiles(
 				var right_has_step_down := _is_walkable(grid, pos + Vector2i(1, 2)) and not _is_walkable(grid, pos + Vector2i(1, 1))
 				var left_has_step_down := _is_walkable(grid, pos + Vector2i(-1, 2)) and not _is_walkable(grid, pos + Vector2i(-1, 1))
 
+				# Szczyt wnęki (A1 Opcja 1: wnęka między schodkami schodzącymi w dół):
+				var l_has_step_far := _is_walkable(grid, pos + Vector2i(-2, 2)) and not _is_walkable(grid, pos + Vector2i(-2, 1))
+				var r_has_step_far := _is_walkable(grid, pos + Vector2i(2, 2)) and not _is_walkable(grid, pos + Vector2i(2, 1))
+				var is_alcove_peak := not right_has_step_down and not left_has_step_down and l_has_step_far and r_has_step_far
+
 				var base_t: Vector2i
 				var mid_t: Vector2i
 				var top_t: Vector2i
@@ -530,6 +537,14 @@ static func apply_cave_tiles(
 						base_t = ROOT_BOTTOM_BASE[rng.randi() % ROOT_BOTTOM_BASE.size()]
 						mid_t = ROOT_BOTTOM_MID[rng.randi() % ROOT_BOTTOM_MID.size()]
 						top_t = ROOT_BOTTOM_TOP[rng.randi() % ROOT_BOTTOM_TOP.size()]
+
+				if is_alcove_peak:
+					# Opcja 1 (A1): Moduł wnęki podniesiony o 1 kafelek, a pos staje się podłogą wnęki
+					walls_layer.set_cell(pos + Vector2i(0, -1), 0, base_t)
+					walls_layer.set_cell(pos + Vector2i(0, -2), 0, mid_t)
+					walls_layer.set_cell(pos + Vector2i(0, -3), 0, top_t)
+					alcove_floor_cells.append(pos)
+					continue
 
 				walls_layer.set_cell(pos, 0, base_t)
 
@@ -605,50 +620,45 @@ static func apply_cave_tiles(
 			# --- B. GÓRNA ŚCIANA (gdy pos jest na POŁUDNIE od podłogi -> n_floor == true) ---
 			# Zwykłe: 1 kafelek wysokości. Korzenie/kolce: 2 kafelki wysokości (row 8 szczyt, row 9 baza)
 			if n_floor:
-				# Płynne ukośne zbocza ściany dolnej (smooth slopes zamiast schodków 90°):
-				var is_slope_right := e_floor or (ne_floor and not nw_floor and not w_floor)
-				var is_slope_left := w_floor or (nw_floor and not ne_floor and not e_floor)
-
-				var is_turn_to_corridor_r := e_floor
-				var is_turn_to_corridor_l := w_floor
-				var is_room_end_l := not nw_floor and not w_floor
-				var is_room_end_r := not ne_floor and not e_floor
-
-				var use_left_corner := is_turn_to_corridor_l or (is_room_end_l and not is_turn_to_corridor_r)
-				var use_right_corner := is_turn_to_corridor_r or (is_room_end_r and not is_turn_to_corridor_l)
-
 				if not use_roots:
-					var top_t: Vector2i = WALL_TOP[rng.randi() % WALL_TOP.size()]
-					if is_slope_right and not is_slope_left:
-						top_t = WALL_TOP_SLOPE_RIGHT
-					elif is_slope_left and not is_slope_right:
-						top_t = WALL_TOP_SLOPE_LEFT
-					elif use_left_corner and not use_right_corner:
-						top_t = WALL_TOP_CORNER_LEFT
-					elif use_right_corner and not use_left_corner:
-						top_t = WALL_TOP_CORNER_RIGHT
-					walls_layer.set_cell(pos, 0, top_t)
+					if w_floor:
+						# RED mark: kafelek 5 (0, 1) - narożnik zewnętrzny lewy
+						walls_layer.set_cell(pos, 0, WALL_TOP_CORNER_LEFT)
+					elif e_floor:
+						# RED lustro: kafelek 8 (5, 1) - narożnik zewnętrzny prawy
+						walls_layer.set_cell(pos, 0, WALL_TOP_CORNER_RIGHT)
+					elif not ne_floor and nw_floor:
+						# BLUE mark: kafelek 6 (1, 1) - narożnik wewnętrzny
+						walls_layer.set_cell(pos, 0, WALL_TOP_SLOPE_LEFT)
+					elif not nw_floor and ne_floor:
+						# BLUE lustro: kafelek 7 (4, 1) - narożnik wewnętrzny
+						walls_layer.set_cell(pos, 0, WALL_TOP_SLOPE_RIGHT)
+					else:
+						# YELLOW mark / prosta ściana górna: (2, 0) lub (3, 0)
+						var top_t: Vector2i = WALL_TOP[rng.randi() % WALL_TOP.size()]
+						walls_layer.set_cell(pos, 0, top_t)
 				else:
-					var spike_top: Vector2i = ROOT_TOP_TIPS[rng.randi() % ROOT_TOP_TIPS.size()]
-					var spike_base: Vector2i = ROOT_TOP_BASE[rng.randi() % ROOT_TOP_BASE.size()]
-					if is_slope_right and not is_slope_left:
-						spike_top = ROOT_TOP_SLOPE_TIPS_RIGHT
-						spike_base = ROOT_TOP_SLOPE_BASE_RIGHT
-					elif is_slope_left and not is_slope_right:
-						spike_top = ROOT_TOP_SLOPE_TIPS_LEFT
-						spike_base = ROOT_TOP_SLOPE_BASE_LEFT
-					elif use_left_corner and not use_right_corner:
-						spike_top = ROOT_TOP_TIPS_LEFT
-						spike_base = ROOT_TOP_BASE_LEFT
-					elif use_right_corner and not use_left_corner:
-						spike_top = ROOT_TOP_TIPS_RIGHT
-						spike_base = ROOT_TOP_BASE_RIGHT
-
-					walls_layer.set_cell(pos, 0, spike_top)
-
-					var p_base := pos + Vector2i(0, 1)
-					if not _is_walkable(grid, p_base):
-						walls_layer.set_cell(p_base, 0, spike_base)
+					if w_floor:
+						walls_layer.set_cell(pos, 0, ROOT_TOP_SLOPE_TIPS_LEFT)
+						var p_b := pos + Vector2i(0, 1)
+						if not _is_walkable(grid, p_b):
+							walls_layer.set_cell(p_b, 0, ROOT_TOP_SLOPE_BASE_LEFT)
+					elif e_floor:
+						walls_layer.set_cell(pos, 0, ROOT_TOP_SLOPE_TIPS_RIGHT)
+						var p_b := pos + Vector2i(0, 1)
+						if not _is_walkable(grid, p_b):
+							walls_layer.set_cell(p_b, 0, ROOT_TOP_SLOPE_BASE_RIGHT)
+					elif not ne_floor and nw_floor:
+						walls_layer.set_cell(pos, 0, Vector2i(1, 10))
+					elif not nw_floor and ne_floor:
+						walls_layer.set_cell(pos, 0, Vector2i(4, 10))
+					else:
+						var spike_top: Vector2i = ROOT_TOP_TIPS[rng.randi() % ROOT_TOP_TIPS.size()]
+						var spike_base: Vector2i = ROOT_TOP_BASE[rng.randi() % ROOT_TOP_BASE.size()]
+						walls_layer.set_cell(pos, 0, spike_top)
+						var p_base := pos + Vector2i(0, 1)
+						if not _is_walkable(grid, p_base):
+							walls_layer.set_cell(p_base, 0, spike_base)
 
 				continue
 
@@ -677,15 +687,21 @@ static func apply_cave_tiles(
 				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
 					walls_layer.set_cell(pos, 0, c_t)
 			elif ne_floor:
-				# floor jest na NE -> lewy dolny narożnik pokoju, lico skały patrzy na WSCHÓD (kolumna 5)
+				# floor jest na NE -> BLUE lustro: kafelek 7 (4, 1)
 				var c_t: Vector2i = CORNER_INNER_BOTTOM_LEFT if not use_roots else ROOT_CORNER_INNER_BOTTOM_LEFT
 				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
 					walls_layer.set_cell(pos, 0, c_t)
 			elif nw_floor:
-				# floor jest na NW -> prawy dolny narożnik pokoju, lico skały patrzy na ZACHÓD (kolumna 0)
+				# floor jest na NW -> BLUE: kafelek 6 (1, 1)
 				var c_t: Vector2i = CORNER_INNER_BOTTOM_RIGHT if not use_roots else ROOT_CORNER_INNER_BOTTOM_RIGHT
 				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
 					walls_layer.set_cell(pos, 0, c_t)
+
+	# 4. Aktualizacja podłogi dla szczytów wnęk (A1 Opcja 1)
+	if not alcove_floor_cells.is_empty():
+		for p in alcove_floor_cells:
+			grid[p] = CellType.FLOOR
+		floor_layer.set_cells_terrain_connect(alcove_floor_cells, 0, 0, false)
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
