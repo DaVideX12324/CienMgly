@@ -32,5 +32,8 @@ shape = SubResource("CapsuleShape2D_fix")
 [node name="DetectionArea" parent="." index="2" unique_id=2045348945]
 position = Vector2(-0.5, -8)
 
+[node name="CollisionShape2D" parent="DetectionArea" index="0" unique_id=1963073735]
+debug_color = Color(0, 0.6, 0.69803923, 0)
+
 [node name="RayCast2D" parent="." index="3"]
 position = Vector2(-0.5, -8)
