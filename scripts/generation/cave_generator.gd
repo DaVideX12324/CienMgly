@@ -18,10 +18,12 @@ const WALL_TOP: Array[Vector2i] = [Vector2i(2, 0), Vector2i(3, 0)]
 const WALL_TOP_CORNER_LEFT := Vector2i(1, 0)
 const WALL_TOP_CORNER_RIGHT := Vector2i(4, 0)
 
-# Lewa ściana: kolumna 0 (wiersze 2, 3)
-const WALL_LEFT: Array[Vector2i] = [Vector2i(0, 2), Vector2i(0, 3)]
-# Prawa ściana: kolumna 5 (wiersze 2, 3)
-const WALL_RIGHT: Array[Vector2i] = [Vector2i(5, 2), Vector2i(5, 3)]
+# Lewa ściana (zachodnia ściana pokoju, e_floor == true): kolumna 5
+const WALL_SIDE_WEST: Array[Vector2i] = [Vector2i(5, 2), Vector2i(5, 3)]
+# Prawa ściana (wschodnia ściana pokoju, w_floor == true): kolumna 0
+const WALL_SIDE_EAST: Array[Vector2i] = [Vector2i(0, 2), Vector2i(0, 3)]
+const WALL_LEFT: Array[Vector2i] = WALL_SIDE_WEST
+const WALL_RIGHT: Array[Vector2i] = WALL_SIDE_EAST
 
 # Dół / fasada opadająca: 3 klocki wysokości (wiersze 5, 6, 7)
 const WALL_BOTTOM_TOP: Array[Vector2i] = [Vector2i(2, 5), Vector2i(3, 5)]
@@ -48,8 +50,10 @@ const ROOT_TOP_TIPS_RIGHT := Vector2i(4, 8)
 const ROOT_TOP_BASE_RIGHT := Vector2i(4, 9)
 
 # Lewa i prawa ściana z korzeniami
-const ROOT_WALL_LEFT: Array[Vector2i] = [Vector2i(0, 11), Vector2i(0, 12)]
-const ROOT_WALL_RIGHT: Array[Vector2i] = [Vector2i(5, 11), Vector2i(5, 12)]
+const ROOT_WALL_SIDE_WEST: Array[Vector2i] = [Vector2i(5, 11), Vector2i(5, 12)]
+const ROOT_WALL_SIDE_EAST: Array[Vector2i] = [Vector2i(0, 11), Vector2i(0, 12)]
+const ROOT_WALL_LEFT: Array[Vector2i] = ROOT_WALL_SIDE_WEST
+const ROOT_WALL_RIGHT: Array[Vector2i] = ROOT_WALL_SIDE_EAST
 
 # Dół / fasada opadająca z korzeniami: 3 klocki wysokości (wiersze 14, 15, 16)
 const ROOT_BOTTOM_TOP: Array[Vector2i] = [Vector2i(2, 14), Vector2i(3, 14)]
@@ -249,12 +253,21 @@ static func apply_cave_tiles(
 	noise.seed = rng.seed
 	noise.frequency = 0.07
 
+	# Rozszerzamy podłogę kamienną o 3 kratki pod ściany, żeby nie było godotowego voidu
 	var ground_cells: Array[Vector2i] = []
 	var grass_cells: Array[Vector2i] = []
+	var near_floor: Dictionary = {}
 
 	for pos in grid.keys():
 		if _is_walkable(grid, pos):
-			ground_cells.append(pos)
+			for dy in range(-3, 4):
+				for dx in range(-3, 4):
+					if abs(dx) + abs(dy) <= 4:
+						near_floor[pos + Vector2i(dx, dy)] = true
+
+	for pos in near_floor.keys():
+		ground_cells.append(pos)
+		if _is_walkable(grid, pos):
 			var n_val := noise.get_noise_2d(float(pos.x), float(pos.y))
 			if n_val > 0.05:
 				grass_cells.append(pos)
@@ -294,22 +307,35 @@ static func apply_cave_tiles(
 			# --- A. DOLNA FASADA (gdy pos jest na PÓŁNOC od podłogi -> s_floor == true) ---
 			# Używa 3 bloków wysokości: baza z cieniem (row 7 lub 16), środek (row 6 lub 15), szczyt (row 5 lub 14)
 			if s_floor:
-				var is_left_end := not sw_floor
-				var is_right_end := not se_floor
+				# Zakręt wewnętrzny do wcięcia / korytarza:
+				if e_floor:
+					# Lewy narożnik wejścia: ściana skręca na północ (w stronę wcięcia)
+					var c_t: Vector2i = Vector2i(5, 4) if not use_roots else Vector2i(5, 13)
+					walls_layer.set_cell(pos, 0, c_t)
+					continue
+				elif w_floor:
+					# Prawy narożnik wejścia: ściana skręca na północ (w stronę wcięcia)
+					var c_t: Vector2i = Vector2i(0, 4) if not use_roots else Vector2i(0, 13)
+					walls_layer.set_cell(pos, 0, c_t)
+					continue
+
+				# Zwykła fasada pozioma (3 klocki wysokości)
+				var is_step_left := not sw_floor
+				var is_step_right := not se_floor
 
 				if not use_roots:
 					var base_t: Vector2i = WALL_BOTTOM_BASE[rng.randi() % WALL_BOTTOM_BASE.size()]
 					var mid_t: Vector2i = WALL_BOTTOM_MID[rng.randi() % WALL_BOTTOM_MID.size()]
 					var top_t: Vector2i = WALL_BOTTOM_TOP[rng.randi() % WALL_BOTTOM_TOP.size()]
 
-					if is_left_end:
-						base_t = WALL_BOTTOM_BASE_LEFT
-						mid_t = WALL_BOTTOM_MID_LEFT
-						top_t = WALL_BOTTOM_TOP_LEFT
-					elif is_right_end:
-						base_t = WALL_BOTTOM_BASE_RIGHT
-						mid_t = WALL_BOTTOM_MID_RIGHT
-						top_t = WALL_BOTTOM_TOP_RIGHT
+					if is_step_left and not is_step_right:
+						base_t = Vector2i(5, 4)
+						mid_t = Vector2i(5, 5)
+						top_t = Vector2i(5, 5)
+					elif is_step_right and not is_step_left:
+						base_t = Vector2i(0, 4)
+						mid_t = Vector2i(0, 5)
+						top_t = Vector2i(0, 5)
 
 					walls_layer.set_cell(pos, 0, base_t)
 
@@ -325,14 +351,14 @@ static func apply_cave_tiles(
 					var mid_t: Vector2i = ROOT_BOTTOM_MID[rng.randi() % ROOT_BOTTOM_MID.size()]
 					var top_t: Vector2i = ROOT_BOTTOM_TOP[rng.randi() % ROOT_BOTTOM_TOP.size()]
 
-					if is_left_end:
-						base_t = ROOT_BOTTOM_BASE_LEFT
-						mid_t = ROOT_BOTTOM_MID_LEFT
-						top_t = ROOT_BOTTOM_TOP_LEFT
-					elif is_right_end:
-						base_t = ROOT_BOTTOM_BASE_RIGHT
-						mid_t = ROOT_BOTTOM_MID_RIGHT
-						top_t = ROOT_BOTTOM_TOP_RIGHT
+					if is_step_left and not is_step_right:
+						base_t = Vector2i(5, 13)
+						mid_t = Vector2i(5, 15)
+						top_t = Vector2i(5, 14)
+					elif is_step_right and not is_step_left:
+						base_t = Vector2i(0, 13)
+						mid_t = Vector2i(0, 15)
+						top_t = Vector2i(0, 14)
 
 					walls_layer.set_cell(pos, 0, base_t)
 
@@ -349,23 +375,28 @@ static func apply_cave_tiles(
 			# --- B. GÓRNA ŚCIANA (gdy pos jest na POŁUDNIE od podłogi -> n_floor == true) ---
 			# Zwykłe: 1 kafelek wysokości. Korzenie/kolce: 2 kafelki wysokości (row 8 szczyt, row 9 baza)
 			if n_floor:
-				var is_left_end := not nw_floor
-				var is_right_end := not ne_floor
+				var is_turn_to_corridor_r := e_floor
+				var is_turn_to_corridor_l := w_floor
+				var is_room_end_l := not nw_floor and not w_floor
+				var is_room_end_r := not ne_floor and not e_floor
+
+				var use_left_corner := is_turn_to_corridor_l or (is_room_end_l and not is_turn_to_corridor_r)
+				var use_right_corner := is_turn_to_corridor_r or (is_room_end_r and not is_turn_to_corridor_l)
 
 				if not use_roots:
 					var top_t: Vector2i = WALL_TOP[rng.randi() % WALL_TOP.size()]
-					if is_left_end:
+					if use_left_corner and not use_right_corner:
 						top_t = WALL_TOP_CORNER_LEFT
-					elif is_right_end:
+					elif use_right_corner and not use_left_corner:
 						top_t = WALL_TOP_CORNER_RIGHT
 					walls_layer.set_cell(pos, 0, top_t)
 				else:
 					var spike_top: Vector2i = ROOT_TOP_TIPS[rng.randi() % ROOT_TOP_TIPS.size()]
 					var spike_base: Vector2i = ROOT_TOP_BASE[rng.randi() % ROOT_TOP_BASE.size()]
-					if is_left_end:
+					if use_left_corner and not use_right_corner:
 						spike_top = ROOT_TOP_TIPS_LEFT
 						spike_base = ROOT_TOP_BASE_LEFT
-					elif is_right_end:
+					elif use_right_corner and not use_left_corner:
 						spike_top = ROOT_TOP_TIPS_RIGHT
 						spike_base = ROOT_TOP_BASE_RIGHT
 
@@ -377,14 +408,16 @@ static func apply_cave_tiles(
 				continue
 
 			# --- C. BOCZNE ŚCIANY ---
-			if w_floor:
-				var side_t: Vector2i = WALL_LEFT[rng.randi() % WALL_LEFT.size()] if not use_roots else ROOT_WALL_LEFT[rng.randi() % ROOT_WALL_LEFT.size()]
+			# e_floor == true -> ściana po lewej stronie (zachodnia ściana pokoju), skała skierowana na wschód
+			if e_floor:
+				var side_t: Vector2i = WALL_SIDE_WEST[rng.randi() % WALL_SIDE_WEST.size()] if not use_roots else ROOT_WALL_SIDE_WEST[rng.randi() % ROOT_WALL_SIDE_WEST.size()]
 				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
 					walls_layer.set_cell(pos, 0, side_t)
 				continue
 
-			if e_floor:
-				var side_t: Vector2i = WALL_RIGHT[rng.randi() % WALL_RIGHT.size()] if not use_roots else ROOT_WALL_RIGHT[rng.randi() % ROOT_WALL_RIGHT.size()]
+			# w_floor == true -> ściana po prawej stronie (wschodnia ściana pokoju), skała skierowana na zachód
+			if w_floor:
+				var side_t: Vector2i = WALL_SIDE_EAST[rng.randi() % WALL_SIDE_EAST.size()] if not use_roots else ROOT_WALL_SIDE_EAST[rng.randi() % ROOT_WALL_SIDE_EAST.size()]
 				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
 					walls_layer.set_cell(pos, 0, side_t)
 				continue
