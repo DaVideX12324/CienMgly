@@ -17,8 +17,8 @@ const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tre
 const WALL_TOP: Array[Vector2i] = [Vector2i(2, 0), Vector2i(3, 0)]
 const WALL_TOP_CORNER_LEFT := Vector2i(1, 0)
 const WALL_TOP_CORNER_RIGHT := Vector2i(4, 0)
-const WALL_TOP_SLOPE_RIGHT := Vector2i(5, 1)
-const WALL_TOP_SLOPE_LEFT := Vector2i(0, 1)
+const WALL_TOP_SLOPE_RIGHT := Vector2i(4, 1) # Kafelek 7 z katalogu (lustro B5)
+const WALL_TOP_SLOPE_LEFT := Vector2i(1, 1)  # Kafelek 6 z katalogu (B5)
 
 # Lewa ściana (zachodnia ściana pokoju, e_floor == true): kolumna 5
 const WALL_SIDE_WEST: Array[Vector2i] = [Vector2i(5, 2), Vector2i(5, 3)]
@@ -480,6 +480,17 @@ static func apply_cave_tiles(
 					walls_layer.set_cell(pos, 0, c_t)
 					continue
 
+				# Jeśli ściana boczna skręca/uskakuje (w_floor lub e_floor == true),
+				# wstawiamy narożnik wewnętrzny zamiast 3-kafelkowego modułu fasady:
+				if w_floor:
+					var c_t: Vector2i = CORNER_INNER_TOP_LEFT if not use_roots else ROOT_CORNER_INNER_TOP_LEFT
+					walls_layer.set_cell(pos, 0, c_t)
+					continue
+				elif e_floor:
+					var c_t: Vector2i = CORNER_INNER_TOP_RIGHT if not use_roots else ROOT_CORNER_INNER_TOP_RIGHT
+					walls_layer.set_cell(pos, 0, c_t)
+					continue
+
 				# Wykrywanie końca ściany lub schodka w dół:
 				var is_west_end := not sw_floor
 				var is_east_end := not se_floor
@@ -530,20 +541,44 @@ static func apply_cave_tiles(
 				if not _is_walkable(grid, p_top):
 					walls_layer.set_cell(p_top, 0, top_t)
 
-				# Ukośny bark tylko przy faktycznym schodkowaniu w dół między kolumnami podłogi:
+				# Schodki diagonalne (przejście ściany górnej w zakręt w prawo lub w lewo):
+				# Specyfikacja A1: na koronie modułu narożnik (1, 4) / (4, 4), pod nim moduł zakrętu (1, 5..7) / (4, 5..7),
+				# w sąsiedniej kolumnie narożnik (1, 4) / (4, 4), a pod nim ściana pionowa.
 				if right_has_step_down:
+					var c_t: Vector2i = CORNER_INNER_TOP_RIGHT if not use_roots else ROOT_CORNER_INNER_TOP_RIGHT
+					# Korona nad modułem schodka:
+					var p_cr := pos + Vector2i(0, -3)
+					if not _is_walkable(grid, p_cr):
+						walls_layer.set_cell(p_cr, 0, c_t)
+					# Narożnik wewnętrzny (1, 4) w kolumnie obok (zaznaczony na czerwono w A1):
 					var p_sh := pos + Vector2i(1, -2)
 					if not _is_walkable(grid, p_sh):
-						var sh_t := Vector2i(0, 5) if not use_roots else Vector2i(0, 14)
-						walls_layer.set_cell(p_sh, 0, sh_t)
+						walls_layer.set_cell(p_sh, 0, c_t)
+					# Ściana pionowa pod narożnikiem (zaznaczona na niebiesko w A1):
+					for dy in [-1, 0]:
+						var p_s := pos + Vector2i(1, dy)
+						if not _is_walkable(grid, p_s):
+							var side_t: Vector2i = WALL_SIDE_EAST[rng.randi() % WALL_SIDE_EAST.size()] if not use_roots else ROOT_WALL_SIDE_EAST[rng.randi() % ROOT_WALL_SIDE_EAST.size()]
+							walls_layer.set_cell(p_s, 0, side_t)
 				elif left_has_step_down:
+					var c_t: Vector2i = CORNER_INNER_TOP_LEFT if not use_roots else ROOT_CORNER_INNER_TOP_LEFT
+					# Korona nad modułem schodka:
+					var p_cr := pos + Vector2i(0, -3)
+					if not _is_walkable(grid, p_cr):
+						walls_layer.set_cell(p_cr, 0, c_t)
+					# Narożnik wewnętrzny (4, 4) w kolumnie obok (lustro A1):
 					var p_sh := pos + Vector2i(-1, -2)
 					if not _is_walkable(grid, p_sh):
-						var sh_t := Vector2i(5, 5) if not use_roots else Vector2i(5, 14)
-						walls_layer.set_cell(p_sh, 0, sh_t)
+						walls_layer.set_cell(p_sh, 0, c_t)
+					# Ściana pionowa pod narożnikiem (lustro A1):
+					for dy in [-1, 0]:
+						var p_s := pos + Vector2i(-1, dy)
+						if not _is_walkable(grid, p_s):
+							var side_t: Vector2i = WALL_SIDE_WEST[rng.randi() % WALL_SIDE_WEST.size()] if not use_roots else ROOT_WALL_SIDE_WEST[rng.randi() % ROOT_WALL_SIDE_WEST.size()]
+							walls_layer.set_cell(p_s, 0, side_t)
 
 				# Pojedynczy narożnik 90° wyrównany do góry korony ściany (Pair 8: (4, 4) i (1, 4)):
-				if is_west_end and not right_has_step_down:
+				if is_west_end and not right_has_step_down and not left_has_step_down:
 					var p_c := pos + Vector2i(-1, -2)
 					if not _is_walkable(grid, p_c):
 						var c_t: Vector2i = CORNER_INNER_TOP_LEFT if not use_roots else ROOT_CORNER_INNER_TOP_LEFT
@@ -554,7 +589,7 @@ static func apply_cave_tiles(
 							var side_t: Vector2i = WALL_SIDE_WEST[rng.randi() % WALL_SIDE_WEST.size()] if not use_roots else ROOT_WALL_SIDE_WEST[rng.randi() % ROOT_WALL_SIDE_WEST.size()]
 							walls_layer.set_cell(p_s, 0, side_t)
 
-				if is_east_end and not left_has_step_down:
+				if is_east_end and not left_has_step_down and not right_has_step_down:
 					var p_c := pos + Vector2i(1, -2)
 					if not _is_walkable(grid, p_c):
 						var c_t: Vector2i = CORNER_INNER_TOP_RIGHT if not use_roots else ROOT_CORNER_INNER_TOP_RIGHT
