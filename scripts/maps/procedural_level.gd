@@ -114,12 +114,15 @@ func generate_level(seed_val: int = 0) -> void:
 		
 	# 2. Warstwy TileMapLayer
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
+	var floor_decor := _get_or_create_layer("FloorDecor", -1, ts)
 	var walls_layer := _get_or_create_layer("Walls", 0, ts)
 	
 	var rng := MapGeneratorBaseScript.create_rng(actual_seed)
 	if level_type == LevelType.CAVE_DUNGEON:
-		CaveGeneratorScript.apply_cave_tiles(floor_layer, walls_layer, gen_result, rng)
+		CaveGeneratorScript.apply_cave_tiles(floor_layer, walls_layer, gen_result, rng, floor_decor)
 	else:
+		if floor_decor:
+			floor_decor.clear()
 		MapGeneratorBaseScript.apply_grid_to_layers(floor_layer, walls_layer, gen_result, palette, rng)
 	
 	# 3. Encje (gracz, wrogowie, skrzynie)

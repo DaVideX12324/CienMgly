@@ -9,57 +9,81 @@ const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tre
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
-# 1. Podłoga kamienna (Stone Floor): kolumny 7-9, wiersze 13-16
-const FLOOR_STONE := [
-	Vector2i(8, 14), Vector2i(9, 14), Vector2i(8, 15), Vector2i(9, 15)
-]
-
-# 2. Podłoga porośnięta mchem/trawą (Moss / Grass Floor): kolumny 12-14, wiersze 13-16
-const FLOOR_MOSS := [
-	Vector2i(13, 14), Vector2i(14, 14), Vector2i(13, 15), Vector2i(14, 15)
-]
+# 1. Podłoga kamienna (Stone Floor): autotiling w terrain_set 0, terrain 0
+# 2. Podłoga porośnięta mchem/trawą (Moss / Grass Floor): autotiling w terrain_set 0, terrain 1
 
 # 3. Ściany zwykłe (Standard Walls):
-# Szczyt / góra: wiersz 0 (kolumny 2, 3)
-const WALL_TOP := [Vector2i(2, 0), Vector2i(3, 0)]
+# Szczyt / góra: wiersz 0 (kolumny 2, 3) - 1 kafelek wysokości
+const WALL_TOP: Array[Vector2i] = [Vector2i(2, 0), Vector2i(3, 0)]
+const WALL_TOP_CORNER_LEFT := Vector2i(1, 0)
+const WALL_TOP_CORNER_RIGHT := Vector2i(4, 0)
+
 # Lewa ściana: kolumna 0 (wiersze 2, 3)
-const WALL_LEFT := [Vector2i(0, 2), Vector2i(0, 3)]
+const WALL_LEFT: Array[Vector2i] = [Vector2i(0, 2), Vector2i(0, 3)]
 # Prawa ściana: kolumna 5 (wiersze 2, 3)
-const WALL_RIGHT := [Vector2i(5, 2), Vector2i(5, 3)]
-# Dół / fasada opadająca: wiersze 4-7
-const WALL_BOTTOM_ROW0 := [Vector2i(2, 4), Vector2i(3, 4)]
-const WALL_BOTTOM_ROW1 := [Vector2i(2, 5), Vector2i(3, 5)]
-const WALL_BOTTOM_ROW2 := [Vector2i(2, 6), Vector2i(3, 6)]
-const WALL_BOTTOM_BASE := [Vector2i(2, 7), Vector2i(3, 7)]
+const WALL_RIGHT: Array[Vector2i] = [Vector2i(5, 2), Vector2i(5, 3)]
 
-# 4. Ściany z korzeniami / kolcami (Root & Thorn Walls)
-const ROOT_BOTTOM_ROW0 := [Vector2i(2, 10), Vector2i(3, 10)]
-const ROOT_BOTTOM_ROW1 := [Vector2i(2, 11), Vector2i(3, 11)]
-const ROOT_BOTTOM_ROW2 := [Vector2i(2, 12), Vector2i(3, 12)]
-const ROOT_BOTTOM_BASE := [Vector2i(2, 13), Vector2i(3, 13)]
+# Dół / fasada opadająca: 3 klocki wysokości (wiersze 5, 6, 7)
+const WALL_BOTTOM_TOP: Array[Vector2i] = [Vector2i(2, 5), Vector2i(3, 5)]
+const WALL_BOTTOM_MID: Array[Vector2i] = [Vector2i(2, 6), Vector2i(3, 6)]
+const WALL_BOTTOM_BASE: Array[Vector2i] = [Vector2i(2, 7), Vector2i(3, 7)]
 
-# 5. Narożniki zewnętrzne (Outer Corners)
-const CORNER_OUTER_TOP_LEFT := Vector2i(1, 0)
-const CORNER_OUTER_TOP_RIGHT := Vector2i(4, 0)
-const CORNER_OUTER_BOTTOM_LEFT := Vector2i(0, 1)
-const CORNER_OUTER_BOTTOM_RIGHT := Vector2i(5, 1)
+const WALL_BOTTOM_TOP_LEFT := Vector2i(1, 5)
+const WALL_BOTTOM_MID_LEFT := Vector2i(1, 6)
+const WALL_BOTTOM_BASE_LEFT := Vector2i(1, 7)
 
-# 6. Narożniki wewnętrzne (Inner Corners)
-# Pojedynczy skręt
+const WALL_BOTTOM_TOP_RIGHT := Vector2i(4, 5)
+const WALL_BOTTOM_MID_RIGHT := Vector2i(4, 6)
+const WALL_BOTTOM_BASE_RIGHT := Vector2i(4, 7)
+
+# 4. Ściany z korzeniami / kolcami (Root & Thorn Walls):
+# Szczyt / góra: 2 kafelki wysokości (wiersz 8 szczyt, wiersz 9 baza kolców)
+const ROOT_TOP_TIPS: Array[Vector2i] = [Vector2i(2, 8), Vector2i(3, 8)]
+const ROOT_TOP_BASE: Array[Vector2i] = [Vector2i(2, 9), Vector2i(3, 9)]
+
+const ROOT_TOP_TIPS_LEFT := Vector2i(1, 8)
+const ROOT_TOP_BASE_LEFT := Vector2i(1, 9)
+
+const ROOT_TOP_TIPS_RIGHT := Vector2i(4, 8)
+const ROOT_TOP_BASE_RIGHT := Vector2i(4, 9)
+
+# Lewa i prawa ściana z korzeniami
+const ROOT_WALL_LEFT: Array[Vector2i] = [Vector2i(0, 11), Vector2i(0, 12)]
+const ROOT_WALL_RIGHT: Array[Vector2i] = [Vector2i(5, 11), Vector2i(5, 12)]
+
+# Dół / fasada opadająca z korzeniami: 3 klocki wysokości (wiersze 14, 15, 16)
+const ROOT_BOTTOM_TOP: Array[Vector2i] = [Vector2i(2, 14), Vector2i(3, 14)]
+const ROOT_BOTTOM_MID: Array[Vector2i] = [Vector2i(2, 15), Vector2i(3, 15)]
+const ROOT_BOTTOM_BASE: Array[Vector2i] = [Vector2i(2, 16), Vector2i(3, 16)]
+
+const ROOT_BOTTOM_TOP_LEFT := Vector2i(1, 14)
+const ROOT_BOTTOM_MID_LEFT := Vector2i(1, 15)
+const ROOT_BOTTOM_BASE_LEFT := Vector2i(1, 16)
+
+const ROOT_BOTTOM_TOP_RIGHT := Vector2i(4, 14)
+const ROOT_BOTTOM_MID_RIGHT := Vector2i(4, 15)
+const ROOT_BOTTOM_BASE_RIGHT := Vector2i(4, 16)
+
+# 5. Narożniki wewnętrzne (Inner Corners):
 const CORNER_INNER_TOP_LEFT := Vector2i(1, 1)
-const CORNER_INNER_TOP_RIGHT := Vector2i(4, 1)
-const CORNER_INNER_BOTTOM_LEFT := Vector2i(0, 4)
-const CORNER_INNER_BOTTOM_RIGHT := Vector2i(5, 4)
+const ROOT_CORNER_INNER_TOP_LEFT := Vector2i(1, 10)
 
-# Wnętrze ściany / pełny ciemny blok
+const CORNER_INNER_TOP_RIGHT := Vector2i(4, 1)
+const ROOT_CORNER_INNER_TOP_RIGHT := Vector2i(4, 10)
+
+const CORNER_INNER_BOTTOM_LEFT := Vector2i(0, 4)
+const ROOT_CORNER_INNER_BOTTOM_LEFT := Vector2i(0, 13)
+
+const CORNER_INNER_BOTTOM_RIGHT := Vector2i(5, 4)
+const ROOT_CORNER_INNER_BOTTOM_RIGHT := Vector2i(5, 13)
+
+# Wnętrze ściany / pełny ciemny blok litej skały
 const WALL_INSIDE := Vector2i(2, 2)
 
 
 static func get_default_palette() -> Dictionary:
 	return {
 		"tileset_path": CAVES_TILESET_PATH,
-		"floor_stone": FLOOR_STONE,
-		"floor_moss": FLOOR_MOSS,
 		"wall_top": WALL_TOP,
 		"wall_left": WALL_LEFT,
 		"wall_right": WALL_RIGHT,
@@ -184,114 +208,207 @@ static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumbe
 			carve_circle(grid, center + Vector2i(offset_x, offset_y), radius - 1, CellType.FLOOR, 100, 100)
 
 
-## Skryptowy autotiling - nanosi dopasowane kafelki z caves.tres na warstwy Floor i Walls
+## Nanosi dopasowane kafelki z caves.tres na warstwy Floor, FloorDecor i Walls
 static func apply_cave_tiles(
 	floor_layer: TileMapLayer,
 	walls_layer: TileMapLayer,
 	result: GenerationResult,
-	rng: RandomNumberGenerator
+	rng: RandomNumberGenerator,
+	floor_decor_layer: TileMapLayer = null
 ) -> void:
+	# Jeśli warstwa dekoracji podłogi nie została przekazana, poszukajmy jej w rodzicu
+	if floor_decor_layer == null and floor_layer.get_parent():
+		floor_decor_layer = floor_layer.get_parent().get_node_or_null("FloorDecor") as TileMapLayer
+		if not floor_decor_layer:
+			floor_decor_layer = TileMapLayer.new()
+			floor_decor_layer.name = "FloorDecor"
+			floor_decor_layer.tile_set = floor_layer.tile_set
+			floor_decor_layer.z_index = -1
+			floor_decor_layer.y_sort_enabled = true
+			floor_layer.get_parent().add_child(floor_decor_layer)
+
 	floor_layer.clear()
+	if floor_decor_layer:
+		floor_decor_layer.clear()
 	walls_layer.clear()
 
-	# 1. Rysowanie podłogi (Kamienna z plamami mchu/trawy)
+	var width := result.width
+	var height := result.height
+	var grid := result.grid
+
+	# 1. WYPEŁNIENIE VOIDU
+	# Cały obszar mapy i margines zewnętrzny wypełniamy ciemną litą skałą
+	for y in range(-4, height + 4):
+		for x in range(-4, width + 4):
+			var pos := Vector2i(x, y)
+			if not _is_walkable(grid, pos):
+				walls_layer.set_cell(pos, 0, WALL_INSIDE)
+
+	# 2. PODŁOGA DWUWARSTWOWA (Kamienna + organiczne plamy mchu/trawy)
 	var noise := FastNoiseLite.new()
 	noise.seed = rng.seed
-	noise.frequency = 0.08
+	noise.frequency = 0.07
 
-	for pos in result.grid.keys():
-		var type: int = result.grid[pos]
-		if type == CellType.FLOOR or type == CellType.DOOR or type == CellType.ENTRANCE or type == CellType.EXIT:
+	var ground_cells: Array[Vector2i] = []
+	var grass_cells: Array[Vector2i] = []
+
+	for pos in grid.keys():
+		if _is_walkable(grid, pos):
+			ground_cells.append(pos)
 			var n_val := noise.get_noise_2d(float(pos.x), float(pos.y))
-			if n_val > 0.15:
-				# Plama mchu / trawy
-				var tile: Vector2i = FLOOR_MOSS[rng.randi() % FLOOR_MOSS.size()]
-				floor_layer.set_cell(pos, 0, tile)
-			else:
-				# Zwykła posadzka kamienna
-				var tile: Vector2i = FLOOR_STONE[rng.randi() % FLOOR_STONE.size()]
-				floor_layer.set_cell(pos, 0, tile)
+			if n_val > 0.05:
+				grass_cells.append(pos)
 
-	# 2. Rysowanie ścian - manualna analiza sąsiadów (Autotiling skryptowy)
-	for pos in result.grid.keys():
-		if result.grid[pos] != CellType.WALL:
-			continue
+	# Warstwa podstawowa: podłoga kamienna z autotilingiem
+	floor_layer.set_cells_terrain_connect(ground_cells, 0, 0, false)
 
-		var tile_coord := _resolve_wall_tile(pos, result.grid, rng)
-		if tile_coord != Vector2i(-1, -1):
-			# Pod każdą ścianą kładziemy również podłogę kamienną, by nie było czarnych przerw przy krawędziach
-			floor_layer.set_cell(pos, 0, FLOOR_STONE[0])
-			walls_layer.set_cell(pos, 0, tile_coord)
+	# Warstwa dekoracyjna: mech/trawa nakładana na kamień z przezroczystymi krawędziami
+	if floor_decor_layer:
+		floor_decor_layer.set_cells_terrain_connect(grass_cells, 0, 1, false)
+	else:
+		floor_layer.set_cells_terrain_connect(grass_cells, 0, 1, false)
 
+	# 3. ŚCIANY WIELOKAFELKOWE (Autotiling skryptowy)
+	var theme_noise := FastNoiseLite.new()
+	theme_noise.seed = rng.seed + 999
+	theme_noise.frequency = 0.04
 
-## Dobiera koordynat kafelka ściany na podstawie sąsiedztwa 8-kierunkowego
-static func _resolve_wall_tile(pos: Vector2i, grid: Dictionary, rng: RandomNumberGenerator) -> Vector2i:
-	var n_is_floor  := _is_walkable(grid, pos + Vector2i(0, -1))
-	var s_is_floor  := _is_walkable(grid, pos + Vector2i(0, 1))
-	var w_is_floor  := _is_walkable(grid, pos + Vector2i(-1, 0))
-	var e_is_floor  := _is_walkable(grid, pos + Vector2i(1, 0))
+	for y in range(height):
+		for x in range(width):
+			var pos := Vector2i(x, y)
+			if _is_walkable(grid, pos):
+				continue
 
-	var nw_is_floor := _is_walkable(grid, pos + Vector2i(-1, -1))
-	var ne_is_floor := _is_walkable(grid, pos + Vector2i(1, -1))
-	var sw_is_floor := _is_walkable(grid, pos + Vector2i(-1, 1))
-	var se_is_floor := _is_walkable(grid, pos + Vector2i(1, 1))
+			var s_floor := _is_walkable(grid, pos + Vector2i(0, 1))
+			var n_floor := _is_walkable(grid, pos + Vector2i(0, -1))
+			var e_floor := _is_walkable(grid, pos + Vector2i(1, 0))
+			var w_floor := _is_walkable(grid, pos + Vector2i(-1, 0))
 
-	# 1. Narożniki zewnętrzne (Outer Corners)
-	if n_is_floor and w_is_floor:
-		return CORNER_OUTER_TOP_LEFT
-	if n_is_floor and e_is_floor:
-		return CORNER_OUTER_TOP_RIGHT
-	if s_is_floor and w_is_floor:
-		return CORNER_OUTER_BOTTOM_LEFT
-	if s_is_floor and e_is_floor:
-		return CORNER_OUTER_BOTTOM_RIGHT
+			var se_floor := _is_walkable(grid, pos + Vector2i(1, 1))
+			var sw_floor := _is_walkable(grid, pos + Vector2i(-1, 1))
+			var ne_floor := _is_walkable(grid, pos + Vector2i(1, -1))
+			var nw_floor := _is_walkable(grid, pos + Vector2i(-1, -1))
 
-	# 2. Proste odcinki ścian
-	if n_is_floor:
-		# Ściana górna pokoju (widziana od dołu)
-		return WALL_TOP[rng.randi() % WALL_TOP.size()]
+			var use_roots := (theme_noise.get_noise_2d(float(x), float(y)) > 0.15)
 
-	if s_is_floor:
-		# Ściana dolna pokoju (frontowa fasada nad podłogą)
-		# Losowo: 70% zwykła fasada, 30% porośnięta korzeniami
-		if rng.randf() < 0.3:
-			return ROOT_BOTTOM_BASE[rng.randi() % ROOT_BOTTOM_BASE.size()]
-		return WALL_BOTTOM_BASE[rng.randi() % WALL_BOTTOM_BASE.size()]
+			# --- A. DOLNA FASADA (gdy pos jest na PÓŁNOC od podłogi -> s_floor == true) ---
+			# Używa 3 bloków wysokości: baza z cieniem (row 7 lub 16), środek (row 6 lub 15), szczyt (row 5 lub 14)
+			if s_floor:
+				var is_left_end := not sw_floor
+				var is_right_end := not se_floor
 
-	if w_is_floor:
-		return WALL_LEFT[rng.randi() % WALL_LEFT.size()]
+				if not use_roots:
+					var base_t: Vector2i = WALL_BOTTOM_BASE[rng.randi() % WALL_BOTTOM_BASE.size()]
+					var mid_t: Vector2i = WALL_BOTTOM_MID[rng.randi() % WALL_BOTTOM_MID.size()]
+					var top_t: Vector2i = WALL_BOTTOM_TOP[rng.randi() % WALL_BOTTOM_TOP.size()]
 
-	if e_is_floor:
-		return WALL_RIGHT[rng.randi() % WALL_RIGHT.size()]
+					if is_left_end:
+						base_t = WALL_BOTTOM_BASE_LEFT
+						mid_t = WALL_BOTTOM_MID_LEFT
+						top_t = WALL_BOTTOM_TOP_LEFT
+					elif is_right_end:
+						base_t = WALL_BOTTOM_BASE_RIGHT
+						mid_t = WALL_BOTTOM_MID_RIGHT
+						top_t = WALL_BOTTOM_TOP_RIGHT
 
-	# 3. Narożniki wewnętrzne (Inner Corners)
-	# Gdy ściana nie ma bezpośredniego sąsiada podłogi N/S/W/E, ale ma po skosie:
-	if se_is_floor:
-		return CORNER_INNER_TOP_LEFT
-	if sw_is_floor:
-		return CORNER_INNER_TOP_RIGHT
-	if ne_is_floor:
-		return CORNER_INNER_BOTTOM_LEFT
-	if nw_is_floor:
-		return CORNER_INNER_BOTTOM_RIGHT
+					walls_layer.set_cell(pos, 0, base_t)
 
-	# 4. Głębokie wnętrze masywu skalnego
-	# Jeśli kafelek jest w odległości 1 od ściany z podłogą, rysujemy wnętrze
-	if _has_any_floor_nearby(pos, grid):
-		return WALL_INSIDE
+					var p_mid := pos + Vector2i(0, -1)
+					if not _is_walkable(grid, p_mid):
+						walls_layer.set_cell(p_mid, 0, mid_t)
 
-	# Pustka / odległy void
-	return Vector2i(-1, -1)
+					var p_top := pos + Vector2i(0, -2)
+					if not _is_walkable(grid, p_top):
+						walls_layer.set_cell(p_top, 0, top_t)
+				else:
+					var base_t: Vector2i = ROOT_BOTTOM_BASE[rng.randi() % ROOT_BOTTOM_BASE.size()]
+					var mid_t: Vector2i = ROOT_BOTTOM_MID[rng.randi() % ROOT_BOTTOM_MID.size()]
+					var top_t: Vector2i = ROOT_BOTTOM_TOP[rng.randi() % ROOT_BOTTOM_TOP.size()]
+
+					if is_left_end:
+						base_t = ROOT_BOTTOM_BASE_LEFT
+						mid_t = ROOT_BOTTOM_MID_LEFT
+						top_t = ROOT_BOTTOM_TOP_LEFT
+					elif is_right_end:
+						base_t = ROOT_BOTTOM_BASE_RIGHT
+						mid_t = ROOT_BOTTOM_MID_RIGHT
+						top_t = ROOT_BOTTOM_TOP_RIGHT
+
+					walls_layer.set_cell(pos, 0, base_t)
+
+					var p_mid := pos + Vector2i(0, -1)
+					if not _is_walkable(grid, p_mid):
+						walls_layer.set_cell(p_mid, 0, mid_t)
+
+					var p_top := pos + Vector2i(0, -2)
+					if not _is_walkable(grid, p_top):
+						walls_layer.set_cell(p_top, 0, top_t)
+
+				continue
+
+			# --- B. GÓRNA ŚCIANA (gdy pos jest na POŁUDNIE od podłogi -> n_floor == true) ---
+			# Zwykłe: 1 kafelek wysokości. Korzenie/kolce: 2 kafelki wysokości (row 8 szczyt, row 9 baza)
+			if n_floor:
+				var is_left_end := not nw_floor
+				var is_right_end := not ne_floor
+
+				if not use_roots:
+					var top_t: Vector2i = WALL_TOP[rng.randi() % WALL_TOP.size()]
+					if is_left_end:
+						top_t = WALL_TOP_CORNER_LEFT
+					elif is_right_end:
+						top_t = WALL_TOP_CORNER_RIGHT
+					walls_layer.set_cell(pos, 0, top_t)
+				else:
+					var spike_top: Vector2i = ROOT_TOP_TIPS[rng.randi() % ROOT_TOP_TIPS.size()]
+					var spike_base: Vector2i = ROOT_TOP_BASE[rng.randi() % ROOT_TOP_BASE.size()]
+					if is_left_end:
+						spike_top = ROOT_TOP_TIPS_LEFT
+						spike_base = ROOT_TOP_BASE_LEFT
+					elif is_right_end:
+						spike_top = ROOT_TOP_TIPS_RIGHT
+						spike_base = ROOT_TOP_BASE_RIGHT
+
+					walls_layer.set_cell(pos, 0, spike_top)
+
+					var p_base := pos + Vector2i(0, 1)
+					if not _is_walkable(grid, p_base):
+						walls_layer.set_cell(p_base, 0, spike_base)
+				continue
+
+			# --- C. BOCZNE ŚCIANY ---
+			if w_floor:
+				var side_t: Vector2i = WALL_LEFT[rng.randi() % WALL_LEFT.size()] if not use_roots else ROOT_WALL_LEFT[rng.randi() % ROOT_WALL_LEFT.size()]
+				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
+					walls_layer.set_cell(pos, 0, side_t)
+				continue
+
+			if e_floor:
+				var side_t: Vector2i = WALL_RIGHT[rng.randi() % WALL_RIGHT.size()] if not use_roots else ROOT_WALL_RIGHT[rng.randi() % ROOT_WALL_RIGHT.size()]
+				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
+					walls_layer.set_cell(pos, 0, side_t)
+				continue
+
+			# --- D. NAROŻNIKI WEWNĘTRZNE (pojedyncze kafelki przy zakrętach) ---
+			if se_floor:
+				var c_t: Vector2i = CORNER_INNER_TOP_LEFT if not use_roots else ROOT_CORNER_INNER_TOP_LEFT
+				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
+					walls_layer.set_cell(pos, 0, c_t)
+			elif sw_floor:
+				var c_t: Vector2i = CORNER_INNER_TOP_RIGHT if not use_roots else ROOT_CORNER_INNER_TOP_RIGHT
+				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
+					walls_layer.set_cell(pos, 0, c_t)
+			elif ne_floor:
+				var c_t: Vector2i = CORNER_INNER_BOTTOM_LEFT if not use_roots else ROOT_CORNER_INNER_BOTTOM_LEFT
+				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
+					walls_layer.set_cell(pos, 0, c_t)
+			elif nw_floor:
+				var c_t: Vector2i = CORNER_INNER_BOTTOM_RIGHT if not use_roots else ROOT_CORNER_INNER_BOTTOM_RIGHT
+				if walls_layer.get_cell_atlas_coords(pos) == WALL_INSIDE:
+					walls_layer.set_cell(pos, 0, c_t)
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
 	var t: int = grid.get(pos, CellType.VOID)
 	return t == CellType.FLOOR or t == CellType.DOOR or t == CellType.ENTRANCE or t == CellType.EXIT
 
-
-static func _has_any_floor_nearby(pos: Vector2i, grid: Dictionary) -> bool:
-	for dy in range(-2, 3):
-		for dx in range(-2, 3):
-			if _is_walkable(grid, pos + Vector2i(dx, dy)):
-				return true
-	return false
