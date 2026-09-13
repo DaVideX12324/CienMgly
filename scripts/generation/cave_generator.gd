@@ -204,8 +204,9 @@ static func generate(
 	var rooms: Array[Rect2i] = []
 	var attempts := 0
 	var border := 6
+	var max_attempts := maxi(300, max_rooms * 25)
 
-	while rooms.size() < max_rooms and attempts < 200:
+	while rooms.size() < max_rooms and attempts < max_attempts:
 		attempts += 1
 		var rw := rng.randi_range(min_room_size, max_room_size)
 		var rh := rng.randi_range(min_room_size, max_room_size)

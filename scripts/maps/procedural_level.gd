@@ -25,6 +25,9 @@ enum LevelType {
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
 @export var next_spawn_name: String = "Spawn"
+@export var spawn_entities_enabled: bool = true
+@export var setup_nav_enabled: bool = true
+@export var cave_max_rooms: int = 0 # 0 = obliczane automatycznie na podstawie rozmiaru mapy
 
 var last_result: RefCounted = null
 var _transitioning: bool = false
@@ -90,7 +93,11 @@ func generate_level(seed_val: int = 0) -> void:
 	match level_type:
 		LevelType.CAVE_DUNGEON:
 			palette = CaveGeneratorScript.get_default_palette()
-			gen_result = CaveGeneratorScript.generate(map_width, map_height, actual_seed)
+			var rooms_count: int = cave_max_rooms
+			if rooms_count <= 0:
+				# Skalowanie: 60x60 -> 6, 100x100 -> 10, 160x160 -> 15, 250x250 -> 30, 500x500 -> 75
+				rooms_count = int(clampf(round(15.0 * (float(map_width * map_height) / (160.0 * 160.0))), 4, 120))
+			gen_result = CaveGeneratorScript.generate(map_width, map_height, actual_seed, 6, 24, rooms_count)
 		LevelType.FOREST_OVERWORLD:
 			palette = OverworldForestGeneratorScript.get_default_palette()
 			gen_result = OverworldForestGeneratorScript.generate(map_width, map_height, actual_seed)
@@ -126,10 +133,12 @@ func generate_level(seed_val: int = 0) -> void:
 		MapGeneratorBaseScript.apply_grid_to_layers(floor_layer, walls_layer, gen_result, palette, rng)
 	
 	# 3. Encje (gracz, wrogowie, skrzynie)
-	MapGeneratorBaseScript.spawn_entities(self, gen_result, enemy_scenes, chest_scene, door_scene)
+	if spawn_entities_enabled:
+		MapGeneratorBaseScript.spawn_entities(self, gen_result, enemy_scenes, chest_scene, door_scene)
 	
 	# 4. Nawigacja 2D
-	MapGeneratorBaseScript.setup_navigation_region(self, gen_result)
+	if setup_nav_enabled:
+		MapGeneratorBaseScript.setup_navigation_region(self, gen_result)
 	
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()

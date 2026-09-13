@@ -14,69 +14,230 @@ y_sort_enabled = true
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Panel" type="PanelContainer" parent="CanvasLayer"]
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 260.0
-offset_bottom = 330.0
+custom_minimum_size = Vector2(340, 0)
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 360.0
+offset_bottom = 680.0
 
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Panel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+horizontal_scroll_mode = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel/MarginContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Panel/ScrollContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer"]
 layout_mode = 2
-text = "🗺️ Generator Map"
-horizontal_alignment = 1
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
-[node name="InfoLabel" type="RichTextLabel" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(210, 140)
+[node name="HBoxTitle" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 15
+text = "🗺️ Eksplorator Map"
+
+[node name="BtnHideHUD" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle"]
+layout_mode = 2
+text = "◀ Zwiń"
+
+[node name="HSeparator1" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TypeLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Typ Generatora:"
+
+[node name="OptType" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SeedLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Seed:"
+
+[node name="HBoxSeed" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpinSeed" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 999999999.0
+value = 119.0
+rounded = true
+
+[node name="BtnPrevSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed"]
+layout_mode = 2
+text = "◀"
+
+[node name="BtnNextSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed"]
+layout_mode = 2
+text = "▶"
+
+[node name="HBoxSeedActions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BtnRandomSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeedActions"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🎲 Losuj (Spacja)"
+
+[node name="BtnCopySeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeedActions"]
+layout_mode = 2
+text = "📋 Kopiuj"
+
+[node name="HSeparator3" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SizeLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Kategoria Rozmiaru:"
+
+[node name="OptSizePreset" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DimensionsLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Wymiary (Szerokość x Wysokość):"
+
+[node name="HBoxDimensions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpinWidth" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 20.0
+max_value = 600.0
+value = 100.0
+rounded = true
+
+[node name="LabelX" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions"]
+layout_mode = 2
+text = "x"
+
+[node name="SpinHeight" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 20.0
+max_value = 600.0
+value = 100.0
+rounded = true
+
+[node name="RatioLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Wariancja Proporcji (Aspect Ratio):"
+
+[node name="OptRatio" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="HSeparator4" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ParamsLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Parametry Generatora:"
+
+[node name="HBoxRooms" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LabelRooms" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Liczba pokoi (0=Auto):"
+
+[node name="SpinRooms" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms"]
+layout_mode = 2
+min_value = 0.0
+max_value = 150.0
+value = 0.0
+rounded = true
+
+[node name="CheckEntities" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Spawnuj wrogów i skrzynie"
+
+[node name="CheckNav" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+button_pressed = true
+text = "Generuj siatkę nawigacji 2D"
+
+[node name="BtnGenerate" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "🔄 Generuj Mapę"
+
+[node name="HSeparator5" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NavLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Kamera i Teleportacja:"
+
+[node name="HBoxCamera1" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BtnFitAll" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🔍 Cała mapa (Fit)"
+
+[node name="BtnCenter" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🎯 Środek"
+
+[node name="HBoxCamera2" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BtnEntrance" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🚪 Start / Wejście (1)"
+
+[node name="BtnExit" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏁 Koniec / Wyjście (2)"
+
+[node name="BtnPlayer" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "🏃 Spacer Graczem (P)"
+
+[node name="HSeparator6" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="InfoTitle" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Statystyki generacji:"
+
+[node name="InfoLabel" type="RichTextLabel" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 bbcode_enabled = true
 text = "Inicjalizacja..."
 fit_content = true
 
-[node name="HBoxButtons" type="HBoxContainer" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="BtnGenerate" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxButtons"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "🎲 Nowy Seed (Spacja)"
-
-[node name="HBoxTypes" type="HBoxContainer" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="BtnForest" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxTypes"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "🌲 Las"
-
-[node name="BtnDungeon" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxTypes"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "🏰 Zamek"
-
-[node name="HBoxSize" type="HBoxContainer" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxSize"]
-layout_mode = 2
-text = "Rozmiar:"
-
-[node name="OptSize" type="OptionButton" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer/HBoxSize"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="BtnPlayer" type="Button" parent="CanvasLayer/Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-text = "🏃 Tryb Gracza (P)"
+[node name="BtnShowHUD" type="Button" parent="CanvasLayer"]
+visible = false
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 100.0
+offset_bottom = 44.0
+text = "▶ Pokaż UI (H)"
 
 [node name="HelpLabel" type="Label" parent="CanvasLayer"]
 anchors_preset = 7
@@ -84,11 +245,13 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -250.0
-offset_top = -36.0
-offset_right = 250.0
-offset_bottom = -12.0
+offset_left = -380.0
+offset_top = -32.0
+offset_right = 380.0
+offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "Spacja: Nowy seed | PPM / ŚPM: Przesuwanie kamery | Kółko: Zoom | P: Spacer graczem"
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+text = "Spacja: Nowy seed | PPM/ŚPM lub WASD: Kamera | Kółko: Zoom | F: Cała mapa | 1: Start | 2: Wyjście | P: Gracz | H: Ukryj UI"
 horizontal_alignment = 1
