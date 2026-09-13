@@ -17,8 +17,8 @@ enum LevelType {
 
 @export var level_type: LevelType = LevelType.FOREST_OVERWORLD
 @export var map_seed: int = 0
-@export var map_width: int = 60
-@export var map_height: int = 60
+@export var map_width: int = 160
+@export var map_height: int = 160
 @export var custom_tileset: TileSet = null
 @export var enemy_scenes: Array[PackedScene] = []
 @export var chest_scene: PackedScene = null
