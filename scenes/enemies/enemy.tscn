@@ -21,10 +21,10 @@ position = Vector2(0, -8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
 shape = SubResource("RectangleShape2D_enemy")
 
-[node name="Node2D" type="Node2D" parent="." unique_id=321684898]
+[node name="Node2D" type="RigidBody2D" parent="." unique_id=1785282346]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Node2D" unique_id=1145610831]
-scale = Vector2(0.3, 0.3)
+[node name="EnemiesColision" type="CollisionShape2D" parent="Node2D" unique_id=262376909]
+scale = Vector2(0.4, 0.4)
 shape = SubResource("RectangleShape2D_enemy")
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=2045348945]
