@@ -1102,7 +1102,10 @@ static func apply_cave_tiles(
 					if not placed_tiles.has(pos) or placed_tiles[pos] == "ROCK":
 						walls_layer.set_cell(pos, 0, Vector2i(4, 1) if not use_roots else Vector2i(4, 10))
 						placed_tiles[pos] = "RIM"
-
+	# Strefy portali muszą pozostać całkowicie przechodnie:
+	# żadnego kafla ściany ani kolizji na ich komórkach.
+	for p in portal_zone:
+		walls_layer.erase_cell(p)
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
