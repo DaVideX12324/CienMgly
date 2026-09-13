@@ -924,7 +924,7 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -3)] = "FACADE"
 					var p_in := pos + Vector2i(1, -2)
 					if not _is_walkable(grid, p_in):
-						var in_corner := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN
+						var in_corner := CRNR_SE_IN  # Zawsze niedekorowany – pod nim jest ściana B, nie ROOT TOP
 						walls_layer.set_cell(p_in, 0, in_corner)
 						placed_tiles[p_in] = "CORNER"
 					var p_side := pos + Vector2i(1, -1)
@@ -958,7 +958,7 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -3)] = "FACADE"
 					var p_in := pos + Vector2i(-1, -2)
 					if not _is_walkable(grid, p_in):
-						var in_corner := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN
+						var in_corner := CRNR_SE_IN  # Zawsze niedekorowany – pod nim jest ściana B, nie ROOT TOP
 						walls_layer.set_cell(p_in, 0, in_corner)
 						placed_tiles[p_in] = "CORNER"
 					var p_side := pos + Vector2i(-1, -1)
@@ -1091,12 +1091,13 @@ static func apply_cave_tiles(
 						if left_has_same_y and right_has_same_y and not left_down_wall and not right_down_wall and front_is_walkable and left_wall_clear and right_wall_clear:
 							can_niche = true
 
-				if can_niche and rng.randf() < 0.40:
-					# Lewy moduł niszy: CRNR_SE_IN na górze + MOD_CRNR_NW_IN w ścianie (wgłębienie z lewej ku prawej)
-					var l_crown := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN
-					var l_top := MOD_CRNR_NW_IN_TOP if not use_roots else ROOT_MOD_CRNR_NW_IN_TOP
-					var l_mid := MOD_CRNR_NW_IN_MID if not use_roots else ROOT_MOD_CRNR_NW_IN_MID
-					var l_base := MOD_CRNR_NW_IN_BASE if not use_roots else ROOT_MOD_CRNR_NW_IN_BASE
+				if can_niche and rng.randf() < 0.15:
+					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
+					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
+					var l_crown := WALL_TOP_CORNER_RIGHT  # (5,1) – korona nad MOD_CRNR_NE_OUT
+					var l_top := MOD_CRNR_NE_OUT_TOP if not use_roots else ROOT_MOD_CRNR_NE_OUT_TOP
+					var l_mid := MOD_CRNR_NE_OUT_MID if not use_roots else ROOT_MOD_CRNR_NE_OUT_MID
+					var l_base := MOD_CRNR_NE_OUT_BASE if not use_roots else ROOT_MOD_CRNR_NE_OUT_BASE
 
 					walls_layer.set_cell(pos + Vector2i(0, -3), 0, l_crown)
 					walls_layer.set_cell(pos + Vector2i(0, -2), 0, l_top)
@@ -1107,11 +1108,11 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos] = "FACADE"
 
-					# Prawy moduł niszy: CRNR_SW_IN na górze + MOD_CRNR_NE_IN w ścianie (wgłębienie z prawej ku lewej)
-					var r_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN
-					var r_top := MOD_CRNR_NE_IN_TOP if not use_roots else ROOT_MOD_CRNR_NE_IN_TOP
-					var r_mid := MOD_CRNR_NE_IN_MID if not use_roots else ROOT_MOD_CRNR_NE_IN_MID
-					var r_base := MOD_CRNR_NE_IN_BASE if not use_roots else ROOT_MOD_CRNR_NE_IN_BASE
+					# Prawy moduł: MOD_CRNR_NW_OUT – patrzy w lewo, domyka wgłębienie od prawej
+					var r_crown := WALL_TOP_CORNER_LEFT  # (0,1) – korona nad MOD_CRNR_NW_OUT
+					var r_top := MOD_CRNR_NW_OUT_TOP if not use_roots else ROOT_MOD_CRNR_NW_OUT_TOP
+					var r_mid := MOD_CRNR_NW_OUT_MID if not use_roots else ROOT_MOD_CRNR_NW_OUT_MID
+					var r_base := MOD_CRNR_NW_OUT_BASE if not use_roots else ROOT_MOD_CRNR_NW_OUT_BASE
 
 					walls_layer.set_cell(pos_next + Vector2i(0, -3), 0, r_crown)
 					walls_layer.set_cell(pos_next + Vector2i(0, -2), 0, r_top)
@@ -1196,7 +1197,7 @@ static func apply_cave_tiles(
 			if sdir == 1:
 				var p_c := Vector2i(adj_x, sy - 2)
 				if not placed_tiles.has(p_c) or placed_tiles[p_c] == "ROCK":
-					var crown_t := CRNR_SE_IN if not use_roots_adj else ROOT_CRNR_SE_IN
+					var crown_t := CRNR_SE_IN  # Zawsze niedekorowany – pod nim jest ściana B, nie ROOT_MOD_NW_IN_TOP
 					walls_layer.set_cell(p_c, 0, crown_t)
 					placed_tiles[p_c] = "CORNER"
 				var side_b := WALL_SIDE_EAST[1] if not use_roots_adj else ROOT_WALL_SIDE_EAST[1]
@@ -1207,7 +1208,7 @@ static func apply_cave_tiles(
 			else:
 				var p_c := Vector2i(adj_x, sy - 2)
 				if not placed_tiles.has(p_c) or placed_tiles[p_c] == "ROCK":
-					var crown_t := CRNR_SW_IN if not use_roots_adj else ROOT_CRNR_SW_IN
+					var crown_t := CRNR_SW_IN  # Zawsze niedekorowany – pod nim jest ściana B, nie ROOT_MOD_NE_IN_TOP
 					walls_layer.set_cell(p_c, 0, crown_t)
 					placed_tiles[p_c] = "CORNER"
 				var side_b := WALL_SIDE_WEST[1] if not use_roots_adj else ROOT_WALL_SIDE_WEST[1]
