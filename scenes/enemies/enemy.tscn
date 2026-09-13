@@ -10,7 +10,7 @@ radius = 150.0
 
 [node name="Enemy" type="CharacterBody2D" unique_id=151771770 groups=["enemies", "interactable"]]
 collision_layer = 2
-collision_mask = 5
+collision_mask = 37
 motion_mode = 1
 platform_on_leave = 2
 script = ExtResource("1_enemy")
@@ -27,13 +27,10 @@ collision_layer = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea" unique_id=1963073735]
 shape = SubResource("CircleShape2D_detect")
 
-[node name="RayCast2D" type="RayCast2D" parent="."]
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=2107681577]
 target_position = Vector2(0, 150)
-collision_mask = 5
-collide_with_areas = false
-collide_with_bodies = true
+collision_mask = 37
 
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="."]
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1695042050]
 path_desired_distance = 8.0
 target_desired_distance = 12.0
-

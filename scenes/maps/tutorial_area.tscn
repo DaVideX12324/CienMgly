@@ -136,16 +136,21 @@ position = Vector2(304, 336)
 
 [node name="Enemy" parent="Enemies" unique_id=1280210534 instance=ExtResource("6_0m64r")]
 position = Vector2(228, -44)
+collision_mask = 5
 
 [node name="Enemy2" parent="Enemies" unique_id=1438334663 instance=ExtResource("6_0m64r")]
 position = Vector2(94, -79)
+collision_mask = 5
 
 [node name="Enemy3" parent="Enemies" unique_id=205540593 instance=ExtResource("6_0m64r")]
 position = Vector2(181, -18)
+collision_mask = 5
 
 [node name="Enemy4" parent="Enemies" unique_id=103068927 instance=ExtResource("7_xwsiw")]
 position = Vector2(542, -67)
+collision_mask = 5
 
 [node name="Enemy5" parent="Enemies" unique_id=96031201 instance=ExtResource("8_5bl0e")]
 position = Vector2(-49, -167)
+collision_mask = 5
 enemy_data = SubResource("Resource_xwsiw")
