@@ -1217,7 +1217,7 @@ static func apply_cave_tiles(
 				# Zakończenie lewe litym murem: ściana zachodnia B i wewnętrzny narożnik SW_IN
 				if not _is_walkable(grid, pos + Vector2i(-1, 0)) and left_y == -1:
 					var side_b := WALL_SIDE_WEST[1] if not use_roots else ROOT_WALL_SIDE_WEST[1]
-					var corner_t := CRNR_SE_IN
+					var corner_t := CRNR_SW_IN
 					var p_corner := Vector2i(pos.x - 1, pos.y - 2)
 					if not _is_walkable(grid, p_corner) and (not placed_tiles.has(p_corner) or placed_tiles[p_corner] == "ROCK"):
 						walls_layer.set_cell(p_corner, 0, corner_t)
