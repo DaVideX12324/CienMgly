@@ -1091,10 +1091,10 @@ static func apply_cave_tiles(
 						if left_has_same_y and right_has_same_y and not left_down_wall and not right_down_wall and front_is_walkable and left_wall_clear and right_wall_clear:
 							can_niche = true
 
-				if can_niche and rng.randf() < 0.15:
+				if can_niche and rng.randf() < 0.03:
 					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
 					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
-					var l_crown := WALL_TOP_CORNER_RIGHT  # (5,1) – korona nad MOD_CRNR_NE_OUT
+					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN# (5,1) – korona nad MOD_CRNR_NE_OUT
 					var l_top := MOD_CRNR_NE_OUT_TOP if not use_roots else ROOT_MOD_CRNR_NE_OUT_TOP
 					var l_mid := MOD_CRNR_NE_OUT_MID if not use_roots else ROOT_MOD_CRNR_NE_OUT_MID
 					var l_base := MOD_CRNR_NE_OUT_BASE if not use_roots else ROOT_MOD_CRNR_NE_OUT_BASE
@@ -1109,7 +1109,7 @@ static func apply_cave_tiles(
 					placed_tiles[pos] = "FACADE"
 
 					# Prawy moduł: MOD_CRNR_NW_OUT – patrzy w lewo, domyka wgłębienie od prawej
-					var r_crown := WALL_TOP_CORNER_LEFT  # (0,1) – korona nad MOD_CRNR_NW_OUT
+					var r_crown := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN  # (0,1) – korona nad MOD_CRNR_NW_OUT
 					var r_top := MOD_CRNR_NW_OUT_TOP if not use_roots else ROOT_MOD_CRNR_NW_OUT_TOP
 					var r_mid := MOD_CRNR_NW_OUT_MID if not use_roots else ROOT_MOD_CRNR_NW_OUT_MID
 					var r_base := MOD_CRNR_NW_OUT_BASE if not use_roots else ROOT_MOD_CRNR_NW_OUT_BASE
@@ -1123,7 +1123,40 @@ static func apply_cave_tiles(
 					placed_tiles[pos_next + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos_next] = "FACADE"
 					continue
+					
+				if can_niche and rng.randf() < 0.15:
+					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
+					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
+					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN# (5,1) – korona nad MOD_CRNR_NE_OUT
+					var l_top := MOD_CRNR_NE_IN_TOP if not use_roots else ROOT_MOD_CRNR_NE_IN_TOP
+					var l_mid := MOD_CRNR_NE_IN_MID if not use_roots else ROOT_MOD_CRNR_NE_IN_MID
+					var l_base := MOD_CRNR_NE_IN_BASE if not use_roots else ROOT_MOD_CRNR_NE_IN_BASE
 
+					walls_layer.set_cell(pos + Vector2i(0, -3), 0, l_crown)
+					walls_layer.set_cell(pos + Vector2i(0, -2), 0, l_top)
+					walls_layer.set_cell(pos + Vector2i(0, -1), 0, l_mid)
+					walls_layer.set_cell(pos, 0, l_base)
+					placed_tiles[pos + Vector2i(0, -3)] = "FACADE"
+					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
+					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
+					placed_tiles[pos] = "FACADE"
+
+					# Prawy moduł: MOD_CRNR_NW_OUT – patrzy w lewo, domyka wgłębienie od prawej
+					var r_crown := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN  # (0,1) – korona nad MOD_CRNR_NW_OUT
+					var r_top := MOD_CRNR_NW_IN_TOP if not use_roots else ROOT_MOD_CRNR_NW_IN_TOP
+					var r_mid := MOD_CRNR_NW_IN_MID if not use_roots else ROOT_MOD_CRNR_NW_IN_MID
+					var r_base := MOD_CRNR_NW_IN_BASE if not use_roots else ROOT_MOD_CRNR_NW_IN_BASE
+
+					walls_layer.set_cell(pos_next + Vector2i(0, -3), 0, r_crown)
+					walls_layer.set_cell(pos_next + Vector2i(0, -2), 0, r_top)
+					walls_layer.set_cell(pos_next + Vector2i(0, -1), 0, r_mid)
+					walls_layer.set_cell(pos_next, 0, r_base)
+					placed_tiles[pos_next + Vector2i(0, -3)] = "FACADE"
+					placed_tiles[pos_next + Vector2i(0, -2)] = "FACADE"
+					placed_tiles[pos_next + Vector2i(0, -1)] = "FACADE"
+					placed_tiles[pos_next] = "FACADE"
+					continue
+					
 				# Ściana prosta MOD_WALL_A / MOD_WALL_B
 				var is_b: bool = ab_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 				var top_t := WALL_BOTTOM_TOP[1] if is_b else WALL_BOTTOM_TOP[0]
