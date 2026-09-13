@@ -903,15 +903,31 @@ static func apply_cave_tiles(
 				placed_tiles[pos + Vector2i(0, dy_off)] = "FACADE"
 				continue
 
-			# Sprawdź OUT corner ("jak jest schodek tylko jeden w bok to powinien być użyty narożnik out zamiast zwykłej ściany")
-			var w_open := not _is_walkable(grid, pos + Vector2i(1, 0)) \
-				and _is_walkable(grid, pos + Vector2i(-1, -1)) \
+			# Sprawdzenie sąsiadów w poziomie
+			var left_y: int = -1
+			if facade_cols.has(x - 1):
+				for ly in facade_cols[x - 1]:
+					if abs(ly - y) <= 4:
+						left_y = ly
+						break
+
+			var right_y: int = -1
+			if facade_cols.has(x + 1):
+				for ry in facade_cols[x + 1]:
+					if abs(ry - y) <= 4:
+						right_y = ry
+						break
+
+			# Sprawdź OUT corner (początek fasady przy korytarzu lub otwartej przestrzeni)
+			var w_open := _is_walkable(grid, pos + Vector2i(-1, -1)) \
 				and _is_walkable(grid, pos + Vector2i(-1, -2)) \
-				and _is_walkable(grid, pos + Vector2i(-1, -3))
-			var e_open := not _is_walkable(grid, pos + Vector2i(-1, 0)) \
-				and _is_walkable(grid, pos + Vector2i(1, -1)) \
+				and not _is_walkable(grid, pos + Vector2i(0, -2)) \
+				and left_y == -1
+
+			var e_open := _is_walkable(grid, pos + Vector2i(1, -1)) \
 				and _is_walkable(grid, pos + Vector2i(1, -2)) \
-				and _is_walkable(grid, pos + Vector2i(1, -3))
+				and not _is_walkable(grid, pos + Vector2i(0, -2)) \
+				and right_y == -1
 
 			if w_open and not e_open:
 				var is_2h_corner := _is_walkable(grid, pos + Vector2i(0, -3))
@@ -945,7 +961,16 @@ static func apply_cave_tiles(
 					placed_tiles[pos] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
-				step_downs.append({"x": x, "y": y, "dir": 1})
+
+					# Dopięcie pionowej ściany wschodniej bezpośrednio nad narożnikiem
+					var p_up := pos + Vector2i(0, -3)
+					if not _is_walkable(grid, p_up) and _is_walkable(grid, pos + Vector2i(-1, -3)):
+						var side_t := WALL_SIDE_EAST[1] if not use_roots else ROOT_WALL_SIDE_EAST[1]
+						walls_layer.set_cell(p_up, 0, side_t)
+						placed_tiles[p_up] = "SIDE_FIXED"
+
+				if not _is_walkable(grid, pos + Vector2i(1, 0)):
+					step_downs.append({"x": x, "y": y, "dir": 1})
 				continue
 			elif e_open and not w_open:
 				var is_2h_corner := _is_walkable(grid, pos + Vector2i(0, -3))
@@ -961,7 +986,7 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -3)] = "FACADE"
 					var p_in := pos + Vector2i(-1, -2)
 					if not _is_walkable(grid, p_in):
-						var in_corner := CRNR_SE_IN  # Zawsze niedekorowany – pod nim jest ściana B, nie ROOT TOP
+						var in_corner := CRNR_SW_IN
 						walls_layer.set_cell(p_in, 0, in_corner)
 						placed_tiles[p_in] = "CORNER"
 					var p_side := pos + Vector2i(-1, -1)
@@ -979,22 +1004,17 @@ static func apply_cave_tiles(
 					placed_tiles[pos] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
-				step_downs.append({"x": x, "y": y, "dir": -1})
-				continue
 
-			# Określenie typu kolumny na podstawie sąsiadów
-			var left_y: int = -1
-			if facade_cols.has(x - 1):
-				for ly in facade_cols[x - 1]:
-					if abs(ly - y) <= 4:
-						left_y = ly
-						break
-			var right_y: int = -1
-			if facade_cols.has(x + 1):
-				for ry in facade_cols[x + 1]:
-					if abs(ry - y) <= 4:
-						right_y = ry
-						break
+					# Dopięcie pionowej ściany zachodniej bezpośrednio nad narożnikiem
+					var p_up := pos + Vector2i(0, -3)
+					if not _is_walkable(grid, p_up) and _is_walkable(grid, pos + Vector2i(1, -3)):
+						var side_t := WALL_SIDE_WEST[1] if not use_roots else ROOT_WALL_SIDE_WEST[1]
+						walls_layer.set_cell(p_up, 0, side_t)
+						placed_tiles[p_up] = "SIDE_FIXED"
+
+				if not _is_walkable(grid, pos + Vector2i(-1, 0)):
+					step_downs.append({"x": x, "y": y, "dir": -1})
+				continue
 
 			if left_y != -1 and y > left_y:
 				# Schodek opada z lewej w prawo (kolumna y jest niżej niż lewy sąsiad)
@@ -1024,13 +1044,14 @@ static func apply_cave_tiles(
 					walls_layer.set_cell(p_crown, 0, crown_t)
 					placed_tiles[p_crown] = "CORNER"
 
-					var p_side := Vector2i(x, left_y - 1)
-					var side_t := WALL_SIDE_EAST[1]
-					walls_layer.set_cell(p_side, 0, side_t)
-					placed_tiles[p_side] = "SIDE_FIXED"
+					for cy in range(left_y - 1, y - 2):
+						var p_side := Vector2i(x, cy)
+						var side_t := WALL_SIDE_EAST[1]
+						walls_layer.set_cell(p_side, 0, side_t)
+						placed_tiles[p_side] = "SIDE_FIXED"
 
 				# Sprawdź, czy schodek kończy się w dół (prawy sąsiad to lita ściana kontynuująca w dół)
-				if not _is_walkable(grid, pos + Vector2i(1, 0)):
+				if not _is_walkable(grid, pos + Vector2i(1, 0)) and right_y == -1:
 					step_downs.append({"x": x, "y": y, "dir": 1})
 
 			elif right_y != -1 and y > right_y:
@@ -1059,13 +1080,13 @@ static func apply_cave_tiles(
 					walls_layer.set_cell(p_crown, 0, crown_t)
 					placed_tiles[p_crown] = "CORNER"
 
-					var p_side := Vector2i(x, right_y - 1)
-					var side_t := WALL_SIDE_WEST[1]
-					walls_layer.set_cell(p_side, 0, side_t)
-					placed_tiles[p_side] = "SIDE_FIXED"
+					for cy in range(right_y - 1, y - 2):
+						var p_side := Vector2i(x, cy)
+						var side_t := WALL_SIDE_WEST[1]
+						walls_layer.set_cell(p_side, 0, side_t)
+						placed_tiles[p_side] = "SIDE_FIXED"
 
-				# Sprawdź, czy schodek kończy się w dół (lewy sąsiad to lita ściana kontynuująca w dół)
-				if not _is_walkable(grid, pos + Vector2i(-1, 0)):
+				if not _is_walkable(grid, pos + Vector2i(-1, 0)) and left_y == -1:
 					step_downs.append({"x": x, "y": y, "dir": -1})
 
 			else:
@@ -1193,42 +1214,39 @@ static func apply_cave_tiles(
 				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 				placed_tiles[pos] = "FACADE"
 
-				# Jeśli ściana kończy się z lewej strony litym murem, po lewej stronie MUSZĄ być ściany lewe typu B
-				# kończące się na wysokości MID fasady, a nad nią narożnik wewnętrzny skierowany w stronę ściany
-				if not _is_walkable(grid, pos + Vector2i(-1, 0)) and not facade_cols.has(pos.x - 1):
+				# Zakończenie lewe litym murem: ściana zachodnia B i wewnętrzny narożnik SW_IN
+				if not _is_walkable(grid, pos + Vector2i(-1, 0)) and left_y == -1:
 					var side_b := WALL_SIDE_WEST[1] if not use_roots else ROOT_WALL_SIDE_WEST[1]
 					var corner_t := CRNR_SE_IN
 					var p_corner := Vector2i(pos.x - 1, pos.y - 2)
 					if not _is_walkable(grid, p_corner) and (not placed_tiles.has(p_corner) or placed_tiles[p_corner] == "ROCK"):
 						walls_layer.set_cell(p_corner, 0, corner_t)
 						placed_tiles[p_corner] = "CORNER"
-					for cy in range(pos.y - 1, pos.y):
+					for cy in range(pos.y - 1, pos.y + 1):
 						var p_side := Vector2i(pos.x - 1, cy)
 						if not _is_walkable(grid, p_side) and (not placed_tiles.has(p_side) or placed_tiles[p_side] == "ROCK"):
 							walls_layer.set_cell(p_side, 0, side_b)
 							placed_tiles[p_side] = "SIDE_FIXED"
 
-				# Jeśli ściana kończy się z prawej strony litym murem, po prawej stronie MUSZĄ być ściany pionowe prawe typu B
-				# kończące się na wysokości MID fasady, a nad nią narożnik wewnętrzny skierowany w stronę ściany
-				if not _is_walkable(grid, pos + Vector2i(1, 0)) and not facade_cols.has(pos.x + 1):
+				# Zakończenie prawe litym murem: ściana wschodnia B i wewnętrzny narożnik SE_IN
+				if not _is_walkable(grid, pos + Vector2i(1, 0)) and right_y == -1:
 					var side_b := WALL_SIDE_EAST[1] if not use_roots else ROOT_WALL_SIDE_EAST[1]
-					var corner_t := CRNR_SW_IN
+					var corner_t := CRNR_SE_IN
 					var p_corner := Vector2i(pos.x + 1, pos.y - 2)
 					if not _is_walkable(grid, p_corner) and (not placed_tiles.has(p_corner) or placed_tiles[p_corner] == "ROCK"):
 						walls_layer.set_cell(p_corner, 0, corner_t)
 						placed_tiles[p_corner] = "CORNER"
-					for cy in range(pos.y - 1, pos.y):
+					for cy in range(pos.y - 1, pos.y + 1):
 						var p_side := Vector2i(pos.x + 1, cy)
 						if not _is_walkable(grid, p_side) and (not placed_tiles.has(p_side) or placed_tiles[p_side] == "ROCK"):
 							walls_layer.set_cell(p_side, 0, side_b)
 							placed_tiles[p_side] = "SIDE_FIXED"
 
 	# FAZA 2.5: Ściany pionowe B obok kończącego się schodka w dół
-	# "jak się schodek kończy w dół, to obok niego powinny być jeszcze ściany pionowe B"
 	for s in step_downs:
 		var sx: int = s.x
 		var sy: int = s.y
-		var sdir: int = s.dir # 1 -> adj is sx + 1, -1 -> adj is sx - 1
+		var sdir: int = s.dir
 		var adj_x: int = sx + sdir
 
 		var is_wall_at_sy := true
@@ -1339,7 +1357,6 @@ static func apply_cave_tiles(
 						walls_layer.set_cell(pos, 0, rim_t)
 						placed_tiles[pos] = "RIM"
 					else:
-						# Udekorowany rim z kolcami (2-kafelkowy kompletny moduł TOP + BASE)
 						# BASE jest tam gdzie było w zwykłych (pos), a nad nimi jest TOP (pos + Vector2i(0, -1))
 						var is_2h_touch_left: bool = placed_tiles.has(pos + Vector2i(-1, 0)) and (placed_tiles[pos + Vector2i(-1, 0)] == "FACADE" or placed_tiles[pos + Vector2i(-1, 0)] == "CORNER")
 						var is_2h_touch_right: bool = placed_tiles.has(pos + Vector2i(1, 0)) and (placed_tiles[pos + Vector2i(1, 0)] == "FACADE" or placed_tiles[pos + Vector2i(1, 0)] == "CORNER")
