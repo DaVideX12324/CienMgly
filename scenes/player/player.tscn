@@ -120,7 +120,7 @@ radius = 3.0
 height = 10.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_interact"]
-radius = 10.049875
+radius = 11.0
 
 [node name="Player" type="CharacterBody2D" unique_id=921874676 groups=["player"]]
 y_sort_enabled = true
