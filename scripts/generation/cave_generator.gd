@@ -150,12 +150,12 @@ static func get_default_palette() -> Dictionary:
 
 
 static func generate(
-	width: int = 60,
-	height: int = 60,
+	width: int = 160,
+	height: int = 160,
 	seed_val: int = -1,
-	min_room_size: int = 8,
-	max_room_size: int = 14,
-	max_rooms: int = 6,
+	min_room_size: int = 6,
+	max_room_size: int = 24,
+	max_rooms: int = 15,
 	corridor_width: int = 3
 ) -> GenerationResult:
 	var rng := create_rng(seed_val)

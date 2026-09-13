@@ -1,32 +1,32 @@
-[gd_scene load_steps=2 format=3 uid="uid://proc_level_001"]
+[gd_scene format=3 uid="uid://cc8kde0qlhh73"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/procedural_level.gd" id="1_proc"]
+[ext_resource type="Script" uid="uid://bt2j5p7uv1fv2" path="res://modules/quiz_rpg/scripts/maps/procedural_level.gd" id="1_proc"]
 
-[node name="ProceduralLevel" type="Node2D"]
+[node name="ProceduralLevel" type="Node2D" unique_id=1686916455]
 y_sort_enabled = true
 script = ExtResource("1_proc")
 level_type = 2
 next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
 
-[node name="Floor" type="TileMapLayer" parent="." groups=["tilemap"]]
+[node name="Floor" type="TileMapLayer" parent="." unique_id=1561698726 groups=["tilemap"]]
 z_index = -2
 y_sort_enabled = true
 
-[node name="FloorDecor" type="TileMapLayer" parent="."]
+[node name="FloorDecor" type="TileMapLayer" parent="." unique_id=1226661710]
 z_index = -1
 y_sort_enabled = true
 
-[node name="Walls" type="TileMapLayer" parent="."]
+[node name="Walls" type="TileMapLayer" parent="." unique_id=916338244]
 y_sort_enabled = true
 
-[node name="Spawns" type="Node2D" parent="."]
+[node name="Spawns" type="Node2D" parent="." unique_id=779057147]
 
-[node name="Spawn" type="Marker2D" parent="Spawns"]
+[node name="Spawn" type="Marker2D" parent="Spawns" unique_id=1088308175]
 
-[node name="Enemies" type="Node2D" parent="."]
+[node name="Enemies" type="Node2D" parent="." unique_id=1390609306]
 y_sort_enabled = true
 
-[node name="Objects" type="Node2D" parent="."]
+[node name="Objects" type="Node2D" parent="." unique_id=271185027]
 y_sort_enabled = true
 
-[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1096101207]
