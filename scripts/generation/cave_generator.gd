@@ -137,6 +137,37 @@ const ROOT_CORNER_INNER_BOTTOM_RIGHT := Vector2i(1, 10)
 # Wnętrze ściany / pełny ciemny blok litej skały
 const WALL_INSIDE := Vector2i(2, 2)
 
+# 6. Ściany fasad o wysokości 2 kratek (wiersze 19, 20, 21):
+const WALL_2H_TOP: Array[Vector2i] = [Vector2i(2, 20), Vector2i(3, 20)]
+const WALL_2H_BASE: Array[Vector2i] = [Vector2i(2, 21), Vector2i(3, 21)]
+
+# Zakończenia / narożniki zewnętrzne 2H:
+const WALL_2H_WEST_TOP := Vector2i(0, 19)
+const WALL_2H_WEST_BASE := Vector2i(0, 20)
+const WALL_2H_EAST_TOP := Vector2i(5, 19)
+const WALL_2H_EAST_BASE := Vector2i(5, 20)
+
+# Narożniki wewnętrzne / skosy 2H:
+const WALL_2H_SLOPE_LEFT_TOP := Vector2i(1, 19)
+const WALL_2H_SLOPE_LEFT_MID := Vector2i(1, 20)
+const WALL_2H_SLOPE_LEFT_BASE := Vector2i(1, 21)
+
+const WALL_2H_SLOPE_RIGHT_TOP := Vector2i(4, 19)
+const WALL_2H_SLOPE_RIGHT_MID := Vector2i(4, 20)
+const WALL_2H_SLOPE_RIGHT_BASE := Vector2i(4, 21)
+
+# Łączniki modularne (przejścia między fasadą 2H a 3H):
+# Przejście 2H (lewo) -> 3H (prawo): kolumna 7
+const CONNECTOR_2H_TO_3H_TOP := Vector2i(7, 19)
+const CONNECTOR_2H_TO_3H_MID := Vector2i(7, 20)
+const CONNECTOR_2H_TO_3H_BASE := Vector2i(7, 21)
+
+# Przejście 3H (lewo) -> 2H (prawo): kolumna 10
+const CONNECTOR_3H_TO_2H_TOP := Vector2i(10, 19)
+const CONNECTOR_3H_TO_2H_MID := Vector2i(10, 20)
+const CONNECTOR_3H_TO_2H_BASE := Vector2i(10, 21)
+
+
 
 static func get_default_palette() -> Dictionary:
 	return {
@@ -195,22 +226,56 @@ static func generate(
 			continue
 
 		rooms.append(new_room)
-		_carve_cave_chamber(result.grid, new_room, rng)
+		_carve_cave_chamber(result.grid, new_room, rng, width, height)
 
 	result.rooms = rooms
 
-	# 3. Korytarze jaskiniowe (meandrujące, organiczne tunele)
-	for i in range(rooms.size() - 1):
-		var center_a := rooms[i].get_center()
-		var center_b := rooms[i + 1].get_center()
-		_carve_organic_corridor(result.grid, center_a, center_b, corridor_width, rng)
+	# 3. Korytarze jaskiniowe - Minimum Spanning Tree (MST) gwarantujące połączenie wszystkich komór
+	if rooms.size() >= 2:
+		var connected_indices: Array[int] = [0]
+		var unconnected_indices: Array[int] = []
+		for i in range(1, rooms.size()):
+			unconnected_indices.append(i)
 
-	if rooms.size() >= 4:
-		var loop_a := rooms[0].get_center()
-		var loop_b := rooms[rooms.size() - 2].get_center()
-		_carve_organic_corridor(result.grid, loop_a, loop_b, corridor_width, rng)
+		while not unconnected_indices.is_empty():
+			var best_dist := INF
+			var best_conn := -1
+			var best_unconn := -1
+			var best_unconn_idx := -1
 
-	# 4. Wymuszenie minimalnej grubości murów (eliminacja zbyt cienkich ścianek < 4 w pionie i < 2 w poziomie)
+			for c_idx in connected_indices:
+				var c_center := rooms[c_idx].get_center()
+				for u_i in range(unconnected_indices.size()):
+					var u_idx := unconnected_indices[u_i]
+					var u_center := rooms[u_idx].get_center()
+					var dist := Vector2(c_center).distance_squared_to(Vector2(u_center))
+					if dist < best_dist:
+						best_dist = dist
+						best_conn = c_idx
+						best_unconn = u_idx
+						best_unconn_idx = u_i
+
+			if best_unconn_idx != -1:
+				_carve_organic_corridor(result.grid, rooms[best_conn].get_center(), rooms[best_unconn].get_center(), corridor_width, rng, width, height)
+				connected_indices.append(best_unconn)
+				unconnected_indices.remove_at(best_unconn_idx)
+
+		# Dodatkowe korytarze pętlowe (cykle) między bliskimi komorami
+		var extra_loops := mini(3, rooms.size() / 3)
+		var loop_attempts := 0
+		var loops_added := 0
+		while loops_added < extra_loops and loop_attempts < 25:
+			loop_attempts += 1
+			var idx_a := rng.randi() % rooms.size()
+			var idx_b := rng.randi() % rooms.size()
+			if idx_a != idx_b:
+				var d := Vector2(rooms[idx_a].get_center()).distance_to(Vector2(rooms[idx_b].get_center()))
+				if d < maxf(width, height) * 0.45:
+					_carve_organic_corridor(result.grid, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width, rng, width, height)
+					loops_added += 1
+
+	# 4. Wymuszenie minimalnej grubości murów i eliminacja ścian o wysokości 1 kratki
+	_remove_1height_walls(result.grid, width, height)
 	_enforce_wall_thickness(result.grid, width, height)
 
 	# 4.5. Twarda gwarancja spójności po wszystkich modyfikacjach gridu.
@@ -272,6 +337,11 @@ static func generate(
 			else:
 				result.chest_spawns.append(center)
 
+		# 6. Ostateczna eliminacja ścian o wysokości 1 kratki oraz egzekucja grubości murów po wycięciu portali
+		_remove_1height_walls(result.grid, width, height)
+		_enforce_wall_thickness(result.grid, width, height)
+		_remove_1height_walls(result.grid, width, height)
+
 	return result
 
 
@@ -327,12 +397,23 @@ static func _ensure_rooms_connected(grid: Dictionary, rooms: Array[Rect2i], widt
 			push_error("CaveGenerator: missing reachable room while repairing connectivity.")
 			return
 
-		_carve_organic_corridor(grid, source, target, maxi(corridor_width, 3), rng)
+		_carve_organic_corridor(grid, source, target, maxi(corridor_width, 3), rng, width, height)
 		reachable = _get_reachable_cells(grid, rooms[0].get_center(), width, height)
 
 
+## Usuwa pojedyncze ściany o wysokości 1 kratki (obszar walls o wysokości 1 kratki nie może istnieć)
+static func _remove_1height_walls(grid: Dictionary, width: int, height: int) -> void:
+	for y in range(1, height - 1):
+		for x in range(1, width - 1):
+			var p := Vector2i(x, y)
+			if not _is_walkable(grid, p):
+				# Jeśli bezpośrednio nad i pod tą kratką jest podłoga, to pionowa wysokość ściany wynosi 1
+				if _is_walkable(grid, p + Vector2i(0, -1)) and _is_walkable(grid, p + Vector2i(0, 1)):
+					grid[p] = CellType.FLOOR
+
+
 ## Rzeźbi komorę o naturalnych, organicznych kształtach jaskini (rdzeń eliptyczny + losowe wybrzuszenia)
-static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumberGenerator) -> void:
+static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumberGenerator, map_w: int = 160, map_h: int = 160) -> void:
 	var center := rect.get_center()
 	var rx_rad := rect.size.x / 2.0
 	var ry_rad := rect.size.y / 2.0
@@ -353,16 +434,19 @@ static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumbe
 		var dist_y := rng.randf_range(0.2, 0.6) * ry_rad
 		var lobe_center := center + Vector2i(int(cos(angle) * dist_x), int(sin(angle) * dist_y))
 		var lobe_radius := rng.randi_range(2, int(min(rx_rad, ry_rad) * 0.6))
-		carve_circle(grid, lobe_center, lobe_radius, CellType.FLOOR, 100, 100)
+		carve_circle(grid, lobe_center, lobe_radius, CellType.FLOOR, map_w, map_h)
 
 
 ## Rzeźbi meandrujący, zaokrąglony korytarz jaskiniowy
-static func _carve_organic_corridor(grid: Dictionary, from: Vector2i, to: Vector2i, width: int, rng: RandomNumberGenerator) -> void:
+static func _carve_organic_corridor(grid: Dictionary, from: Vector2i, to: Vector2i, width: int, rng: RandomNumberGenerator, map_w: int = 160, map_h: int = 160) -> void:
 	var mid := (from + to) / 2
 	var dir := Vector2(to - from).normalized()
 	var normal := Vector2(-dir.y, dir.x)
 	var jitter := normal * rng.randf_range(-3.0, 3.0)
 	var mid_curved := Vector2i(mid + Vector2i(int(jitter.x), int(jitter.y)))
+	mid_curved.x = clampi(mid_curved.x, 3, map_w - 4)
+	mid_curved.y = clampi(mid_curved.y, 3, map_h - 4)
+
 	var points = [from, mid_curved, to]
 	for seg in range(points.size() - 1):
 		var p0: Vector2 = Vector2(points[seg])
@@ -372,7 +456,7 @@ static func _carve_organic_corridor(grid: Dictionary, from: Vector2i, to: Vector
 		for s in range(steps + 1):
 			var t := float(s) / maxf(float(steps), 1.0)
 			var cur := p0.lerp(p1, t)
-			carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), width / 2 + 1, CellType.FLOOR, 100, 100)
+			carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), width / 2 + 1, CellType.FLOOR, map_w, map_h)
 
 
 ## Usuwa cienkie ścianki (< 4 kratek w pionie, < 2 kratek w poziomie), łącząc komory w szerokie przejścia
@@ -397,8 +481,8 @@ static func _enforce_wall_thickness(grid: Dictionary, width: int, height: int) -
 					var has_floor_above := (y_start > 0 and _is_walkable(grid, Vector2i(x, y_start - 1)))
 					var has_floor_below := (y_end < height - 1 and _is_walkable(grid, Vector2i(x, y_end + 1)))
 
-					# Jeśli ściana dzieli dwie komory w pionie i ma mniej niż 4 kratki (nie zmieści modułów):
-					if has_floor_above and has_floor_below and wall_len < 4:
+					# Jeśli ściana dzieli dwie komory w pionie i ma mniej niż 2 kratki (nie zmieści żadnego modułu):
+					if has_floor_above and has_floor_below and wall_len < 2:
 						for cy in range(y_start, y_end + 1):
 							grid[Vector2i(x, cy)] = CellType.FLOOR
 						changed = true
@@ -474,6 +558,7 @@ static func _get_vertical_wall_thickness(grid: Dictionary, pos: Vector2i, height
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map_h: int, rng: RandomNumberGenerator, avoid_edge: int = -1) -> Dictionary:
 	const ALCOVE_RADIUS := 2
+	const ALCOVE_NORTH_EXTRA := 1  # Dodatkowy wiersz w górę na bazę fasady ściany północnej
 	const MAP_BORDER := 2
 	const MIN_TUNNEL_LENGTH := 2
 	const ALCOVE_CENTER_MARGIN := ALCOVE_RADIUS + MAP_BORDER
@@ -494,7 +579,7 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 	var chosen_max_length := 0
 
 	# Wybieramy najbliższą dozwoloną krawędź tylko wtedy, gdy po tunelu
-	# zmieści się pełna alkowa 5x5 wraz z dwukratkowym pasem mapy.
+	# zmieści się pełna alkowa 5x5 wraz z marginesem mapy.
 	for edge_data in edge_dists:
 		var edge := int(edge_data["edge"])
 		if edge == avoid_edge:
@@ -510,7 +595,7 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 				dir = Vector2i(0, -1)
 				tunnel_start = Vector2i(center.x, room.position.y - 1)
 				perp = Vector2i(1, 0)
-				max_length = tunnel_start.y - ALCOVE_CENTER_MARGIN
+				max_length = tunnel_start.y - (ALCOVE_CENTER_MARGIN + ALCOVE_NORTH_EXTRA)
 			1:
 				dir = Vector2i(1, 0)
 				tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
@@ -535,7 +620,7 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 			chosen_max_length = max_length
 			break
 
-	# Przy obecznym bezpiecznym marginesie generacji zawsze powinna istnieć
+	# Przy obecnym bezpiecznym marginesie generacji zawsze powinna istnieć
 	# przynajmniej jedna poprawna krawędź. Nie twórz częściowej alkowy, jeśli nie ma.
 	if chosen_edge == -1:
 		push_error("CaveGenerator: no safe edge for portal alcove.")
@@ -551,11 +636,15 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 		current += chosen_dir
 
 	var alcove_cells: Array[Vector2i] = []
-	for dy in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
+	for dy in range(-ALCOVE_RADIUS - ALCOVE_NORTH_EXTRA, ALCOVE_RADIUS + 1):
 		for dx in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
 			var p := current + Vector2i(dx, dy)
-			grid[p] = CellType.FLOOR
-			alcove_cells.append(p)
+			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
+				grid[p] = CellType.FLOOR
+				# Dodatkowy wiersz u góry (dy < -ALCOVE_RADIUS) przeznaczony jest na bazę fasady;
+				# nie włączamy go do alcove_cells/portal_zone, aby czyszczenie kolizji nie usunęło bazy.
+				if dy >= -ALCOVE_RADIUS:
+					alcove_cells.append(p)
 
 	return {"center": current, "edge": chosen_edge, "cells": alcove_cells}
 
@@ -586,6 +675,9 @@ static func apply_cave_tiles(
 	var width := result.width
 	var height := result.height
 	var grid := result.grid
+
+	# Gwarancja: obszar walls o wysokości 1 kratki nie powinien generować ścian
+	_remove_1height_walls(grid, width, height)
 
 	# 1. WYPEŁNIENIE VOIDU
 	for y in range(-4, height + 4):
@@ -671,49 +763,31 @@ static func apply_cave_tiles(
 	if floor_decor_layer:
 		floor_decor_layer.set_cells_terrain_connect(grass_cells, 0, 2, true)
 
-	# 3. SPÓJNY MOTYW ŚCIAN NA POZIOMIE KOMÓR
-	# 70% dekorowanego setu (Roots) i 30% zwykłego (Standard Rock), z możliwością wymuszenia przez theme_override
-	var num_rooms: int = result.rooms.size()
-	var num_decorated: int = maxi(1, int(round(num_rooms * 0.70))) if num_rooms > 0 else 0
-	if theme_override == 0:
-		num_decorated = 0
-	elif theme_override == 1:
-		num_decorated = num_rooms
+	# 3. MOTYW ŚCIAN: SZUM O PLAMACH NA KILKA KRATEK (30% Roots, 70% Standard Rock)
+	# Oraz drobny szum dla częstych zmian wariantów A/B ścian prostych
+	var roots_theme_noise := FastNoiseLite.new()
+	roots_theme_noise.seed = rng.seed + 333
+	roots_theme_noise.frequency = 0.08  # Większy szum - plamy o szerokości kilku kratek
 
-	var room_indices: Array[int] = []
-	for i in range(num_rooms):
-		room_indices.append(i)
+	var ab_noise := FastNoiseLite.new()
+	ab_noise.seed = rng.seed + 777
+	ab_noise.frequency = 0.45  # Drobny szum - warianty A/B zmieniają się co 1-2 kratki
 
-	# Tasowanie indeksów pomieszczeń za pomocą generatora rng
-	for i in range(num_rooms - 1, 0, -1):
-		var j := rng.randi_range(0, i)
-		var tmp := room_indices[i]
-		room_indices[i] = room_indices[j]
-		room_indices[j] = tmp
-
-	var room_themes: Array[bool] = []
-	room_themes.resize(num_rooms)
-	for i in range(num_rooms):
-		room_themes[i] = false
-	for k in range(mini(num_decorated, num_rooms)):
-		room_themes[room_indices[k]] = true
+	var res_entrance: Vector2i = result.entrance_pos
+	var res_exit: Vector2i = result.exit_pos
 
 	var get_use_roots := func(pos: Vector2i) -> bool:
 		if theme_override == 0:
 			return false
 		if theme_override == 1:
 			return true
-		if room_themes.is_empty():
-			return false
-		var closest_dist := 999999.0
-		var closest_idx := 0
-		for r_i in range(result.rooms.size()):
-			var center: Vector2 = result.rooms[r_i].get_center()
-			var d := Vector2(pos).distance_squared_to(center)
-			if d < closest_dist:
-				closest_dist = d
-				closest_idx = r_i
-		return room_themes[closest_idx]
+		# W strefach portali zapewnij jednolity motyw dla całego pokoju
+		if res_entrance != Vector2i.ZERO and abs(pos.x - res_entrance.x) <= 4 and abs(pos.y - res_entrance.y) <= 4:
+			return roots_theme_noise.get_noise_2d(float(res_entrance.x), float(res_entrance.y)) > 0.14
+		if res_exit != Vector2i.ZERO and abs(pos.x - res_exit.x) <= 4 and abs(pos.y - res_exit.y) <= 4:
+			return roots_theme_noise.get_noise_2d(float(res_exit.x), float(res_exit.y)) > 0.14
+		# Progiem 0.14 uzyskujemy ~30% powierzchni dla dekorowanego zestawu (Roots)
+		return roots_theme_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.14
 
 	# 4. POTOK KAFELKOWANIA ŚCIAN (GROUND TRUTH MODULAR PIPELINE)
 	var placed_tiles: Dictionary = {}
@@ -741,8 +815,8 @@ static func apply_cave_tiles(
 		for x in range(width):
 			var pos := Vector2i(x, y)
 			if _is_walkable(grid, pos) and not _is_walkable(grid, pos + Vector2i(0, -1)):
-				# Sprawdź, czy nad głową jest wystarczająco dużo skały (headroom)
-				if not _is_walkable(grid, pos + Vector2i(0, -2)) and not _is_walkable(grid, pos + Vector2i(0, -3)):
+				# Sprawdź, czy nad głową jest co najmniej 2 kratki ściany (fasada 2H lub 3H)
+				if not _is_walkable(grid, pos + Vector2i(0, -2)):
 					if not facade_cols.has(x):
 						facade_cols[x] = []
 					facade_cols[x].append(y)
@@ -758,6 +832,65 @@ static func apply_cave_tiles(
 			if placed_tiles.has(pos) and placed_tiles[pos] == "FACADE":
 				continue
 			var use_roots: bool = get_use_roots.call(pos)
+
+			# 1. Obsługa fasady 2-kratkowej (gdy ściana ma grubość dokładnie 2 kratek)
+			var is_2h: bool = _is_walkable(grid, pos + Vector2i(0, -3))
+			if is_2h:
+				var is_west_end: bool = _is_walkable(grid, pos + Vector2i(-1, -1)) or _is_walkable(grid, pos + Vector2i(-1, -2))
+				var is_east_end: bool = _is_walkable(grid, pos + Vector2i(1, -1)) or _is_walkable(grid, pos + Vector2i(1, -2))
+
+				var top_2h: Vector2i = Vector2i.ZERO
+				var base_2h: Vector2i = Vector2i.ZERO
+
+				if is_west_end and not is_east_end:
+					top_2h = WALL_2H_WEST_TOP
+					base_2h = WALL_2H_WEST_BASE
+				elif is_east_end and not is_west_end:
+					top_2h = WALL_2H_EAST_TOP
+					base_2h = WALL_2H_EAST_BASE
+				else:
+					var is_b: bool = ab_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
+					top_2h = WALL_2H_TOP[1] if is_b else WALL_2H_TOP[0]
+					base_2h = WALL_2H_BASE[1] if is_b else WALL_2H_BASE[0]
+
+				walls_layer.set_cell(pos + Vector2i(0, -2), 0, top_2h)
+				walls_layer.set_cell(pos + Vector2i(0, -1), 0, base_2h)
+				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
+				continue
+
+			# 2. Obsługa łączników modułowych 2H <-> 3H
+			var check_2h_col := func(cx: int, fy: int) -> bool:
+				return _is_walkable(grid, Vector2i(cx, fy)) \
+					and not _is_walkable(grid, Vector2i(cx, fy - 1)) \
+					and not _is_walkable(grid, Vector2i(cx, fy - 2)) \
+					and _is_walkable(grid, Vector2i(cx, fy - 3))
+
+			var left_is_2h_same: bool = check_2h_col.call(x - 1, y)
+			var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
+			var right_is_2h_same: bool = check_2h_col.call(x + 1, y)
+			var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
+
+			if (left_is_2h_same or left_is_2h_step) and not (right_is_2h_same or right_is_2h_step):
+				# Łącznik: przejście z 2H po lewej do 3H po prawej (kolumna 7)
+				var dy_off := 0 if left_is_2h_same else -1
+				walls_layer.set_cell(pos + Vector2i(0, -2 + dy_off), 0, CONNECTOR_2H_TO_3H_TOP)
+				walls_layer.set_cell(pos + Vector2i(0, -1 + dy_off), 0, CONNECTOR_2H_TO_3H_MID)
+				walls_layer.set_cell(pos + Vector2i(0, dy_off), 0, CONNECTOR_2H_TO_3H_BASE)
+				placed_tiles[pos + Vector2i(0, -2 + dy_off)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, -1 + dy_off)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, dy_off)] = "FACADE"
+				continue
+			elif (right_is_2h_same or right_is_2h_step) and not (left_is_2h_same or left_is_2h_step):
+				# Łącznik: przejście z 3H po lewej do 2H po prawej (kolumna 10)
+				var dy_off := 0 if right_is_2h_same else -1
+				walls_layer.set_cell(pos + Vector2i(0, -2 + dy_off), 0, CONNECTOR_3H_TO_2H_TOP)
+				walls_layer.set_cell(pos + Vector2i(0, -1 + dy_off), 0, CONNECTOR_3H_TO_2H_MID)
+				walls_layer.set_cell(pos + Vector2i(0, dy_off), 0, CONNECTOR_3H_TO_2H_BASE)
+				placed_tiles[pos + Vector2i(0, -2 + dy_off)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, -1 + dy_off)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, dy_off)] = "FACADE"
+				continue
 
 			# Sprawdź OUT corner ("jak jest schodek tylko jeden w bok to powinien być użyty narożnik out zamiast zwykłej ściany")
 			# Jeśli kolumna x była ścianą pionową (a nie skosem schodzącym z rimu wyspy)
@@ -886,58 +1019,38 @@ static func apply_cave_tiles(
 				if not _is_walkable(grid, pos + Vector2i(-1, 0)):
 					step_downs.append({"x": x, "y": y, "dir": -1})
 
-			elif left_y == -1 and right_y != -1:
-				var crown_t := WALL_SIDE_EAST[1] if not use_roots else ROOT_WALL_SIDE_EAST[1]
-				var top_t := MOD_CRNR_NW_OUT_TOP if not use_roots else ROOT_MOD_CRNR_NW_OUT_TOP
-				var mid_t := MOD_CRNR_NW_OUT_MID if not use_roots else ROOT_MOD_CRNR_NW_OUT_MID
-				var base_t := MOD_CRNR_NW_OUT_BASE if not use_roots else ROOT_MOD_CRNR_NW_OUT_BASE
-				walls_layer.set_cell(pos + Vector2i(0, -3), 0, crown_t)
-				walls_layer.set_cell(pos + Vector2i(0, -2), 0, top_t)
-				walls_layer.set_cell(pos + Vector2i(0, -1), 0, mid_t)
-				walls_layer.set_cell(pos, 0, base_t)
-				placed_tiles[pos + Vector2i(0, -3)] = "FACADE"
-				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
-				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
-				placed_tiles[pos] = "FACADE"
-
-			elif right_y == -1 and left_y != -1:
-				var crown_t := WALL_SIDE_WEST[1] if not use_roots else ROOT_WALL_SIDE_WEST[1]
-				var top_t := MOD_CRNR_NE_OUT_TOP if not use_roots else ROOT_MOD_CRNR_NE_OUT_TOP
-				var mid_t := MOD_CRNR_NE_OUT_MID if not use_roots else ROOT_MOD_CRNR_NE_OUT_MID
-				var base_t := MOD_CRNR_NE_OUT_BASE if not use_roots else ROOT_MOD_CRNR_NE_OUT_BASE
-				walls_layer.set_cell(pos + Vector2i(0, -3), 0, crown_t)
-				walls_layer.set_cell(pos + Vector2i(0, -2), 0, top_t)
-				walls_layer.set_cell(pos + Vector2i(0, -1), 0, mid_t)
-				walls_layer.set_cell(pos, 0, base_t)
-				placed_tiles[pos + Vector2i(0, -3)] = "FACADE"
-				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
-				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
-				placed_tiles[pos] = "FACADE"
-
 			else:
 				# Sprawdź, czy można zastosować dwukafelkową niszową formację dodającą głębi ścianom
-				# Para modułów: (MOD_CRNR_NE_IN + nad nim CRNR_SW_IN) oraz (MOD_CRNR_NW_IN + nad nim CRNR_SE_IN)
+				# Para modułów: (MOD_CRNR_NW_IN + nad nim CRNR_SE_IN) z lewej oraz (MOD_CRNR_NE_IN + nad nim CRNR_SW_IN) z prawej
+				# ZASADA: nie generuj nisz, jeśli sąsiad z lewej/prawej jest na innej wysokości, ściana schodzi w dół, lub jest to strefa portalu!
 				var can_niche := false
 				var pos_next := Vector2i(x + 1, y)
-				if facade_cols.has(x + 1) and facade_cols[x + 1].has(y):
+				var is_in_portal := portal_zone.has(pos + Vector2i(0, 1)) or portal_zone.has(pos_next + Vector2i(0, 1))
+
+				if not is_in_portal and facade_cols.has(x + 1) and facade_cols[x + 1].has(y):
 					if not (placed_tiles.has(pos_next) and placed_tiles[pos_next] == "FACADE"):
-						var next_right_y := -1
-						if facade_cols.has(x + 2):
-							for ry in facade_cols[x + 2]:
-								if abs(ry - y) <= 4:
-									next_right_y = ry
-									break
-						var next_is_step_down: bool = (next_right_y != -1 and y > next_right_y)
-						var next_is_out_corner: bool = (next_right_y == -1 and _is_walkable(grid, pos_next + Vector2i(1, -1)))
-						if not next_is_step_down and not next_is_out_corner:
+						# Kafelek z lewej (x - 1) MUSI być na DOKŁADNIE tej samej wysokości y
+						var left_has_same_y: bool = facade_cols.has(x - 1) and facade_cols[x - 1].has(y)
+						# Kafelek z prawej (x + 2) MUSI być na DOKŁADNIE tej samej wysokości y
+						var right_has_same_y: bool = facade_cols.has(x + 2) and facade_cols[x + 2].has(y)
+
+						# Sąsiad 1 w bok 1 w dół: jeśli ściana idzie w dół (lity mur lub schodek fasady), nie twórz niszy
+						var left_down_wall: bool = not _is_walkable(grid, Vector2i(x - 1, y + 1)) or (facade_cols.has(x - 1) and facade_cols[x - 1].has(y + 1))
+						var right_down_wall: bool = not _is_walkable(grid, Vector2i(x + 2, y + 1)) or (facade_cols.has(x + 2) and facade_cols[x + 2].has(y + 1))
+						var front_is_walkable: bool = _is_walkable(grid, Vector2i(x, y + 1)) and _is_walkable(grid, Vector2i(x + 1, y + 1))
+						# Nisza nie powinna dotykać bezpośrednio bocznych ścian pomieszczenia
+						var left_wall_clear: bool = _is_walkable(grid, Vector2i(x - 2, y))
+						var right_wall_clear: bool = _is_walkable(grid, Vector2i(x + 3, y))
+
+						if left_has_same_y and right_has_same_y and not left_down_wall and not right_down_wall and front_is_walkable and left_wall_clear and right_wall_clear:
 							can_niche = true
 
 				if can_niche and rng.randf() < 0.40:
-					# Lewy moduł (NE_IN): wgłębienie w ścianie w kierunku prawym
-					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN
-					var l_top := MOD_CRNR_NE_IN_TOP if not use_roots else ROOT_MOD_CRNR_NE_IN_TOP
-					var l_mid := MOD_CRNR_NE_IN_MID if not use_roots else ROOT_MOD_CRNR_NE_IN_MID
-					var l_base := MOD_CRNR_NE_IN_BASE if not use_roots else ROOT_MOD_CRNR_NE_IN_BASE
+					# Lewy moduł niszy: CRNR_SE_IN na górze + MOD_CRNR_NW_IN w ścianie (wgłębienie z lewej ku prawej)
+					var l_crown := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN
+					var l_top := MOD_CRNR_NW_IN_TOP if not use_roots else ROOT_MOD_CRNR_NW_IN_TOP
+					var l_mid := MOD_CRNR_NW_IN_MID if not use_roots else ROOT_MOD_CRNR_NW_IN_MID
+					var l_base := MOD_CRNR_NW_IN_BASE if not use_roots else ROOT_MOD_CRNR_NW_IN_BASE
 
 					walls_layer.set_cell(pos + Vector2i(0, -3), 0, l_crown)
 					walls_layer.set_cell(pos + Vector2i(0, -2), 0, l_top)
@@ -948,11 +1061,11 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos] = "FACADE"
 
-					# Prawy moduł (NW_IN): wgłębienie w ścianie w kierunku lewym
-					var r_crown := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN
-					var r_top := MOD_CRNR_NW_IN_TOP if not use_roots else ROOT_MOD_CRNR_NW_IN_TOP
-					var r_mid := MOD_CRNR_NW_IN_MID if not use_roots else ROOT_MOD_CRNR_NW_IN_MID
-					var r_base := MOD_CRNR_NW_IN_BASE if not use_roots else ROOT_MOD_CRNR_NW_IN_BASE
+					# Prawy moduł niszy: CRNR_SW_IN na górze + MOD_CRNR_NE_IN w ścianie (wgłębienie z prawej ku lewej)
+					var r_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN
+					var r_top := MOD_CRNR_NE_IN_TOP if not use_roots else ROOT_MOD_CRNR_NE_IN_TOP
+					var r_mid := MOD_CRNR_NE_IN_MID if not use_roots else ROOT_MOD_CRNR_NE_IN_MID
+					var r_base := MOD_CRNR_NE_IN_BASE if not use_roots else ROOT_MOD_CRNR_NE_IN_BASE
 
 					walls_layer.set_cell(pos_next + Vector2i(0, -3), 0, r_crown)
 					walls_layer.set_cell(pos_next + Vector2i(0, -2), 0, r_top)
@@ -964,7 +1077,8 @@ static func apply_cave_tiles(
 					placed_tiles[pos_next] = "FACADE"
 					continue
 
-				var is_b: bool = rng.randf() < 0.5
+				# Ściana prosta MOD_WALL_A / MOD_WALL_B
+				var is_b: bool = ab_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 				var top_t := WALL_BOTTOM_TOP[1] if is_b else WALL_BOTTOM_TOP[0]
 				var mid_t := WALL_BOTTOM_MID[1] if is_b else WALL_BOTTOM_MID[0]
 				var base_t := WALL_BOTTOM_BASE[1] if is_b else WALL_BOTTOM_BASE[0]
@@ -984,6 +1098,36 @@ static func apply_cave_tiles(
 				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
 				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 				placed_tiles[pos] = "FACADE"
+
+				# Jeśli ściana kończy się z lewej strony litym murem, po lewej stronie MUSZĄ być ściany lewe typu B
+				# kończące się na wysokości MID fasady, a nad nią narożnik wewnętrzny skierowany w stronę ściany
+				if not _is_walkable(grid, pos + Vector2i(-1, 0)):
+					var side_b := WALL_SIDE_WEST[1] if not use_roots else ROOT_WALL_SIDE_WEST[1]
+					var corner_t := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN
+					var p_corner := Vector2i(pos.x - 1, pos.y - 2)
+					if not _is_walkable(grid, p_corner):
+						walls_layer.set_cell(p_corner, 0, corner_t)
+						placed_tiles[p_corner] = "CORNER"
+					for cy in range(pos.y - 1, pos.y + 1):
+						var p_side := Vector2i(pos.x - 1, cy)
+						if not _is_walkable(grid, p_side):
+							walls_layer.set_cell(p_side, 0, side_b)
+							placed_tiles[p_side] = "SIDE_FIXED"
+
+				# Jeśli ściana kończy się z prawej strony litym murem, po prawej stronie MUSZĄ być ściany pionowe prawe typu B
+				# kończące się na wysokości MID fasady, a nad nią narożnik wewnętrzny skierowany w stronę ściany
+				if not _is_walkable(grid, pos + Vector2i(1, 0)):
+					var side_b := WALL_SIDE_EAST[1] if not use_roots else ROOT_WALL_SIDE_EAST[1]
+					var corner_t := CRNR_SE_IN if not use_roots else ROOT_CRNR_SE_IN
+					var p_corner := Vector2i(pos.x + 1, pos.y - 2)
+					if not _is_walkable(grid, p_corner):
+						walls_layer.set_cell(p_corner, 0, corner_t)
+						placed_tiles[p_corner] = "CORNER"
+					for cy in range(pos.y - 1, pos.y + 1):
+						var p_side := Vector2i(pos.x + 1, cy)
+						if not _is_walkable(grid, p_side):
+							walls_layer.set_cell(p_side, 0, side_b)
+							placed_tiles[p_side] = "SIDE_FIXED"
 
 	# FAZA 2.5: Ściany pionowe B obok kończącego się schodka w dół
 	# "jak się schodek kończy w dół, to obok niego powinny być jeszcze ściany pionowe B"
@@ -1071,6 +1215,10 @@ static func apply_cave_tiles(
 					if placed_tiles.has(pos) and (placed_tiles[pos] == "FACADE" or placed_tiles[pos] == "SIDE_FIXED"):
 						continue # Nie nadpisuj fasad ani stałych ścian bocznych B
 
+					# Jeśli bezpośrednio pod ścianą jest podłoga (obszar walls ma tylko 1 kratkę wysokości), nie generuj tu ściany
+					if _is_walkable(grid, pos + Vector2i(0, 1)):
+						continue
+
 					if not use_roots:
 						# Zwykły rim (1-kafelkowy)
 						var rim_t := Vector2i(2, 0)
@@ -1093,7 +1241,7 @@ static func apply_cave_tiles(
 									walls_layer.set_cell(p_b, 0, Vector2i(1, 1))
 									placed_tiles[p_b] = "RIM"
 						else:
-							var is_b: bool = rng.randf() < 0.5
+							var is_b: bool = ab_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 							rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 
 						walls_layer.set_cell(pos, 0, rim_t)
@@ -1144,7 +1292,7 @@ static func apply_cave_tiles(
 									placed_tiles[p_b] = "RIM"
 						else:
 							# Ściana prosta pozioma: BASE na pos, TOP nad nim
-							var is_b: bool = rng.randf() < 0.5
+							var is_b: bool = ab_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 							var t_top: Vector2i = ROOT_TOP_TIPS[1] if is_b else ROOT_TOP_TIPS[0]
 							var t_base: Vector2i = ROOT_TOP_BASE[1] if is_b else ROOT_TOP_BASE[0]
 							walls_layer.set_cell(pos, 0, t_base)
