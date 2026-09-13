@@ -792,6 +792,9 @@ static func apply_cave_tiles(
 
 	# 4. POTOK KAFELKOWANIA ŚCIAN (GROUND TRUTH MODULAR PIPELINE)
 	var placed_tiles: Dictionary = {}
+	# Rzadkie nisze OUT są punktami sekretów; nie grupuj ich blisko siebie.
+	var out_niche_positions: Array[Vector2i] = []
+	const OUT_NICHE_MIN_DISTANCE := 10
 
 	# FAZA 1: Wypełnienie litej skały (Rock Fill)
 	for y in range(height):
@@ -1091,7 +1094,14 @@ static func apply_cave_tiles(
 						if left_has_same_y and right_has_same_y and not left_down_wall and not right_down_wall and front_is_walkable and left_wall_clear and right_wall_clear:
 							can_niche = true
 
-				if can_niche and rng.randf() < 0.03:
+				var can_place_out_niche := true
+				for existing_out_pos in out_niche_positions:
+					var distance_sq := Vector2(pos).distance_squared_to(Vector2(existing_out_pos))
+					if distance_sq < OUT_NICHE_MIN_DISTANCE * OUT_NICHE_MIN_DISTANCE:
+						can_place_out_niche = false
+						break
+
+				if can_niche and can_place_out_niche and rng.randf() < 0.03:
 					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
 					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
 					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN# (5,1) – korona nad MOD_CRNR_NE_OUT
@@ -1122,6 +1132,9 @@ static func apply_cave_tiles(
 					placed_tiles[pos_next + Vector2i(0, -2)] = "FACADE"
 					placed_tiles[pos_next + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos_next] = "FACADE"
+
+					# Rejestrujemy lewy bok pary OUT + OUT jako punkt sekretu.
+					out_niche_positions.append(pos)
 					continue
 					
 				if can_niche and rng.randf() < 0.15:
