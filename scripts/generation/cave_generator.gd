@@ -213,6 +213,9 @@ static func generate(
 	# 4. Wymuszenie minimalnej grubości murów (eliminacja zbyt cienkich ścianek < 4 w pionie i < 2 w poziomie)
 	_enforce_wall_thickness(result.grid, width, height)
 
+	# 4.5. Twarda gwarancja spójności po wszystkich modyfikacjach gridu.
+	_ensure_rooms_connected(result.grid, rooms, width, height, corridor_width, rng)
+
 	# 5. Dedykowane wejście i wyjście - ZAWSZE obecne na mapie
 	if not rooms.is_empty():
 		# Znajdź parę komór o maksymalnym dystansie między centrami
@@ -270,6 +273,62 @@ static func generate(
 				result.chest_spawns.append(center)
 
 	return result
+
+
+## Zwraca wszystkie przechodnie komórki osiągalne ze startu (4-kierunkowy flood fill).
+static func _get_reachable_cells(grid: Dictionary, start: Vector2i, width: int, height: int) -> Dictionary:
+	var reachable: Dictionary = {}
+	if not _is_walkable(grid, start):
+		return reachable
+
+	var queue: Array[Vector2i] = [start]
+	var head := 0
+	var directions: Array[Vector2i] = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
+	reachable[start] = true
+
+	while head < queue.size():
+		var current := queue[head]
+		head += 1
+		for direction in directions:
+			var next := current + direction
+			if next.x < 0 or next.x >= width or next.y < 0 or next.y >= height:
+				continue
+			if reachable.has(next) or not _is_walkable(grid, next):
+				continue
+			reachable[next] = true
+			queue.append(next)
+
+	return reachable
+
+
+## Dopina komory odłączone po korektach grubości ścian.
+static func _ensure_rooms_connected(grid: Dictionary, rooms: Array[Rect2i], width: int, height: int, corridor_width: int, rng: RandomNumberGenerator) -> void:
+	if rooms.size() < 2:
+		return
+
+	var reachable := _get_reachable_cells(grid, rooms[0].get_center(), width, height)
+	for room in rooms:
+		var target := room.get_center()
+		if reachable.has(target):
+			continue
+
+		var source := Vector2i.ZERO
+		var best_distance := INF
+		for connected_room in rooms:
+			var candidate := connected_room.get_center()
+			if not reachable.has(candidate):
+				continue
+			var distance := Vector2(candidate).distance_squared_to(Vector2(target))
+			if distance < best_distance:
+				best_distance = distance
+				source = candidate
+
+		if best_distance == INF:
+			push_error("CaveGenerator: missing reachable room while repairing connectivity.")
+			return
+
+		_carve_organic_corridor(grid, source, target, maxi(corridor_width, 3), rng)
+		reachable = _get_reachable_cells(grid, rooms[0].get_center(), width, height)
 
 
 ## Rzeźbi komorę o naturalnych, organicznych kształtach jaskini (rdzeń eliptyczny + losowe wybrzuszenia)
