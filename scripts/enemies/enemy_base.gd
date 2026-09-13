@@ -212,6 +212,8 @@ func _has_line_of_sight_to_player() -> bool:
 	# Bardzo blisko / w srodku wroga -- raycast moze byc niestabilny przy
 	# zerowej dlugosci, wiec traktujemy to jako widoczne bez sprawdzania.
 	var distance := global_position.distance_to(player_ref.global_position)
+	if distance > detection_radius:
+		return false
 	if distance < 50.0:
 		return true
 
@@ -392,20 +394,15 @@ func _chase(delta: float) -> void:
 			_set_new_wander_target()
 			return
 
-	var move_target := last_seen_player_pos
-	if _nav_agent != null:
-		_nav_agent.target_position = last_seen_player_pos
-		if not _nav_agent.is_navigation_finished():
-			var next_pos := _nav_agent.get_next_path_position()
-			if next_pos != Vector2.ZERO:
-				move_target = next_pos
-
-	var direction := (move_target - global_position).normalized()
+	# Walka jest uruchamiana wyłącznie przez wejście collidera Enemy
+	# do Player/InteractionArea. Nie używaj wyniku NavigationAgent2D
+	# bez walidacji: wadliwy następny punkt potrafił stale kierować AI ku górze.
+	var direction := (last_seen_player_pos - global_position).normalized()
 	velocity = direction * patrol_speed * 1.3
 	move_and_slide()
 
-	if is_instance_valid(player_ref) and global_position.distance_to(player_ref.global_position) < 40.0:
-		start_combat(player_ref)
+	if is_on_wall():
+		velocity = Vector2.ZERO
 
 
 func _setup_detection_area() -> void:
@@ -451,6 +448,16 @@ func interact(player: Node2D) -> void:
 		return
 	if not defeated:
 		start_combat(player)
+
+
+## Wywoływane przez Player/InteractionArea po wejściu collidera przeciwnika.
+func engage_from_player_interaction(player: Node2D) -> void:
+	if not is_instance_valid(player) or defeated or _are_enemies_disabled():
+		return
+	player_ref = player
+	last_seen_player_pos = player.global_position
+	memory_timer = memory_duration
+	start_combat(player)
 
 
 func start_combat(player: Node2D) -> void:
