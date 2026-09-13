@@ -31,6 +31,8 @@ class GenerationResult:
 	var entrance_pos: Vector2i = Vector2i.ZERO
 	var exit_pos: Vector2i = Vector2i.ZERO
 	var decoration_spawns: Array[Dictionary] = [] # { pos: Vector2i, id: int }
+	var entrance_zone: Array[Vector2i] = []  # komórki strefy wejściowej
+	var exit_zone: Array[Vector2i] = []  # komórki strefy wyjściowej
 
 
 # --- Inicjalizacja RNG ---
