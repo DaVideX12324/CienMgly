@@ -414,91 +414,79 @@ static func _get_vertical_wall_thickness(grid: Dictionary, pos: Vector2i, height
 ## Wyrzeźbi dedykowany tunel portalowy z komory ku krawędzi mapy, zakończony niszą wejściową/wyjściową.
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map_h: int, rng: RandomNumberGenerator, avoid_edge: int = -1) -> Dictionary:
-	const ALCOVE_RADIUS := 2
-	const MAP_BORDER := 2
-	const MIN_TUNNEL_LENGTH := 2
-	const ALCOVE_CENTER_MARGIN := ALCOVE_RADIUS + MAP_BORDER
-
 	var center := room.get_center()
-	var edge_dists: Array[Dictionary] = [
-		{"edge": 0, "dist": center.y},
-		{"edge": 1, "dist": map_w - 1 - center.x},
-		{"edge": 2, "dist": map_h - 1 - center.y},
-		{"edge": 3, "dist": center.x},
-	]
+
+	# Oblicz dystans od centrum pokoju do każdej krawędzi mapy
+	var edge_dists: Array[Dictionary] = []
+	edge_dists.append({"edge": 0, "dist": center.y})                # góra (N)
+	edge_dists.append({"edge": 1, "dist": map_w - 1 - center.x})     # prawo (E)
+	edge_dists.append({"edge": 2, "dist": map_h - 1 - center.y})     # dół (S)
+	edge_dists.append({"edge": 3, "dist": center.x})                 # lewo (W)
+
+	# Sortuj po dystansie (najbliższa krawędź pierwsza)
 	edge_dists.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["dist"]) < int(b["dist"]))
 
-	var chosen_edge := -1
-	var chosen_dir := Vector2i.ZERO
-	var chosen_start := Vector2i.ZERO
-	var chosen_perp := Vector2i.ZERO
-	var chosen_max_length := 0
-
-	# Wybieramy najbliższą dozwoloną krawędź tylko wtedy, gdy po tunelu
-	# zmieści się pełna alkowa 5x5 wraz z dwukratkowym pasem mapy.
-	for edge_data in edge_dists:
-		var edge := int(edge_data["edge"])
-		if edge == avoid_edge:
-			continue
-
-		var dir := Vector2i.ZERO
-		var tunnel_start := Vector2i.ZERO
-		var perp := Vector2i.ZERO
-		var max_length := 0
-
-		match edge:
-			0:
-				dir = Vector2i(0, -1)
-				tunnel_start = Vector2i(center.x, room.position.y - 1)
-				perp = Vector2i(1, 0)
-				max_length = tunnel_start.y - ALCOVE_CENTER_MARGIN
-			1:
-				dir = Vector2i(1, 0)
-				tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
-				perp = Vector2i(0, 1)
-				max_length = map_w - 1 - ALCOVE_CENTER_MARGIN - tunnel_start.x
-			2:
-				dir = Vector2i(0, 1)
-				tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
-				perp = Vector2i(1, 0)
-				max_length = map_h - 1 - ALCOVE_CENTER_MARGIN - tunnel_start.y
-			3:
-				dir = Vector2i(-1, 0)
-				tunnel_start = Vector2i(room.position.x - 1, center.y)
-				perp = Vector2i(0, 1)
-				max_length = tunnel_start.x - ALCOVE_CENTER_MARGIN
-
-		if max_length >= MIN_TUNNEL_LENGTH:
-			chosen_edge = edge
-			chosen_dir = dir
-			chosen_start = tunnel_start
-			chosen_perp = perp
-			chosen_max_length = max_length
+	var chosen_edge: int = int(edge_dists[0]["edge"])
+	for e in edge_dists:
+		if int(e["edge"]) != avoid_edge:
+			chosen_edge = int(e["edge"])
 			break
 
-	# Przy obecznym bezpiecznym marginesie generacji zawsze powinna istnieć
-	# przynajmniej jedna poprawna krawędź. Nie twórz częściowej alkowy, jeśli nie ma.
-	if chosen_edge == -1:
-		push_error("CaveGenerator: no safe edge for portal alcove.")
-		return {"center": center, "edge": -1, "cells": []}
+	# Określ kierunek tunelu i punkt startowy na krawędzi pokoju
+	var dir := Vector2i.ZERO
+	var tunnel_start := Vector2i.ZERO
+	var perp := Vector2i.ZERO  # prostopadła oś (szerokość tunelu)
 
-	var tunnel_length := mini(rng.randi_range(4, 6), chosen_max_length)
-	var current := chosen_start
+	match chosen_edge:
+		0:  # ku górze (N)
+			dir = Vector2i(0, -1)
+			tunnel_start = Vector2i(center.x, room.position.y - 1)
+			perp = Vector2i(1, 0)
+		1:  # ku prawej (E)
+			dir = Vector2i(1, 0)
+			tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
+			perp = Vector2i(0, 1)
+		2:  # ku dołowi (S)
+			dir = Vector2i(0, 1)
+			tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
+			perp = Vector2i(1, 0)
+		3:  # ku lewej (W)
+			dir = Vector2i(-1, 0)
+			tunnel_start = Vector2i(room.position.x - 1, center.y)
+			perp = Vector2i(0, 1)
+
+	# Oblicz maksymalną długość tunelu (zatrzymaj się 3 kratki od krawędzi mapy)
+	var max_length := 0
+	match chosen_edge:
+		0: max_length = tunnel_start.y - 3
+		1: max_length = map_w - 3 - tunnel_start.x
+		2: max_length = map_h - 3 - tunnel_start.y
+		3: max_length = tunnel_start.x - 3
+	max_length = maxi(max_length, 2)
+
+	var tunnel_length: int = mini(rng.randi_range(4, 6), max_length)
+
+	# Wyrzeźb korytarz (szerokość 3 kafelki)
+	var current := tunnel_start
 	for i in range(tunnel_length):
-		for w in range(-1, 2):
-			var p := current + chosen_perp * w
-			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
+		for w in range(-1, 2):  # -1, 0, 1 = 3 kafelki szerokości
+			var p := current + perp * w
+			if p.x >= 1 and p.x < map_w - 1 and p.y >= 1 and p.y < map_h - 1:
 				grid[p] = CellType.FLOOR
-		current += chosen_dir
+		current += dir
 
+	# Wyrzeźb alkow / niszę na końcu tunelu (5x5 komora)
+	var alcove_center := current
 	var alcove_cells: Array[Vector2i] = []
-	for dy in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
-		for dx in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
-			var p := current + Vector2i(dx, dy)
-			grid[p] = CellType.FLOOR
-			alcove_cells.append(p)
+	for dy in range(-2, 3):
+		for dx in range(-2, 3):
+			var p := alcove_center + Vector2i(dx, dy)
+			if p.x >= 2 and p.x < map_w - 2 and p.y >= 2 and p.y < map_h - 2:
+				grid[p] = CellType.FLOOR
+				alcove_cells.append(p)
 
-	return {"center": current, "edge": chosen_edge, "cells": alcove_cells}
+	return {"center": alcove_center, "edge": chosen_edge, "cells": alcove_cells}
+
 
 ## Nanosi dopasowane kafelki z caves.tres na warstwy Floor, FloorDecor i Walls
 static func apply_cave_tiles(
