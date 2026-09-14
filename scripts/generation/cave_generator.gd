@@ -7,6 +7,17 @@ extends "res://modules/quiz_rpg/scripts/generation/map_generator_base.gd"
 
 const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tres"
 
+# =========================================================================
+# FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)
+# =========================================================================
+class GenerationFlags:
+	var enable_meandering: bool = true
+	var enable_variable_width: bool = true
+	var enable_funnels: bool = true
+	var enable_junction_smoothing: bool = true
+	var enable_grid_cleanup: bool = true
+	var enable_terrain_smoothing: bool = true
+
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
 # 1. Podłoga kamienna (Stone Floor): autotiling w terrain_set 0, terrain 0
@@ -187,8 +198,12 @@ static func generate(
 	min_room_size: int = 6,
 	max_room_size: int = 24,
 	max_rooms: int = 15,
-	corridor_width: int = 3
+	corridor_width: int = 3,
+	flags: GenerationFlags = null
 ) -> GenerationResult:
+	if flags == null:
+		flags = GenerationFlags.new()
+
 	var rng := create_rng(seed_val)
 	var result := GenerationResult.new()
 	result.width = width
@@ -257,7 +272,7 @@ static func generate(
 						best_unconn_idx = u_i
 
 			if best_unconn_idx != -1:
-				_carve_organic_corridor(result.grid, rooms[best_conn].get_center(), rooms[best_unconn].get_center(), corridor_width, rng, width, height)
+				_carve_organic_corridor(result.grid, rooms[best_conn].get_center(), rooms[best_unconn].get_center(), corridor_width, rng, width, height, flags)
 				connected_indices.append(best_unconn)
 				unconnected_indices.remove_at(best_unconn_idx)
 
@@ -272,15 +287,19 @@ static func generate(
 			if idx_a != idx_b:
 				var d := Vector2(rooms[idx_a].get_center()).distance_to(Vector2(rooms[idx_b].get_center()))
 				if d < maxf(width, height) * 0.45:
-					_carve_organic_corridor(result.grid, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width, rng, width, height)
+					_carve_organic_corridor(result.grid, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width, rng, width, height, flags)
 					loops_added += 1
+
+	# 3.5. Morfologiczne wygładzenie styków komór i korytarzy
+	if flags.enable_junction_smoothing:
+		_smooth_cave_junctions(result.grid, width, height)
 
 	# 4. Wymuszenie minimalnej grubości murów i eliminacja ścian o wysokości 1 kratki
 	_remove_1height_walls(result.grid, width, height)
 	_enforce_wall_thickness(result.grid, width, height)
 
-	# 4.5. Twarda gwarancja spójności po wszystkich modyfikacjach gridu.
-	_ensure_rooms_connected(result.grid, rooms, width, height, corridor_width, rng)
+	# 4.5. Twarda gwarancja spójności po wszystkich modyfikacjach gridu
+	_ensure_rooms_connected(result.grid, rooms, width, height, corridor_width, rng, flags)
 
 	# 5. Dedykowane wejście i wyjście - ZAWSZE obecne na mapie
 	if not rooms.is_empty():
@@ -373,7 +392,7 @@ static func _get_reachable_cells(grid: Dictionary, start: Vector2i, width: int, 
 
 
 ## Dopina komory odłączone po korektach grubości ścian.
-static func _ensure_rooms_connected(grid: Dictionary, rooms: Array[Rect2i], width: int, height: int, corridor_width: int, rng: RandomNumberGenerator) -> void:
+static func _ensure_rooms_connected(grid: Dictionary, rooms: Array[Rect2i], width: int, height: int, corridor_width: int, rng: RandomNumberGenerator, flags: GenerationFlags = null) -> void:
 	if rooms.size() < 2:
 		return
 
@@ -398,7 +417,7 @@ static func _ensure_rooms_connected(grid: Dictionary, rooms: Array[Rect2i], widt
 			push_error("CaveGenerator: missing reachable room while repairing connectivity.")
 			return
 
-		_carve_organic_corridor(grid, source, target, maxi(corridor_width, 3), rng, width, height)
+		_carve_organic_corridor(grid, source, target, maxi(corridor_width, 3), rng, width, height, flags)
 		reachable = _get_reachable_cells(grid, rooms[0].get_center(), width, height)
 
 
@@ -438,26 +457,132 @@ static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumbe
 		carve_circle(grid, lobe_center, lobe_radius, CellType.FLOOR, map_w, map_h)
 
 
-## Rzeźbi meandrujący, zaokrąglony korytarz jaskiniowy
-static func _carve_organic_corridor(grid: Dictionary, from: Vector2i, to: Vector2i, width: int, rng: RandomNumberGenerator, map_w: int = 160, map_h: int = 160) -> void:
-	var mid := (from + to) / 2
-	var dir := Vector2(to - from).normalized()
-	var normal := Vector2(-dir.y, dir.x)
-	var jitter := normal * rng.randf_range(-3.0, 3.0)
-	var mid_curved := Vector2i(mid + Vector2i(int(jitter.x), int(jitter.y)))
-	mid_curved.x = clampi(mid_curved.x, 3, map_w - 4)
-	mid_curved.y = clampi(mid_curved.y, 3, map_h - 4)
+## Rzeźbi meandrujący, zaokrąglony korytarz jaskiniowy o zmiennej szerokości i lejkach wlotowych
+static func _carve_organic_corridor(grid: Dictionary, from: Vector2i, to: Vector2i, width: int, rng: RandomNumberGenerator, map_w: int = 160, map_h: int = 160, flags: GenerationFlags = null) -> void:
+	if flags != null and flags.enable_meandering:
+		var v_from := Vector2(from)
+		var v_to := Vector2(to)
+		var total_dist := v_from.distance_to(v_to)
+		if total_dist < 1.0:
+			return
 
-	var points = [from, mid_curved, to]
-	for seg in range(points.size() - 1):
-		var p0: Vector2 = Vector2(points[seg])
-		var p1: Vector2 = Vector2(points[seg + 1])
-		var dist := p0.distance_to(p1)
-		var steps := int(dist * 2.0)
-		for s in range(steps + 1):
-			var t := float(s) / maxf(float(steps), 1.0)
-			var cur := p0.lerp(p1, t)
-			carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), width / 2 + 1, CellType.FLOOR, map_w, map_h)
+		var path_noise := FastNoiseLite.new()
+		path_noise.seed = rng.seed + int(from.x * 13 + from.y * 37)
+		path_noise.frequency = 0.04
+		path_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+
+		var width_noise := FastNoiseLite.new()
+		width_noise.seed = rng.seed + int(to.x * 31 + to.y * 17)
+		width_noise.frequency = 0.08
+
+		var dir := (v_to - v_from).normalized()
+		var normal := Vector2(-dir.y, dir.x)
+
+		var num_control_pts := clampi(int(total_dist / 6.0), 3, 14)
+		var control_points: Array[Vector2] = []
+		control_points.append(v_from)
+
+		var max_amplitude := clampf(total_dist * 0.22, 3.0, 10.0)
+
+		for i in range(1, num_control_pts):
+			var t := float(i) / float(num_control_pts)
+			var base_pt := v_from.lerp(v_to, t)
+			var envelope := sin(t * PI)
+			var offset_val := path_noise.get_noise_1d(t * 120.0) * max_amplitude * envelope
+			var pt := base_pt + normal * offset_val
+			pt.x = clampf(pt.x, 4.0, float(map_w - 5))
+			pt.y = clampf(pt.y, 4.0, float(map_h - 5))
+			control_points.append(pt)
+
+		control_points.append(v_to)
+
+		var total_steps := int(total_dist * 2.5)
+		var min_w := maxi(2, width - 1)
+		var max_w := width + 2
+
+		for s in range(total_steps + 1):
+			var t_global := float(s) / maxf(float(total_steps), 1.0)
+			var pt_index_float := t_global * float(control_points.size() - 1)
+			var idx0 := clampi(int(floor(pt_index_float)), 0, control_points.size() - 1)
+			var idx1 := clampi(idx0 + 1, 0, control_points.size() - 1)
+			var local_t := pt_index_float - float(idx0)
+			var cur_pos := control_points[idx0].lerp(control_points[idx1], local_t)
+
+			var dynamic_width := float(width)
+			if flags.enable_variable_width:
+				var w_noise_val := (width_noise.get_noise_1d(t_global * 100.0) + 1.0) * 0.5
+				dynamic_width = lerpf(float(min_w), float(max_w), w_noise_val)
+
+			var funnel_factor := 0.0
+			if flags.enable_funnels:
+				funnel_factor = pow(1.0 - sin(t_global * PI), 2.0) * 2.2
+
+			var final_radius := int((dynamic_width + funnel_factor) / 2.0) + 1
+			carve_circle(grid, Vector2i(int(cur_pos.x), int(cur_pos.y)), final_radius, CellType.FLOOR, map_w, map_h)
+	else:
+		# Klasyczne rzeźbienie łukowe z pojedynczym punktem środkowym
+		var mid := (from + to) / 2
+		var dir := Vector2(to - from).normalized()
+		var normal := Vector2(-dir.y, dir.x)
+		var jitter := normal * rng.randf_range(-3.0, 3.0)
+		var mid_curved := Vector2i(mid + Vector2i(int(jitter.x), int(jitter.y)))
+		mid_curved.x = clampi(mid_curved.x, 3, map_w - 4)
+		mid_curved.y = clampi(mid_curved.y, 3, map_h - 4)
+
+		var points = [from, mid_curved, to]
+		for seg in range(points.size() - 1):
+			var p0: Vector2 = Vector2(points[seg])
+			var p1: Vector2 = Vector2(points[seg + 1])
+			var dist := p0.distance_to(p1)
+			var steps := int(dist * 2.0)
+			for s in range(steps + 1):
+				var t := float(s) / maxf(float(steps), 1.0)
+				var cur := p0.lerp(p1, t)
+				carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), width / 2 + 1, CellType.FLOOR, map_w, map_h)
+
+
+## Wygładza krawędzie i likwiduje ostre ząbkowania geometrii po drążeniu komór i tuneli (buforowane)
+static func _smooth_cave_junctions(grid: Dictionary, width: int, height: int) -> void:
+	var to_carve: Array[Vector2i] = []
+	for y in range(2, height - 2):
+		for x in range(2, width - 2):
+			var p := Vector2i(x, y)
+			if grid.get(p, CellType.WALL) == CellType.WALL:
+				var floor_cardinal := 0
+				if _is_walkable(grid, p + Vector2i(1, 0)): floor_cardinal += 1
+				if _is_walkable(grid, p + Vector2i(-1, 0)): floor_cardinal += 1
+				if _is_walkable(grid, p + Vector2i(0, 1)): floor_cardinal += 1
+				if _is_walkable(grid, p + Vector2i(0, -1)): floor_cardinal += 1
+
+				if floor_cardinal >= 2:
+					var floor_corners := 0
+					if _is_walkable(grid, p + Vector2i(1, 1)): floor_corners += 1
+					if _is_walkable(grid, p + Vector2i(-1, 1)): floor_corners += 1
+					if _is_walkable(grid, p + Vector2i(1, -1)): floor_corners += 1
+					if _is_walkable(grid, p + Vector2i(-1, -1)): floor_corners += 1
+
+					if floor_cardinal + floor_corners >= 4:
+						to_carve.append(p)
+
+	for p in to_carve:
+		grid[p] = CellType.FLOOR
+
+	var to_fill: Array[Vector2i] = []
+	for y in range(2, height - 2):
+		for x in range(2, width - 2):
+			var p := Vector2i(x, y)
+			if _is_walkable(grid, p):
+				var wall_cardinal := 0
+				if not _is_walkable(grid, p + Vector2i(1, 0)): wall_cardinal += 1
+				if not _is_walkable(grid, p + Vector2i(-1, 0)): wall_cardinal += 1
+				if not _is_walkable(grid, p + Vector2i(0, 1)): wall_cardinal += 1
+				if not _is_walkable(grid, p + Vector2i(0, -1)): wall_cardinal += 1
+
+				if wall_cardinal >= 3:
+					to_fill.append(p)
+
+	for p in to_fill:
+		grid[p] = CellType.WALL
 
 
 ## Usuwa cienkie ścianki (< 4 kratek w pionie, < 2 kratek w poziomie), łącząc komory w szerokie przejścia
@@ -649,6 +774,75 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 
 	return {"center": current, "edge": chosen_edge, "cells": alcove_cells}
 
+
+## Pre-pass normalizacji siatki: usuwa 1-kratkowe wypustki w każdą stronę,
+## zachowując wnęki 1x1 i narożniki schodkowe 2x2.
+static func _cleanup_grid_before_tiling(grid: Dictionary, width: int, height: int) -> void:
+	var changed := true
+	var max_passes := 4
+	var pass_count := 0
+
+	while changed and pass_count < max_passes:
+		changed = false
+		pass_count += 1
+		var to_carve: Array[Vector2i] = []
+
+		for y in range(1, height - 1):
+			for x in range(1, width - 1):
+				var p := Vector2i(x, y)
+				if grid.get(p, CellType.WALL) != CellType.WALL:
+					continue
+
+				var w_n := not _is_walkable(grid, p + Vector2i(0, -1))
+				var w_s := not _is_walkable(grid, p + Vector2i(0, 1))
+				var w_w := not _is_walkable(grid, p + Vector2i(-1, 0))
+				var w_e := not _is_walkable(grid, p + Vector2i(1, 0))
+
+				var wall_cardinal := 0
+				if w_n: wall_cardinal += 1
+				if w_s: wall_cardinal += 1
+				if w_w: wall_cardinal += 1
+				if w_e: wall_cardinal += 1
+
+				# 1. Wypustka 1-kratkowa (wystaje w przestrzeń podłogi w dowolną stronę, oparcie ma <= 1)
+				if wall_cardinal <= 1:
+					to_carve.append(p)
+					continue
+
+				# 2. Cienki mostek 1-kratkowy (linia ściany otoczona podłogą po bokach)
+				if (w_n and w_s and not w_w and not w_e) or (w_w and w_e and not w_n and not w_s):
+					to_carve.append(p)
+					continue
+
+		if not to_carve.is_empty():
+			for p in to_carve:
+				grid[p] = CellType.FLOOR
+			changed = true
+
+
+## Wygładza maskę terenu, dopełniając klastry i eliminując ząbkowane styki diagonalne
+static func _clean_terrain_mask(candidates: Dictionary) -> Array[Vector2i]:
+	var refined: Dictionary = {}
+	for p in candidates.keys():
+		if candidates.has(p + Vector2i(1, 0)) and candidates.has(p + Vector2i(0, 1)) and candidates.has(p + Vector2i(1, 1)):
+			refined[p] = true
+			refined[p + Vector2i(1, 0)] = true
+			refined[p + Vector2i(0, 1)] = true
+			refined[p + Vector2i(1, 1)] = true
+
+	var filled: Dictionary = refined.duplicate()
+	for p in refined.keys():
+		if refined.has(p + Vector2i(1, 1)) and not refined.has(p + Vector2i(1, 0)) and not refined.has(p + Vector2i(0, 1)):
+			filled[p + Vector2i(1, 0)] = true
+		if refined.has(p + Vector2i(-1, 1)) and not refined.has(p + Vector2i(-1, 0)) and not refined.has(p + Vector2i(0, 1)):
+			filled[p + Vector2i(0, 1)] = true
+
+	var out: Array[Vector2i] = []
+	for p in filled.keys():
+		out.append(p)
+	return out
+
+
 ## Nanosi dopasowane kafelki z caves.tres na warstwy Floor, FloorDecor i Walls
 static func apply_cave_tiles(
 	floor_layer: TileMapLayer,
@@ -656,8 +850,12 @@ static func apply_cave_tiles(
 	result: GenerationResult,
 	rng: RandomNumberGenerator,
 	floor_decor_layer: TileMapLayer = null,
-	theme_override: int = -1
+	theme_override: int = -1,
+	flags: GenerationFlags = null
 ) -> void:
+	if flags == null:
+		flags = GenerationFlags.new()
+
 	if floor_decor_layer == null and floor_layer.get_parent():
 		floor_decor_layer = floor_layer.get_parent().get_node_or_null("FloorDecor") as TileMapLayer
 		if not floor_decor_layer:
@@ -676,6 +874,10 @@ static func apply_cave_tiles(
 	var width := result.width
 	var height := result.height
 	var grid := result.grid
+
+	# --- KROK 0: PRE-PASS DLA TERENU I ŚCIAN ---
+	if flags.enable_grid_cleanup:
+		_cleanup_grid_before_tiling(grid, width, height)
 
 	# Gwarancja: obszar walls o wysokości 1 kratki nie powinien generować ścian
 	_remove_1height_walls(grid, width, height)
@@ -722,17 +924,19 @@ static func apply_cave_tiles(
 		if mud_noise.get_noise_2d(float(p.x), float(p.y)) > -0.02:
 			mud_candidates[p] = true
 
-	var mud_cells_set := {}
-	for p in mud_candidates.keys():
-		if mud_candidates.has(p + Vector2i(1, 0)) and mud_candidates.has(p + Vector2i(0, 1)) and mud_candidates.has(p + Vector2i(1, 1)):
-			mud_cells_set[p] = true
-			mud_cells_set[p + Vector2i(1, 0)] = true
-			mud_cells_set[p + Vector2i(0, 1)] = true
-			mud_cells_set[p + Vector2i(1, 1)] = true
-
 	var mud_cells: Array[Vector2i] = []
-	for p in mud_cells_set.keys():
-		mud_cells.append(p)
+	if flags.enable_terrain_smoothing:
+		mud_cells = _clean_terrain_mask(mud_candidates)
+	else:
+		var mud_cells_set := {}
+		for p in mud_candidates.keys():
+			if mud_candidates.has(p + Vector2i(1, 0)) and mud_candidates.has(p + Vector2i(0, 1)) and mud_candidates.has(p + Vector2i(1, 1)):
+				mud_cells_set[p] = true
+				mud_cells_set[p + Vector2i(1, 0)] = true
+				mud_cells_set[p + Vector2i(0, 1)] = true
+				mud_cells_set[p + Vector2i(1, 1)] = true
+		for p in mud_cells_set.keys():
+			mud_cells.append(p)
 
 	floor_layer.set_cells_terrain_connect(mud_cells, 0, 1, true)
 
@@ -749,17 +953,19 @@ static func apply_cave_tiles(
 		if grass_noise.get_noise_2d(float(p.x), float(p.y)) > 0.10:
 			grass_candidates[p] = true
 
-	var grass_cells_set := {}
-	for p in grass_candidates.keys():
-		if grass_candidates.has(p + Vector2i(1, 0)) and grass_candidates.has(p + Vector2i(0, 1)) and grass_candidates.has(p + Vector2i(1, 1)):
-			grass_cells_set[p] = true
-			grass_cells_set[p + Vector2i(1, 0)] = true
-			grass_cells_set[p + Vector2i(0, 1)] = true
-			grass_cells_set[p + Vector2i(1, 1)] = true
-
 	var grass_cells: Array[Vector2i] = []
-	for p in grass_cells_set.keys():
-		grass_cells.append(p)
+	if flags.enable_terrain_smoothing:
+		grass_cells = _clean_terrain_mask(grass_candidates)
+	else:
+		var grass_cells_set := {}
+		for p in grass_candidates.keys():
+			if grass_candidates.has(p + Vector2i(1, 0)) and grass_candidates.has(p + Vector2i(0, 1)) and grass_candidates.has(p + Vector2i(1, 1)):
+				grass_cells_set[p] = true
+				grass_cells_set[p + Vector2i(1, 0)] = true
+				grass_cells_set[p + Vector2i(0, 1)] = true
+				grass_cells_set[p + Vector2i(1, 1)] = true
+		for p in grass_cells_set.keys():
+			grass_cells.append(p)
 
 	if floor_decor_layer:
 		floor_decor_layer.set_cells_terrain_connect(grass_cells, 0, 2, true)
@@ -790,9 +996,11 @@ static func apply_cave_tiles(
 		# Progiem 0.14 uzyskujemy ~30% powierzchni dla dekorowanego zestawu (Roots)
 		return roots_theme_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.14
 
+# =========================================================================
 	# 4. POTOK KAFELKOWANIA ŚCIAN (GROUND TRUTH MODULAR PIPELINE)
-	var placed_tiles: Dictionary = {}
 	# Rzadkie nisze OUT są punktami sekretów; nie grupuj ich blisko siebie.
+	# =========================================================================
+	var placed_tiles: Dictionary = placed_cells
 	var out_niche_positions: Array[Vector2i] = []
 	const OUT_NICHE_MIN_DISTANCE := 10
 
@@ -962,6 +1170,14 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
 
+					# Wstrzykiwanie korony wewnętrznej w sąsiedniej kolumnie na szczycie
+					if flags.enable_corner_crown_injection:
+						var p_crown := pos + Vector2i(1, -2)
+						if not _is_walkable(grid, p_crown) and (not placed_tiles.has(p_crown) or placed_tiles[p_crown] == "ROCK"):
+							var crown_t := ROOT_CRNR_SE_IN if use_roots else CRNR_SE_IN
+							walls_layer.set_cell(p_crown, 0, crown_t)
+							placed_tiles[p_crown] = "CORNER"
+
 					# Dopięcie pionowej ściany wschodniej bezpośrednio nad narożnikiem
 					var p_up := pos + Vector2i(0, -3)
 					if not _is_walkable(grid, p_up) and _is_walkable(grid, pos + Vector2i(-1, -3)):
@@ -972,6 +1188,7 @@ static func apply_cave_tiles(
 				if not _is_walkable(grid, pos + Vector2i(1, 0)):
 					step_downs.append({"x": x, "y": y, "dir": 1})
 				continue
+
 			elif e_open and not w_open:
 				var is_2h_corner := _is_walkable(grid, pos + Vector2i(0, -3))
 				if is_2h_corner:
@@ -1004,6 +1221,14 @@ static func apply_cave_tiles(
 					placed_tiles[pos] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
+
+					# Wstrzykiwanie korony wewnętrznej w sąsiedniej kolumnie na szczycie
+					if flags.enable_corner_crown_injection:
+						var p_crown := pos + Vector2i(-1, -2)
+						if not _is_walkable(grid, p_crown) and (not placed_tiles.has(p_crown) or placed_tiles[p_crown] == "ROCK"):
+							var crown_t := ROOT_CRNR_SW_IN if use_roots else CRNR_SW_IN
+							walls_layer.set_cell(p_crown, 0, crown_t)
+							placed_tiles[p_crown] = "CORNER"
 
 					# Dopięcie pionowej ściany zachodniej bezpośrednio nad narożnikiem
 					var p_up := pos + Vector2i(0, -3)
@@ -1097,7 +1322,7 @@ static func apply_cave_tiles(
 				var pos_next := Vector2i(x + 1, y)
 				var is_in_portal := portal_zone.has(pos + Vector2i(0, 1)) or portal_zone.has(pos_next + Vector2i(0, 1))
 
-				if not is_in_portal and facade_cols.has(x + 1) and facade_cols[x + 1].has(y):
+				if flags.enable_decorative_niches and not is_in_portal and facade_cols.has(x + 1) and facade_cols[x + 1].has(y):
 					if not (placed_tiles.has(pos_next) and placed_tiles[pos_next] == "FACADE"):
 						# Kafelek z lewej (x - 1) MUSI być na DOKŁADNIE tej samej wysokości y
 						var left_has_same_y: bool = facade_cols.has(x - 1) and facade_cols[x - 1].has(y)
@@ -1158,10 +1383,10 @@ static func apply_cave_tiles(
 					out_niche_positions.append(pos)
 					continue
 					
-				if can_niche and rng.randf() < 0.15:
 					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
 					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
 					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN# (5,1) – korona nad MOD_CRNR_NE_OUT
+				if can_niche and rng.randf() < flags.niche_spawn_chance:
 					var l_top := MOD_CRNR_NE_IN_TOP if not use_roots else ROOT_MOD_CRNR_NE_IN_TOP
 					var l_mid := MOD_CRNR_NE_IN_MID if not use_roots else ROOT_MOD_CRNR_NE_IN_MID
 					var l_base := MOD_CRNR_NE_IN_BASE if not use_roots else ROOT_MOD_CRNR_NE_IN_BASE
@@ -1281,11 +1506,12 @@ static func apply_cave_tiles(
 					walls_layer.set_cell(p_b1, 0, side_b)
 					placed_tiles[p_b1] = "SIDE_FIXED"
 
-	# FAZA 3: Ściany pionowe boczne (Side Walls)
+	# FAZA 3: Szczyty ścian bocznych i ściany pionowe
 	for y in range(height):
 		for x in range(width):
 			var pos := Vector2i(x, y)
 			if not _is_walkable(grid, pos):
+				var n_floor := _is_walkable(grid, pos + Vector2i(0, -1))
 				var w_floor := _is_walkable(grid, pos + Vector2i(-1, 0))
 				var e_floor := _is_walkable(grid, pos + Vector2i(1, 0))
 				var use_roots: bool = get_use_roots.call(pos)
@@ -1417,6 +1643,59 @@ static func apply_cave_tiles(
 	# żadnego kafla ściany ani kolizji na ich komórkach.
 	for p in portal_zone:
 		walls_layer.erase_cell(p)
+
+
+# =========================================================================
+# FUNKCJE POMOCNICZE KAFELKOWANIA I FILARÓW 360°
+# =========================================================================
+
+## Wykrywa i składa wolnostojące filary w komorach (z kielichem RIM wchodzącym w północną podłogę)
+static func _build_free_standing_pillars(walls_layer: TileMapLayer, grid: Dictionary, width: int, height: int, placed_cells: Dictionary, is_roots: bool) -> void:
+	for y in range(1, height - 2):
+		for x in range(1, width - 2):
+			var base_left := Vector2i(x, y)
+			if grid.get(base_left, CellType.WALL) == CellType.WALL and not placed_cells.has(base_left):
+				if _is_walkable(grid, base_left + Vector2i(-1, 0)) and _is_walkable(grid, base_left + Vector2i(0, 1)):
+					var iw := 0
+					while grid.get(base_left + Vector2i(iw, 0), CellType.WALL) == CellType.WALL and _is_walkable(grid, base_left + Vector2i(iw, 1)):
+						iw += 1
+					if iw >= 2 and _is_walkable(grid, base_left + Vector2i(iw, 0)):
+						var wh := 0
+						while not _is_walkable(grid, Vector2i(base_left.x, base_left.y - wh)):
+							wh += 1
+						if wh <= 4:
+							_assemble_pillar(walls_layer, base_left, iw, wh, placed_cells, is_roots)
+
+
+static func _assemble_pillar(walls_layer: TileMapLayer, base_left: Vector2i, iw: int, wh: int, placed_cells: Dictionary, is_roots: bool) -> void:
+	var r_off := 9 if is_roots else 0
+	for ix in range(iw):
+		var cx := base_left.x + ix
+		var col := 0 if ix == 0 else (5 if ix == iw - 1 else (2 if cx % 2 == 0 else 3))
+		if wh == 1:
+			walls_layer.set_cell(Vector2i(cx, base_left.y), 0, Vector2i(col, 7 + r_off))
+			placed_cells[Vector2i(cx, base_left.y)] = "PILLAR"
+		elif wh == 2:
+			walls_layer.set_cell(Vector2i(cx, base_left.y), 0, Vector2i(col, 7 + r_off))
+			walls_layer.set_cell(Vector2i(cx, base_left.y - 1), 0, Vector2i(col, 6 + r_off))
+			placed_cells[Vector2i(cx, base_left.y)] = "PILLAR"
+			placed_cells[Vector2i(cx, base_left.y - 1)] = "PILLAR"
+		else:
+			walls_layer.set_cell(Vector2i(cx, base_left.y), 0, Vector2i(col, 7 + r_off))
+			walls_layer.set_cell(Vector2i(cx, base_left.y - 1), 0, Vector2i(col, 6 + r_off))
+			walls_layer.set_cell(Vector2i(cx, base_left.y - 2), 0, Vector2i(col, 5 + r_off))
+			placed_cells[Vector2i(cx, base_left.y)] = "PILLAR"
+			placed_cells[Vector2i(cx, base_left.y - 1)] = "PILLAR"
+			placed_cells[Vector2i(cx, base_left.y - 2)] = "PILLAR"
+
+		var rim_p := Vector2i(cx, base_left.y - wh)
+		if ix == 0:
+			walls_layer.set_cell(rim_p, 0, ROOT_RIM_CRNR_NE_IN if is_roots else ROCK_RIM_CRNR_NE_IN)
+		elif ix == iw - 1:
+			walls_layer.set_cell(rim_p, 0, ROOT_RIM_CRNR_NW_IN if is_roots else ROCK_RIM_CRNR_NW_IN)
+		else:
+			walls_layer.set_cell(rim_p, 0, Vector2i(cx % 2 + 2, 9 if is_roots else 0))
+		placed_cells[rim_p] = "PILLAR_RIM"
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
