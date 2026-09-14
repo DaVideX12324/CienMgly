@@ -1,30 +1,30 @@
-[gd_scene load_steps=2 format=3 uid="uid://map_gen_preview_01"]
+[gd_scene format=3 uid="uid://8t7cuwdsm35q"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/tools/map_generator_preview.gd" id="1_preview"]
+[ext_resource type="Script" uid="uid://bm3roj6hwqwqv" path="res://modules/quiz_rpg/scripts/tools/map_generator_preview.gd" id="1_preview"]
 
-[node name="MapGeneratorPreview" type="Node2D"]
+[node name="MapGeneratorPreview" type="Node2D" unique_id=2043851017]
 script = ExtResource("1_preview")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1019597550]
 zoom = Vector2(0.8, 0.8)
 
-[node name="LevelContainer" type="Node2D" parent="."]
+[node name="LevelContainer" type="Node2D" parent="." unique_id=1163965354]
 y_sort_enabled = true
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436035097]
 
-[node name="Panel" type="PanelContainer" parent="CanvasLayer"]
+[node name="Panel" type="PanelContainer" parent="CanvasLayer" unique_id=1699924494]
 custom_minimum_size = Vector2(340, 0)
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 360.0
 offset_bottom = 680.0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Panel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Panel" unique_id=1266704046]
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Panel/ScrollContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/Panel/ScrollContainer" unique_id=1308948631]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 10
@@ -32,45 +32,45 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer" unique_id=1138997381]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="HBoxTitle" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxTitle" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1848516443]
 layout_mode = 2
 
-[node name="TitleLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle"]
+[node name="TitleLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle" unique_id=292700474]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 15
 text = "🗺️ Eksplorator Map"
 
-[node name="BtnHideHUD" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle"]
+[node name="BtnHideHUD" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle" unique_id=1558833934]
 layout_mode = 2
 text = "◀ Zwiń"
 
-[node name="HSeparator1" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator1" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1509393065]
 layout_mode = 2
 
-[node name="TypeLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="TypeLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1098661288]
 layout_mode = 2
 text = "Typ Generatora:"
 
-[node name="OptType" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="OptType" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=112537330]
 layout_mode = 2
 
-[node name="HSeparator2" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator2" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=601282324]
 layout_mode = 2
 
-[node name="SeedLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="SeedLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1882293699]
 layout_mode = 2
 text = "Seed:"
 
-[node name="HBoxSeed" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxSeed" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1327533529]
 layout_mode = 2
 
-[node name="SpinSeed" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed"]
+[node name="SpinSeed" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed" unique_id=1144887296]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 1.0
@@ -78,44 +78,44 @@ max_value = 999999999.0
 value = 119.0
 rounded = true
 
-[node name="BtnPrevSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed"]
+[node name="BtnPrevSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed" unique_id=817030243]
 layout_mode = 2
 text = "◀"
 
-[node name="BtnNextSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed"]
+[node name="BtnNextSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed" unique_id=1490593417]
 layout_mode = 2
 text = "▶"
 
-[node name="HBoxSeedActions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxSeedActions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1315776308]
 layout_mode = 2
 
-[node name="BtnRandomSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeedActions"]
+[node name="BtnRandomSeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeedActions" unique_id=2111730556]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🎲 Losuj (Spacja)"
 
-[node name="BtnCopySeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeedActions"]
+[node name="BtnCopySeed" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeedActions" unique_id=1649811230]
 layout_mode = 2
 text = "📋 Kopiuj"
 
-[node name="HSeparator3" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator3" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1860992373]
 layout_mode = 2
 
-[node name="SizeLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="SizeLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=894466149]
 layout_mode = 2
 text = "Kategoria Rozmiaru:"
 
-[node name="OptSizePreset" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="OptSizePreset" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=824425527]
 layout_mode = 2
 
-[node name="DimensionsLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="DimensionsLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2090795839]
 layout_mode = 2
 text = "Wymiary (Szerokość x Wysokość):"
 
-[node name="HBoxDimensions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxDimensions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1390828902]
 layout_mode = 2
 
-[node name="SpinWidth" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions"]
+[node name="SpinWidth" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions" unique_id=1700363771]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 20.0
@@ -123,11 +123,11 @@ max_value = 600.0
 value = 100.0
 rounded = true
 
-[node name="LabelX" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions"]
+[node name="LabelX" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions" unique_id=1537987579]
 layout_mode = 2
 text = "x"
 
-[node name="SpinHeight" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions"]
+[node name="SpinHeight" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxDimensions" unique_id=934370089]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 20.0
@@ -135,103 +135,105 @@ max_value = 600.0
 value = 100.0
 rounded = true
 
-[node name="RatioLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="RatioLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=62294860]
 layout_mode = 2
 text = "Wariancja Proporcji (Aspect Ratio):"
 
-[node name="OptRatio" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="OptRatio" type="OptionButton" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1843304091]
 layout_mode = 2
 
-[node name="HSeparator4" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator4" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=575306194]
 layout_mode = 2
 
-[node name="ParamsLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="ParamsLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=905014443]
 layout_mode = 2
 text = "Parametry Generatora:"
 
-[node name="HBoxRooms" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxRooms" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1542297112]
 layout_mode = 2
 
-[node name="LabelRooms" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms"]
+[node name="LabelRooms" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms" unique_id=1719304732]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Liczba pokoi (0=Auto):"
 
-[node name="SpinRooms" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms"]
+[node name="SpinRooms" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms" unique_id=1974388361]
 layout_mode = 2
-min_value = 0.0
 max_value = 150.0
-value = 0.0
 rounded = true
 
-[node name="CheckEntities" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="CheckEntities" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1943254088]
 layout_mode = 2
 button_pressed = true
 text = "Spawnuj wrogów i skrzynie"
 
-[node name="CheckNav" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="CheckNav" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1033425716]
 layout_mode = 2
 button_pressed = true
 text = "Generuj siatkę nawigacji 2D"
 
-[node name="BtnGenerate" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="CheckGenMask" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=137925409]
+layout_mode = 2
+text = "Pokaż maskę Floor / Wall"
+
+[node name="BtnGenerate" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1701866369]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "🔄 Generuj Mapę"
 
-[node name="HSeparator5" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator5" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2033587675]
 layout_mode = 2
 
-[node name="NavLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="NavLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1824123199]
 layout_mode = 2
 text = "Kamera i Teleportacja:"
 
-[node name="HBoxCamera1" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxCamera1" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=977395452]
 layout_mode = 2
 
-[node name="BtnFitAll" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1"]
+[node name="BtnFitAll" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1" unique_id=996595639]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🔍 Cała mapa (Fit)"
 
-[node name="BtnCenter" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1"]
+[node name="BtnCenter" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1" unique_id=1318619191]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🎯 Środek"
 
-[node name="HBoxCamera2" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HBoxCamera2" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=209791387]
 layout_mode = 2
 
-[node name="BtnEntrance" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2"]
+[node name="BtnEntrance" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2" unique_id=1628819205]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🚪 Start / Wejście (1)"
 
-[node name="BtnExit" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2"]
+[node name="BtnExit" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2" unique_id=454987858]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "🏁 Koniec / Wyjście (2)"
 
-[node name="BtnPlayer" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="BtnPlayer" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1765122714]
 layout_mode = 2
 text = "🏃 Spacer Graczem (P)"
 
-[node name="HSeparator6" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator6" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=707220037]
 layout_mode = 2
 
-[node name="InfoTitle" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="InfoTitle" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=221861306]
 layout_mode = 2
 text = "Statystyki generacji:"
 
-[node name="InfoLabel" type="RichTextLabel" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer"]
+[node name="InfoLabel" type="RichTextLabel" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1259976056]
 custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 bbcode_enabled = true
 text = "Inicjalizacja..."
 fit_content = true
 
-[node name="BtnShowHUD" type="Button" parent="CanvasLayer"]
+[node name="BtnShowHUD" type="Button" parent="CanvasLayer" unique_id=1513268770]
 visible = false
 offset_left = 12.0
 offset_top = 12.0
@@ -239,7 +241,7 @@ offset_right = 100.0
 offset_bottom = 44.0
 text = "▶ Pokaż UI (H)"
 
-[node name="HelpLabel" type="Label" parent="CanvasLayer"]
+[node name="HelpLabel" type="Label" parent="CanvasLayer" unique_id=927814415]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
