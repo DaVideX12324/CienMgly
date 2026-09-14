@@ -17,6 +17,10 @@ class GenerationFlags:
 	var enable_junction_smoothing: bool = true
 	var enable_grid_cleanup: bool = true
 	var enable_terrain_smoothing: bool = true
+	var enable_decorative_niches: bool = true
+	var enable_rim_capping: bool = true
+	var niche_spawn_chance: float = 0.15
+	var secret_niche_spawn_chance: float = 0.3
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -297,8 +301,9 @@ static func generate(
 	# 4. Wymuszenie minimalnej grubości murów i eliminacja ścian o wysokości 1 kratki
 	_remove_1height_walls(result.grid, width, height)
 	_enforce_wall_thickness(result.grid, width, height)
-
-	# 4.5. Twarda gwarancja spójności po wszystkich modyfikacjach gridu
+	_flatten_short_3h_bulges(result.grid, width, height)
+	
+	# 4.5. Twarda gwarancja spójności po wszystkich modyfikacjach gridu.
 	_ensure_rooms_connected(result.grid, rooms, width, height, corridor_width, rng, flags)
 
 	# 5. Dedykowane wejście i wyjście - ZAWSZE obecne na mapie
@@ -356,12 +361,6 @@ static func generate(
 					})
 			else:
 				result.chest_spawns.append(center)
-
-		# 6. Ostateczna eliminacja ścian o wysokości 1 kratki oraz egzekucja grubości murów po wycięciu portali
-		_remove_1height_walls(result.grid, width, height)
-		_enforce_wall_thickness(result.grid, width, height)
-		_remove_1height_walls(result.grid, width, height)
-
 	return result
 
 
@@ -421,16 +420,39 @@ static func _ensure_rooms_connected(grid: Dictionary, rooms: Array[Rect2i], widt
 		reachable = _get_reachable_cells(grid, rooms[0].get_center(), width, height)
 
 
-## Usuwa pojedyncze ściany o wysokości 1 kratki (obszar walls o wysokości 1 kratki nie może istnieć)
+## Normalizuje ściany 1-kratkowe:
+## - Szerokie fragmenty (szerokość >= 2) rozszerza na północ do 2H (tworząc stabilne półki/filary)
+## - Wąskie kikuty (szerokość < 2) usuwa do podłogi (bo atlas nie ma modułów o szerokości 1)
 static func _remove_1height_walls(grid: Dictionary, width: int, height: int) -> void:
+	var to_expand_north: Array[Vector2i] = []
+	var to_carve_floor: Array[Vector2i] = []
+
 	for y in range(1, height - 1):
 		for x in range(1, width - 1):
 			var p := Vector2i(x, y)
-			if not _is_walkable(grid, p):
-				# Jeśli bezpośrednio nad i pod tą kratką jest podłoga, to pionowa wysokość ściany wynosi 1
-				if _is_walkable(grid, p + Vector2i(0, -1)) and _is_walkable(grid, p + Vector2i(0, 1)):
-					grid[p] = CellType.FLOOR
+			if grid.get(p, CellType.WALL) != CellType.WALL:
+				continue
 
+			# Ściana 1H: podłoga bezpośrednio nad nią i pod nią
+			if _is_walkable(grid, p + Vector2i(0, -1)) and _is_walkable(grid, p + Vector2i(0, 1)):
+				var has_h_neighbor: bool = (
+					int(grid.get(p + Vector2i(-1, 0), CellType.FLOOR)) == CellType.WALL
+					or int(grid.get(p + Vector2i(1, 0), CellType.FLOOR)) == CellType.WALL
+				)
+
+				var north_cell := p + Vector2i(0, -1)
+				var north_clear: bool = _is_walkable(grid, north_cell)
+
+				if has_h_neighbor and north_clear:
+					to_expand_north.append(north_cell)
+				else:
+					to_carve_floor.append(p)
+
+	for p in to_carve_floor:
+		grid[p] = CellType.FLOOR
+
+	for p in to_expand_north:
+		grid[p] = CellType.WALL
 
 ## Rzeźbi komorę o naturalnych, organicznych kształtach jaskini (rdzeń eliptyczny + losowe wybrzuszenia)
 static func _carve_cave_chamber(grid: Dictionary, rect: Rect2i, rng: RandomNumberGenerator, map_w: int = 160, map_h: int = 160) -> void:
@@ -585,37 +607,18 @@ static func _smooth_cave_junctions(grid: Dictionary, width: int, height: int) ->
 		grid[p] = CellType.WALL
 
 
-## Usuwa cienkie ścianki (< 4 kratek w pionie, < 2 kratek w poziomie), łącząc komory w szerokie przejścia
+## Wymusza minimalną grubość ścian:
+## - Pozostawia ściany o grubości >= 2 kratek w pionie (obsługiwane przez moduły 2H).
+## - Usuwa cienkie pionowe przegródki o szerokości 1 kratki w poziomie (łącząc komory/korytarze).
+## - Czyści samotne, oderwane bloczki 1x1.
 static func _enforce_wall_thickness(grid: Dictionary, width: int, height: int) -> void:
 	var changed := true
 	var passes := 0
-	while changed and passes < 5:
+	while changed and passes < 4:
 		changed = false
 		passes += 1
 
-		# 1. Sprawdzanie pionowej grubości ścian między otwartymi przestrzeniami
-		for x in range(width):
-			var y := 0
-			while y < height:
-				if grid.get(Vector2i(x, y), CellType.WALL) == CellType.WALL:
-					var y_start := y
-					while y < height and grid.get(Vector2i(x, y), CellType.WALL) == CellType.WALL:
-						y += 1
-					var y_end := y - 1
-					var wall_len := y_end - y_start + 1
-
-					var has_floor_above := (y_start > 0 and _is_walkable(grid, Vector2i(x, y_start - 1)))
-					var has_floor_below := (y_end < height - 1 and _is_walkable(grid, Vector2i(x, y_end + 1)))
-
-					# Jeśli ściana dzieli dwie komory w pionie i ma mniej niż 2 kratki (nie zmieści żadnego modułu):
-					if has_floor_above and has_floor_below and wall_len < 2:
-						for cy in range(y_start, y_end + 1):
-							grid[Vector2i(x, cy)] = CellType.FLOOR
-						changed = true
-				else:
-					y += 1
-
-		# 2. Sprawdzanie poziomej grubości ścian między otwartymi przestrzeniami
+		# 1. Pozioma grubość ścian (ściana dzieląca dwie przestrzenie musi mieć >= 2 kratki szerokości)
 		for y in range(height):
 			var x := 0
 			while x < width:
@@ -629,7 +632,8 @@ static func _enforce_wall_thickness(grid: Dictionary, width: int, height: int) -
 					var has_floor_left := (x_start > 0 and _is_walkable(grid, Vector2i(x_start - 1, y)))
 					var has_floor_right := (x_end < width - 1 and _is_walkable(grid, Vector2i(x_end + 1, y)))
 
-					# Jeśli ściana dzieli dwie komory w poziomie i ma tylko 1 kratkę:
+					# Jeśli ściana dzieli komory w poziomie i ma TYLKO 1 kratkę grubości:
+					# Wycinek do podłogi, ponieważ kafelkator wymaga min. 2 kratek na krawędź lewą i prawą.
 					if has_floor_left and has_floor_right and wall_len < 2:
 						for cx in range(x_start, x_end + 1):
 							grid[Vector2i(cx, y)] = CellType.FLOOR
@@ -637,7 +641,7 @@ static func _enforce_wall_thickness(grid: Dictionary, width: int, height: int) -
 				else:
 					x += 1
 
-		# 3. Usuwanie pojedynczych izolowanych klocków ściany otoczonych podłogą
+		# 2. Usuwanie samotnych, pojedynczych klocków ściany 1x1 otoczonych podłogą z 3 lub 4 stron
 		for y in range(1, height - 1):
 			for x in range(1, width - 1):
 				var p := Vector2i(x, y)
@@ -647,24 +651,11 @@ static func _enforce_wall_thickness(grid: Dictionary, width: int, height: int) -
 					if _is_walkable(grid, p + Vector2i(-1, 0)): floor_count += 1
 					if _is_walkable(grid, p + Vector2i(0, 1)): floor_count += 1
 					if _is_walkable(grid, p + Vector2i(0, -1)): floor_count += 1
+					
+					# Pojedynczy wystający ząb lub kropka 1x1 (ściany 2x2 mają floor_count <= 2)
 					if floor_count >= 3:
 						grid[p] = CellType.FLOOR
 						changed = true
-
-		# 4. Usuwanie mikrowcięć podłogi otoczonych ścianami
-		for y in range(1, height - 1):
-			for x in range(1, width - 1):
-				var p := Vector2i(x, y)
-				if _is_walkable(grid, p):
-					var wall_count := 0
-					if not _is_walkable(grid, p + Vector2i(1, 0)): wall_count += 1
-					if not _is_walkable(grid, p + Vector2i(-1, 0)): wall_count += 1
-					if not _is_walkable(grid, p + Vector2i(0, 1)): wall_count += 1
-					if not _is_walkable(grid, p + Vector2i(0, -1)): wall_count += 1
-					if wall_count >= 3:
-						grid[p] = CellType.WALL
-						changed = true
-
 
 ## Zwraca pionową grubość ściany na danej pozycji (do najbliższej podłogi w górę i w dół)
 static func _get_vertical_wall_thickness(grid: Dictionary, pos: Vector2i, height: int) -> int:
@@ -684,7 +675,7 @@ static func _get_vertical_wall_thickness(grid: Dictionary, pos: Vector2i, height
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map_h: int, rng: RandomNumberGenerator, avoid_edge: int = -1) -> Dictionary:
 	const ALCOVE_RADIUS := 2
-	const ALCOVE_NORTH_EXTRA := 1  # Dodatkowy wiersz w górę na bazę fasady ściany północnej
+	const ALCOVE_NORTH_EXTRA := 0  # Dodatkowy wiersz w górę na bazę fasady ściany północnej
 	const MAP_BORDER := 2
 	const MIN_TUNNEL_LENGTH := 5
 	const ALCOVE_CENTER_MARGIN := ALCOVE_RADIUS + MAP_BORDER
@@ -769,14 +760,17 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 				grid[p] = CellType.FLOOR
 				# Dodatkowy wiersz u góry (dy < -ALCOVE_RADIUS) przeznaczony jest na bazę fasady;
 				# nie włączamy go do alcove_cells/portal_zone, aby czyszczenie kolizji nie usunęło bazy.
-				if dy >= -ALCOVE_RADIUS:
+				if dy >= -ALCOVE_RADIUS+1:
 					alcove_cells.append(p)
 
 	return {"center": current, "edge": chosen_edge, "cells": alcove_cells}
 
 
-## Pre-pass normalizacji siatki: usuwa 1-kratkowe wypustki w każdą stronę,
-## zachowując wnęki 1x1 i narożniki schodkowe 2x2.
+# =========================================================================
+## Pre-pass normalizacji siatki przed kafelkowaniem:
+## 1. Usuwa wypustki 1-kratkowe i mostki.
+## 2. Zachowuje poprawne wnęki i narożniki schodkowe 2x2.
+## 3. Wyrównuje 1-kratkowe skoki grubości (eliminuje niemożliwe hybrydy 2H -> 3H -> 2H).
 static func _cleanup_grid_before_tiling(grid: Dictionary, width: int, height: int) -> void:
 	var changed := true
 	var max_passes := 4
@@ -804,21 +798,83 @@ static func _cleanup_grid_before_tiling(grid: Dictionary, width: int, height: in
 				if w_w: wall_cardinal += 1
 				if w_e: wall_cardinal += 1
 
-				# 1. Wypustka 1-kratkowa (wystaje w przestrzeń podłogi w dowolną stronę, oparcie ma <= 1)
+				# --- REGUŁA 1: Wiszący ząbek / pojedyncza wypustka ---
 				if wall_cardinal <= 1:
 					to_carve.append(p)
 					continue
 
-				# 2. Cienki mostek 1-kratkowy (linia ściany otoczona podłogą po bokach)
-				if (w_n and w_s and not w_w and not w_e) or (w_w and w_e and not w_n and not w_s):
+				# --- REGUŁA 2: Wąski pionowy mostek ściany ---
+				if w_n and w_s and not w_w and not w_e:
 					to_carve.append(p)
 					continue
+
+				# --- REGUŁA 3: Wyrównywanie skoków fasady i grubości (Anti-Jitter) ---
+				# Przypadek A: Ząbek ściany wysunięty na południe w pokój (między dwoma polami podłogi)
+				if not w_s and not w_w and not w_e:
+					to_carve.append(p)
+					continue
+
+				# Przypadek B: Anomalia grubości 2H vs 3H od północy.
+				# Jeśli komórka to ściana granicząca od południa z murem 2H,
+				# ale po lewej i prawej na tej samej wysokości jest podłoga (sąsiedzi to 2H),
+				# ścinamy tę komórkę, aby cały odcinek stał się równym 2H.
+				if not w_w and not w_e:
+					var floor_sw := _is_walkable(grid, p + Vector2i(-1, 1))
+					var floor_se := _is_walkable(grid, p + Vector2i(1, 1))
+					# Pod tą ścianą jest ściana (y+1 i y+2), a po bokach podłoga
+					if w_s and not floor_sw and not floor_se:
+						to_carve.append(p)
+						continue
 
 		if not to_carve.is_empty():
 			for p in to_carve:
 				grid[p] = CellType.FLOOR
 			changed = true
 
+## Wyrównuje grubość fasad: jeśli pozioma ściana 2H ma lokalne wybrzuszenie 3H+ o szerokości < 4 kratek,
+## ścina pole na północ (y - 3) do podłogi, zamieniając cały odcinek w gładką, jednolitą ścianę 2H.
+static func _flatten_short_3h_bulges(grid: Dictionary, width: int, height: int) -> void:
+	for y in range(3, height - 1):
+		var x := 1
+		while x < width - 1:
+			var p := Vector2i(x, y)
+			# Szukamy linii podłogi pod fasadą południową
+			if _is_walkable(grid, p) and not _is_walkable(grid, p + Vector2i(0, -1)):
+				var is_col_2h := func(cx: int) -> bool:
+					return _is_walkable(grid, Vector2i(cx, y)) \
+						and not _is_walkable(grid, Vector2i(cx, y - 1)) \
+						and not _is_walkable(grid, Vector2i(cx, y - 2)) \
+						and _is_walkable(grid, Vector2i(cx, y - 3))
+
+				var is_col_3h_plus := func(cx: int) -> bool:
+					return _is_walkable(grid, Vector2i(cx, y)) \
+						and not _is_walkable(grid, Vector2i(cx, y - 1)) \
+						and not _is_walkable(grid, Vector2i(cx, y - 2)) \
+						and not _is_walkable(grid, Vector2i(cx, y - 3))
+
+				if is_col_3h_plus.call(x):
+					# Mierzymy szerokość odcinka 3H+
+					var bulge_start := x
+					while x < width - 1 and is_col_3h_plus.call(x):
+						x += 1
+					var bulge_end := x - 1
+					var bulge_width := bulge_end - bulge_start + 1
+
+					var left_is_2h: bool = (bulge_start > 1 and is_col_2h.call(bulge_start - 1))
+					var right_is_2h: bool = (bulge_end < width - 2 and is_col_2h.call(bulge_end + 1))
+
+					# Jeśli wybrzuszenie jest wąskie (< 4 kratki) i graniczy z 2H:
+					# Ścinamy kratkę y - 3 (i ewentualne wyższe) do podłogi komory wyżej
+					if bulge_width < 4 and (left_is_2h or right_is_2h):
+						for bx in range(bulge_start, bulge_end + 1):
+							var cy := y - 3
+							while cy >= 0 and not _is_walkable(grid, Vector2i(bx, cy)):
+								grid[Vector2i(bx, cy)] = CellType.FLOOR
+								cy -= 1
+				else:
+					x += 1
+			else:
+				x += 1
 
 ## Wygładza maskę terenu, dopełniając klastry i eliminując ząbkowane styki diagonalne
 static func _clean_terrain_mask(candidates: Dictionary) -> Array[Vector2i]:
@@ -875,12 +931,10 @@ static func apply_cave_tiles(
 	var height := result.height
 	var grid := result.grid
 
-	# --- KROK 0: PRE-PASS DLA TERENU I ŚCIAN ---
+# --- KROK 0: PRE-PASS DLA TERENU I ŚCIAN ---
 	if flags.enable_grid_cleanup:
 		_cleanup_grid_before_tiling(grid, width, height)
-
-	# Gwarancja: obszar walls o wysokości 1 kratki nie powinien generować ścian
-	_remove_1height_walls(grid, width, height)
+		_flatten_short_3h_bulges(grid, width, height)
 
 	# 1. WYPEŁNIENIE VOIDU
 	for y in range(-4, height + 4):
@@ -941,7 +995,6 @@ static func apply_cave_tiles(
 	floor_layer.set_cells_terrain_connect(mud_cells, 0, 1, true)
 
 	# 2c. Organiczne plamy mchu / trawy (Terrain 2 'Grass') na osobnej warstwie FloorDecor
-	# Mniejsze, ale częstsze plamy mchu (wyższa częstotliwość)
 	var grass_noise := FastNoiseLite.new()
 	grass_noise.seed = rng.seed
 	grass_noise.frequency = 0.13
@@ -996,11 +1049,11 @@ static func apply_cave_tiles(
 		# Progiem 0.14 uzyskujemy ~30% powierzchni dla dekorowanego zestawu (Roots)
 		return roots_theme_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.14
 
-# =========================================================================
-	# 4. POTOK KAFELKOWANIA ŚCIAN (GROUND TRUTH MODULAR PIPELINE)
-	# Rzadkie nisze OUT są punktami sekretów; nie grupuj ich blisko siebie.
 	# =========================================================================
-	var placed_tiles: Dictionary = placed_cells
+	# 4. POTOK KAFELKOWANIA ŚCIAN (GROUND TRUTH MODULAR PIPELINE)
+	# =========================================================================
+	var placed_tiles: Dictionary = {}
+	# Rzadkie nisze OUT są punktami sekretów; nie grupuj ich blisko siebie.
 	var out_niche_positions: Array[Vector2i] = []
 	const OUT_NICHE_MIN_DISTANCE := 10
 
@@ -1044,16 +1097,28 @@ static func apply_cave_tiles(
 			if placed_tiles.has(pos) and placed_tiles[pos] == "FACADE":
 				continue
 			var use_roots: bool = get_use_roots.call(pos)
-
-			# 1. Obsługa fasady 2-kratkowej (gdy ściana ma grubość dokładnie 2 kratek)
+			# Sprawdzenie sąsiadów fasady w poziomie na tej samej wysokości
 			var has_same_y := func(cx: int, cy: int) -> bool:
 				if not facade_cols.has(cx): return false
 				for fy in facade_cols[cx]:
 					if abs(fy - cy) <= 1: return true
 				return false
+			# 1. Sprawdzenie czy sąsiedzi w poziomie to 2H
+			var check_2h_col := func(cx: int, fy: int) -> bool:
+				return _is_walkable(grid, Vector2i(cx, fy)) \
+					and not _is_walkable(grid, Vector2i(cx, fy - 1)) \
+					and not _is_walkable(grid, Vector2i(cx, fy - 2)) \
+					and _is_walkable(grid, Vector2i(cx, fy - 3))
+
+			var left_is_2h: bool = check_2h_col.call(x - 1, y)
+			var right_is_2h: bool = check_2h_col.call(x + 1, y)
+			var near_2h_context: bool = (left_is_2h and right_is_2h) \
+				or (left_is_2h and check_2h_col.call(x + 2, y)) \
+				or (right_is_2h and check_2h_col.call(x - 2, y))
 
 			var is_horizontal_facade: bool = has_same_y.call(x - 1, y) or has_same_y.call(x + 1, y)
-			var is_2h: bool = is_horizontal_facade and _is_walkable(grid, pos + Vector2i(0, -3))
+			var is_2h: bool = is_horizontal_facade and (_is_walkable(grid, pos + Vector2i(0, -3)) or near_2h_context)
+
 			if is_2h:
 				var is_west_end: bool = _is_walkable(grid, pos + Vector2i(-1, -1)) or _is_walkable(grid, pos + Vector2i(-1, -2))
 				var is_east_end: bool = _is_walkable(grid, pos + Vector2i(1, -1)) or _is_walkable(grid, pos + Vector2i(1, -2))
@@ -1072,33 +1137,35 @@ static func apply_cave_tiles(
 					top_2h = WALL_2H_TOP[1] if is_b else WALL_2H_TOP[0]
 					base_2h = WALL_2H_BASE[1] if is_b else WALL_2H_BASE[0]
 
-				walls_layer.set_cell(pos + Vector2i(0, -2), 0, top_2h)
-				walls_layer.set_cell(pos + Vector2i(0, -1), 0, base_2h)
-				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
+				# Baza ZAWSZE na kaflu podłogi pos, a szczyt na kaflu ściany pos + (0, -1)
+				walls_layer.set_cell(pos, 0, base_2h)
+				walls_layer.set_cell(pos + Vector2i(0, -1), 0, top_2h)
+				placed_tiles[pos] = "FACADE"
 				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 				continue
 
-			# 2. Obsługa łączników modułowych 2H <-> 3H
-			var check_2h_col := func(cx: int, fy: int) -> bool:
-				return _is_walkable(grid, Vector2i(cx, fy)) \
-					and not _is_walkable(grid, Vector2i(cx, fy - 1)) \
-					and not _is_walkable(grid, Vector2i(cx, fy - 2)) \
-					and _is_walkable(grid, Vector2i(cx, fy - 3))
-
+			# 2. Obsługa łączników modularnych 2H <-> 3H
+			# Łącznik wolno postawić TYLKO wtedy, gdy po stronie 3H ściana ma min. 3 kratki szerokości
 			var left_is_2h_same: bool = check_2h_col.call(x - 1, y)
-			var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
 			var right_is_2h_same: bool = check_2h_col.call(x + 1, y)
-			var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
+			var right_has_room_for_3h: bool = not check_2h_col.call(x + 1, y) and not check_2h_col.call(x + 2, y) and not check_2h_col.call(x + 3, y)
+			var left_has_room_for_3h: bool = not check_2h_col.call(x - 1, y) and not check_2h_col.call(x - 2, y) and not check_2h_col.call(x - 3, y)
 
-			if (left_is_2h_same or left_is_2h_step) and not (right_is_2h_same or right_is_2h_step):
-				# Łącznik: przejście z 2H po lewej do 3H po prawej (kolumna 7)
-				var dy_off := 0 if left_is_2h_same else -1
-				walls_layer.set_cell(pos + Vector2i(0, -2 + dy_off), 0, CONNECTOR_2H_TO_3H_TOP)
-				walls_layer.set_cell(pos + Vector2i(0, -1 + dy_off), 0, CONNECTOR_2H_TO_3H_MID)
-				walls_layer.set_cell(pos + Vector2i(0, dy_off), 0, CONNECTOR_2H_TO_3H_BASE)
-				placed_tiles[pos + Vector2i(0, -2 + dy_off)] = "FACADE"
-				placed_tiles[pos + Vector2i(0, -1 + dy_off)] = "FACADE"
-				placed_tiles[pos + Vector2i(0, dy_off)] = "FACADE"
+			if left_is_2h_same and right_has_room_for_3h:
+				walls_layer.set_cell(pos + Vector2i(0, -2), 0, CONNECTOR_2H_TO_3H_TOP)
+				walls_layer.set_cell(pos + Vector2i(0, -1), 0, CONNECTOR_2H_TO_3H_MID)
+				walls_layer.set_cell(pos, 0, CONNECTOR_2H_TO_3H_BASE)
+				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
+				placed_tiles[pos] = "FACADE"
+				continue
+			elif right_is_2h_same and left_has_room_for_3h:
+				walls_layer.set_cell(pos + Vector2i(0, -2), 0, CONNECTOR_3H_TO_2H_TOP)
+				walls_layer.set_cell(pos + Vector2i(0, -1), 0, CONNECTOR_3H_TO_2H_MID)
+				walls_layer.set_cell(pos, 0, CONNECTOR_3H_TO_2H_BASE)
+				placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
+				placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
+				placed_tiles[pos] = "FACADE"
 				continue
 			elif (right_is_2h_same or right_is_2h_step) and not (left_is_2h_same or left_is_2h_step):
 				# Łącznik: przejście z 3H po lewej do 2H po prawej (kolumna 10)
@@ -1170,14 +1237,6 @@ static func apply_cave_tiles(
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
 
-					# Wstrzykiwanie korony wewnętrznej w sąsiedniej kolumnie na szczycie
-					if flags.enable_corner_crown_injection:
-						var p_crown := pos + Vector2i(1, -2)
-						if not _is_walkable(grid, p_crown) and (not placed_tiles.has(p_crown) or placed_tiles[p_crown] == "ROCK"):
-							var crown_t := ROOT_CRNR_SE_IN if use_roots else CRNR_SE_IN
-							walls_layer.set_cell(p_crown, 0, crown_t)
-							placed_tiles[p_crown] = "CORNER"
-
 					# Dopięcie pionowej ściany wschodniej bezpośrednio nad narożnikiem
 					var p_up := pos + Vector2i(0, -3)
 					if not _is_walkable(grid, p_up) and _is_walkable(grid, pos + Vector2i(-1, -3)):
@@ -1221,14 +1280,6 @@ static func apply_cave_tiles(
 					placed_tiles[pos] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos + Vector2i(0, -2)] = "FACADE"
-
-					# Wstrzykiwanie korony wewnętrznej w sąsiedniej kolumnie na szczycie
-					if flags.enable_corner_crown_injection:
-						var p_crown := pos + Vector2i(-1, -2)
-						if not _is_walkable(grid, p_crown) and (not placed_tiles.has(p_crown) or placed_tiles[p_crown] == "ROCK"):
-							var crown_t := ROOT_CRNR_SW_IN if use_roots else CRNR_SW_IN
-							walls_layer.set_cell(p_crown, 0, crown_t)
-							placed_tiles[p_crown] = "CORNER"
 
 					# Dopięcie pionowej ściany zachodniej bezpośrednio nad narożnikiem
 					var p_up := pos + Vector2i(0, -3)
@@ -1347,7 +1398,7 @@ static func apply_cave_tiles(
 						can_place_out_niche = false
 						break
 
-				if can_niche and can_place_out_niche and rng.randf() < 0.03:
+				if can_niche and can_place_out_niche and rng.randf() < flags.secret_niche_spawn_chance:
 					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
 					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
 					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN# (5,1) – korona nad MOD_CRNR_NE_OUT
@@ -1382,11 +1433,10 @@ static func apply_cave_tiles(
 					# Rejestrujemy lewy bok pary OUT + OUT jako punkt sekretu.
 					out_niche_positions.append(pos)
 					continue
-					
-					# Nisza odwrócona: lewy = MOD_CRNR_NE_OUT, prawy = MOD_CRNR_NW_OUT
-					# Razem tworzą wgłębienie skierowane do wewnątrz (ściana-NE_OUT-NW_OUT-ściana)
-					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN# (5,1) – korona nad MOD_CRNR_NE_OUT
+
 				if can_niche and rng.randf() < flags.niche_spawn_chance:
+					# Nisza standardowa lewy = MOD_CRNR_NE_IN, prawy = MOD_CRNR_NW_IN
+					var l_crown := CRNR_SW_IN if not use_roots else ROOT_CRNR_SW_IN
 					var l_top := MOD_CRNR_NE_IN_TOP if not use_roots else ROOT_MOD_CRNR_NE_IN_TOP
 					var l_mid := MOD_CRNR_NE_IN_MID if not use_roots else ROOT_MOD_CRNR_NE_IN_MID
 					var l_base := MOD_CRNR_NE_IN_BASE if not use_roots else ROOT_MOD_CRNR_NE_IN_BASE
@@ -1415,7 +1465,7 @@ static func apply_cave_tiles(
 					placed_tiles[pos_next + Vector2i(0, -1)] = "FACADE"
 					placed_tiles[pos_next] = "FACADE"
 					continue
-					
+
 				# Ściana prosta MOD_WALL_A / MOD_WALL_B
 				var is_b: bool = ab_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 				var top_t := WALL_BOTTOM_TOP[1] if is_b else WALL_BOTTOM_TOP[0]
@@ -1639,65 +1689,60 @@ static func apply_cave_tiles(
 					if not placed_tiles.has(pos) or placed_tiles[pos] == "ROCK":
 						walls_layer.set_cell(pos, 0, Vector2i(4, 1) if not use_roots else Vector2i(4, 10))
 						placed_tiles[pos] = "RIM"
-	# Strefy portali muszą pozostać całkowicie przechodnie:
-	# żadnego kafla ściany ani kolizji na ich komórkach.
+
+
+	# Czyszczenie kafelków na polach portali
 	for p in portal_zone:
 		walls_layer.erase_cell(p)
-
-
-# =========================================================================
-# FUNKCJE POMOCNICZE KAFELKOWANIA I FILARÓW 360°
-# =========================================================================
-
-## Wykrywa i składa wolnostojące filary w komorach (z kielichem RIM wchodzącym w północną podłogę)
-static func _build_free_standing_pillars(walls_layer: TileMapLayer, grid: Dictionary, width: int, height: int, placed_cells: Dictionary, is_roots: bool) -> void:
-	for y in range(1, height - 2):
-		for x in range(1, width - 2):
-			var base_left := Vector2i(x, y)
-			if grid.get(base_left, CellType.WALL) == CellType.WALL and not placed_cells.has(base_left):
-				if _is_walkable(grid, base_left + Vector2i(-1, 0)) and _is_walkable(grid, base_left + Vector2i(0, 1)):
-					var iw := 0
-					while grid.get(base_left + Vector2i(iw, 0), CellType.WALL) == CellType.WALL and _is_walkable(grid, base_left + Vector2i(iw, 1)):
-						iw += 1
-					if iw >= 2 and _is_walkable(grid, base_left + Vector2i(iw, 0)):
-						var wh := 0
-						while not _is_walkable(grid, Vector2i(base_left.x, base_left.y - wh)):
-							wh += 1
-						if wh <= 4:
-							_assemble_pillar(walls_layer, base_left, iw, wh, placed_cells, is_roots)
-
-
-static func _assemble_pillar(walls_layer: TileMapLayer, base_left: Vector2i, iw: int, wh: int, placed_cells: Dictionary, is_roots: bool) -> void:
-	var r_off := 9 if is_roots else 0
-	for ix in range(iw):
-		var cx := base_left.x + ix
-		var col := 0 if ix == 0 else (5 if ix == iw - 1 else (2 if cx % 2 == 0 else 3))
-		if wh == 1:
-			walls_layer.set_cell(Vector2i(cx, base_left.y), 0, Vector2i(col, 7 + r_off))
-			placed_cells[Vector2i(cx, base_left.y)] = "PILLAR"
-		elif wh == 2:
-			walls_layer.set_cell(Vector2i(cx, base_left.y), 0, Vector2i(col, 7 + r_off))
-			walls_layer.set_cell(Vector2i(cx, base_left.y - 1), 0, Vector2i(col, 6 + r_off))
-			placed_cells[Vector2i(cx, base_left.y)] = "PILLAR"
-			placed_cells[Vector2i(cx, base_left.y - 1)] = "PILLAR"
-		else:
-			walls_layer.set_cell(Vector2i(cx, base_left.y), 0, Vector2i(col, 7 + r_off))
-			walls_layer.set_cell(Vector2i(cx, base_left.y - 1), 0, Vector2i(col, 6 + r_off))
-			walls_layer.set_cell(Vector2i(cx, base_left.y - 2), 0, Vector2i(col, 5 + r_off))
-			placed_cells[Vector2i(cx, base_left.y)] = "PILLAR"
-			placed_cells[Vector2i(cx, base_left.y - 1)] = "PILLAR"
-			placed_cells[Vector2i(cx, base_left.y - 2)] = "PILLAR"
-
-		var rim_p := Vector2i(cx, base_left.y - wh)
-		if ix == 0:
-			walls_layer.set_cell(rim_p, 0, ROOT_RIM_CRNR_NE_IN if is_roots else ROCK_RIM_CRNR_NE_IN)
-		elif ix == iw - 1:
-			walls_layer.set_cell(rim_p, 0, ROOT_RIM_CRNR_NW_IN if is_roots else ROCK_RIM_CRNR_NW_IN)
-		else:
-			walls_layer.set_cell(rim_p, 0, Vector2i(cx % 2 + 2, 9 if is_roots else 0))
-		placed_cells[rim_p] = "PILLAR_RIM"
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
 	var t: int = grid.get(pos, CellType.VOID)
 	return t == CellType.FLOOR or t == CellType.DOOR or t == CellType.ENTRANCE or t == CellType.EXIT
+## Tworzy obraz (Image) ostatecznej maski binarnej do celów debugowania
+## Czarny/Szary = WALL, Biały = FLOOR, Zielony = ENTRANCE, Czerwony = EXIT
+static func get_grid_mask_image(result: GenerationResult) -> Image:
+	var img := Image.create(result.width, result.height, false, Image.FORMAT_RGBA8)
+	var col_wall := Color(0.12, 0.12, 0.15, 1.0)
+	var col_floor := Color(0.88, 0.88, 0.90, 1.0)
+	var col_entrance := Color(0.2, 0.85, 0.3, 1.0)
+	var col_exit := Color(0.9, 0.25, 0.2, 1.0)
+
+	for y in range(result.height):
+		for x in range(result.width):
+			var p := Vector2i(x, y)
+			var type: int = result.grid.get(p, CellType.VOID)
+			match type:
+				CellType.WALL:
+					img.set_pixel(x, y, col_wall)
+				CellType.FLOOR:
+					img.set_pixel(x, y, col_floor)
+				CellType.ENTRANCE:
+					img.set_pixel(x, y, col_entrance)
+				CellType.EXIT:
+					img.set_pixel(x, y, col_exit)
+				_:
+					img.set_pixel(x, y, Color.BLACK)
+	return img
+
+
+## Wypisuje wycinek siatki wokół danego punktu do konsoli Output
+static func print_grid_mask_ascii(grid: Dictionary, center: Vector2i, radius: int = 10) -> void:
+	print("--- PODGLĄD MASKI GRIDU (%d, %d) ---" % [center.x, center.y])
+	for y in range(center.y - radius, center.y + radius + 1):
+		var line := ""
+		for x in range(center.x - radius, center.x + radius + 1):
+			var p := Vector2i(x, y)
+			var t: int = grid.get(p, CellType.VOID)
+			match t:
+				CellType.WALL:
+					line += "#"
+				CellType.FLOOR:
+					line += "."
+				CellType.ENTRANCE:
+					line += "S"
+				CellType.EXIT:
+					line += "E"
+				_:
+					line += " "
+		print(line)

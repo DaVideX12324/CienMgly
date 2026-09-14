@@ -6,7 +6,7 @@ extends Node2D
 
 const ProceduralLevelScript = preload("res://modules/quiz_rpg/scripts/maps/procedural_level.gd")
 const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
-
+const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
 @onready var camera: Camera2D = $Camera2D
 @onready var level_container: Node2D = $LevelContainer
 @onready var hud: CanvasLayer = $CanvasLayer
@@ -31,6 +31,7 @@ const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generatio
 @onready var spin_rooms: SpinBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms/SpinRooms
 @onready var check_entities: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEntities
 @onready var check_nav: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckNav
+@onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
 @onready var btn_generate: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnGenerate
 
 @onready var btn_fit_all: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1/BtnFitAll
@@ -98,6 +99,8 @@ func _ensure_nodes() -> void:
 		check_entities = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEntities") as CheckBox
 	if not check_nav:
 		check_nav = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckNav") as CheckBox
+	if not check_gen_mask:
+		check_gen_mask = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask") as CheckBox
 	if not opt_type:
 		opt_type = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OptType") as OptionButton
 	if not opt_size_preset:
@@ -121,7 +124,69 @@ func _ensure_nodes() -> void:
 	if not btn_hide_hud:
 		btn_hide_hud = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle/BtnHideHUD") as Button
 
+# Wewnątrz map_generator_preview.gd:
+var _mask_sprite: Sprite2D = null
 
+
+func _toggle_grid_mask() -> void:
+	var should_show := not is_instance_valid(_mask_sprite)
+
+	if check_gen_mask:
+		check_gen_mask.button_pressed = should_show
+	else:
+		if should_show:
+			_show_grid_mask()
+		else:
+			_hide_grid_mask()
+
+
+func _on_grid_mask_toggled(enabled: bool) -> void:
+	if enabled:
+		_show_grid_mask()
+	else:
+		_hide_grid_mask()
+
+
+func _show_grid_mask() -> void:
+	if is_instance_valid(_mask_sprite):
+		_mask_sprite.visible = true
+		return
+
+	if not level_container or level_container.get_child_count() == 0:
+		return
+
+	var proc_level := level_container.get_child(0)
+	var res: Variant = proc_level.get("last_result") if proc_level else null
+
+	if not res:
+		return
+
+	var img: Image = CaveGeneratorScript.get_grid_mask_image(res)
+
+	if img == null or img.is_empty():
+		push_warning("Nie udało się utworzyć obrazu maski.")
+		return
+
+	var tex := ImageTexture.create_from_image(img)
+
+	_mask_sprite = Sprite2D.new()
+	_mask_sprite.name = "GridMask"
+	_mask_sprite.texture = tex
+	_mask_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_mask_sprite.scale = Vector2(16.0, 16.0)
+	_mask_sprite.centered = false
+	_mask_sprite.modulate = Color(1.0, 1.0, 1.0, 0.6)
+	_mask_sprite.z_index = 100
+
+	level_container.add_child(_mask_sprite)
+
+
+func _hide_grid_mask() -> void:
+	if is_instance_valid(_mask_sprite):
+		_mask_sprite.queue_free()
+
+	_mask_sprite = null
+	
 func _setup_ui() -> void:
 	# 1. Typy generatora
 	opt_type.clear()
@@ -179,6 +244,8 @@ func _setup_ui() -> void:
 
 	# 5. Generuj i Opcje
 	btn_generate.pressed.connect(_generate_current_map)
+	if check_gen_mask:
+		check_gen_mask.toggled.connect(_on_grid_mask_toggled)
 
 	# 6. Kamera
 	btn_fit_all.pressed.connect(fit_to_screen)
@@ -284,6 +351,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F1:
 				opt_type.select(1) # Las
 				_on_type_selected(1)
+			KEY_M:
+				_toggle_grid_mask()
 			KEY_F2:
 				opt_type.select(2) # Zamek
 				_on_type_selected(2)
@@ -461,7 +530,6 @@ func _generate_current_map() -> void:
 			res.chest_spawns.size() if "chest_spawns" in res else 0,
 			extra_stats
 		]
-
 
 func _toggle_player_mode() -> void:
 	if is_player_mode:
