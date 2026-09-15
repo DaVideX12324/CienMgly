@@ -14,8 +14,12 @@ var theme_override: int = -1
 
 # --- Stan roboczy ---
 var rng: RandomNumberGenerator
+var tile_rng: RandomNumberGenerator
+var priority_table: Dictionary = {}
 var grid: Dictionary = {}
 var portal_zone: Dictionary = {}
+var entrance_zone: Array[Vector2i] = []
+var exit_zone: Array[Vector2i] = []
 var rooms: Array[Rect2i] = []
 var entrance_pos: Vector2i = Vector2i.ZERO
 var exit_pos: Vector2i = Vector2i.ZERO

@@ -556,12 +556,12 @@ static func apply_cave_tiles(
 		ctx.flags = flags
 		ctx.portal_zone = portal_zone
 		ctx.rng = rng
-		var edges := EdgeAnalyzer.analyze(ctx)
+		var analysis := EdgeAnalyzer.analyze(ctx)
 		for check_y in range(height):
 			for check_x in range(width):
 				var check_p := Vector2i(check_x, check_y)
 				var expected_kind := _legacy_classify(grid, check_p, facade_cols, portal_zone, flags)
-				var actual_kind: int = edges[check_p].edge_kind
+				var actual_kind: int = analysis.edges[check_p].edge_kind
 				assert(expected_kind == actual_kind, "Stage 4 parity mismatch at %s: legacy=%d vs edge_analyzer=%d" % [str(check_p), expected_kind, actual_kind])
 
 	var step_downs: Array[Dictionary] = []
