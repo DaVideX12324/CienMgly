@@ -10,16 +10,8 @@ const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tre
 # =========================================================================
 # FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)
 # =========================================================================
-class GenerationFlags:
-	var enable_meandering: bool = true
-	var enable_variable_width: bool = true
-	var enable_funnels: bool = true
-	var enable_junction_smoothing: bool = true
-	var enable_grid_cleanup: bool = true
-	var enable_terrain_smoothing: bool = true
-	var enable_decorative_niches: bool = true
-	var niche_spawn_chance: float = 0.15
-	var secret_niche_spawn_chance: float = 0.3
+const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
+const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -1688,8 +1680,7 @@ static func apply_cave_tiles(
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
-	var t: int = grid.get(pos, CellType.VOID)
-	return t == CellType.FLOOR or t == CellType.DOOR or t == CellType.ENTRANCE or t == CellType.EXIT
+	return GridUtils.is_walkable(grid, pos)
 ## Tworzy obraz (Image) ostatecznej maski binarnej do celów debugowania
 ## Czarny/Szary = WALL, Biały = FLOOR, Zielony = ENTRANCE, Czerwony = EXIT
 static func get_grid_mask_image(result: GenerationResult) -> Image:

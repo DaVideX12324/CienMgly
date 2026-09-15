@@ -33,6 +33,12 @@ class GenerationResult:
 	var decoration_spawns: Array[Dictionary] = [] # { pos: Vector2i, id: int }
 	var entrance_zone: Array[Vector2i] = []  # komórki strefy wejściowej
 	var exit_zone: Array[Vector2i] = []  # komórki strefy wyjściowej
+	var profile_id: StringName = &""  # który profil wygenerował ten wynik
+	var flags_used: RefCounted = null  # GenerationFlags faktycznie użyte
+	var overrides_used: Dictionary = {}  # nadpisania runtime
+	var portal_zone: Dictionary = {}  # Vector2i -> bool (union entrance+exit)
+	var corridors: Array[Dictionary] = []  # { from, to, width } — do debugowania
+	var preprocess_stats: Dictionary = {}  # ile komórek zmienił każdy pass
 
 
 # --- Inicjalizacja RNG ---
