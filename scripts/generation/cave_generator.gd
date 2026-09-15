@@ -897,6 +897,9 @@ static func apply_cave_tiles(
 	if flags == null:
 		flags = GenerationFlags.new()
 
+	# Reset globalnego seeda dla operacji silnika (np. set_cells_terrain_connect)
+	seed(rng.seed)
+
 	if floor_decor_layer == null and floor_layer.get_parent():
 		floor_decor_layer = floor_layer.get_parent().get_node_or_null("FloorDecor") as TileMapLayer
 		if not floor_decor_layer:
