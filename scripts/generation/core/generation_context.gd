@@ -1,4 +1,4 @@
-﻿class_name GenerationContext
+class_name GenerationContext
 extends RefCounted
 
 const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
@@ -10,6 +10,7 @@ var overrides: Dictionary = {}
 var seed_value: int = 0
 var width: int = 0
 var height: int = 0
+var theme_override: int = -1
 
 # --- Stan roboczy ---
 var rng: RandomNumberGenerator
