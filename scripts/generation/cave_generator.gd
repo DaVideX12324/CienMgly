@@ -11,8 +11,11 @@ const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tre
 # FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)
 # =========================================================================
 const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
+const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
 const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
 const InteriorRoomLayoutGenerator = preload("res://modules/quiz_rpg/scripts/generation/topology/interior_room_layout_generator.gd")
+const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
+const EdgeAnalyzer = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analyzer.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -237,6 +240,124 @@ static func _clean_terrain_mask(candidates: Dictionary) -> Array[Vector2i]:
 	return out
 
 
+## Czysta funkcja wyroczni legacy do weryfikacji równoległej w Etapie 4 (§4.8, §12.5).
+## Nie modyfikuje żadnego stanu, nie stawia kafelków, nie konsumuje RNG.
+static func _legacy_classify(
+	grid: Dictionary,
+	pos: Vector2i,
+	facade_cols: Dictionary,
+	portal_zone: Dictionary,
+	_flags: GenerationFlags
+) -> int:
+	if portal_zone.has(pos):
+		return EdgeKind.Kind.PORTAL_CLEAR
+
+	if _is_walkable(grid, pos):
+		var x := pos.x
+		var y := pos.y
+		if not (facade_cols.has(x) and facade_cols[x].has(y)):
+			return EdgeKind.Kind.FLOOR
+
+		# Komórka jest stopą fasady
+		var has_same_y := func(cx: int, cy: int) -> bool:
+			if not facade_cols.has(cx): return false
+			for fy in facade_cols[cx]:
+				if abs(fy - cy) <= 1: return true
+			return false
+
+		var check_2h_col := func(cx: int, fy: int) -> bool:
+			return _is_walkable(grid, Vector2i(cx, fy)) \
+				and not _is_walkable(grid, Vector2i(cx, fy - 1)) \
+				and not _is_walkable(grid, Vector2i(cx, fy - 2)) \
+				and _is_walkable(grid, Vector2i(cx, fy - 3))
+
+		var left_is_2h: bool = check_2h_col.call(x - 1, y)
+		var right_is_2h: bool = check_2h_col.call(x + 1, y)
+		var near_2h_context: bool = (left_is_2h and right_is_2h) \
+			or (left_is_2h and check_2h_col.call(x + 2, y)) \
+			or (right_is_2h and check_2h_col.call(x - 2, y))
+
+		var is_horizontal_facade: bool = has_same_y.call(x - 1, y) or has_same_y.call(x + 1, y)
+		var is_2h: bool = is_horizontal_facade and (_is_walkable(grid, pos + Vector2i(0, -3)) or near_2h_context)
+		if is_2h:
+			return EdgeKind.Kind.FACADE
+
+		var left_is_2h_same: bool = check_2h_col.call(x - 1, y)
+		var right_is_2h_same: bool = check_2h_col.call(x + 1, y)
+		var right_has_room_for_3h: bool = not check_2h_col.call(x + 1, y) and not check_2h_col.call(x + 2, y) and not check_2h_col.call(x + 3, y)
+		var left_has_room_for_3h: bool = not check_2h_col.call(x - 1, y) and not check_2h_col.call(x - 2, y) and not check_2h_col.call(x - 3, y)
+		var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
+		var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
+
+		if left_is_2h_same and right_has_room_for_3h:
+			return EdgeKind.Kind.CONNECTOR
+		elif right_is_2h_same and left_has_room_for_3h:
+			return EdgeKind.Kind.CONNECTOR
+		elif (right_is_2h_same or right_is_2h_step) and not (left_is_2h_same or left_is_2h_step):
+			return EdgeKind.Kind.CONNECTOR
+
+		var left_y: int = -1
+		if facade_cols.has(x - 1):
+			for ly in facade_cols[x - 1]:
+				if abs(ly - y) <= 4:
+					left_y = ly
+					break
+
+		var right_y: int = -1
+		if facade_cols.has(x + 1):
+			for ry in facade_cols[x + 1]:
+				if abs(ry - y) <= 4:
+					right_y = ry
+					break
+
+		var w_open := _is_walkable(grid, pos + Vector2i(-1, -1)) \
+			and _is_walkable(grid, pos + Vector2i(-1, -2)) \
+			and not _is_walkable(grid, pos + Vector2i(0, -2)) \
+			and left_y == -1
+
+		var e_open := _is_walkable(grid, pos + Vector2i(1, -1)) \
+			and _is_walkable(grid, pos + Vector2i(1, -2)) \
+			and not _is_walkable(grid, pos + Vector2i(0, -2)) \
+			and right_y == -1
+
+		if (w_open and not e_open) or (e_open and not w_open):
+			return EdgeKind.Kind.OUT_CORNER
+
+		if (left_y != -1 and y > left_y) or (right_y != -1 and y > right_y):
+			return EdgeKind.Kind.STEP
+
+		return EdgeKind.Kind.FACADE
+
+	# Komórka ściany
+	var n_floor := _is_walkable(grid, pos + Vector2i(0, -1))
+	var s_floor := _is_walkable(grid, pos + Vector2i(0, 1))
+	var e_floor := _is_walkable(grid, pos + Vector2i(1, 0))
+	var w_floor := _is_walkable(grid, pos + Vector2i(-1, 0))
+	var nw_floor := _is_walkable(grid, pos + Vector2i(-1, -1))
+	var ne_floor := _is_walkable(grid, pos + Vector2i(1, -1))
+	var sw_floor := _is_walkable(grid, pos + Vector2i(-1, 1))
+	var se_floor := _is_walkable(grid, pos + Vector2i(1, 1))
+
+	if n_floor and not s_floor:
+		return EdgeKind.Kind.TOP_RIM
+
+	if e_floor and not w_floor:
+		return EdgeKind.Kind.SIDE_WALL
+	elif w_floor and not e_floor:
+		return EdgeKind.Kind.SIDE_WALL
+
+	if nw_floor and not ne_floor and not w_floor and not n_floor:
+		return EdgeKind.Kind.INNER_CORNER
+	elif ne_floor and not nw_floor and not e_floor and not n_floor:
+		return EdgeKind.Kind.INNER_CORNER
+	elif sw_floor and not se_floor and not w_floor and not s_floor:
+		return EdgeKind.Kind.INNER_CORNER
+	elif se_floor and not sw_floor and not e_floor and not s_floor:
+		return EdgeKind.Kind.INNER_CORNER
+
+	return EdgeKind.Kind.SOLID_FILL
+
+
 ## Nanosi dopasowane kafelki z caves.tres na warstwy Floor, FloorDecor i Walls
 static func apply_cave_tiles(
 	floor_layer: TileMapLayer,
@@ -424,6 +545,24 @@ static func apply_cave_tiles(
 
 	var sorted_xs: Array = facade_cols.keys()
 	sorted_xs.sort()
+
+	# Weryfikacja równoległa wyroczni legacy z EdgeAnalyzer (Etap 4, §4.8)
+	if OS.is_debug_build() and flags.debug_log_edge_kinds:
+		var ctx := GenerationContext.new()
+		ctx.grid = grid
+		ctx.width = width
+		ctx.height = height
+		ctx.seed_value = rng.seed
+		ctx.flags = flags
+		ctx.portal_zone = portal_zone
+		ctx.rng = rng
+		var edges := EdgeAnalyzer.analyze(ctx)
+		for check_y in range(height):
+			for check_x in range(width):
+				var check_p := Vector2i(check_x, check_y)
+				var expected_kind := _legacy_classify(grid, check_p, facade_cols, portal_zone, flags)
+				var actual_kind: int = edges[check_p].edge_kind
+				assert(expected_kind == actual_kind, "Stage 4 parity mismatch at %s: legacy=%d vs edge_analyzer=%d" % [str(check_p), expected_kind, actual_kind])
 
 	var step_downs: Array[Dictionary] = []
 
