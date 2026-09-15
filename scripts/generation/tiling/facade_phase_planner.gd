@@ -19,12 +19,21 @@ const OutCornerPlacer = preload("res://modules/quiz_rpg/scripts/generation/tilin
 const StepPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/step_placer.gd")
 const NichePlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/niche_placer.gd")
 
-static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
+static func _queue(
+	plan: TilePlacementPlan,
+	target_pos: Vector2i,
+	atlas_coords: Vector2i,
+	category: StringName,
+	table: Dictionary,
+	origin: Vector2i = Vector2i.ZERO
+) -> void:
 	var p := TilePlacement.new()
-	p.pos = pos
+	p.pos = target_pos
 	p.layer = &"Walls"
 	p.atlas_coords = atlas_coords
 	p.category = category
+	p.origin = origin
+	p.tie_breaker = 10 if (origin == Vector2i.ZERO or target_pos.x == origin.x) else 1
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
 
@@ -139,20 +148,20 @@ static func plan(
 			if sdir == 1:
 				var p_c := Vector2i(adj_x, sy - 2)
 				if state.is_empty_or_rock(p_c):
-					_queue(plan, p_c, CaveTileConstants.CRNR_SE_IN, &"CORNER", table)
+					_queue(plan, p_c, CaveTileConstants.CRNR_SE_IN, &"CORNER", table, Vector2i(sx, sy))
 					state.mark(p_c, &"CORNER")
 				var side_b := CaveTileConstants.WALL_SIDE_EAST[1] if not use_roots_adj else CaveTileConstants.ROOT_WALL_SIDE_EAST[1]
 				var p_b1 := Vector2i(adj_x, sy - 1)
 				if state.is_empty_or_rock(p_b1):
-					_queue(plan, p_b1, side_b, &"SIDE_WALL_FIXED", table)
+					_queue(plan, p_b1, side_b, &"SIDE_WALL_FIXED", table, Vector2i(sx, sy))
 					state.mark(p_b1, &"SIDE_FIXED")
 			else:
 				var p_c := Vector2i(adj_x, sy - 2)
 				if state.is_empty_or_rock(p_c):
-					_queue(plan, p_c, CaveTileConstants.CRNR_SW_IN, &"CORNER", table)
+					_queue(plan, p_c, CaveTileConstants.CRNR_SW_IN, &"CORNER", table, Vector2i(sx, sy))
 					state.mark(p_c, &"CORNER")
 				var side_b := CaveTileConstants.WALL_SIDE_WEST[1] if not use_roots_adj else CaveTileConstants.ROOT_WALL_SIDE_WEST[1]
 				var p_b1 := Vector2i(adj_x, sy - 1)
 				if state.is_empty_or_rock(p_b1):
-					_queue(plan, p_b1, side_b, &"SIDE_WALL_FIXED", table)
+					_queue(plan, p_b1, side_b, &"SIDE_WALL_FIXED", table, Vector2i(sx, sy))
 					state.mark(p_b1, &"SIDE_FIXED")

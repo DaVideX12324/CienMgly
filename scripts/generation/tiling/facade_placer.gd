@@ -20,12 +20,21 @@ static func _get_variant_noise(ctx: GenerationContext) -> FastNoiseLite:
 	return n
 
 
-static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
+static func _queue(
+	plan: TilePlacementPlan,
+	target_pos: Vector2i,
+	atlas_coords: Vector2i,
+	category: StringName,
+	table: Dictionary,
+	origin: Vector2i = Vector2i.ZERO
+) -> void:
 	var p := TilePlacement.new()
-	p.pos = pos
+	p.pos = target_pos
 	p.layer = &"Walls"
 	p.atlas_coords = atlas_coords
 	p.category = category
+	p.origin = origin
+	p.tie_breaker = 10 if (origin == Vector2i.ZERO or target_pos.x == origin.x) else 1
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
 
@@ -110,12 +119,12 @@ static func place_3h(
 		var corner_t := CaveTileConstants.CRNR_SW_IN
 		var p_corner := Vector2i(pos.x - 1, pos.y - 2)
 		if not GridUtils.is_walkable(grid, p_corner) and state.is_empty_or_rock(p_corner):
-			_queue(plan, p_corner, corner_t, &"CORNER", table)
+			_queue(plan, p_corner, corner_t, &"CORNER", table, pos)
 			state.mark(p_corner, &"CORNER")
 		for cy in range(pos.y - 1, pos.y + 1):
 			var p_side := Vector2i(pos.x - 1, cy)
 			if not GridUtils.is_walkable(grid, p_side) and state.is_empty_or_rock(p_side):
-				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table)
+				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
 				state.mark(p_side, &"SIDE_FIXED")
 
 	# Zakończenie prawe litym murem: ściana wschodnia B i wewnętrzny narożnik SE_IN
@@ -124,10 +133,10 @@ static func place_3h(
 		var corner_t := CaveTileConstants.CRNR_SE_IN
 		var p_corner := Vector2i(pos.x + 1, pos.y - 2)
 		if not GridUtils.is_walkable(grid, p_corner) and state.is_empty_or_rock(p_corner):
-			_queue(plan, p_corner, corner_t, &"CORNER", table)
+			_queue(plan, p_corner, corner_t, &"CORNER", table, pos)
 			state.mark(p_corner, &"CORNER")
 		for cy in range(pos.y - 1, pos.y + 1):
 			var p_side := Vector2i(pos.x + 1, cy)
 			if not GridUtils.is_walkable(grid, p_side) and state.is_empty_or_rock(p_side):
-				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table)
+				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
 				state.mark(p_side, &"SIDE_FIXED")
