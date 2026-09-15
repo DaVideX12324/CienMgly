@@ -18,14 +18,13 @@ class GenerationFlags:
 	var enable_grid_cleanup: bool = true
 	var enable_terrain_smoothing: bool = true
 	var enable_decorative_niches: bool = true
-	var enable_rim_capping: bool = true
 	var niche_spawn_chance: float = 0.15
 	var secret_niche_spawn_chance: float = 0.3
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
 # 1. Podłoga kamienna (Stone Floor): autotiling w terrain_set 0, terrain 0
-# 2. Podłoga porośnięta mchem/trawą (Moss / Grass Floor): autotiling w terrain_set 0, terrain 1
+# 2. Podłoga porośnięta mchem (Mud - terrain 1), trawą (Grass - terrain 2): autotiling w terrain_set 0
 
 # 3. Ściany zwykłe (Standard Walls):
 # Szczyt / góra: wiersz 0 (kolumny 2, 3) - 1 kafelek wysokości
@@ -657,25 +656,11 @@ static func _enforce_wall_thickness(grid: Dictionary, width: int, height: int) -
 						grid[p] = CellType.FLOOR
 						changed = true
 
-## Zwraca pionową grubość ściany na danej pozycji (do najbliższej podłogi w górę i w dół)
-static func _get_vertical_wall_thickness(grid: Dictionary, pos: Vector2i, height: int) -> int:
-	var thickness := 0
-	var cy := pos.y
-	while cy >= 0 and not _is_walkable(grid, Vector2i(pos.x, cy)):
-		thickness += 1
-		cy -= 1
-	cy = pos.y + 1
-	while cy < height and not _is_walkable(grid, Vector2i(pos.x, cy)):
-		thickness += 1
-		cy += 1
-	return thickness
-
 
 ## Wyrzeźbi dedykowany tunel portalowy z komory ku krawędzi mapy, zakończony niszą wejściową/wyjściową.
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map_h: int, rng: RandomNumberGenerator, avoid_edge: int = -1) -> Dictionary:
 	const ALCOVE_RADIUS := 2
-	const ALCOVE_NORTH_EXTRA := 0  # Dodatkowy wiersz w górę na bazę fasady ściany północnej
 	const MAP_BORDER := 2
 	const MIN_TUNNEL_LENGTH := 5
 	const ALCOVE_CENTER_MARGIN := ALCOVE_RADIUS + MAP_BORDER
@@ -712,7 +697,7 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 				dir = Vector2i(0, -1)
 				tunnel_start = Vector2i(center.x, room.position.y - 1)
 				perp = Vector2i(1, 0)
-				max_length = tunnel_start.y - (ALCOVE_CENTER_MARGIN + ALCOVE_NORTH_EXTRA)
+				max_length = tunnel_start.y - ALCOVE_CENTER_MARGIN
 			1:
 				dir = Vector2i(1, 0)
 				tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
@@ -753,7 +738,7 @@ static func _carve_portal_alcove(grid: Dictionary, room: Rect2i, map_w: int, map
 		current += chosen_dir
 
 	var alcove_cells: Array[Vector2i] = []
-	for dy in range(-ALCOVE_RADIUS - ALCOVE_NORTH_EXTRA, ALCOVE_RADIUS + 1):
+	for dy in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
 		for dx in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
 			var p := current + Vector2i(dx, dy)
 			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
