@@ -127,7 +127,7 @@ func _test_f01_rim_1h_straight() -> void:
 #####
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.TOP_RIM \
 		and edge.orientation == EdgeKind.Orientation.NORTH \
@@ -160,7 +160,7 @@ func _test_f03_rim_segment_start_middle_end() -> void:
 #######
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var single_edge: EdgeContext = edges[Vector2i(1, 1)]
 	var start_edge: EdgeContext = edges[Vector2i(3, 1)]
 	var mid_edge: EdgeContext = edges[Vector2i(4, 1)]
@@ -181,7 +181,7 @@ func _test_f04_rim_cap_east() -> void:
 #####
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(0, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.TOP_RIM \
 		and edge.orientation == EdgeKind.Orientation.NORTH \
@@ -198,7 +198,7 @@ func _test_f05_rim_cap_west() -> void:
 #####
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(4, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.TOP_RIM \
 		and edge.orientation == EdgeKind.Orientation.NORTH \
@@ -217,7 +217,7 @@ func _test_f06_facade_3h_straight() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 3)]
 	var ok := edge.edge_kind == EdgeKind.Kind.FACADE \
 		and edge.orientation == EdgeKind.Orientation.SOUTH \
@@ -237,7 +237,7 @@ func _test_f07_facade_2h_straight() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 3)]
 	var ok := edge.edge_kind == EdgeKind.Kind.FACADE \
 		and edge.orientation == EdgeKind.Orientation.SOUTH \
@@ -260,7 +260,7 @@ func _test_f08_facade_depth_5() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 6)]
 	var ok := edge.edge_kind == EdgeKind.Kind.FACADE \
 		and edge.solid_depth == 5 \
@@ -281,7 +281,7 @@ func _test_f09_out_corner_west_3h() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 6)]
 	var ok := edge.edge_kind == EdgeKind.Kind.OUT_CORNER \
 		and edge.orientation == EdgeKind.Orientation.WEST \
@@ -302,7 +302,7 @@ func _test_f10_out_corner_east_3h() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 6)]
 	var ok_corner := edge.edge_kind == EdgeKind.Kind.OUT_CORNER \
 		and edge.orientation == EdgeKind.Orientation.EAST \
@@ -325,7 +325,7 @@ func _test_f11_out_corner_west_2h() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 6)]
 	var ok := edge.edge_kind == EdgeKind.Kind.OUT_CORNER \
 		and edge.orientation == EdgeKind.Orientation.WEST \
@@ -346,7 +346,7 @@ func _test_f12_out_corner_east_2h() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 6)]
 	var ok := edge.edge_kind == EdgeKind.Kind.OUT_CORNER \
 		and edge.orientation == EdgeKind.Orientation.EAST \
@@ -364,7 +364,7 @@ func _test_f13_step_west_dy1() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 3)]
 	var ok := edge.edge_kind == EdgeKind.Kind.STEP \
 		and edge.orientation == EdgeKind.Orientation.WEST \
@@ -385,7 +385,7 @@ func _test_f14_step_west_dy3() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 5)]
 	var ok := edge.edge_kind == EdgeKind.Kind.STEP \
 		and edge.orientation == EdgeKind.Orientation.WEST \
@@ -404,7 +404,7 @@ func _test_f15_step_east_dy1() -> void:
 .....
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(1, 3)]
 	# Dla (1, 3): left_y (przy x=0) == 3, right_y (przy x=2) == 2, więc y > right_y (3 > 2) -> STEP EAST
 	var ok := edge.edge_kind == EdgeKind.Kind.STEP \
@@ -424,7 +424,7 @@ func _test_f16_connector_2h_to_3h() -> void:
 ......
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 3)]
 	var ok := edge.edge_kind == EdgeKind.Kind.CONNECTOR \
 		and edge.orientation == EdgeKind.Orientation.EAST \
@@ -442,7 +442,7 @@ func _test_f17_connector_3h_to_2h() -> void:
 ......
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 3)]
 	var ok := edge.edge_kind == EdgeKind.Kind.CONNECTOR \
 		and edge.orientation == EdgeKind.Orientation.WEST \
@@ -458,7 +458,7 @@ func _test_f18_inner_corner_nw() -> void:
 ###
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(1, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.INNER_CORNER \
 		and edge.orientation == EdgeKind.Orientation.NORTH_WEST
@@ -473,7 +473,7 @@ func _test_f19_inner_corner_ne() -> void:
 ###
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(1, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.INNER_CORNER \
 		and edge.orientation == EdgeKind.Orientation.NORTH_EAST
@@ -488,7 +488,7 @@ func _test_f20_side_wall_east() -> void:
 ###
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(0, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.SIDE_WALL \
 		and edge.orientation == EdgeKind.Orientation.EAST
@@ -503,7 +503,7 @@ func _test_f21_side_wall_west() -> void:
 ###
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.SIDE_WALL \
 		and edge.orientation == EdgeKind.Orientation.WEST
@@ -522,7 +522,7 @@ func _test_f22_niche_pair() -> void:
 	var flags := GenerationFlags.new()
 	flags.enable_decorative_niches = true
 	var ctx := make_context_from_ascii(ascii, flags)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var pos := Vector2i(2, 3)
 	var partner_pos := Vector2i(3, 3)
 	var edge: EdgeContext = edges[pos]
@@ -575,7 +575,7 @@ func _test_f25_portal_not_covered() -> void:
 #####
 """
 	var ctx := make_context_from_ascii(ascii)
-	var edges := EdgeAnalyzer.analyze(ctx)
+	var edges := EdgeAnalyzer.analyze(ctx).edges
 	var edge: EdgeContext = edges[Vector2i(2, 1)]
 	var ok := edge.edge_kind == EdgeKind.Kind.PORTAL_CLEAR and edge.in_portal_zone
 	_assert(ok, "F-25: portal_not_covered (PORTAL_CLEAR)")

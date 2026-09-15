@@ -7,6 +7,7 @@ const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_ki
 const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
 const FacadeSegmentDetector = preload("res://modules/quiz_rpg/scripts/generation/edge/facade_segment_detector.gd")
 const FacadeHeightResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/facade_height_resolver.gd")
+const EdgeAnalysisResult = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analysis_result.gd")
 
 ## Mierzy głębokość litej ściany w danym kierunku od komórki podłogi (§9.5).
 static func measure_solid_depth(
@@ -76,7 +77,7 @@ static func analyze_local_cell(ctx: GenerationContext, pos: Vector2i) -> EdgeCon
 
 
 ## Główna analiza geometryczna całej siatki mapy (Wariant A) zgodnie z §9.3 i §9.6.
-static func analyze(ctx: GenerationContext) -> Dictionary:
+static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var width := ctx.width
 	var height := ctx.height
 	var grid := ctx.grid
@@ -277,9 +278,24 @@ static func analyze(ctx: GenerationContext) -> Dictionary:
 				edge.edge_kind = EdgeKind.Kind.SOLID_FILL
 
 	# Przebieg 6: Segmentacja pozioma rimów
-	FacadeSegmentDetector.detect(rim_cells, edges)
+	var rim_segments := FacadeSegmentDetector.detect(rim_cells, edges)
 
-	return edges
+	# Przebieg 7: Wyznaczenie sąsiedztwa fasad 2H dla rimów
+	for pos in rim_cells:
+		var edge: EdgeContext = edges[pos]
+		var left_foot := pos + Vector2i(-1, 1)
+		if edges.has(left_foot) and (edges[left_foot] as EdgeContext).facade_height == 2:
+			edge.touches_2h_facade_left = true
+		var right_foot := pos + Vector2i(1, 1)
+		if edges.has(right_foot) and (edges[right_foot] as EdgeContext).facade_height == 2:
+			edge.touches_2h_facade_right = true
+
+	var result := EdgeAnalysisResult.new()
+	result.edges = edges
+	result.facade_cols = facade_cols
+	result.sorted_xs = sorted_xs
+	result.facade_segments = rim_segments
+	return result
 
 
 static func _populate_neighborhood(ctx: GenerationContext, edge: EdgeContext) -> void:
