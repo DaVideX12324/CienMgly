@@ -42,4 +42,3 @@ var niche_partner: Vector2i = Vector2i(-1, -1)
 # --- Sąsiedztwo z fasadą 2H (dla RimPlacer) ---
 var touches_2h_facade_left: bool = false
 var touches_2h_facade_right: bool = false
-
