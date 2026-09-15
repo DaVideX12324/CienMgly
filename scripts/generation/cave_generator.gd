@@ -1150,7 +1150,10 @@ static func apply_cave_tiles(
 			var right_is_2h_same: bool = check_2h_col.call(x + 1, y)
 			var right_has_room_for_3h: bool = not check_2h_col.call(x + 1, y) and not check_2h_col.call(x + 2, y) and not check_2h_col.call(x + 3, y)
 			var left_has_room_for_3h: bool = not check_2h_col.call(x - 1, y) and not check_2h_col.call(x - 2, y) and not check_2h_col.call(x - 3, y)
+			var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
+			var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
 
+			
 			if left_is_2h_same and right_has_room_for_3h:
 				walls_layer.set_cell(pos + Vector2i(0, -2), 0, CONNECTOR_2H_TO_3H_TOP)
 				walls_layer.set_cell(pos + Vector2i(0, -1), 0, CONNECTOR_2H_TO_3H_MID)
