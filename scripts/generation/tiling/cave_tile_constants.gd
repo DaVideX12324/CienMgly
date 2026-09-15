@@ -9,6 +9,28 @@ const WALL_TOP_CORNER_LEFT := Vector2i(0, 1)   # Kafelek 5 (RED B5)
 const WALL_TOP_CORNER_RIGHT := Vector2i(5, 1)  # Kafelek 8 (RED mirror B5)
 const WALL_TOP_SLOPE_RIGHT := Vector2i(4, 1)   # Kafelek 7 (BLUE mirror B5)
 const WALL_TOP_SLOPE_LEFT := Vector2i(1, 1)    # Kafelek 6 (BLUE B5)
+# Narożniki dolne zewnętrzne (CRNR_SW/SE_OUT):
+# BASE (Rock):
+const CRNR_SW_OUT_BASE_A := Vector2i(0, 1)
+const CRNR_SW_OUT_BASE_B := Vector2i(1, 0)
+const CRNR_SE_OUT_BASE_A := Vector2i(4, 0)
+const CRNR_SE_OUT_BASE_B := Vector2i(5, 1)
+
+const WALL_TOP_OUT_CORNER_LEFT_A := CRNR_SW_OUT_BASE_B   # (1, 0)
+const WALL_TOP_OUT_CORNER_LEFT_B := CRNR_SW_OUT_BASE_A   # (0, 1)
+const WALL_TOP_OUT_CORNER_RIGHT_A := CRNR_SE_OUT_BASE_A  # (4, 0)
+const WALL_TOP_OUT_CORNER_RIGHT_B := CRNR_SE_OUT_BASE_B  # (5, 1)
+
+# DECORATED (Roots) - moduły 2-wysokie (TIPS na górze pos+(0,-1), BASE na dole pos):
+const CRNR_SW_OUT_DECORATED_A_TIPS := Vector2i(0, 9)
+const CRNR_SW_OUT_DECORATED_A_BASE := Vector2i(0, 10)
+const CRNR_SW_OUT_DECORATED_B_TIPS := Vector2i(1, 8)
+const CRNR_SW_OUT_DECORATED_B_BASE := Vector2i(1, 9)
+
+const CRNR_SE_OUT_DECORATED_A_TIPS := Vector2i(4, 8)
+const CRNR_SE_OUT_DECORATED_A_BASE := Vector2i(4, 9)
+const CRNR_SE_OUT_DECORATED_B_TIPS := Vector2i(5, 9)
+const CRNR_SE_OUT_DECORATED_B_BASE := Vector2i(5, 10)
 
 # Ściany boczne (pionowe)
 const WALL_SIDE_WEST: Array[Vector2i] = [Vector2i(5, 2), Vector2i(5, 3)]

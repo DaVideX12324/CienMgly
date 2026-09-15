@@ -45,25 +45,20 @@ static func place(
 	var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
 	var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
 
-	if left_is_2h_same and right_has_room_for_3h:
+	var left_is_2h_any := left_is_2h_same or left_is_2h_step
+	var right_is_2h_any := right_is_2h_same or right_is_2h_step
+
+	if (left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any):
 		_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_2H_TO_3H_TOP, &"CONNECTOR", table)
 		_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_2H_TO_3H_MID, &"CONNECTOR", table)
 		_queue(plan, pos, CaveTileConstants.CONNECTOR_2H_TO_3H_BASE, &"CONNECTOR", table)
 		state.mark(pos + Vector2i(0, -2), &"FACADE")
 		state.mark(pos + Vector2i(0, -1), &"FACADE")
 		state.mark(pos, &"FACADE")
-	elif right_is_2h_same and left_has_room_for_3h:
+	elif (right_is_2h_any and left_has_room_for_3h) or (right_is_2h_any and not left_is_2h_any):
 		_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"CONNECTOR", table)
 		_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"CONNECTOR", table)
 		_queue(plan, pos, CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"CONNECTOR", table)
 		state.mark(pos + Vector2i(0, -2), &"FACADE")
 		state.mark(pos + Vector2i(0, -1), &"FACADE")
 		state.mark(pos, &"FACADE")
-	elif (right_is_2h_same or right_is_2h_step) and not (left_is_2h_same or left_is_2h_step):
-		var dy_off := 0 if right_is_2h_same else -1
-		_queue(plan, pos + Vector2i(0, -2 + dy_off), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"CONNECTOR", table)
-		_queue(plan, pos + Vector2i(0, -1 + dy_off), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"CONNECTOR", table)
-		_queue(plan, pos + Vector2i(0, dy_off), CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"CONNECTOR", table)
-		state.mark(pos + Vector2i(0, -2 + dy_off), &"FACADE")
-		state.mark(pos + Vector2i(0, -1 + dy_off), &"FACADE")
-		state.mark(pos + Vector2i(0, dy_off), &"FACADE")

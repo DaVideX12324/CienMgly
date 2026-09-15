@@ -94,7 +94,10 @@ static func plan(
 			var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
 			var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
 
-			if (left_is_2h_same and right_has_room_for_3h) or (right_is_2h_same and left_has_room_for_3h) or ((right_is_2h_same or right_is_2h_step) and not (left_is_2h_same or left_is_2h_step)):
+			var left_is_2h_any := left_is_2h_same or left_is_2h_step
+			var right_is_2h_any := right_is_2h_same or right_is_2h_step
+
+			if (left_is_2h_any and right_has_room_for_3h) or (right_is_2h_any and left_has_room_for_3h) or (left_is_2h_any != right_is_2h_any):
 				ConnectorPlacer.place(ctx, edge, state, plan)
 				continue
 

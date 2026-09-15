@@ -63,34 +63,46 @@ static func plan(
 				var e_floor := GridUtils.is_walkable(grid, pos + Vector2i(1, 0))
 				var se_floor := GridUtils.is_walkable(grid, pos + Vector2i(1, 1))
 				var sw_floor := GridUtils.is_walkable(grid, pos + Vector2i(-1, 1))
+				var nw_floor := GridUtils.is_walkable(grid, pos + Vector2i(-1, -1))
+				var ne_floor := GridUtils.is_walkable(grid, pos + Vector2i(1, -1))
+
+				# Edge case skośnego styku ściany:
+				# 011 / 000 / 100 -> narożnik NW
+				# 110 / 000 / 001 -> narożnik NE
+				var is_edge_diag_left: bool = (not nw_floor and ne_floor) and (not w_floor and not e_floor) and (sw_floor and not se_floor)
+				var is_edge_diag_right: bool = (nw_floor and not ne_floor) and (not w_floor and not e_floor) and (se_floor and not sw_floor)
 
 				var use_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
 
 				var is_2h_touch_left: bool = state.has(pos + Vector2i(-1, 0)) and (state.get_category(pos + Vector2i(-1, 0)) == &"FACADE" or state.get_category(pos + Vector2i(-1, 0)) == &"CORNER")
 				var is_2h_touch_right: bool = state.has(pos + Vector2i(1, 0)) and (state.get_category(pos + Vector2i(1, 0)) == &"FACADE" or state.get_category(pos + Vector2i(1, 0)) == &"CORNER")
 
+				var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
+
 				if not use_roots:
 					# Motyw rock (1-kafelkowy)
 					var rim_t := Vector2i(2, 0)
-					if is_2h_touch_left or is_2h_touch_right:
-						var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
-						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
-					elif e_floor and not w_floor:
-						rim_t = Vector2i(5, 1)
+					if e_floor and not w_floor:
+						rim_t = CaveTileConstants.CRNR_SE_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SE_OUT_BASE_A
 						if not se_floor:
 							var p_b := pos + Vector2i(0, 1)
 							if not GridUtils.is_walkable(grid, p_b) and state.is_empty_or_rock(p_b):
 								_queue(plan, p_b, Vector2i(4, 1), &"RIM_BOWL", table)
 								state.mark(p_b, &"RIM")
 					elif w_floor and not e_floor:
-						rim_t = Vector2i(0, 1)
+						rim_t = CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
 						if not sw_floor:
 							var p_b := pos + Vector2i(0, 1)
 							if not GridUtils.is_walkable(grid, p_b) and state.is_empty_or_rock(p_b):
 								_queue(plan, p_b, Vector2i(1, 1), &"RIM_BOWL", table)
 								state.mark(p_b, &"RIM")
+					elif is_edge_diag_left:
+						rim_t = CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
+					elif is_edge_diag_right:
+						rim_t = CaveTileConstants.CRNR_SE_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SE_OUT_BASE_A
+					elif is_2h_touch_left or is_2h_touch_right:
+						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 					else:
-						var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 
 					_queue(plan, pos, rim_t, &"RIM_BASE", table)
@@ -103,8 +115,45 @@ static func plan(
 					var can_place_top: bool = not (state.has(p_top) and state.get_category(p_top) == &"FACADE")
 					var can_place_base: bool = not GridUtils.is_walkable(grid, p_b) and not (state.has(p_b) and (state.get_category(p_b) == &"FACADE" or state.get_category(p_b) == &"SIDE_FIXED" or state.get_category(p_b) == &"CORNER"))
 
-					if is_2h_touch_left or is_2h_touch_right:
-						var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
+					if e_floor and not w_floor:
+						var t_base := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
+						var t_tips := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
+						_queue(plan, pos, t_base, &"RIM_BASE", table)
+						state.mark(pos, &"RIM")
+						if can_place_top:
+							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
+							state.mark(p_top, &"RIM")
+						if not se_floor and can_place_base:
+							_queue(plan, p_b, CaveTileConstants.ROOT_CORNER_INNER_BOTTOM_LEFT, &"RIM_BOWL_DECORATED", table)
+							state.mark(p_b, &"RIM")
+					elif w_floor and not e_floor:
+						var t_base := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
+						var t_tips := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
+						_queue(plan, pos, t_base, &"RIM_BASE", table)
+						state.mark(pos, &"RIM")
+						if can_place_top:
+							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
+							state.mark(p_top, &"RIM")
+						if not sw_floor and can_place_base:
+							_queue(plan, p_b, CaveTileConstants.ROOT_CORNER_INNER_BOTTOM_RIGHT, &"RIM_BOWL_DECORATED", table)
+							state.mark(p_b, &"RIM")
+					elif is_edge_diag_left:
+						var t_base := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
+						var t_tips := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
+						_queue(plan, pos, t_base, &"RIM_BASE", table)
+						state.mark(pos, &"RIM")
+						if can_place_top:
+							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
+							state.mark(p_top, &"RIM")
+					elif is_edge_diag_right:
+						var t_base := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
+						var t_tips := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
+						_queue(plan, pos, t_base, &"RIM_BASE", table)
+						state.mark(pos, &"RIM")
+						if can_place_top:
+							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
+							state.mark(p_top, &"RIM")
+					elif is_2h_touch_left or is_2h_touch_right:
 						var t_top: Vector2i = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
 						var t_base: Vector2i = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
 						_queue(plan, pos, t_base, &"RIM_BASE", table)
@@ -112,26 +161,7 @@ static func plan(
 						if can_place_top:
 							_queue(plan, p_top, t_top, &"RIM_TIP", table)
 							state.mark(p_top, &"RIM")
-					elif e_floor and not w_floor:
-						_queue(plan, pos, CaveTileConstants.ROOT_TOP_SLOPE_BASE_RIGHT, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, CaveTileConstants.ROOT_TOP_SLOPE_TIPS_RIGHT, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
-						if not se_floor and can_place_base:
-							_queue(plan, p_b, CaveTileConstants.ROOT_CORNER_INNER_BOTTOM_LEFT, &"RIM_BOWL_DECORATED", table)
-							state.mark(p_b, &"RIM")
-					elif w_floor and not e_floor:
-						_queue(plan, pos, CaveTileConstants.ROOT_TOP_SLOPE_BASE_LEFT, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, CaveTileConstants.ROOT_TOP_SLOPE_TIPS_LEFT, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
-						if not sw_floor and can_place_base:
-							_queue(plan, p_b, CaveTileConstants.ROOT_CORNER_INNER_BOTTOM_RIGHT, &"RIM_BOWL_DECORATED", table)
-							state.mark(p_b, &"RIM")
 					else:
-						var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 						var t_top: Vector2i = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
 						var t_base: Vector2i = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
 						_queue(plan, pos, t_base, &"RIM_BASE", table)

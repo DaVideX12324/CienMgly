@@ -99,16 +99,19 @@ static func place_3h(
 		mid_t = CaveTileConstants.ROOT_BOTTOM_MID[1] if is_b else CaveTileConstants.ROOT_BOTTOM_MID[0]
 		base_t = CaveTileConstants.ROOT_BOTTOM_BASE[1] if is_b else CaveTileConstants.ROOT_BOTTOM_BASE[0]
 
-	var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
-	if use_roots:
-		crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
+	var p_crown := pos + Vector2i(0, -3)
+	var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
+	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown):
+		var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
+		if use_roots:
+			crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
+		_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
+		state.mark(p_crown, &"CORNER")
 
-	_queue(plan, pos + Vector2i(0, -3), crown_t, &"FACADE", table)
 	_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table)
 	_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table)
 	_queue(plan, pos, base_t, &"FACADE", table)
 
-	state.mark(pos + Vector2i(0, -3), &"FACADE")
 	state.mark(pos + Vector2i(0, -2), &"FACADE")
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
 	state.mark(pos, &"FACADE")
