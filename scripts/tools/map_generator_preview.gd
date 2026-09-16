@@ -32,6 +32,7 @@ const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/c
 @onready var check_entities: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEntities
 @onready var check_nav: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckNav
 @onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
+@onready var check_edge_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask
 @onready var btn_generate: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnGenerate
 
 @onready var btn_fit_all: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1/BtnFitAll
@@ -101,6 +102,8 @@ func _ensure_nodes() -> void:
 		check_nav = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckNav") as CheckBox
 	if not check_gen_mask:
 		check_gen_mask = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask") as CheckBox
+	if not check_edge_mask:
+		check_edge_mask = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask") as CheckBox
 	if not opt_type:
 		opt_type = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/OptType") as OptionButton
 	if not opt_size_preset:
@@ -126,6 +129,7 @@ func _ensure_nodes() -> void:
 
 # Wewnątrz map_generator_preview.gd:
 var _mask_sprite: Sprite2D = null
+var _edge_mask_sprite: Sprite2D = null
 
 
 func _toggle_grid_mask() -> void:
@@ -140,11 +144,30 @@ func _toggle_grid_mask() -> void:
 			_hide_grid_mask()
 
 
+func _toggle_edge_mask() -> void:
+	var should_show := not is_instance_valid(_edge_mask_sprite)
+
+	if check_edge_mask:
+		check_edge_mask.button_pressed = should_show
+	else:
+		if should_show:
+			_show_edge_mask()
+		else:
+			_hide_edge_mask()
+
+
 func _on_grid_mask_toggled(enabled: bool) -> void:
 	if enabled:
 		_show_grid_mask()
 	else:
 		_hide_grid_mask()
+
+
+func _on_edge_mask_toggled(enabled: bool) -> void:
+	if enabled:
+		_show_edge_mask()
+	else:
+		_hide_edge_mask()
 
 
 func _show_grid_mask() -> void:
@@ -173,9 +196,9 @@ func _show_grid_mask() -> void:
 	_mask_sprite.name = "GridMask"
 	_mask_sprite.texture = tex
 	_mask_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_mask_sprite.scale = Vector2(16.0, 16.0)
+	_mask_sprite.scale = Vector2.ONE
 	_mask_sprite.centered = false
-	_mask_sprite.modulate = Color(1.0, 1.0, 1.0, 0.6)
+	_mask_sprite.modulate = Color(1.0, 1.0, 1.0, 0.85)
 	_mask_sprite.z_index = 100
 
 	level_container.add_child(_mask_sprite)
@@ -186,6 +209,47 @@ func _hide_grid_mask() -> void:
 		_mask_sprite.queue_free()
 
 	_mask_sprite = null
+
+
+func _show_edge_mask() -> void:
+	if is_instance_valid(_edge_mask_sprite):
+		_edge_mask_sprite.visible = true
+		return
+
+	if not level_container or level_container.get_child_count() == 0:
+		return
+
+	var proc_level := level_container.get_child(0)
+	var res: Variant = proc_level.get("last_result") if proc_level else null
+
+	if not res:
+		return
+
+	var img: Image = CaveGeneratorScript.get_edge_detection_mask_image(res)
+
+	if img == null or img.is_empty():
+		push_warning("Nie udało się utworzyć obrazu maski Edge Detection.")
+		return
+
+	var tex := ImageTexture.create_from_image(img)
+
+	_edge_mask_sprite = Sprite2D.new()
+	_edge_mask_sprite.name = "EdgeDetectionMask"
+	_edge_mask_sprite.texture = tex
+	_edge_mask_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_edge_mask_sprite.scale = Vector2.ONE
+	_edge_mask_sprite.centered = false
+	_edge_mask_sprite.modulate = Color(1.0, 1.0, 1.0, 0.95)
+	_edge_mask_sprite.z_index = 105
+
+	level_container.add_child(_edge_mask_sprite)
+
+
+func _hide_edge_mask() -> void:
+	if is_instance_valid(_edge_mask_sprite):
+		_edge_mask_sprite.queue_free()
+
+	_edge_mask_sprite = null
 	
 func _setup_ui() -> void:
 	# 1. Typy generatora
@@ -246,6 +310,8 @@ func _setup_ui() -> void:
 	btn_generate.pressed.connect(_generate_current_map)
 	if check_gen_mask:
 		check_gen_mask.toggled.connect(_on_grid_mask_toggled)
+	if check_edge_mask:
+		check_edge_mask.toggled.connect(_on_edge_mask_toggled)
 
 	# 6. Kamera
 	btn_fit_all.pressed.connect(fit_to_screen)
@@ -353,6 +419,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_on_type_selected(1)
 			KEY_M:
 				_toggle_grid_mask()
+			KEY_E:
+				_toggle_edge_mask()
 			KEY_F2:
 				opt_type.select(2) # Zamek
 				_on_type_selected(2)
@@ -458,6 +526,9 @@ func _generate_current_map() -> void:
 	for child in level_container.get_children():
 		child.queue_free()
 
+	_mask_sprite = null
+	_edge_mask_sprite = null
+
 	if spin_seed:
 		current_seed = int(spin_seed.value)
 	if spin_width:
@@ -530,6 +601,11 @@ func _generate_current_map() -> void:
 			res.chest_spawns.size() if "chest_spawns" in res else 0,
 			extra_stats
 		]
+
+		if check_gen_mask and check_gen_mask.button_pressed:
+			_show_grid_mask()
+		if check_edge_mask and check_edge_mask.button_pressed:
+			_show_edge_mask()
 
 func _toggle_player_mode() -> void:
 	if is_player_mode:

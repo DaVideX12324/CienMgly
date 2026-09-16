@@ -56,4 +56,29 @@ func apply(ctx: GenerationContext) -> int:
 						total_changed += 1
 						changed = true
 
+		# 3. Eliminacja skośnych styków podłóg przez litą ścianę
+		for y in range(1, height - 1):
+			for x in range(1, width - 1):
+				var p := Vector2i(x, y)
+				if grid.get(p, CellType.WALL) == CellType.WALL:
+					if grid.get(p + Vector2i(0, -1), CellType.WALL) == CellType.WALL \
+					and grid.get(p + Vector2i(0, 1), CellType.WALL) == CellType.WALL \
+					and grid.get(p + Vector2i(-1, 0), CellType.WALL) == CellType.WALL \
+					and grid.get(p + Vector2i(1, 0), CellType.WALL) == CellType.WALL:
+						var nw := GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
+						var ne := GridUtils.is_walkable(grid, p + Vector2i(1, -1))
+						var sw := GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
+						var se := GridUtils.is_walkable(grid, p + Vector2i(1, 1))
+
+						# Wzorzec 1: 100 / 000 / 001 -> górny narożnik NW staje się 0
+						if nw and se and not ne and not sw:
+							grid[p + Vector2i(-1, -1)] = CellType.WALL
+							total_changed += 1
+							changed = true
+						# Wzorzec 2: 001 / 000 / 100 -> górny narożnik NE staje się 0
+						elif ne and sw and not nw and not se:
+							grid[p + Vector2i(1, -1)] = CellType.WALL
+							total_changed += 1
+							changed = true
+
 	return total_changed

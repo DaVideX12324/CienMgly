@@ -4,8 +4,10 @@ extends RefCounted
 const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/tiling/cave_tile_constants.gd")
 const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
 const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
+const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
 const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
 const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
+const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
@@ -38,7 +40,8 @@ static func place(
 	use_roots: bool,
 	step_downs: Array[Dictionary],
 	left_y: int,
-	right_y: int
+	right_y: int,
+	edges: Dictionary = {}
 ) -> void:
 	var pos := edge.pos
 	var x := pos.x
@@ -64,15 +67,20 @@ static func place(
 		if dy == 1:
 			var p_crown := pos + Vector2i(0, -3)
 			var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-			if not has_floor_above and not GridUtils.is_walkable(grid, p_crown):
+			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
+			if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
 				var crown_t := CaveTileConstants.ROOT_CRNR_SE_IN if step_use_roots else CaveTileConstants.CRNR_SE_IN
 				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
 				state.mark(p_crown, &"CORNER")
 		else:
 			var p_crown := Vector2i(x, left_y - 2)
-			var crown_t := CaveTileConstants.CRNR_SE_IN
-			_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-			state.mark(p_crown, &"CORNER")
+			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
+			if crown_free and state.is_empty_or_rock(p_crown):
+				var crown_t := CaveTileConstants.CRNR_SE_IN
+				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
+				state.mark(p_crown, &"CORNER")
 
 			for cy in range(left_y - 1, y - 2):
 				var p_side := Vector2i(x, cy)
@@ -101,15 +109,20 @@ static func place(
 		if dy == 1:
 			var p_crown := pos + Vector2i(0, -3)
 			var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-			if not has_floor_above and not GridUtils.is_walkable(grid, p_crown):
+			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
+			if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
 				var crown_t := CaveTileConstants.ROOT_CRNR_SW_IN if step_use_roots else CaveTileConstants.CRNR_SW_IN
 				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
 				state.mark(p_crown, &"CORNER")
 		else:
 			var p_crown := Vector2i(x, right_y - 2)
-			var crown_t := CaveTileConstants.CRNR_SW_IN
-			_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-			state.mark(p_crown, &"CORNER")
+			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
+			if crown_free and state.is_empty_or_rock(p_crown):
+				var crown_t := CaveTileConstants.CRNR_SW_IN
+				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
+				state.mark(p_crown, &"CORNER")
 
 			for cy in range(right_y - 1, y - 2):
 				var p_side := Vector2i(x, cy)

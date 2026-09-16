@@ -182,9 +182,24 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				edge.facade_height = 2
 				continue
 
+			var is_out_corner_cand := func(cx: int, cy: int) -> bool:
+				if cy < 2: return false
+				var w_cand: bool = (cx >= 1) and GridUtils.is_walkable(grid, Vector2i(cx - 1, cy - 1)) \
+					and GridUtils.is_walkable(grid, Vector2i(cx - 1, cy - 2)) \
+					and not GridUtils.is_walkable(grid, Vector2i(cx, cy - 2))
+				var e_cand: bool = (cx < width - 1) and GridUtils.is_walkable(grid, Vector2i(cx + 1, cy - 1)) \
+					and GridUtils.is_walkable(grid, Vector2i(cx + 1, cy - 2)) \
+					and not GridUtils.is_walkable(grid, Vector2i(cx, cy - 2))
+				return w_cand or e_cand
+
 			# 3. Sąsiedzi na innej wysokości (left_y / right_y)
 			var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x - 1, y, 4)
+			if left_y != -1 and is_out_corner_cand.call(x - 1, left_y):
+				left_y = -1
+
 			var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x + 1, y, 4)
+			if right_y != -1 and is_out_corner_cand.call(x + 1, right_y):
+				right_y = -1
 
 			# 4. Sprawdzenie OUT_CORNER (początek fasady przy korytarzu / otwartej przestrzeni)
 			var w_open := GridUtils.is_walkable(grid, pos + Vector2i(-1, -1)) \
@@ -276,6 +291,61 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 
 				# 4. SOLID_FILL: lita skała bez bezpośredniej krawędzi
 				edge.edge_kind = EdgeKind.Kind.SOLID_FILL
+
+	# Przebieg 5B: Drugie przejście dla sąsiadów modułów corner 2H i 3H (bez skanowania voidu)
+	for pos in edges:
+		var edge: EdgeContext = edges[pos]
+		if edge.edge_kind == EdgeKind.Kind.OUT_CORNER:
+			var h := edge.facade_height
+			var is_east := edge.orientation == EdgeKind.Orientation.EAST
+			var adj_x: int = pos.x - 1 if is_east else pos.x + 1
+			if adj_x >= 0 and adj_x < width:
+				# 1. Ściana boczna na poziomie podstawy (pos.y)
+				var p_bot := Vector2i(adj_x, pos.y)
+				if edges.has(p_bot) and not GridUtils.is_walkable(grid, p_bot):
+					var e_bot: EdgeContext = edges[p_bot]
+					e_bot.edge_kind = EdgeKind.Kind.SIDE_WALL
+					e_bot.orientation = EdgeKind.Orientation.EAST if is_east else EdgeKind.Orientation.WEST
+					e_bot.is_protected_solid = false
+
+				if h == 3:
+					# 2. W środkowym (pos.y - 1): ściana boczna
+					var p_mid := Vector2i(adj_x, pos.y - 1)
+					if edges.has(p_mid) and not GridUtils.is_walkable(grid, p_mid):
+						var e_mid: EdgeContext = edges[p_mid]
+						if not e_mid.n_floor:
+							e_mid.edge_kind = EdgeKind.Kind.SIDE_WALL
+							e_mid.orientation = EdgeKind.Orientation.EAST if is_east else EdgeKind.Orientation.WEST
+							e_mid.is_protected_solid = false
+
+					# 3. W górnym (pos.y - 2): narożnik wewnętrzny SE (dla EAST) lub SW (dla WEST)
+					var p_top := Vector2i(adj_x, pos.y - 2)
+					if edges.has(p_top) and not GridUtils.is_walkable(grid, p_top):
+						var e_top: EdgeContext = edges[p_top]
+						if not e_top.n_floor:
+							e_top.edge_kind = EdgeKind.Kind.INNER_CORNER
+							e_top.orientation = EdgeKind.Orientation.SOUTH_EAST if is_east else EdgeKind.Orientation.SOUTH_WEST
+							e_top.is_protected_solid = false
+				elif h == 2:
+					# Dla 2H: w górnym (pos.y - 1) narożnik wewnętrzny
+					var p_top := Vector2i(adj_x, pos.y - 1)
+					if edges.has(p_top) and not GridUtils.is_walkable(grid, p_top):
+						var e_top: EdgeContext = edges[p_top]
+						if not e_top.n_floor:
+							e_top.edge_kind = EdgeKind.Kind.INNER_CORNER
+							e_top.orientation = EdgeKind.Orientation.SOUTH_EAST if is_east else EdgeKind.Orientation.SOUTH_WEST
+							e_top.is_protected_solid = false
+
+			# Komórki w głębi ściany (odległość 2 kratek) o otoczeniu 000/000/000 zabezpieczamy jako lity void
+			var deep_x: int = pos.x - 2 if is_east else pos.x + 2
+			if deep_x >= 0 and deep_x < width:
+				for dy in range(1, -h - 2, -1):
+					var deep_p := Vector2i(deep_x, pos.y + dy)
+					var e_deep: EdgeContext = edges.get(deep_p)
+					if e_deep != null and e_deep.neighborhood_mask == 0:
+						e_deep.is_protected_solid = true
+						e_deep.edge_kind = EdgeKind.Kind.SOLID_FILL
+						e_deep.orientation = EdgeKind.Orientation.NONE
 
 	# Przebieg 6: Segmentacja pozioma rimów
 	var rim_segments := FacadeSegmentDetector.detect(rim_cells, edges)

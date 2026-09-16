@@ -15,6 +15,7 @@ const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/cor
 const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
 const InteriorRoomLayoutGenerator = preload("res://modules/quiz_rpg/scripts/generation/topology/interior_room_layout_generator.gd")
 const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
+const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
 const EdgeAnalyzer = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analyzer.gd")
 const TilePlacementPlanner = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_planner.gd")
 const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
@@ -289,30 +290,121 @@ static func apply_cave_tiles(
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:
 	return GridUtils.is_walkable(grid, pos)
-## Tworzy obraz (Image) ostatecznej maski binarnej do celów debugowania
-## Czarny/Szary = WALL, Biały = FLOOR, Zielony = ENTRANCE, Czerwony = EXIT
+## Tworzy szczegółowy obraz (Image) maski logicznej siatki z siatką 16x16 px na kafelek.
+## Ściany: ciemne (#1e1e28), Podłoga: zielona (#3f723f), Wejście: jasna zieleń, Wyjście: czerwień, Siatka: (#32323e7f).
 static func get_grid_mask_image(result: GenerationResult) -> Image:
-	var img := Image.create(result.width, result.height, false, Image.FORMAT_RGBA8)
-	var col_wall := Color(0.12, 0.12, 0.15, 1.0)
-	var col_floor := Color(0.88, 0.88, 0.90, 1.0)
+	var img := Image.create(result.width * 16, result.height * 16, false, Image.FORMAT_RGBA8)
+	var col_grid := Color.hex(0x32323e7f)
+	var col_wall := Color.hex(0x1e1e28ff)
+	var col_floor := Color.hex(0x3f723fff)
 	var col_entrance := Color(0.2, 0.85, 0.3, 1.0)
 	var col_exit := Color(0.9, 0.25, 0.2, 1.0)
 
+	img.fill(col_grid)
 	for y in range(result.height):
 		for x in range(result.width):
 			var p := Vector2i(x, y)
 			var type: int = result.grid.get(p, CellType.VOID)
+			var col: Color = col_wall
 			match type:
-				CellType.WALL:
-					img.set_pixel(x, y, col_wall)
 				CellType.FLOOR:
-					img.set_pixel(x, y, col_floor)
+					col = col_floor
 				CellType.ENTRANCE:
-					img.set_pixel(x, y, col_entrance)
+					col = col_entrance
 				CellType.EXIT:
-					img.set_pixel(x, y, col_exit)
+					col = col_exit
 				_:
-					img.set_pixel(x, y, Color.BLACK)
+					col = col_wall
+			img.fill_rect(Rect2i(x * 16 + 1, y * 16 + 1, 15, 15), col)
+	return img
+
+
+## Tworzy obraz nakładkowy (Image) kandydatów Edge Detection z kafelkami wyciętymi bezpośrednio z atlasu Tiles.png.
+static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
+	var img := Image.create(result.width * 16, result.height * 16, true, Image.FORMAT_RGBA8)
+	var col_grid := Color.hex(0x32323e7f)
+	img.fill(Color(0.05, 0.05, 0.08, 0.75))
+
+	for y in range(result.height):
+		for x in range(result.width):
+			img.fill_rect(Rect2i(x * 16, y * 16, 16, 1), col_grid)
+			img.fill_rect(Rect2i(x * 16, y * 16, 1, 16), col_grid)
+
+	var tiles_tex = load("res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png") as Texture2D
+	if not tiles_tex:
+		return img
+
+	var tiles_img := tiles_tex.get_image()
+
+	var ctx := GenerationContext.new()
+	ctx.grid = result.grid
+	ctx.width = result.width
+	ctx.height = result.height
+	ctx.flags = GenerationFlags.new()
+	ctx.entrance_zone = result.entrance_zone
+	ctx.exit_zone = result.exit_zone
+	for p in result.entrance_zone: ctx.portal_zone[p] = true
+	for p in result.exit_zone: ctx.portal_zone[p] = true
+	var analysis := EdgeAnalyzer.analyze(ctx)
+
+	var blit_tile := func(tile_coord: Vector2i, grid_pos: Vector2i) -> void:
+		if tile_coord != Vector2i(-1, -1) and grid_pos.x >= 0 and grid_pos.x < result.width and grid_pos.y >= 0 and grid_pos.y < result.height:
+			var src_rect := Rect2i(tile_coord.x * 16, tile_coord.y * 16, 16, 16)
+			img.blit_rect(tiles_img, src_rect, Vector2i(grid_pos.x * 16, grid_pos.y * 16))
+
+	for pos in analysis.edges:
+		var edge: EdgeContext = analysis.edges[pos]
+		match edge.edge_kind:
+			EdgeKind.Kind.INNER_CORNER:
+				var c := Vector2i(-1, -1)
+				match edge.orientation:
+					EdgeKind.Orientation.NORTH_WEST: c = Vector2i(1, 1)
+					EdgeKind.Orientation.NORTH_EAST: c = Vector2i(4, 1)
+					EdgeKind.Orientation.SOUTH_WEST: c = Vector2i(4, 4)
+					EdgeKind.Orientation.SOUTH_EAST: c = Vector2i(1, 4)
+				blit_tile.call(c, pos)
+
+			EdgeKind.Kind.TOP_RIM:
+				blit_tile.call(Vector2i(2, 0), pos)
+
+			EdgeKind.Kind.SIDE_WALL:
+				var c := Vector2i(5, 2) if edge.orientation == EdgeKind.Orientation.EAST else Vector2i(0, 2)
+				blit_tile.call(c, pos)
+
+			EdgeKind.Kind.FACADE:
+				if edge.facade_height == 2:
+					blit_tile.call(Vector2i(2, 21), pos)
+					blit_tile.call(Vector2i(2, 20), pos + Vector2i(0, -1))
+				else:
+					blit_tile.call(Vector2i(2, 7), pos)
+					blit_tile.call(Vector2i(2, 6), pos + Vector2i(0, -1))
+					blit_tile.call(Vector2i(2, 5), pos + Vector2i(0, -2))
+
+			EdgeKind.Kind.STEP:
+				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
+				blit_tile.call(Vector2i(4, 7) if is_e else Vector2i(1, 7), pos)
+				blit_tile.call(Vector2i(4, 6) if is_e else Vector2i(1, 6), pos + Vector2i(0, -1))
+				blit_tile.call(Vector2i(4, 5) if is_e else Vector2i(1, 5), pos + Vector2i(0, -2))
+
+			EdgeKind.Kind.OUT_CORNER:
+				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
+				if edge.facade_height == 2:
+					blit_tile.call(Vector2i(5, 20) if is_e else Vector2i(0, 20), pos)
+					blit_tile.call(Vector2i(5, 19) if is_e else Vector2i(0, 19), pos + Vector2i(0, -1))
+				else:
+					blit_tile.call(Vector2i(5, 6) if is_e else Vector2i(0, 6), pos)
+					blit_tile.call(Vector2i(5, 5) if is_e else Vector2i(0, 5), pos + Vector2i(0, -1))
+					blit_tile.call(Vector2i(5, 4) if is_e else Vector2i(0, 4), pos + Vector2i(0, -2))
+
+			EdgeKind.Kind.CONNECTOR:
+				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
+				blit_tile.call(Vector2i(7, 21) if is_e else Vector2i(10, 21), pos)
+				blit_tile.call(Vector2i(7, 20) if is_e else Vector2i(10, 20), pos + Vector2i(0, -1))
+				blit_tile.call(Vector2i(7, 19) if is_e else Vector2i(10, 19), pos + Vector2i(0, -2))
+
+			EdgeKind.Kind.NICHE:
+				blit_tile.call(Vector2i(1, 6), pos)
+
 	return img
 
 

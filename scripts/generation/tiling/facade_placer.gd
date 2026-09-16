@@ -83,7 +83,8 @@ static func place_3h(
 	plan: TilePlacementPlan,
 	use_roots: bool,
 	left_y: int = -1,
-	right_y: int = -1
+	right_y: int = -1,
+	edges: Dictionary = {}
 ) -> void:
 	var pos := edge.pos
 	var grid := ctx.grid
@@ -101,7 +102,9 @@ static func place_3h(
 
 	var p_crown := pos + Vector2i(0, -3)
 	var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown):
+	var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+	var crown_free: bool = edge_crown == null or edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE
+	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
 		var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
 		if use_roots:
 			crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
@@ -121,12 +124,16 @@ static func place_3h(
 		var side_b := CaveTileConstants.WALL_SIDE_WEST[1] if not use_roots else CaveTileConstants.ROOT_WALL_SIDE_WEST[1]
 		var corner_t := CaveTileConstants.CRNR_SW_IN
 		var p_corner := Vector2i(pos.x - 1, pos.y - 2)
-		if not GridUtils.is_walkable(grid, p_corner) and state.is_empty_or_rock(p_corner):
+		var edge_corner: EdgeContext = edges.get(p_corner) if not edges.is_empty() else null
+		var corner_free: bool = edge_corner == null or edge_corner.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_corner.edge_kind == EdgeKind.Kind.NONE
+		if not GridUtils.is_walkable(grid, p_corner) and corner_free and state.is_empty_or_rock(p_corner):
 			_queue(plan, p_corner, corner_t, &"CORNER", table, pos)
 			state.mark(p_corner, &"CORNER")
 		for cy in range(pos.y - 1, pos.y + 1):
 			var p_side := Vector2i(pos.x - 1, cy)
-			if not GridUtils.is_walkable(grid, p_side) and state.is_empty_or_rock(p_side):
+			var edge_side: EdgeContext = edges.get(p_side) if not edges.is_empty() else null
+			var side_free: bool = edge_side == null or edge_side.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_side.edge_kind == EdgeKind.Kind.NONE
+			if not GridUtils.is_walkable(grid, p_side) and side_free and state.is_empty_or_rock(p_side):
 				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
 				state.mark(p_side, &"SIDE_FIXED")
 
@@ -135,11 +142,15 @@ static func place_3h(
 		var side_b := CaveTileConstants.WALL_SIDE_EAST[1] if not use_roots else CaveTileConstants.ROOT_WALL_SIDE_EAST[1]
 		var corner_t := CaveTileConstants.CRNR_SE_IN
 		var p_corner := Vector2i(pos.x + 1, pos.y - 2)
-		if not GridUtils.is_walkable(grid, p_corner) and state.is_empty_or_rock(p_corner):
+		var edge_corner: EdgeContext = edges.get(p_corner) if not edges.is_empty() else null
+		var corner_free: bool = edge_corner == null or edge_corner.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_corner.edge_kind == EdgeKind.Kind.NONE
+		if not GridUtils.is_walkable(grid, p_corner) and corner_free and state.is_empty_or_rock(p_corner):
 			_queue(plan, p_corner, corner_t, &"CORNER", table, pos)
 			state.mark(p_corner, &"CORNER")
 		for cy in range(pos.y - 1, pos.y + 1):
 			var p_side := Vector2i(pos.x + 1, cy)
-			if not GridUtils.is_walkable(grid, p_side) and state.is_empty_or_rock(p_side):
+			var edge_side: EdgeContext = edges.get(p_side) if not edges.is_empty() else null
+			var side_free: bool = edge_side == null or edge_side.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_side.edge_kind == EdgeKind.Kind.NONE
+			if not GridUtils.is_walkable(grid, p_side) and side_free and state.is_empty_or_rock(p_side):
 				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
 				state.mark(p_side, &"SIDE_FIXED")

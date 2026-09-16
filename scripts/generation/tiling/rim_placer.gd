@@ -84,18 +84,8 @@ static func plan(
 					var rim_t := Vector2i(2, 0)
 					if e_floor and not w_floor:
 						rim_t = CaveTileConstants.CRNR_SE_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SE_OUT_BASE_A
-						if not se_floor:
-							var p_b := pos + Vector2i(0, 1)
-							if not GridUtils.is_walkable(grid, p_b) and state.is_empty_or_rock(p_b):
-								_queue(plan, p_b, Vector2i(4, 1), &"RIM_BOWL", table)
-								state.mark(p_b, &"RIM")
 					elif w_floor and not e_floor:
 						rim_t = CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
-						if not sw_floor:
-							var p_b := pos + Vector2i(0, 1)
-							if not GridUtils.is_walkable(grid, p_b) and state.is_empty_or_rock(p_b):
-								_queue(plan, p_b, Vector2i(1, 1), &"RIM_BOWL", table)
-								state.mark(p_b, &"RIM")
 					elif is_edge_diag_left:
 						rim_t = CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
 					elif is_edge_diag_right:
@@ -109,63 +99,33 @@ static func plan(
 					state.mark(pos, &"RIM")
 
 				else:
-					# Motyw roots (baza + tips)
+					# Motyw roots (2-kafelkowy kompletny moduł TOP + BASE)
 					var p_top := pos + Vector2i(0, -1)
-					var p_b := pos + Vector2i(0, 1)
 					var can_place_top: bool = not (state.has(p_top) and state.get_category(p_top) == &"FACADE")
-					var can_place_base: bool = not GridUtils.is_walkable(grid, p_b) and not (state.has(p_b) and (state.get_category(p_b) == &"FACADE" or state.get_category(p_b) == &"SIDE_FIXED" or state.get_category(p_b) == &"CORNER"))
+					var t_base := Vector2i(2, 9)
+					var t_tips := Vector2i(2, 8)
 
 					if e_floor and not w_floor:
-						var t_base := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
-						var t_tips := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
-						_queue(plan, pos, t_base, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
-						if not se_floor and can_place_base:
-							_queue(plan, p_b, CaveTileConstants.ROOT_CORNER_INNER_BOTTOM_LEFT, &"RIM_BOWL_DECORATED", table)
-							state.mark(p_b, &"RIM")
+						t_base = CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
+						t_tips = CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
 					elif w_floor and not e_floor:
-						var t_base := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
-						var t_tips := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
-						_queue(plan, pos, t_base, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
-						if not sw_floor and can_place_base:
-							_queue(plan, p_b, CaveTileConstants.ROOT_CORNER_INNER_BOTTOM_RIGHT, &"RIM_BOWL_DECORATED", table)
-							state.mark(p_b, &"RIM")
+						t_base = CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
+						t_tips = CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
 					elif is_edge_diag_left:
-						var t_base := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
-						var t_tips := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
-						_queue(plan, pos, t_base, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
+						t_base = CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
+						t_tips = CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
 					elif is_edge_diag_right:
-						var t_base := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
-						var t_tips := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
-						_queue(plan, pos, t_base, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, t_tips, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
+						t_base = CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
+						t_tips = CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
 					elif is_2h_touch_left or is_2h_touch_right:
-						var t_top: Vector2i = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
-						var t_base: Vector2i = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
-						_queue(plan, pos, t_base, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, t_top, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
+						t_base = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
+						t_tips = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
 					else:
-						var t_top: Vector2i = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
-						var t_base: Vector2i = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
-						_queue(plan, pos, t_base, &"RIM_BASE", table)
-						state.mark(pos, &"RIM")
-						if can_place_top:
-							_queue(plan, p_top, t_top, &"RIM_TIP", table)
-							state.mark(p_top, &"RIM")
+						t_base = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
+						t_tips = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
+
+					_queue(plan, pos, t_base, &"RIM_BASE", table)
+					state.mark(pos, &"RIM")
+					if can_place_top:
+						_queue(plan, p_top, t_tips, &"RIM_TIP", table)
+						state.mark(p_top, &"RIM")
