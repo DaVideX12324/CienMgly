@@ -5,6 +5,7 @@ const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/til
 const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
 const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
 const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
+const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
 const EdgeAnalysisResult = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analysis_result.gd")
 const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
 const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
@@ -65,72 +66,35 @@ static func plan(
 
 			var edge: EdgeContext = edges[pos]
 			var use_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.SELF) == &"roots"
-
-			var has_same_y := func(cx: int, cy: int) -> bool:
-				if not facade_cols.has(cx): return false
-				for fy in facade_cols[cx]:
-					if abs(fy - cy) <= 1: return true
-				return false
-
-			var left_is_2h: bool = check_2h_col.call(x - 1, y)
-			var right_is_2h: bool = check_2h_col.call(x + 1, y)
-			var near_2h_context: bool = (left_is_2h and right_is_2h) \
-				or (left_is_2h and check_2h_col.call(x + 2, y)) \
-				or (right_is_2h and check_2h_col.call(x - 2, y))
-
-			var is_horizontal_facade: bool = has_same_y.call(x - 1, y) or has_same_y.call(x + 1, y)
-			var is_2h: bool = is_horizontal_facade and (GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or near_2h_context)
-
-			# 1. Fasada 2H
-			if is_2h:
-				FacadePlacer.place_2h(ctx, edge, state, plan)
-				continue
-
-			# 2. Łączniki 2H <-> 3H
-			var left_is_2h_same: bool = check_2h_col.call(x - 1, y)
-			var right_is_2h_same: bool = check_2h_col.call(x + 1, y)
-			var right_has_room_for_3h: bool = not check_2h_col.call(x + 1, y) and not check_2h_col.call(x + 2, y) and not check_2h_col.call(x + 3, y)
-			var left_has_room_for_3h: bool = not check_2h_col.call(x - 1, y) and not check_2h_col.call(x - 2, y) and not check_2h_col.call(x - 3, y)
-			var right_is_2h_step: bool = check_2h_col.call(x + 1, y - 1)
-			var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
-
-			var left_is_2h_any := left_is_2h_same or left_is_2h_step
-			var right_is_2h_any := right_is_2h_same or right_is_2h_step
-
-			if (left_is_2h_any and right_has_room_for_3h) or (right_is_2h_any and left_has_room_for_3h) or (left_is_2h_any != right_is_2h_any):
-				ConnectorPlacer.place(ctx, edge, state, plan)
-				continue
-
-			# 3. Sąsiedzi na innej wysokości
 			var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x - 1, y, 4)
 			var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x + 1, y, 4)
 
-			# 4. Sprawdź OUT corner
-			var w_open := GridUtils.is_walkable(grid, pos + Vector2i(-1, -1)) \
-				and GridUtils.is_walkable(grid, pos + Vector2i(-1, -2)) \
-				and not GridUtils.is_walkable(grid, pos + Vector2i(0, -2)) \
-				and left_y == -1
+			match edge.edge_kind:
+				EdgeKind.Kind.OUT_CORNER:
+					var w_open := edge.orientation == EdgeKind.Orientation.WEST
+					var e_open := edge.orientation == EdgeKind.Orientation.EAST
+					OutCornerPlacer.place(ctx, edge, state, plan, use_roots, step_downs, w_open, e_open)
+					continue
 
-			var e_open := GridUtils.is_walkable(grid, pos + Vector2i(1, -1)) \
-				and GridUtils.is_walkable(grid, pos + Vector2i(1, -2)) \
-				and not GridUtils.is_walkable(grid, pos + Vector2i(0, -2)) \
-				and right_y == -1
+				EdgeKind.Kind.STEP:
+					StepPlacer.place(ctx, edge, state, plan, use_roots, step_downs, left_y, right_y, analysis.edges)
+					continue
 
-			if (w_open and not e_open) or (e_open and not w_open):
-				OutCornerPlacer.place(ctx, edge, state, plan, use_roots, step_downs, w_open, e_open)
-				continue
+				EdgeKind.Kind.CONNECTOR:
+					ConnectorPlacer.place(ctx, edge, state, plan)
+					continue
 
-			# 5. Schodek (STEP)
-			if (left_y != -1 and y > left_y) or (right_y != -1 and y > right_y):
-				StepPlacer.place(ctx, edge, state, plan, use_roots, step_downs, left_y, right_y)
-				continue
-
-			# 6. Nisza (dekoracyjna / sekretna)
-			if NichePlacer.try_place_legacy(ctx, edge, state, plan, use_roots, facade_cols):
-				continue
-
-			# 7. Zwykła ściana prosta 3H
-			FacadePlacer.place_3h(ctx, edge, state, plan, use_roots, left_y, right_y)
+				EdgeKind.Kind.FACADE:
+					if edge.facade_height == 2:
+						FacadePlacer.place_2h(ctx, edge, state, plan)
+						continue
+					else:
+						if NichePlacer.try_place_legacy(ctx, edge, state, plan, use_roots, facade_cols):
+							continue
+						FacadePlacer.place_3h(ctx, edge, state, plan, use_roots, left_y, right_y, edges)
+						continue
+				_:
+					continue
 
 	# FAZA 2.5: Ściany pionowe B obok kończącego się schodka w dół
 	for s in step_downs:
@@ -150,21 +114,29 @@ static func plan(
 			var use_roots_adj: bool = ThemeResolver.resolve(ctx, Vector2i(adj_x, sy), ThemeResolver.RefPoint.SELF) == &"roots"
 			if sdir == 1:
 				var p_c := Vector2i(adj_x, sy - 2)
-				if state.is_empty_or_rock(p_c):
+				var edge_c: EdgeContext = edges.get(p_c)
+				var can_place_crown: bool = state.is_empty_or_rock(p_c) and edge_c != null and not edge_c.is_protected_solid and edge_c.neighborhood_mask != 0 and (edge_c.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_c.edge_kind == EdgeKind.Kind.NONE)
+				if can_place_crown:
 					_queue(plan, p_c, CaveTileConstants.CRNR_SE_IN, &"CORNER", table, Vector2i(sx, sy))
 					state.mark(p_c, &"CORNER")
 				var side_b := CaveTileConstants.WALL_SIDE_EAST[1] if not use_roots_adj else CaveTileConstants.ROOT_WALL_SIDE_EAST[1]
 				var p_b1 := Vector2i(adj_x, sy - 1)
-				if state.is_empty_or_rock(p_b1):
+				var edge_b1: EdgeContext = edges.get(p_b1)
+				var can_place_side: bool = state.is_empty_or_rock(p_b1) and edge_b1 != null and not edge_b1.is_protected_solid and edge_b1.neighborhood_mask != 0 and (edge_b1.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_b1.edge_kind == EdgeKind.Kind.NONE)
+				if can_place_side:
 					_queue(plan, p_b1, side_b, &"SIDE_WALL_FIXED", table, Vector2i(sx, sy))
 					state.mark(p_b1, &"SIDE_FIXED")
 			else:
 				var p_c := Vector2i(adj_x, sy - 2)
-				if state.is_empty_or_rock(p_c):
+				var edge_c: EdgeContext = edges.get(p_c)
+				var can_place_crown: bool = state.is_empty_or_rock(p_c) and edge_c != null and not edge_c.is_protected_solid and edge_c.neighborhood_mask != 0 and (edge_c.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_c.edge_kind == EdgeKind.Kind.NONE)
+				if can_place_crown:
 					_queue(plan, p_c, CaveTileConstants.CRNR_SW_IN, &"CORNER", table, Vector2i(sx, sy))
 					state.mark(p_c, &"CORNER")
 				var side_b := CaveTileConstants.WALL_SIDE_WEST[1] if not use_roots_adj else CaveTileConstants.ROOT_WALL_SIDE_WEST[1]
 				var p_b1 := Vector2i(adj_x, sy - 1)
-				if state.is_empty_or_rock(p_b1):
+				var edge_b1: EdgeContext = edges.get(p_b1)
+				var can_place_side: bool = state.is_empty_or_rock(p_b1) and edge_b1 != null and not edge_b1.is_protected_solid and edge_b1.neighborhood_mask != 0 and (edge_b1.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_b1.edge_kind == EdgeKind.Kind.NONE)
+				if can_place_side:
 					_queue(plan, p_b1, side_b, &"SIDE_WALL_FIXED", table, Vector2i(sx, sy))
 					state.mark(p_b1, &"SIDE_FIXED")

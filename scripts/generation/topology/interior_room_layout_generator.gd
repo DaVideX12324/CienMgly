@@ -152,22 +152,26 @@ static func generate_layout(
 						exit_room_idx = j
 
 		var entrance_room := rooms[entrance_room_idx]
-		var exit_room := rooms[exit_room_idx]
-
 		var entrance_data: Dictionary = PortalGenerator.carve_portal_alcove(ctx, entrance_room)
-		result.entrance_pos = entrance_data["center"] as Vector2i
-		result.player_spawn = entrance_data["center"] as Vector2i
+		ctx.entrance_pos = entrance_data["center"] as Vector2i
+		result.entrance_pos = ctx.entrance_pos
+		result.player_spawn = ctx.entrance_pos
 		result.entrance_zone = entrance_data["cells"] as Array[Vector2i]
 		for p in result.entrance_zone:
 			ctx.grid[p] = CellType.ENTRANCE
 			ctx.portal_zone[p] = true
 
+		var exit_room := rooms[exit_room_idx]
 		var exit_data: Dictionary = PortalGenerator.carve_portal_alcove(ctx, exit_room, int(entrance_data["edge"]))
-		result.exit_pos = exit_data["center"] as Vector2i
+		ctx.exit_pos = exit_data["center"] as Vector2i
+		result.exit_pos = ctx.exit_pos
 		result.exit_zone = exit_data["cells"] as Array[Vector2i]
 		for p in result.exit_zone:
 			ctx.grid[p] = CellType.EXIT
 			ctx.portal_zone[p] = true
+
+		# Dodatkowa gwarancja spójności po wycięciu portali
+		ConnectivityRepair.repair(ctx, corridor_width)
 
 	# P10. Pre-pass normalizacji siatki (przeniesiony z apply_cave_tiles KROK 0)
 	if flags.enable_grid_cleanup:

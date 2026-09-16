@@ -69,23 +69,8 @@ static func place(
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 
-			var crown_pos := pos + Vector2i(0, -2)
-			var crown_use_roots: bool = ThemeResolver.resolve(ctx, crown_pos, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
-			if not crown_use_roots:
-				var crown_2h := CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
-				_queue(plan, crown_pos, crown_2h, &"FACADE", table, pos)
-				state.mark(crown_pos, &"FACADE")
-			else:
-				var t_base := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
-				var t_tips := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
-				_queue(plan, crown_pos, t_base, &"FACADE", table, pos)
-				state.mark(crown_pos, &"FACADE")
-				if GridUtils.is_walkable(grid, pos + Vector2i(0, -3)):
-					_queue(plan, pos + Vector2i(0, -3), t_tips, &"FACADE", table, pos)
-					state.mark(pos + Vector2i(0, -3), &"FACADE")
-
 			var p_in := pos + Vector2i(1, -1)
-			if not GridUtils.is_walkable(grid, p_in):
+			if not GridUtils.is_walkable(grid, p_in) and state.is_empty_or_rock(p_in):
 				var in_corner := CaveTileConstants.CRNR_SE_IN
 				_queue(plan, p_in, in_corner, &"CORNER", table, pos)
 				state.mark(p_in, &"CORNER")
@@ -106,25 +91,6 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 			state.mark(pos + Vector2i(0, -2), &"FACADE")
 
-			var p_up := pos + Vector2i(0, -3)
-			var p_above := p_up + Vector2i(0, -1)
-			if not GridUtils.is_walkable(grid, p_up) and GridUtils.is_walkable(grid, pos + Vector2i(-1, -3)) and GridUtils.is_walkable(grid, p_above):
-				var crown_use_roots: bool = ThemeResolver.resolve(ctx, p_up, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
-				if not crown_use_roots:
-					var corner_t := CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
-					_queue(plan, p_up, corner_t, &"FACADE", table, pos)
-					state.mark(p_up, &"FACADE")
-				else:
-					var t_base := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_BASE
-					var t_tips := CaveTileConstants.CRNR_SW_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SW_OUT_DECORATED_A_TIPS
-					_queue(plan, p_up, t_base, &"FACADE", table, pos)
-					state.mark(p_up, &"FACADE")
-					_queue(plan, p_above, t_tips, &"FACADE", table, pos)
-					state.mark(p_above, &"FACADE")
-
-		if not GridUtils.is_walkable(grid, pos + Vector2i(1, 0)):
-			step_downs.append({"x": x, "y": y, "dir": 1})
-
 	elif e_open and not w_open:
 		var is_2h_corner := GridUtils.is_walkable(grid, pos + Vector2i(0, -3))
 		if is_2h_corner:
@@ -135,23 +101,8 @@ static func place(
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 
-			var crown_pos := pos + Vector2i(0, -2)
-			var crown_use_roots: bool = ThemeResolver.resolve(ctx, crown_pos, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
-			if not crown_use_roots:
-				var crown_2h := CaveTileConstants.CRNR_SE_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SE_OUT_BASE_A
-				_queue(plan, crown_pos, crown_2h, &"FACADE", table, pos)
-				state.mark(crown_pos, &"FACADE")
-			else:
-				var t_base := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
-				var t_tips := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
-				_queue(plan, crown_pos, t_base, &"FACADE", table, pos)
-				state.mark(crown_pos, &"FACADE")
-				if GridUtils.is_walkable(grid, pos + Vector2i(0, -3)):
-					_queue(plan, pos + Vector2i(0, -3), t_tips, &"FACADE", table, pos)
-					state.mark(pos + Vector2i(0, -3), &"FACADE")
-
 			var p_in := pos + Vector2i(-1, -1)
-			if not GridUtils.is_walkable(grid, p_in):
+			if not GridUtils.is_walkable(grid, p_in) and state.is_empty_or_rock(p_in):
 				var in_corner := CaveTileConstants.CRNR_SW_IN
 				_queue(plan, p_in, in_corner, &"CORNER", table, pos)
 				state.mark(p_in, &"CORNER")
@@ -172,21 +123,3 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 			state.mark(pos + Vector2i(0, -2), &"FACADE")
 
-			var p_up := pos + Vector2i(0, -3)
-			var p_above := p_up + Vector2i(0, -1)
-			if not GridUtils.is_walkable(grid, p_up) and GridUtils.is_walkable(grid, pos + Vector2i(1, -3)) and GridUtils.is_walkable(grid, p_above):
-				var crown_use_roots: bool = ThemeResolver.resolve(ctx, p_up, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
-				if not crown_use_roots:
-					var corner_t := CaveTileConstants.CRNR_SE_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SE_OUT_BASE_A
-					_queue(plan, p_up, corner_t, &"FACADE", table, pos)
-					state.mark(p_up, &"FACADE")
-				else:
-					var t_base := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_BASE if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_BASE
-					var t_tips := CaveTileConstants.CRNR_SE_OUT_DECORATED_B_TIPS if is_b else CaveTileConstants.CRNR_SE_OUT_DECORATED_A_TIPS
-					_queue(plan, p_up, t_base, &"FACADE", table, pos)
-					state.mark(p_up, &"FACADE")
-					_queue(plan, p_above, t_tips, &"FACADE", table, pos)
-					state.mark(p_above, &"FACADE")
-
-		if not GridUtils.is_walkable(grid, pos + Vector2i(-1, 0)):
-			step_downs.append({"x": x, "y": y, "dir": -1})

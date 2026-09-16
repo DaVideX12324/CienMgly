@@ -1,4 +1,4 @@
-﻿class_name PortalGenerator
+class_name PortalGenerator
 extends RefCounted
 
 const CellType = preload("res://modules/quiz_rpg/scripts/generation/core/cell_type.gd")
@@ -31,6 +31,7 @@ static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge
 	var chosen_start := Vector2i.ZERO
 	var chosen_perp := Vector2i.ZERO
 	var chosen_max_length := 0
+	var chosen_room_bridge_steps := 0
 
 	for edge_data in edge_dists:
 		var edge := int(edge_data["edge"])
@@ -42,27 +43,32 @@ static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge
 		var perp := Vector2i.ZERO
 		var max_length := 0
 
+		var bridge_steps := 0
 		match edge:
 			0:
 				dir = Vector2i(0, -1)
 				tunnel_start = Vector2i(center.x, room.position.y - 1)
 				perp = Vector2i(1, 0)
 				max_length = tunnel_start.y - ALCOVE_CENTER_MARGIN
+				bridge_steps = center.y - tunnel_start.y
 			1:
 				dir = Vector2i(1, 0)
 				tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
 				perp = Vector2i(0, 1)
 				max_length = map_w - 1 - ALCOVE_CENTER_MARGIN - tunnel_start.x
+				bridge_steps = tunnel_start.x - center.x
 			2:
 				dir = Vector2i(0, 1)
 				tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
 				perp = Vector2i(1, 0)
 				max_length = map_h - 1 - ALCOVE_CENTER_MARGIN - tunnel_start.y
+				bridge_steps = tunnel_start.y - center.y
 			3:
 				dir = Vector2i(-1, 0)
 				tunnel_start = Vector2i(room.position.x - 1, center.y)
 				perp = Vector2i(0, 1)
 				max_length = tunnel_start.x - ALCOVE_CENTER_MARGIN
+				bridge_steps = center.x - tunnel_start.x
 
 		if max_length >= MIN_TUNNEL_LENGTH:
 			chosen_edge = edge
@@ -70,12 +76,23 @@ static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge
 			chosen_start = tunnel_start
 			chosen_perp = perp
 			chosen_max_length = max_length
+			chosen_room_bridge_steps = bridge_steps
 			break
 
 	if chosen_edge == -1:
 		push_error("PortalGenerator: no safe edge for portal alcove.")
 		return {"center": center, "edge": -1, "cells": []}
 
+	# 1. Ciągły most od centrum pokoju do punktu startowego tunelu
+	var bridge_pos := center
+	for i in range(chosen_room_bridge_steps):
+		for w in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
+			var p := bridge_pos + chosen_perp * w
+			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
+				grid[p] = CellType.FLOOR
+		bridge_pos += chosen_dir
+
+	# 2. Tunel portalowy ku krawędzi mapy
 	var tunnel_length := mini(rng.randi_range(5, 7), chosen_max_length)
 	var current := chosen_start
 	for i in range(tunnel_length):
