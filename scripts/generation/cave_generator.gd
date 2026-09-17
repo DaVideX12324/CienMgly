@@ -20,6 +20,7 @@ const EdgeAnalyzer = preload("res://modules/quiz_rpg/scripts/generation/edge/edg
 const TilePlacementPlanner = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_planner.gd")
 const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
 const TerrainPaintExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_paint_executor.gd")
+const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -340,9 +341,12 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 	ctx.grid = result.grid
 	ctx.width = result.width
 	ctx.height = result.height
-	ctx.flags = GenerationFlags.new()
+	ctx.seed_value = result.seed_used
+	ctx.flags = result.flags_used if result.flags_used != null else GenerationFlags.new()
 	ctx.entrance_zone = result.entrance_zone
 	ctx.exit_zone = result.exit_zone
+	ctx.entrance_pos = result.entrance_pos
+	ctx.exit_pos = result.exit_pos
 	for p in result.entrance_zone: ctx.portal_zone[p] = true
 	for p in result.exit_zone: ctx.portal_zone[p] = true
 	var analysis := EdgeAnalyzer.analyze(ctx)
@@ -356,16 +360,55 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 		var edge: EdgeContext = analysis.edges[pos]
 		match edge.edge_kind:
 			EdgeKind.Kind.INNER_CORNER:
+				var p_down: Vector2i = pos + Vector2i(0, 1)
+				var foot_3h: EdgeContext = analysis.edges.get(p_down + Vector2i(0, 2))
+				var is_dec_step_top_ne := false
+				var is_dec_step_top_nw := false
+				if foot_3h != null and foot_3h.edge_kind == EdgeKind.Kind.STEP and foot_3h.step_dy == 1:
+					var step_use_roots: bool = ThemeResolver.resolve(ctx, p_down + Vector2i(0, 2), ThemeResolver.RefPoint.SELF) == &"roots"
+					if step_use_roots:
+						if foot_3h.orientation == EdgeKind.Orientation.EAST:
+							is_dec_step_top_ne = true
+						elif foot_3h.orientation == EdgeKind.Orientation.WEST:
+							is_dec_step_top_nw = true
+
 				var c := Vector2i(-1, -1)
 				match edge.orientation:
 					EdgeKind.Orientation.NORTH_WEST: c = Vector2i(1, 1)
 					EdgeKind.Orientation.NORTH_EAST: c = Vector2i(4, 1)
-					EdgeKind.Orientation.SOUTH_WEST: c = Vector2i(4, 4)
-					EdgeKind.Orientation.SOUTH_EAST: c = Vector2i(1, 4)
+					EdgeKind.Orientation.SOUTH_WEST:
+						c = Vector2i(4, 13) if is_dec_step_top_ne else Vector2i(4, 4)
+					EdgeKind.Orientation.SOUTH_EAST:
+						c = Vector2i(1, 13) if is_dec_step_top_nw else Vector2i(1, 4)
 				blit_tile.call(c, pos)
 
 			EdgeKind.Kind.TOP_RIM:
-				blit_tile.call(Vector2i(2, 0), pos)
+				var is_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
+				if is_roots:
+					var base_coord := Vector2i(2, 9)
+					var tips_coord := Vector2i(2, 8)
+					match edge.orientation:
+						EdgeKind.Orientation.WEST:
+							base_coord = Vector2i(1, 9)
+							tips_coord = Vector2i(1, 8)
+						EdgeKind.Orientation.EAST:
+							base_coord = Vector2i(4, 9)
+							tips_coord = Vector2i(4, 8)
+						_:
+							base_coord = Vector2i(2, 9)
+							tips_coord = Vector2i(2, 8)
+					blit_tile.call(base_coord, pos)
+					blit_tile.call(tips_coord, pos + Vector2i(0, -1))
+				else:
+					var rock_coord := Vector2i(2, 0)
+					match edge.orientation:
+						EdgeKind.Orientation.WEST:
+							rock_coord = Vector2i(1, 0)
+						EdgeKind.Orientation.EAST:
+							rock_coord = Vector2i(4, 0)
+						_:
+							rock_coord = Vector2i(2, 0)
+					blit_tile.call(rock_coord, pos)
 
 			EdgeKind.Kind.SIDE_WALL:
 				var c := Vector2i(5, 2) if edge.orientation == EdgeKind.Orientation.EAST else Vector2i(0, 2)

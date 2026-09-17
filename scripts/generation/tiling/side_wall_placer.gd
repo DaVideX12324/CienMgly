@@ -43,16 +43,19 @@ static func plan(
 			if not state.is_empty_or_rock(pos):
 				continue
 
+			var edge_above: EdgeContext = edges.get(pos + Vector2i(0, -1))
+			var is_under_inner_corner: bool = (edge_above != null and edge_above.edge_kind == EdgeKind.Kind.INNER_CORNER)
+
 			if edge.orientation == EdgeKind.Orientation.EAST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
-				var var_idx: int = ctx.tile_rng.randi() % 2
+				var var_idx: int = 1 if is_under_inner_corner else (ctx.tile_rng.randi() % 2)
 				var side_t: Vector2i = CaveTileConstants.WALL_SIDE_WEST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_WEST[var_idx]
 				_queue(plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
 
 			elif edge.orientation == EdgeKind.Orientation.WEST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(-1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
-				var var_idx: int = ctx.tile_rng.randi() % 2
+				var var_idx: int = 1 if is_under_inner_corner else (ctx.tile_rng.randi() % 2)
 				var side_t: Vector2i = CaveTileConstants.WALL_SIDE_EAST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_EAST[var_idx]
 				_queue(plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
