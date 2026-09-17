@@ -81,7 +81,7 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i) -> bool:
 	return false
 
 
-## Czy komórka jest poziomem BASE (stopą) fasady 3H.
+## Czy komórka jest poziomem BASE (stopą ściany) fasady 3H.
 static func _is_facade_base(edges: Dictionary, p: Vector2i) -> bool:
 	var foot: EdgeContext = edges.get(p)
 	if foot != null and foot.facade_height == 3:
@@ -264,31 +264,9 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				edge.facade_height = 2
 				continue
 
-			var is_out_corner_cand := func(cx: int, cy: int) -> bool:
-				var candidate_pos := Vector2i(cx, cy)
-				var w_cand := cx > 0 and _has_out_corner_opening(
-					grid,
-					candidate_pos,
-					Vector2i(-1, 0)
-				)
-				var e_cand := cx < width - 1 and _has_out_corner_opening(
-					grid,
-					candidate_pos,
-					Vector2i(1, 0)
-				)
-
-				# Obustronne otwarcie oznacza przejście / szeroką przestrzeń,
-				# a nie pojedynczy moduł OUT_CORNER.
-				return w_cand != e_cand
-
 			# 3. Sąsiedzi na innej wysokości (left_y / right_y).
 			var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x - 1, y, 4)
-			if left_y != -1 and is_out_corner_cand.call(x - 1, left_y):
-				left_y = -1
-
 			var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x + 1, y, 4)
-			if right_y != -1 and is_out_corner_cand.call(x + 1, right_y):
-				right_y = -1
 
 			# 4. OUT_CORNER — lokalne wzorce:
 			#
@@ -386,11 +364,11 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 					continue
 				elif edge.sw_floor and not edge.se_floor and not edge.w_floor and not edge.s_floor:
 					edge.edge_kind = EdgeKind.Kind.INNER_CORNER
-					edge.orientation = EdgeKind.Orientation.SOUTH_WEST
+					edge.orientation = EdgeKind.Orientation.SOUTH_EAST
 					continue
 				elif edge.se_floor and not edge.sw_floor and not edge.e_floor and not edge.s_floor:
 					edge.edge_kind = EdgeKind.Kind.INNER_CORNER
-					edge.orientation = EdgeKind.Orientation.SOUTH_EAST
+					edge.orientation = EdgeKind.Orientation.SOUTH_WEST
 					continue
 
 				# 4. SOLID_FILL: lita skała bez bezpośredniej krawędzi.
@@ -415,166 +393,128 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 						e_deep.edge_kind = EdgeKind.Kind.SOLID_FILL
 						e_deep.orientation = EdgeKind.Orientation.NONE
 
-		# 2. Ściany boczne (MID / BOT) i narożniki wewnętrzne przy końcach fasad, schodków i OUT_CORNER
-		if edge.edge_kind in [EdgeKind.Kind.STEP, EdgeKind.Kind.FACADE, EdgeKind.Kind.OUT_CORNER]:
-			for sdir: int in [-1, 1]:
-				var adj_x: int = pos.x + sdir
-				if adj_x < 0 or adj_x >= width:
-					continue
-
-				var has_adjacent_facade: bool = false
-				if facade_cols.has(adj_x):
-					var col_y_arr: Array = facade_cols[adj_x]
-					for fy_val in col_y_arr:
-						var fy: int = fy_val as int
-						if abs(fy - pos.y) <= 2:
-							has_adjacent_facade = true
-							break
-
-				if not has_adjacent_facade:
-					var is_east: bool = (sdir == 1)
-					var p_bot: Vector2i = Vector2i(adj_x, pos.y)
-					var p_mid: Vector2i = Vector2i(adj_x, pos.y - 1)
-					var p_top: Vector2i = Vector2i(adj_x, pos.y - 2)
-
-					# Ściana boczna na wysokości podstawy
-					var e_bot: EdgeContext = edges.get(p_bot)
-					if e_bot != null and not GridUtils.is_walkable(grid, p_bot) and e_bot.edge_kind != EdgeKind.Kind.INNER_CORNER:
-						e_bot.edge_kind = EdgeKind.Kind.SIDE_WALL
-						e_bot.orientation = EdgeKind.Orientation.WEST if is_east else EdgeKind.Orientation.EAST
-						e_bot.is_protected_solid = false
-
-					# Ściana boczna na wysokości MID
-					var e_mid: EdgeContext = edges.get(p_mid)
-					if e_mid != null and not GridUtils.is_walkable(grid, p_mid) and e_mid.edge_kind != EdgeKind.Kind.INNER_CORNER:
-						e_mid.edge_kind = EdgeKind.Kind.SIDE_WALL
-						e_mid.orientation = EdgeKind.Orientation.WEST if is_east else EdgeKind.Orientation.EAST
-						e_mid.is_protected_solid = false
-
-					# Narożnik wewnętrzny na szczycie
-					var e_top: EdgeContext = edges.get(p_top)
-					if e_top != null and not GridUtils.is_walkable(grid, p_top):
-						e_top.edge_kind = EdgeKind.Kind.INNER_CORNER
-						e_top.orientation = EdgeKind.Orientation.SOUTH_WEST if is_east else EdgeKind.Orientation.SOUTH_EAST
-						e_top.is_protected_solid = false
-
-		# 3. Schodki o uskokach pionowych dy >= 2
-		if edge.edge_kind == EdgeKind.Kind.STEP and edge.step_dy >= 2:
-			var is_west_step: bool = (edge.orientation == EdgeKind.Orientation.WEST)
-			var higher_y: int = pos.y - edge.step_dy
-			var p_top_step: Vector2i = Vector2i(pos.x, higher_y - 2)
-			var e_top_step: EdgeContext = edges.get(p_top_step)
-			if e_top_step != null and not GridUtils.is_walkable(grid, p_top_step):
-				e_top_step.edge_kind = EdgeKind.Kind.INNER_CORNER
-				e_top_step.orientation = EdgeKind.Orientation.SOUTH_WEST if is_west_step else EdgeKind.Orientation.SOUTH_EAST
-				e_top_step.is_protected_solid = false
-
-			for cy: int in range(higher_y - 1, pos.y - 2):
-				var p_side: Vector2i = Vector2i(pos.x, cy)
-				var e_side: EdgeContext = edges.get(p_side)
-				if e_side != null and not GridUtils.is_walkable(grid, p_side):
-					e_side.edge_kind = EdgeKind.Kind.SIDE_WALL
-					e_side.orientation = EdgeKind.Orientation.WEST if is_west_step else EdgeKind.Orientation.EAST
-					e_side.is_protected_solid = false
-
-# Przebieg 5B (część 1): Wzorzec ściany bocznej typ B
+	# Przebieg 5B (część 1): Wzorzec ściany bocznej typ B
+	# Pattern 2 (przy MID):
 	# 0  0  top              top  0  0
 	# 0 [X] mid      or      mid [X] 0
 	# 0  0  base            base  0  0
-	for p_key: Vector2i in edges:
-		var p: Vector2i = p_key
-		if GridUtils.is_walkable(grid, p):
-			continue
+	#
+	# Pattern 3 (przy BASE):
+	# 0  0  mid              mid  0  0
+	# 0 [X] base     or     base [X] 0
+	# 0  0  1                 1   0  0
+	for y in range(height):
+		for x in range(width):
+			var p := Vector2i(x, y)
+			if GridUtils.is_walkable(grid, p):
+				continue
 
-		var edge_c: EdgeContext = edges[p]
-		if edge_c.in_portal_zone or edge_c.edge_kind == EdgeKind.Kind.INNER_CORNER:
-			continue
+			var edge_c: EdgeContext = edges.get(p)
+			if edge_c == null or edge_c.in_portal_zone:
+				continue
 
-		var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
-		var wall_n: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
-		var wall_ne: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, -1))
-		var wall_w: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 0))
-		var wall_e: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 0))
-		var wall_sw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
-		var wall_s: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, 1))
-		var wall_se: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
+			var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
+			var wall_n: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
+			var wall_ne: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, -1))
+			var wall_w: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 0))
+			var wall_e: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 0))
+			var wall_sw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
+			var wall_s: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, 1))
+			var wall_se: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
-		# Ściana lewa (pokój / fasada po prawej) -> Orientation.EAST
-		var match_side_left: bool = wall_nw and wall_n and wall_w and wall_sw and wall_s \
-			and _is_any_wall_top(edges, p + Vector2i(1, -1)) \
-			and _is_facade_mid(edges, p + Vector2i(1, 0)) \
-			and _is_facade_base(edges, p + Vector2i(1, 1))
+			# Ściana lewa (pokój / fasada po prawej) -> Orientation.EAST
+			# Pattern 2 (przy MID):
+			var match_side_left_mid: bool = wall_nw and wall_n and wall_w and wall_sw and wall_s \
+				and _is_any_wall_top(edges, p + Vector2i(1, -1)) \
+				and _is_facade_mid(edges, p + Vector2i(1, 0)) \
+				and _is_facade_base(edges, p + Vector2i(1, 1))
 
-		# Ściana prawa (pokój / fasada po lewej) -> Orientation.WEST
-		var match_side_right: bool = wall_ne and wall_n and wall_e and wall_se and wall_s \
-			and _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
-			and _is_facade_mid(edges, p + Vector2i(-1, 0)) \
-			and _is_facade_base(edges, p + Vector2i(-1, 1))
+			# Pattern 3 (przy BASE):
+			var match_side_left_base: bool = wall_nw and wall_n and wall_w and wall_sw \
+				and _is_facade_mid(edges, p + Vector2i(1, -1)) \
+				and _is_facade_base(edges, p + Vector2i(1, 0)) \
+				and GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
-		if match_side_left:
-			edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
-			edge_c.orientation = EdgeKind.Orientation.EAST
-			edge_c.is_protected_solid = false
-		elif match_side_right:
-			edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
-			edge_c.orientation = EdgeKind.Orientation.WEST
-			edge_c.is_protected_solid = false
+			# Ściana prawa (pokój / fasada po lewej) -> Orientation.WEST
+			# Pattern 2 (przy MID):
+			var match_side_right_mid: bool = wall_ne and wall_n and wall_e and wall_se and wall_s \
+				and _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
+				and _is_facade_mid(edges, p + Vector2i(-1, 0)) \
+				and _is_facade_base(edges, p + Vector2i(-1, 1))
+
+			# Pattern 3 (przy BASE):
+			var match_side_right_base: bool = wall_ne and wall_n and wall_e and wall_se \
+				and _is_facade_mid(edges, p + Vector2i(-1, -1)) \
+				and _is_facade_base(edges, p + Vector2i(-1, 0)) \
+				and GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
+
+			if match_side_left_mid or match_side_left_base:
+				edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
+				edge_c.orientation = EdgeKind.Orientation.EAST
+				edge_c.is_protected_solid = false
+			elif match_side_right_mid or match_side_right_base:
+				edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
+				edge_c.orientation = EdgeKind.Orientation.WEST
+				edge_c.is_protected_solid = false
 
 	# Przebieg 5B (część 2): Wzorzec INNER_CORNER
 	# 0  0  0                         0  0  0
 	# 0 [X] top              or      top [X] 0
 	# 0 (top/side) mid               mid (top/side) 0
-	for p_key: Vector2i in edges:
-		var p: Vector2i = p_key
-		if GridUtils.is_walkable(grid, p):
-			continue
+	for y in range(height):
+		for x in range(width):
+			var p := Vector2i(x, y)
+			if GridUtils.is_walkable(grid, p):
+				continue
 
-		var edge_c: EdgeContext = edges[p]
-		if edge_c.in_portal_zone or edge_c.edge_kind == EdgeKind.Kind.INNER_CORNER:
-			continue
+			var edge_c: EdgeContext = edges.get(p)
+			if edge_c == null or edge_c.in_portal_zone or edge_c.edge_kind == EdgeKind.Kind.INNER_CORNER:
+				continue
 
-		var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
-		var wall_n: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
-		var wall_ne: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, -1))
-		var wall_w: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 0))
-		var wall_e: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 0))
-		var wall_sw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
-		var wall_se: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
+			var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
+			var wall_n: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
+			var wall_ne: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, -1))
+			var wall_w: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 0))
+			var wall_e: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 0))
+			var wall_sw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
+			var wall_se: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
-		var no_top_above: bool = not _is_any_wall_top(edges, p + Vector2i(0, -1)) \
-			and not _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
-			and not _is_any_wall_top(edges, p + Vector2i(1, -1))
+			var e_above: EdgeContext = edges.get(p + Vector2i(0, -1))
+			var above_is_corner_or_side: bool = e_above != null and e_above.edge_kind in [EdgeKind.Kind.INNER_CORNER, EdgeKind.Kind.SIDE_WALL]
 
-		var p_down: Vector2i = p + Vector2i(0, 1)
-		var down_is_top_or_side: bool = _is_any_wall_top(edges, p_down) \
-			or (edges.has(p_down) and (edges[p_down] as EdgeContext).edge_kind == EdgeKind.Kind.SIDE_WALL)
+			var no_top_above: bool = not above_is_corner_or_side \
+				and not _is_any_wall_top(edges, p + Vector2i(0, -1)) \
+				and not _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
+				and not _is_any_wall_top(edges, p + Vector2i(1, -1))
 
-		# Wariant SOUTH_EAST (top po prawej, ściana/top pod spodem)
-		var match_corner_se: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw and no_top_above \
-			and _is_any_wall_top(edges, p + Vector2i(1, 0)) \
-			and down_is_top_or_side \
-			and _is_facade_mid(edges, p + Vector2i(1, 1))
+			var p_down: Vector2i = p + Vector2i(0, 1)
+			var is_down_facade_foot: bool = edges.has(p_down) and (edges[p_down] as EdgeContext).edge_kind == EdgeKind.Kind.FACADE
+			var is_down_facade_base: bool = edges.has(p_down + Vector2i(0, 1)) and (edges[p_down + Vector2i(0, 1)] as EdgeContext).edge_kind == EdgeKind.Kind.FACADE
+			var is_down_facade_mid: bool = edges.has(p_down + Vector2i(0, 2)) and (edges[p_down + Vector2i(0, 2)] as EdgeContext).edge_kind == EdgeKind.Kind.FACADE
+			var down_is_straight_facade: bool = is_down_facade_foot or is_down_facade_base or is_down_facade_mid
+			var down_is_wall: bool = not GridUtils.is_walkable(grid, p_down) and not down_is_straight_facade
 
-		# Wariant SOUTH_WEST (top po lewej, ściana/top pod spodem)
-		var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_e and wall_se and no_top_above \
-			and _is_any_wall_top(edges, p + Vector2i(-1, 0)) \
-			and down_is_top_or_side \
-			and _is_facade_mid(edges, p + Vector2i(-1, 1))
+			# Wariant SOUTH_WEST (top po prawej, ściana pod spodem -> lewa strona pokoju)
+			var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw and no_top_above \
+				and _is_any_wall_top(edges, p + Vector2i(1, 0)) \
+				and down_is_wall \
+				and not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
-		if match_corner_se:
-			edge_c.edge_kind = EdgeKind.Kind.INNER_CORNER
-			edge_c.orientation = EdgeKind.Orientation.SOUTH_EAST
-			edge_c.is_protected_solid = false
-		elif match_corner_sw:
-			edge_c.edge_kind = EdgeKind.Kind.INNER_CORNER
-			edge_c.orientation = EdgeKind.Orientation.SOUTH_WEST
-			edge_c.is_protected_solid = false
+			# Wariant SOUTH_EAST (top po lewej, ściana pod spodem -> prawa strona pokoju)
+			var match_corner_se: bool = wall_nw and wall_n and wall_ne and wall_e and wall_se and no_top_above \
+				and _is_any_wall_top(edges, p + Vector2i(-1, 0)) \
+				and down_is_wall \
+				and not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
 
-	# Aktualizacja rim_cells: usunięcie komórek, które stały się narożnikami
-	rim_cells = rim_cells.filter(func(pos_rim: Vector2i) -> bool:
-		return (edges[pos_rim] as EdgeContext).edge_kind == EdgeKind.Kind.TOP_RIM
-	)
-	
+			if match_corner_sw:
+				edge_c.edge_kind = EdgeKind.Kind.INNER_CORNER
+				edge_c.orientation = EdgeKind.Orientation.SOUTH_WEST
+				edge_c.is_protected_solid = false
+			elif match_corner_se:
+				edge_c.edge_kind = EdgeKind.Kind.INNER_CORNER
+				edge_c.orientation = EdgeKind.Orientation.SOUTH_EAST
+				edge_c.is_protected_solid = false
+
 	# Przebieg 6: Segmentacja pozioma rimów.
 	var rim_segments := FacadeSegmentDetector.detect(rim_cells, edges)
 
