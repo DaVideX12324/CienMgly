@@ -70,7 +70,6 @@ static func place_2h(
 
 	_queue(plan, pos, base_2h, &"FACADE", table)
 	_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table)
-
 	state.mark(pos, &"FACADE")
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
 
@@ -118,39 +117,3 @@ static func place_3h(
 	state.mark(pos + Vector2i(0, -2), &"FACADE")
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
 	state.mark(pos, &"FACADE")
-
-	# Zakończenie lewe litym murem: ściana zachodnia B i wewnętrzny narożnik SW_IN
-	if not GridUtils.is_walkable(grid, pos + Vector2i(-1, 0)) and left_y == -1:
-		var side_b := CaveTileConstants.WALL_SIDE_WEST[1] if not use_roots else CaveTileConstants.ROOT_WALL_SIDE_WEST[1]
-		var corner_t := CaveTileConstants.CRNR_SW_IN
-		var p_corner := Vector2i(pos.x - 1, pos.y - 2)
-		var edge_corner: EdgeContext = edges.get(p_corner) if not edges.is_empty() else null
-		var corner_free: bool = edge_corner == null or edge_corner.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_corner.edge_kind == EdgeKind.Kind.NONE
-		if not GridUtils.is_walkable(grid, p_corner) and corner_free and state.is_empty_or_rock(p_corner):
-			_queue(plan, p_corner, corner_t, &"CORNER", table, pos)
-			state.mark(p_corner, &"CORNER")
-		for cy in range(pos.y - 1, pos.y + 1):
-			var p_side := Vector2i(pos.x - 1, cy)
-			var edge_side: EdgeContext = edges.get(p_side) if not edges.is_empty() else null
-			var side_free: bool = edge_side == null or edge_side.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_side.edge_kind == EdgeKind.Kind.NONE
-			if not GridUtils.is_walkable(grid, p_side) and side_free and state.is_empty_or_rock(p_side):
-				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
-				state.mark(p_side, &"SIDE_FIXED")
-
-	# Zakończenie prawe litym murem: ściana wschodnia B i wewnętrzny narożnik SE_IN
-	if not GridUtils.is_walkable(grid, pos + Vector2i(1, 0)) and right_y == -1:
-		var side_b := CaveTileConstants.WALL_SIDE_EAST[1] if not use_roots else CaveTileConstants.ROOT_WALL_SIDE_EAST[1]
-		var corner_t := CaveTileConstants.CRNR_SE_IN
-		var p_corner := Vector2i(pos.x + 1, pos.y - 2)
-		var edge_corner: EdgeContext = edges.get(p_corner) if not edges.is_empty() else null
-		var corner_free: bool = edge_corner == null or edge_corner.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_corner.edge_kind == EdgeKind.Kind.NONE
-		if not GridUtils.is_walkable(grid, p_corner) and corner_free and state.is_empty_or_rock(p_corner):
-			_queue(plan, p_corner, corner_t, &"CORNER", table, pos)
-			state.mark(p_corner, &"CORNER")
-		for cy in range(pos.y - 1, pos.y + 1):
-			var p_side := Vector2i(pos.x + 1, cy)
-			var edge_side: EdgeContext = edges.get(p_side) if not edges.is_empty() else null
-			var side_free: bool = edge_side == null or edge_side.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_side.edge_kind == EdgeKind.Kind.NONE
-			if not GridUtils.is_walkable(grid, p_side) and side_free and state.is_empty_or_rock(p_side):
-				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
-				state.mark(p_side, &"SIDE_FIXED")
