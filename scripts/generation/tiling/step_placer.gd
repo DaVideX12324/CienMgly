@@ -38,7 +38,6 @@ static func place(
 	state: LegacyPlacementState,
 	plan: TilePlacementPlan,
 	use_roots: bool,
-	step_downs: Array[Dictionary],
 	left_y: int,
 	right_y: int,
 	edges: Dictionary = {}
@@ -46,89 +45,79 @@ static func place(
 	var pos := edge.pos
 	var x := pos.x
 	var y := pos.y
-	var grid := ctx.grid
 	var table := ctx.priority_table
 
 	if left_y != -1 and y > left_y:
-		var dy: int = y - left_y
-		var step_use_roots: bool = use_roots and (dy == 1)
-
-		var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
-		var mid_t := CaveTileConstants.MOD_CRNR_NW_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID
-		var top_t := CaveTileConstants.MOD_CRNR_NW_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP
-
-		_queue(plan, pos, base_t, &"FACADE", table, pos)
-		_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
-		_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
-		state.mark(pos, &"FACADE")
-		state.mark(pos + Vector2i(0, -1), &"FACADE")
-		state.mark(pos + Vector2i(0, -2), &"FACADE")
-
-		if dy == 1:
-			var p_crown := pos + Vector2i(0, -3)
-			var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
-			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
-			if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
-				var crown_t := CaveTileConstants.ROOT_CRNR_SE_IN if step_use_roots else CaveTileConstants.CRNR_SE_IN
-				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-				state.mark(p_crown, &"CORNER")
+		if edge.facade_height == 2:
+			_queue(plan, pos, CaveTileConstants.WALL_2H_WEST_BASE, &"FACADE", table, pos)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_WEST_TOP, &"FACADE", table, pos)
+			state.mark(pos, &"FACADE")
+			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
-			var p_crown := Vector2i(x, left_y - 2)
-			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
-			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
-			if crown_free and state.is_empty_or_rock(p_crown):
-				var crown_t := CaveTileConstants.CRNR_SE_IN
-				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-				state.mark(p_crown, &"CORNER")
+			var dy: int = y - left_y
+			if dy == 1 and (right_y == y + 1 or right_y == -1):
+				var p_diag := pos + Vector2i(1, -2)
+				var e_diag: EdgeContext = edges.get(p_diag)
+				var is_thick_conn := e_diag != null and (
+					(e_diag.edge_kind == EdgeKind.Kind.INNER_CORNER and e_diag.orientation == EdgeKind.Orientation.SOUTH_EAST) or
+					(e_diag.edge_kind == EdgeKind.Kind.SIDE_WALL and e_diag.orientation == EdgeKind.Orientation.WEST)
+				)
+				if is_thick_conn:
+					_queue(plan, pos, CaveTileConstants.CONNECTOR_2H_TO_3H_BASE, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_2H_TO_3H_MID, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_2H_TO_3H_TOP, &"FACADE", table, pos)
+				else:
+					_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
+			else:
+				var step_use_roots: bool = use_roots and (dy == 1)
+				var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
+				var mid_t := CaveTileConstants.MOD_CRNR_NW_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID
+				var top_t := CaveTileConstants.MOD_CRNR_NW_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP
 
-			for cy in range(left_y - 1, y - 2):
-				var p_side := Vector2i(x, cy)
-				var side_t := CaveTileConstants.WALL_SIDE_EAST[1]
-				_queue(plan, p_side, side_t, &"SIDE_WALL_FIXED", table, pos)
-				state.mark(p_side, &"SIDE_FIXED")
+				_queue(plan, pos, base_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
 
-		if not GridUtils.is_walkable(grid, pos + Vector2i(1, 0)) and right_y == -1:
-			step_downs.append({"x": x, "y": y, "dir": 1})
+			state.mark(pos, &"FACADE")
+			state.mark(pos + Vector2i(0, -1), &"FACADE")
+			state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 	elif right_y != -1 and y > right_y:
-		var dy: int = y - right_y
-		var step_use_roots: bool = use_roots and (dy == 1)
-
-		var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
-		var mid_t := CaveTileConstants.MOD_CRNR_NE_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID
-		var top_t := CaveTileConstants.MOD_CRNR_NE_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP
-
-		_queue(plan, pos, base_t, &"FACADE", table, pos)
-		_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
-		_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
-		state.mark(pos, &"FACADE")
-		state.mark(pos + Vector2i(0, -1), &"FACADE")
-		state.mark(pos + Vector2i(0, -2), &"FACADE")
-
-		if dy == 1:
-			var p_crown := pos + Vector2i(0, -3)
-			var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
-			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
-			if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
-				var crown_t := CaveTileConstants.ROOT_CRNR_SW_IN if step_use_roots else CaveTileConstants.CRNR_SW_IN
-				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-				state.mark(p_crown, &"CORNER")
+		if edge.facade_height == 2:
+			_queue(plan, pos, CaveTileConstants.WALL_2H_EAST_BASE, &"FACADE", table, pos)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)
+			state.mark(pos, &"FACADE")
+			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
-			var p_crown := Vector2i(x, right_y - 2)
-			var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
-			var crown_free: bool = edge_crown != null and not edge_crown.is_protected_solid and edge_crown.neighborhood_mask != 0 and (edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE)
-			if crown_free and state.is_empty_or_rock(p_crown):
-				var crown_t := CaveTileConstants.CRNR_SW_IN
-				_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-				state.mark(p_crown, &"CORNER")
+			var dy: int = y - right_y
+			if dy == 1 and (left_y == y + 1 or left_y == -1):
+				var p_diag := pos + Vector2i(-1, -2)
+				var e_diag: EdgeContext = edges.get(p_diag)
+				var is_thick_conn := e_diag != null and (
+					(e_diag.edge_kind == EdgeKind.Kind.INNER_CORNER and e_diag.orientation == EdgeKind.Orientation.SOUTH_WEST) or
+					(e_diag.edge_kind == EdgeKind.Kind.SIDE_WALL and e_diag.orientation == EdgeKind.Orientation.EAST)
+				)
+				if is_thick_conn:
+					_queue(plan, pos, CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"FACADE", table, pos)
+				else:
+					_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP, &"FACADE", table, pos)
+			else:
+				var step_use_roots: bool = use_roots and (dy == 1)
+				var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
+				var mid_t := CaveTileConstants.MOD_CRNR_NE_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID
+				var top_t := CaveTileConstants.MOD_CRNR_NE_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP
 
-			for cy in range(right_y - 1, y - 2):
-				var p_side := Vector2i(x, cy)
-				var side_t := CaveTileConstants.WALL_SIDE_WEST[1]
-				_queue(plan, p_side, side_t, &"SIDE_WALL_FIXED", table, pos)
-				state.mark(p_side, &"SIDE_FIXED")
+				_queue(plan, pos, base_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
 
-		if not GridUtils.is_walkable(grid, pos + Vector2i(-1, 0)) and left_y == -1:
-			step_downs.append({"x": x, "y": y, "dir": -1})
+			state.mark(pos, &"FACADE")
+			state.mark(pos + Vector2i(0, -1), &"FACADE")
+			state.mark(pos + Vector2i(0, -2), &"FACADE")
+

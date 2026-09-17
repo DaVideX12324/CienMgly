@@ -47,39 +47,20 @@ static func place(
 	state: LegacyPlacementState,
 	plan: TilePlacementPlan,
 	use_roots: bool,
-	step_downs: Array[Dictionary],
 	w_open: bool,
 	e_open: bool
 ) -> void:
 	var pos := edge.pos
-	var x := pos.x
-	var y := pos.y
-	var grid := ctx.grid
 	var table := ctx.priority_table
-	var v_noise := _get_variant_noise(ctx)
-	var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 
 	if w_open and not e_open:
-		var is_2h_corner := GridUtils.is_walkable(grid, pos + Vector2i(0, -3))
-		if is_2h_corner:
+		if edge.facade_height == 2:
 			var base_2h := CaveTileConstants.WALL_2H_WEST_BASE
 			var top_2h := CaveTileConstants.WALL_2H_WEST_TOP
 			_queue(plan, pos, base_2h, &"FACADE", table, pos)
 			_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
-
-			var p_in := pos + Vector2i(1, -1)
-			if not GridUtils.is_walkable(grid, p_in) and state.is_empty_or_rock(p_in):
-				var in_corner := CaveTileConstants.CRNR_SE_IN
-				_queue(plan, p_in, in_corner, &"CORNER", table, pos)
-				state.mark(p_in, &"CORNER")
-
-			var p_side := pos + Vector2i(1, 0)
-			if not GridUtils.is_walkable(grid, p_side) and state.is_empty_or_rock(p_side):
-				var side_b := CaveTileConstants.WALL_SIDE_EAST[1] if not use_roots else CaveTileConstants.ROOT_WALL_SIDE_EAST[1]
-				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
-				state.mark(p_side, &"SIDE_FIXED")
 		else:
 			var top_t := CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP
 			var mid_t := CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID
@@ -92,26 +73,13 @@ static func place(
 			state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 	elif e_open and not w_open:
-		var is_2h_corner := GridUtils.is_walkable(grid, pos + Vector2i(0, -3))
-		if is_2h_corner:
+		if edge.facade_height == 2:
 			var base_2h := CaveTileConstants.WALL_2H_EAST_BASE
 			var top_2h := CaveTileConstants.WALL_2H_EAST_TOP
 			_queue(plan, pos, base_2h, &"FACADE", table, pos)
 			_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
-
-			var p_in := pos + Vector2i(-1, -1)
-			if not GridUtils.is_walkable(grid, p_in) and state.is_empty_or_rock(p_in):
-				var in_corner := CaveTileConstants.CRNR_SW_IN
-				_queue(plan, p_in, in_corner, &"CORNER", table, pos)
-				state.mark(p_in, &"CORNER")
-
-			var p_side := pos + Vector2i(-1, 0)
-			if not GridUtils.is_walkable(grid, p_side) and state.is_empty_or_rock(p_side):
-				var side_b := CaveTileConstants.WALL_SIDE_WEST[1] if not use_roots else CaveTileConstants.ROOT_WALL_SIDE_WEST[1]
-				_queue(plan, p_side, side_b, &"SIDE_WALL_FIXED", table, pos)
-				state.mark(p_side, &"SIDE_FIXED")
 		else:
 			var top_t := CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP
 			var mid_t := CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID
