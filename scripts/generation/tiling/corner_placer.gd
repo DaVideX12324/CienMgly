@@ -37,35 +37,33 @@ static func plan(
 		for x in range(width):
 			var pos := Vector2i(x, y)
 			var edge: EdgeContext = edges.get(pos)
-			if edge == null or edge.edge_kind != EdgeKind.Kind.INNER_CORNER or edge.is_protected_solid or edge.neighborhood_mask == 0:
+			if edge == null or edge.edge_kind != EdgeKind.Kind.INNER_CORNER or edge.is_protected_solid:
 				continue
 
 			if not state.is_empty_or_rock(pos):
 				continue
 
-			var floor_sample := pos
-			match edge.orientation:
-				EdgeKind.Orientation.NORTH_WEST:
-					floor_sample = pos + Vector2i(-1, -1)
-				EdgeKind.Orientation.NORTH_EAST:
-					floor_sample = pos + Vector2i(1, -1)
-				EdgeKind.Orientation.SOUTH_WEST:
-					floor_sample = pos + Vector2i(-1, 1)
-				EdgeKind.Orientation.SOUTH_EAST:
-					floor_sample = pos + Vector2i(1, 1)
+			var wall_cells: Dictionary = plan.by_layer.get(&"Walls", {})
+			var placement_under: TilePlacement = wall_cells.get(pos + Vector2i(0, 1))
+			var tile_under: Vector2i = placement_under.atlas_coords if placement_under != null else Vector2i(-1, -1)
 
-			var use_roots: bool = ThemeResolver.resolve(ctx, floor_sample, ThemeResolver.RefPoint.SELF) == &"roots"
 			var tile := Vector2i(-1, -1)
 
 			match edge.orientation:
 				EdgeKind.Orientation.NORTH_WEST:
-					tile = Vector2i(1, 1) if not use_roots else Vector2i(1, 10)
+					tile = Vector2i(1, 1)
 				EdgeKind.Orientation.NORTH_EAST:
-					tile = Vector2i(4, 1) if not use_roots else Vector2i(4, 10)
+					tile = Vector2i(4, 1)
 				EdgeKind.Orientation.SOUTH_WEST:
-					tile = CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
+					if tile_under == CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP:
+						tile = CaveTileConstants.ROOT_CRNR_SW_IN
+					else:
+						tile = CaveTileConstants.CRNR_SW_IN
 				EdgeKind.Orientation.SOUTH_EAST:
-					tile = CaveTileConstants.CRNR_SE_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SE_IN
+					if tile_under == CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP:
+						tile = CaveTileConstants.ROOT_CRNR_SE_IN
+					else:
+						tile = CaveTileConstants.CRNR_SE_IN
 
 			if tile != Vector2i(-1, -1):
 				_queue(plan, pos, tile, &"CORNER", table)
