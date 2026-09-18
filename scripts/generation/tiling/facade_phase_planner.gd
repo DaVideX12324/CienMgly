@@ -18,6 +18,7 @@ const FacadePlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/f
 const ConnectorPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/connector_placer.gd")
 const OutCornerPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/out_corner_placer.gd")
 const StepPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/step_placer.gd")
+const SlopePlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/slope_placer.gd")
 const NichePlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/niche_placer.gd")
 
 static func plan(
@@ -50,6 +51,10 @@ static func plan(
 
 				EdgeKind.Kind.STEP:
 					StepPlacer.place(ctx, edge, state, plan, use_roots, left_y, right_y, analysis.edges)
+					continue
+
+				EdgeKind.Kind.SLOPE:
+					SlopePlacer.place(ctx, edge, state, plan)
 					continue
 
 				EdgeKind.Kind.CONNECTOR:

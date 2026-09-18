@@ -511,6 +511,54 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				edge_c.orientation = EdgeKind.Orientation.SOUTH_EAST
 				edge_c.is_protected_solid = false
 
+	# Przebieg 5C: Doprecyzowanie schodków (STEP -> SLOPE lub CONNECTOR).
+	for x in sorted_xs:
+		for y in facade_cols[x]:
+			var pos := Vector2i(x, y)
+			var edge_step: EdgeContext = edges.get(pos)
+			if edge_step == null or edge_step.edge_kind != EdgeKind.Kind.STEP:
+				continue
+
+			if edge_step.facade_height == 3:
+				var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x - 1, y, 4)
+				var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, x + 1, y, 4)
+
+				if left_y != -1 and y > left_y:
+					var dy: int = y - left_y
+					if dy == 1 and (right_y == y + 1 or right_y == -1):
+						var p_diag := pos + Vector2i(1, -2)
+						var e_diag: EdgeContext = edges.get(p_diag)
+						var is_thick_conn: bool = e_diag != null and (
+							(e_diag.edge_kind == EdgeKind.Kind.INNER_CORNER and e_diag.orientation == EdgeKind.Orientation.SOUTH_EAST) or
+							(e_diag.edge_kind == EdgeKind.Kind.SIDE_WALL and e_diag.orientation == EdgeKind.Orientation.WEST)
+						)
+						if is_thick_conn:
+							edge_step.edge_kind = EdgeKind.Kind.CONNECTOR
+							edge_step.orientation = EdgeKind.Orientation.EAST
+							edge_step.facade_height = 3
+						else:
+							edge_step.edge_kind = EdgeKind.Kind.SLOPE
+							edge_step.orientation = EdgeKind.Orientation.WEST
+							edge_step.facade_height = 3
+
+				elif right_y != -1 and y > right_y:
+					var dy: int = y - right_y
+					if dy == 1 and (left_y == y + 1 or left_y == -1):
+						var p_diag := pos + Vector2i(-1, -2)
+						var e_diag: EdgeContext = edges.get(p_diag)
+						var is_thick_conn: bool = e_diag != null and (
+							(e_diag.edge_kind == EdgeKind.Kind.INNER_CORNER and e_diag.orientation == EdgeKind.Orientation.SOUTH_WEST) or
+							(e_diag.edge_kind == EdgeKind.Kind.SIDE_WALL and e_diag.orientation == EdgeKind.Orientation.EAST)
+						)
+						if is_thick_conn:
+							edge_step.edge_kind = EdgeKind.Kind.CONNECTOR
+							edge_step.orientation = EdgeKind.Orientation.WEST
+							edge_step.facade_height = 3
+						else:
+							edge_step.edge_kind = EdgeKind.Kind.SLOPE
+							edge_step.orientation = EdgeKind.Orientation.EAST
+							edge_step.facade_height = 3
+
 	# Przebieg 6: Segmentacja pozioma rimów.
 	var rim_segments := FacadeSegmentDetector.detect(rim_cells, edges)
 

@@ -10,6 +10,7 @@ enum Kind {
 	FACADE,             # Fasada południowa (podłoga pod, ściana nad)
 	CONNECTOR,          # Łącznik zmiany wysokości fasady (2H <-> 3H)
 	STEP,               # Schodek fasady (sąsiad na innej wysokości)
+	SLOPE,              # Skos fasady (cienki schodek dy=1)
 	TOP_RIM,            # Szczyt ściany widziany z góry
 	OUT_CORNER,         # Wypukłe zakończenie fasady (koniec masywu)
 	INNER_CORNER,       # Wklęsły narożnik / domknięcie schodka
