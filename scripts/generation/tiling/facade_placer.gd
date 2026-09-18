@@ -47,12 +47,26 @@ static func place_2h(
 	plan: TilePlacementPlan
 ) -> void:
 	var pos := edge.pos
+	var grid := ctx.grid
 	var table := ctx.priority_table
 
-	var v_noise := _get_variant_noise(ctx)
-	var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
-	var top_2h: Vector2i = CaveTileConstants.WALL_2H_TOP[1] if is_b else CaveTileConstants.WALL_2H_TOP[0]
-	var base_2h: Vector2i = CaveTileConstants.WALL_2H_BASE[1] if is_b else CaveTileConstants.WALL_2H_BASE[0]
+	var is_west_end: bool = GridUtils.is_walkable(grid, pos + Vector2i(-1, -1)) or GridUtils.is_walkable(grid, pos + Vector2i(-1, -2))
+	var is_east_end: bool = GridUtils.is_walkable(grid, pos + Vector2i(1, -1)) or GridUtils.is_walkable(grid, pos + Vector2i(1, -2))
+
+	var top_2h := Vector2i.ZERO
+	var base_2h := Vector2i.ZERO
+
+	if is_west_end and not is_east_end:
+		top_2h = CaveTileConstants.WALL_2H_WEST_TOP
+		base_2h = CaveTileConstants.WALL_2H_WEST_BASE
+	elif is_east_end and not is_west_end:
+		top_2h = CaveTileConstants.WALL_2H_EAST_TOP
+		base_2h = CaveTileConstants.WALL_2H_EAST_BASE
+	else:
+		var v_noise := _get_variant_noise(ctx)
+		var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
+		top_2h = CaveTileConstants.WALL_2H_TOP[1] if is_b else CaveTileConstants.WALL_2H_TOP[0]
+		base_2h = CaveTileConstants.WALL_2H_BASE[1] if is_b else CaveTileConstants.WALL_2H_BASE[0]
 
 	_queue(plan, pos, base_2h, &"FACADE", table)
 	_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table)
