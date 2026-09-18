@@ -66,10 +66,15 @@ static func place(
 					_queue(plan, pos, CaveTileConstants.CONNECTOR_2H_TO_3H_BASE, &"FACADE", table, pos)
 					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_2H_TO_3H_MID, &"FACADE", table, pos)
 					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_2H_TO_3H_TOP, &"FACADE", table, pos)
+					state.mark(pos + Vector2i(0, -2), &"FACADE")
 				else:
 					_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
 					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
+					var p_top := pos + Vector2i(0, -2)
+					var e_top: EdgeContext = edges.get(p_top)
+					if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
+						_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
+						state.mark(p_top, &"FACADE")
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
@@ -79,10 +84,10 @@ static func place(
 				_queue(plan, pos, base_t, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
+				state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
-			state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 	elif right_y != -1 and y > right_y:
 		if edge.facade_height == 2:
@@ -103,10 +108,15 @@ static func place(
 					_queue(plan, pos, CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"FACADE", table, pos)
 					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"FACADE", table, pos)
 					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"FACADE", table, pos)
+					state.mark(pos + Vector2i(0, -2), &"FACADE")
 				else:
 					_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
 					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP, &"FACADE", table, pos)
+					var p_top := pos + Vector2i(0, -2)
+					var e_top: EdgeContext = edges.get(p_top)
+					if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
+						_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP, &"FACADE", table, pos)
+						state.mark(p_top, &"FACADE")
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
@@ -116,8 +126,7 @@ static func place(
 				_queue(plan, pos, base_t, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
+				state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
-			state.mark(pos + Vector2i(0, -2), &"FACADE")
-

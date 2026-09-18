@@ -65,6 +65,14 @@ static func _has_out_corner_opening(
 
 	return true
 
+## Czy komórka jest modułem TOP fasady 2H (stopa o 1 niżej o wysokości 2H).
+static func _is_facade_top_2h(edges: Dictionary, p: Vector2i) -> bool:
+	var foot: EdgeContext = edges.get(p + Vector2i(0, 1))
+	if foot != null and (foot.facade_height == 2 or foot.solid_depth == 2):
+		return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
+	return false
+
+
 ## Czy komórka jest jakimkolwiek szczytem ściany (TOP_RIM, szczyt fasady 2H/3H/schodka).
 static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
 	var e: EdgeContext = edges.get(p)
@@ -73,16 +81,11 @@ static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
 	if e.edge_kind == EdgeKind.Kind.TOP_RIM:
 		return true
 
-	var foot_2h: EdgeContext = edges.get(p + Vector2i(0, 1))
-	if foot_2h != null and foot_2h.facade_height == 2 and foot_2h.solid_depth == 2:
-		if foot_2h.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]:
-			return true
+	# Szczyt fasady 2H jest ZAWSZE o 1 powyżej stopy (p + (0, 1) to stopa).
+	if _is_facade_top_2h(edges, p):
+		return true
 
-	var foot_2h_d3: EdgeContext = edges.get(p + Vector2i(0, 2))
-	if foot_2h_d3 != null and foot_2h_d3.facade_height == 2 and foot_2h_d3.solid_depth >= 3:
-		if foot_2h_d3.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]:
-			return true
-
+	# Szczyt fasady 3H jest o 2 powyżej stopy (p + (0, 2) to stopa).
 	var foot_3h: EdgeContext = edges.get(p + Vector2i(0, 2))
 	if foot_3h != null and foot_3h.facade_height == 3:
 		if foot_3h.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]:
@@ -92,12 +95,28 @@ static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
 
 
 ## Czy komórka jest poziomem MID fasady 3H (stopa o 1 niżej o wysokości 3H).
-static func _is_facade_mid(edges: Dictionary, p: Vector2i) -> bool:
+## Fasada 2H NIE MA poziomu MID - jej moduł na y_foot - 1 to TOP!
+static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictionary) -> bool:
+	if _is_facade_top_2h(edges, p):
+		return false
 	var foot: EdgeContext = edges.get(p + Vector2i(0, 1))
-	if foot != null and foot.facade_height == 3:
-		return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
-	return false
+	if foot == null or foot.facade_height != 3:
+		return false
 
+	# Stopa skosu (STEP o kroku 1) liczy się jako mid TYLKO gdy StepPlacer
+	# faktycznie postawi tam zwykły modularny narożnik (nie SLOPE) — czyli
+	# gdy druga strona schodka NIE spełnia symetrycznego warunku kroku 1.
+	if foot.edge_kind == EdgeKind.Kind.STEP and foot.step_dy == 1:
+		var fx: int = foot.pos.x
+		var fy: int = foot.pos.y
+		var is_west: bool = foot.orientation == EdgeKind.Orientation.WEST
+		var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx - 1, fy, 4)
+		var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx + 1, fy, 4)
+		var opposite_ok: bool = (right_y == fy + 1 or right_y == -1) if is_west else (left_y == fy + 1 or left_y == -1)
+		if opposite_ok:
+			return false # prawdziwy kandydat na SLOPE — nie liczy się jako mid.
+
+	return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
 
 ## Czy komórka jest poziomem BASE (stopą ściany) fasady 3H.
 static func _is_facade_base(edges: Dictionary, p: Vector2i) -> bool:
@@ -372,6 +391,10 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			if edge_c == null or edge_c.in_portal_zone:
 				continue
 
+			# Moduł TOP fasady 2H ani MID fasady 3H nie może zostać nadpisany jako SIDE_WALL
+			if _is_facade_top_2h(edges, p) or _is_facade_mid(edges, p, facade_cols):
+				continue
+
 			var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
 			var wall_n: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
 			var wall_ne: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, -1))
@@ -385,13 +408,13 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			# Pattern 2 (przy MID):
 			var match_side_left_mid: bool = wall_nw and wall_n and wall_w and wall_sw and wall_s \
 				and _is_any_wall_top(edges, p + Vector2i(1, -1)) \
-				and _is_facade_mid(edges, p + Vector2i(1, 0)) \
+				and _is_facade_mid(edges, p + Vector2i(1, 0), facade_cols) \
 				and _is_facade_base(edges, p + Vector2i(1, 1))\
 				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			# Pattern 3 (przy BASE):
 			var match_side_left_base: bool = wall_nw and wall_n and wall_w and wall_sw \
-				and _is_facade_mid(edges, p + Vector2i(1, -1)) \
+				and _is_facade_mid(edges, p + Vector2i(1, -1), facade_cols) \
 				and _is_facade_base(edges, p + Vector2i(1, 0)) \
 				and GridUtils.is_walkable(grid, p + Vector2i(1, 1))\
 				and not _is_inner_corner(edges, p + Vector2i(0, 1))
@@ -400,22 +423,26 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			# Pattern 2 (przy MID):
 			var match_side_right_mid: bool = wall_ne and wall_n and wall_e and wall_se and wall_s \
 				and _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
-				and _is_facade_mid(edges, p + Vector2i(-1, 0)) \
+				and _is_facade_mid(edges, p + Vector2i(-1, 0), facade_cols) \
 				and _is_facade_base(edges, p + Vector2i(-1, 1))\
 				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			# Pattern 3 (przy BASE):
 			var match_side_right_base: bool = wall_ne and wall_n and wall_e and wall_se \
-				and _is_facade_mid(edges, p + Vector2i(-1, -1)) \
+				and _is_facade_mid(edges, p + Vector2i(-1, -1), facade_cols) \
 				and _is_facade_base(edges, p + Vector2i(-1, 0)) \
 				and GridUtils.is_walkable(grid, p + Vector2i(-1, 1))\
 				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
-			if match_side_left_mid or match_side_left_base:
+			# Reguła: jeśli kafelek obok MID fasady 3H, ma być on ścianą boczną (SIDE_WALL).
+			var is_mid_right: bool = _is_facade_mid(edges, p + Vector2i(1, 0), facade_cols)
+			var is_mid_left: bool = _is_facade_mid(edges, p + Vector2i(-1, 0), facade_cols)
+
+			if is_mid_right or match_side_left_mid or match_side_left_base:
 				edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
 				edge_c.orientation = EdgeKind.Orientation.EAST
 				edge_c.is_protected_solid = false
-			elif match_side_right_mid or match_side_right_base:
+			elif is_mid_left or match_side_right_mid or match_side_right_base:
 				edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
 				edge_c.orientation = EdgeKind.Orientation.WEST
 				edge_c.is_protected_solid = false
@@ -431,7 +458,15 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				continue
 
 			var edge_c: EdgeContext = edges.get(p)
-			if edge_c == null or edge_c.in_portal_zone or edge_c.edge_kind == EdgeKind.Kind.INNER_CORNER:
+			if edge_c == null or edge_c.in_portal_zone or edge_c.edge_kind == EdgeKind.Kind.INNER_CORNER or edge_c.edge_kind == EdgeKind.Kind.SIDE_WALL:
+				continue
+
+			# Moduł TOP fasady 2H, MID 3H, kafelek obok MID fasady 3H ani pod innym narożnikiem nie może być INNER_CORNER
+			if _is_facade_top_2h(edges, p) or _is_facade_mid(edges, p, facade_cols):
+				continue
+			if _is_facade_mid(edges, p + Vector2i(1, 0), facade_cols) or _is_facade_mid(edges, p + Vector2i(-1, 0), facade_cols):
+				continue
+			if _is_inner_corner(edges, p + Vector2i(0, -1)):
 				continue
 
 			var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
@@ -448,7 +483,6 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var is_down_facade_mid: bool = edges.has(p_down + Vector2i(0, 2)) and (edges[p_down + Vector2i(0, 2)] as EdgeContext).edge_kind == EdgeKind.Kind.FACADE
 			var down_is_straight_facade: bool = is_down_facade_foot or is_down_facade_base or is_down_facade_mid
 			var down_is_wall: bool = not GridUtils.is_walkable(grid, p_down) and not down_is_straight_facade
-
 
 			# Wariant SOUTH_WEST (top po prawej, ściana pod spodem -> lewa strona pokoju)
 			var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw \
