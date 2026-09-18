@@ -55,26 +55,19 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - left_y
-			if dy == 1 and (right_y == y + 1 or right_y == -1):
-				var p_diag := pos + Vector2i(1, -2)
-				var e_diag: EdgeContext = edges.get(p_diag)
-				var is_thick_conn := e_diag != null and (
-					(e_diag.edge_kind == EdgeKind.Kind.INNER_CORNER and e_diag.orientation == EdgeKind.Orientation.SOUTH_EAST) or
-					(e_diag.edge_kind == EdgeKind.Kind.SIDE_WALL and e_diag.orientation == EdgeKind.Orientation.WEST)
-				)
-				if is_thick_conn:
-					_queue(plan, pos, CaveTileConstants.CONNECTOR_2H_TO_3H_BASE, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_2H_TO_3H_MID, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_2H_TO_3H_TOP, &"FACADE", table, pos)
-					state.mark(pos + Vector2i(0, -2), &"FACADE")
-				else:
-					_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
-					var p_top := pos + Vector2i(0, -2)
-					var e_top: EdgeContext = edges.get(p_top)
-					if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
-						_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
-						state.mark(p_top, &"FACADE")
+			# Skos "1-dół-1-bok" o ścianie dokładnie 4 kratki wysokiej (podłoga → 4×
+			# ściana → podłoga, solid_depth == 4) → gładki narożnik 2H (WALL_2H_SLOPE),
+			# żeby tekstury łączyły się płynnie (seed 119). Pozostałe skosy/schodki 3H
+			# to modularny narożnik 3H (MOD_CRNR). Łączniki 2H↔3H nie powstają tu nigdy
+			# (prawdziwe zmiany wysokości klasyfikuje EdgeAnalyzer jako CONNECTOR).
+			if dy == 1 and (right_y == y + 1 or right_y == -1) and (edge.solid_depth == 4 or edge.solid_depth == 5):
+				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
+				var p_top := pos + Vector2i(0, -2)
+				var e_top: EdgeContext = edges.get(p_top)
+				if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
+					_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
+					state.mark(p_top, &"FACADE")
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
@@ -97,26 +90,16 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - right_y
-			if dy == 1 and (left_y == y + 1 or left_y == -1):
-				var p_diag := pos + Vector2i(-1, -2)
-				var e_diag: EdgeContext = edges.get(p_diag)
-				var is_thick_conn := e_diag != null and (
-					(e_diag.edge_kind == EdgeKind.Kind.INNER_CORNER and e_diag.orientation == EdgeKind.Orientation.SOUTH_WEST) or
-					(e_diag.edge_kind == EdgeKind.Kind.SIDE_WALL and e_diag.orientation == EdgeKind.Orientation.EAST)
-				)
-				if is_thick_conn:
-					_queue(plan, pos, CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"FACADE", table, pos)
-					state.mark(pos + Vector2i(0, -2), &"FACADE")
-				else:
-					_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
-					_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
-					var p_top := pos + Vector2i(0, -2)
-					var e_top: EdgeContext = edges.get(p_top)
-					if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
-						_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP, &"FACADE", table, pos)
-						state.mark(p_top, &"FACADE")
+			# Patrz komentarz w gałęzi WEST: skos o ścianie głębokości 4 → narożnik 2H,
+			# pozostałe skosy/schodki 3H → modularny narożnik 3H (MOD_CRNR).
+			if dy == 1 and (left_y == y + 1 or left_y == -1) and (edge.solid_depth == 4 or edge.solid_depth == 5):
+				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
+				var p_top := pos + Vector2i(0, -2)
+				var e_top: EdgeContext = edges.get(p_top)
+				if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
+					_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP, &"FACADE", table, pos)
+					state.mark(p_top, &"FACADE")
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE

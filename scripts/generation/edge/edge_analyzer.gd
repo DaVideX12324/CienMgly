@@ -103,10 +103,11 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 	if foot == null or foot.facade_height != 3:
 		return false
 
-	# Stopa skosu (STEP o kroku 1) liczy się jako mid TYLKO gdy StepPlacer
-	# faktycznie postawi tam zwykły modularny narożnik (nie SLOPE) — czyli
-	# gdy druga strona schodka NIE spełnia symetrycznego warunku kroku 1.
-	if foot.edge_kind == EdgeKind.Kind.STEP and foot.step_dy == 1:
+	# Schodki 3H są modularnymi narożnikami (MOD_CRNR) z pełnym poziomem MID i liczą
+	# się jako mid — Z WYJĄTKIEM skosu dy == 1 o ścianie głębokości 4, który StepPlacer
+	# renderuje jako gładki narożnik 2H (WALL_2H_SLOPE). Taki kafel NIE ma poziomu MID
+	# fasady 3H, więc nie może wymuszać ścian bocznych / narożników wewnętrznych obok.
+	if foot.edge_kind == EdgeKind.Kind.STEP and foot.step_dy == 1 and (foot.solid_depth == 4 or foot.solid_depth == 5):
 		var fx: int = foot.pos.x
 		var fy: int = foot.pos.y
 		var is_west: bool = foot.orientation == EdgeKind.Orientation.WEST
@@ -114,7 +115,7 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 		var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx + 1, fy, 4)
 		var opposite_ok: bool = (right_y == fy + 1 or right_y == -1) if is_west else (left_y == fy + 1 or left_y == -1)
 		if opposite_ok:
-			return false # prawdziwy kandydat na SLOPE — nie liczy się jako mid.
+			return false # gładki narożnik 2H — nie liczy się jako mid fasady 3H.
 
 	return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
 
