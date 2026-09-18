@@ -18,6 +18,8 @@ const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_ki
 const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
 const EdgeAnalyzer = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analyzer.gd")
 const TilePlacementPlanner = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_planner.gd")
+const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
+const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
 const TerrainPaintExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_paint_executor.gd")
 const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
@@ -342,111 +344,32 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 	ctx.width = result.width
 	ctx.height = result.height
 	ctx.seed_value = result.seed_used
+	var rng := RandomNumberGenerator.new()
+	rng.seed = result.seed_used
+	ctx.rng = rng
+	ctx.tile_rng = rng
 	ctx.flags = result.flags_used if result.flags_used != null else GenerationFlags.new()
 	ctx.entrance_zone = result.entrance_zone
 	ctx.exit_zone = result.exit_zone
 	ctx.entrance_pos = result.entrance_pos
 	ctx.exit_pos = result.exit_pos
+	ctx.rooms = result.rooms
 	for p in result.entrance_zone: ctx.portal_zone[p] = true
 	for p in result.exit_zone: ctx.portal_zone[p] = true
+
 	var analysis := EdgeAnalyzer.analyze(ctx)
+	var plans := TilePlacementPlanner.plan(ctx, analysis)
+	var tiles_plan: TilePlacementPlan = plans.tiles
 
-	var blit_tile := func(tile_coord: Vector2i, grid_pos: Vector2i) -> void:
-		if tile_coord != Vector2i(-1, -1) and grid_pos.x >= 0 and grid_pos.x < result.width and grid_pos.y >= 0 and grid_pos.y < result.height:
-			var src_rect := Rect2i(tile_coord.x * 16, tile_coord.y * 16, 16, 16)
-			img.blit_rect(tiles_img, src_rect, Vector2i(grid_pos.x * 16, grid_pos.y * 16))
+	var wall_cells: Dictionary = tiles_plan.by_layer.get(&"Walls", {})
 
-	for pos in analysis.edges:
-		var edge: EdgeContext = analysis.edges[pos]
-		match edge.edge_kind:
-			EdgeKind.Kind.INNER_CORNER:
-				var p_down: Vector2i = pos + Vector2i(0, 1)
-				var foot_3h: EdgeContext = analysis.edges.get(p_down + Vector2i(0, 2))
-				var is_dec_step_top_ne := false
-				var is_dec_step_top_nw := false
-				if foot_3h != null and foot_3h.edge_kind == EdgeKind.Kind.STEP and foot_3h.step_dy == 1:
-					var step_use_roots: bool = ThemeResolver.resolve(ctx, p_down + Vector2i(0, 2), ThemeResolver.RefPoint.SELF) == &"roots"
-					if step_use_roots:
-						if foot_3h.orientation == EdgeKind.Orientation.EAST:
-							is_dec_step_top_ne = true
-						elif foot_3h.orientation == EdgeKind.Orientation.WEST:
-							is_dec_step_top_nw = true
-
-				var c := Vector2i(-1, -1)
-				match edge.orientation:
-					EdgeKind.Orientation.NORTH_WEST: c = Vector2i(1, 1)
-					EdgeKind.Orientation.NORTH_EAST: c = Vector2i(4, 1)
-					EdgeKind.Orientation.SOUTH_WEST:
-						c = Vector2i(4, 13) if is_dec_step_top_ne else Vector2i(4, 4)
-					EdgeKind.Orientation.SOUTH_EAST:
-						c = Vector2i(1, 13) if is_dec_step_top_nw else Vector2i(1, 4)
-				blit_tile.call(c, pos)
-
-			EdgeKind.Kind.TOP_RIM:
-				var is_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
-				if is_roots:
-					var base_coord := Vector2i(2, 9)
-					var tips_coord := Vector2i(2, 8)
-					match edge.orientation:
-						EdgeKind.Orientation.WEST:
-							base_coord = Vector2i(1, 9)
-							tips_coord = Vector2i(1, 8)
-						EdgeKind.Orientation.EAST:
-							base_coord = Vector2i(4, 9)
-							tips_coord = Vector2i(4, 8)
-						_:
-							base_coord = Vector2i(2, 9)
-							tips_coord = Vector2i(2, 8)
-					blit_tile.call(base_coord, pos)
-					blit_tile.call(tips_coord, pos + Vector2i(0, -1))
-				else:
-					var rock_coord := Vector2i(2, 0)
-					match edge.orientation:
-						EdgeKind.Orientation.WEST:
-							rock_coord = Vector2i(1, 0)
-						EdgeKind.Orientation.EAST:
-							rock_coord = Vector2i(4, 0)
-						_:
-							rock_coord = Vector2i(2, 0)
-					blit_tile.call(rock_coord, pos)
-
-			EdgeKind.Kind.SIDE_WALL:
-				var c := Vector2i(5, 2) if edge.orientation == EdgeKind.Orientation.EAST else Vector2i(0, 2)
-				blit_tile.call(c, pos)
-
-			EdgeKind.Kind.FACADE:
-				if edge.facade_height == 2:
-					blit_tile.call(Vector2i(2, 21), pos)
-					blit_tile.call(Vector2i(2, 20), pos + Vector2i(0, -1))
-				else:
-					blit_tile.call(Vector2i(2, 7), pos)
-					blit_tile.call(Vector2i(2, 6), pos + Vector2i(0, -1))
-					blit_tile.call(Vector2i(2, 5), pos + Vector2i(0, -2))
-
-			EdgeKind.Kind.STEP:
-				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
-				blit_tile.call(Vector2i(4, 7) if is_e else Vector2i(1, 7), pos)
-				blit_tile.call(Vector2i(4, 6) if is_e else Vector2i(1, 6), pos + Vector2i(0, -1))
-				blit_tile.call(Vector2i(4, 5) if is_e else Vector2i(1, 5), pos + Vector2i(0, -2))
-
-			EdgeKind.Kind.OUT_CORNER:
-				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
-				if edge.facade_height == 2:
-					blit_tile.call(Vector2i(5, 20) if is_e else Vector2i(0, 20), pos)
-					blit_tile.call(Vector2i(5, 19) if is_e else Vector2i(0, 19), pos + Vector2i(0, -1))
-				else:
-					blit_tile.call(Vector2i(5, 6) if is_e else Vector2i(0, 6), pos)
-					blit_tile.call(Vector2i(5, 5) if is_e else Vector2i(0, 5), pos + Vector2i(0, -1))
-					blit_tile.call(Vector2i(5, 4) if is_e else Vector2i(0, 4), pos + Vector2i(0, -2))
-
-			EdgeKind.Kind.CONNECTOR:
-				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
-				blit_tile.call(Vector2i(7, 21) if is_e else Vector2i(10, 21), pos)
-				blit_tile.call(Vector2i(7, 20) if is_e else Vector2i(10, 20), pos + Vector2i(0, -1))
-				blit_tile.call(Vector2i(7, 19) if is_e else Vector2i(10, 19), pos + Vector2i(0, -2))
-
-			EdgeKind.Kind.NICHE:
-				blit_tile.call(Vector2i(1, 6), pos)
+	for p in wall_cells:
+		if p.x >= 0 and p.x < result.width and p.y >= 0 and p.y < result.height:
+			var placement: TilePlacement = wall_cells[p]
+			var tc := placement.atlas_coords
+			if tc != Vector2i(-1, -1):
+				var src_rect := Rect2i(tc.x * 16, tc.y * 16, 16, 16)
+				img.blit_rect(tiles_img, src_rect, Vector2i(p.x * 16, p.y * 16))
 
 	return img
 
