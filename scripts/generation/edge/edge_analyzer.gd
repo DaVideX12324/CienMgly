@@ -28,29 +28,42 @@ static func measure_solid_depth(
 
 ## Czy stopa fasady ma jednoznaczne otwarcie narożnika po wybranej stronie.
 ##
+## depth == 3 (domyślnie):
 ## EAST:            WEST:
 ## n11              11n
 ## nX1              1Xn
-## nnn              nnn
+## n11              11n     <- side_above musi też być wolne
 ##
-## X oznacza aktualną stopę fasady. Liczą się tylko komórka z boku
-## oraz przekątna nad nią; pozostałe pola wzorca są nieistotne.
-## Czy stopa fasady ma jednoznaczne otwarcie narożnika po wybranej stronie.
-## Po stronie otwarcia komórki na wysokości stopy (MID), fasady (TOP) 
-## oraz nad nią muszą być całkowicie wolne (brak jakiejkolwiek ściany).
+## depth == 2 (otwarcie 2H):
+## EAST:            WEST:
+## n11              11n
+## nX1              1Xn
+## nnn              nnn     <- side_above nieistotne, może być ściana
+##
+## X oznacza aktualną stopę fasady. Dla depth == 2 liczą się tylko
+## komórka z boku (MID) oraz przekątna nad nią (TOP); dla depth == 3
+## wymagana jest dodatkowo wolna komórka jeszcze wyżej (ABOVE), żeby
+## odróżnić prawdziwe otwarcie 3H od niskiego korytarza 2H.
 static func _has_out_corner_opening(
 	grid,
 	floor_pos: Vector2i,
-	side: Vector2i
+	side: Vector2i,
+	depth: int = 3
 ) -> bool:
 	var side_mid := floor_pos + side
 	var side_top := side_mid + Vector2i(0, -1)
-	var side_above := side_mid + Vector2i(0, -2)
 
-	return GridUtils.is_walkable(grid, side_mid) \
-		and GridUtils.is_walkable(grid, side_top) \
-		and GridUtils.is_walkable(grid, side_above)
+	if not GridUtils.is_walkable(grid, side_mid):
+		return false
+	if not GridUtils.is_walkable(grid, side_top):
+		return false
 
+	if depth >= 3:
+		var side_above := side_top + Vector2i(0, -1)
+		if not GridUtils.is_walkable(grid, side_above):
+			return false
+
+	return true
 
 ## Czy komórka jest jakimkolwiek szczytem ściany (TOP_RIM, szczyt fasady 2H/3H/schodka).
 static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
@@ -93,69 +106,13 @@ static func _is_facade_base(edges: Dictionary, p: Vector2i) -> bool:
 		return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
 	return false
 	
-
-## Szybka, czysto lokalna analiza 3x3 dla prostych fixture'ów punktowych.
-static func analyze_local_cell(ctx: GenerationContext, pos: Vector2i) -> EdgeContext:
-	var edge := EdgeContext.new()
-	edge.pos = pos
-	_populate_neighborhood(ctx, edge)
-
-	if ctx.portal_zone.has(pos):
-		edge.edge_kind = EdgeKind.Kind.PORTAL_CLEAR
-		edge.in_portal_zone = true
-		return edge
-
-	if GridUtils.is_walkable(ctx.grid, pos):
-		edge.edge_kind = EdgeKind.Kind.FLOOR
-		return edge
-
-	# Komórka ściany — lokalna klasyfikacja.
-	if edge.n_floor and not GridUtils.is_walkable(ctx.grid, pos + Vector2i(0, 1)):
-		edge.edge_kind = EdgeKind.Kind.TOP_RIM
-		var is_edge_diag_left: bool = (not edge.nw_floor and edge.ne_floor) and (not edge.w_floor and not edge.e_floor) and (edge.sw_floor and not edge.se_floor)
-		var is_edge_diag_right: bool = (edge.nw_floor and not edge.ne_floor) and (not edge.w_floor and not edge.e_floor) and (edge.se_floor and not edge.sw_floor)
-		if edge.e_floor and not edge.w_floor:
-			edge.orientation = EdgeKind.Orientation.EAST
-		elif edge.w_floor and not edge.e_floor:
-			edge.orientation = EdgeKind.Orientation.WEST
-		elif is_edge_diag_right:
-			edge.orientation = EdgeKind.Orientation.EAST
-		elif is_edge_diag_left:
-			edge.orientation = EdgeKind.Orientation.WEST
-		else:
-			edge.orientation = EdgeKind.Orientation.NORTH
-		return edge
-
-	if edge.e_floor and not edge.w_floor:
-		edge.edge_kind = EdgeKind.Kind.SIDE_WALL
-		edge.orientation = EdgeKind.Orientation.EAST
-		return edge
-	elif edge.w_floor and not edge.e_floor:
-		edge.edge_kind = EdgeKind.Kind.SIDE_WALL
-		edge.orientation = EdgeKind.Orientation.WEST
-		return edge
-
-	if edge.nw_floor and not edge.ne_floor and not edge.w_floor and not edge.n_floor:
-		edge.edge_kind = EdgeKind.Kind.INNER_CORNER
-		edge.orientation = EdgeKind.Orientation.NORTH_WEST
-		return edge
-	elif edge.ne_floor and not edge.nw_floor and not edge.e_floor and not edge.n_floor:
-		edge.edge_kind = EdgeKind.Kind.INNER_CORNER
-		edge.orientation = EdgeKind.Orientation.NORTH_EAST
-		return edge
-	elif edge.sw_floor and not edge.se_floor and not edge.w_floor and not edge.s_floor:
-		edge.edge_kind = EdgeKind.Kind.INNER_CORNER
-		edge.orientation = EdgeKind.Orientation.SOUTH_WEST
-		return edge
-	elif edge.se_floor and not edge.sw_floor and not edge.e_floor and not edge.s_floor:
-		edge.edge_kind = EdgeKind.Kind.INNER_CORNER
-		edge.orientation = EdgeKind.Orientation.SOUTH_EAST
-		return edge
-
-	edge.edge_kind = EdgeKind.Kind.SOLID_FILL
-	return edge
-
-
+## Czy komórka jest jakimkolwiek narożnikiem wewnętrznym (INNER_CORNER, dowolna orientacja).
+static func _is_inner_corner(edges: Dictionary, p: Vector2i) -> bool:
+	var e: EdgeContext = edges.get(p)
+	if e == null:
+		return false
+	return e.edge_kind == EdgeKind.Kind.INNER_CORNER
+	
 ## Główna analiza geometryczna całej siatki mapy (Wariant A) zgodnie z §9.3 i §9.6.
 static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var width := ctx.width
@@ -224,14 +181,9 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 					and not GridUtils.is_walkable(grid, Vector2i(cx, fy - 2)) \
 					and GridUtils.is_walkable(grid, Vector2i(cx, fy - 3))
 
-			var left_is_2h: bool = check_2h_col.call(x - 1, y)
-			var right_is_2h: bool = check_2h_col.call(x + 1, y)
-			var near_2h_context: bool = (left_is_2h and right_is_2h) \
-				or (left_is_2h and check_2h_col.call(x + 2, y)) \
-				or (right_is_2h and check_2h_col.call(x - 2, y))
 
 			var is_horizontal_facade: bool = FacadeSegmentDetector.has_same_y(facade_cols, x - 1, y, 1) \
-				or FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, 1)
+				and FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, 1)
 			var is_2h: bool = is_horizontal_facade and edge.solid_depth == 2
 
 			if is_2h:
@@ -247,6 +199,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var left_is_2h_step: bool = check_2h_col.call(x - 1, y - 1)
 			var left_is_2h_any: bool = left_is_2h_same or left_is_2h_step
 			var right_is_2h_any: bool = right_is_2h_same or right_is_2h_step
+			var self_is_2h: bool = check_2h_col.call(x, y)
 
 			var right_has_room_for_3h: bool = not check_2h_col.call(x + 1, y) \
 				and not check_2h_col.call(x + 2, y) \
@@ -255,12 +208,12 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				and not check_2h_col.call(x - 2, y) \
 				and not check_2h_col.call(x - 3, y)
 
-			if (left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any):
+			if not self_is_2h and ((left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any)):
 				edge.edge_kind = EdgeKind.Kind.CONNECTOR
 				edge.orientation = EdgeKind.Orientation.EAST
 				edge.facade_height = 3
 				continue
-			elif (right_is_2h_any and left_has_room_for_3h) or (right_is_2h_any and not left_is_2h_any):
+			elif not self_is_2h and ((right_is_2h_any and left_has_room_for_3h) or (right_is_2h_any and not left_is_2h_any)):
 				edge.edge_kind = EdgeKind.Kind.CONNECTOR
 				edge.orientation = EdgeKind.Orientation.WEST
 				edge.facade_height = 2
@@ -279,18 +232,21 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			#
 			# X jest aktualną stopą fasady. Warunek wykorzystuje wyłącznie
 			# podłogę po boku oraz podłogę po przekątnej nad tym bokiem.
+			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)))
+			var opening_depth: int = 2 if is_2h_col else 3
+
 			var w_open := _has_out_corner_opening(
 				grid,
 				pos,
-				Vector2i(-1, 0)
+				Vector2i(-1, 0),
+				opening_depth
 			) and left_y == -1
 			var e_open := _has_out_corner_opening(
 				grid,
 				pos,
-				Vector2i(1, 0)
+				Vector2i(1, 0),
+				opening_depth
 			) and right_y == -1
-
-			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)))
 
 			# Narożnik musi mieć jeden jednoznaczny kierunek.
 			if w_open != e_open:
@@ -430,26 +386,30 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var match_side_left_mid: bool = wall_nw and wall_n and wall_w and wall_sw and wall_s \
 				and _is_any_wall_top(edges, p + Vector2i(1, -1)) \
 				and _is_facade_mid(edges, p + Vector2i(1, 0)) \
-				and _is_facade_base(edges, p + Vector2i(1, 1))
+				and _is_facade_base(edges, p + Vector2i(1, 1))\
+				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			# Pattern 3 (przy BASE):
 			var match_side_left_base: bool = wall_nw and wall_n and wall_w and wall_sw \
 				and _is_facade_mid(edges, p + Vector2i(1, -1)) \
 				and _is_facade_base(edges, p + Vector2i(1, 0)) \
-				and GridUtils.is_walkable(grid, p + Vector2i(1, 1))
+				and GridUtils.is_walkable(grid, p + Vector2i(1, 1))\
+				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			# Ściana prawa (pokój / fasada po lewej) -> Orientation.WEST
 			# Pattern 2 (przy MID):
 			var match_side_right_mid: bool = wall_ne and wall_n and wall_e and wall_se and wall_s \
 				and _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
 				and _is_facade_mid(edges, p + Vector2i(-1, 0)) \
-				and _is_facade_base(edges, p + Vector2i(-1, 1))
+				and _is_facade_base(edges, p + Vector2i(-1, 1))\
+				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			# Pattern 3 (przy BASE):
 			var match_side_right_base: bool = wall_ne and wall_n and wall_e and wall_se \
 				and _is_facade_mid(edges, p + Vector2i(-1, -1)) \
 				and _is_facade_base(edges, p + Vector2i(-1, 0)) \
-				and GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
+				and GridUtils.is_walkable(grid, p + Vector2i(-1, 1))\
+				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			if match_side_left_mid or match_side_left_base:
 				edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
