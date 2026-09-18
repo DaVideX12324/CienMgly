@@ -411,7 +411,10 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 					blit_tile.call(rock_coord, pos)
 
 			EdgeKind.Kind.SIDE_WALL:
-				var c := Vector2i(5, 2) if edge.orientation == EdgeKind.Orientation.EAST else Vector2i(0, 2)
+				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
+				var ref_p: Vector2i = pos + Vector2i(1, 0) if is_e else pos + Vector2i(-1, 0)
+				var use_roots: bool = ThemeResolver.resolve(ctx, ref_p, ThemeResolver.RefPoint.SELF) == &"roots"
+				var c := Vector2i(5, 11 if use_roots else 2) if is_e else Vector2i(0, 11 if use_roots else 2)
 				blit_tile.call(c, pos)
 
 			EdgeKind.Kind.FACADE:
@@ -419,25 +422,44 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 					blit_tile.call(Vector2i(2, 21), pos)
 					blit_tile.call(Vector2i(2, 20), pos + Vector2i(0, -1))
 				else:
-					blit_tile.call(Vector2i(2, 7), pos)
-					blit_tile.call(Vector2i(2, 6), pos + Vector2i(0, -1))
-					blit_tile.call(Vector2i(2, 5), pos + Vector2i(0, -2))
+					var use_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.SELF) == &"roots"
+					blit_tile.call(Vector2i(2, 16 if use_roots else 7), pos)
+					blit_tile.call(Vector2i(2, 15 if use_roots else 6), pos + Vector2i(0, -1))
+					blit_tile.call(Vector2i(2, 14 if use_roots else 5), pos + Vector2i(0, -2))
 
 			EdgeKind.Kind.STEP:
 				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
-				blit_tile.call(Vector2i(4, 7) if is_e else Vector2i(1, 7), pos)
-				blit_tile.call(Vector2i(4, 6) if is_e else Vector2i(1, 6), pos + Vector2i(0, -1))
-				blit_tile.call(Vector2i(4, 5) if is_e else Vector2i(1, 5), pos + Vector2i(0, -2))
+				var use_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.SELF) == &"roots"
+				if is_e:
+					blit_tile.call(Vector2i(4, 16 if use_roots else 7), pos)
+					blit_tile.call(Vector2i(4, 15 if use_roots else 6), pos + Vector2i(0, -1))
+					blit_tile.call(Vector2i(4, 14 if use_roots else 5), pos + Vector2i(0, -2))
+				else:
+					blit_tile.call(Vector2i(1, 16 if use_roots else 7), pos)
+					blit_tile.call(Vector2i(1, 15 if use_roots else 6), pos + Vector2i(0, -1))
+					blit_tile.call(Vector2i(1, 14 if use_roots else 5), pos + Vector2i(0, -2))
+
+			EdgeKind.Kind.SLOPE:
+				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
+				blit_tile.call(Vector2i(4, 21) if is_e else Vector2i(1, 21), pos)
+				blit_tile.call(Vector2i(4, 20) if is_e else Vector2i(1, 20), pos + Vector2i(0, -1))
+				blit_tile.call(Vector2i(4, 19) if is_e else Vector2i(1, 19), pos + Vector2i(0, -2))
 
 			EdgeKind.Kind.OUT_CORNER:
 				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
 				if edge.facade_height == 2:
-					blit_tile.call(Vector2i(5, 20) if is_e else Vector2i(0, 20), pos)
-					blit_tile.call(Vector2i(5, 19) if is_e else Vector2i(0, 19), pos + Vector2i(0, -1))
+					var base_c := Vector2i(3, 21) if is_e else Vector2i(0, 21)
+					var top_c := Vector2i(3, 20) if is_e else Vector2i(0, 20)
+					blit_tile.call(base_c, pos)
+					blit_tile.call(top_c, pos + Vector2i(0, -1))
 				else:
-					blit_tile.call(Vector2i(5, 6) if is_e else Vector2i(0, 6), pos)
-					blit_tile.call(Vector2i(5, 5) if is_e else Vector2i(0, 5), pos + Vector2i(0, -1))
-					blit_tile.call(Vector2i(5, 4) if is_e else Vector2i(0, 4), pos + Vector2i(0, -2))
+					var use_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.SELF) == &"roots"
+					var base_c := Vector2i(5, 16 if use_roots else 7) if is_e else Vector2i(0, 16 if use_roots else 7)
+					var mid_c := Vector2i(5, 15 if use_roots else 6) if is_e else Vector2i(0, 15 if use_roots else 6)
+					var top_c := Vector2i(5, 14 if use_roots else 5) if is_e else Vector2i(0, 14 if use_roots else 5)
+					blit_tile.call(base_c, pos)
+					blit_tile.call(mid_c, pos + Vector2i(0, -1))
+					blit_tile.call(top_c, pos + Vector2i(0, -2))
 
 			EdgeKind.Kind.CONNECTOR:
 				var is_e: bool = edge.orientation == EdgeKind.Orientation.EAST
