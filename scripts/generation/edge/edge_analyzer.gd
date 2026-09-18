@@ -69,7 +69,10 @@ static func _has_out_corner_opening(
 static func _is_facade_top_2h(edges: Dictionary, p: Vector2i) -> bool:
 	var foot: EdgeContext = edges.get(p + Vector2i(0, 1))
 	if foot != null and (foot.facade_height == 2 or foot.solid_depth == 2):
-		return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
+		# Łącznik 2H↔3H to zawsze moduł 3-kaflowy (TOP/MID/BASE), więc traktujemy go
+		# jak ścianę 3H: jego foot-1 to MID, NIE top 2H. Dzięki temu narożnik wewnętrzny
+		# ląduje przy TOP łącznika, a przy MID powstaje ściana boczna.
+		return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER]
 	return false
 
 
@@ -85,9 +88,9 @@ static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
 	if _is_facade_top_2h(edges, p):
 		return true
 
-	# Szczyt fasady 3H jest o 2 powyżej stopy (p + (0, 2) to stopa).
+	# Szczyt fasady 3H (oraz każdego łącznika, bo jest 3-kaflowy) jest o 2 powyżej stopy.
 	var foot_3h: EdgeContext = edges.get(p + Vector2i(0, 2))
-	if foot_3h != null and foot_3h.facade_height == 3:
+	if foot_3h != null and (foot_3h.facade_height == 3 or foot_3h.edge_kind == EdgeKind.Kind.CONNECTOR):
 		if foot_3h.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]:
 			return true
 
@@ -100,7 +103,8 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 	if _is_facade_top_2h(edges, p):
 		return false
 	var foot: EdgeContext = edges.get(p + Vector2i(0, 1))
-	if foot == null or foot.facade_height != 3:
+	# Łącznik traktujemy jak ścianę 3H (jest 3-kaflowy), więc jego foot-1 to też MID.
+	if foot == null or (foot.facade_height != 3 and foot.edge_kind != EdgeKind.Kind.CONNECTOR):
 		return false
 
 	# Schodki 3H są modularnymi narożnikami (MOD_CRNR) z pełnym poziomem MID i liczą
