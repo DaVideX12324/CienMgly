@@ -41,7 +41,18 @@ const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/c
 @onready var btn_exit: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera2/BtnExit
 @onready var btn_player: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnPlayer
 
+@onready var inspector_label: RichTextLabel = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/InspectorLabel
+@onready var spin_coord_x: SpinBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs/SpinCoordX
+@onready var spin_coord_y: SpinBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs/SpinCoordY
+@onready var btn_jump_coord: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs/BtnJumpCoord
+@onready var btn_copy_coords: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordActions/BtnCopyCoords
+@onready var btn_clear_selection: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordActions/BtnClearSelection
+@onready var check_tile_highlight: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckTileHighlight
+@onready var check_cursor_tooltip: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckCursorTooltip
+
 @onready var info_label: RichTextLabel = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/InfoLabel
+@onready var tile_hud: PanelContainer = $CanvasLayer/TileHUD
+@onready var tile_hud_label: RichTextLabel = $CanvasLayer/TileHUD/MarginContainer/TileHUDLabel
 
 # Stan
 var current_type: int = 2 # 2: CAVE_DUNGEON, 0: FOREST, 1: DUNGEON
@@ -55,6 +66,11 @@ var player_instance: Node2D = null
 var last_entrance_pos: Vector2i = Vector2i.ZERO
 var last_exit_pos: Vector2i = Vector2i.ZERO
 
+# Inspektor koordynatów kafelków
+var _hovered_tile: Vector2i = Vector2i(-9999, -9999)
+var _selected_tile: Vector2i = Vector2i(-9999, -9999)
+var _tile_overlay: Node2D = null
+
 # Drag kamery
 var _is_dragging: bool = false
 var _drag_start: Vector2 = Vector2.ZERO
@@ -63,6 +79,7 @@ var _cam_start_pos: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	_ensure_nodes()
+	_setup_tile_overlay()
 	_setup_ui()
 	_apply_size_preset(1) # Start na Średnim (100x100)
 	_generate_current_map()
@@ -80,6 +97,26 @@ func _ensure_nodes() -> void:
 		panel = get_node_or_null("CanvasLayer/Panel") as PanelContainer
 	if not info_label:
 		info_label = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/InfoLabel") as RichTextLabel
+	if not inspector_label:
+		inspector_label = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/InspectorLabel") as RichTextLabel
+	if not spin_coord_x:
+		spin_coord_x = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs/SpinCoordX") as SpinBox
+	if not spin_coord_y:
+		spin_coord_y = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs/SpinCoordY") as SpinBox
+	if not btn_jump_coord:
+		btn_jump_coord = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs/BtnJumpCoord") as Button
+	if not btn_copy_coords:
+		btn_copy_coords = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordActions/BtnCopyCoords") as Button
+	if not btn_clear_selection:
+		btn_clear_selection = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordActions/BtnClearSelection") as Button
+	if not check_tile_highlight:
+		check_tile_highlight = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckTileHighlight") as CheckBox
+	if not check_cursor_tooltip:
+		check_cursor_tooltip = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckCursorTooltip") as CheckBox
+	if not tile_hud:
+		tile_hud = get_node_or_null("CanvasLayer/TileHUD") as PanelContainer
+	if not tile_hud_label:
+		tile_hud_label = get_node_or_null("CanvasLayer/TileHUD/MarginContainer/TileHUDLabel") as RichTextLabel
 	if not spin_seed:
 		spin_seed = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxSeed/SpinSeed") as SpinBox
 	if not btn_prev_seed:
@@ -324,6 +361,26 @@ func _setup_ui() -> void:
 	btn_hide_hud.pressed.connect(_toggle_hud)
 	btn_show_hud.pressed.connect(_toggle_hud)
 
+	# 8. Inspektor kafelków
+	if btn_jump_coord:
+		btn_jump_coord.pressed.connect(_jump_to_custom_coord)
+	if btn_copy_coords:
+		btn_copy_coords.pressed.connect(_copy_current_tile_coords)
+	if btn_clear_selection:
+		btn_clear_selection.pressed.connect(_clear_tile_selection)
+	if check_tile_highlight:
+		check_tile_highlight.toggled.connect(func(_enabled: bool):
+			if is_instance_valid(_tile_overlay):
+				_tile_overlay.queue_redraw()
+		)
+	if check_cursor_tooltip:
+		check_cursor_tooltip.toggled.connect(func(enabled: bool):
+			if is_instance_valid(tile_hud):
+				tile_hud.visible = enabled
+			if is_instance_valid(_tile_overlay):
+				_tile_overlay.queue_redraw()
+		)
+
 
 func _on_type_selected(index: int) -> void:
 	current_type = opt_type.get_item_id(index)
@@ -402,6 +459,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_SPACE:
 				_on_random_seed_pressed()
 				get_viewport().set_input_as_handled()
+			KEY_C:
+				_copy_current_tile_coords()
+				get_viewport().set_input_as_handled()
+			KEY_G:
+				_jump_to_custom_coord()
+				get_viewport().set_input_as_handled()
 			KEY_F:
 				fit_to_screen()
 			KEY_1:
@@ -428,9 +491,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				opt_type.select(0) # Jaskinia
 				_on_type_selected(0)
 
-	# Zoom kółkiem myszy
+	# Kliknięcie i Zoom
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var mouse_world := get_global_mouse_position()
+			var clicked_tile := Vector2i(int(floor(mouse_world.x / 16.0)), int(floor(mouse_world.y / 16.0)))
+			if _is_in_bounds(clicked_tile):
+				_select_tile(clicked_tile)
+				get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_zoom_camera(1.15)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom_camera(0.85)
@@ -463,6 +532,15 @@ func _process(delta: float) -> void:
 			camera.position += move.normalized() * (600.0 * delta / camera.zoom.x)
 	elif is_instance_valid(player_instance):
 		camera.position = player_instance.global_position
+
+	# Śledzenie pozycji kafelka pod kursorem
+	var mouse_world := get_global_mouse_position()
+	var current_tile := Vector2i(int(floor(mouse_world.x / 16.0)), int(floor(mouse_world.y / 16.0)))
+	if current_tile != _hovered_tile:
+		_hovered_tile = current_tile
+		_update_tile_inspector_ui()
+		if is_instance_valid(_tile_overlay):
+			_tile_overlay.queue_redraw()
 
 
 func _zoom_camera(factor: float) -> void:
@@ -607,6 +685,19 @@ func _generate_current_map() -> void:
 		if check_edge_mask and check_edge_mask.button_pressed:
 			_show_edge_mask()
 
+	if spin_coord_x:
+		spin_coord_x.max_value = float(maxi(0, current_width - 1))
+	if spin_coord_y:
+		spin_coord_y.max_value = float(maxi(0, current_height - 1))
+
+	if not _is_in_bounds(_selected_tile):
+		_selected_tile = Vector2i(-9999, -9999)
+
+	_update_tile_inspector_ui()
+	if is_instance_valid(_tile_overlay):
+		_tile_overlay.queue_redraw()
+
+
 func _toggle_player_mode() -> void:
 	if is_player_mode:
 		if is_instance_valid(player_instance):
@@ -641,3 +732,274 @@ func _toggle_player_mode() -> void:
 		btn_player.text = "🕊️ Wolna Kamera (P)"
 		camera.zoom = Vector2(2.0, 2.0)
 		camera.position = spawn_px
+
+
+# =========================================================================
+# INSPEKTOR KOORDYNATÓW KAFELKÓW (Tile Inspector)
+# =========================================================================
+
+func _setup_tile_overlay() -> void:
+	if not _tile_overlay:
+		_tile_overlay = Node2D.new()
+		_tile_overlay.name = "TileInspectorOverlay"
+		_tile_overlay.z_index = 250
+		_tile_overlay.draw.connect(_on_tile_overlay_draw)
+		add_child(_tile_overlay)
+
+
+func _is_in_bounds(pos: Vector2i) -> bool:
+	return pos.x >= 0 and pos.x < current_width and pos.y >= 0 and pos.y < current_height
+
+
+func _select_tile(tile_pos: Vector2i) -> void:
+	_selected_tile = tile_pos
+	if spin_coord_x:
+		spin_coord_x.set_value_no_signal(tile_pos.x)
+	if spin_coord_y:
+		spin_coord_y.set_value_no_signal(tile_pos.y)
+	_update_tile_inspector_ui()
+	if is_instance_valid(_tile_overlay):
+		_tile_overlay.queue_redraw()
+
+
+func _clear_tile_selection() -> void:
+	_selected_tile = Vector2i(-9999, -9999)
+	_update_tile_inspector_ui()
+	if is_instance_valid(_tile_overlay):
+		_tile_overlay.queue_redraw()
+
+
+func _jump_to_custom_coord() -> void:
+	var tx: int = int(spin_coord_x.value) if spin_coord_x else 0
+	var ty: int = int(spin_coord_y.value) if spin_coord_y else 0
+	var target := Vector2i(tx, ty)
+	_select_tile(target)
+	if camera:
+		camera.position = Vector2(target.x * 16.0 + 8.0, target.y * 16.0 + 8.0)
+		if camera.zoom.x < 1.0:
+			camera.zoom = Vector2(1.5, 1.5)
+
+
+func _copy_current_tile_coords() -> void:
+	var target := _selected_tile if _is_in_bounds(_selected_tile) else _hovered_tile
+	if not _is_in_bounds(target):
+		return
+	var coord_str := "(%d, %d)" % [target.x, target.y]
+	DisplayServer.clipboard_set(coord_str)
+	if is_instance_valid(btn_copy_coords):
+		btn_copy_coords.text = "✓ " + coord_str
+		get_tree().create_timer(1.2).timeout.connect(func():
+			if is_instance_valid(btn_copy_coords):
+				btn_copy_coords.text = "📋 Kopiuj (X, Y)"
+		)
+
+
+func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
+	var info := {
+		"in_bounds": _is_in_bounds(tile_pos),
+		"tile_pos": tile_pos,
+		"world_pos": Vector2(tile_pos.x * 16.0, tile_pos.y * 16.0),
+		"center_pos": Vector2(tile_pos.x * 16.0 + 8.0, tile_pos.y * 16.0 + 8.0),
+		"cell_type": -1,
+		"cell_name": "Poza mapą",
+		"tags": [] as Array[String],
+		"walls_layer": "",
+		"floor_layer": "",
+		"decor_layer": "",
+		"dist_entrance": 0.0,
+		"dist_exit": 0.0,
+		"manhattan_entrance": 0,
+		"manhattan_exit": 0
+	}
+
+	if not info.in_bounds:
+		return info
+
+	info.dist_entrance = Vector2(tile_pos).distance_to(Vector2(last_entrance_pos))
+	info.dist_exit = Vector2(tile_pos).distance_to(Vector2(last_exit_pos))
+	info.manhattan_entrance = absi(tile_pos.x - last_entrance_pos.x) + absi(tile_pos.y - last_entrance_pos.y)
+	info.manhattan_exit = absi(tile_pos.x - last_exit_pos.x) + absi(tile_pos.y - last_exit_pos.y)
+
+	var proc_level := level_container.get_child(0) if level_container and level_container.get_child_count() > 0 else null
+	var res: Variant = proc_level.get("last_result") if proc_level else null
+
+	var cell_names := {
+		0: "Pustka (VOID)",
+		1: "Podłoga (FLOOR)",
+		2: "Ściana (WALL)",
+		3: "Ścieżka (PATH)",
+		4: "Drzewo (TREE)",
+		5: "Woda (WATER)",
+		6: "Drzwi (DOOR)",
+		7: "Wejście (ENTRANCE)",
+		8: "Wyjście (EXIT)",
+		9: "Dekoracja (DECORATION)"
+	}
+
+	if res and "grid" in res and res.grid is Dictionary:
+		var ctype: int = res.grid.get(tile_pos, -1)
+		info.cell_type = ctype
+		info.cell_name = cell_names.get(ctype, "Nieznany (%d)" % ctype)
+
+	# Tagi specjalne / Obiekty
+	if tile_pos == last_entrance_pos:
+		info.tags.append("🚪 START (Wejście)")
+	if tile_pos == last_exit_pos:
+		info.tags.append("🏁 META (Wyjście)")
+
+	if res:
+		if "chest_spawns" in res and tile_pos in res.chest_spawns:
+			info.tags.append("📦 Skrzynia")
+		if "enemy_spawns" in res:
+			for esp in res.enemy_spawns:
+				if esp is Dictionary and esp.get("pos") == tile_pos:
+					info.tags.append("👾 Wróg (Tier %s)" % str(esp.get("tier", 1)))
+		if "doors" in res and tile_pos in res.doors:
+			info.tags.append("🚪 Drzwi")
+		if "entrance_zone" in res and tile_pos in res.entrance_zone:
+			info.tags.append("🟢 Strefa Wejścia")
+		if "exit_zone" in res and tile_pos in res.exit_zone:
+			info.tags.append("🔴 Strefa Wyjścia")
+		if "rooms" in res:
+			for i in range(res.rooms.size()):
+				var r: Rect2i = res.rooms[i]
+				if r.has_point(tile_pos):
+					info.tags.append("🏰 Pokój #%d (%dx%d)" % [i + 1, r.size.x, r.size.y])
+					break
+		if "clearings" in res:
+			for i in range(res.clearings.size()):
+				var cl: Dictionary = res.clearings[i]
+				var c_center: Vector2i = cl.get("center", Vector2i.ZERO)
+				var c_rad: int = cl.get("radius", 0)
+				if Vector2(c_center).distance_to(Vector2(tile_pos)) <= float(c_rad):
+					info.tags.append("🌲 Polana #%d (%s, r=%d)" % [i + 1, cl.get("type", "normal"), c_rad])
+					break
+
+	# Warstwy TileMapLayer
+	if proc_level:
+		var walls_l := proc_level.find_child("Walls", true, false) as TileMapLayer
+		if walls_l and walls_l.get_cell_source_id(tile_pos) != -1:
+			var ac: Vector2i = walls_l.get_cell_atlas_coords(tile_pos)
+			info.walls_layer = "Atlas (%d, %d)" % [ac.x, ac.y]
+		var floor_l := proc_level.find_child("Floor", true, false) as TileMapLayer
+		if floor_l and floor_l.get_cell_source_id(tile_pos) != -1:
+			var ac: Vector2i = floor_l.get_cell_atlas_coords(tile_pos)
+			info.floor_layer = "Atlas (%d, %d)" % [ac.x, ac.y]
+		var decor_l := proc_level.find_child("FloorDecor", true, false) as TileMapLayer
+		if decor_l and decor_l.get_cell_source_id(tile_pos) != -1:
+			var ac: Vector2i = decor_l.get_cell_atlas_coords(tile_pos)
+			info.decor_layer = "Atlas (%d, %d)" % [ac.x, ac.y]
+
+	return info
+
+
+func _update_tile_inspector_ui() -> void:
+	var hover_info := _get_tile_info(_hovered_tile)
+	var has_selection := _is_in_bounds(_selected_tile)
+	var inspect_pos := _selected_tile if has_selection else _hovered_tile
+	var active_info := _get_tile_info(inspect_pos)
+
+	# 1. Floating HUD na ekranie
+	if is_instance_valid(tile_hud_label):
+		if hover_info.in_bounds:
+			var tag_str: String = (" [" + hover_info.tags[0] + "]") if not hover_info.tags.is_empty() else ""
+			tile_hud_label.text = "📍 [b]Kafelek:[/b] [color=#66ff88](%d, %d)[/color]\n📐 [b]Świat:[/b] (%d, %d) px\n🧱 [b]Typ:[/b] %s%s" % [
+				hover_info.tile_pos.x, hover_info.tile_pos.y,
+				int(hover_info.world_pos.x), int(hover_info.world_pos.y),
+				hover_info.cell_name,
+				tag_str
+			]
+		else:
+			tile_hud_label.text = "📍 [b]Kursor poza mapą[/b]\n📐 Rozmiar: %dx%d" % [current_width, current_height]
+
+	# 2. Inspektor w bocznym panelu UI
+	if is_instance_valid(inspector_label):
+		if not active_info.in_bounds:
+			inspector_label.text = "[color=#888888]Najedź kursorem lub kliknij na kafelek...[/color]"
+			return
+
+		var mode_header := "[color=#ffd700][b]★ ZAZNACZONY KAFELEK[/b][/color]\n" if has_selection else "[color=#66ddff][b]👁 KURSOR NA MAPIE[/b][/color]\n"
+		var tags_text := ""
+		if not active_info.tags.is_empty():
+			tags_text = "\n[b]Obiekty:[/b] " + ", ".join(active_info.tags)
+
+		var layers_text := ""
+		if not active_info.walls_layer.is_empty():
+			layers_text += "\n[b]Warstwa Ścian:[/b] %s" % active_info.walls_layer
+		if not active_info.floor_layer.is_empty():
+			layers_text += "\n[b]Warstwa Podłogi:[/b] %s" % active_info.floor_layer
+		if not active_info.decor_layer.is_empty():
+			layers_text += "\n[b]Warstwa Dekoracji:[/b] %s" % active_info.decor_layer
+
+		var relative_sel_text := ""
+		if has_selection and hover_info.in_bounds and _hovered_tile != _selected_tile:
+			var d_sel := Vector2(_selected_tile).distance_to(Vector2(_hovered_tile))
+			var man_sel := absi(_hovered_tile.x - _selected_tile.x) + absi(_hovered_tile.y - _selected_tile.y)
+			var dx: int = _hovered_tile.x - _selected_tile.x
+			var dy: int = _hovered_tile.y - _selected_tile.y
+			relative_sel_text = "\n[color=#ffeedd][b]Odległość do kursora:[/b] %.1f kratek (ΔX: %+d, ΔY: %+d, Manh: %d)[/color]" % [d_sel, dx, dy, man_sel]
+
+		inspector_label.text = """%s[b]Pozycja kafelka:[/b] [color=#66ff88](%d, %d)[/color]
+[b]Piksele w świecie:[/b] (%d, %d) px
+[b]Typ komórki:[/b] %s%s%s
+[b]Od Startu (1):[/b] %.1f (Manh: %d)
+[b]Do Wyjścia (2):[/b] %.1f (Manh: %d)%s""" % [
+			mode_header,
+			active_info.tile_pos.x, active_info.tile_pos.y,
+			int(active_info.world_pos.x), int(active_info.world_pos.y),
+			active_info.cell_name,
+			tags_text,
+			layers_text,
+			active_info.dist_entrance, active_info.manhattan_entrance,
+			active_info.dist_exit, active_info.manhattan_exit,
+			relative_sel_text
+		]
+
+
+func _on_tile_overlay_draw() -> void:
+	if not _tile_overlay:
+		return
+
+	var is_highlight_enabled: bool = check_tile_highlight.button_pressed if check_tile_highlight else true
+	if not is_highlight_enabled:
+		return
+
+	var font: Font = ThemeDB.fallback_font
+	var font_size: int = 11
+
+	# 1. Hover Box (Ramka podświetlająca kafelek pod myszką)
+	if _is_in_bounds(_hovered_tile):
+		var hover_rect := Rect2(_hovered_tile.x * 16.0, _hovered_tile.y * 16.0, 16.0, 16.0)
+		_tile_overlay.draw_rect(hover_rect, Color(0.0, 0.75, 1.0, 0.25), true)
+		_tile_overlay.draw_rect(hover_rect, Color(0.0, 0.95, 1.0, 0.9), false, 1.5)
+
+		var show_tooltip: bool = check_cursor_tooltip.button_pressed if check_cursor_tooltip else true
+		if show_tooltip and font:
+			var txt := "(%d, %d)" % [_hovered_tile.x, _hovered_tile.y]
+			var txt_size := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+			var pad := Vector2(4, 2)
+			var txt_pos := Vector2(_hovered_tile.x * 16.0 + 18.0, _hovered_tile.y * 16.0 + 13.0)
+			var bg_rect := Rect2(txt_pos.x - pad.x, txt_pos.y - txt_size.y + pad.y - 1, txt_size.x + pad.x * 2, txt_size.y + pad.y * 2)
+			_tile_overlay.draw_rect(bg_rect, Color(0.05, 0.08, 0.12, 0.85), true)
+			_tile_overlay.draw_rect(bg_rect, Color(0.0, 0.8, 1.0, 0.6), false, 1.0)
+			_tile_overlay.draw_string(font, txt_pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
+
+	# 2. Selected Box & Ruler Line (Zaznaczony kafelek i linia pomiaru odległości)
+	if _is_in_bounds(_selected_tile):
+		var sel_rect := Rect2(_selected_tile.x * 16.0, _selected_tile.y * 16.0, 16.0, 16.0)
+		_tile_overlay.draw_rect(sel_rect, Color(1.0, 0.85, 0.0, 0.35), true)
+		_tile_overlay.draw_rect(sel_rect, Color(1.0, 0.9, 0.1, 1.0), false, 2.0)
+
+		if _is_in_bounds(_hovered_tile) and _hovered_tile != _selected_tile:
+			var p_sel := Vector2(_selected_tile.x * 16.0 + 8.0, _selected_tile.y * 16.0 + 8.0)
+			var p_hov := Vector2(_hovered_tile.x * 16.0 + 8.0, _hovered_tile.y * 16.0 + 8.0)
+			_tile_overlay.draw_line(p_sel, p_hov, Color(1.0, 0.85, 0.2, 0.75), 1.5, true)
+
+			if font:
+				var dist := Vector2(_selected_tile).distance_to(Vector2(_hovered_tile))
+				var dist_txt := "%.1f" % dist
+				var mid_pos := (p_sel + p_hov) / 2.0 + Vector2(0, -6)
+				var d_size := font.get_string_size(dist_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+				var d_bg := Rect2(mid_pos.x - 3, mid_pos.y - d_size.y + 1, d_size.x + 6, d_size.y + 3)
+				_tile_overlay.draw_rect(d_bg, Color(0.1, 0.1, 0.05, 0.9), true)
+				_tile_overlay.draw_string(font, mid_pos, dist_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1.0, 0.9, 0.3))

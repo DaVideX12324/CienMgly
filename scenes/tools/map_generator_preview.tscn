@@ -223,6 +223,70 @@ text = "🏁 Koniec / Wyjście (2)"
 layout_mode = 2
 text = "🏃 Spacer Graczem (P)"
 
+[node name="HSeparatorInspector" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111001]
+layout_mode = 2
+
+[node name="InspectorTitle" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111002]
+layout_mode = 2
+text = "🎯 Inspektor Kafelka:"
+
+[node name="InspectorLabel" type="RichTextLabel" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111003]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+bbcode_enabled = true
+text = "Najedź kursorem lub kliknij na kafelek..."
+fit_content = true
+
+[node name="HBoxCoordInputs" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111004]
+layout_mode = 2
+
+[node name="LabelCoordX" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs" unique_id=2083111005]
+layout_mode = 2
+text = "X:"
+
+[node name="SpinCoordX" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs" unique_id=2083111006]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 600.0
+rounded = true
+
+[node name="LabelCoordY" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs" unique_id=2083111007]
+layout_mode = 2
+text = "Y:"
+
+[node name="SpinCoordY" type="SpinBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs" unique_id=2083111008]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 600.0
+rounded = true
+
+[node name="BtnJumpCoord" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordInputs" unique_id=2083111009]
+layout_mode = 2
+text = "🎯 Idź"
+
+[node name="HBoxCoordActions" type="HBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111010]
+layout_mode = 2
+
+[node name="BtnCopyCoords" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordActions" unique_id=2083111011]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "📋 Kopiuj (X, Y)"
+
+[node name="BtnClearSelection" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCoordActions" unique_id=2083111012]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "❌ Odznacz"
+
+[node name="CheckTileHighlight" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111013]
+layout_mode = 2
+button_pressed = true
+text = "Podświetlaj aktywny kafelek"
+
+[node name="CheckCursorTooltip" type="CheckBox" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111014]
+layout_mode = 2
+button_pressed = true
+text = "Pokaż etykietę przy kursorze"
+
 [node name="HSeparator6" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=707220037]
 layout_mode = 2
 
@@ -245,19 +309,42 @@ offset_right = 100.0
 offset_bottom = 44.0
 text = "▶ Pokaż UI (H)"
 
+[node name="TileHUD" type="PanelContainer" parent="CanvasLayer" unique_id=2083111015]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -290.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 90.0
+grow_horizontal = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/TileHUD" unique_id=2083111016]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="TileHUDLabel" type="RichTextLabel" parent="CanvasLayer/TileHUD/MarginContainer" unique_id=2083111017]
+layout_mode = 2
+bbcode_enabled = true
+text = "📍 [b]Kafelek:[/b] (0, 0)\n📐 [b]Świat:[/b] (0, 0) px\n🧱 [b]Typ:[/b] -"
+fit_content = true
+
 [node name="HelpLabel" type="Label" parent="CanvasLayer" unique_id=927814415]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -380.0
+offset_left = -440.0
 offset_top = -32.0
-offset_right = 380.0
+offset_right = 440.0
 offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 3
-text = "Spacja: Nowy seed | PPM/ŚPM lub WASD: Kamera | Kółko: Zoom | F: Cała mapa | 1: Start | 2: Wyjście | P: Gracz | H: Ukryj UI"
+text = "LPM: Zaznacz/Kopiuj kafelek | C: Kopiuj koordynaty | G: Skocz | Spacja: Losuj seed | PPM/WASD: Kamera | Kółko: Zoom | F: Cała mapa | H: UI"
 horizontal_alignment = 1
