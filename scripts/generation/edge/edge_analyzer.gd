@@ -506,22 +506,18 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var wall_sw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
 			var wall_se: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
-			var no_top_above: bool = not _is_any_wall_top(edges, p + Vector2i(0, -1)) \
-				and not _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
-				and not _is_any_wall_top(edges, p + Vector2i(1, -1))
-
 			var p_down: Vector2i = p + Vector2i(0, 1)
 			var down_is_top_or_side: bool = _is_any_wall_top(edges, p_down) \
 				or (edges.has(p_down) and (edges[p_down] as EdgeContext).edge_kind in [EdgeKind.Kind.SIDE_WALL, EdgeKind.Kind.INNER_CORNER])
 
 			# Wariant SOUTH_WEST (top po prawej, ściana pod spodem -> lewa strona pokoju)
-			var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw and no_top_above \
+			var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw\
 				and _is_any_wall_top(edges, p + Vector2i(1, 0)) \
 				and down_is_top_or_side \
 				and not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
 			# Wariant SOUTH_EAST (top po lewej, ściana pod spodem -> prawa strona pokoju)
-			var match_corner_se: bool = wall_nw and wall_n and wall_ne and wall_e and wall_se and no_top_above \
+			var match_corner_se: bool = wall_nw and wall_n and wall_ne and wall_e and wall_se\
 				and _is_any_wall_top(edges, p + Vector2i(-1, 0)) \
 				and down_is_top_or_side \
 				and not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
