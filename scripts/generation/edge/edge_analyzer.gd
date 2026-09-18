@@ -482,14 +482,6 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var wall_sw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
 			var wall_se: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
-			var e_above: EdgeContext = edges.get(p + Vector2i(0, -1))
-			var above_is_corner_or_side: bool = e_above != null and e_above.edge_kind in [EdgeKind.Kind.INNER_CORNER, EdgeKind.Kind.SIDE_WALL]
-
-			var no_top_above: bool = not above_is_corner_or_side \
-				and not _is_any_wall_top(edges, p + Vector2i(0, -1)) \
-				and not _is_any_wall_top(edges, p + Vector2i(-1, -1)) \
-				and not _is_any_wall_top(edges, p + Vector2i(1, -1))
-
 			var p_down: Vector2i = p + Vector2i(0, 1)
 			var is_down_facade_foot: bool = edges.has(p_down) and (edges[p_down] as EdgeContext).edge_kind == EdgeKind.Kind.FACADE
 			var is_down_facade_base: bool = edges.has(p_down + Vector2i(0, 1)) and (edges[p_down + Vector2i(0, 1)] as EdgeContext).edge_kind == EdgeKind.Kind.FACADE
@@ -497,17 +489,15 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var down_is_straight_facade: bool = is_down_facade_foot or is_down_facade_base or is_down_facade_mid
 			var down_is_wall: bool = not GridUtils.is_walkable(grid, p_down) and not down_is_straight_facade
 
-			var top_above: bool = e_above != null and e_above.edge_kind == EdgeKind.Kind.TOP_RIM
-			var allow_top: bool = no_top_above or top_above
 
 			# Wariant SOUTH_WEST (top po prawej, ściana pod spodem -> lewa strona pokoju)
-			var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw and allow_top \
+			var match_corner_sw: bool = wall_nw and wall_n and wall_ne and wall_w and wall_sw \
 				and _is_any_wall_top(edges, p + Vector2i(1, 0)) \
 				and down_is_wall \
 				and not GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 
 			# Wariant SOUTH_EAST (top po lewej, ściana pod spodem -> prawa strona pokoju)
-			var match_corner_se: bool = wall_nw and wall_n and wall_ne and wall_e and wall_se and allow_top \
+			var match_corner_se: bool = wall_nw and wall_n and wall_ne and wall_e and wall_se \
 				and _is_any_wall_top(edges, p + Vector2i(-1, 0)) \
 				and down_is_wall \
 				and not GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
