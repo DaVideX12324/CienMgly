@@ -329,7 +329,9 @@ theme_override_constants/margin_bottom = 6
 [node name="TileHUDLabel" type="RichTextLabel" parent="CanvasLayer/TileHUD/MarginContainer" unique_id=2083111017]
 layout_mode = 2
 bbcode_enabled = true
-text = "📍 [b]Kafelek:[/b] (0, 0)\n📐 [b]Świat:[/b] (0, 0) px\n🧱 [b]Typ:[/b] -"
+text = "📍 [b]Kafelek:[/b] (0, 0)
+📐 [b]Świat:[/b] (0, 0) px
+🧱 [b]Typ:[/b] -"
 fit_content = true
 
 [node name="HelpLabel" type="Label" parent="CanvasLayer" unique_id=927814415]
