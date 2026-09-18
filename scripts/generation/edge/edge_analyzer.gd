@@ -467,9 +467,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				continue
 			if _is_facade_mid(edges, p + Vector2i(1, 0), facade_cols) or _is_facade_mid(edges, p + Vector2i(-1, 0), facade_cols):
 				continue
-			if _is_inner_corner(edges, p + Vector2i(0, -1)):
-				continue
-
+				
 			var wall_nw: bool = not GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
 			var wall_n: bool = not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
 			var wall_ne: bool = not GridUtils.is_walkable(grid, p + Vector2i(1, -1))
