@@ -159,9 +159,17 @@ static func place_3h(
 		_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
 		state.mark(p_crown, &"CORNER")
 
-	_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table)
-	_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table)
-	_queue(plan, pos, base_t, &"FACADE", table)
+	# Wariant zależny od motywu (roots) + A/B z variant_noise — jak legacy. Anchor = stopa;
+	# base @ (0,0), mid @ (0,-1), top @ (0,-2). Korona wyżej zostaje osobnym CORNER-em.
+	var variant_id: StringName
+	if use_roots:
+		variant_id = &"ROOT_B" if is_b else &"ROOT_A"
+	else:
+		variant_id = &"B" if is_b else &"A"
+	if not _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_3H, variant_id, table):
+		_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table)
+		_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table)
+		_queue(plan, pos, base_t, &"FACADE", table)
 
 	state.mark(pos + Vector2i(0, -2), &"FACADE")
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
