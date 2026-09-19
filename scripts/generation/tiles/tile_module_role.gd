@@ -21,6 +21,8 @@ enum Id {
 	SLOPE_RIGHT,
 	SIDE_WALL_EAST,
 	SIDE_WALL_WEST,
+	OUT_CORNER_WEST,
+	OUT_CORNER_EAST,
 }
 
 ## Klucz, pod którym NamedTileSetDefinition przechowuje wpis danego modułu
@@ -39,6 +41,8 @@ static func to_storage_role(module_role: Id) -> int:
 		Id.SLOPE_RIGHT: return TileRole.Id.SLOPE_RIGHT
 		Id.SIDE_WALL_EAST: return TileRole.Id.SIDE_WALL_EAST
 		Id.SIDE_WALL_WEST: return TileRole.Id.SIDE_WALL_WEST
+		Id.OUT_CORNER_WEST: return TileRole.Id.OUTER_CORNER_NW
+		Id.OUT_CORNER_EAST: return TileRole.Id.OUTER_CORNER_NE
 		_: return TileRole.Id.NONE
 
 ## Ile części ma mieć poprawny moduł (0 = dowolnie). Do walidacji kształtu.

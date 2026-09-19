@@ -10,16 +10,8 @@ const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/th
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-
-static func _get_variant_noise(ctx: GenerationContext) -> FastNoiseLite:
-	if ctx.variant_noise != null:
-		return ctx.variant_noise
-	var n := FastNoiseLite.new()
-	n.seed = ctx.seed_value + 777
-	n.frequency = 0.45
-	ctx.variant_noise = n
-	return n
-
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 static func _queue(
 	plan: TilePlacementPlan,
@@ -41,6 +33,26 @@ static func _queue(
 	plan.queue(p)
 
 
+## Ścieżka modułowa (origin = anchor, tie_breaker jak _queue). true jeśli położono.
+static func _try_out(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id)
+	if parts.is_empty():
+		return false
+	for rp in parts:
+		var p := TilePlacement.new()
+		p.pos = anchor + rp.offset
+		p.layer = rp.layer if rp.layer != &"" else &"Walls"
+		p.source_id = rp.tile.source_id
+		p.atlas_coords = rp.tile.atlas_coords
+		p.alternative_tile = rp.tile.alternative_tile
+		p.category = &"FACADE"
+		p.origin = anchor
+		p.tie_breaker = 10 if (anchor == Vector2i.ZERO or p.pos.x == anchor.x) else 1
+		PlacementPriority.assign(p, table)
+		plan.queue(p)
+	return true
+
+
 static func place(
 	ctx: GenerationContext,
 	edge: EdgeContext,
@@ -55,39 +67,41 @@ static func place(
 
 	if w_open and not e_open:
 		if edge.facade_height == 2:
-			var base_2h := CaveTileConstants.WALL_2H_WEST_BASE
-			var top_2h := CaveTileConstants.WALL_2H_WEST_TOP
-			_queue(plan, pos, base_2h, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table, pos)
+			# 2H reużywa końcówkę FACADE_2H WEST (te same kafle/kategoria).
+			if not _try_out(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, &"WEST", table):
+				_queue(plan, pos, CaveTileConstants.WALL_2H_WEST_BASE, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_WEST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
-			var top_t := CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP
-			var mid_t := CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID
-			var base_t := CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE
-			_queue(plan, pos, base_t, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
+			var vid: StringName = &"ROOT_A" if use_roots else &"A"
+			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, vid, table):
+				var top_t := CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP
+				var mid_t := CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID
+				var base_t := CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE
+				_queue(plan, pos, base_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 			state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 	elif e_open and not w_open:
 		if edge.facade_height == 2:
-			var base_2h := CaveTileConstants.WALL_2H_EAST_BASE
-			var top_2h := CaveTileConstants.WALL_2H_EAST_TOP
-			_queue(plan, pos, base_2h, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table, pos)
+			if not _try_out(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, &"EAST", table):
+				_queue(plan, pos, CaveTileConstants.WALL_2H_EAST_BASE, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
-			var top_t := CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP
-			var mid_t := CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID
-			var base_t := CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE
-			_queue(plan, pos, base_t, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
+			var vid: StringName = &"ROOT_A" if use_roots else &"A"
+			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, vid, table):
+				var top_t := CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP
+				var mid_t := CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID
+				var base_t := CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE
+				_queue(plan, pos, base_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 			state.mark(pos + Vector2i(0, -2), &"FACADE")
-
