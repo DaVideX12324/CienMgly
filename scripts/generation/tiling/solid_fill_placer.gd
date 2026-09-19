@@ -9,6 +9,8 @@ const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/cor
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 ## Planuje wypełnienie pustki poza mapą oraz litej skały wewnątrz mapy.
 static func plan(
@@ -43,20 +45,30 @@ static func plan(
 			var pos := Vector2i(x, y)
 			if GridUtils.is_walkable(ctx.grid, pos):
 				continue
+			# Legacy roll 0..99 służy jako deterministyczny wybór wariantu (progi 45/92).
+			# Ten sam roll trafia do resolvera -> jeśli SOLID_FILL ma warianty A/B/C o wagach
+			# 45/47/8, wynik jest 1:1 z legacy. Bez profilu -> stara logika progów.
 			var roll := LegacyTileHash.rock_fill_roll(pos, ctx.seed_value)
-			var coords := CaveTileConstants.WALL_INSIDE_ALT
-			if roll < 45:
-				coords = CaveTileConstants.WALL_INSIDE
-			elif roll < 92:
-				coords = CaveTileConstants.WALL_INSIDE_ALT
-			else:
-				coords = CaveTileConstants.WALL_INSIDE_ALT2
+			var parts := TileResolver.resolve_module_parts(ctx, pos, TileModuleRole.Id.SOLID_FILL, [], roll)
 
 			var p := TilePlacement.new()
 			p.pos = pos
 			p.layer = &"Walls"
-			p.atlas_coords = coords
 			p.category = &"SOLID_FILL"
+			if parts.is_empty():
+				var coords := CaveTileConstants.WALL_INSIDE_ALT
+				if roll < 45:
+					coords = CaveTileConstants.WALL_INSIDE
+				elif roll < 92:
+					coords = CaveTileConstants.WALL_INSIDE_ALT
+				else:
+					coords = CaveTileConstants.WALL_INSIDE_ALT2
+				p.atlas_coords = coords
+			else:
+				var rp = parts[0]
+				p.source_id = rp.tile.source_id
+				p.atlas_coords = rp.tile.atlas_coords
+				p.alternative_tile = rp.tile.alternative_tile
 			PlacementPriority.assign(p, table)
 			plan.queue(p)
 			state.mark(pos, &"ROCK")
