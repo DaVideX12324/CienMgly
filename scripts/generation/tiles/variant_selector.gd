@@ -42,6 +42,30 @@ static func choose_variant_for_anchor(
 	return active[active.size() - 1]
 
 
+## Wybór przez CAŁKOWITY roll (np. legacy hash pozycji 0..N). Wagi traktowane jako
+## całkowite (int(weight)); r = roll % sum(int(weight)); wybór po skumulowanej wadze.
+## Pozwala odwzorować legacy rozkłady 1:1 (np. solid_fill 45/47/8, roll 0..99) bez floatów.
+static func choose_variant_by_int_roll(variants: Array, roll: int) -> TileVariant:
+	var active: Array = []
+	var total: int = 0
+	for v in variants:
+		if v == null:
+			continue
+		if not (v as TileVariant).is_active():
+			continue
+		active.append(v)
+		total += int((v as TileVariant).weight)
+	if active.is_empty() or total <= 0:
+		return null
+	var r: int = ((roll % total) + total) % total
+	var acc: int = 0
+	for v in active:
+		acc += int((v as TileVariant).weight)
+		if r < acc:
+			return v
+	return active[active.size() - 1]
+
+
 ## Stabilny 32-bit hash (FNV-1a na sekwencji intów). Deterministyczny między uruchomieniami.
 static func _stable_hash(values: Array) -> int:
 	var h: int = 2166136261

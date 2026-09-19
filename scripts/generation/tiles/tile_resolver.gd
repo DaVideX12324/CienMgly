@@ -90,11 +90,14 @@ static func resolve(
 ## Zwraca części wybranego modułu dla roli modułowej w danej kotwicy.
 ## Pusta tablica => moduł nierozwiązany (placer używa swojego legacy fallbacku).
 ## NIE buduje TilePlacement — to robi placer (zachowuje category/priority/tie_breaker).
+## variant_roll >= 0: deterministyczny całkowity roll (np. legacy hash pozycji) do
+## wyboru wariantu 1:1 z legacy (solid_fill). -1: domyślnie stabilny hash kotwicy.
 static func resolve_module_parts(
 	ctx: GenerationContext,
 	anchor_pos: Vector2i,
 	module_role: TileModuleRole.Id,
-	neighbor_positions: Array[Vector2i] = []
+	neighbor_positions: Array[Vector2i] = [],
+	variant_roll: int = -1
 ) -> Array:
 	if not is_active(ctx):
 		return []
@@ -139,14 +142,14 @@ static func resolve_module_parts(
 					pass
 
 	# 2) Własny zestaw: wariant -> legacy tile.
-	var parts := _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, own_id, module_role)
+	var parts := _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, own_id, module_role, variant_roll)
 	if not parts.is_empty():
 		return parts
 
 	# 3) Zestaw domyślny.
 	var default_set: NamedTileSetDefinition = profile.get_default_tileset()
 	if default_set != null and default_set != own_set:
-		parts = _entry_parts(default_set.get_entry(storage_role), anchor_pos, ctx.seed_value, default_set.id, module_role)
+		parts = _entry_parts(default_set.get_entry(storage_role), anchor_pos, ctx.seed_value, default_set.id, module_role, variant_roll)
 		if not parts.is_empty():
 			return parts
 
@@ -160,15 +163,20 @@ static func _entry_parts(
 	anchor_pos: Vector2i,
 	world_seed: int,
 	tileset_id: StringName,
-	module_role: int
+	module_role: int,
+	variant_roll: int = -1
 ) -> Array:
 	if entry == null:
 		return []
 
 	if entry.has_variants():
-		var variant: TileVariant = VariantSelector.choose_variant_for_anchor(
-			entry.variants, anchor_pos, world_seed, tileset_id, module_role
-		)
+		var variant: TileVariant
+		if variant_roll >= 0:
+			variant = VariantSelector.choose_variant_by_int_roll(entry.variants, variant_roll)
+		else:
+			variant = VariantSelector.choose_variant_for_anchor(
+				entry.variants, anchor_pos, world_seed, tileset_id, module_role
+			)
 		if variant != null:
 			var out: Array = []
 			for p in variant.valid_parts():
