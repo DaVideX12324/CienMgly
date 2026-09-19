@@ -11,6 +11,8 @@ const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/th
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 static func _queue(
 	plan: TilePlacementPlan,
@@ -32,6 +34,26 @@ static func _queue(
 	plan.queue(p)
 
 
+## Ścieżka modułowa (kategoria FACADE, origin = anchor). true jeśli położono.
+static func _try(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id)
+	if parts.is_empty():
+		return false
+	for rp in parts:
+		var p := TilePlacement.new()
+		p.pos = anchor + rp.offset
+		p.layer = rp.layer if rp.layer != &"" else &"Walls"
+		p.source_id = rp.tile.source_id
+		p.atlas_coords = rp.tile.atlas_coords
+		p.alternative_tile = rp.tile.alternative_tile
+		p.category = &"FACADE"
+		p.origin = anchor
+		p.tie_breaker = 10 if (anchor == Vector2i.ZERO or p.pos.x == anchor.x) else 1
+		PlacementPriority.assign(p, table)
+		plan.queue(p)
+	return true
+
+
 static func place(
 	ctx: GenerationContext,
 	edge: EdgeContext,
@@ -49,17 +71,16 @@ static func place(
 
 	if left_y != -1 and y > left_y:
 		if edge.facade_height == 2:
-			_queue(plan, pos, CaveTileConstants.WALL_2H_WEST_BASE, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_WEST_TOP, &"FACADE", table, pos)
+			# 2H reużywa końcówkę FACADE_2H WEST (te same kafle).
+			if not _try(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, &"WEST", table):
+				_queue(plan, pos, CaveTileConstants.WALL_2H_WEST_BASE, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_WEST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - left_y
-			# Skos "1-dół-1-bok" o ścianie dokładnie 4 kratki wysokiej (podłoga → 4×
-			# ściana → podłoga, solid_depth == 4) → gładki narożnik 2H (WALL_2H_SLOPE),
-			# żeby tekstury łączyły się płynnie (seed 119). Pozostałe skosy/schodki 3H
-			# to modularny narożnik 3H (MOD_CRNR). Łączniki 2H↔3H nie powstają tu nigdy
-			# (prawdziwe zmiany wysokości klasyfikuje EdgeAnalyzer jako CONNECTOR).
+			# Skos "1-dół-1-bok" o ścianie 4/5 (warunkowy top) zostaje ścieżką legacy —
+			# nie mapuje się na moduł o stałej liczbie części. Reszta = narożnik 3H STEP_LEFT.
 			if dy == 1 and (right_y == y + 1 or right_y == -1) and (edge.solid_depth == 4 or edge.solid_depth == 5):
 				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
@@ -70,13 +91,14 @@ static func place(
 					state.mark(p_top, &"FACADE")
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
-				var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
-				var mid_t := CaveTileConstants.MOD_CRNR_NW_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID
-				var top_t := CaveTileConstants.MOD_CRNR_NW_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP
-
-				_queue(plan, pos, base_t, &"FACADE", table, pos)
-				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
-				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
+				var vid: StringName = &"ROOT_A" if step_use_roots else &"A"
+				if not _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT, vid, table):
+					var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
+					var mid_t := CaveTileConstants.MOD_CRNR_NW_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID
+					var top_t := CaveTileConstants.MOD_CRNR_NW_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP
+					_queue(plan, pos, base_t, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
 				state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 			state.mark(pos, &"FACADE")
@@ -84,14 +106,13 @@ static func place(
 
 	elif right_y != -1 and y > right_y:
 		if edge.facade_height == 2:
-			_queue(plan, pos, CaveTileConstants.WALL_2H_EAST_BASE, &"FACADE", table, pos)
-			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)
+			if not _try(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, &"EAST", table):
+				_queue(plan, pos, CaveTileConstants.WALL_2H_EAST_BASE, &"FACADE", table, pos)
+				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - right_y
-			# Patrz komentarz w gałęzi WEST: skos o ścianie głębokości 4 → narożnik 2H,
-			# pozostałe skosy/schodki 3H → modularny narożnik 3H (MOD_CRNR).
 			if dy == 1 and (left_y == y + 1 or left_y == -1) and (edge.solid_depth == 4 or edge.solid_depth == 5):
 				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
@@ -102,13 +123,14 @@ static func place(
 					state.mark(p_top, &"FACADE")
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
-				var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
-				var mid_t := CaveTileConstants.MOD_CRNR_NE_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID
-				var top_t := CaveTileConstants.MOD_CRNR_NE_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP
-
-				_queue(plan, pos, base_t, &"FACADE", table, pos)
-				_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
-				_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
+				var vid: StringName = &"ROOT_A" if step_use_roots else &"A"
+				if not _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT, vid, table):
+					var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
+					var mid_t := CaveTileConstants.MOD_CRNR_NE_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID
+					var top_t := CaveTileConstants.MOD_CRNR_NE_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP
+					_queue(plan, pos, base_t, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table, pos)
+					_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table, pos)
 				state.mark(pos + Vector2i(0, -2), &"FACADE")
 
 			state.mark(pos, &"FACADE")
