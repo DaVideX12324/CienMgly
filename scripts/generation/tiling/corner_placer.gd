@@ -11,6 +11,8 @@ const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/th
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
@@ -20,6 +22,24 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 	p.category = category
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
+
+
+## Ścieżka modułowa (1 kafel, kategoria CORNER, tie_breaker=0 jak legacy). true jeśli położono.
+static func _try_corner(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id)
+	if parts.is_empty():
+		return false
+	for rp in parts:
+		var p := TilePlacement.new()
+		p.pos = pos + rp.offset
+		p.layer = rp.layer if rp.layer != &"" else &"Walls"
+		p.source_id = rp.tile.source_id
+		p.atlas_coords = rp.tile.atlas_coords
+		p.alternative_tile = rp.tile.alternative_tile
+		p.category = &"CORNER"
+		PlacementPriority.assign(p, table)
+		plan.queue(p)
+	return true
 
 
 ## Planuje wyłącznie diagonalne INNER_CORNER na podstawie klasyfikacji EdgeAnalyzer (SSOT).
@@ -48,23 +68,32 @@ static func plan(
 			var tile_under: Vector2i = placement_under.atlas_coords if placement_under != null else Vector2i(-1, -1)
 
 			var tile := Vector2i(-1, -1)
+			var module_role: int = TileModuleRole.Id.NONE
+			var variant_id: StringName = &"A"
 
 			match edge.orientation:
 				EdgeKind.Orientation.NORTH_WEST:
 					tile = Vector2i(1, 1)
+					module_role = TileModuleRole.Id.INNER_CORNER_NW
 				EdgeKind.Orientation.NORTH_EAST:
 					tile = Vector2i(4, 1)
+					module_role = TileModuleRole.Id.INNER_CORNER_NE
 				EdgeKind.Orientation.SOUTH_WEST:
+					module_role = TileModuleRole.Id.INNER_CORNER_SW
 					if tile_under == CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP:
 						tile = CaveTileConstants.ROOT_CRNR_SW_IN
+						variant_id = &"ROOT_A"
 					else:
 						tile = CaveTileConstants.CRNR_SW_IN
 				EdgeKind.Orientation.SOUTH_EAST:
+					module_role = TileModuleRole.Id.INNER_CORNER_SE
 					if tile_under == CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP:
 						tile = CaveTileConstants.ROOT_CRNR_SE_IN
+						variant_id = &"ROOT_A"
 					else:
 						tile = CaveTileConstants.CRNR_SE_IN
 
 			if tile != Vector2i(-1, -1):
-				_queue(plan, pos, tile, &"CORNER", table)
+				if not _try_corner(ctx, plan, pos, module_role, variant_id, table):
+					_queue(plan, pos, tile, &"CORNER", table)
 				state.mark(pos, &"CORNER")
