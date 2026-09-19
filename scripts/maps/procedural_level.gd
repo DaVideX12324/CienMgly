@@ -8,6 +8,8 @@ const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generatio
 const OverworldForestGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/dungeon_generator.gd")
 const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
+const GeneratorBehaviourConfig = preload("res://modules/quiz_rpg/scripts/generation/tiles/generator_behaviour_config.gd")
+const TileSetFieldScript = preload("res://modules/quiz_rpg/scripts/generation/core/tileset_field.gd")
 
 enum LevelType {
 	FOREST_OVERWORLD,
@@ -29,8 +31,33 @@ enum LevelType {
 @export var setup_nav_enabled: bool = true
 @export var cave_max_rooms: int = 0 # 0 = obliczane automatycznie na podstawie rozmiaru mapy
 
+## Named TileSet System: ścieżka do companion-JSON zachowania (np. caves.json).
+## Puste => generator działa jak dotychczas (placery używają stałych CaveTileConstants).
+@export_file("*.json") var tile_behaviour_json_path: String = ""
+
 var last_result: RefCounted = null
 var _transitioning: bool = false
+
+
+## Wczytuje companion-JSON + profil dla Named TileSet System.
+## Zwraca {profile, field, raw}. Puste/brak => {} (generator działa jak dotychczas).
+func _load_tile_behaviour() -> Dictionary:
+	if tile_behaviour_json_path.is_empty():
+		return {}
+
+	var cfg = GeneratorBehaviourConfig.load_from_json_path(tile_behaviour_json_path)
+	for w in cfg.warnings:
+		push_warning("[TileBehaviour] " + w)
+	for e in cfg.errors:
+		push_error("[TileBehaviour] " + e)
+
+	if cfg.profile == null:
+		return {} # brak profilu => stary tryb (stałe)
+
+	# TileSetField: na razie puste (pojedynczy zestaw = default_tileset_id dla każdej komórki).
+	# Docelowo wypełniane ze stref 'zones' (noise / room_tag). Zostawione jako punkt rozszerzenia.
+	var field = TileSetFieldScript.new()
+	return {"profile": cfg.profile, "field": field, "raw": cfg.raw}
 
 
 func _ready() -> void:
@@ -126,7 +153,15 @@ func generate_level(seed_val: int = 0) -> void:
 	
 	var rng := MapGeneratorBaseScript.create_rng(actual_seed)
 	if level_type == LevelType.CAVE_DUNGEON:
-		CaveGeneratorScript.apply_cave_tiles(floor_layer, walls_layer, gen_result, rng, floor_decor)
+		# Named TileSet System (opcjonalny). Wczytaj companion-JSON, profil i pole zestawów.
+		var behaviour := _load_tile_behaviour()
+		var tile_profile = behaviour.get("profile")
+		var tileset_field = behaviour.get("field")
+		var behaviour_dict: Dictionary = behaviour.get("raw", {})
+		CaveGeneratorScript.apply_cave_tiles(
+			floor_layer, walls_layer, gen_result, rng, floor_decor, -1, null,
+			tile_profile, tileset_field, behaviour_dict
+		)
 	else:
 		if floor_decor:
 			floor_decor.clear()
