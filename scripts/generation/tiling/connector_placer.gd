@@ -9,6 +9,8 @@ const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
@@ -18,6 +20,24 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 	p.category = category
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
+
+
+## Ścieżka modułowa (tie_breaker = 0 jak legacy connector). true jeśli coś położono.
+static func _try_module(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, table: Dictionary) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role)
+	if parts.is_empty():
+		return false
+	for rp in parts:
+		var p := TilePlacement.new()
+		p.pos = anchor + rp.offset
+		p.layer = rp.layer if rp.layer != &"" else &"Walls"
+		p.source_id = rp.tile.source_id
+		p.atlas_coords = rp.tile.atlas_coords
+		p.alternative_tile = rp.tile.alternative_tile
+		p.category = &"CONNECTOR"
+		PlacementPriority.assign(p, table)
+		plan.queue(p)
+	return true
 
 
 static func place(
@@ -48,17 +68,20 @@ static func place(
 	var left_is_2h_any := left_is_2h_same or left_is_2h_step
 	var right_is_2h_any := right_is_2h_same or right_is_2h_step
 
+	# Anchor = stopa; części: base @ (0,0), mid @ (0,-1), top @ (0,-2).
 	if (left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any):
-		_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_2H_TO_3H_TOP, &"CONNECTOR", table)
-		_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_2H_TO_3H_MID, &"CONNECTOR", table)
-		_queue(plan, pos, CaveTileConstants.CONNECTOR_2H_TO_3H_BASE, &"CONNECTOR", table)
+		if not _try_module(ctx, plan, pos, TileModuleRole.Id.CONNECTOR_LEFT, table):
+			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_2H_TO_3H_TOP, &"CONNECTOR", table)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_2H_TO_3H_MID, &"CONNECTOR", table)
+			_queue(plan, pos, CaveTileConstants.CONNECTOR_2H_TO_3H_BASE, &"CONNECTOR", table)
 		state.mark(pos + Vector2i(0, -2), &"FACADE")
 		state.mark(pos + Vector2i(0, -1), &"FACADE")
 		state.mark(pos, &"FACADE")
 	elif (right_is_2h_any and left_has_room_for_3h) or (right_is_2h_any and not left_is_2h_any):
-		_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"CONNECTOR", table)
-		_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"CONNECTOR", table)
-		_queue(plan, pos, CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"CONNECTOR", table)
+		if not _try_module(ctx, plan, pos, TileModuleRole.Id.CONNECTOR_RIGHT, table):
+			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.CONNECTOR_3H_TO_2H_TOP, &"CONNECTOR", table)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.CONNECTOR_3H_TO_2H_MID, &"CONNECTOR", table)
+			_queue(plan, pos, CaveTileConstants.CONNECTOR_3H_TO_2H_BASE, &"CONNECTOR", table)
 		state.mark(pos + Vector2i(0, -2), &"FACADE")
 		state.mark(pos + Vector2i(0, -1), &"FACADE")
 		state.mark(pos, &"FACADE")
