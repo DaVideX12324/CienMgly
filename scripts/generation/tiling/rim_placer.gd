@@ -11,6 +11,26 @@ const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/th
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
+
+## Ścieżka modułowa dla rima rock (1 kafel, kategoria RIM_BASE, tie_breaker=0).
+static func _try_rim(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id)
+	if parts.is_empty():
+		return false
+	for rp in parts:
+		var p := TilePlacement.new()
+		p.pos = pos + rp.offset
+		p.layer = rp.layer if rp.layer != &"" else &"Walls"
+		p.source_id = rp.tile.source_id
+		p.atlas_coords = rp.tile.atlas_coords
+		p.alternative_tile = rp.tile.alternative_tile
+		p.category = &"RIM_BASE"
+		PlacementPriority.assign(p, table)
+		plan.queue(p)
+	return true
+
 
 static func _get_variant_noise(ctx: GenerationContext) -> FastNoiseLite:
 	if ctx.variant_noise != null:
@@ -59,21 +79,27 @@ static func plan(
 			var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 
 			if not use_roots:
-				# Motyw rock (1-kafelkowy)
+				# Motyw rock (1-kafelkowy). is_b (A/B) z variant_noise; orientacja -> rola.
+				var variant_id: StringName = &"B" if is_b else &"A"
+				var role: int = TileModuleRole.Id.RIM_NORTH
 				var rim_t := Vector2i(2, 0)
 				match edge.orientation:
 					EdgeKind.Orientation.EAST:
+						role = TileModuleRole.Id.RIM_EAST
 						rim_t = CaveTileConstants.CRNR_SE_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SE_OUT_BASE_A
 					EdgeKind.Orientation.WEST:
+						role = TileModuleRole.Id.RIM_WEST
 						rim_t = CaveTileConstants.CRNR_SW_OUT_BASE_B if is_b else CaveTileConstants.CRNR_SW_OUT_BASE_A
 					_:
 						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 
-				_queue(plan, pos, rim_t, &"RIM_BASE", table)
+				if not _try_rim(ctx, plan, pos, role, variant_id, table):
+					_queue(plan, pos, rim_t, &"RIM_BASE", table)
 				state.mark(pos, &"RIM")
 
 			else:
-				# Motyw roots (2-kafelkowy kompletny moduł TOP + BASE)
+				# Motyw roots (2-kafelkowy: base RIM_BASE + warunkowy tips RIM_TIP) -> LEGACY.
+				# Dwie różne kategorie i warunkowy tips nie mieszczą się w module o jednej kategorii.
 				var p_top := pos + Vector2i(0, -1)
 				var can_place_top: bool = not (state.has(p_top) and state.get_category(p_top) == &"FACADE")
 				var t_base := Vector2i(2, 9)
