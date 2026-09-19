@@ -92,12 +92,16 @@ static func resolve(
 ## NIE buduje TilePlacement — to robi placer (zachowuje category/priority/tie_breaker).
 ## variant_roll >= 0: deterministyczny całkowity roll (np. legacy hash pozycji) do
 ## wyboru wariantu 1:1 z legacy (solid_fill). -1: domyślnie stabilny hash kotwicy.
+## forced_variant_id != "": placer wymusza KONKRETNY wariant (geometria: WEST/EAST,
+## motyw roots, A/B z variant_noise) — resolver zwraca części tego wariantu. To zachowuje
+## legacy wybór wariantu sterowany geometrią; hash/roll dotyczy tylko wariantów równoważnych.
 static func resolve_module_parts(
 	ctx: GenerationContext,
 	anchor_pos: Vector2i,
 	module_role: TileModuleRole.Id,
 	neighbor_positions: Array[Vector2i] = [],
-	variant_roll: int = -1
+	variant_roll: int = -1,
+	forced_variant_id: StringName = &""
 ) -> Array:
 	if not is_active(ctx):
 		return []
@@ -142,14 +146,14 @@ static func resolve_module_parts(
 					pass
 
 	# 2) Własny zestaw: wariant -> legacy tile.
-	var parts := _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, own_id, module_role, variant_roll)
+	var parts := _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, own_id, module_role, variant_roll, forced_variant_id)
 	if not parts.is_empty():
 		return parts
 
 	# 3) Zestaw domyślny.
 	var default_set: NamedTileSetDefinition = profile.get_default_tileset()
 	if default_set != null and default_set != own_set:
-		parts = _entry_parts(default_set.get_entry(storage_role), anchor_pos, ctx.seed_value, default_set.id, module_role, variant_roll)
+		parts = _entry_parts(default_set.get_entry(storage_role), anchor_pos, ctx.seed_value, default_set.id, module_role, variant_roll, forced_variant_id)
 		if not parts.is_empty():
 			return parts
 
@@ -164,14 +168,17 @@ static func _entry_parts(
 	world_seed: int,
 	tileset_id: StringName,
 	module_role: int,
-	variant_roll: int = -1
+	variant_roll: int = -1,
+	forced_variant_id: StringName = &""
 ) -> Array:
 	if entry == null:
 		return []
 
 	if entry.has_variants():
 		var variant: TileVariant
-		if variant_roll >= 0:
+		if forced_variant_id != &"":
+			variant = _find_variant(entry.variants, forced_variant_id)
+		elif variant_roll >= 0:
 			variant = VariantSelector.choose_variant_by_int_roll(entry.variants, variant_roll)
 		else:
 			variant = VariantSelector.choose_variant_for_anchor(
@@ -201,6 +208,13 @@ static func _entry_parts(
 		return [rp]
 
 	return []
+
+
+static func _find_variant(variants: Array, variant_id: StringName) -> TileVariant:
+	for v in variants:
+		if v != null and (v as TileVariant).variant_id == variant_id and (v as TileVariant).is_active():
+			return v
+	return null
 
 
 static func _transition_parts(
