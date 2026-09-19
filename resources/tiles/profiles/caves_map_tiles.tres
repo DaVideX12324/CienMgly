@@ -1,0 +1,201 @@
+[gd_resource type="Resource" script_class="MapTileProfile" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd" id="1_5trmb"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd" id="2_1ds74"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/named_tileset_definition.gd" id="3_hrbet"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_role_entry.gd" id="4_ddt62"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_ref.gd" id="5_nstq4"]
+[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/tilemaps/caves.tres" id="6_4axk4"]
+
+[sub_resource type="Resource" id="Resource_78ykd"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(10, 13)
+
+[sub_resource type="Resource" id="Resource_mtsut"]
+script = ExtResource("4_ddt62")
+role = 1
+tile = SubResource("Resource_78ykd")
+
+[sub_resource type="Resource" id="Resource_old3f"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 2)
+
+[sub_resource type="Resource" id="Resource_k1jgq"]
+script = ExtResource("4_ddt62")
+role = 3
+tile = SubResource("Resource_old3f")
+
+[sub_resource type="Resource" id="Resource_s5phm"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 0)
+
+[sub_resource type="Resource" id="Resource_o6plj"]
+script = ExtResource("4_ddt62")
+role = 4
+tile = SubResource("Resource_s5phm")
+
+[sub_resource type="Resource" id="Resource_ynfol"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(0, 2)
+
+[sub_resource type="Resource" id="Resource_hepmf"]
+script = ExtResource("4_ddt62")
+role = 8
+tile = SubResource("Resource_ynfol")
+
+[sub_resource type="Resource" id="Resource_mx8w6"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(5, 2)
+
+[sub_resource type="Resource" id="Resource_1opxl"]
+script = ExtResource("4_ddt62")
+role = 9
+tile = SubResource("Resource_mx8w6")
+
+[sub_resource type="Resource" id="Resource_bq74g"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 20)
+
+[sub_resource type="Resource" id="Resource_3x5s3"]
+script = ExtResource("4_ddt62")
+role = 12
+tile = SubResource("Resource_bq74g")
+
+[sub_resource type="Resource" id="Resource_yfnmd"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 21)
+
+[sub_resource type="Resource" id="Resource_otihy"]
+script = ExtResource("4_ddt62")
+role = 14
+tile = SubResource("Resource_yfnmd")
+
+[sub_resource type="Resource" id="Resource_02bll"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 5)
+
+[sub_resource type="Resource" id="Resource_j68pr"]
+script = ExtResource("4_ddt62")
+role = 15
+tile = SubResource("Resource_02bll")
+
+[sub_resource type="Resource" id="Resource_08m1f"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 6)
+
+[sub_resource type="Resource" id="Resource_srhdk"]
+script = ExtResource("4_ddt62")
+role = 16
+tile = SubResource("Resource_08m1f")
+
+[sub_resource type="Resource" id="Resource_1sae0"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(2, 7)
+
+[sub_resource type="Resource" id="Resource_iix2s"]
+script = ExtResource("4_ddt62")
+role = 17
+tile = SubResource("Resource_1sae0")
+
+[sub_resource type="Resource" id="Resource_wy5pl"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(4, 4)
+
+[sub_resource type="Resource" id="Resource_cfbwy"]
+script = ExtResource("4_ddt62")
+role = 21
+tile = SubResource("Resource_wy5pl")
+
+[sub_resource type="Resource" id="Resource_jfsfi"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(1, 4)
+
+[sub_resource type="Resource" id="Resource_gponh"]
+script = ExtResource("4_ddt62")
+role = 20
+tile = SubResource("Resource_jfsfi")
+
+[sub_resource type="Resource" id="Resource_sfnch"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(0, 6)
+
+[sub_resource type="Resource" id="Resource_kchdh"]
+script = ExtResource("4_ddt62")
+role = 23
+tile = SubResource("Resource_sfnch")
+
+[sub_resource type="Resource" id="Resource_2haee"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(5, 6)
+
+[sub_resource type="Resource" id="Resource_dicnf"]
+script = ExtResource("4_ddt62")
+role = 22
+tile = SubResource("Resource_2haee")
+
+[sub_resource type="Resource" id="Resource_w47lb"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(1, 7)
+
+[sub_resource type="Resource" id="Resource_ywinr"]
+script = ExtResource("4_ddt62")
+role = 26
+tile = SubResource("Resource_w47lb")
+
+[sub_resource type="Resource" id="Resource_37dod"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(4, 7)
+
+[sub_resource type="Resource" id="Resource_hsgsx"]
+script = ExtResource("4_ddt62")
+role = 27
+tile = SubResource("Resource_37dod")
+
+[sub_resource type="Resource" id="Resource_daikj"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(7, 21)
+
+[sub_resource type="Resource" id="Resource_857k5"]
+script = ExtResource("4_ddt62")
+role = 28
+tile = SubResource("Resource_daikj")
+
+[sub_resource type="Resource" id="Resource_8fmcs"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(10, 21)
+
+[sub_resource type="Resource" id="Resource_vnqcq"]
+script = ExtResource("4_ddt62")
+role = 29
+tile = SubResource("Resource_8fmcs")
+
+[sub_resource type="Resource" id="Resource_jtue1"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(1, 21)
+
+[sub_resource type="Resource" id="Resource_e12rx"]
+script = ExtResource("4_ddt62")
+role = 30
+tile = SubResource("Resource_jtue1")
+
+[sub_resource type="Resource" id="Resource_6xjkg"]
+script = ExtResource("5_nstq4")
+atlas_coords = Vector2i(4, 21)
+
+[sub_resource type="Resource" id="Resource_1ihgb"]
+script = ExtResource("4_ddt62")
+role = 31
+tile = SubResource("Resource_6xjkg")
+
+[sub_resource type="Resource" id="Resource_n7n3o"]
+script = ExtResource("3_hrbet")
+id = &"caves_rock"
+display_name = "Cave — Rock"
+description = "Bazowy zestaw skalnych ścian jaskini (primary warianty)."
+tile_set = ExtResource("6_4axk4")
+tile_entries = Array[ExtResource("4_ddt62")]([SubResource("Resource_mtsut"), SubResource("Resource_k1jgq"), SubResource("Resource_o6plj"), SubResource("Resource_hepmf"), SubResource("Resource_1opxl"), SubResource("Resource_3x5s3"), SubResource("Resource_otihy"), SubResource("Resource_j68pr"), SubResource("Resource_srhdk"), SubResource("Resource_iix2s"), SubResource("Resource_cfbwy"), SubResource("Resource_gponh"), SubResource("Resource_kchdh"), SubResource("Resource_dicnf"), SubResource("Resource_ywinr"), SubResource("Resource_hsgsx"), SubResource("Resource_857k5"), SubResource("Resource_vnqcq"), SubResource("Resource_e12rx"), SubResource("Resource_1ihgb")])
+
+[resource]
+script = ExtResource("2_1ds74")
+tilesets = Array[ExtResource("3_hrbet")]([SubResource("Resource_n7n3o")])
+default_tileset_id = &"caves_rock"

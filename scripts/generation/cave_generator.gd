@@ -232,7 +232,10 @@ static func apply_cave_tiles(
 	rng: RandomNumberGenerator,
 	floor_decor_layer: TileMapLayer = null,
 	theme_override: int = -1,
-	flags: GenerationFlags = null
+	flags: GenerationFlags = null,
+	map_tile_profile: MapTileProfile = null,
+	tileset_field: TileSetField = null,
+	generator_behaviour: Dictionary = {}
 ) -> void:
 	if flags == null:
 		flags = GenerationFlags.new()
@@ -276,6 +279,15 @@ static func apply_cave_tiles(
 	ctx.entrance_pos = result.entrance_pos
 	ctx.exit_pos = result.exit_pos
 	ctx.rooms = result.rooms
+
+	# Named TileSet System (opcjonalne). Gdy jest profil, ale nie ma pola przypisań,
+	# tworzymy puste pole -> resolver używa default_tileset_id dla każdej komórki
+	# (pojedynczy zestaw = zachowanie parzyste z mapowaniem ról).
+	ctx.map_tile_profile = map_tile_profile
+	ctx.tileset_field = tileset_field
+	ctx.generator_behaviour = generator_behaviour
+	if map_tile_profile != null and ctx.tileset_field == null:
+		ctx.tileset_field = TileSetField.new()
 
 	var layers: Dictionary = {
 		&"Floor": floor_layer,

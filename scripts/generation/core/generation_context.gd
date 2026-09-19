@@ -24,6 +24,11 @@ var rooms: Array[Rect2i] = []
 var entrance_pos: Vector2i = Vector2i.ZERO
 var exit_pos: Vector2i = Vector2i.ZERO
 
+# --- Named TileSet System (opcjonalne; null => placery używają stałych) ---
+var map_tile_profile: MapTileProfile = null
+var tileset_field: TileSetField = null
+var generator_behaviour: Dictionary = {}
+
 # --- Szumy (deterministyczne, tworzone raz) ---
 var theme_noise: FastNoiseLite
 var variant_noise: FastNoiseLite

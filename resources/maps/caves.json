@@ -1,0 +1,22 @@
+{
+  "debug": {
+    "validate_tile_profile_on_load": true
+  },
+  "tile_profile": "res://modules/quiz_rpg/resources/tiles/profiles/caves_map_tiles.tres",
+  "tilesets": {
+    "default": "caves_rock",
+    "enabled": [
+      "caves_rock"
+    ],
+    "forbidden_contact_policy": "use_default",
+    "missing_tileset_policy": "default"
+  },
+  "tiling": {
+    "connectors_enabled": true,
+    "facades_enabled": true,
+    "floor_enabled": true,
+    "slopes_enabled": true,
+    "solid_fill_enabled": true
+  },
+  "version": 1
+}
