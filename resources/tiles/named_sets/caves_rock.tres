@@ -418,36 +418,88 @@ script = ExtResource("3_78ykd")
 atlas_coords = Vector2i(7, 21)
 
 [sub_resource type="Resource" id="Resource_2je4q"]
-script = ExtResource("2_0ga60")
-role = 28
+script = ExtResource("5_old3f")
 tile = SubResource("Resource_hinm8")
 
 [sub_resource type="Resource" id="Resource_jatcp"]
 script = ExtResource("3_78ykd")
-atlas_coords = Vector2i(10, 21)
+atlas_coords = Vector2i(7, 20)
 
 [sub_resource type="Resource" id="Resource_fwxue"]
-script = ExtResource("2_0ga60")
-role = 29
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -1)
 tile = SubResource("Resource_jatcp")
 
 [sub_resource type="Resource" id="Resource_mpctw"]
 script = ExtResource("3_78ykd")
-atlas_coords = Vector2i(1, 21)
+atlas_coords = Vector2i(7, 19)
 
 [sub_resource type="Resource" id="Resource_0qkxu"]
-script = ExtResource("2_0ga60")
-role = 30
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -2)
 tile = SubResource("Resource_mpctw")
 
 [sub_resource type="Resource" id="Resource_qeffd"]
-script = ExtResource("3_78ykd")
-atlas_coords = Vector2i(4, 21)
+script = ExtResource("4_mtsut")
+parts = Array[ExtResource("5_old3f")]([SubResource("Resource_2je4q"), SubResource("Resource_fwxue"), SubResource("Resource_0qkxu")])
 
 [sub_resource type="Resource" id="Resource_uhwto"]
 script = ExtResource("2_0ga60")
+role = 28
+variants = Array[ExtResource("4_mtsut")]([SubResource("Resource_qeffd")])
+
+[sub_resource type="Resource" id="Resource_irn7f"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(10, 21)
+
+[sub_resource type="Resource" id="Resource_qhw2t"]
+script = ExtResource("5_old3f")
+tile = SubResource("Resource_irn7f")
+
+[sub_resource type="Resource" id="Resource_8xg00"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(10, 20)
+
+[sub_resource type="Resource" id="Resource_1hr68"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -1)
+tile = SubResource("Resource_8xg00")
+
+[sub_resource type="Resource" id="Resource_wvb1k"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(10, 19)
+
+[sub_resource type="Resource" id="Resource_3elho"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -2)
+tile = SubResource("Resource_wvb1k")
+
+[sub_resource type="Resource" id="Resource_3ikwt"]
+script = ExtResource("4_mtsut")
+parts = Array[ExtResource("5_old3f")]([SubResource("Resource_qhw2t"), SubResource("Resource_1hr68"), SubResource("Resource_3elho")])
+
+[sub_resource type="Resource" id="Resource_veov4"]
+script = ExtResource("2_0ga60")
+role = 29
+variants = Array[ExtResource("4_mtsut")]([SubResource("Resource_3ikwt")])
+
+[sub_resource type="Resource" id="Resource_inu4p"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 21)
+
+[sub_resource type="Resource" id="Resource_emikw"]
+script = ExtResource("2_0ga60")
+role = 30
+tile = SubResource("Resource_inu4p")
+
+[sub_resource type="Resource" id="Resource_eqgoi"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 21)
+
+[sub_resource type="Resource" id="Resource_8me55"]
+script = ExtResource("2_0ga60")
 role = 31
-tile = SubResource("Resource_qeffd")
+tile = SubResource("Resource_eqgoi")
 
 [resource]
 script = ExtResource("1_mhosx")
@@ -455,4 +507,4 @@ id = &"caves_rock"
 display_name = "Cave — Rock"
 description = "Bazowy zestaw skalnych ścian jaskini (primary warianty)."
 tile_set = ExtResource("6_k1jgq")
-tile_entries = Array[ExtResource("2_0ga60")]([SubResource("Resource_o6plj"), SubResource("Resource_08m1f"), SubResource("Resource_1sae0"), SubResource("Resource_wy5pl"), SubResource("Resource_jfsfi"), SubResource("Resource_sfnch"), SubResource("Resource_2haee"), SubResource("Resource_kty4s"), SubResource("Resource_mxuxo"), SubResource("Resource_2mdcs"), SubResource("Resource_rk1qk"), SubResource("Resource_80a0o"), SubResource("Resource_gu6h3"), SubResource("Resource_1lmhl"), SubResource("Resource_kxxa7"), SubResource("Resource_0fs70"), SubResource("Resource_bay71"), SubResource("Resource_t0qbd"), SubResource("Resource_2je4q"), SubResource("Resource_fwxue"), SubResource("Resource_0qkxu"), SubResource("Resource_uhwto")])
+tile_entries = Array[ExtResource("2_0ga60")]([SubResource("Resource_o6plj"), SubResource("Resource_08m1f"), SubResource("Resource_1sae0"), SubResource("Resource_wy5pl"), SubResource("Resource_jfsfi"), SubResource("Resource_sfnch"), SubResource("Resource_2haee"), SubResource("Resource_kty4s"), SubResource("Resource_mxuxo"), SubResource("Resource_2mdcs"), SubResource("Resource_rk1qk"), SubResource("Resource_80a0o"), SubResource("Resource_gu6h3"), SubResource("Resource_1lmhl"), SubResource("Resource_kxxa7"), SubResource("Resource_0fs70"), SubResource("Resource_bay71"), SubResource("Resource_t0qbd"), SubResource("Resource_uhwto"), SubResource("Resource_veov4"), SubResource("Resource_emikw"), SubResource("Resource_8me55")])
