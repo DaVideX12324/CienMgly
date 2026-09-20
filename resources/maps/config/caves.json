@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tile_profile": "res://modules/quiz_rpg/resources/tiles/profiles/caves_map_tiles.tres",
+  "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/caves_map_tiles.tres",
   "generation": {
     "seed": 0,
     "width": 0,

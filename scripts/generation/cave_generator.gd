@@ -5,7 +5,7 @@ extends "res://modules/quiz_rpg/scripts/generation/map_generator_base.gd"
 ## Wykorzystuje kafelki z caves.tres, manualnie dopasowując kafelki ścian (autotiling skryptowy),
 ## narożników wewnętrznych i zewnętrznych, fasad wielokafelkowych oraz podłogi kamiennej z mchem.
 
-const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/tilemaps/caves.tres"
+const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/maps/caves.tres"
 
 # =========================================================================
 # FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)

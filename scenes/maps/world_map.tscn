@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://worldmap001"]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/knowledge_guardian.tscn" id="2_enemy_guardian"]
-[ext_resource type="TileSet" uid="uid://da35ib8lqmfbh" path="res://modules/quiz_rpg/resources/tilemaps/caves.tres" id="2_ovh33"]
+[ext_resource type="TileSet" uid="uid://da35ib8lqmfbh" path="res://modules/quiz_rpg/resources/maps/caves.tres" id="2_ovh33"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/algorithm_master.tscn" id="3_enemy_algorithm"]
 [ext_resource type="PackedScene" uid="uid://c0qbrwglmvul3" path="res://modules/quiz_rpg/scenes/enemies/slime_green.tscn" id="4_enemy_dragon"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/math_golem.tscn" id="5_enemy_golem"]

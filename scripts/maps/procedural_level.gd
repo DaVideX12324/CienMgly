@@ -166,7 +166,7 @@ func generate_level(seed_val: int = 0) -> void:
 	var ts := custom_tileset
 	if ts == null:
 		if level_type == LevelType.CAVE_DUNGEON:
-			var cave_ts_path: String = palette.get("tileset_path", "res://modules/quiz_rpg/resources/tilemaps/caves.tres")
+			var cave_ts_path: String = palette.get("tileset_path", "res://modules/quiz_rpg/resources/maps/caves.tres")
 			if ResourceLoader.exists(cave_ts_path):
 				ts = load(cave_ts_path) as TileSet
 		if ts == null:
