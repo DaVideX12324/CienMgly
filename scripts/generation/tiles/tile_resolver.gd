@@ -95,13 +95,16 @@ static func resolve(
 ## forced_variant_id != "": placer wymusza KONKRETNY wariant (geometria: WEST/EAST,
 ## motyw roots, A/B z variant_noise) — resolver zwraca części tego wariantu. To zachowuje
 ## legacy wybór wariantu sterowany geometrią; hash/roll dotyczy tylko wariantów równoważnych.
+## force_tileset_id != "": placer wymusza KONKRETNY named set (np. caves_roots gdy
+## use_roots), zamiast brać go z TileSetField. Poza tym normalna ścieżka (wariant, części).
 static func resolve_module_parts(
 	ctx: GenerationContext,
 	anchor_pos: Vector2i,
 	module_role: TileModuleRole.Id,
 	neighbor_positions: Array[Vector2i] = [],
 	variant_roll: int = -1,
-	forced_variant_id: StringName = &""
+	forced_variant_id: StringName = &"",
+	force_tileset_id: StringName = &""
 ) -> Array:
 	if not is_active(ctx):
 		return []
@@ -110,7 +113,7 @@ static func resolve_module_parts(
 	var default_id: StringName = profile.default_tileset_id
 	var storage_role: int = TileModuleRole.to_storage_role(module_role)
 
-	var own_id: StringName = ctx.tileset_field.get_tileset_id(anchor_pos, default_id)
+	var own_id: StringName = force_tileset_id if force_tileset_id != &"" else ctx.tileset_field.get_tileset_id(anchor_pos, default_id)
 	var own_set: NamedTileSetDefinition = profile.get_tileset(own_id)
 	if own_set == null:
 		push_warning("TileResolver.module: nieznany TileSet ID '%s' @ %s" % [own_id, anchor_pos])
@@ -122,7 +125,8 @@ static func resolve_module_parts(
 	var neighbor_id: StringName = _find_relevant_neighbor_id(ctx, anchor_pos, neighbor_positions, own_id)
 
 	# 1) Styk zestawów — reguła pary (transition / forbidden / use_*).
-	if neighbor_id != StringName() and neighbor_id != own_id:
+	# Przy wymuszonym secie (force_tileset_id) pomijamy — placer jawnie wybrał rodzinę.
+	if force_tileset_id == &"" and neighbor_id != StringName() and neighbor_id != own_id:
 		var rule: TileSetPairRule = profile.get_pair_rule(own_id, neighbor_id)
 		if rule != null:
 			match rule.mode:

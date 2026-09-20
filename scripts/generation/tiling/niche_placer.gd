@@ -23,8 +23,8 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 
 
 ## Moduł niszy: 8 części, 2 kolumny (offsety x=0 i x=1). Kategoria FACADE, tie_breaker=0.
-static func _place_niche(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
-	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id)
+static func _place_niche(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
 	for rp in parts:
@@ -80,12 +80,13 @@ static func try_place_legacy(
 	if not can_niche:
 		return false
 
-	var vid: StringName = &"ROOT_A" if use_roots else &"A"
+	var vid: StringName = &"A"
+	var force_id: StringName = &"caves_roots" if use_roots else &""
 	var can_place_out_niche := state.can_place_out_niche(pos)
 
 	# 1. Nisza sekretna (para modułów OUT + OUT)
 	if can_place_out_niche and ctx.tile_rng.randf() < ctx.flags.secret_niche_spawn_chance:
-		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_SECRET, vid, table):
+		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_SECRET, vid, table, force_id):
 			var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
 			_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)
 			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP, &"FACADE", table)
@@ -102,7 +103,7 @@ static func try_place_legacy(
 
 	# 2. Nisza standardowa (para modułów IN + IN)
 	if ctx.tile_rng.randf() < ctx.flags.niche_spawn_chance:
-		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_STANDARD, vid, table):
+		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_STANDARD, vid, table, force_id):
 			var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
 			_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)
 			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NE_IN_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP, &"FACADE", table)
