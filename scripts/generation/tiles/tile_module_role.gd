@@ -30,6 +30,8 @@ enum Id {
 	RIM_NORTH,
 	RIM_EAST,
 	RIM_WEST,
+	NICHE_STANDARD,
+	NICHE_SECRET,
 }
 
 ## Klucz, pod którym NamedTileSetDefinition przechowuje wpis danego modułu
@@ -57,6 +59,8 @@ static func to_storage_role(module_role: Id) -> int:
 		Id.RIM_NORTH: return TileRole.Id.RIM_NORTH
 		Id.RIM_EAST: return TileRole.Id.RIM_EAST
 		Id.RIM_WEST: return TileRole.Id.RIM_WEST
+		Id.NICHE_STANDARD: return TileRole.Id.NICHE_STANDARD
+		Id.NICHE_SECRET: return TileRole.Id.NICHE_SECRET
 		_: return TileRole.Id.NONE
 
 ## Ile części ma mieć poprawny moduł (0 = dowolnie). Do walidacji kształtu.

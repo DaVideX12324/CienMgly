@@ -9,6 +9,8 @@ const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
+const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
+const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
@@ -18,6 +20,30 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 	p.category = category
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
+
+
+## Moduł niszy: 8 części, 2 kolumny (offsety x=0 i x=1). Kategoria FACADE, tie_breaker=0.
+static func _place_niche(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id)
+	if parts.is_empty():
+		return false
+	for rp in parts:
+		var p := TilePlacement.new()
+		p.pos = anchor + rp.offset
+		p.layer = rp.layer if rp.layer != &"" else &"Walls"
+		p.source_id = rp.tile.source_id
+		p.atlas_coords = rp.tile.atlas_coords
+		p.alternative_tile = rp.tile.alternative_tile
+		p.category = &"FACADE"
+		PlacementPriority.assign(p, table)
+		plan.queue(p)
+	return true
+
+
+static func _mark8(state: LegacyPlacementState, pos: Vector2i, pos_next: Vector2i) -> void:
+	for dy in [-3, -2, -1, 0]:
+		state.mark(pos + Vector2i(0, dy), &"FACADE")
+		state.mark(pos_next + Vector2i(0, dy), &"FACADE")
 
 
 static func try_place_legacy(
@@ -54,71 +80,40 @@ static func try_place_legacy(
 	if not can_niche:
 		return false
 
+	var vid: StringName = &"ROOT_A" if use_roots else &"A"
 	var can_place_out_niche := state.can_place_out_niche(pos)
 
 	# 1. Nisza sekretna (para modułów OUT + OUT)
 	if can_place_out_niche and ctx.tile_rng.randf() < ctx.flags.secret_niche_spawn_chance:
-		var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
-		var l_top := CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP
-		var l_mid := CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID
-		var l_base := CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE
-
-		_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)
-		_queue(plan, pos + Vector2i(0, -2), l_top, &"FACADE", table)
-		_queue(plan, pos + Vector2i(0, -1), l_mid, &"FACADE", table)
-		_queue(plan, pos, l_base, &"FACADE", table)
-		state.mark(pos + Vector2i(0, -3), &"FACADE")
-		state.mark(pos + Vector2i(0, -2), &"FACADE")
-		state.mark(pos + Vector2i(0, -1), &"FACADE")
-		state.mark(pos, &"FACADE")
-
-		var r_crown := CaveTileConstants.CRNR_SE_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SE_IN
-		var r_top := CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP
-		var r_mid := CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID
-		var r_base := CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE
-
-		_queue(plan, pos_next + Vector2i(0, -3), r_crown, &"FACADE", table)
-		_queue(plan, pos_next + Vector2i(0, -2), r_top, &"FACADE", table)
-		_queue(plan, pos_next + Vector2i(0, -1), r_mid, &"FACADE", table)
-		_queue(plan, pos_next, r_base, &"FACADE", table)
-		state.mark(pos_next + Vector2i(0, -3), &"FACADE")
-		state.mark(pos_next + Vector2i(0, -2), &"FACADE")
-		state.mark(pos_next + Vector2i(0, -1), &"FACADE")
-		state.mark(pos_next, &"FACADE")
-
+		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_SECRET, vid, table):
+			var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
+			_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)
+			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP, &"FACADE", table)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID, &"FACADE", table)
+			_queue(plan, pos, CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE, &"FACADE", table)
+			var r_crown := CaveTileConstants.CRNR_SE_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SE_IN
+			_queue(plan, pos_next + Vector2i(0, -3), r_crown, &"FACADE", table)
+			_queue(plan, pos_next + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP, &"FACADE", table)
+			_queue(plan, pos_next + Vector2i(0, -1), CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID, &"FACADE", table)
+			_queue(plan, pos_next, CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE, &"FACADE", table)
+		_mark8(state, pos, pos_next)
 		state.register_out_niche(pos)
 		return true
 
 	# 2. Nisza standardowa (para modułów IN + IN)
 	if ctx.tile_rng.randf() < ctx.flags.niche_spawn_chance:
-		var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
-		var l_top := CaveTileConstants.MOD_CRNR_NE_IN_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP
-		var l_mid := CaveTileConstants.MOD_CRNR_NE_IN_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID
-		var l_base := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
-
-		_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)
-		_queue(plan, pos + Vector2i(0, -2), l_top, &"FACADE", table)
-		_queue(plan, pos + Vector2i(0, -1), l_mid, &"FACADE", table)
-		_queue(plan, pos, l_base, &"FACADE", table)
-		state.mark(pos + Vector2i(0, -3), &"FACADE")
-		state.mark(pos + Vector2i(0, -2), &"FACADE")
-		state.mark(pos + Vector2i(0, -1), &"FACADE")
-		state.mark(pos, &"FACADE")
-
-		var r_crown := CaveTileConstants.CRNR_SE_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SE_IN
-		var r_top := CaveTileConstants.MOD_CRNR_NW_IN_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP
-		var r_mid := CaveTileConstants.MOD_CRNR_NW_IN_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID
-		var r_base := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
-
-		_queue(plan, pos_next + Vector2i(0, -3), r_crown, &"FACADE", table)
-		_queue(plan, pos_next + Vector2i(0, -2), r_top, &"FACADE", table)
-		_queue(plan, pos_next + Vector2i(0, -1), r_mid, &"FACADE", table)
-		_queue(plan, pos_next, r_base, &"FACADE", table)
-		state.mark(pos_next + Vector2i(0, -3), &"FACADE")
-		state.mark(pos_next + Vector2i(0, -2), &"FACADE")
-		state.mark(pos_next + Vector2i(0, -1), &"FACADE")
-		state.mark(pos_next, &"FACADE")
-
+		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_STANDARD, vid, table):
+			var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
+			_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)
+			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NE_IN_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP, &"FACADE", table)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.MOD_CRNR_NE_IN_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID, &"FACADE", table)
+			_queue(plan, pos, CaveTileConstants.MOD_CRNR_NE_IN_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE, &"FACADE", table)
+			var r_crown := CaveTileConstants.CRNR_SE_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SE_IN
+			_queue(plan, pos_next + Vector2i(0, -3), r_crown, &"FACADE", table)
+			_queue(plan, pos_next + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NW_IN_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP, &"FACADE", table)
+			_queue(plan, pos_next + Vector2i(0, -1), CaveTileConstants.MOD_CRNR_NW_IN_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID, &"FACADE", table)
+			_queue(plan, pos_next, CaveTileConstants.MOD_CRNR_NW_IN_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE, &"FACADE", table)
+		_mark8(state, pos, pos_next)
 		return true
 
 	return false
