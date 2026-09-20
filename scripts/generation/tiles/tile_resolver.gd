@@ -18,6 +18,20 @@ const TileVariant = preload("res://modules/quiz_rpg/scripts/generation/core/tile
 const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 const VariantSelector = preload("res://modules/quiz_rpg/scripts/generation/tiles/variant_selector.gd")
 const ResolvedTileModulePart = preload("res://modules/quiz_rpg/scripts/generation/tiles/resolved_tile_module_part.gd")
+const MixedPool = preload("res://modules/quiz_rpg/scripts/generation/tiles/mixed_pool.gd")
+
+
+## MIXED: deterministycznie wybiera JEDEN kompatybilny source z puli dla danego anchor.
+## Pusta pula -> degradacja do default. Jeden set na cały moduł (spójność).
+static func _pick_mixed_source(profile: MapTileProfile, pool: MixedPool, anchor: Vector2i, world_seed: int) -> StringName:
+	var valid: Array = []
+	for sid in pool.sources:
+		if profile.get_tileset(sid) != null:
+			valid.append(sid)
+	if valid.is_empty():
+		return profile.default_tileset_id
+	var idx := VariantSelector.hash_index([world_seed, anchor.x, anchor.y, int(String(pool.id).hash())], valid.size())
+	return valid[idx]
 
 
 ## Czy dynamiczny resolver jest aktywny dla tego kontekstu.
@@ -113,7 +127,16 @@ static func resolve_module_parts(
 	var default_id: StringName = profile.default_tileset_id
 	var storage_role: int = TileModuleRole.to_storage_role(module_role)
 
-	var own_id: StringName = force_tileset_id if force_tileset_id != &"" else ctx.tileset_field.get_tileset_id(anchor_pos, default_id)
+	# MIXED z pola ma priorytet nad force_tileset_id (region MIXED nadpisuje motyw placera).
+	var field_id: StringName = ctx.tileset_field.get_tileset_id(anchor_pos, default_id)
+	var was_mixed := false
+	var own_id: StringName
+	var mixed_pool: MixedPool = profile.get_mixed_pool(field_id)
+	if mixed_pool != null:
+		own_id = _pick_mixed_source(profile, mixed_pool, anchor_pos, ctx.seed_value)
+		was_mixed = true
+	else:
+		own_id = force_tileset_id if force_tileset_id != &"" else field_id
 	var own_set: NamedTileSetDefinition = profile.get_tileset(own_id)
 	if own_set == null:
 		push_warning("TileResolver.module: nieznany TileSet ID '%s' @ %s" % [own_id, anchor_pos])
@@ -125,8 +148,8 @@ static func resolve_module_parts(
 	var neighbor_id: StringName = _find_relevant_neighbor_id(ctx, anchor_pos, neighbor_positions, own_id)
 
 	# 1) Styk zestawów — reguła pary (transition / forbidden / use_*).
-	# Przy wymuszonym secie (force_tileset_id) pomijamy — placer jawnie wybrał rodzinę.
-	if force_tileset_id == &"" and neighbor_id != StringName() and neighbor_id != own_id:
+	# Pomijamy przy wymuszonym secie (placer wybrał rodzinę) i przy MIXED (źródła są ALLOWED).
+	if force_tileset_id == &"" and not was_mixed and neighbor_id != StringName() and neighbor_id != own_id:
 		var rule: TileSetPairRule = profile.get_pair_rule(own_id, neighbor_id)
 		if rule != null:
 			match rule.mode:

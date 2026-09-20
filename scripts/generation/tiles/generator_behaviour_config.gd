@@ -9,6 +9,11 @@ extends RefCounted
 
 const MapTileProfile = preload("res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd")
 const TileRole = preload("res://modules/quiz_rpg/scripts/generation/core/tile_role.gd")
+const TileSetPairRule = preload("res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd")
+
+## Id puli MIXED do wypełnienia pola (JSON tilesets.mixed), lub "" gdy brak.
+func mixed_pool_id() -> StringName:
+	return StringName(tilesets().get("mixed", &""))
 
 const VALID_LAYERS := [&"Walls", &"Floor", &"FloorDecor", &""]
 # Oczekiwana liczba części dla ról-modułów (klucz przechowywania = TileRole.Id).
@@ -128,6 +133,23 @@ static func validate_profile(profile: MapTileProfile) -> Array[String]:
 			out.append("Reguła pary wskazuje nieistniejące id '%s'." % rule.first_tileset_id)
 		if profile.get_tileset(rule.second_tileset_id) == null:
 			out.append("Reguła pary wskazuje nieistniejące id '%s'." % rule.second_tileset_id)
+
+	# Pule MIXED: id, źródła istnieją, źródła wzajemnie ALLOWED (nie FORBIDDEN).
+	for pool in profile.mixed_pools:
+		if pool == null:
+			continue
+		if String(pool.id).is_empty():
+			out.append("MixedPool ma puste id.")
+		if pool.sources.is_empty():
+			out.append("MixedPool '%s' nie ma źródeł." % pool.id)
+		for sid in pool.sources:
+			if profile.get_tileset(sid) == null:
+				out.append("MixedPool '%s' -> nieistniejące źródło '%s'." % [pool.id, sid])
+		for i in range(pool.sources.size()):
+			for j in range(i + 1, pool.sources.size()):
+				var r: TileSetPairRule = profile.get_pair_rule(pool.sources[i], pool.sources[j])
+				if r == null or r.mode == TileSetPairRule.Mode.FORBIDDEN:
+					out.append("MixedPool '%s' -> '%s' i '%s' nie są ALLOWED (nie mogą się mieszać)." % [pool.id, pool.sources[i], pool.sources[j]])
 
 	return out
 
