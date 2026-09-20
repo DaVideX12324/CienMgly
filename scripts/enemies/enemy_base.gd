@@ -21,6 +21,9 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
 @export var is_boss: bool = false
+## Trwałe id bossa dla zapisu pokonania (puste => generowane z nazwy+pozycji).
+## Używane tylko gdy is_boss = true.
+@export var unique_id: String = ""
 @export_group("Movement")
 @export var patrol_speed: float = 80.0
 @export var detection_radius: float = 150.0
@@ -75,6 +78,13 @@ func _ready() -> void:
 
 	add_to_group("enemies")
 	add_to_group("interactable")
+
+	# Bossy: przywróć stan pokonania (per-save). Deferred + retry na level_path,
+	# bo current_level_path bywa ustawiany dopiero po _ready (jak w skrzyniach).
+	if is_boss:
+		if unique_id.is_empty():
+			unique_id = _generate_boss_id()
+		call_deferred("_check_boss_defeated")
 
 	var sprite = get_node_or_null("AnimatedSprite2D")
 	if sprite and sprite is AnimatedSprite2D and sprite.sprite_frames:
@@ -500,6 +510,8 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 	if player_won:
 		defeated = true
 		state = State.DEFEATED
+		if is_boss:
+			_persist_boss_defeat()
 		if _ps:
 			_ps.add_xp(xp_reward)
 		var tween: Tween = create_tween()
@@ -533,3 +545,74 @@ func take_quiz_damage(amount: int) -> void:
 
 func is_defeated() -> bool:
 	return hp <= 0
+
+
+## --- Zapis pokonania bossa (per-save, czyszczony przy rerollu mapy) ---
+
+func _generate_boss_id() -> String:
+	var parts: Array[String] = ["boss"]
+	var nm := enemy_name.strip_edges().to_lower()
+	if nm.is_empty() or nm == "przeciwnik":
+		nm = name.replace("@", "").strip_edges().to_lower()
+	if not nm.is_empty():
+		parts.append(nm)
+	var px := int(global_position.x / 10.0) * 10
+	var py := int(global_position.y / 10.0) * 10
+	parts.append(str(px))
+	parts.append(str(py))
+	return "_".join(parts)
+
+
+func _check_boss_defeated() -> void:
+	if not is_boss or not is_instance_valid(self):
+		return
+	var level_path := _get_current_level_path()
+	if level_path.is_empty():
+		await get_tree().process_frame
+		if is_instance_valid(self):
+			_check_boss_defeated()
+		return
+	var lsm := _get_level_state_manager()
+	if lsm and lsm.is_boss_defeated(level_path, unique_id):
+		# Już pokonany w tym zapisie -> nie spawnuj (usuń cicho).
+		defeated = true
+		state = State.DEFEATED
+		queue_free()
+
+
+func _persist_boss_defeat() -> void:
+	var level_path := _get_current_level_path()
+	if level_path.is_empty():
+		return
+	var lsm := _get_level_state_manager()
+	if lsm:
+		lsm.mark_boss_defeated(level_path, unique_id)
+
+
+func _get_level_state_manager() -> Node:
+	var s: Variant = CoreManager.get_singleton("LevelStateManager")
+	if s is Node:
+		return s
+	return get_node_or_null("/root/LevelStateManager")
+
+
+func _get_level_manager() -> Node:
+	var game_root := get_tree().current_scene
+	if game_root:
+		var lm := game_root.find_child("level_manager", true, false)
+		if lm is Node:
+			return lm
+	if CoreManager and CoreManager.has_method("get_active_module"):
+		var module_root: Variant = CoreManager.call("get_active_module")
+		if module_root is Node:
+			var lm2 := (module_root as Node).find_child("level_manager", true, false)
+			if lm2 is Node:
+				return lm2
+	return null
+
+
+func _get_current_level_path() -> String:
+	var lm := _get_level_manager()
+	if lm and lm.get("current_level_path") != null:
+		return str(lm.get("current_level_path"))
+	return ""
