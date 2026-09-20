@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/caves_map_tiles.tres",
+  "generation": {
+    "seed": 0,
+    "width": 0,
+    "height": 0,
+    "min_room_size": 6,
+    "max_room_size": 15,
+    "max_rooms": 0,
+    "corridor_width": 5
+  },
+  "flags": {
+    "enable_meandering": false,
+    "enable_variable_width": false,
+    "enable_funnels": false,
+    "enable_junction_smoothing": true,
+    "enable_grid_cleanup": true,
+    "enable_terrain_smoothing": true,
+    "enable_decorative_niches": true,
+    "enable_pillars": false,
+    "enable_2h_facades": true,
+    "enable_3h_facades": true,
+    "enable_floor_decorations": true,
+    "niche_spawn_chance": 0,
+    "secret_niche_spawn_chance": 0,
+    "force_theme": -1,
+    "debug_log_edge_kinds": false
+  },
+  "tilesets": {
+    "default": "caves_rock",
+    "enabled": [
+      "caves_rock",
+      "caves_roots"
+    ],
+    "forbidden_contact_policy": "use_default",
+    "missing_tileset_policy": "default"
+  },
+  "tiling": {
+    "connectors_enabled": true,
+    "facades_enabled": true,
+    "floor_enabled": true,
+    "slopes_enabled": true,
+    "solid_fill_enabled": true
+  },
+  "debug": {
+    "validate_tile_profile_on_load": true
+  }
+}
