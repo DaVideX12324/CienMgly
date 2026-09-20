@@ -3,7 +3,17 @@
 
 extends Node
 
+## Emitowany po każdym nowym kroku postępu urządzenia arcymaga (dla UI paska).
+signal device_progress_changed(count: int, total: int)
+
 var level_states: Dictionary = {}
+
+# --- Postęp urządzenia arcymaga (fabuła) ---
+# GLOBALNY, per-save, MONOTONICZNY, nieodwracalny. NIE jest częścią level_states,
+# więc reroll mapy / clear_defeated_bosses go NIE ruszają. Klucz = stabilne story-id
+# bossa (nie pozycyjne unique_id), żeby ten sam boss nie liczył się dwa razy po rerollu.
+var _device_progress: Dictionary = {}   # story_id -> true
+var device_total_bosses: int = 0        # łączna liczba bossów = 100% (ustawiana z gry)
 
 func _ready() -> void:
 	print("[LevelStateManager] ✓ Initialized")
@@ -262,13 +272,67 @@ func is_arena_completed(level_path: String, arena_id: String) -> bool:
 		return false
 	return arena_id in state["completed_arenas"]
 
-## SERIALIZACJA - dla SaveManager
+## ========================================
+## POSTĘP URZĄDZENIA ARCYMAGA (fabuła) - monotoniczny, per-save, nieodwracalny
+## Osobny od defeated_bosses: TEN licznik NIE cofa się przy rerollu mapy.
+## story_id = stabilne id story-bossa (EnemyBase.boss_story_id lub fallback level_path).
+## ========================================
+
+## Rejestruje krok postępu dla danego story-bossa. Zwraca true jeśli NOWY (nie liczono
+## go wcześniej — monotonicznie). Ten sam story_id po rerollu i ponownym zabiciu = brak
+## podwójnego liczenia.
+func register_device_progress(story_id: String) -> bool:
+	if story_id.is_empty() or _device_progress.has(story_id):
+		return false
+	_device_progress[story_id] = true
+	print("[LevelState] Device progress +1 (%d/%d): %s" % [get_device_progress(), device_total_bosses, story_id])
+	device_progress_changed.emit(get_device_progress(), device_total_bosses)
+	return true
+
+func has_device_progress(story_id: String) -> bool:
+	return _device_progress.has(story_id)
+
+## Liczba zaliczonych kroków (pokonanych unikalnych story-bossów).
+func get_device_progress() -> int:
+	return _device_progress.size()
+
+## Ustawia łączną liczbę bossów (= 100%). Wywołaj z gry przy starcie kampanii.
+func set_device_total_bosses(n: int) -> void:
+	device_total_bosses = maxi(n, 0)
+	device_progress_changed.emit(get_device_progress(), device_total_bosses)
+
+## Postęp 0.0..1.0 (0.0 gdy total nieustawiony). Do UI paska.
+func get_device_progress_ratio() -> float:
+	if device_total_bosses <= 0:
+		return 0.0
+	return clampf(float(get_device_progress()) / float(device_total_bosses), 0.0, 1.0)
+
+## Czy urządzenie osiągnęło 100% (Point of No Return fabularny).
+func is_device_complete() -> bool:
+	return device_total_bosses > 0 and get_device_progress() >= device_total_bosses
+
+
+## SERIALIZACJA - dla SaveManager (format: {levels, device_progress, device_total_bosses};
+## stary format = sam dict level_states, obsługiwany wstecznie).
 func serialize() -> Dictionary:
-	return level_states.duplicate(true)
+	return {
+		"levels": level_states.duplicate(true),
+		"device_progress": _device_progress.duplicate(true),
+		"device_total_bosses": device_total_bosses,
+	}
 
 func deserialize(data: Dictionary) -> void:
-	level_states = data.duplicate(true)
-	print("[LevelStateManager] ✓ Restored states for ", level_states.keys().size(), " levels")
+	if data.has("levels"):
+		level_states = (data.get("levels", {}) as Dictionary).duplicate(true)
+		_device_progress = (data.get("device_progress", {}) as Dictionary).duplicate(true)
+		device_total_bosses = int(data.get("device_total_bosses", 0))
+	else:
+		# Stary format zapisu: cały dict to level_states.
+		level_states = data.duplicate(true)
+		_device_progress = {}
+		device_total_bosses = 0
+	print("[LevelStateManager] ✓ Restored %d levels, device %d/%d" % [level_states.keys().size(), get_device_progress(), device_total_bosses])
+	device_progress_changed.emit(get_device_progress(), device_total_bosses)
 
 ## DEBUG - Wypisz aktualny stan
 func print_state(level_path: String = "") -> void:
@@ -278,7 +342,10 @@ func print_state(level_path: String = "") -> void:
 	else:
 		print("[LevelState] ", level_path, ": ", get_level_state(level_path))
 
-## Reset wszystkich stanów
+## Reset wszystkich stanów (nowa gra). Czyści też postęp urządzenia.
 func reset() -> void:
 	level_states.clear()
+	_device_progress.clear()
+	device_total_bosses = 0
 	print("[LevelStateManager] ✓ All states cleared")
+	device_progress_changed.emit(0, 0)
