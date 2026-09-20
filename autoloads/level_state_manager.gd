@@ -14,6 +14,9 @@ var level_states: Dictionary = {}
 # bossa (nie pozycyjne unique_id), żeby ten sam boss nie liczył się dwa razy po rerollu.
 var _device_progress: Dictionary = {}   # story_id -> true
 var device_total_bosses: int = 0        # łączna liczba bossów = 100% (ustawiana z gry)
+# Bramka fazy fabularnej: gdy false, pokonani bossowie NIE dobijają już paska
+# (np. po złożeniu klucza z fragmentów urządzenie "zamarza" do walki z arcymagiem).
+var device_counting_enabled: bool = true
 
 func _ready() -> void:
 	print("[LevelStateManager] ✓ Initialized")
@@ -282,6 +285,8 @@ func is_arena_completed(level_path: String, arena_id: String) -> bool:
 ## go wcześniej — monotonicznie). Ten sam story_id po rerollu i ponownym zabiciu = brak
 ## podwójnego liczenia.
 func register_device_progress(story_id: String) -> bool:
+	if not device_counting_enabled:
+		return false
 	if story_id.is_empty() or _device_progress.has(story_id):
 		return false
 	_device_progress[story_id] = true
@@ -291,6 +296,13 @@ func register_device_progress(story_id: String) -> bool:
 
 func has_device_progress(story_id: String) -> bool:
 	return _device_progress.has(story_id)
+
+## Włącza/wyłącza liczenie bossów do paska (bramka fazy fabularnej). Wywołaj
+## set_device_counting_enabled(false) np. po złożeniu klucza z fragmentów —
+## od tego momentu pokonani bossowie nie dobijają już postępu urządzenia.
+func set_device_counting_enabled(enabled: bool) -> void:
+	device_counting_enabled = enabled
+	print("[LevelState] Device counting enabled: ", enabled)
 
 ## Liczba zaliczonych kroków (pokonanych unikalnych story-bossów).
 func get_device_progress() -> int:
@@ -319,6 +331,7 @@ func serialize() -> Dictionary:
 		"levels": level_states.duplicate(true),
 		"device_progress": _device_progress.duplicate(true),
 		"device_total_bosses": device_total_bosses,
+		"device_counting_enabled": device_counting_enabled,
 	}
 
 func deserialize(data: Dictionary) -> void:
@@ -326,11 +339,13 @@ func deserialize(data: Dictionary) -> void:
 		level_states = (data.get("levels", {}) as Dictionary).duplicate(true)
 		_device_progress = (data.get("device_progress", {}) as Dictionary).duplicate(true)
 		device_total_bosses = int(data.get("device_total_bosses", 0))
+		device_counting_enabled = bool(data.get("device_counting_enabled", true))
 	else:
 		# Stary format zapisu: cały dict to level_states.
 		level_states = data.duplicate(true)
 		_device_progress = {}
 		device_total_bosses = 0
+		device_counting_enabled = true
 	print("[LevelStateManager] ✓ Restored %d levels, device %d/%d" % [level_states.keys().size(), get_device_progress(), device_total_bosses])
 	device_progress_changed.emit(get_device_progress(), device_total_bosses)
 
@@ -347,5 +362,6 @@ func reset() -> void:
 	level_states.clear()
 	_device_progress.clear()
 	device_total_bosses = 0
+	device_counting_enabled = true
 	print("[LevelStateManager] ✓ All states cleared")
 	device_progress_changed.emit(0, 0)
