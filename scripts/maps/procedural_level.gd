@@ -122,14 +122,25 @@ func _ensure_default_resources() -> void:
 
 func generate_level(seed_val: int = 0) -> void:
 	# Companion-JSON: parametry generatora + Named TileSet System (opcjonalne).
-	# Precedencja parametrów: UI/@export (>0) > JSON > wbudowany default.
+	# Precedencja parametrów: UI/@export (>0) > zapisany seed (per-save) > JSON > default.
 	var cfg = _load_behaviour_config()
+	var level_key := _level_key()
+	var lsm = _get_level_state_manager()
 
-	var actual_seed: int = seed_val if seed_val > 0 else (map_seed if map_seed > 0 else 0)
+	# Seed: jawny @export/UI (>0) > zapisany per-save > JSON > wylosuj.
+	var explicit_seed: int = seed_val if seed_val > 0 else (map_seed if map_seed > 0 else 0)
+	var actual_seed: int = explicit_seed
+	if actual_seed <= 0 and lsm != null and not level_key.is_empty():
+		actual_seed = lsm.get_map_seed(level_key)
 	if actual_seed <= 0 and cfg != null:
 		actual_seed = cfg.gen_int("seed", 0)
 	if actual_seed <= 0:
-		actual_seed = int(randi() % 1000000)
+		actual_seed = int(randi() % 1000000) + 1
+
+	# Utrwal seed dla tego poziomu, gdy nie było jeszcze zapisanego (stały układ
+	# per-save). Jawny @export/UI jest override'em projektanta i NIE nadpisuje zapisu.
+	if explicit_seed <= 0 and lsm != null and not level_key.is_empty() and lsm.get_map_seed(level_key) <= 0:
+		lsm.set_map_seed(level_key, actual_seed)
 
 	var gen_width: int = map_width if map_width > 0 else (cfg.gen_int("width", 160) if cfg != null else 160)
 	var gen_height: int = map_height if map_height > 0 else (cfg.gen_int("height", 160) if cfg != null else 160)
@@ -251,3 +262,51 @@ func _find_level_manager() -> Node:
 		if module_root is Node:
 			return (module_root as Node).find_child("level_manager", true, false)
 	return null
+
+
+## Klucz poziomu do zapisu seeda/stanu. scene_file_path jest ustawiony już w _ready
+## (niezależnie od timingu level_managera) i równy ścieżce używanej przez skrzynie itd.
+func _level_key() -> String:
+	if not scene_file_path.is_empty():
+		return scene_file_path
+	var lm := _find_level_manager()
+	if lm != null and lm.get("current_level_path") != null:
+		return str(lm.get("current_level_path"))
+	return ""
+
+
+func _get_level_state_manager() -> Node:
+	var core_manager := get_node_or_null("/root/CoreManager")
+	if core_manager and core_manager.has_method("get_singleton"):
+		var s: Variant = core_manager.call("get_singleton", "LevelStateManager")
+		if s is Node:
+			return s
+	return get_node_or_null("/root/LevelStateManager")
+
+
+## Reroll mapy: przypisuje nowy seed i CZYŚCI zapisany stan tego poziomu
+## (skrzynie/beczki/ściany/boss — bo stare id pozycyjne nie pasują do nowego układu),
+## a następnie przeładowuje poziom, generując go z nowym seedem.
+## new_seed <= 0 => losowy. Publiczne API — np. po zebraniu trzeciego fragmentu.
+func reroll(new_seed: int = 0) -> void:
+	var level_key := _level_key()
+	var lsm = _get_level_state_manager()
+	if lsm == null or level_key.is_empty():
+		push_warning("[ProceduralLevel] reroll: brak LevelStateManager lub klucza poziomu")
+		return
+
+	if new_seed > 0:
+		lsm.clear_level_state(level_key)
+		lsm.set_map_seed(level_key, new_seed)
+	else:
+		lsm.reroll_map_seed(level_key)
+
+	var lm := _find_level_manager()
+	if lm != null and lm.has_method("change_level"):
+		var path := str(lm.get("current_level_path"))
+		if path.is_empty():
+			path = scene_file_path
+		var spawn: String = str(lm.get("current_spawn_name")) if lm.get("current_spawn_name") != null else next_spawn_name
+		lm.call("change_level", path, spawn)
+	else:
+		push_warning("[ProceduralLevel] reroll: brak level_managera — mapa dostanie nowy seed przy następnym wejściu.")
