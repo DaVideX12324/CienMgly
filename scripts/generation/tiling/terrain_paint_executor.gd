@@ -2,8 +2,12 @@ class_name TerrainPaintExecutor
 extends RefCounted
 
 const TerrainPaintPlan = preload("res://modules/quiz_rpg/scripts/generation/core/terrain_paint_plan.gd")
+const TerrainAutotileSolver = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_autotile_solver.gd")
 
-## Wykonuje zaplanowane batche autotilingu set_cells_terrain_connect na warstwach.
+## Wykonuje zaplanowane batche autotilingu terenu na warstwach.
+## Używa własnego solvera (TerrainAutotileSolver) zamiast set_cells_terrain_connect,
+## który przy nakładających się terenach wstawia zły kafel (Godot #70218 -> twarde
+## cięcia krawędzi, najgorzej po prawej). Solver dobiera kafel wprost z wzorca sąsiedztwa.
 ## Jeśli warstwa docelowa (np. FloorDecor) jest null, batch zostaje bezpiecznie pominięty.
 static func execute(layers: Dictionary, plan: TerrainPaintPlan) -> void:
 	if plan == null or plan.batches.is_empty():
@@ -17,4 +21,4 @@ static func execute(layers: Dictionary, plan: TerrainPaintPlan) -> void:
 			continue
 
 		if not batch.cells.is_empty():
-			layer.set_cells_terrain_connect(batch.cells, batch.terrain_set, batch.terrain, batch.ignore_empty_terrains)
+			TerrainAutotileSolver.paint(layer, batch.cells, batch.terrain_set, batch.terrain)
