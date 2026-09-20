@@ -21,9 +21,13 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
 @export var is_boss: bool = false
-## Trwałe id bossa dla zapisu pokonania (puste => generowane z nazwy+pozycji).
-## Używane tylko gdy is_boss = true.
+## Trwałe id bossa dla zapisu pokonania/respawnu (puste => generowane z nazwy+pozycji).
+## Używane tylko gdy is_boss = true. Zmienne per seed (reroll => nowa pozycja/id).
 @export var unique_id: String = ""
+## Stabilne story-id bossa dla postępu urządzenia arcymaga (fabuła). NIE zmienia się
+## przy rerollu — dzięki temu ten sam story-boss nie liczy się dwa razy. Puste =>
+## fallback do level_path (jeden krok postępu na mapę). Ustaw np. "boss_desert_fragment1".
+@export var boss_story_id: String = ""
 @export_group("Movement")
 @export var patrol_speed: float = 80.0
 @export var detection_radius: float = 150.0
@@ -582,11 +586,17 @@ func _check_boss_defeated() -> void:
 
 func _persist_boss_defeat() -> void:
 	var level_path := _get_current_level_path()
-	if level_path.is_empty():
-		return
 	var lsm := _get_level_state_manager()
-	if lsm:
+	if lsm == null:
+		return
+	# 1) Respawn: pod tym seedem boss zostaje pokonany (czyszczone rerollem).
+	if not level_path.is_empty():
 		lsm.mark_boss_defeated(level_path, unique_id)
+	# 2) Postęp urządzenia arcymaga: monotoniczny, nieodwracalny, per story-boss.
+	#    Fallback story_id = level_path (jeden krok na mapę), gdy nie ustawiono jawnie.
+	var story_id := boss_story_id if not boss_story_id.is_empty() else level_path
+	if not story_id.is_empty() and lsm.has_method("register_device_progress"):
+		lsm.register_device_progress(story_id)
 
 
 func _get_level_state_manager() -> Node:
