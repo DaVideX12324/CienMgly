@@ -12,6 +12,7 @@ func get_level_state(level_path: String) -> Dictionary:
 	if not level_states.has(level_path):
 		level_states[level_path] = {
 			"map_seed": 0,                # ← seed mapy proceduralnej (0 = brak, wylosuj)
+			"defeated_bosses": [],        # ← pokonani bossowie (per-save, czyszczeni przy rerollu)
 			"dropped_items": [],
 			"opened_chests": [],
 			"destroyed_barrels": [],
@@ -56,6 +57,33 @@ func reroll_map_seed(level_path: String) -> int:
 	var new_seed := int(randi() % 1000000) + 1
 	set_map_seed(level_path, new_seed)
 	return new_seed
+
+## ========================================
+## BOSSY - pokonanie per-save (NIE na stałe: znika przy rerollu mapy albo
+## po jawnym clear_defeated_bosses). Pokonany boss nie odradza się przy
+## ponownym wejściu na tę samą mapę (ten sam seed => ta sama pozycja/id).
+## ========================================
+func mark_boss_defeated(level_path: String, boss_id: String) -> void:
+	var state = get_level_state(level_path)
+	if not state.has("defeated_bosses"):
+		state["defeated_bosses"] = []
+	if boss_id not in state["defeated_bosses"]:
+		state["defeated_bosses"].append(boss_id)
+		print("[LevelState] Boss defeated: ", boss_id)
+
+func is_boss_defeated(level_path: String, boss_id: String) -> bool:
+	var state = get_level_state(level_path)
+	if not state.has("defeated_bosses"):
+		return false
+	return boss_id in state["defeated_bosses"]
+
+## Reset pokonanych bossów dla poziomu (do wywołania — bez pełnego rerollu mapy).
+## Bossowie odrodzą się przy ponownym wejściu; reszta stanu (skrzynie itd.) zostaje.
+func clear_defeated_bosses(level_path: String) -> void:
+	var state = get_level_state(level_path)
+	state["defeated_bosses"] = []
+	print("[LevelState] Defeated bosses reset for: ", level_path)
+
 
 ## DROPPED ITEMS
 func save_dropped_item(level_path: String, item_data: Dictionary) -> void:
