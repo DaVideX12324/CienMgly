@@ -24,15 +24,14 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 	plan.queue(p)
 
 
-static func _variant_id(use_roots: bool, var_idx: int) -> StringName:
-	if use_roots:
-		return &"ROOT_B" if var_idx == 1 else &"ROOT_A"
+## A′: wariant to tylko A/B (var_idx). Motyw roots wybiera RODZINĘ (force_id niżej).
+static func _variant_id(var_idx: int) -> StringName:
 	return &"B" if var_idx == 1 else &"A"
 
 
-## Ścieżka modułowa dla ściany bocznej (1 kafel, wymuszony wariant). true jeśli położono.
-static func _try_side(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
-	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id)
+## Ścieżka modułowa dla ściany bocznej (1 kafel, wymuszony wariant + rodzina). true jeśli położono.
+static func _try_side(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
 	for rp in parts:
@@ -77,7 +76,7 @@ static func plan(
 			if edge.orientation == EdgeKind.Orientation.EAST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
 				var var_idx: int = 1 if is_under_inner_corner else (ctx.tile_rng.randi() % 2)
-				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _variant_id(use_roots_side, var_idx), table):
+				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_WEST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_WEST[var_idx]
 					_queue(plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
@@ -85,7 +84,7 @@ static func plan(
 			elif edge.orientation == EdgeKind.Orientation.WEST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(-1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
 				var var_idx: int = 1 if is_under_inner_corner else (ctx.tile_rng.randi() % 2)
-				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _variant_id(use_roots_side, var_idx), table):
+				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_EAST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_EAST[var_idx]
 					_queue(plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")

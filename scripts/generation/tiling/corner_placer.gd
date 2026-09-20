@@ -25,8 +25,8 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 
 
 ## Ścieżka modułowa (1 kafel, kategoria CORNER, tie_breaker=0 jak legacy). true jeśli położono.
-static func _try_corner(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
-	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id)
+static func _try_corner(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
 	for rp in parts:
@@ -70,6 +70,7 @@ static func plan(
 			var tile := Vector2i(-1, -1)
 			var module_role: int = TileModuleRole.Id.NONE
 			var variant_id: StringName = &"A"
+			var force_id: StringName = &""
 
 			match edge.orientation:
 				EdgeKind.Orientation.NORTH_WEST:
@@ -82,18 +83,18 @@ static func plan(
 					module_role = TileModuleRole.Id.INNER_CORNER_SW
 					if tile_under == CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP:
 						tile = CaveTileConstants.ROOT_CRNR_SW_IN
-						variant_id = &"ROOT_A"
+						force_id = &"caves_roots"
 					else:
 						tile = CaveTileConstants.CRNR_SW_IN
 				EdgeKind.Orientation.SOUTH_EAST:
 					module_role = TileModuleRole.Id.INNER_CORNER_SE
 					if tile_under == CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP:
 						tile = CaveTileConstants.ROOT_CRNR_SE_IN
-						variant_id = &"ROOT_A"
+						force_id = &"caves_roots"
 					else:
 						tile = CaveTileConstants.CRNR_SE_IN
 
 			if tile != Vector2i(-1, -1):
-				if not _try_corner(ctx, plan, pos, module_role, variant_id, table):
+				if not _try_corner(ctx, plan, pos, module_role, variant_id, table, force_id):
 					_queue(plan, pos, tile, &"CORNER", table)
 				state.mark(pos, &"CORNER")

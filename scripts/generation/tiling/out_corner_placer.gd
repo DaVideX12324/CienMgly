@@ -34,8 +34,8 @@ static func _queue(
 
 
 ## Ścieżka modułowa (origin = anchor, tie_breaker jak _queue). true jeśli położono.
-static func _try_out(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
-	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id)
+static func _try_out(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
 	for rp in parts:
@@ -74,8 +74,8 @@ static func place(
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
-			var vid: StringName = &"ROOT_A" if use_roots else &"A"
-			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, vid, table):
+			var vid: StringName = &"A"
+			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, vid, table, &"caves_roots" if use_roots else &""):
 				var top_t := CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP
 				var mid_t := CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID
 				var base_t := CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE
@@ -94,8 +94,8 @@ static func place(
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
-			var vid: StringName = &"ROOT_A" if use_roots else &"A"
-			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, vid, table):
+			var vid: StringName = &"A"
+			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, vid, table, &"caves_roots" if use_roots else &""):
 				var top_t := CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP
 				var mid_t := CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID
 				var base_t := CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE

@@ -6,7 +6,8 @@
   "tilesets": {
     "default": "caves_rock",
     "enabled": [
-      "caves_rock"
+      "caves_rock",
+      "caves_roots"
     ],
     "forbidden_contact_policy": "use_default",
     "missing_tileset_policy": "default"
