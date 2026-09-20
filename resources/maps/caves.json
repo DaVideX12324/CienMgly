@@ -1,8 +1,32 @@
 {
-  "debug": {
-    "validate_tile_profile_on_load": true
-  },
+  "version": 1,
   "tile_profile": "res://modules/quiz_rpg/resources/tiles/profiles/caves_map_tiles.tres",
+  "generation": {
+    "seed": 0,
+    "width": 0,
+    "height": 0,
+    "min_room_size": 6,
+    "max_room_size": 24,
+    "max_rooms": 0,
+    "corridor_width": 3
+  },
+  "flags": {
+    "enable_meandering": true,
+    "enable_variable_width": true,
+    "enable_funnels": true,
+    "enable_junction_smoothing": true,
+    "enable_grid_cleanup": true,
+    "enable_terrain_smoothing": true,
+    "enable_decorative_niches": true,
+    "enable_pillars": true,
+    "enable_2h_facades": true,
+    "enable_3h_facades": true,
+    "enable_floor_decorations": true,
+    "niche_spawn_chance": 0.15,
+    "secret_niche_spawn_chance": 0.3,
+    "force_theme": -1,
+    "debug_log_edge_kinds": false
+  },
   "tilesets": {
     "default": "caves_rock",
     "enabled": [
@@ -19,5 +43,7 @@
     "slopes_enabled": true,
     "solid_fill_enabled": true
   },
-  "version": 1
+  "debug": {
+    "validate_tile_profile_on_load": true
+  }
 }

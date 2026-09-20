@@ -10,6 +10,15 @@ extends RefCounted
 const MapTileProfile = preload("res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd")
 const TileRole = preload("res://modules/quiz_rpg/scripts/generation/core/tile_role.gd")
 const TileSetPairRule = preload("res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd")
+const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
+
+# Rozpoznawane klucze bloku "generation" (parametry topologii). seed/width/height
+# = 0 oznacza "auto" (bierz z UI/@export albo wbudowany default).
+const GEN_KEYS := ["min_room_size", "max_room_size", "max_rooms", "corridor_width", "seed", "width", "height"]
+# Rozpoznawane klucze bloku "flags" (1:1 z właściwościami GenerationFlags).
+const FLAG_BOOL_KEYS := ["enable_meandering", "enable_variable_width", "enable_funnels", "enable_junction_smoothing", "enable_grid_cleanup", "enable_terrain_smoothing", "enable_decorative_niches", "enable_pillars", "enable_2h_facades", "enable_3h_facades", "enable_floor_decorations", "debug_log_edge_kinds"]
+const FLAG_FLOAT_KEYS := ["niche_spawn_chance", "secret_niche_spawn_chance"]
+const FLAG_INT_KEYS := ["force_theme"]
 
 ## Id puli MIXED do wypełnienia pola (JSON tilesets.mixed), lub "" gdy brak.
 func mixed_pool_id() -> StringName:
@@ -38,6 +47,26 @@ func debug() -> Dictionary: return raw.get("debug", {})
 ## Etap tilingu (np. "connectors_enabled") — domyślnie true (włączony jak dotychczas).
 func is_tiling_enabled(key: String) -> bool:
 	return bool(tiling().get(key, true))
+
+
+## Parametr topologii z bloku "generation" jako int (def, gdy brak klucza).
+func gen_int(key: String, def: int) -> int:
+	var g := generation()
+	return int(g[key]) if g.has(key) else def
+
+
+## Buduje GenerationFlags z bloku "flags" JSON-a. Klucze nieobecne zostają z base
+## (albo z domyślnych GenerationFlags), więc JSON nadpisuje tylko to, co podaje.
+func build_flags(base: GenerationFlags = null) -> GenerationFlags:
+	var f: GenerationFlags = base if base != null else GenerationFlags.new()
+	var fl := flags()
+	for k in FLAG_BOOL_KEYS:
+		if fl.has(k): f.set(k, bool(fl[k]))
+	for k in FLAG_FLOAT_KEYS:
+		if fl.has(k): f.set(k, float(fl[k]))
+	for k in FLAG_INT_KEYS:
+		if fl.has(k): f.set(k, int(fl[k]))
+	return f
 
 func default_tileset_id() -> StringName:
 	return StringName(tilesets().get("default", &""))
@@ -86,6 +115,15 @@ static func load_from_json_path(json_path: String) -> GeneratorBehaviourConfig:
 		for tid in enabled:
 			if cfg.profile.get_tileset(StringName(tid)) == null:
 				cfg.warnings.append("JSON 'enabled' zawiera zestaw '%s' spoza profilu." % tid)
+
+	# Walidacja parametrów generatora (nieznane klucze -> ostrzeżenie, nie błąd).
+	for k in cfg.generation():
+		if not GEN_KEYS.has(k):
+			cfg.warnings.append("Nieznany parametr 'generation.%s' — pominięto." % k)
+	var known_flags := FLAG_BOOL_KEYS + FLAG_FLOAT_KEYS + FLAG_INT_KEYS
+	for k in cfg.flags():
+		if not known_flags.has(k):
+			cfg.warnings.append("Nieznana flaga 'flags.%s' — pominięto." % k)
 
 	return cfg
 
