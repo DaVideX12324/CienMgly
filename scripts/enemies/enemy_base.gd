@@ -28,6 +28,9 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 ## przy rerollu — dzięki temu ten sam story-boss nie liczy się dwa razy. Puste =>
 ## fallback do level_path (jeden krok postępu na mapę). Ustaw np. "boss_desert_fragment1".
 @export var boss_story_id: String = ""
+## Czy ten boss dobija pasek postępu urządzenia. Odznacz dla bossów, które nie mają
+## się liczyć (globalna bramka fazy jest osobno w LevelStateManager).
+@export var counts_toward_device: bool = true
 @export_group("Movement")
 @export var patrol_speed: float = 80.0
 @export var detection_radius: float = 150.0
@@ -594,9 +597,11 @@ func _persist_boss_defeat() -> void:
 		lsm.mark_boss_defeated(level_path, unique_id)
 	# 2) Postęp urządzenia arcymaga: monotoniczny, nieodwracalny, per story-boss.
 	#    Fallback story_id = level_path (jeden krok na mapę), gdy nie ustawiono jawnie.
-	var story_id := boss_story_id if not boss_story_id.is_empty() else level_path
-	if not story_id.is_empty() and lsm.has_method("register_device_progress"):
-		lsm.register_device_progress(story_id)
+	#    Globalna bramka (device_counting_enabled) jest sprawdzana w managerze.
+	if counts_toward_device:
+		var story_id := boss_story_id if not boss_story_id.is_empty() else level_path
+		if not story_id.is_empty() and lsm.has_method("register_device_progress"):
+			lsm.register_device_progress(story_id)
 
 
 func _get_level_state_manager() -> Node:
