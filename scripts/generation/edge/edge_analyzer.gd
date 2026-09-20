@@ -440,8 +440,11 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				and not _is_inner_corner(edges, p + Vector2i(0, 1))
 
 			# Reguła: jeśli kafelek obok MID fasady 3H, ma być on ścianą boczną (SIDE_WALL).
-			var is_mid_right: bool = _is_facade_mid(edges, p + Vector2i(1, 0), facade_cols)
-			var is_mid_left: bool = _is_facade_mid(edges, p + Vector2i(-1, 0), facade_cols)
+			# WYJĄTEK: komórka z podłogą bezpośrednio na północy jest szczytem ściany
+			# (TOP_RIM / narożnik zewnętrzny), nigdy pionową ścianą boczną — skrót MID nie
+			# może jej nadpisać, inaczej narożnik out rima staje się płaską ścianą.
+			var is_mid_right: bool = not edge_c.n_floor and _is_facade_mid(edges, p + Vector2i(1, 0), facade_cols)
+			var is_mid_left: bool = not edge_c.n_floor and _is_facade_mid(edges, p + Vector2i(-1, 0), facade_cols)
 
 			if is_mid_right or match_side_left_mid or match_side_left_base:
 				edge_c.edge_kind = EdgeKind.Kind.SIDE_WALL
