@@ -54,9 +54,13 @@ func _load_tile_behaviour() -> Dictionary:
 	if cfg.profile == null:
 		return {} # brak profilu => stary tryb (stałe)
 
-	# TileSetField: na razie puste (pojedynczy zestaw = default_tileset_id dla każdej komórki).
-	# Docelowo wypełniane ze stref 'zones' (noise / room_tag). Zostawione jako punkt rozszerzenia.
+	# TileSetField: domyślnie puste (pojedynczy zestaw = default_tileset_id).
+	# MIXED: gdy JSON ustawia tilesets.mixed = <id puli>, wypełniamy field tym id dla
+	# całego obszaru mapy -> resolver miesza rodziny per moduł (respektując grupę).
 	var field = TileSetFieldScript.new()
+	var mix_id: StringName = cfg.mixed_pool_id()
+	if mix_id != &"" and cfg.profile.get_mixed_pool(mix_id) != null:
+		field.fill_rect(Rect2i(-6, -6, map_width + 12, map_height + 12), mix_id)
 	return {"profile": cfg.profile, "field": field, "raw": cfg.raw}
 
 

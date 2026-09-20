@@ -10,8 +10,18 @@ extends Resource
 @export_category("Reguły sąsiedztwa")
 @export var pair_rules: Array[TileSetPairRule] = []
 
+@export_category("Pule MIXED")
+@export var mixed_pools: Array[MixedPool] = []
+
 @export_category("Fallback")
 @export var default_tileset_id: StringName
+
+## Pula MIXED o danym id, lub null.
+func get_mixed_pool(pool_id: StringName) -> MixedPool:
+	for pool in mixed_pools:
+		if pool != null and pool.id == pool_id:
+			return pool
+	return null
 
 func get_tileset(id: StringName) -> NamedTileSetDefinition:
 	for definition in tilesets:

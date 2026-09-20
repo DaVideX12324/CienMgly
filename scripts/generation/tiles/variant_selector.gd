@@ -66,6 +66,14 @@ static func choose_variant_by_int_roll(variants: Array, roll: int) -> TileVarian
 	return active[active.size() - 1]
 
 
+## Stabilny, deterministyczny indeks [0, count) z sekwencji intów (np. seed+pozycja).
+## Do wyboru źródła puli MIXED — niezależny od kolejności iteracji.
+static func hash_index(values: Array, count: int) -> int:
+	if count <= 0:
+		return 0
+	return _stable_hash(values) % count
+
+
 ## Stabilny 32-bit hash (FNV-1a na sekwencji intów). Deterministyczny między uruchomieniami.
 static func _stable_hash(values: Array) -> int:
 	var h: int = 2166136261
