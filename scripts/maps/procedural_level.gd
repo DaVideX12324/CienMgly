@@ -39,19 +39,23 @@ var last_result: RefCounted = null
 var _transitioning: bool = false
 
 
-## Wczytuje companion-JSON + profil dla Named TileSet System.
-## Zwraca {profile, field, raw}. Puste/brak => {} (generator działa jak dotychczas).
-func _load_tile_behaviour() -> Dictionary:
+## Wczytuje companion-JSON (parametry generatora + Named TileSet System).
+## Zwraca obiekt konfiguracji lub null (puste/brak ścieżki => stary tryb).
+func _load_behaviour_config():
 	if tile_behaviour_json_path.is_empty():
-		return {}
-
+		return null
 	var cfg = GeneratorBehaviourConfig.load_from_json_path(tile_behaviour_json_path)
 	for w in cfg.warnings:
 		push_warning("[TileBehaviour] " + w)
 	for e in cfg.errors:
 		push_error("[TileBehaviour] " + e)
+	return cfg
 
-	if cfg.profile == null:
+
+## Buduje profil + pole zestawów dla Named TileSet System z wczytanego configu.
+## Zwraca {profile, field, raw}. Brak profilu => {} (generator działa jak dotychczas).
+func _build_tile_behaviour(cfg, gen_width: int, gen_height: int) -> Dictionary:
+	if cfg == null or cfg.profile == null:
 		return {} # brak profilu => stary tryb (stałe)
 
 	# TileSetField: domyślnie puste (pojedynczy zestaw = default_tileset_id).
@@ -60,7 +64,7 @@ func _load_tile_behaviour() -> Dictionary:
 	var field = TileSetFieldScript.new()
 	var mix_id: StringName = cfg.mixed_pool_id()
 	if mix_id != &"" and cfg.profile.get_mixed_pool(mix_id) != null:
-		field.fill_rect(Rect2i(-6, -6, map_width + 12, map_height + 12), mix_id)
+		field.fill_rect(Rect2i(-6, -6, gen_width + 12, gen_height + 12), mix_id)
 	return {"profile": cfg.profile, "field": field, "raw": cfg.raw}
 
 
@@ -117,25 +121,45 @@ func _ensure_default_resources() -> void:
 
 
 func generate_level(seed_val: int = 0) -> void:
-	var actual_seed: int = seed_val if seed_val > 0 else (map_seed if map_seed > 0 else int(randi() % 1000000))
+	# Companion-JSON: parametry generatora + Named TileSet System (opcjonalne).
+	# Precedencja parametrów: UI/@export (>0) > JSON > wbudowany default.
+	var cfg = _load_behaviour_config()
+
+	var actual_seed: int = seed_val if seed_val > 0 else (map_seed if map_seed > 0 else 0)
+	if actual_seed <= 0 and cfg != null:
+		actual_seed = cfg.gen_int("seed", 0)
+	if actual_seed <= 0:
+		actual_seed = int(randi() % 1000000)
+
+	var gen_width: int = map_width if map_width > 0 else (cfg.gen_int("width", 160) if cfg != null else 160)
+	var gen_height: int = map_height if map_height > 0 else (cfg.gen_int("height", 160) if cfg != null else 160)
+
+	# Flagi generacji z JSON (wspólne dla topologii i tilingu). Brak JSON => null => domyślne.
+	var cave_flags = cfg.build_flags() if cfg != null else null
+
 	var palette: Dictionary = {}
 	var gen_result: RefCounted = null
-	
+
 	match level_type:
 		LevelType.CAVE_DUNGEON:
 			palette = CaveGeneratorScript.get_default_palette()
+			var min_room: int = cfg.gen_int("min_room_size", 6) if cfg != null else 6
+			var max_room: int = cfg.gen_int("max_room_size", 24) if cfg != null else 24
+			var corridor: int = cfg.gen_int("corridor_width", 3) if cfg != null else 3
 			var rooms_count: int = cave_max_rooms
+			if rooms_count <= 0 and cfg != null:
+				rooms_count = cfg.gen_int("max_rooms", 0)
 			if rooms_count <= 0:
-				# Skalowanie: 60x60 -> 6, 100x100 -> 10, 160x160 -> 15, 250x250 -> 30, 500x500 -> 75
-				rooms_count = int(clampf(round(15.0 * (float(map_width * map_height) / (160.0 * 160.0))), 4, 120))
-			gen_result = CaveGeneratorScript.generate(map_width, map_height, actual_seed, 6, 24, rooms_count)
+				# Skalowanie: 60x60 -> 6, 160x160 -> 15, 250x250 -> ~37 (clamp 4..120)
+				rooms_count = int(clampf(round(15.0 * (float(gen_width * gen_height) / (160.0 * 160.0))), 4, 120))
+			gen_result = CaveGeneratorScript.generate(gen_width, gen_height, actual_seed, min_room, max_room, rooms_count, corridor, cave_flags)
 		LevelType.FOREST_OVERWORLD:
 			palette = OverworldForestGeneratorScript.get_default_palette()
-			gen_result = OverworldForestGeneratorScript.generate(map_width, map_height, actual_seed)
+			gen_result = OverworldForestGeneratorScript.generate(gen_width, gen_height, actual_seed)
 		LevelType.DUNGEON_CASTLE:
 			palette = DungeonGeneratorScript.get_default_palette()
-			gen_result = DungeonGeneratorScript.generate(map_width, map_height, actual_seed)
-			
+			gen_result = DungeonGeneratorScript.generate(gen_width, gen_height, actual_seed)
+
 	last_result = gen_result
 	
 	# 1. TileSet
@@ -157,13 +181,13 @@ func generate_level(seed_val: int = 0) -> void:
 	
 	var rng := MapGeneratorBaseScript.create_rng(actual_seed)
 	if level_type == LevelType.CAVE_DUNGEON:
-		# Named TileSet System (opcjonalny). Wczytaj companion-JSON, profil i pole zestawów.
-		var behaviour := _load_tile_behaviour()
+		# Named TileSet System (opcjonalny). Profil i pole zestawów z wczytanego configu.
+		var behaviour := _build_tile_behaviour(cfg, gen_width, gen_height)
 		var tile_profile = behaviour.get("profile")
 		var tileset_field = behaviour.get("field")
 		var behaviour_dict: Dictionary = behaviour.get("raw", {})
 		CaveGeneratorScript.apply_cave_tiles(
-			floor_layer, walls_layer, gen_result, rng, floor_decor, -1, null,
+			floor_layer, walls_layer, gen_result, rng, floor_decor, -1, cave_flags,
 			tile_profile, tileset_field, behaviour_dict
 		)
 	else:
