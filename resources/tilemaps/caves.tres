@@ -1,6 +1,6 @@
 [gd_resource type="TileSet" format=3 uid="uid://da35ib8lqmfbh"]
 
-[ext_resource type="Texture2D" uid="uid://b3j8ifpkjv2tx" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_8v6cb"]
+[ext_resource type="Texture2D" uid="uid://07y6clqgwkss" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_8v6cb"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8ee6j"]
 texture = ExtResource("1_8v6cb")
