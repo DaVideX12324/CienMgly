@@ -980,10 +980,322 @@ script = ExtResource("2_0ga60")
 role = 31
 tile = SubResource("Resource_00ph0")
 
+[sub_resource type="Resource" id="Resource_jiwbp"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 4)
+
+[sub_resource type="Resource" id="Resource_wapwt"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -3)
+tile = SubResource("Resource_jiwbp")
+
+[sub_resource type="Resource" id="Resource_jkcrw"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 5)
+
+[sub_resource type="Resource" id="Resource_kiq4k"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -2)
+tile = SubResource("Resource_jkcrw")
+
+[sub_resource type="Resource" id="Resource_fhkwi"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 6)
+
+[sub_resource type="Resource" id="Resource_nt6jd"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -1)
+tile = SubResource("Resource_fhkwi")
+
+[sub_resource type="Resource" id="Resource_3h1vx"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 7)
+
+[sub_resource type="Resource" id="Resource_qw1gb"]
+script = ExtResource("5_old3f")
+tile = SubResource("Resource_3h1vx")
+
+[sub_resource type="Resource" id="Resource_b0hh3"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 4)
+
+[sub_resource type="Resource" id="Resource_0xbh5"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -3)
+tile = SubResource("Resource_b0hh3")
+
+[sub_resource type="Resource" id="Resource_4jmgr"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 5)
+
+[sub_resource type="Resource" id="Resource_7ns31"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -2)
+tile = SubResource("Resource_4jmgr")
+
+[sub_resource type="Resource" id="Resource_4erte"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 6)
+
+[sub_resource type="Resource" id="Resource_mac42"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -1)
+tile = SubResource("Resource_4erte")
+
+[sub_resource type="Resource" id="Resource_ubchp"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 7)
+
+[sub_resource type="Resource" id="Resource_hpoxs"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, 0)
+tile = SubResource("Resource_ubchp")
+
+[sub_resource type="Resource" id="Resource_foh31"]
+script = ExtResource("4_mtsut")
+parts = Array[ExtResource("5_old3f")]([SubResource("Resource_wapwt"), SubResource("Resource_kiq4k"), SubResource("Resource_nt6jd"), SubResource("Resource_qw1gb"), SubResource("Resource_0xbh5"), SubResource("Resource_7ns31"), SubResource("Resource_mac42"), SubResource("Resource_hpoxs")])
+
+[sub_resource type="Resource" id="Resource_utrod"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 13)
+
+[sub_resource type="Resource" id="Resource_5ai0i"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -3)
+tile = SubResource("Resource_utrod")
+
+[sub_resource type="Resource" id="Resource_fcy0l"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 14)
+
+[sub_resource type="Resource" id="Resource_he1du"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -2)
+tile = SubResource("Resource_fcy0l")
+
+[sub_resource type="Resource" id="Resource_561l6"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 15)
+
+[sub_resource type="Resource" id="Resource_4p3a1"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -1)
+tile = SubResource("Resource_561l6")
+
+[sub_resource type="Resource" id="Resource_eancm"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 16)
+
+[sub_resource type="Resource" id="Resource_ltkil"]
+script = ExtResource("5_old3f")
+tile = SubResource("Resource_eancm")
+
+[sub_resource type="Resource" id="Resource_imvnl"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 13)
+
+[sub_resource type="Resource" id="Resource_6to7c"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -3)
+tile = SubResource("Resource_imvnl")
+
+[sub_resource type="Resource" id="Resource_c60p7"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 14)
+
+[sub_resource type="Resource" id="Resource_wxf2e"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -2)
+tile = SubResource("Resource_c60p7")
+
+[sub_resource type="Resource" id="Resource_1qmh5"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 15)
+
+[sub_resource type="Resource" id="Resource_wpyyu"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -1)
+tile = SubResource("Resource_1qmh5")
+
+[sub_resource type="Resource" id="Resource_p5jl1"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 16)
+
+[sub_resource type="Resource" id="Resource_6c1jc"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, 0)
+tile = SubResource("Resource_p5jl1")
+
+[sub_resource type="Resource" id="Resource_wu7vu"]
+script = ExtResource("4_mtsut")
+variant_id = &"ROOT_A"
+parts = Array[ExtResource("5_old3f")]([SubResource("Resource_5ai0i"), SubResource("Resource_he1du"), SubResource("Resource_4p3a1"), SubResource("Resource_ltkil"), SubResource("Resource_6to7c"), SubResource("Resource_wxf2e"), SubResource("Resource_wpyyu"), SubResource("Resource_6c1jc")])
+
+[sub_resource type="Resource" id="Resource_ii2ku"]
+script = ExtResource("2_0ga60")
+role = 34
+variants = Array[ExtResource("4_mtsut")]([SubResource("Resource_foh31"), SubResource("Resource_wu7vu")])
+
+[sub_resource type="Resource" id="Resource_jspd4"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 4)
+
+[sub_resource type="Resource" id="Resource_5l7o2"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -3)
+tile = SubResource("Resource_jspd4")
+
+[sub_resource type="Resource" id="Resource_8a4lj"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(5, 4)
+
+[sub_resource type="Resource" id="Resource_eg1id"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -2)
+tile = SubResource("Resource_8a4lj")
+
+[sub_resource type="Resource" id="Resource_7db8u"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(5, 5)
+
+[sub_resource type="Resource" id="Resource_n4imw"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -1)
+tile = SubResource("Resource_7db8u")
+
+[sub_resource type="Resource" id="Resource_70p7a"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(5, 6)
+
+[sub_resource type="Resource" id="Resource_gdo7l"]
+script = ExtResource("5_old3f")
+tile = SubResource("Resource_70p7a")
+
+[sub_resource type="Resource" id="Resource_kujgs"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 4)
+
+[sub_resource type="Resource" id="Resource_q1w3u"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -3)
+tile = SubResource("Resource_kujgs")
+
+[sub_resource type="Resource" id="Resource_ptfer"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(0, 4)
+
+[sub_resource type="Resource" id="Resource_1f2jv"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -2)
+tile = SubResource("Resource_ptfer")
+
+[sub_resource type="Resource" id="Resource_b50qo"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(0, 5)
+
+[sub_resource type="Resource" id="Resource_6lwcu"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -1)
+tile = SubResource("Resource_b50qo")
+
+[sub_resource type="Resource" id="Resource_u6ahb"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(0, 6)
+
+[sub_resource type="Resource" id="Resource_pp1we"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, 0)
+tile = SubResource("Resource_u6ahb")
+
+[sub_resource type="Resource" id="Resource_ep0nw"]
+script = ExtResource("4_mtsut")
+parts = Array[ExtResource("5_old3f")]([SubResource("Resource_5l7o2"), SubResource("Resource_eg1id"), SubResource("Resource_n4imw"), SubResource("Resource_gdo7l"), SubResource("Resource_q1w3u"), SubResource("Resource_1f2jv"), SubResource("Resource_6lwcu"), SubResource("Resource_pp1we")])
+
+[sub_resource type="Resource" id="Resource_gb4xb"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(4, 13)
+
+[sub_resource type="Resource" id="Resource_j34uo"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -3)
+tile = SubResource("Resource_gb4xb")
+
+[sub_resource type="Resource" id="Resource_e1phd"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(5, 13)
+
+[sub_resource type="Resource" id="Resource_ucghg"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -2)
+tile = SubResource("Resource_e1phd")
+
+[sub_resource type="Resource" id="Resource_nhofb"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(5, 14)
+
+[sub_resource type="Resource" id="Resource_1wi4b"]
+script = ExtResource("5_old3f")
+offset = Vector2i(0, -1)
+tile = SubResource("Resource_nhofb")
+
+[sub_resource type="Resource" id="Resource_yx8n2"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(5, 15)
+
+[sub_resource type="Resource" id="Resource_42o7t"]
+script = ExtResource("5_old3f")
+tile = SubResource("Resource_yx8n2")
+
+[sub_resource type="Resource" id="Resource_msupp"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(1, 13)
+
+[sub_resource type="Resource" id="Resource_xcjdi"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -3)
+tile = SubResource("Resource_msupp")
+
+[sub_resource type="Resource" id="Resource_wrh1b"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(0, 13)
+
+[sub_resource type="Resource" id="Resource_6j8uh"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -2)
+tile = SubResource("Resource_wrh1b")
+
+[sub_resource type="Resource" id="Resource_a4vr7"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(0, 14)
+
+[sub_resource type="Resource" id="Resource_20tel"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, -1)
+tile = SubResource("Resource_a4vr7")
+
+[sub_resource type="Resource" id="Resource_1rqqp"]
+script = ExtResource("3_78ykd")
+atlas_coords = Vector2i(0, 15)
+
+[sub_resource type="Resource" id="Resource_vcx58"]
+script = ExtResource("5_old3f")
+offset = Vector2i(1, 0)
+tile = SubResource("Resource_1rqqp")
+
+[sub_resource type="Resource" id="Resource_hqc26"]
+script = ExtResource("4_mtsut")
+variant_id = &"ROOT_A"
+parts = Array[ExtResource("5_old3f")]([SubResource("Resource_j34uo"), SubResource("Resource_ucghg"), SubResource("Resource_1wi4b"), SubResource("Resource_42o7t"), SubResource("Resource_xcjdi"), SubResource("Resource_6j8uh"), SubResource("Resource_20tel"), SubResource("Resource_vcx58")])
+
+[sub_resource type="Resource" id="Resource_omho7"]
+script = ExtResource("2_0ga60")
+role = 35
+variants = Array[ExtResource("4_mtsut")]([SubResource("Resource_ep0nw"), SubResource("Resource_hqc26")])
+
 [resource]
 script = ExtResource("1_mhosx")
 id = &"caves_rock"
 display_name = "Cave — Rock"
 description = "Bazowy zestaw skalnych ścian jaskini (primary warianty)."
 tile_set = ExtResource("6_k1jgq")
-tile_entries = Array[ExtResource("2_0ga60")]([SubResource("Resource_o6plj"), SubResource("Resource_08m1f"), SubResource("Resource_gponh"), SubResource("Resource_37dod"), SubResource("Resource_e12rx"), SubResource("Resource_4hhyu"), SubResource("Resource_x8lr6"), SubResource("Resource_28eip"), SubResource("Resource_4x3v6"), SubResource("Resource_kxxa7"), SubResource("Resource_0fs70"), SubResource("Resource_bay71"), SubResource("Resource_t0qbd"), SubResource("Resource_gge2k"), SubResource("Resource_0f6ei"), SubResource("Resource_yl2rq"), SubResource("Resource_sow4w"), SubResource("Resource_eng55"), SubResource("Resource_qyna6"), SubResource("Resource_iwcup"), SubResource("Resource_mlfxy"), SubResource("Resource_juqpi"), SubResource("Resource_coedj"), SubResource("Resource_uf1pt"), SubResource("Resource_7bp3u"), SubResource("Resource_4wguu")])
+tile_entries = Array[ExtResource("2_0ga60")]([SubResource("Resource_o6plj"), SubResource("Resource_08m1f"), SubResource("Resource_gponh"), SubResource("Resource_37dod"), SubResource("Resource_e12rx"), SubResource("Resource_4hhyu"), SubResource("Resource_x8lr6"), SubResource("Resource_28eip"), SubResource("Resource_4x3v6"), SubResource("Resource_kxxa7"), SubResource("Resource_0fs70"), SubResource("Resource_bay71"), SubResource("Resource_t0qbd"), SubResource("Resource_gge2k"), SubResource("Resource_0f6ei"), SubResource("Resource_yl2rq"), SubResource("Resource_sow4w"), SubResource("Resource_eng55"), SubResource("Resource_qyna6"), SubResource("Resource_iwcup"), SubResource("Resource_mlfxy"), SubResource("Resource_juqpi"), SubResource("Resource_coedj"), SubResource("Resource_uf1pt"), SubResource("Resource_7bp3u"), SubResource("Resource_4wguu"), SubResource("Resource_ii2ku"), SubResource("Resource_omho7")])

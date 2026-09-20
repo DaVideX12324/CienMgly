@@ -50,6 +50,8 @@ enum Id {
 	# wpisy modułów wielokaflowych (fasady). Granularne role zostają dla EdgeAnalyzera.
 	FACADE_2H,
 	FACADE_3H,
+	NICHE_STANDARD,
+	NICHE_SECRET,
 }
 
 
