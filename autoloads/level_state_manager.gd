@@ -11,6 +11,7 @@ func _ready() -> void:
 func get_level_state(level_path: String) -> Dictionary:
 	if not level_states.has(level_path):
 		level_states[level_path] = {
+			"map_seed": 0,                # ← seed mapy proceduralnej (0 = brak, wylosuj)
 			"dropped_items": [],
 			"opened_chests": [],
 			"destroyed_barrels": [],
@@ -25,6 +26,36 @@ func get_level_state(level_path: String) -> Dictionary:
 			"completed_arenas": []  # ← DODAJ
 		}
 	return level_states[level_path]
+
+
+## ========================================
+## MAP SEED - trwały seed mapy proceduralnej per level_path (per-save)
+## ========================================
+
+## Zwraca zapisany seed dla poziomu (0 = brak; generator wylosuje i zapisze).
+func get_map_seed(level_path: String) -> int:
+	return int(get_level_state(level_path).get("map_seed", 0))
+
+## Zapisuje seed mapy dla poziomu (utrwala układ na kolejne wejścia).
+func set_map_seed(level_path: String, map_seed: int) -> void:
+	get_level_state(level_path)["map_seed"] = map_seed
+	print("[LevelState] Map seed set for %s: %d" % [level_path, map_seed])
+
+## Czyści CAŁY zapisany stan poziomu (skrzynie/beczki/ściany/boss/seed).
+## Następny get_level_state odtworzy świeży wpis. Używane przy rerollu mapy.
+func clear_level_state(level_path: String) -> void:
+	if level_states.has(level_path):
+		level_states.erase(level_path)
+		print("[LevelState] Cleared full state for: ", level_path)
+
+## Reroll mapy: czyści stan poziomu i przypisuje NOWY losowy seed. Zwraca seed.
+## Uwaga: stare id pozycyjne (skrzynie itd.) nie pasują do nowego układu, więc
+## czyścimy je celowo (decyzja projektowa: reroll = mapa od zera).
+func reroll_map_seed(level_path: String) -> int:
+	clear_level_state(level_path)
+	var new_seed := int(randi() % 1000000) + 1
+	set_map_seed(level_path, new_seed)
+	return new_seed
 
 ## DROPPED ITEMS
 func save_dropped_item(level_path: String, item_data: Dictionary) -> void:
