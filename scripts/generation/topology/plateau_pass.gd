@@ -25,6 +25,7 @@ const STAIR_SITE_W := 6       # okno rzeźbionego miejsca na schody: 2*STAIR_FLA
 const STAIR_SITE_W_MIN := 4   # węższe okno (flanka 1 + 2 stopnie), gdy 6 się nie mieści (wąski korytarz)
 const POCKET_MAX := 8         # odcięte kieszonki ziemi do tej wielkości -> płaskowyż
 const PORTAL_RING := 2        # pierścień wokół strefy portalu (bez krawędzi płaskowyżu)
+const TURN_UP_MAX := 3        # tyle kratek wyższego terenu między licem a ścianą nad nim -> granica skręca w górę
 const STRIP_MIN := 5          # węższy pas wzniesienia / ziemi między granicą poziomu a ścianą -> cały albo wcale
 
 
@@ -38,6 +39,7 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout
 	mask = _clean(ctx, mask, allowed, flags.plateau_min_area, flags.plateau_smooth)
 	mask = _fill_wall_gaps(ctx, mask, allowed)
 	mask = _snap_strips(ctx, mask, allowed)
+	mask = _turn_up_at_walls(ctx, mask, allowed, true)
 	mask = _portals_all_or_nothing(ctx, mask, allowed)
 	mask = _strip_thin(ctx, mask)
 	mask = _drop_small(mask, flags.plateau_min_area)
@@ -151,6 +153,7 @@ static func _level_shape(ctx: GenerationContext, m: Dictionary, room: Dictionary
 	var out := _clean(ctx, m, room, min_area, smooth)
 	out = _fill_wall_gaps(ctx, out, room, at_wall)
 	out = _snap_strips(ctx, out, room)
+	out = _turn_up_at_walls(ctx, out, room, at_wall)
 	out = _portals_all_or_nothing(ctx, out, room)
 	out = _strip_thin(ctx, out, at_wall)
 	return _drop_small(out, min_area)
@@ -785,6 +788,47 @@ static func _strip_changes(ctx: GenerationContext, out: Dictionary, room: Dictio
 					for r in run:
 						changes[r] = true
 	return changes
+
+
+## Lico wyższego terenu tuż pod ścianą główną (między niższym terenem a ścianą nad nim najwyżej
+## TURN_UP_MAX kratek wyższego) zlewałoby się z licem ściany. Te kratki schodzą na niższy poziom:
+## niższy teren dochodzi do ściany, a granica poziomów skręca w górę jako ściana boczna, która może
+## wejść pod ścianę główną. mask_is_higher: maska = wyższy teren (płaskowyż) — kratki z niej wypadają;
+## inaczej maska = niższy teren (dół) — kratki ziemi do niej dochodzą (ciągiem od dołu, w `room`).
+static func _turn_up_at_walls(ctx: GenerationContext, m: Dictionary, room: Dictionary, mask_is_higher: bool) -> Dictionary:
+	var out := m.duplicate()
+	var changed := {}
+	for c in m:
+		var top: Vector2i  # najniższa kratka wyższego terenu w kolumnie, nad niższym c
+		if mask_is_higher:
+			var below: Vector2i = c + Vector2i(0, 1)
+			if m.has(below) or not GridUtils.is_walkable(ctx.grid, below):
+				continue
+			top = c
+		else:
+			top = c + Vector2i(0, -1)
+			if m.has(top) or not GridUtils.is_walkable(ctx.grid, top):
+				continue
+		var run: Array[Vector2i] = []
+		var q := top
+		while run.size() <= TURN_UP_MAX and GridUtils.is_walkable(ctx.grid, q) and m.has(q) == mask_is_higher:
+			run.append(q)
+			q += Vector2i(0, -1)
+		if run.size() > TURN_UP_MAX or GridUtils.is_walkable(ctx.grid, q):
+			continue  # wysoki teren albo nad nim nie ma ściany
+		for r in run:
+			if mask_is_higher:
+				changed[r] = true
+			elif room.has(r):
+				changed[r] = true
+			else:
+				break
+	for c in changed:
+		if mask_is_higher:
+			out.erase(c)
+		else:
+			out[c] = true
+	return out
 
 
 ## Kratka maski nie do narysowania: bez ortogonalnego sąsiada w masce albo o grubości 1 w którejś osi —
