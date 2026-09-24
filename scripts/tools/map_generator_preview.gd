@@ -64,6 +64,8 @@ var current_width: int = 100
 var current_height: int = 100
 var is_player_mode: bool = false
 var player_instance: Node2D = null
+var _prev_game_state: int = -1  # stan GameManagera sprzed spaceru graczem (przywracany po wyjściu)
+var _own_game_manager: Node = null  # GameManager podglądu, gdy moduł quiz_rpg nie jest aktywny (F6)
 
 # Ostatnie dane generacji
 var last_entrance_pos: Vector2i = Vector2i.ZERO
@@ -801,6 +803,7 @@ func _generate_current_map_impl() -> void:
 		player_instance.queue_free()
 		player_instance = null
 		is_player_mode = false
+		_set_exploring(false)
 		if btn_player:
 			btn_player.text = "🏃 Spacer Graczem (P)"
 
@@ -933,6 +936,7 @@ func _toggle_player_mode() -> void:
 			player_instance.queue_free()
 			player_instance = null
 		is_player_mode = false
+		_set_exploring(false)
 		btn_player.text = "🏃 Spacer Graczem (P)"
 		camera.zoom = Vector2(0.8, 0.8)
 	else:
@@ -953,6 +957,7 @@ func _toggle_player_mode() -> void:
 
 		var spawn_px := Vector2(last_entrance_pos.x * 16.0 + 8.0, last_entrance_pos.y * 16.0 + 8.0)
 
+		_set_exploring(true)  # przed dodaniem gracza — player.gd pobiera GameManager w _ready
 		player_instance = p_packed.instantiate() as Node2D
 		player_instance.global_position = spawn_px
 		level_container.add_child(player_instance)
@@ -961,6 +966,35 @@ func _toggle_player_mode() -> void:
 		btn_player.text = "🕊️ Wolna Kamera (P)"
 		camera.zoom = Vector2(2.0, 2.0)
 		camera.position = spawn_px
+
+
+## Gracz rusza się tylko w stanie EXPLORING GameManagera (player.gd), a podgląd startuje w MENU —
+## na czas spaceru przełączamy stan i przywracamy poprzedni po wyjściu. Podgląd uruchomiony sam (F6)
+## nie ma modułu quiz_rpg, więc i jego singletonów — wtedy tworzy własny GameManager.
+func _set_exploring(on: bool) -> void:
+	var gm = CoreManager.get_singleton("GameManager")
+	if gm == null:
+		if not on:
+			return
+		_own_game_manager = Node.new()
+		_own_game_manager.name = "GameManager"
+		_own_game_manager.set_script(load("res://modules/quiz_rpg/autoloads/game_manager.gd"))
+		add_child(_own_game_manager)
+		CoreManager.register_singleton("GameManager", _own_game_manager)
+		gm = _own_game_manager
+	if on:
+		if _prev_game_state < 0:
+			_prev_game_state = gm.current_state
+		gm.change_state(gm.GameState.EXPLORING)
+	elif _prev_game_state >= 0:
+		gm.change_state(_prev_game_state)
+		_prev_game_state = -1
+
+
+func _exit_tree() -> void:
+	_set_exploring(false)
+	if _own_game_manager and CoreManager.get_active_module_id() == "" 			and CoreManager.get_singleton("GameManager") == _own_game_manager:
+		CoreManager.unregister_module_singletons()
 
 
 # =========================================================================
