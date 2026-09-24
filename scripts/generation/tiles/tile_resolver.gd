@@ -129,14 +129,8 @@ static func resolve_module_parts(
 
 	# MIXED z pola ma priorytet nad force_tileset_id (region MIXED nadpisuje motyw placera).
 	var field_id: StringName = ctx.tileset_field.get_tileset_id(anchor_pos, default_id)
-	var was_mixed := false
-	var own_id: StringName
-	var mixed_pool: MixedPool = profile.get_mixed_pool(field_id)
-	if mixed_pool != null:
-		own_id = _pick_mixed_source(profile, mixed_pool, anchor_pos, ctx.seed_value)
-		was_mixed = true
-	else:
-		own_id = force_tileset_id if force_tileset_id != &"" else field_id
+	var was_mixed: bool = profile.get_mixed_pool(field_id) != null
+	var own_id: StringName = _own_id_for_field(ctx, field_id, anchor_pos, force_tileset_id)
 	var own_set: NamedTileSetDefinition = profile.get_tileset(own_id)
 	if own_set == null:
 		push_warning("TileResolver.module: nieznany TileSet ID '%s' @ %s" % [own_id, anchor_pos])
@@ -186,6 +180,22 @@ static func resolve_module_parts(
 
 	# 4) Geometryczny fallback zostawiamy placerowi (pusta tablica -> legacy stała).
 	return []
+
+
+## Zestaw, z którego resolve_module_parts bierze kafel w anchor_pos: MIXED z pola (losowane
+## źródło puli) > force_tileset_id > zestaw pola. Przy variant_roll >= 0 i bez sąsiadów/wymuszeń
+## wynik resolve_module_parts zależy tylko od (ten zestaw, roll) — placery mogą go cache'ować.
+static func own_tileset_id(ctx: GenerationContext, anchor_pos: Vector2i, force_tileset_id: StringName = &"") -> StringName:
+	var field_id: StringName = ctx.tileset_field.get_tileset_id(anchor_pos, ctx.map_tile_profile.default_tileset_id)
+	return _own_id_for_field(ctx, field_id, anchor_pos, force_tileset_id)
+
+
+static func _own_id_for_field(ctx: GenerationContext, field_id: StringName, anchor_pos: Vector2i, force_tileset_id: StringName) -> StringName:
+	var profile: MapTileProfile = ctx.map_tile_profile
+	var mixed_pool: MixedPool = profile.get_mixed_pool(field_id)
+	if mixed_pool != null:
+		return _pick_mixed_source(profile, mixed_pool, anchor_pos, ctx.seed_value)
+	return force_tileset_id if force_tileset_id != &"" else field_id
 
 
 ## Ścisłe rozwiązanie modułu z JEDNEGO nazwanego zestawu: bez pola, MIXED, reguł par i bez

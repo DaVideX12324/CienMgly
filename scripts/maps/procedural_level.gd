@@ -10,6 +10,18 @@ const DungeonGeneratorScript = preload("res://modules/quiz_rpg/scripts/generatio
 const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
 const GeneratorBehaviourConfig = preload("res://modules/quiz_rpg/scripts/generation/tiles/generator_behaviour_config.gd")
 const TileSetFieldScript = preload("res://modules/quiz_rpg/scripts/generation/core/tileset_field.gd")
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
+const TerrainPaintExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_paint_executor.gd")
+const LoadingOverlayScript = preload("res://modules/quiz_rpg/scripts/ui/generation_loading_overlay.gd")
+
+## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
+signal generation_finished
+
+## Kafli wstawianych na klatkę przy generowaniu w tle (reszta klatki zostaje na pasek ładowania).
+const PAINT_CHUNK := 6000
+## Encji (wrogów/skrzyń/drzwi) tworzonych na klatkę przy generowaniu w tle.
+const ENTITY_CHUNK := 6
 
 enum LevelType {
 	FOREST_OVERWORLD,
@@ -36,8 +48,43 @@ enum LevelType {
 ## generator działa jak dotychczas (placery używają stałych CaveTileConstants).
 @export_file("*.json") var tile_behaviour_json_path: String = ""
 
+## Generowanie w tle (wątek roboczy) z ekranem ładowania. false = jak dawniej: cała mapa w _ready
+## w jednej klatce (testy, narzędzia, które czytają last_result od razu po add_child).
+@export var async_generation: bool = true
+
 var last_result: RefCounted = null
+var is_generating: bool = false
 var _transitioning: bool = false
+var _task_id: int = -1
+
+
+## Dane jednej generacji. run() to czyste dane (bez węzłów) — wołane w wątku roboczym albo od razu.
+class GenJob extends RefCounted:
+	var is_cave: bool = false
+	var gen_script: Script = null
+	var base_script: Script = null  # MapGeneratorBase (create_rng)
+	var seed_value: int = 0
+	var width: int = 0
+	var height: int = 0
+	var min_room: int = 6
+	var max_room: int = 24
+	var rooms_count: int = 0
+	var corridor: int = 3
+	var flags = null
+	var behaviour: Dictionary = {}
+	var result: RefCounted = null
+	var rng: RandomNumberGenerator = null
+	var plans: Dictionary = {}
+
+	func run() -> void:
+		if is_cave:
+			result = gen_script.generate(width, height, seed_value, min_room, max_room, rooms_count, corridor, flags)
+			rng = base_script.create_rng(seed_value)
+			plans = gen_script.plan_cave_tiles(result, rng, -1, flags,
+				behaviour.get("profile"), behaviour.get("field"), behaviour.get("raw", {}))
+		else:
+			result = gen_script.generate(width, height, seed_value)
+			rng = base_script.create_rng(seed_value)
 
 
 ## Wczytuje companion-JSON (parametry generatora + Named TileSet System).
@@ -83,7 +130,10 @@ func _build_tile_behaviour(cfg, gen_width: int, gen_height: int) -> Dictionary:
 func _ready() -> void:
 	y_sort_enabled = true
 	_ensure_default_resources()
-	generate_level(map_seed)
+	if async_generation:
+		generate_level_async(map_seed)
+	else:
+		generate_level(map_seed)
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		if level_type == LevelType.DUNGEON_CASTLE:
@@ -132,7 +182,61 @@ func _ensure_default_resources() -> void:
 			door_scene = load(dp) as PackedScene
 
 
+## Generuje poziom synchronicznie (cała mapa w tej klatce).
 func generate_level(seed_val: int = 0) -> void:
+	var job := _prepare_job(seed_val)
+	job.run()
+	_apply_job(job)
+	generation_finished.emit()
+
+
+## Generuje poziom w tle: topologia + plan kafli w wątku roboczym, potem kafle porcjami między
+## klatkami, encje i nawigacja. Ekran ładowania śledzi znaczniki GenProgress. Kończy się sygnałem
+## generation_finished (level_manager czeka na niego przed postawieniem gracza).
+func generate_level_async(seed_val: int = 0) -> void:
+	if is_generating:
+		return
+	is_generating = true
+	var job := _prepare_job(seed_val)
+	var progress := GenProgress.new()
+	var overlay = LoadingOverlayScript.new(_loading_title())
+	add_child(overlay)
+	overlay.track(progress)
+	GenProgress.start(progress)
+
+	_task_id = WorkerThreadPool.add_task(job.run, false, "Generowanie mapy")
+	while not WorkerThreadPool.is_task_completed(_task_id):
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(_task_id)
+	_task_id = -1
+
+	await _apply_job_async(job)
+	progress.finish()
+	GenProgress.stop()
+	overlay.close()
+	is_generating = false
+	generation_finished.emit()
+
+
+func _exit_tree() -> void:
+	# Poziom zamknięty w trakcie generowania: dokończ zadanie wątku (inaczej wyciek zadania puli).
+	if _task_id >= 0:
+		WorkerThreadPool.wait_for_task_completion(_task_id)
+		_task_id = -1
+		GenProgress.stop()
+
+
+func _loading_title() -> String:
+	match level_type:
+		LevelType.CAVE_DUNGEON:
+			return "Generowanie jaskini…"
+		LevelType.DUNGEON_CASTLE:
+			return "Generowanie zamku…"
+	return "Generowanie mapy…"
+
+
+## Parametry generacji z UI/@export, zapisu i companion-JSON (główny wątek: węzły, zasoby).
+func _prepare_job(seed_val: int) -> GenJob:
 	# Companion-JSON: parametry generatora + Named TileSet System (opcjonalne).
 	# Precedencja parametrów: UI/@export (>0) > zapisany seed (per-save) > JSON > default.
 	var cfg = _load_behaviour_config()
@@ -160,32 +264,47 @@ func generate_level(seed_val: int = 0) -> void:
 	# Flagi generacji z JSON (wspólne dla topologii i tilingu). Brak JSON => null => domyślne.
 	var cave_flags = cfg.build_flags() if cfg != null else null
 
-	var palette: Dictionary = {}
-	var gen_result: RefCounted = null
+	var job := GenJob.new()
+	job.is_cave = level_type == LevelType.CAVE_DUNGEON
+	job.base_script = MapGeneratorBaseScript
+	job.seed_value = actual_seed
+	job.width = gen_width
+	job.height = gen_height
+	job.flags = cave_flags
 
 	match level_type:
 		LevelType.CAVE_DUNGEON:
-			palette = CaveGeneratorScript.get_default_palette()
-			var min_room: int = cfg.gen_int("min_room_size", 6) if cfg != null else 6
-			var max_room: int = cfg.gen_int("max_room_size", 24) if cfg != null else 24
-			var corridor: int = cfg.gen_int("corridor_width", 3) if cfg != null else 3
+			job.gen_script = CaveGeneratorScript
+			job.min_room = cfg.gen_int("min_room_size", 6) if cfg != null else 6
+			job.max_room = cfg.gen_int("max_room_size", 24) if cfg != null else 24
+			job.corridor = cfg.gen_int("corridor_width", 3) if cfg != null else 3
 			var rooms_count: int = cave_max_rooms
 			if rooms_count <= 0 and cfg != null:
 				rooms_count = cfg.gen_int("max_rooms", 0)
 			if rooms_count <= 0:
 				# Skalowanie: 60x60 -> 6, 160x160 -> 15, 250x250 -> ~37 (clamp 4..120)
 				rooms_count = int(clampf(round(15.0 * (float(gen_width * gen_height) / (160.0 * 160.0))), 4, 120))
-			gen_result = CaveGeneratorScript.generate(gen_width, gen_height, actual_seed, min_room, max_room, rooms_count, corridor, cave_flags)
+			job.rooms_count = rooms_count
+			# Named TileSet System (opcjonalny). Profil i pole zestawów z wczytanego configu.
+			job.behaviour = _build_tile_behaviour(cfg, gen_width, gen_height)
 		LevelType.FOREST_OVERWORLD:
-			palette = OverworldForestGeneratorScript.get_default_palette()
-			gen_result = OverworldForestGeneratorScript.generate(gen_width, gen_height, actual_seed)
+			job.gen_script = OverworldForestGeneratorScript
 		LevelType.DUNGEON_CASTLE:
-			palette = DungeonGeneratorScript.get_default_palette()
-			gen_result = DungeonGeneratorScript.generate(gen_width, gen_height, actual_seed)
+			job.gen_script = DungeonGeneratorScript
+	return job
 
-	last_result = gen_result
-	
-	# 1. TileSet
+
+func _palette() -> Dictionary:
+	match level_type:
+		LevelType.CAVE_DUNGEON:
+			return CaveGeneratorScript.get_default_palette()
+		LevelType.FOREST_OVERWORLD:
+			return OverworldForestGeneratorScript.get_default_palette()
+	return DungeonGeneratorScript.get_default_palette()
+
+
+## TileSet poziomu: @export > tileset z palety (jaskinie) > domyślny z tekstury palety.
+func _resolve_tileset(palette: Dictionary) -> TileSet:
 	var ts := custom_tileset
 	if ts == null:
 		if level_type == LevelType.CAVE_DUNGEON:
@@ -196,38 +315,86 @@ func generate_level(seed_val: int = 0) -> void:
 			var tex_path: String = palette.get("texture_path", "")
 			var col_tiles: Array = palette.get("collision_tiles", [])
 			ts = MapGeneratorBaseScript.create_default_tileset(tex_path, col_tiles)
-		
-	# 2. Warstwy TileMapLayer
+	return ts
+
+
+## Warstwy poziomu. Jaskinie: przygotowane i wyczyszczone przez generator (FloorDecor/Platforms).
+func _prepare_layers(job: GenJob) -> Dictionary:
+	var ts := _resolve_tileset(_palette())
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
 	var floor_decor := _get_or_create_layer("FloorDecor", -1, ts)
 	var walls_layer := _get_or_create_layer("Walls", 0, ts)
 	var platforms_layer := _get_or_create_layer("Platforms", -1, ts)  # płaskowyże: pod Walls i encjami
-
-	var rng := MapGeneratorBaseScript.create_rng(actual_seed)
 	if level_type == LevelType.CAVE_DUNGEON:
-		# Named TileSet System (opcjonalny). Profil i pole zestawów z wczytanego configu.
-		var behaviour := _build_tile_behaviour(cfg, gen_width, gen_height)
-		var tile_profile = behaviour.get("profile")
-		var tileset_field = behaviour.get("field")
-		var behaviour_dict: Dictionary = behaviour.get("raw", {})
-		CaveGeneratorScript.apply_cave_tiles(
-			floor_layer, walls_layer, gen_result, rng, floor_decor, -1, cave_flags,
-			tile_profile, tileset_field, behaviour_dict, platforms_layer
-		)
+		return CaveGeneratorScript.prepare_cave_layers(floor_layer, walls_layer, job.result, floor_decor, platforms_layer)
+	return {&"Floor": floor_layer, &"FloorDecor": floor_decor, &"Walls": walls_layer, &"Platforms": platforms_layer}
+
+
+## Nakłada wynik generacji na scenę w jednej klatce.
+func _apply_job(job: GenJob) -> void:
+	last_result = job.result
+	var layers := _prepare_layers(job)
+	if level_type == LevelType.CAVE_DUNGEON:
+		seed(job.rng.seed)  # jak apply_cave_tiles: globalny seed dla operacji silnika
+		CaveGeneratorScript.execute_cave_tiles(layers, job.plans)
 	else:
-		if floor_decor:
-			floor_decor.clear()
-		platforms_layer.clear()
-		MapGeneratorBaseScript.apply_grid_to_layers(floor_layer, walls_layer, gen_result, palette, rng)
-	
+		_apply_grid_layers(job, layers)
+	_finish_level(job)
+
+
+## Jak _apply_job, ale kafle jaskini porcjami (PAINT_CHUNK na klatkę) z postępem paska.
+func _apply_job_async(job: GenJob) -> void:
+	last_result = job.result
+	var layers := _prepare_layers(job)
+	if level_type == LevelType.CAVE_DUNGEON:
+		seed(job.rng.seed)
+		GenProgress.begin(&"paint")
+		var tiles = job.plans.tiles
+		var order := [&"Floor", &"Walls", &"Platforms"]
+		var total := 0
+		for layer_name in order:
+			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
+		var done := 0
+		for layer_name in order:
+			if layer_name == &"Walls":
+				# Teren (błoto/trawa) między Floor a Walls — jak execute_cave_tiles.
+				TerrainPaintExecutor.execute(layers, job.plans.terrain)
+			var layer: TileMapLayer = layers.get(layer_name)
+			var cells: Dictionary = tiles.by_layer.get(layer_name, {})
+			if layer == null or cells.is_empty():
+				continue
+			var positions: Array = cells.keys()
+			for from in range(0, positions.size(), PAINT_CHUNK):
+				TilePlacementExecutor.place_range(layer, cells, positions, from, from + PAINT_CHUNK)
+				done += mini(PAINT_CHUNK, positions.size() - from)
+				GenProgress.sub(float(done) / maxf(total, 1))
+				await get_tree().process_frame
+	else:
+		_apply_grid_layers(job, layers)
+	await _finish_level(job, ENTITY_CHUNK)
+
+
+func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
+	var floor_decor: TileMapLayer = layers.get(&"FloorDecor")
+	if floor_decor:
+		floor_decor.clear()
+	(layers[&"Platforms"] as TileMapLayer).clear()
+	MapGeneratorBaseScript.apply_grid_to_layers(layers[&"Floor"], layers[&"Walls"], job.result, _palette(), job.rng)
+
+
+## Encje, nawigacja i wyjście — wspólne dla obu ścieżek. per_frame > 0: encje porcjami między
+## klatkami (wtedy wołać z await); 0 = od razu (wywołanie bez await jest synchroniczne).
+func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
+	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		MapGeneratorBaseScript.spawn_entities(self, gen_result, enemy_scenes, chest_scene, door_scene)
-	
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, enemy_scenes, chest_scene, door_scene, 16, per_frame)
+
 	# 4. Nawigacja 2D
+	GenProgress.begin(&"navigation")
 	if setup_nav_enabled:
-		MapGeneratorBaseScript.setup_navigation_region(self, gen_result)
-	
+		MapGeneratorBaseScript.setup_navigation_region(self, job.result)
+
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
 

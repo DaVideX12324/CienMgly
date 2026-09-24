@@ -40,6 +40,9 @@ static func plan(
 				plan.queue(p)
 
 	# Krok B: Właściwe komórki litej skały w granicach mapy
+	# Wynik resolvera zależy tu tylko od (zestaw kratki, roll) — cache zamiast wywołania na kratkę.
+	var resolver_on := TileResolver.is_active(ctx)
+	var cache := {}  # zestaw -> Array[100] części (null = jeszcze nie liczone)
 	for y in range(height):
 		for x in range(width):
 			var pos := Vector2i(x, y)
@@ -49,7 +52,16 @@ static func plan(
 			# Ten sam roll trafia do resolvera -> jeśli SOLID_FILL ma warianty A/B/C o wagach
 			# 45/47/8, wynik jest 1:1 z legacy. Bez profilu -> stara logika progów.
 			var roll := LegacyTileHash.rock_fill_roll(pos, ctx.seed_value)
-			var parts := TileResolver.resolve_module_parts(ctx, pos, TileModuleRole.Id.SOLID_FILL, [], roll)
+			var parts: Array = []
+			if resolver_on:
+				var set_id := TileResolver.own_tileset_id(ctx, pos)
+				var per_roll: Array = cache.get(set_id, [])
+				if per_roll.is_empty():
+					per_roll.resize(100)
+					cache[set_id] = per_roll
+				if per_roll[roll] == null:
+					per_roll[roll] = TileResolver.resolve_module_parts(ctx, pos, TileModuleRole.Id.SOLID_FILL, [], roll)
+				parts = per_roll[roll]
 
 			var p := TilePlacement.new()
 			p.pos = pos

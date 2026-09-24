@@ -54,12 +54,11 @@ static func plan(
 	state: LegacyPlacementState,
 	plan: TilePlacementPlan
 ) -> void:
-	var width := ctx.width
-	var height := ctx.height
+	var scan := ctx.scan_bounds()
 	var table := ctx.priority_table
 
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		for x in range(scan.position.x, scan.end.x):
 			var pos := Vector2i(x, y)
 			var edge: EdgeContext = edges.get(pos)
 			if edge == null or edge.edge_kind != EdgeKind.Kind.SIDE_WALL:
@@ -72,10 +71,10 @@ static func plan(
 			var is_under_inner_corner: bool = (edge_above != null and edge_above.edge_kind == EdgeKind.Kind.INNER_CORNER)
 
 			# var_idx (A/B) z ctx.tile_rng jest kolejność-zależny: placer MUSI konsumować
-			# RNG identycznie jak legacy i wymusić wybrany wariant w resolverze.
+			# RNG identycznie jak legacy i wymusić wybrany wariant w resolverze (poza trybem płaskowyżu).
 			if edge.orientation == EdgeKind.Orientation.EAST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
-				var var_idx: int = 1 if is_under_inner_corner else (ctx.tile_rng.randi() % 2)
+				var var_idx: int = 1 if is_under_inner_corner else _side_variant(ctx, pos)
 				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_WEST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_WEST[var_idx]
 					_queue(plan, pos, side_t, &"SIDE_WALL", table)
@@ -83,8 +82,16 @@ static func plan(
 
 			elif edge.orientation == EdgeKind.Orientation.WEST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(-1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
-				var var_idx: int = 1 if is_under_inner_corner else (ctx.tile_rng.randi() % 2)
+				var var_idx: int = 1 if is_under_inner_corner else _side_variant(ctx, pos)
 				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_EAST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_EAST[var_idx]
 					_queue(plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
+
+
+## Wariant A/B ściany bocznej. Ściany: z ctx.tile_rng w kolejności skanu (parytet z legacy).
+## Płaskowyże: z pozycji — niezależnie od kolejności, bo PlateauRenderer skanuje okna osobno.
+static func _side_variant(ctx: GenerationContext, pos: Vector2i) -> int:
+	if ctx.plateau_mode:
+		return hash([ctx.seed_value, pos, "plateau_side"]) & 1
+	return ctx.tile_rng.randi() % 2

@@ -49,12 +49,11 @@ static func plan(
 	state: LegacyPlacementState,
 	plan: TilePlacementPlan
 ) -> void:
-	var width := ctx.width
-	var height := ctx.height
+	var scan := ctx.scan_bounds()
 	var table := ctx.priority_table
 
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		for x in range(scan.position.x, scan.end.x):
 			var pos := Vector2i(x, y)
 			var edge: EdgeContext = edges.get(pos)
 			if edge == null or edge.edge_kind != EdgeKind.Kind.INNER_CORNER or edge.is_protected_solid:

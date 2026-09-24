@@ -140,17 +140,24 @@ static func _is_inner_corner(edges: Dictionary, p: Vector2i) -> bool:
 ## Główna analiza geometryczna całej siatki mapy (Wariant A) zgodnie z §9.3 i §9.6.
 static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var width := ctx.width
-	var height := ctx.height
+	var scan := ctx.scan_bounds()
 	var grid := ctx.grid
 	var edges: Dictionary = {}
 
+	# Płaska mapa chodliwości skanu (+1 kratka ramki): sąsiedztwo 3x3 czytane z tablicy bajtów
+	# zamiast 8 wywołań GridUtils.is_walkable na kratkę. Poza siatką = niechodliwe (jak wcześniej).
+	var walk_rect := scan.grow(1)
+	var walk := _walkable_bytes(grid, walk_rect)
+	var ww := walk_rect.size.x
+
 	# Przebieg 1: Inicjalizacja kontekstów 3x3 dla wszystkich komórek w porządku (y, x).
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		var row := (y - walk_rect.position.y) * ww - walk_rect.position.x
+		for x in range(scan.position.x, scan.end.x):
 			var pos := Vector2i(x, y)
 			var edge := EdgeContext.new()
 			edge.pos = pos
-			_populate_neighborhood(ctx, edge)
+			_populate_neighborhood_bytes(edge, walk, row + x, ww)
 
 			if ctx.portal_zone.has(pos):
 				edge.edge_kind = EdgeKind.Kind.PORTAL_CLEAR
@@ -164,8 +171,8 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var facade_cols: Dictionary = {} # x -> Array of y
 	var facade_candidates: Array[Vector2i] = []
 
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		for x in range(scan.position.x, scan.end.x):
 			var pos := Vector2i(x, y)
 			if GridUtils.is_walkable(grid, pos) and not GridUtils.is_walkable(grid, pos + Vector2i(0, -1)):
 				if not GridUtils.is_walkable(grid, pos + Vector2i(0, -2)):
@@ -307,8 +314,8 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# Przebieg 5: Klasyfikacja komórek ściany (TOP_RIM, SIDE_WALL, INNER_CORNER, SOLID_FILL).
 	var rim_cells: Array[Vector2i] = []
 
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		for x in range(scan.position.x, scan.end.x):
 			var pos := Vector2i(x, y)
 			var edge: EdgeContext = edges[pos]
 
@@ -392,14 +399,18 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# 0  0  mid              mid  0  0
 	# 0 [X] base     or     base [X] 0
 	# 0  0  1                 1   0  0
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		for x in range(scan.position.x, scan.end.x):
 			var p := Vector2i(x, y)
 			if GridUtils.is_walkable(grid, p):
 				continue
 
 			var edge_c: EdgeContext = edges.get(p)
 			if edge_c == null or edge_c.in_portal_zone:
+				continue
+			# Każde dopasowanie niżej wymaga MID fasady w (x±1, y) lub (x±1, y-1), a więc jej stopy
+			# (kratki podłogi) w E/W/SE/SW — bez podłogi tam komórka nie może zostać ścianą boczną.
+			if not (edge_c.e_floor or edge_c.w_floor or edge_c.se_floor or edge_c.sw_floor):
 				continue
 
 			# Moduł TOP fasady 2H ani MID fasady 3H nie może zostać nadpisany jako SIDE_WALL
@@ -465,14 +476,19 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# 0  0  0                         0  0  0
 	# 0 [X] top              or      top [X] 0
 	# 0 (top/side) mid               mid (top/side) 0
-	for y in range(height):
-		for x in range(width):
+	for y in range(scan.position.y, scan.end.y):
+		for x in range(scan.position.x, scan.end.x):
 			var p := Vector2i(x, y)
 			if GridUtils.is_walkable(grid, p):
 				continue
 
 			var edge_c: EdgeContext = edges.get(p)
 			if edge_c == null or edge_c.in_portal_zone or edge_c.edge_kind == EdgeKind.Kind.INNER_CORNER or edge_c.edge_kind == EdgeKind.Kind.SIDE_WALL:
+				continue
+			# Dopasowanie wymaga szczytu ściany w (x±1, y) przy ścianach w NE/NW i (x±1, y+1): TOP_RIM
+			# (podłoga nad nim) i szczyt 2H (stopa w (x±1, y+1)) są wtedy wykluczone — zostaje szczyt 3H,
+			# którego stopa to podłoga w (x±1, y+2). Bez niej komórka nie może być narożnikiem.
+			if not (GridUtils.is_walkable(grid, p + Vector2i(1, 2)) or GridUtils.is_walkable(grid, p + Vector2i(-1, 2))):
 				continue
 
 			# Moduł TOP fasady 2H, MID 3H, kafelek obok MID fasady 3H ani pod innym narożnikiem nie może być INNER_CORNER
@@ -539,6 +555,32 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	return result
 
 
+## Chodliwość komórek prostokąta r jako bajty (1 = podłoga/drzwi/portal), wiersz po wierszu.
+static func _walkable_bytes(grid: Dictionary, r: Rect2i) -> PackedByteArray:
+	var out := PackedByteArray()
+	out.resize(r.size.x * r.size.y)
+	var i := 0
+	for y in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
+			if GridUtils.is_walkable(grid, Vector2i(x, y)):
+				out[i] = 1
+			i += 1
+	return out
+
+
+## _populate_neighborhood na tablicy z _walkable_bytes: i = indeks komórki, w = szerokość wiersza.
+static func _populate_neighborhood_bytes(edge: EdgeContext, walk: PackedByteArray, i: int, w: int) -> void:
+	edge.n_floor = walk[i - w] == 1
+	edge.ne_floor = walk[i - w + 1] == 1
+	edge.e_floor = walk[i + 1] == 1
+	edge.se_floor = walk[i + w + 1] == 1
+	edge.s_floor = walk[i + w] == 1
+	edge.sw_floor = walk[i + w - 1] == 1
+	edge.w_floor = walk[i - 1] == 1
+	edge.nw_floor = walk[i - w - 1] == 1
+	_finish_neighborhood(edge)
+
+
 static func _populate_neighborhood(ctx: GenerationContext, edge: EdgeContext) -> void:
 	var pos := edge.pos
 	var grid := ctx.grid
@@ -551,7 +593,11 @@ static func _populate_neighborhood(ctx: GenerationContext, edge: EdgeContext) ->
 	edge.sw_floor = GridUtils.is_walkable(grid, pos + Vector2i(-1, 1))
 	edge.w_floor = GridUtils.is_walkable(grid, pos + Vector2i(-1, 0))
 	edge.nw_floor = GridUtils.is_walkable(grid, pos + Vector2i(-1, -1))
+	_finish_neighborhood(edge)
 
+
+## Wspólna część sąsiedztwa: reguła prepass (diagonalne narożniki), liczniki kardynalne i maska.
+static func _finish_neighborhood(edge: EdgeContext) -> void:
 	# Reguła prepass:
 	# 100 / 000 / 001 -> górny narożnik (NW) zmienia się na 0
 	if edge.nw_floor and edge.se_floor \

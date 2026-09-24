@@ -58,6 +58,8 @@ var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_
 # Stan
 var current_type: int = 2 # 2: CAVE_DUNGEON, 0: FOREST, 1: DUNGEON
 var current_seed: int = 119
+var _gen_busy := false     # generowanie w toku (w tle, z ekranem ładowania)
+var _gen_pending := false  # prośba o nową mapę w trakcie — wykonana po zakończeniu bieżącej
 var current_width: int = 100
 var current_height: int = 100
 var is_player_mode: bool = false
@@ -730,6 +732,18 @@ func jump_to_exit() -> void:
 
 
 func _generate_current_map() -> void:
+	if _gen_busy:
+		_gen_pending = true
+		return
+	_gen_busy = true
+	await _generate_current_map_impl()
+	_gen_busy = false
+	if _gen_pending:
+		_gen_pending = false
+		_generate_current_map()
+
+
+func _generate_current_map_impl() -> void:
 	_ensure_nodes()
 	if is_instance_valid(player_instance):
 		player_instance.queue_free()
@@ -766,6 +780,8 @@ func _generate_current_map() -> void:
 	proc_level.set("spawn_entities_enabled", check_entities.button_pressed if check_entities else true)
 	proc_level.set("setup_nav_enabled", check_nav.button_pressed if check_nav else true)
 	level_container.add_child(proc_level)
+	if proc_level.get("is_generating") == true:
+		await proc_level.generation_finished
 
 	var t_gen: int = Time.get_ticks_msec() - t_start
 

@@ -48,6 +48,15 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	current_spawn_name = spawn_name
 
 	await get_tree().process_frame
+	# Poziom generowany w tle (ProceduralLevel): gracz czeka zamrożony, aż mapa i spawny będą gotowe.
+	if current_level.get("is_generating") == true:
+		var player := _get_player()
+		var player_mode := player.process_mode if player else Node.PROCESS_MODE_INHERIT
+		if player:
+			player.process_mode = Node.PROCESS_MODE_DISABLED
+		await current_level.generation_finished
+		if is_instance_valid(player):
+			player.process_mode = player_mode
 	_place_player_at_spawn(spawn_name)
 	_play_level_music(level_path, current_level)
 
