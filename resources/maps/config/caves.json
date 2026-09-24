@@ -30,7 +30,6 @@
     "plateau_noise_frequency": 0.006,
     "plateau_threshold": 0.2,
     "plateau_min_area": 20,
-    "plateau_portal_margin": 0,
     "platform_max_stairs": 8,
     "stair_max_width": 6
   },
