@@ -265,18 +265,23 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or ctx.plateau_mode)
 			var opening_depth: int = 2 if is_2h_col else 3
 
+			# Sąsiednie lico wyklucza narożnik (-> schodek), gdy się z tym stykają. Lico 3H zajmuje stopę
+			# i 2 kratki nad nią: sąsiad wyżej o 3-4 wiersze nie zachodzi na bok — ten bok jest odsłonięty,
+			# więc to narożnik out (moduł schodka ma z boku ciągłą ścianę, narożnik — przezroczysty koniec).
+			var left_touch: bool = left_y != -1 and (is_2h_col or y - left_y <= 2)
+			var right_touch: bool = right_y != -1 and (is_2h_col or y - right_y <= 2)
 			var w_open := _has_out_corner_opening(
 				grid,
 				pos,
 				Vector2i(-1, 0),
 				opening_depth
-			) and left_y == -1
+			) and not left_touch
 			var e_open := _has_out_corner_opening(
 				grid,
 				pos,
 				Vector2i(1, 0),
 				opening_depth
-			) and right_y == -1
+			) and not right_touch
 
 			# Narożnik musi mieć jeden jednoznaczny kierunek.
 			if w_open != e_open:
