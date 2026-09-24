@@ -16,6 +16,7 @@ static func _queue(
 	p.atlas_coords = atlas_coords
 	p.category = category
 	p.origin = origin
+	p.out_corner = true
 	# Na własnej kolumnie tie_breaker = 10; na kolumnie sąsiedniej = 1 (§10.4).
 	p.tie_breaker = 10 if (origin == Vector2i.ZERO or target_pos.x == origin.x) else 1
 	PlacementPriority.assign(p, table)
@@ -36,6 +37,7 @@ static func _try_out(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Ve
 		p.alternative_tile = rp.tile.alternative_tile
 		p.category = &"FACADE"
 		p.origin = anchor
+		p.out_corner = true
 		p.tie_breaker = 10 if (anchor == Vector2i.ZERO or p.pos.x == anchor.x) else 1
 		PlacementPriority.assign(p, table)
 		plan.queue(p)

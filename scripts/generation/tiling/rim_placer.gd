@@ -3,7 +3,7 @@ extends RefCounted
 
 
 ## Ścieżka modułowa dla rima rock (1 kafel, kategoria RIM_BASE, tie_breaker=0).
-static func _try_rim(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+static func _try_rim(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, out_corner: bool = false) -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id)
 	if parts.is_empty():
 		return false
@@ -15,6 +15,7 @@ static func _try_rim(ctx: GenerationContext, placement_plan: TilePlacementPlan, 
 		p.atlas_coords = rp.tile.atlas_coords
 		p.alternative_tile = rp.tile.alternative_tile
 		p.category = &"RIM_BASE"
+		p.out_corner = out_corner
 		PlacementPriority.assign(p, table)
 		placement_plan.queue(p)
 	return true
@@ -30,12 +31,13 @@ static func _get_variant_noise(ctx: GenerationContext) -> FastNoiseLite:
 	return n
 
 
-static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
+static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary, out_corner: bool = false) -> void:
 	var p := TilePlacement.new()
 	p.pos = pos
 	p.layer = &"Walls"
 	p.atlas_coords = atlas_coords
 	p.category = category
+	p.out_corner = out_corner
 	PlacementPriority.assign(p, table)
 	placement_plan.queue(p)
 
@@ -63,6 +65,8 @@ static func plan(
 
 			var use_roots: bool = ThemeResolver.resolve(ctx, pos, ThemeResolver.RefPoint.NORTH_FLOOR) == &"roots"
 			var is_b: bool = v_noise.get_noise_2d(float(pos.x), float(pos.y)) > 0.0
+			# Koniec rimu (narożnik out, przezroczysty) — PlateauRenderer nie wchłania pod nim płaskowyżu.
+			var corner: bool = edge.orientation == EdgeKind.Orientation.EAST or edge.orientation == EdgeKind.Orientation.WEST
 
 			if not use_roots:
 				# Motyw rock (1-kafelkowy). is_b (A/B) z variant_noise; orientacja -> rola.
@@ -79,8 +83,8 @@ static func plan(
 					_:
 						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 
-				if not _try_rim(ctx, placement_plan, pos, role, variant_id, table):
-					_queue(placement_plan, pos, rim_t, &"RIM_BASE", table)
+				if not _try_rim(ctx, placement_plan, pos, role, variant_id, table, corner):
+					_queue(placement_plan, pos, rim_t, &"RIM_BASE", table, corner)
 				state.mark(pos, &"RIM")
 
 			else:
@@ -102,8 +106,8 @@ static func plan(
 						t_base = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
 						t_tips = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
 
-				_queue(placement_plan, pos, t_base, &"RIM_BASE", table)
+				_queue(placement_plan, pos, t_base, &"RIM_BASE", table, corner)
 				state.mark(pos, &"RIM")
 				if can_place_top:
-					_queue(placement_plan, p_top, t_tips, &"RIM_TIP", table)
+					_queue(placement_plan, p_top, t_tips, &"RIM_TIP", table, corner)
 					state.mark(p_top, &"RIM")
