@@ -67,19 +67,66 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 		RimPlacer.plan(sctx, analysis.edges, state, plan)
 		CornerPlacer.plan(sctx, analysis.edges, state, plan)
 
+	# Wchłanianie przez ściany główne: kafel płaskowyżu w kratce z kaflem ściany (lico, rim, bok
+	# dochodzące pod krawędź ściany, także podłoga pod bazą lica ściany) nakładałby się z nim — ściana
+	# go „wchłania”. Stopa lica płaskowyżu pod wchłoniętą kratką znika razem z licem. Nie pod narożnikiem
+	# out ściany — jego przezroczysty koniec pokazuje, co jest za nim (np. rim płaskowyżu).
 	var tiles: Dictionary = result.tiles
+	var absorbed_feet := {}  # stopy wchłoniętych kolumn lica
 	for layer_name in plan.by_layer:
 		var cells: Dictionary = plan.by_layer[layer_name]
 		for pos in cells:
 			if not _keep(pos, region, sgrid):
 				continue
 			var p: TilePlacement = cells[pos]
+			var foot: Vector2i = pos if not region.has(pos) else pos + Vector2i(0, 1)
+			if _absorbed(real_ctx, wall_cells, pos) 					or (p.category == &"FACADE" and not region.has(pos) and _absorbed(real_ctx, wall_cells, pos + Vector2i(0, -1))):
+				if p.category == &"FACADE":
+					absorbed_feet[foot] = true
+				continue
 			if layer_name != LAYER:
 				# Placer użył stałej ściany (rola nieobecna w rodzinie platform) — nie mieszamy sztuki.
 				result.missing += 1
 				continue
 			tiles[pos] = p
+	_end_facades_at_absorbed(sctx, tiles, region, absorbed_feet)
 	return result
+
+
+## Lico płaskowyżu urwane przy wchłoniętej kolumnie: kolumna obok (stopa w tym samym wierszu) dostaje
+## zakończenie lica 2H (jak narożnik out pipeline'u: FACADE_2H WEST/EAST) zamiast środka lica.
+static func _end_facades_at_absorbed(sctx: GenerationContext, tiles: Dictionary, region: Dictionary, absorbed_feet: Dictionary) -> void:
+	for f in absorbed_feet:
+		for side in [-1, 1]:
+			var n: Vector2i = f + Vector2i(side, 0)
+			if absorbed_feet.has(n) or not region.has(n + Vector2i(0, -1)):
+				continue
+			var cur: TilePlacement = tiles.get(n)
+			if cur == null or cur.category != &"FACADE":
+				continue
+			# Wchłonięta kolumna po zachodniej stronie -> lico otwarte na zachód (WEST) i odwrotnie.
+			var variant: StringName = &"WEST" if side == 1 else &"EAST"
+			var parts := TileResolver.resolve_module_parts(sctx, n, TileModuleRole.Id.FACADE_2H, [], -1, variant)
+			for rp in parts:
+				var p := TilePlacement.new()
+				p.pos = n + rp.offset
+				p.layer = LAYER
+				p.source_id = rp.tile.source_id
+				p.atlas_coords = rp.tile.atlas_coords
+				p.alternative_tile = rp.tile.alternative_tile
+				p.category = &"FACADE"
+				p.origin = n
+				p.tie_breaker = cur.tie_breaker
+				tiles[p.pos] = p
+
+
+## Kratka, która wchłania kafel płaskowyżu: z kaflem ściany głównej poza narożnikiem out, a na
+## prawdziwej ścianie także bez kafla (void).
+static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, pos: Vector2i) -> bool:
+	var w: TilePlacement = wall_cells.get(pos)
+	if GridUtils.is_walkable(real_ctx.grid, pos):
+		return w != null and w.atlas_coords.x >= 0 and not w.out_corner
+	return w == null or not w.out_corner
 
 
 ## Void = komórki ścian z kafelkiem SOLID_FILL (lite, nieprzezroczyste) albo bez kafla.
