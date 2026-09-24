@@ -22,6 +22,11 @@ var noise_frequency: float = 0.0
 var noise_octaves: int = 3
 var threshold: float = 0.0
 
+# Statystyki naprawy osiągalności (PlateauPass._solve) — diagnostyka i testy.
+var connect_stairs: int = 0      # schody dodane, bo obszar był nieosiągalny (ponad budżet)
+var dropped_pieces: int = 0      # płaskowyże usunięte: odcinały teren, a schodów nie dało się postawić
+var unreachable_top: int = 0     # kratki góry bez dojścia (brak miejsca na schody) -> bariera
+
 
 func is_empty() -> bool:
 	return mask.is_empty()

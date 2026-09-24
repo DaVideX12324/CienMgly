@@ -24,7 +24,7 @@ var plateau_noise_frequency: float = 0.02   # wielkość plam: MNIEJSZA = więks
 var plateau_threshold: float = 0.1         # próg szumu -1..1: NIŻSZY = więcej płaskowyżu (0.1 ≈ ~40% mapy)
 var plateau_noise_octaves: int = 3         # szczegółowość brzegów: mniej = gładsze, większe plamy
 var plateau_min_area: int = 40             # mniejsze komponenty odpadają
-var platform_max_stairs: int = 4           # wspólny budżet schodów na płaskowyż (S, potem N, E, W); schody dla spójności ponad budżet
+var platform_max_stairs: int = 4           # maks. schodów „z wyglądu” na płaskowyż — liczba losowana 0..max (S, potem N, E, W); schody dla osiągalności ponad to
 var stair_max_width: int = 3               # schody: min. 2 ([L][R]), szersze dokładają MID
 
 # --- Prawdopodobieństwa (nadpisują profil, gdy >= 0.0) ---
