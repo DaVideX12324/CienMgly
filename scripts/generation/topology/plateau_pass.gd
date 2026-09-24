@@ -123,7 +123,7 @@ static func _add_pits(ctx: GenerationContext, flags: GenerationFlags, allowed: D
 		room.erase(c)
 	for j in range(1, flags.plateau_pit_levels + 1):
 		var dj := _band(noise, room, pit_threshold - (j - 1) * flags.plateau_level_step, false, flags.plateau_block)
-		dj = _level_shape(ctx, dj, room, flags.plateau_min_area, flags.plateau_smooth)
+		dj = _level_shape(ctx, dj, room, flags.plateau_min_area, flags.plateau_smooth, false)
 		if dj.is_empty():
 			break
 		var ground := allowed.duplicate()
@@ -145,12 +145,14 @@ static func _band(noise: FastNoiseLite, cells: Dictionary, threshold: float, abo
 
 ## Kształt poziomu jak dla płaskowyżu 1: czyszczenie, szczeliny przy ścianach, portale w całości
 ## albo wcale, bez wypustek, min. pole.
-static func _level_shape(ctx: GenerationContext, m: Dictionary, room: Dictionary, min_area: int, smooth: int = 1) -> Dictionary:
+## at_wall: pasy grubości 1 przy ścianie też są „cienkie” (płaskowyże; doły nie — tam rysowana jest
+## ziemia wokół dołu, a wąski dół przy ścianie bywa jedynym przejściem ze schodami).
+static func _level_shape(ctx: GenerationContext, m: Dictionary, room: Dictionary, min_area: int, smooth: int = 1, at_wall: bool = true) -> Dictionary:
 	var out := _clean(ctx, m, room, min_area, smooth)
-	out = _fill_wall_gaps(ctx, out, room)
+	out = _fill_wall_gaps(ctx, out, room, at_wall)
 	out = _snap_strips(ctx, out, room)
 	out = _portals_all_or_nothing(ctx, out, room)
-	out = _strip_thin(ctx, out)
+	out = _strip_thin(ctx, out, at_wall)
 	return _drop_small(out, min_area)
 
 
@@ -373,6 +375,14 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, levels: Dicti
 		for i in range(comps.size()):
 			if alive[i] and comp_level[i] == 1 and not ground.is_empty() and _touches(comps[i], layout, ground):
 				blockers.append(i)
+		# Odcina tylko kawałek, na który da się wejść (np. z wejściem na płaskowyżu bez miejsca na schody
+		# w dół) — nieosiągalne płaskowyże przy tej ziemi niczego nie blokują i zostają.
+		var entered: Array[int] = []
+		for i in blockers:
+			if _overlaps(comps[i], reach):
+				entered.append(i)
+		if not entered.is_empty():
+			blockers = entered
 		if not blockers.is_empty():
 			if _absorb_pockets(ctx, comps, blockers, levels.get(1, {}), add_ok.get(1, allowed), guard.get(1, portal), ground, layout, lists):
 				continue
@@ -666,7 +676,7 @@ static func _clean(ctx: GenerationContext, mask: Dictionary, allowed: Dictionary
 ## ortogonalnie (bezpośrednio albo przez inne dołożone).
 ## Też wcięcie 1 kratki przy narożniku ściany (płaskowyż z dwóch prostopadłych stron, ściana po skosie). Dwa przebiegi (drugi domyka szczeliny powstałe
 ## w pierwszym), każdy po masce z początku przebiegu — przejścia szersze niż 1 kratka zostają.
-static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dictionary) -> Dictionary:
+static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dictionary, at_wall: bool = true) -> Dictionary:
 	var out := m
 	for _pass in range(2):
 		var src := out
@@ -690,7 +700,7 @@ static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dict
 	for _i in range(3):
 		var thin: Array[Vector2i] = []
 		for c in out:
-			if not m.has(c) and _thin(ctx, out, c):
+			if not m.has(c) and _thin(ctx, out, c, at_wall):
 				thin.append(c)
 		if thin.is_empty():
 			break
@@ -777,14 +787,21 @@ static func _strip_changes(ctx: GenerationContext, out: Dictionary, room: Dictio
 	return changes
 
 
-## Kratka maski nie do narysowania: bez ortogonalnego sąsiada w masce albo z ziemią po dwóch
-## przeciwnych stronach (1 kratka szerokości).
-static func _thin(ctx: GenerationContext, m: Dictionary, c: Vector2i) -> bool:
+## Kratka maski nie do narysowania: bez ortogonalnego sąsiada w masce albo o grubości 1 w którejś osi —
+## ziemia po obu stronach albo ziemia z jednej i ściana z drugiej (pas 1 kratki przy ścianie; pas
+## od ściany do ściany to pełne przejście korytarza, zostaje). Pas przy ścianie tylko przy kształtowaniu
+## maski (at_wall) — solver (rzeźbienie schodów) zostaje przy ziemi po obu stronach.
+static func _thin(ctx: GenerationContext, m: Dictionary, c: Vector2i, at_wall: bool = false) -> bool:
 	var ground := func(n: Vector2i) -> bool: return not m.has(n) and GridUtils.is_walkable(ctx.grid, n)
-	if ground.call(c + Vector2i(0, -1)) and ground.call(c + Vector2i(0, 1)):
-		return true
-	if ground.call(c + Vector2i(-1, 0)) and ground.call(c + Vector2i(1, 0)):
-		return true
+	for axis in [Vector2i(0, 1), Vector2i(1, 0)]:
+		var a: Vector2i = c - axis
+		var b: Vector2i = c + axis
+		if m.has(a) or m.has(b):
+			continue
+		if ground.call(a) and ground.call(b):
+			return true
+		if at_wall and (ground.call(a) or ground.call(b)):
+			return true
 	for d in DIRS4:
 		if m.has(c + d):
 			return false
@@ -792,12 +809,12 @@ static func _thin(ctx: GenerationContext, m: Dictionary, c: Vector2i) -> bool:
 
 
 ## Ścina wypustki szerokości 1 (_thin) aż do skutku — np. resztki po wycięciu strefy portalu.
-static func _strip_thin(ctx: GenerationContext, m: Dictionary) -> Dictionary:
+static func _strip_thin(ctx: GenerationContext, m: Dictionary, at_wall: bool = true) -> Dictionary:
 	var out := m.duplicate()
 	for _i in range(8):
 		var thin: Array[Vector2i] = []
 		for c in out:
-			if _thin(ctx, out, c):
+			if _thin(ctx, out, c, at_wall):
 				thin.append(c)
 		if thin.is_empty():
 			break
@@ -1383,7 +1400,8 @@ static func _seal_holes(ctx: GenerationContext, comps: Array, alive: Array[bool]
 ## Kształt po naprawie: szczeliny i wypustki szerokości 1 między poziomami (np. wcięcie w lico po
 ## rzeźbieniu, kanał albo język ziemi przy dole). Kratka wysokości h
 ## - z wyższym terenem po obu przeciwnych stronach -> dołącza do kawałka poziomu h+1,
-## - z niższym terenem po obu przeciwnych stronach -> odpada z kawałka poziomu h (obniżona o 1).
+## - z niższym terenem po obu przeciwnych stronach -> odpada z kawałka poziomu h (obniżona o 1),
+## - wzniesienie (h >= 1) ze ścianą z jednej strony i niższym terenem z drugiej -> też obniżona.
 ## Nie przy samych schodach (flanki, margines 1) ani w strefie ochronnej (portale, pierścień wyższego
 ## poziomu). True, gdy coś zmieniono.
 static func _fill_slots(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, _lists: Array, protect_flanks: bool = false) -> bool:
@@ -1425,7 +1443,13 @@ static func _fill_slots(ctx: GenerationContext, comps: Array, alive: Array[bool]
 		for pr in pairs:
 			var a: Vector2i = c + pr[0]
 			var b: Vector2i = c + pr[1]
-			if not (GridUtils.is_walkable(ctx.grid, a) and GridUtils.is_walkable(ctx.grid, b)):
+			var wa := GridUtils.is_walkable(ctx.grid, a)
+			var wb := GridUtils.is_walkable(ctx.grid, b)
+			if not (wa and wb):
+				# Pas wzniesienia grubości 1 przy ścianie (ściana z jednej strony, niżej z drugiej) -> obniżony.
+				if h >= 1 and (wa or wb) and layout.height_of(a if wa else b) < h:
+					down = _owner_at(comps, comp_level, alive, c, h)
+					break
 				continue
 			if layout.height_of(a) > h and layout.height_of(b) > h:
 				up = _owner_at(comps, comp_level, alive, a, h + 1)
