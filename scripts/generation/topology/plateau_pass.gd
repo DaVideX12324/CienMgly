@@ -816,6 +816,8 @@ static func _turn_up_at_walls(ctx: GenerationContext, m: Dictionary, room: Dicti
 			q += Vector2i(0, -1)
 		if run.size() > TURN_UP_MAX or GridUtils.is_walkable(ctx.grid, q):
 			continue  # wysoki teren albo nad nim nie ma ściany
+		if mask_is_higher and _spans_to_wall(ctx, m, run):
+			continue  # płaskowyż sięga tu w poziomie do ściany (cała szerokość) — wnęka przy ścianie byłaby gorsza
 		for r in run:
 			if mask_is_higher:
 				changed[r] = true
@@ -829,6 +831,16 @@ static func _turn_up_at_walls(ctx: GenerationContext, m: Dictionary, room: Dicti
 		else:
 			out[c] = true
 	return out
+
+
+## Któraś kratka ciągu ma w poziomie maskę z jednej strony i ścianę z drugiej.
+static func _spans_to_wall(ctx: GenerationContext, m: Dictionary, run: Array[Vector2i]) -> bool:
+	for r in run:
+		var w: Vector2i = r + Vector2i(-1, 0)
+		var e: Vector2i = r + Vector2i(1, 0)
+		if (m.has(w) and not GridUtils.is_walkable(ctx.grid, e)) or (m.has(e) and not GridUtils.is_walkable(ctx.grid, w)):
+			return true
+	return false
 
 
 ## Kratka maski nie do narysowania: bez ortogonalnego sąsiada w masce albo o grubości 1 w którejś osi —
