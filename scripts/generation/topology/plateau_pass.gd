@@ -25,6 +25,7 @@ const STAIR_SITE_W := 6       # okno rzeźbionego miejsca na schody: 2*STAIR_FLA
 const STAIR_SITE_W_MIN := 4   # węższe okno (flanka 1 + 2 stopnie), gdy 6 się nie mieści (wąski korytarz)
 const POCKET_MAX := 8         # odcięte kieszonki ziemi do tej wielkości -> płaskowyż
 const PORTAL_RING := 2        # pierścień wokół strefy portalu (bez krawędzi płaskowyżu)
+const STRIP_MIN := 5          # węższy pas wzniesienia / ziemi między granicą poziomu a ścianą -> cały albo wcale
 
 
 static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout:
@@ -36,6 +37,7 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout
 	var mask := _noise_mask(ctx, flags, allowed, thr.level)
 	mask = _clean(ctx, mask, allowed, flags.plateau_min_area, flags.plateau_smooth)
 	mask = _fill_wall_gaps(ctx, mask, allowed)
+	mask = _snap_strips(ctx, mask, allowed)
 	mask = _portals_all_or_nothing(ctx, mask, allowed)
 	mask = _strip_thin(ctx, mask)
 	mask = _drop_small(mask, flags.plateau_min_area)
@@ -146,6 +148,7 @@ static func _band(noise: FastNoiseLite, cells: Dictionary, threshold: float, abo
 static func _level_shape(ctx: GenerationContext, m: Dictionary, room: Dictionary, min_area: int, smooth: int = 1) -> Dictionary:
 	var out := _clean(ctx, m, room, min_area, smooth)
 	out = _fill_wall_gaps(ctx, out, room)
+	out = _snap_strips(ctx, out, room)
 	out = _portals_all_or_nothing(ctx, out, room)
 	out = _strip_thin(ctx, out)
 	return _drop_small(out, min_area)
@@ -707,6 +710,73 @@ static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dict
 	return out
 
 
+## Granica poziomu biegnąca wzdłuż korytarza / pokoju (np. skosem) zostawia wąskie pasy, na których
+## bariery (krawędź, stopa fasady) zjadają prawie wszystko. Wzdłuż wierszy i kolumn (bariery liczą się
+## per wiersz/kolumna) dla każdej pary kratka maski | kratka ziemi:
+## - pas ziemi za granicą węższy niż STRIP_MIN (do ściany albo maski) i nie szerszy niż pas maski -> maska
+##   (poziom na całą szerokość; tylko w `room`),
+## - pas maski przy ścianie węższy niż STRIP_MIN i węższy niż ziemia -> ziemia (wcale).
+## Pasy >= STRIP_MIN zostają (granica może iść środkiem, oba poziomy chodliwe). Kilka przebiegów.
+static func _snap_strips(ctx: GenerationContext, m: Dictionary, room: Dictionary) -> Dictionary:
+	# Najpierw tylko wypełnianie (do stabilności), potem raz usuwanie półek — naprzemiennie
+	# oscylowałoby (usunięta półka zostawia wąską szczelinę, którą kolejny przebieg zasypuje).
+	var out := m
+	var added := {}
+	for _pass in range(4):
+		var add := _strip_changes(ctx, out, room, true)
+		if add.is_empty():
+			break
+		out = out.duplicate()
+		out.merge(add)
+		added.merge(add)
+	# Półki tylko z pierwotnej maski: wypełniony pas bywa „półką” w poprzek (np. róg pokoju przy ścianie).
+	var del := _strip_changes(ctx, out, room, false, added)
+	if not del.is_empty():
+		out = out.duplicate()
+		for c in del:
+			out.erase(c)
+	return out
+
+
+## Zmiany _snap_strips: fill = kratki ziemi do dodania, inaczej kratki maski (półek) do usunięcia.
+static func _strip_changes(ctx: GenerationContext, out: Dictionary, room: Dictionary, fill: bool, keep: Dictionary = {}) -> Dictionary:
+	var changes := {}
+	for c in out:
+		for d in DIRS4:
+			var g0: Vector2i = c + d
+			if out.has(g0) or not GridUtils.is_walkable(ctx.grid, g0):
+				continue
+			var g_run: Array[Vector2i] = []
+			var p := g0
+			while g_run.size() < STRIP_MIN and GridUtils.is_walkable(ctx.grid, p) and not out.has(p):
+				g_run.append(p)
+				p += d
+			var u := 0
+			var q: Vector2i = c
+			while u < STRIP_MIN and out.has(q):
+				u += 1
+				q -= d
+			var ledge := u < STRIP_MIN and not GridUtils.is_walkable(ctx.grid, q)
+			if fill:
+				if g_run.size() < STRIP_MIN and (g_run.size() <= u or not ledge):
+					var fits := true
+					for g in g_run:
+						if not room.has(g):
+							fits = false
+							break
+					if fits:
+						for g in g_run:
+							changes[g] = true
+			elif ledge and u < g_run.size():
+				var run: Array[Vector2i] = []
+				for i in range(u):
+					run.append(c - d * i)
+				if not _overlaps_arr(run, keep):
+					for r in run:
+						changes[r] = true
+	return changes
+
+
 ## Kratka maski nie do narysowania: bez ortogonalnego sąsiada w masce albo z ziemią po dwóch
 ## przeciwnych stronach (1 kratka szerokości).
 static func _thin(ctx: GenerationContext, m: Dictionary, c: Vector2i) -> bool:
@@ -822,6 +892,13 @@ static func _fill_holes(ctx: GenerationContext, m: Dictionary, allowed: Dictiona
 		if ok:
 			out.merge(comp)
 	return out
+
+
+static func _overlaps_arr(a: Array[Vector2i], b: Dictionary) -> bool:
+	for c in a:
+		if b.has(c):
+			return true
+	return false
 
 
 static func _overlaps(a: Dictionary, b: Dictionary) -> bool:
