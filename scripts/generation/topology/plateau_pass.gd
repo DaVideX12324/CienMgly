@@ -320,7 +320,7 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, levels: Dicti
 		for c in allowed:
 			if not (levels[0] as Dictionary).has(c):
 				pit_cells[c] = true
-	var env := {"levels": levels, "add_ok": add_ok, "guard": guard, "guard_base": guard_base, "comp_level": comp_level, "lo": lo, "hi": hi, "allowed": allowed, "pit_cells": pit_cells}
+	var env := {"levels": levels, "add_ok": add_ok, "guard": guard, "guard_base": guard_base, "comp_level": comp_level, "lo": lo, "hi": hi, "allowed": allowed, "pit_cells": pit_cells, "portal": portal, "refilled": {}}
 
 	# Teren, który ma być osiągalny: spójny z wejściem w gridzie (bez wysokości) — sam grid, nie
 	# warunek ścieżki; komórki odcięte już w topologii nie są problemem wysokości.
@@ -383,6 +383,9 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, levels: Dicti
 			continue
 		break  # zostały tylko nieosiągalne góry -> bariera przy domknięciu niżej
 
+	# Po naprawie wysepki ziemi w dole idą do dołu także tam, gdzie _fill_pits zasypał dół bez dojścia:
+	# samotna kratka ziemi to wypustka, a dół bez dojścia i tak dostaje barierę niżej.
+	(env.refilled as Dictionary).clear()
 	layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
 	var reach_final := _bfs(ctx, ctx.entrance_pos, layout.blocked)
 	if _seal_holes(ctx, comps, alive, layout, guard.get(1, portal), lists, comp_level):
@@ -466,6 +469,7 @@ static func _fill_pits(_ctx: GenerationContext, comps: Array, alive: Array[bool]
 			if alive[i] and comp_level[i] == h + 1 and _touches(comps[i], layout, region):
 				(comps[i] as Dictionary).merge(region)
 				((env.levels as Dictionary)[h + 1] as Dictionary).merge(region)
+				(env.refilled as Dictionary).merge(region)  # _assemble nie zrobi z nich znowu dołu
 				filled = true
 				break
 	return filled
@@ -655,7 +659,9 @@ static func _clean(ctx: GenerationContext, mask: Dictionary, allowed: Dictionary
 
 
 ## Szczelina 1 kratki między płaskowyżem a ścianą (płaskowyż z jednej strony, ściana albo płaskowyż
-## dokładnie naprzeciw, także po skosie) -> płaskowyż. Dwa przebiegi (drugi domyka szczeliny powstałe
+## dokładnie naprzeciw, także po skosie) -> płaskowyż. Dołożona kratka musi łączyć się z płaskowyżem
+## ortogonalnie (bezpośrednio albo przez inne dołożone).
+## Też wcięcie 1 kratki przy narożniku ściany (płaskowyż z dwóch prostopadłych stron, ściana po skosie). Dwa przebiegi (drugi domyka szczeliny powstałe
 ## w pierwszym), każdy po masce z początku przebiegu — przejścia szersze niż 1 kratka zostają.
 static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dictionary) -> Dictionary:
 	var out := m
@@ -669,6 +675,14 @@ static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dict
 				if src.has(c + d) and (src.has(c - d) or not GridUtils.is_walkable(ctx.grid, c - d)):
 					out[c] = true
 					break
+			if out.has(c):
+				continue
+			# Wcięcie przy narożniku ściany: płaskowyż z dwóch prostopadłych stron, ściana na skosie
+			# między nimi — bez tej kratki oba kawałki stykałyby się tylko rogiem.
+			for d in [Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]:
+				if src.has(c + Vector2i(d.x, 0)) and src.has(c + Vector2i(0, d.y)) and not GridUtils.is_walkable(ctx.grid, c + d):
+					out[c] = true
+					break
 	# Bez cienkich wypustek (pipeline ścian ich nie narysuje): dołożona kratka zostaje, gdy nie jest cienka.
 	for _i in range(3):
 		var thin: Array[Vector2i] = []
@@ -679,6 +693,17 @@ static func _fill_wall_gaps(ctx: GenerationContext, m: Dictionary, allowed: Dict
 			break
 		for c in thin:
 			out.erase(c)
+	# Dołożone kratki bez ortogonalnego połączenia z płaskowyżem (szczelina po skosie, dobudowana
+	# w drugim przebiegu) -> precz: kawałek stykający się z płaskowyżem tylko rogiem.
+	for comp in _components(out, DIRS4):
+		var anchored := false
+		for c in comp:
+			if m.has(c):
+				anchored = true
+				break
+		if not anchored:
+			for c in comp:
+				out.erase(c)
 	return out
 
 
@@ -799,9 +824,16 @@ static func _fill_holes(ctx: GenerationContext, m: Dictionary, allowed: Dictiona
 	return out
 
 
+static func _overlaps(a: Dictionary, b: Dictionary) -> bool:
+	for c in a:
+		if b.has(c):
+			return true
+	return false
+
+
 static func _drop_small(m: Dictionary, min_area: int) -> Dictionary:
 	var out := {}
-	for comp in _components(m, DIRS8):
+	for comp in _components(m, DIRS4):
 		if (comp as Dictionary).size() >= min_area:
 			out.merge(comp)
 	return out
@@ -1542,6 +1574,15 @@ static func _assemble(ctx: GenerationContext, comps: Array, lists: Array, alive:
 			for comp in _components(sunk, DIRS8):
 				if (comp as Dictionary).size() < min_area:
 					m.merge(comp)
+			# I odwrotnie: wysepka ziemi w dole (ortogonalnie) mniejsza niż min_area -> dół (nie przy
+			# portalu ani tam, gdzie _fill_pits zasypał dół bez dojścia — inaczej wracałby w kółko).
+			if env.has("portal"):
+				for comp in _components(m, DIRS4):
+					if (comp as Dictionary).size() >= min_area or _overlaps(comp, env.portal) or _overlaps(comp, env.refilled):
+						continue
+					for c in comp:
+						m.erase(c)
+						(env.pit_cells as Dictionary)[c] = true
 		if k > lo + 1 and layout.levels.has(k - 1):
 			var nested := {}
 			var below: Dictionary = layout.levels[k - 1]
