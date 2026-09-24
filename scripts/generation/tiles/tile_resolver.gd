@@ -188,6 +188,26 @@ static func resolve_module_parts(
 	return []
 
 
+## Ścisłe rozwiązanie modułu z JEDNEGO nazwanego zestawu: bez pola, MIXED, reguł par i bez
+## fallbacku do zestawu domyślnego. Dla nakładek z własną rodziną (np. platformy), gdzie art
+## ścian nie może się pojawić. Pusta tablica -> zestaw nie ma roli/wariantu (lub jest wyłączony).
+static func resolve_strict(
+	ctx: GenerationContext,
+	tileset_id: StringName,
+	anchor_pos: Vector2i,
+	module_role: TileModuleRole.Id,
+	variant_roll: int = -1,
+	forced_variant_id: StringName = &""
+) -> Array:
+	if ctx == null or ctx.map_tile_profile == null:
+		return []
+	var own_set: NamedTileSetDefinition = ctx.map_tile_profile.get_tileset(tileset_id)
+	if own_set == null or not own_set.enabled:
+		return []
+	var storage_role: int = TileModuleRole.to_storage_role(module_role)
+	return _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, tileset_id, module_role, variant_roll, forced_variant_id)
+
+
 ## Buduje części z wpisu: wybrany wariant (ważony hash) LUB legacy tile jako 1 część (0,0).
 static func _entry_parts(
 	entry: TileRoleEntry,

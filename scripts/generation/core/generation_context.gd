@@ -23,6 +23,10 @@ var exit_zone: Array[Vector2i] = []
 var rooms: Array[Rect2i] = []
 var entrance_pos: Vector2i = Vector2i.ZERO
 var exit_pos: Vector2i = Vector2i.ZERO
+var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (grid zostaje FLOOR)
+# Tryb płaskowyżu (tylko syntetyczny kontekst PlateauRenderera): fasady zawsze 2H, stopień
+# lica 2H = moduł IN (STEP_LEFT/RIGHT 2-częściowy). Domyślnie false — ściany bez zmian.
+var plateau_mode: bool = false
 
 # --- Named TileSet System (opcjonalne; null => placery używają stałych) ---
 var map_tile_profile: MapTileProfile = null

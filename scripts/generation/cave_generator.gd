@@ -235,7 +235,8 @@ static func apply_cave_tiles(
 	flags: GenerationFlags = null,
 	map_tile_profile: MapTileProfile = null,
 	tileset_field: TileSetField = null,
-	generator_behaviour: Dictionary = {}
+	generator_behaviour: Dictionary = {},
+	platforms_layer: TileMapLayer = null
 ) -> void:
 	if flags == null:
 		flags = GenerationFlags.new()
@@ -253,10 +254,24 @@ static func apply_cave_tiles(
 			floor_decor_layer.y_sort_enabled = true
 			floor_layer.get_parent().add_child(floor_decor_layer)
 
+	# Warstwa Platforms (płaskowyże): rodzeństwo "Platforms"; tworzona tylko, gdy są płaskowyże.
+	# z_index -1: pod Walls i encjami (nikt nie stoi pod/za płaskowyżem).
+	if platforms_layer == null and floor_layer.get_parent():
+		platforms_layer = floor_layer.get_parent().get_node_or_null("Platforms") as TileMapLayer
+		if platforms_layer == null and result.plateau != null and not result.plateau.is_empty():
+			platforms_layer = TileMapLayer.new()
+			platforms_layer.name = "Platforms"
+			platforms_layer.tile_set = floor_layer.tile_set
+			platforms_layer.z_index = -1
+			platforms_layer.y_sort_enabled = true
+			floor_layer.get_parent().add_child(platforms_layer)
+
 	floor_layer.clear()
 	if floor_decor_layer:
 		floor_decor_layer.clear()
 	walls_layer.clear()
+	if platforms_layer:
+		platforms_layer.clear()
 
 	var portal_zone: Dictionary = {}
 	for p in result.entrance_zone:
@@ -279,6 +294,7 @@ static func apply_cave_tiles(
 	ctx.entrance_pos = result.entrance_pos
 	ctx.exit_pos = result.exit_pos
 	ctx.rooms = result.rooms
+	ctx.plateau = result.plateau
 
 	# Named TileSet System (opcjonalne). Gdy jest profil, ale nie ma pola przypisań,
 	# tworzymy puste pole -> resolver używa default_tileset_id dla każdej komórki
@@ -293,6 +309,7 @@ static func apply_cave_tiles(
 		&"Floor": floor_layer,
 		&"FloorDecor": floor_decor_layer,
 		&"Walls": walls_layer,
+		&"Platforms": platforms_layer,
 	}
 
 	var analysis := EdgeAnalyzer.analyze(ctx)
@@ -301,6 +318,7 @@ static func apply_cave_tiles(
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
 	TerrainPaintExecutor.execute(layers, plans.terrain)
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
+	TilePlacementExecutor.execute(layers[&"Platforms"], plans.tiles, &"Platforms")
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:

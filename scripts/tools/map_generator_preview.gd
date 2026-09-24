@@ -33,6 +33,7 @@ const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/c
 @onready var check_nav: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckNav
 @onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
 @onready var check_edge_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask
+var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_ensure_height_mask_check)
 @onready var btn_generate: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnGenerate
 
 @onready var btn_fit_all: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1/BtnFitAll
@@ -167,6 +168,16 @@ func _ensure_nodes() -> void:
 # Wewnątrz map_generator_preview.gd:
 var _mask_sprite: Sprite2D = null
 var _edge_mask_sprite: Sprite2D = null
+var _height_mask_sprite: Sprite2D = null
+
+# Mapa wysokości: pole szumu > próg na CAŁEJ mapie (też nad ścianami/voidem) jako półprzezroczyste
+# wypełnienie z gładkim konturem; na nim faktyczny płaskowyż (mocniej) i schody (żółte).
+const PlateauPassScript = preload("res://modules/quiz_rpg/scripts/generation/topology/plateau_pass.gd")
+const HEIGHT_MASK_PX := 4  # próbki na kratkę w każdą stronę (gładki kontur)
+const HEIGHT_FIELD_FILL := Color(0.25, 0.85, 1.0, 0.18)
+const HEIGHT_FIELD_EDGE := Color(0.35, 0.9, 1.0, 0.95)
+const HEIGHT_PLATEAU_FILL := Color(0.25, 0.85, 1.0, 0.45)
+const HEIGHT_STAIR_FILL := Color(1.0, 0.85, 0.2, 0.7)
 
 
 func _toggle_grid_mask() -> void:
@@ -287,6 +298,130 @@ func _hide_edge_mask() -> void:
 		_edge_mask_sprite.queue_free()
 
 	_edge_mask_sprite = null
+
+
+## Checkbox maski wysokości pod CheckEdgeMask (w kodzie, żeby nie zależeć od zapisu sceny).
+func _ensure_height_mask_check() -> void:
+	if check_height_mask or not check_edge_mask:
+		return
+	check_height_mask = CheckBox.new()
+	check_height_mask.name = "CheckHeightMask"
+	check_height_mask.text = "Pokaż mapę wysokości (płaskowyże)"
+	var box := check_edge_mask.get_parent()
+	box.add_child(check_height_mask)
+	box.move_child(check_height_mask, check_edge_mask.get_index() + 1)
+
+
+func _toggle_height_mask() -> void:
+	var should_show := not is_instance_valid(_height_mask_sprite)
+	if check_height_mask:
+		check_height_mask.button_pressed = should_show
+	elif should_show:
+		_show_height_mask()
+	else:
+		_hide_height_mask()
+
+
+func _on_height_mask_toggled(enabled: bool) -> void:
+	if enabled:
+		_show_height_mask()
+	else:
+		_hide_height_mask()
+
+
+func _show_height_mask() -> void:
+	if is_instance_valid(_height_mask_sprite):
+		_height_mask_sprite.visible = true
+		return
+	if not level_container or level_container.get_child_count() == 0:
+		return
+	var proc_level := level_container.get_child(0)
+	var res: Variant = proc_level.get("last_result") if proc_level else null
+	if not res:
+		return
+	var img := _build_height_mask_image(res)
+	if img == null:
+		push_warning("Mapa wysokości niedostępna (płaskowyże wyłączone albo inny typ mapy).")
+		return
+
+	_height_mask_sprite = Sprite2D.new()
+	_height_mask_sprite.name = "HeightMask"
+	_height_mask_sprite.texture = ImageTexture.create_from_image(img)
+	_height_mask_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_height_mask_sprite.scale = Vector2.ONE * (16.0 / HEIGHT_MASK_PX)  # kratka = 16 px
+	_height_mask_sprite.centered = false
+	_height_mask_sprite.z_index = 102
+	level_container.add_child(_height_mask_sprite)
+
+
+func _hide_height_mask() -> void:
+	if is_instance_valid(_height_mask_sprite):
+		_height_mask_sprite.queue_free()
+	_height_mask_sprite = null
+
+
+## Obraz HEIGHT_MASK_PX px / kratkę: pole mapy wysokości na całej mapie (wypełnienie + gładki kontur),
+## faktyczny płaskowyż i schody. null = brak mapy wysokości (płaskowyże wyłączone).
+func _build_height_mask_image(res) -> Image:
+	var pl = res.plateau if "plateau" in res else null
+	if pl == null or pl.noise_frequency <= 0.0:
+		return null
+	var s := HEIGHT_MASK_PX
+	var w: int = res.width * s
+	var h: int = res.height * s
+	var noise: FastNoiseLite = PlateauPassScript.make_noise(pl.noise_seed, pl.noise_frequency, pl.noise_octaves)
+
+	# Pole: próbka szumu w środku każdego podpiksela (współrzędne kratek).
+	var inside := PackedByteArray()
+	inside.resize(w * h)
+	for py in range(h):
+		var fy := (py + 0.5) / s
+		for px in range(w):
+			if noise.get_noise_2d((px + 0.5) / s, fy) > pl.threshold:
+				inside[py * w + px] = 1
+
+	var data := PackedByteArray()
+	data.resize(w * h * 4)
+	var fill := _rgba8(HEIGHT_FIELD_FILL)
+	for i in range(w * h):
+		if inside[i] == 1:
+			_put(data, i, fill)
+	var plateau := _rgba8(HEIGHT_PLATEAU_FILL)
+	for c in pl.mask:
+		_put_cell(data, w, c, s, plateau)
+	var stair := _rgba8(HEIGHT_STAIR_FILL)
+	for c in pl.stair_cells():
+		_put_cell(data, w, c, s, stair)
+	# Kontur pola na wierzchu: podpiksel wewnątrz z sąsiadem na zewnątrz.
+	var edge := _rgba8(HEIGHT_FIELD_EDGE)
+	for py in range(h):
+		for px in range(w):
+			var i := py * w + px
+			if inside[i] == 0:
+				continue
+			if (px == 0 or inside[i - 1] == 0) or (px == w - 1 or inside[i + 1] == 0) \
+				or (py == 0 or inside[i - w] == 0) or (py == h - 1 or inside[i + w] == 0):
+				_put(data, i, edge)
+	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
+
+
+static func _rgba8(c: Color) -> PackedByteArray:
+	return PackedByteArray([c.r8, c.g8, c.b8, c.a8])
+
+
+static func _put(data: PackedByteArray, i: int, rgba: PackedByteArray) -> void:
+	data[i * 4] = rgba[0]
+	data[i * 4 + 1] = rgba[1]
+	data[i * 4 + 2] = rgba[2]
+	data[i * 4 + 3] = rgba[3]
+
+
+static func _put_cell(data: PackedByteArray, w: int, c: Vector2i, s: int, rgba: PackedByteArray) -> void:
+	if c.x < 0 or c.y < 0 or (c.x + 1) * s > w or (c.y + 1) * s * w * 4 > data.size():
+		return
+	for dy in range(s):
+		for dx in range(s):
+			_put(data, (c.y * s + dy) * w + c.x * s + dx, rgba)
 	
 func _setup_ui() -> void:
 	# 1. Typy generatora
@@ -349,6 +484,9 @@ func _setup_ui() -> void:
 		check_gen_mask.toggled.connect(_on_grid_mask_toggled)
 	if check_edge_mask:
 		check_edge_mask.toggled.connect(_on_edge_mask_toggled)
+	_ensure_height_mask_check()
+	if check_height_mask:
+		check_height_mask.toggled.connect(_on_height_mask_toggled)
 
 	# 6. Kamera
 	btn_fit_all.pressed.connect(fit_to_screen)
@@ -484,6 +622,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				_toggle_grid_mask()
 			KEY_E:
 				_toggle_edge_mask()
+			KEY_L:
+				_toggle_height_mask()
 			KEY_F2:
 				opt_type.select(2) # Zamek
 				_on_type_selected(2)
@@ -606,6 +746,7 @@ func _generate_current_map() -> void:
 
 	_mask_sprite = null
 	_edge_mask_sprite = null
+	_height_mask_sprite = null
 
 	if spin_seed:
 		current_seed = int(spin_seed.value)
@@ -654,6 +795,15 @@ func _generate_current_map() -> void:
 			if walls_layer:
 				var total_tiles := walls_layer.get_used_cells().size()
 				extra_stats = "\n[b]Kafelki ścian:[/b] %d" % total_tiles
+			if "plateau" in res:
+				var pl = res.plateau
+				var cells: int = pl.mask.size() if pl != null else 0
+				var stairs_s: int = pl.stairs.size() if pl != null else 0
+				var stairs_n: int = pl.stairs_north.size() if pl != null else 0
+				var stairs_e: int = pl.stairs_east.size() if pl != null else 0
+				var stairs_w: int = pl.stairs_west.size() if pl != null else 0
+				var total_st: int = stairs_s + stairs_n + stairs_e + stairs_w
+				extra_stats += "\n[b]Płaskowyże:[/b] %d kratek, %d schodów (%d S / %d N / %d E / %d W)" % [cells, total_st, stairs_s, stairs_n, stairs_e, stairs_w]
 
 		info_label.text = """[b]Typ:[/b] %s
 [b]Seed:[/b] [color=#ffdd66]%d[/color]
@@ -684,6 +834,8 @@ func _generate_current_map() -> void:
 			_show_grid_mask()
 		if check_edge_mask and check_edge_mask.button_pressed:
 			_show_edge_mask()
+		if check_height_mask and check_height_mask.button_pressed:
+			_show_height_mask()
 
 	if spin_coord_x:
 		spin_coord_x.max_value = float(maxi(0, current_width - 1))
@@ -806,6 +958,7 @@ func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
 		"walls_layer": "",
 		"floor_layer": "",
 		"decor_layer": "",
+		"platforms_layer": "",
 		"dist_entrance": 0.0,
 		"dist_exit": 0.0,
 		"manhattan_entrance": 0,
@@ -889,6 +1042,10 @@ func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
 		if decor_l and decor_l.get_cell_source_id(tile_pos) != -1:
 			var ac: Vector2i = decor_l.get_cell_atlas_coords(tile_pos)
 			info.decor_layer = "Atlas (%d, %d)" % [ac.x, ac.y]
+		var plat_l := proc_level.find_child("Platforms", true, false) as TileMapLayer
+		if plat_l and plat_l.get_cell_source_id(tile_pos) != -1:
+			var ac: Vector2i = plat_l.get_cell_atlas_coords(tile_pos)
+			info.platforms_layer = "Atlas (%d, %d)" % [ac.x, ac.y]
 
 	return info
 
@@ -930,6 +1087,8 @@ func _update_tile_inspector_ui() -> void:
 			layers_text += "\n[b]Warstwa Podłogi:[/b] %s" % active_info.floor_layer
 		if not active_info.decor_layer.is_empty():
 			layers_text += "\n[b]Warstwa Dekoracji:[/b] %s" % active_info.decor_layer
+		if not active_info.platforms_layer.is_empty():
+			layers_text += "\n[b]Warstwa Platform:[/b] %s" % active_info.platforms_layer
 
 		var relative_sel_text := ""
 		if has_selection and hover_info.in_bounds and _hovered_tile != _selected_tile:

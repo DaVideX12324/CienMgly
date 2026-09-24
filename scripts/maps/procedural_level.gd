@@ -32,7 +32,8 @@ enum LevelType {
 @export var cave_max_rooms: int = 0 # 0 = obliczane automatycznie na podstawie rozmiaru mapy
 
 ## Named TileSet System: ścieżka do companion-JSON zachowania (np. caves.json).
-## Puste => generator działa jak dotychczas (placery używają stałych CaveTileConstants).
+## Puste => dla jaskiń companion-JSON tilesetu (caves.tres -> config/caves.json); gdy go brak,
+## generator działa jak dotychczas (placery używają stałych CaveTileConstants).
 @export_file("*.json") var tile_behaviour_json_path: String = ""
 
 var last_result: RefCounted = null
@@ -42,14 +43,25 @@ var _transitioning: bool = false
 ## Wczytuje companion-JSON (parametry generatora + Named TileSet System).
 ## Zwraca obiekt konfiguracji lub null (puste/brak ścieżki => stary tryb).
 func _load_behaviour_config():
-	if tile_behaviour_json_path.is_empty():
+	var json_path := _resolve_behaviour_json_path()
+	if json_path.is_empty():
 		return null
-	var cfg = GeneratorBehaviourConfig.load_from_json_path(tile_behaviour_json_path)
+	var cfg = GeneratorBehaviourConfig.load_from_json_path(json_path)
 	for w in cfg.warnings:
 		push_warning("[TileBehaviour] " + w)
 	for e in cfg.errors:
 		push_error("[TileBehaviour] " + e)
 	return cfg
+
+
+## Jawna ścieżka z @export wygrywa; inaczej (tylko jaskinie) companion-JSON używanego tilesetu.
+func _resolve_behaviour_json_path() -> String:
+	if not tile_behaviour_json_path.is_empty():
+		return tile_behaviour_json_path
+	if level_type != LevelType.CAVE_DUNGEON:
+		return ""
+	var ts_path: String = custom_tileset.resource_path if custom_tileset != null else CaveGeneratorScript.CAVES_TILESET_PATH
+	return GeneratorBehaviourConfig.resolve_json_path(ts_path)
 
 
 ## Buduje profil + pole zestawów dla Named TileSet System z wczytanego configu.
@@ -189,7 +201,8 @@ func generate_level(seed_val: int = 0) -> void:
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
 	var floor_decor := _get_or_create_layer("FloorDecor", -1, ts)
 	var walls_layer := _get_or_create_layer("Walls", 0, ts)
-	
+	var platforms_layer := _get_or_create_layer("Platforms", -1, ts)  # płaskowyże: pod Walls i encjami
+
 	var rng := MapGeneratorBaseScript.create_rng(actual_seed)
 	if level_type == LevelType.CAVE_DUNGEON:
 		# Named TileSet System (opcjonalny). Profil i pole zestawów z wczytanego configu.
@@ -199,11 +212,12 @@ func generate_level(seed_val: int = 0) -> void:
 		var behaviour_dict: Dictionary = behaviour.get("raw", {})
 		CaveGeneratorScript.apply_cave_tiles(
 			floor_layer, walls_layer, gen_result, rng, floor_decor, -1, cave_flags,
-			tile_profile, tileset_field, behaviour_dict
+			tile_profile, tileset_field, behaviour_dict, platforms_layer
 		)
 	else:
 		if floor_decor:
 			floor_decor.clear()
+		platforms_layer.clear()
 		MapGeneratorBaseScript.apply_grid_to_layers(floor_layer, walls_layer, gen_result, palette, rng)
 	
 	# 3. Encje (gracz, wrogowie, skrzynie)

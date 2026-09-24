@@ -16,15 +16,15 @@ const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/
 # = 0 oznacza "auto" (bierz z UI/@export albo wbudowany default).
 const GEN_KEYS := ["min_room_size", "max_room_size", "max_rooms", "corridor_width", "seed", "width", "height"]
 # Rozpoznawane klucze bloku "flags" (1:1 z właściwościami GenerationFlags).
-const FLAG_BOOL_KEYS := ["enable_meandering", "enable_variable_width", "enable_funnels", "enable_junction_smoothing", "enable_grid_cleanup", "enable_terrain_smoothing", "enable_decorative_niches", "enable_pillars", "enable_2h_facades", "enable_3h_facades", "enable_floor_decorations", "debug_log_edge_kinds"]
-const FLAG_FLOAT_KEYS := ["niche_spawn_chance", "secret_niche_spawn_chance"]
-const FLAG_INT_KEYS := ["force_theme"]
+const FLAG_BOOL_KEYS := ["enable_meandering", "enable_variable_width", "enable_funnels", "enable_junction_smoothing", "enable_grid_cleanup", "enable_terrain_smoothing", "enable_decorative_niches", "enable_pillars", "enable_2h_facades", "enable_3h_facades", "enable_floor_decorations", "debug_log_edge_kinds", "enable_platforms"]
+const FLAG_FLOAT_KEYS := ["niche_spawn_chance", "secret_niche_spawn_chance", "plateau_noise_frequency", "plateau_threshold"]
+const FLAG_INT_KEYS := ["force_theme", "plateau_noise_octaves", "plateau_min_area", "plateau_portal_margin", "platform_max_stairs", "stair_max_width"]
 
 ## Id puli MIXED do wypełnienia pola (JSON tilesets.mixed), lub "" gdy brak.
 func mixed_pool_id() -> StringName:
 	return StringName(tilesets().get("mixed", &""))
 
-const VALID_LAYERS := [&"Walls", &"Floor", &"FloorDecor", &""]
+const VALID_LAYERS := [&"Walls", &"Floor", &"FloorDecor", &"Platforms", &""]
 # Oczekiwana liczba części dla ról-modułów (klucz przechowywania = TileRole.Id).
 static func _expected_parts(role: int) -> int:
 	if role == TileRole.Id.FACADE_2H: return 2
@@ -72,11 +72,17 @@ func default_tileset_id() -> StringName:
 	return StringName(tilesets().get("default", &""))
 
 
-## Companion-JSON o tej samej nazwie bazowej co .tres. Ścieżka wyliczana dynamicznie.
+## Companion-JSON o tej samej nazwie bazowej co .tres: maps/<nazwa>.tres -> maps/config/<nazwa>.json
+## (układ po reorganizacji), z fallbackiem na sąsiedni <nazwa>.json. "" gdy żaden nie istnieje.
 static func resolve_json_path(tres_path: String) -> String:
 	if tres_path.is_empty() or not tres_path.ends_with(".tres"):
 		return ""
-	return tres_path.trim_suffix(".tres") + ".json"
+	var dir := tres_path.get_base_dir()
+	var base := tres_path.get_file().get_basename()
+	for candidate in ["%s/config/%s.json" % [dir, base], "%s/%s.json" % [dir, base]]:
+		if FileAccess.file_exists(candidate):
+			return candidate
+	return ""
 
 
 ## Ładuje config z pliku .json. Zwraca zawsze obiekt (nawet przy błędzie) — z errors/warnings.
