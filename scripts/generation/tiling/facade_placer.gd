@@ -18,7 +18,8 @@ static func _queue(
 	atlas_coords: Vector2i,
 	category: StringName,
 	table: Dictionary,
-	origin: Vector2i = Vector2i.ZERO
+	origin: Vector2i = Vector2i.ZERO,
+	out_corner: bool = false
 ) -> void:
 	var p := TilePlacement.new()
 	p.pos = target_pos
@@ -26,6 +27,7 @@ static func _queue(
 	p.atlas_coords = atlas_coords
 	p.category = category
 	p.origin = origin
+	p.out_corner = out_corner
 	p.tie_breaker = 10 if (origin == Vector2i.ZERO or target_pos.x == origin.x) else 1
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
@@ -38,7 +40,8 @@ static func _queue_part(
 	rp,
 	category: StringName,
 	table: Dictionary,
-	origin: Vector2i = Vector2i.ZERO
+	origin: Vector2i = Vector2i.ZERO,
+	out_corner: bool = false
 ) -> void:
 	var p := TilePlacement.new()
 	p.pos = target_pos
@@ -48,6 +51,7 @@ static func _queue_part(
 	p.alternative_tile = rp.tile.alternative_tile
 	p.category = category
 	p.origin = origin
+	p.out_corner = out_corner
 	p.tie_breaker = 10 if (origin == Vector2i.ZERO or target_pos.x == origin.x) else 1
 	PlacementPriority.assign(p, table)
 	plan.queue(p)
@@ -61,13 +65,14 @@ static func _try_module(
 	module_role: TileModuleRole.Id,
 	variant_id: StringName,
 	table: Dictionary,
-	force_id: StringName = &""
+	force_id: StringName = &"",
+	out_corner: bool = false
 ) -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
 	for rp in parts:
-		_queue_part(plan, anchor + rp.offset, rp, &"FACADE", table)
+		_queue_part(plan, anchor + rp.offset, rp, &"FACADE", table, Vector2i.ZERO, out_corner)
 	return true
 
 
@@ -106,10 +111,12 @@ static func place_2h(
 		top_2h = CaveTileConstants.WALL_2H_TOP[1] if is_b else CaveTileConstants.WALL_2H_TOP[0]
 		base_2h = CaveTileConstants.WALL_2H_BASE[1] if is_b else CaveTileConstants.WALL_2H_BASE[0]
 
-	# Anchor = stopa (pos): część base @ (0,0), top @ (0,-1).
-	if not _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, variant_id, table):
-		_queue(plan, pos, base_2h, &"FACADE", table)
-		_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table)
+	# Anchor = stopa (pos): część base @ (0,0), top @ (0,-1). Końce WEST/EAST = narożnik out
+	# (przezroczysty koniec lica — PlateauRenderer nie wchłania pod nim płaskowyżu).
+	var is_end: bool = variant_id == &"WEST" or variant_id == &"EAST"
+	if not _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, variant_id, table, &"", is_end):
+		_queue(plan, pos, base_2h, &"FACADE", table, Vector2i.ZERO, is_end)
+		_queue(plan, pos + Vector2i(0, -1), top_2h, &"FACADE", table, Vector2i.ZERO, is_end)
 	state.mark(pos, &"FACADE")
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
 

@@ -80,7 +80,7 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 				continue
 			var p: TilePlacement = cells[pos]
 			var foot: Vector2i = pos if not region.has(pos) else pos + Vector2i(0, 1)
-			if _absorbed(real_ctx, wall_cells, pos) 					or (p.category == &"FACADE" and not region.has(pos) and _absorbed(real_ctx, wall_cells, pos + Vector2i(0, -1))):
+			if _absorbed(real_ctx, wall_cells, pos, _is_rim(p)) 					or (p.category == &"FACADE" and not region.has(pos) and _absorbed(real_ctx, wall_cells, pos + Vector2i(0, -1))):
 				if p.category == &"FACADE":
 					absorbed_feet[foot] = true
 				continue
@@ -121,12 +121,30 @@ static func _end_facades_at_absorbed(sctx: GenerationContext, tiles: Dictionary,
 
 
 ## Kratka, która wchłania kafel płaskowyżu: z kaflem ściany głównej poza narożnikiem out, a na
-## prawdziwej ścianie także bez kafla (void).
-static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, pos: Vector2i) -> bool:
+## prawdziwej ścianie także bez kafla (void). Rim płaskowyżu (rim = true) tylko pod górą modułu
+## ściany (jej rim albo najwyższa część lica) — pod bokiem, narożnikiem itp. go widać, zostaje.
+static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, pos: Vector2i, rim: bool = false) -> bool:
 	var w: TilePlacement = wall_cells.get(pos)
-	if GridUtils.is_walkable(real_ctx.grid, pos):
-		return w != null and w.atlas_coords.x >= 0 and not w.out_corner
-	return w == null or not w.out_corner
+	if w == null or w.atlas_coords.x < 0:
+		return not GridUtils.is_walkable(real_ctx.grid, pos)
+	if w.out_corner:
+		return false
+	return not rim or _is_module_top(wall_cells, w)
+
+
+static func _is_rim(p: TilePlacement) -> bool:
+	return String(p.category).begins_with("RIM")
+
+
+## Najwyższa część modułu ściany: rim (moduł 1-kaflowy) albo część lica bez części tego samego
+## modułu (origin) nad sobą.
+static func _is_module_top(wall_cells: Dictionary, w: TilePlacement) -> bool:
+	if String(w.category).begins_with("RIM"):
+		return true
+	if w.category != &"FACADE":
+		return false
+	var above: TilePlacement = wall_cells.get(w.pos + Vector2i(0, -1))
+	return above == null or above.category != &"FACADE" or above.origin != w.origin
 
 
 ## Void = komórki ścian z kafelkiem SOLID_FILL (lite, nieprzezroczyste) albo bez kafla.
