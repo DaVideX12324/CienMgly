@@ -17,6 +17,7 @@ const SCAN_GROW := 10
 const DIRS4: Array[Vector2i] = [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
 const DIAG4: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1)]
 const FOOT_SEARCH := 3  # fasada ściany: stopa najwyżej 3 kratki niżej
+const VOID_REACH := 2   # o tyle kratek krawędzi ściany P dochodzi do voidu
 
 
 ## Zwraca {"tiles": pos -> TilePlacement (warstwa Platforms), "region": P, "missing": liczba kafli,
@@ -186,7 +187,34 @@ static func build_region(real_ctx: GenerationContext, mask: Dictionary, wall_cel
 			continue
 		if _faces_mask(real_ctx, w, mask):
 			region[w] = true
+	# Domknięcie do voidu: od P (kratka z M tuż za nią) prostym promieniem przez kratki krawędzi ściany (nie void, bez podłogi
+	# spoza M wokół), gdy promień w VOID_REACH kratkach trafia w void — cały ten odcinek do P. Inaczej
+	# granica P biegłaby w pasie krawędzi równolegle do ściany jaskini (w syntetycznym gridzie to
+	# podłoga) i płaskowyż skręcałby pod ścianą (bok, narożnik in).
+	var grow := {}
+	for c in region:
+		for d in DIRS4:
+			if not mask.has(c - d):
+				continue  # promień przedłuża teren M prosto w głąb ściany, nie biegnie wzdłuż pasa krawędzi
+			var ray: Array[Vector2i] = []
+			var w: Vector2i = c + d
+			while ray.size() < VOID_REACH and not region.has(w) and not GridUtils.is_walkable(real_ctx.grid, w) 					and not is_void(real_ctx, wall_cells, w) and not _faces_other_floor(real_ctx, w, mask):
+				ray.append(w)
+				w += d
+			if not ray.is_empty() and is_void(real_ctx, wall_cells, w):
+				for r in ray:
+					grow[r] = true
+	region.merge(grow)
 	return region
+
+
+## Kratka sąsiaduje (8 kierunków) z podłogą spoza maski — krawędź patrzy na inny teren.
+static func _faces_other_floor(real_ctx: GenerationContext, w: Vector2i, mask: Dictionary) -> bool:
+	for d in DIRS4 + DIAG4:
+		var n: Vector2i = w + d
+		if GridUtils.is_walkable(real_ctx.grid, n) and not mask.has(n):
+			return true
+	return false
 
 
 static func _faces_mask(real_ctx: GenerationContext, w: Vector2i, mask: Dictionary) -> bool:
@@ -197,10 +225,11 @@ static func _faces_mask(real_ctx: GenerationContext, w: Vector2i, mask: Dictiona
 			any_orth = true
 			if mask.has(n):
 				return true
-	if not any_orth:
-		for d in DIAG4:
-			if mask.has(w + d):
-				return true
+	if any_orth:
+		return false  # patrzy tylko na podłogę spoza M — krawędź innego terenu (np. bok narożnika out)
+	for d in DIAG4:
+		if mask.has(w + d):
+			return true
 	# Fasada: stopa pod komórką ściany (przez komórki ściany, najwyżej FOOT_SEARCH w dół).
 	var c := w
 	for _i in range(FOOT_SEARCH):
