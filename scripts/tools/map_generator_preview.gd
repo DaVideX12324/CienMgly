@@ -972,7 +972,12 @@ func _toggle_player_mode() -> void:
 ## na czas spaceru przełączamy stan i przywracamy poprzedni po wyjściu. Podgląd uruchomiony sam (F6)
 ## nie ma modułu quiz_rpg, więc i jego singletonów — wtedy tworzy własny GameManager.
 func _set_exploring(on: bool) -> void:
-	var gm = CoreManager.get_singleton("GameManager")
+	# Autoload przez ścieżkę, nie identyfikator: skrypty narzędziowe (-s) preloadują podgląd przed
+	# autoloadami i goły identyfikator CoreManager wywaliłby ich kompilację.
+	var core := get_node_or_null("/root/CoreManager")
+	if core == null:
+		return
+	var gm = core.get_singleton("GameManager")
 	if gm == null:
 		if not on:
 			return
@@ -980,7 +985,7 @@ func _set_exploring(on: bool) -> void:
 		_own_game_manager.name = "GameManager"
 		_own_game_manager.set_script(load("res://modules/quiz_rpg/autoloads/game_manager.gd"))
 		add_child(_own_game_manager)
-		CoreManager.register_singleton("GameManager", _own_game_manager)
+		core.register_singleton("GameManager", _own_game_manager)
 		gm = _own_game_manager
 	if on:
 		if _prev_game_state < 0:
@@ -993,8 +998,9 @@ func _set_exploring(on: bool) -> void:
 
 func _exit_tree() -> void:
 	_set_exploring(false)
-	if _own_game_manager and CoreManager.get_active_module_id() == "" 			and CoreManager.get_singleton("GameManager") == _own_game_manager:
-		CoreManager.unregister_module_singletons()
+	var core := get_node_or_null("/root/CoreManager")
+	if _own_game_manager and core and core.get_active_module_id() == "" 			and core.get_singleton("GameManager") == _own_game_manager:
+		core.unregister_module_singletons()
 
 
 # =========================================================================
