@@ -80,7 +80,8 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 				continue
 			var p: TilePlacement = cells[pos]
 			var foot: Vector2i = pos if not region.has(pos) else pos + Vector2i(0, 1)
-			if _absorbed(real_ctx, wall_cells, pos, _is_rim(p)) 					or (p.category == &"FACADE" and not region.has(pos) and _absorbed(real_ctx, wall_cells, pos + Vector2i(0, -1))):
+			if _absorbed(real_ctx, wall_cells, pos, p) \
+					or (p.category == &"FACADE" and not region.has(pos) and _absorbed(real_ctx, wall_cells, pos + Vector2i(0, -1))):
 				if p.category == &"FACADE":
 					absorbed_feet[foot] = true
 				continue
@@ -120,20 +121,20 @@ static func _end_facades_at_absorbed(sctx: GenerationContext, tiles: Dictionary,
 				tiles[p.pos] = p
 
 
-## Kratka, która wchłania kafel płaskowyżu: z kaflem ściany głównej poza narożnikiem out, a na
-## prawdziwej ścianie także bez kafla (void). Rim płaskowyżu (rim = true) tylko pod górą modułu
-## ściany (jej rim albo najwyższa część lica) — pod bokiem, narożnikiem itp. go widać, zostaje.
-static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, pos: Vector2i, rim: bool = false) -> bool:
+## Kratka, która wchłania kafel płaskowyżu `p` (null = stopa lica: jak lico). Void (ściana bez kafla
+## albo z litym wypełnieniem) zawsze; pod narożnikiem out ściany nigdy (przezroczysty koniec). Lico
+## płaskowyżu — tylko pod częścią lica ściany (pod ścianą boczną zostaje). Rim, bok, narożnik
+## płaskowyżu — tylko pod górą modułu ściany (jej rim albo najwyższa część lica): pod bazą i środkiem
+## lica ściany wchodzą głębiej.
+static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, pos: Vector2i, p: TilePlacement = null) -> bool:
 	var w: TilePlacement = wall_cells.get(pos)
-	if w == null or w.atlas_coords.x < 0:
+	if w == null or w.atlas_coords.x < 0 or w.category == &"SOLID_FILL":
 		return not GridUtils.is_walkable(real_ctx.grid, pos)
 	if w.out_corner:
 		return false
-	return not rim or _is_module_top(wall_cells, w)
-
-
-static func _is_rim(p: TilePlacement) -> bool:
-	return String(p.category).begins_with("RIM")
+	if p == null or p.category == &"FACADE":
+		return w.category == &"FACADE"
+	return _is_module_top(wall_cells, w)
 
 
 ## Najwyższa część modułu ściany: rim (moduł 1-kaflowy) albo część lica bez części tego samego
