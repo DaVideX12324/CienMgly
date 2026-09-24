@@ -68,8 +68,8 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 		CornerPlacer.plan(sctx, analysis.edges, state, plan)
 
 	# Wchłanianie przez ściany główne (kafle płaskowyżu pod krawędzią ściany nakładałyby się z nią):
-	# void zawsze; lico płaskowyżu, gdy jego baza wypada tuż pod bazą lica ściany (top lica na bazie
-	# ściany) — cała kolumna; rim/bok/narożnik płaskowyżu pod górą modułu ściany. Nie pod narożnikiem
+	# void zawsze; lico płaskowyżu, gdy jego baza wypada na bazie lica ściany albo tuż pod nią
+	# — cała kolumna; rim/bok/narożnik płaskowyżu pod górą modułu ściany. Nie pod narożnikiem
 	# out ściany — jego przezroczysty koniec pokazuje, co jest za nim.
 	var tiles: Dictionary = result.tiles
 	var absorbed_feet := {}  # stopy wchłoniętych kolumn lica
@@ -126,9 +126,9 @@ static func _end_facades_at_absorbed(sctx: GenerationContext, tiles: Dictionary,
 
 ## Czy ściana główna wchłania kafel płaskowyżu `p` w kratce pos:
 ## - void (prawdziwa ściana bez kafla albo z litym wypełnieniem) — zawsze,
-## - lico płaskowyżu — gdy top jego kolumny (kratka w P; dla stopy kratka nad nią) leży na bazie lica
-##   ściany (baza płaskowyżu tuż pod bazą ściany). Baza płaskowyżu na bazie ściany jest przez nią
-##   zakryta i zostaje; pod ścianą boczną lico też zostaje,
+## - lico płaskowyżu (cała kolumna) — gdy jego baza wypada na bazie lica ściany (base-base: lico
+##   płaskowyżu przegrywa) albo tuż pod nią (top kolumny na bazie ściany); kolumna: top = kratka w P,
+##   dla stopy kratka nad nią. Pod ścianą boczną lico zostaje,
 ## - rim, bok, narożnik płaskowyżu — pod górą modułu ściany (jej rim albo najwyższa część lica);
 ##   pod bazą i środkiem lica ściany wchodzą głębiej,
 ## - nigdy pod narożnikiem out ściany (przezroczysty koniec).
@@ -139,11 +139,16 @@ static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, regio
 		return true
 	if p.category == &"FACADE":
 		var t: Vector2i = pos if region.has(pos) else pos + Vector2i(0, -1)
-		var wt: TilePlacement = wall_cells.get(t)
-		return GridUtils.is_walkable(real_ctx.grid, t) and wt != null and wt.category == &"FACADE" and not wt.out_corner
+		return _on_wall_base(real_ctx, wall_cells, t) or _on_wall_base(real_ctx, wall_cells, t + Vector2i(0, 1))
 	if no_tile or w.out_corner:
 		return false
 	return _is_module_top(wall_cells, w)
+
+
+## Baza lica ściany głównej (część lica na podłodze — stopa), nie narożnik out.
+static func _on_wall_base(real_ctx: GenerationContext, wall_cells: Dictionary, c: Vector2i) -> bool:
+	var w: TilePlacement = wall_cells.get(c)
+	return GridUtils.is_walkable(real_ctx.grid, c) and w != null and w.category == &"FACADE" and not w.out_corner
 
 
 ## Najwyższa część modułu ściany: rim (moduł 1-kaflowy) albo część lica bez części tego samego
