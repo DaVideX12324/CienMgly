@@ -91,17 +91,14 @@ static func _thresholds(ctx: GenerationContext, flags: GenerationFlags, allowed:
 
 ## Poziomy 2, 3…: wyższe pasmo tego samego szumu (próg + (k-1)·step), ale tylko wewnątrz poziomu
 ## niżej zwężonego o plateau_level_ring — zawsze zostaje półka niższego poziomu (bez klifów o dwa
-## poziomy, kafle poziomów się nie nakładają). Portale zostają co najwyżej na poziomie 1.
+## poziomy, kafle poziomów się nie nakładają). Portal może leżeć na dowolnym poziomie — w całości.
 static func _add_upper_levels(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary, levels: Dictionary, high_threshold: float) -> void:
 	if flags.plateau_levels < 2 or not levels.has(1):
 		return
 	var noise := make_noise(noise_seed_for(ctx.seed_value), flags.plateau_noise_frequency, flags.plateau_noise_octaves)
 	var ring := maxi(flags.plateau_level_ring, 2)
-	var portal := _portal_area(ctx, allowed)
 	for k in range(2, flags.plateau_levels + 1):
 		var room := _erode_n(ctx, levels[k - 1], ring)
-		for c in portal:
-			room.erase(c)
 		var mk := _band(noise, room, high_threshold + (k - 2) * flags.plateau_level_step, true, flags.plateau_block)
 		mk = _level_shape(ctx, mk, room, flags.plateau_min_area, flags.plateau_smooth)
 		if mk.is_empty():
@@ -110,7 +107,8 @@ static func _add_upper_levels(ctx: GenerationContext, flags: GenerationFlags, al
 
 
 ## Zagłębienia -1, -2…: szum poniżej -plateau_pit_threshold (głębsze: o step niżej), z dala
-## (plateau_level_ring) od płaskowyżów i portali; głębszy dół wewnątrz płytszego zwężonego o ring.
+## (plateau_level_ring) od płaskowyżów; głębszy dół wewnątrz płytszego zwężonego o ring. Portal może
+## leżeć w dole — w całości (jak na płaskowyżu).
 ## Zapis jak dla płaskowyżów: levels[0] = podłoga bez dołów -1 („ziemia nad dołem”), levels[-1] =
 ## podłoga bez dołów -2 itd. — krawędzie dołu to krawędzie tego „płaskowyżu” ziemi.
 static func _add_pits(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary, levels: Dictionary, pit_threshold: float) -> void:
@@ -120,8 +118,6 @@ static func _add_pits(ctx: GenerationContext, flags: GenerationFlags, allowed: D
 	var ring := maxi(flags.plateau_level_ring, 2)
 	var room := allowed.duplicate()
 	for c in _grow(levels.get(1, {}), ring):
-		room.erase(c)
-	for c in _portal_area(ctx, allowed):
 		room.erase(c)
 	for j in range(1, flags.plateau_pit_levels + 1):
 		var dj := _band(noise, room, pit_threshold - (j - 1) * flags.plateau_level_step, false, flags.plateau_block)
@@ -145,10 +141,12 @@ static func _band(noise: FastNoiseLite, cells: Dictionary, threshold: float, abo
 	return out
 
 
-## Kształt poziomu jak dla płaskowyżu 1: czyszczenie, szczeliny przy ścianach, bez wypustek, min. pole.
+## Kształt poziomu jak dla płaskowyżu 1: czyszczenie, szczeliny przy ścianach, portale w całości
+## albo wcale, bez wypustek, min. pole.
 static func _level_shape(ctx: GenerationContext, m: Dictionary, room: Dictionary, min_area: int, smooth: int = 1) -> Dictionary:
 	var out := _clean(ctx, m, room, min_area, smooth)
 	out = _fill_wall_gaps(ctx, out, room)
+	out = _portals_all_or_nothing(ctx, out, room)
 	out = _strip_thin(ctx, out)
 	return _drop_small(out, min_area)
 
@@ -558,6 +556,19 @@ static func _portal_zones(ctx: GenerationContext) -> Array:
 	return out
 
 
+## Dozwolone kratki (jak _allowed_cells) w otoczeniu PORTAL_RING strefy — bez przeglądania całej mapy.
+static func _allowed_near(ctx: GenerationContext, zone: Array) -> Dictionary:
+	var out := {}
+	for c in zone:
+		for dy in range(-PORTAL_RING, PORTAL_RING + 1):
+			for dx in range(-PORTAL_RING, PORTAL_RING + 1):
+				var n: Vector2i = c + Vector2i(dx, dy)
+				var t := int(ctx.grid.get(n, CellType.WALL))
+				if t == CellType.FLOOR or t == CellType.ENTRANCE or t == CellType.EXIT:
+					out[n] = true
+	return out
+
+
 static func _zone_area(zone: Array, allowed: Dictionary) -> Dictionary:
 	var area := {}
 	for c in zone:
@@ -569,9 +580,10 @@ static func _zone_area(zone: Array, allowed: Dictionary) -> Dictionary:
 	return area
 
 
-## Strefa portalu (wejście / wyjście) + pierścień PORTAL_RING: w całości na płaskowyżu albo wcale,
-## żeby krawędź płaskowyżu nie przecinała wnęki portalu. Pokryta >= połowa strefy -> cała.
-static func _portals_all_or_nothing(ctx: GenerationContext, mask: Dictionary, allowed: Dictionary) -> Dictionary:
+## Strefa portalu (wejście / wyjście) + pierścień PORTAL_RING: w całości w masce poziomu albo wcale,
+## żeby krawędź poziomu (płaskowyżu, wyższego piętra, dołu) nie przecinała wnęki portalu. Pokryta
+## >= połowa strefy i cały obszar mieści się w `room` (miejscu poziomu) -> cała.
+static func _portals_all_or_nothing(ctx: GenerationContext, mask: Dictionary, room: Dictionary) -> Dictionary:
 	var m := mask
 	for zone in _portal_zones(ctx):
 		if (zone as Array).is_empty():
@@ -580,8 +592,13 @@ static func _portals_all_or_nothing(ctx: GenerationContext, mask: Dictionary, al
 		for c in zone:
 			if m.has(c):
 				covered += 1
-		var area := _zone_area(zone, allowed)
-		if covered * 2 >= (zone as Array).size():
+		var area := _zone_area(zone, _allowed_near(ctx, zone))
+		var fits := true
+		for c in area:
+			if not room.has(c):
+				fits = false
+				break
+		if fits and covered * 2 >= (zone as Array).size():
 			m.merge(area)
 		else:
 			for c in area:
