@@ -37,7 +37,9 @@ const FOOT_SEARCH := 3  # fasada ściany: stopa najwyżej 3 kratki niżej
 ## Zwraca {"tiles": pos -> TilePlacement (warstwa Platforms), "region": P, "missing": liczba kafli,
 ## które pipeline wziąłby ze stałych ścian (brak roli w rodzinie platform — odrzucone)}.
 ## mask: komórki PODŁOGI płaskowyżu. wall_cells: warstwa Walls planu mapy (pos -> TilePlacement).
-static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Dictionary) -> Dictionary:
+## focus (opcjonalnie): rysuj tylko okolicę tych kratek — dla „ziemi nad zagłębieniem” (maska = cała
+## podłoga poza dołem), gdzie krawędzie są wyłącznie wokół dołów; okna skanu z kawałków focus.
+static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Dictionary, focus: Dictionary = {}) -> Dictionary:
 	var result := {"tiles": {}, "region": {}, "missing": 0}
 	if mask.is_empty() or real_ctx.map_tile_profile == null:
 		return result
@@ -46,12 +48,26 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 		push_warning("PlateauRenderer: brak zestawu '%s' w profilu" % TILESET_ID)
 		return result
 
+	var focus_scans: Array[Rect2i] = []
+	if not focus.is_empty():
+		# Maska przycięta do okien skanu wokół dołów (+ margines): w oknie maska jest pełna, a jej
+		# sztuczny brzeg leży poza oknem, gdzie syntetyczny grid i tak jest bryłą.
+		focus_scans = _scan_windows(real_ctx, focus)
+		var near := {}
+		for r in focus_scans:
+			var g := r.grow(WINDOW_MARGIN)
+			for y in range(g.position.y, g.end.y):
+				for x in range(g.position.x, g.end.x):
+					var q := Vector2i(x, y)
+					if mask.has(q):
+						near[q] = true
+		mask = near
 	var region := build_region(real_ctx, mask, wall_cells)
 	result.region = region
 	# Okno całości (bbox P + margines) wyznacza syntetyczny grid; pipeline skanuje jednak tylko
 	# rozłączne okna skupisk płaskowyżów (współrzędne globalne — hashe pozycji bez zmian).
 	var box := _window(region)
-	var scans := _scan_windows(real_ctx, region)
+	var scans := focus_scans if not focus.is_empty() else _scan_windows(real_ctx, region)
 	var sgrid := _synthetic_grid(real_ctx, region, wall_cells, box, scans)
 	var sctx := _synthetic_ctx(real_ctx, sgrid, platform_set)
 

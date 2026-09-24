@@ -180,6 +180,12 @@ const HEIGHT_FIELD_FILL := Color(0.25, 0.85, 1.0, 0.18)
 const HEIGHT_FIELD_EDGE := Color(0.35, 0.9, 1.0, 0.95)
 const HEIGHT_PLATEAU_FILL := Color(0.25, 0.85, 1.0, 0.45)
 const HEIGHT_STAIR_FILL := Color(1.0, 0.85, 0.2, 0.7)
+const HEIGHT_HIGH_FILL := Color(0.15, 0.45, 1.0, 0.6)   # poziom 2 i wyżej
+const HEIGHT_BASE_FILL := Color(0.6, 0.6, 0.55, 0.12)      # pasmo pola: wysokość bazowa (0)
+const HEIGHT_HIGH_FIELD_FILL := Color(0.15, 0.45, 1.0, 0.22) # pasmo pola: poziom 2+
+const HEIGHT_PIT_FIELD_FILL := Color(0.95, 0.45, 0.2, 0.2)   # pasmo pola: doły
+const HEIGHT_PIT_EDGE := Color(1.0, 0.55, 0.25, 0.95)        # kontur pasma dołów
+const HEIGHT_PIT_FILL := Color(0.95, 0.4, 0.2, 0.5)     # zagłębienia (poziom < 0)
 
 
 func _toggle_grid_mask() -> void:
@@ -362,8 +368,9 @@ func _hide_height_mask() -> void:
 	_height_mask_sprite = null
 
 
-## Obraz HEIGHT_MASK_PX px / kratkę: pole mapy wysokości na całej mapie (wypełnienie + gładki kontur),
-## faktyczny płaskowyż i schody. null = brak mapy wysokości (płaskowyże wyłączone).
+## Obraz HEIGHT_MASK_PX px / kratkę: pole mapy wysokości na całej mapie podzielone na pasma — doły
+## (-1, -2…), wysokość bazowa (0, tam gdzie szum nie przekracza żadnego progu), poziom 1, 2… — każde
+## z półprzezroczystym kolorem i konturem na granicy. Na wierzchu faktyczne kratki wysokości i schody.
 func _build_height_mask_image(res) -> Image:
 	var pl = res.plateau if "plateau" in res else null
 	if pl == null or pl.noise_frequency <= 0.0:
@@ -373,38 +380,83 @@ func _build_height_mask_image(res) -> Image:
 	var h: int = res.height * s
 	var noise: FastNoiseLite = PlateauPassScript.make_noise(pl.noise_seed, pl.noise_frequency, pl.noise_octaves)
 
-	# Pole: próbka szumu w środku każdego podpiksela (współrzędne kratek).
-	var inside := PackedByteArray()
-	inside.resize(w * h)
+	# Pasmo pola w każdym podpikselu (próbka szumu jak w generatorze, z blokami).
+	var band := PackedInt32Array()
+	band.resize(w * h)
+	var block: int = pl.noise_block
 	for py in range(h):
 		var fy := (py + 0.5) / s
 		for px in range(w):
-			if noise.get_noise_2d((px + 0.5) / s, fy) > pl.threshold:
-				inside[py * w + px] = 1
+			var v: float
+			if block > 1:
+				v = PlateauPassScript.sample_height(noise, Vector2i(px / s, py / s), block)
+			else:
+				v = noise.get_noise_2d((px + 0.5) / s, fy)
+			band[py * w + px] = _field_band(pl, v)
 
 	var data := PackedByteArray()
 	data.resize(w * h * 4)
-	var fill := _rgba8(HEIGHT_FIELD_FILL)
+	var colors := {}
 	for i in range(w * h):
-		if inside[i] == 1:
-			_put(data, i, fill)
+		var bnd: int = band[i]
+		if not colors.has(bnd):
+			colors[bnd] = _rgba8(_band_color(bnd))
+		_put(data, i, colors[bnd])
+	# Faktyczne kratki (po czyszczeniu, schodach i naprawie) mocniejszymi kolorami.
 	var plateau := _rgba8(HEIGHT_PLATEAU_FILL)
 	for c in pl.mask:
 		_put_cell(data, w, c, s, plateau)
+	var high := _rgba8(HEIGHT_HIGH_FILL)
+	var pit := _rgba8(HEIGHT_PIT_FILL)
+	for c in pl.heights:
+		var hc: int = int(pl.heights[c])
+		if hc >= 2:
+			_put_cell(data, w, c, s, high)
+		elif hc < 0:
+			_put_cell(data, w, c, s, pit)
 	var stair := _rgba8(HEIGHT_STAIR_FILL)
 	for c in pl.stair_cells():
 		_put_cell(data, w, c, s, stair)
-	# Kontur pola na wierzchu: podpiksel wewnątrz z sąsiadem na zewnątrz.
+	# Kontury pasm na wierzchu: podpiksel z sąsiadem z innego pasma (rysowany po stronie wyższego
+	# pasma dla wzniesień, niższego dla dołów — kontur leży na krawędzi „wzniesienia” / „dołu”).
 	var edge := _rgba8(HEIGHT_FIELD_EDGE)
+	var pit_edge := _rgba8(HEIGHT_PIT_EDGE)
 	for py in range(h):
 		for px in range(w):
 			var i := py * w + px
-			if inside[i] == 0:
+			var b0: int = band[i]
+			if b0 == 0:
 				continue
-			if (px == 0 or inside[i - 1] == 0) or (px == w - 1 or inside[i + 1] == 0) \
-				or (py == 0 or inside[i - w] == 0) or (py == h - 1 or inside[i + w] == 0):
-				_put(data, i, edge)
+			var nbs := [
+				band[i - 1] if px > 0 else b0, band[i + 1] if px < w - 1 else b0,
+				band[i - w] if py > 0 else b0, band[i + w] if py < h - 1 else b0]
+			for nb in nbs:
+				if (b0 > 0 and nb < b0) or (b0 < 0 and nb > b0):
+					_put(data, i, edge if b0 > 0 else pit_edge)
+					break
 	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
+
+
+## Pasmo pola dla wartości szumu v: 0 = wysokość bazowa, 1..level_count = wzniesienia, -1..-pit_count = doły.
+static func _field_band(pl, v: float) -> int:
+	var step: float = maxf(pl.level_step, 0.0001)
+	if pl.pit_count > 0 and v < pl.pit_threshold:
+		return -mini(pl.pit_count, 1 + int(floor((pl.pit_threshold - v) / step)))
+	if v <= pl.threshold:
+		return 0
+	if pl.level_count < 2 or v <= pl.high_threshold:
+		return 1
+	return mini(pl.level_count, 2 + int(floor((v - pl.high_threshold) / step)))
+
+
+static func _band_color(bnd: int) -> Color:
+	if bnd == 0:
+		return HEIGHT_BASE_FILL
+	if bnd < 0:
+		return HEIGHT_PIT_FIELD_FILL
+	if bnd == 1:
+		return HEIGHT_FIELD_FILL
+	return HEIGHT_HIGH_FIELD_FILL
 
 
 static func _rgba8(c: Color) -> PackedByteArray:
@@ -820,6 +872,15 @@ func _generate_current_map_impl() -> void:
 				var stairs_w: int = pl.stairs_west.size() if pl != null else 0
 				var total_st: int = stairs_s + stairs_n + stairs_e + stairs_w
 				extra_stats += "\n[b]Płaskowyże:[/b] %d kratek, %d schodów (%d S / %d N / %d E / %d W)" % [cells, total_st, stairs_s, stairs_n, stairs_e, stairs_w]
+				if pl != null and (pl.max_level >= 2 or pl.min_level < 0):
+					var n_high := 0
+					var n_pit := 0
+					for c in pl.heights:
+						if int(pl.heights[c]) >= 2:
+							n_high += 1
+						elif int(pl.heights[c]) < 0:
+							n_pit += 1
+					extra_stats += "\n[b]Poziomy:[/b] %d..%d, poziom 2+: %d kratek, zagłębienia: %d kratek" % [pl.min_level, pl.max_level, n_high, n_pit]
 
 		info_label.text = """[b]Typ:[/b] %s
 [b]Seed:[/b] [color=#ffdd66]%d[/color]

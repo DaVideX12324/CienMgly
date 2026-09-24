@@ -8,7 +8,7 @@ const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_u
 const SeededNoise = preload("res://modules/quiz_rpg/scripts/generation/core/seeded_noise.gd")
 const PlateauLayout = preload("res://modules/quiz_rpg/scripts/generation/core/plateau_layout.gd")
 
-## Topologia płaskowyżów (jeden poziom): maska z szumu na podłodze całej mapy, czyszczona
+## Topologia wysokości terenu: płaskowyże (1, 2…) i zagłębienia (-1…) z jednego pola szumu, maska z szumu na podłodze całej mapy, czyszczona
 ## morfologicznie (ściany liczą się jako lite — płaskowyż dosuwa się do ścian i zostają półki
 ## przy ścianach), schody na prostych odcinkach lica, potem naprawa OSIĄGALNOŚCI: każdy kawałek
 ## chodliwego terenu, do którego nie da się dojść z wejścia, dostaje schody do osiągalnego terenu
@@ -22,6 +22,8 @@ const CLEAN_ITERS := 3
 const HOLE_MAX := 40          # zamknięte kieszenie podłogi do tej wielkości są zasypywane
 const MAX_REPAIR_ITERS := 32
 const PICK_CANDIDATES := 8    # kandydaci schodów na kierunek przy łączeniu (pierwszy niekolidujący wygrywa)
+const SLOT_ITERS := 4         # w tylu pierwszych iteracjach naprawy zasypywane są szczeliny/wypustki
+const STAIR_GAP := 6          # min. odstęp (kratki) między schodami — różnych kawałków i poziomów też
 const REGION_TRIES := 2      # ile nieudanych prób schodów dla tego samego nieosiągalnego kawałka
 enum { CONNECT_ADDED, CONNECT_FAILED, CONNECT_WAITING }
 const STAIR_FLANK := 2        # od końca biegu lica: kolumna końca + ≥1 kolumna fasady
@@ -36,30 +38,167 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout
 		return null
 
 	var allowed := _allowed_cells(ctx)
-	var mask := _noise_mask(ctx, flags, allowed)
-	mask = _clean(ctx, mask, allowed, flags.plateau_min_area)
+	var thr := _thresholds(ctx, flags, allowed)
+	var mask := _noise_mask(ctx, flags, allowed, thr.level)
+	mask = _clean(ctx, mask, allowed, flags.plateau_min_area, flags.plateau_smooth)
 	mask = _fill_wall_gaps(ctx, mask, allowed)
 	mask = _portals_all_or_nothing(ctx, mask, allowed)
 	mask = _strip_thin(ctx, mask)
 	mask = _drop_small(mask, flags.plateau_min_area)
-	return _with_field(solve_mask(ctx, flags, mask), ctx, flags)
+	var levels := {}
+	if not mask.is_empty():
+		levels[1] = mask
+	_add_upper_levels(ctx, flags, allowed, levels, thr.high)
+	_add_pits(ctx, flags, allowed, levels, thr.pit)
+	var layout := _with_field(solve_levels(ctx, flags, levels), ctx, flags)
+	layout.threshold = thr.level  # podgląd rysuje pasma pola tymi progami
+	layout.high_threshold = thr.high
+	layout.pit_threshold = thr.pit
+	layout.level_step = flags.plateau_level_step
+	layout.level_count = flags.plateau_levels
+	layout.pit_count = flags.plateau_pit_levels
+	return layout
 
 
-## Schody + osiągalność dla gotowej maski płaskowyżu (bez szumu i czyszczenia) — używane przez
-## run() i przez testy scenariuszowe z ręcznie zadaną maską.
+## Progi pola wysokości dla tej mapy. Udział > 0 (plateau_coverage / _high_ / _pit_) -> próg z kwantyla
+## wartości szumu na podłodze tej mapy: każda mapa ma podobne proporcje, niezależnie od tego, czy
+## szum (przy niskiej częstotliwości zmienia się wolniej niż rozmiar mapy) wypadł na niej wysoko,
+## czy nisko. Udział 0 -> stały próg z konfiguracji (plateau_threshold itd.).
+static func _thresholds(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary) -> Dictionary:
+	var out := {
+		"level": flags.plateau_threshold,
+		"high": flags.plateau_threshold + flags.plateau_level_step,
+		"pit": -flags.plateau_pit_threshold,
+	}
+	if flags.plateau_coverage <= 0.0 and flags.plateau_high_coverage <= 0.0 and flags.plateau_pit_coverage <= 0.0:
+		return out
+	var noise := make_noise(noise_seed_for(ctx.seed_value), flags.plateau_noise_frequency, flags.plateau_noise_octaves)
+	var vals := PackedFloat32Array()
+	vals.resize(allowed.size())
+	var i := 0
+	for c in allowed:
+		vals[i] = sample_height(noise, c, flags.plateau_block)
+		i += 1
+	vals.sort()
+	if vals.is_empty():
+		return out
+	# Wysoki kwantyl -> próg, powyżej którego leży `share` podłogi (niski kwantyl dla dołów).
+	var above := func(share: float) -> float: return vals[clampi(int((1.0 - share) * vals.size()), 0, vals.size() - 1)]
+	if flags.plateau_coverage > 0.0:
+		out.level = above.call(flags.plateau_coverage)
+	if flags.plateau_high_coverage > 0.0:
+		out.high = maxf(above.call(flags.plateau_high_coverage), out.level)
+	else:
+		out.high = out.level + flags.plateau_level_step
+	if flags.plateau_pit_coverage > 0.0:
+		out.pit = minf(vals[clampi(int(flags.plateau_pit_coverage * vals.size()), 0, vals.size() - 1)], out.level)
+	return out
+
+
+## Poziomy 2, 3…: wyższe pasmo tego samego szumu (próg + (k-1)·step), ale tylko wewnątrz poziomu
+## niżej zwężonego o plateau_level_ring — zawsze zostaje półka niższego poziomu (bez klifów o dwa
+## poziomy, kafle poziomów się nie nakładają). Portale zostają co najwyżej na poziomie 1.
+static func _add_upper_levels(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary, levels: Dictionary, high_threshold: float) -> void:
+	if flags.plateau_levels < 2 or not levels.has(1):
+		return
+	var noise := make_noise(noise_seed_for(ctx.seed_value), flags.plateau_noise_frequency, flags.plateau_noise_octaves)
+	var ring := maxi(flags.plateau_level_ring, 2)
+	var portal := _portal_area(ctx, allowed)
+	for k in range(2, flags.plateau_levels + 1):
+		var room := _erode_n(ctx, levels[k - 1], ring)
+		for c in portal:
+			room.erase(c)
+		var mk := _band(noise, room, high_threshold + (k - 2) * flags.plateau_level_step, true, flags.plateau_block)
+		mk = _level_shape(ctx, mk, room, flags.plateau_min_area, flags.plateau_smooth)
+		if mk.is_empty():
+			return
+		levels[k] = mk
+
+
+## Zagłębienia -1, -2…: szum poniżej -plateau_pit_threshold (głębsze: o step niżej), z dala
+## (plateau_level_ring) od płaskowyżów i portali; głębszy dół wewnątrz płytszego zwężonego o ring.
+## Zapis jak dla płaskowyżów: levels[0] = podłoga bez dołów -1 („ziemia nad dołem”), levels[-1] =
+## podłoga bez dołów -2 itd. — krawędzie dołu to krawędzie tego „płaskowyżu” ziemi.
+static func _add_pits(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary, levels: Dictionary, pit_threshold: float) -> void:
+	if flags.plateau_pit_levels < 1:
+		return
+	var noise := make_noise(noise_seed_for(ctx.seed_value), flags.plateau_noise_frequency, flags.plateau_noise_octaves)
+	var ring := maxi(flags.plateau_level_ring, 2)
+	var room := allowed.duplicate()
+	for c in _grow(levels.get(1, {}), ring):
+		room.erase(c)
+	for c in _portal_area(ctx, allowed):
+		room.erase(c)
+	for j in range(1, flags.plateau_pit_levels + 1):
+		var dj := _band(noise, room, pit_threshold - (j - 1) * flags.plateau_level_step, false, flags.plateau_block)
+		dj = _level_shape(ctx, dj, room, flags.plateau_min_area, flags.plateau_smooth)
+		if dj.is_empty():
+			break
+		var ground := allowed.duplicate()
+		for c in dj:
+			ground.erase(c)
+		levels[1 - j] = ground
+		room = _erode_n(ctx, dj, ring)
+
+
+## Kratki `cells`, gdzie szum > próg (above) albo < próg.
+static func _band(noise: FastNoiseLite, cells: Dictionary, threshold: float, above: bool, block: int = 1) -> Dictionary:
+	var out := {}
+	for c in cells:
+		var v := sample_height(noise, c, block)
+		if (v > threshold) if above else (v < threshold):
+			out[c] = true
+	return out
+
+
+## Kształt poziomu jak dla płaskowyżu 1: czyszczenie, szczeliny przy ścianach, bez wypustek, min. pole.
+static func _level_shape(ctx: GenerationContext, m: Dictionary, room: Dictionary, min_area: int, smooth: int = 1) -> Dictionary:
+	var out := _clean(ctx, m, room, min_area, smooth)
+	out = _fill_wall_gaps(ctx, out, room)
+	out = _strip_thin(ctx, out)
+	return _drop_small(out, min_area)
+
+
+## Erozja n razy (ściany liczą się jako lite — wyższy poziom może dochodzić do ścian).
+static func _erode_n(ctx: GenerationContext, m: Dictionary, n: int) -> Dictionary:
+	var out := m
+	for _i in range(n):
+		out = _erode(ctx, out)
+	return out
+
+
+## Schody + osiągalność dla gotowej maski płaskowyżu (jeden poziom) — testy scenariuszowe.
 static func solve_mask(ctx: GenerationContext, flags: GenerationFlags, mask: Dictionary) -> PlateauLayout:
-	if mask.is_empty():
+	return solve_levels(ctx, flags, {1: mask} if not mask.is_empty() else {})
+
+
+## Schody + osiągalność dla gotowych poziomów (levels[k] = kratki o wysokości >= k; k >= 1 płaskowyże,
+## k <= 0 ziemia nad zagłębieniami) — run() i testy scenariuszowe z ręcznie zadanymi poziomami.
+static func solve_levels(ctx: GenerationContext, flags: GenerationFlags, levels: Dictionary) -> PlateauLayout:
+	if levels.is_empty():
 		return PlateauLayout.new()
 	var allowed := _allowed_cells(ctx)
-	var layout := _solve(ctx, flags, mask.duplicate(), allowed)
+	var lv := {}
+	for k in levels:
+		lv[k] = (levels[k] as Dictionary).duplicate()
+	var layout := _solve(ctx, flags, lv, allowed)
 	# Portal na płaskowyżu, do którego nie da się dojść (brak miejsca na schody) -> wytnij jego
-	# obszar (strefa + pierścień) i policz jeszcze raz. Krawędź ląduje wtedy poza pierścieniem.
+	# obszar (strefa + pierścień) z płaskowyżów i policz jeszcze raz. Krawędź ląduje poza pierścieniem.
 	var bad := _unreached_portal_area(ctx, layout, allowed)
 	if not bad.is_empty():
-		var m2: Dictionary = layout.mask.duplicate()
-		for c in bad:
-			m2.erase(c)
-		layout = _solve(ctx, flags, _drop_small(_strip_thin(ctx, m2), flags.plateau_min_area), allowed)
+		var lv2 := {}
+		for k in layout.levels:
+			var m: Dictionary = (layout.levels[k] as Dictionary).duplicate()
+			for c in bad:
+				if k >= 1:
+					m.erase(c)
+				elif allowed.has(c):
+					m[c] = true  # dół nigdy nie zabiera portalu
+			if k >= 1:
+				m = _drop_small(_strip_thin(ctx, m), flags.plateau_min_area)
+			if not m.is_empty():
+				lv2[k] = m
+		layout = _solve(ctx, flags, lv2, allowed)
 	return layout
 
 
@@ -78,54 +217,130 @@ static func _unreached_portal_area(ctx: GenerationContext, layout: PlateauLayout
 	return out
 
 
-## Schody + osiągalność. Zasada: po złożeniu układu cały chodliwy teren (ziemia i góry płaskowyżów)
-## ma być osiągalny z wejścia po rzeczywistych zasadach ruchu — bariery (rim, bok, lico i jego
-## stopa) blokują, schody są jedynym przejściem między wysokościami (_bfs po layout.blocked).
-## Nie ma wymogu ścieżki po samej podłodze ani schodów na każdym płaskowyżu:
-## - obszar osiągalny (np. przez schody z budżetu albo portal na górze) nie dostaje nic,
-## - nieosiągalny kawałek dostaje schody do osiągalnego terenu sąsiedniej wysokości, z dowolnej
-##   strony (S, N, E, W; w razie potrzeby wyrzeźbione miejsce) — _connect_region,
+## Schody + osiągalność na polu wysokości. Zasada: po złożeniu układu cały chodliwy teren (każda
+## wysokość) ma być osiągalny z wejścia po rzeczywistych zasadach ruchu — bariery (kratka wyżej niż
+## ortogonalny sąsiad: rim, bok, lico; plus stopa lica) blokują, schody są jedynym przejściem
+## i łączą tylko SĄSIEDNIE wysokości (_bfs po layout.blocked). Kawałki („pieces”) to spójne
+## obszary wysokości >= k dla każdego poziomu k; schody należą do kawałka i schodzą z k na k-1.
+## Nie ma wymogu ścieżki po samej podłodze ani schodów na każdym kawałku:
+## - obszar osiągalny (schody z budżetu, portal na górze, schody z wyższego poziomu) nie dostaje nic,
+## - nieosiągalny kawałek terenu na wysokości h dostaje schody: ze swojego kawałka w dół na h-1 albo
+##   z kawałka poziomu h+1 w dół do niego; dowolna strona (S, N, E, W; w razie potrzeby wyrzeźbione
+##   miejsce) — _connect_region. Trasa 0 -> 1 -> 2 powstaje kolejnymi iteracjami.
 ## - gdy schodów nie da się postawić nigdzie (jawnie, jak dotąd w generatorze): drobna kieszeń
-##   ziemi -> płaskowyż, płaskowyż odcinający ziemię -> usunięty, nieosiągalna góra -> bariera
-##   (wzniesienie zostaje, tylko nikt tam nie trafia). Liczniki w PlateauLayout.
-static func _solve(ctx: GenerationContext, flags: GenerationFlags, mask: Dictionary, allowed: Dictionary) -> PlateauLayout:
-	var comps := _components(mask, DIRS8)
-	var protected := _portal_area(ctx, allowed)  # rzeźbienie schodów nie rusza portali
+##   ziemi -> płaskowyż, płaskowyż odcinający ziemię -> usunięty, dół bez dojścia -> zasypany,
+##   nieosiągalna góra -> bariera (wzniesienie zostaje, tylko nikt tam nie trafia). Liczniki w PlateauLayout.
+static func _solve(ctx: GenerationContext, flags: GenerationFlags, levels: Dictionary, allowed: Dictionary) -> PlateauLayout:
+	var keys: Array = levels.keys()
+	keys.sort()
+	var lo: int = mini(int(keys[0]) - 1, 0)
+	var hi: int = maxi(int(keys.back()), 0)
+	var ring := maxi(flags.plateau_level_ring, 2)
+	var portal := _portal_area(ctx, allowed)  # rzeźbienie schodów nie rusza portali
+
+	# Na poziom: gdzie kawałek może urosnąć (add_ok) i czego nie może oddać (guard: portale i pierścień
+	# wokół poziomu wyżej — inaczej niższy poziom podszedłby pod wyższy o więcej niż 1).
+	var add_ok := {}
+	var guard := {}
+	var guard_base := {}
+	for k in keys:
+		if k >= 2:
+			add_ok[k] = _erode_n(ctx, levels[k - 1], ring)
+		elif k == 1 and levels.has(0):
+			var ok1 := allowed.duplicate()
+			for c in allowed:
+				if not (levels[0] as Dictionary).has(c):
+					for q in _grow({c: true}, ring):
+						ok1.erase(q)
+			add_ok[k] = ok1
+		else:
+			add_ok[k] = allowed
+		var g := portal.duplicate()
+		if levels.has(k + 1):
+			g.merge(_grow(levels[k + 1], ring))
+		guard_base[k] = g.duplicate()
+		if k <= 0:
+			# Ziemia nad dołem: rzeźbienie schodów może dół zasypać (dodać ziemię), ale nie kopać
+			# nowego dołu w ziemi — inaczej powstają języki ziemi i kieszenie w dole.
+			g.merge(levels[k])
+		guard[k] = g
+
+	var comps: Array = []
+	var comp_level: Array[int] = []
+	for k in keys:
+		for comp in _components(levels[k], DIRS8):
+			comps.append(comp)
+			comp_level.append(k)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([ctx.seed_value, "plateau_stairs"])
-	# Schody „z wyglądu”: każdy płaskowyż losuje ich liczbę z 0..platform_max_stairs (S, potem N, E, W;
-	# szerokość też losowa, 2..stair_max_width). Dostępność zapewnia dopiero naprawa niżej — płaskowyż,
+	# Schody „z wyglądu”: każdy kawałek losuje ich liczbę z 0..platform_max_stairs (S, potem N, E, W;
+	# szerokość też losowa, 2..stair_max_width). Dostępność zapewnia dopiero naprawa niżej — kawałek,
 	# który wylosował za mało (albo 0), dostaje dokładnie tyle schodów, ile trzeba do dojścia.
 	var max_budget := maxi(flags.platform_max_stairs, 0)
 	var comp_stairs_south: Array = []
 	var comp_stairs_north: Array = []
 	var comp_stairs_east: Array = []
 	var comp_stairs_west: Array = []
+	var spaced := {}  # kratki schodów wszystkich kawałków poszerzone o STAIR_GAP (rozstaw)
 	for comp in comps:
 		var budget := rng.randi_range(0, max_budget)
-		var ss := _pick_stairs(ctx, comp, rng, flags, false, budget)
-		var sn := _pick_stairs_north(ctx, comp, rng, flags, false, budget - ss.size())
-		var se := _pick_stairs_side(ctx, comp, rng, true, flags, false, budget - ss.size() - sn.size())
-		var sw := _pick_stairs_side(ctx, comp, rng, false, flags, false, budget - ss.size() - sn.size() - se.size())
-		comp_stairs_south.append(ss)
-		comp_stairs_north.append(sn)
-		comp_stairs_east.append(se)
-		comp_stairs_west.append(sw)
+		var got: Array = [[], [], [], []]
+		if budget > 0:
+			# Kandydaci z każdego lica (jedni na bieg lica, najdłuższe biegi najpierw), brani na zmianę
+			# S, N, E, W od losowego kierunku — schody lądują na różnych krawędziach, z odstępem.
+			var picks: Array = [
+				_pick_stairs(ctx, comp, rng, flags, false, budget),
+				_pick_stairs_north(ctx, comp, rng, flags, false, budget),
+				_pick_stairs_side(ctx, comp, rng, true, flags, false, budget),
+				_pick_stairs_side(ctx, comp, rng, false, flags, false, budget),
+			]
+			var idx := [0, 0, 0, 0]
+			var start := rng.randi() % 4
+			var n := 0
+			var progress := true
+			while n < budget and progress:
+				progress = false
+				for t in 4:
+					var d: int = (start + t) % 4
+					while int(idx[d]) < (picks[d] as Array).size():
+						var st: Vector3i = picks[d][idx[d]]
+						idx[d] = int(idx[d]) + 1
+						if _cells_free(_one_stair_cells(d, st), spaced):
+							(got[d] as Array).append(st)
+							_mark_spaced(spaced, d, st)
+							n += 1
+							progress = true
+							break
+					if n >= budget:
+						break
+		comp_stairs_south.append(_as_v3(got[0]))
+		comp_stairs_north.append(_as_v3(got[1]))
+		comp_stairs_east.append(_as_v3(got[2]))
+		comp_stairs_west.append(_as_v3(got[3]))
 
 	var alive: Array[bool] = []
 	alive.resize(comps.size())
 	alive.fill(true)
 	var lists := [comp_stairs_south, comp_stairs_north, comp_stairs_east, comp_stairs_west]
+	# Kratki, które mogą być dołem: pierwotne doły (rzeźbienie ich nie kopie) + obniżone wypustki.
+	var pit_cells := {}
+	if levels.has(0):
+		for c in allowed:
+			if not (levels[0] as Dictionary).has(c):
+				pit_cells[c] = true
+	var env := {"levels": levels, "add_ok": add_ok, "guard": guard, "guard_base": guard_base, "comp_level": comp_level, "lo": lo, "hi": hi, "allowed": allowed, "pit_cells": pit_cells}
 
 	# Teren, który ma być osiągalny: spójny z wejściem w gridzie (bez wysokości) — sam grid, nie
-	# warunek ścieżki; komórki odcięte już w topologii nie są problemem płaskowyżów.
+	# warunek ścieżki; komórki odcięte już w topologii nie są problemem wysokości.
 	var walkable_area := _bfs(ctx, ctx.entrance_pos, {})
 	var tried := {}           # klucz nieosiągalnego kawałka -> liczba prób schodów
 	var connect_added := 0
 	var dropped := 0
 	var layout: PlateauLayout = null
 	for _iter in range(MAX_REPAIR_ITERS):
-		layout = _assemble(ctx, comps, comp_stairs_south, comp_stairs_north, comp_stairs_east, comp_stairs_west, alive, flags.plateau_min_area)
+		layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
+		if _iter < SLOT_ITERS and _fill_slots(ctx, comps, alive, layout, env, lists):
+			layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
 		var reach := _bfs(ctx, ctx.entrance_pos, layout.blocked)
 		var unreached := {}
 		for c in walkable_area:
@@ -134,13 +349,13 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, mask: Diction
 		if unreached.is_empty():
 			break
 
-		# 1. Schody do każdego nieosiągalnego kawałka (góra -> w dół, ziemia -> z płaskowyżu obok).
+		# 1. Schody do każdego nieosiągalnego kawałka (z jego poziomu w dół albo z poziomu wyżej).
 		var added := 0
 		for region in _components(unreached, DIRS4):
 			var key := _island_key(region)
 			if int(tried.get(key, 0)) >= REGION_TRIES:
 				continue
-			var r := _connect_region(ctx, region, comps, alive, layout, reach, mask, allowed, protected, rng, flags, lists)
+			var r := _connect_region(ctx, region, comps, alive, layout, reach, env, rng, flags, lists)
 			if r == CONNECT_ADDED:
 				added += 1
 			elif r == CONNECT_FAILED:
@@ -149,31 +364,52 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, mask: Diction
 			connect_added += added
 			continue
 
-		# 2. Schodów nie da się postawić — jawna obsługa. Ziemia odcięta przez płaskowyż:
-		#    drobna kieszeń -> płaskowyż, inaczej płaskowyż usunięty (odblokowuje teren).
+		# 2. Schodów nie da się postawić — jawna obsługa (jak dotąd w generatorze).
+		#    Ziemia odcięta przez płaskowyż: drobna kieszeń -> płaskowyż, inaczej płaskowyż usunięty.
 		var ground := {}
+		var sunk := {}
 		for c in unreached:
-			if not layout.mask.has(c):
+			var h := layout.height_of(c)
+			if h == 0:
 				ground[c] = true
+			elif h < 0:
+				sunk[c] = true
 		var blockers: Array[int] = []
 		for i in range(comps.size()):
-			if alive[i] and not ground.is_empty() and _touches(comps[i], layout, ground):
+			if alive[i] and comp_level[i] == 1 and not ground.is_empty() and _touches(comps[i], layout, ground):
 				blockers.append(i)
-		if blockers.is_empty():
-			break  # zostały tylko nieosiągalne góry -> bariera przy domknięciu niżej
-		if _absorb_pockets(ctx, comps, blockers, mask, allowed, protected, ground, layout, lists):
+		if not blockers.is_empty():
+			if _absorb_pockets(ctx, comps, blockers, levels.get(1, {}), add_ok.get(1, allowed), guard.get(1, portal), ground, layout, lists):
+				continue
+			for i in blockers:
+				alive[i] = false
+			dropped += blockers.size()
 			continue
-		for i in blockers:
-			alive[i] = false
-		dropped += blockers.size()
+		#    Dół bez dojścia -> zasypany (kratki dołu wchodzą do kawałka ziemi, który go otacza).
+		if not sunk.is_empty() and _fill_pits(ctx, comps, alive, layout, env, sunk):
+			dropped += 1
+			continue
+		break  # zostały tylko nieosiągalne góry -> bariera przy domknięciu niżej
 
-	layout = _assemble(ctx, comps, comp_stairs_south, comp_stairs_north, comp_stairs_east, comp_stairs_west, alive, flags.plateau_min_area)
+	layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
 	var reach_final := _bfs(ctx, ctx.entrance_pos, layout.blocked)
-	if _seal_holes(ctx, comps, alive, layout, protected, lists):
-		layout = _assemble(ctx, comps, comp_stairs_south, comp_stairs_north, comp_stairs_east, comp_stairs_west, alive, flags.plateau_min_area)
+	if _seal_holes(ctx, comps, alive, layout, guard.get(1, portal), lists, comp_level):
+		layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
 		reach_final = _bfs(ctx, ctx.entrance_pos, layout.blocked)
-	# Góra bez dojścia, dla której nie było miejsca na schody -> bariera (żadnych spawnów tam).
-	var lost := _unreached_top(layout, reach_final)
+	for _pass in range(3):
+		if not _fill_slots(ctx, comps, alive, layout, env, lists, true):
+			break
+		layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
+		reach_final = _bfs(ctx, ctx.entrance_pos, layout.blocked)
+	# Teren bez dojścia, dla którego nie było miejsca na schody -> bariera (żadnych spawnów tam):
+	# góry płaskowyżów oraz (gdy są doły) wszystko poza zwykłą ziemią.
+	var lost := {}
+	for c in walkable_area:
+		if reach_final.has(c) or layout.blocked.has(c):
+			continue
+		var h := layout.height_of(c)
+		if h != 0 or lo < 0:
+			lost[c] = true
 	for c in lost:
 		layout.top.erase(c)
 		layout.blocked[c] = true
@@ -184,36 +420,63 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, mask: Diction
 
 
 ## Schody dla nieosiągalnego kawałka terenu `region` (spójny kawałek nieosiągniętych, chodliwych
-## kratek):
-## - kawałek góry płaskowyżu -> schody z tego płaskowyżu na osiągalny teren niższego poziomu przy nim,
-## - kawałek ziemi -> schody z sąsiedniego płaskowyżu, którego góra jest osiągalna, w dół do kawałka.
+## kratek; może łączyć kilka wysokości przez własne schody):
+## a) kratki kawałka będące górą kawałka poziomu h -> schody z niego w dół, na osiągalny teren obok,
+## b) kawałek poziomu h+1 o osiągalnej górze, który dotyka kawałka -> schody z niego w dół do kawałka.
 ## Strona schodów dowolna (S, N, E, W). Zwraca CONNECT_ADDED / CONNECT_FAILED (był osiągalny sąsiad,
-## ale nie ma miejsca na schody) / CONNECT_WAITING (obok nie ma jeszcze osiągalnego terenu — np. góra
-## sąsiedniego płaskowyżu dopiero dostanie schody; nie zużywa próby).
-static func _connect_region(ctx: GenerationContext, region: Dictionary, comps: Array, alive: Array[bool], layout: PlateauLayout, reach: Dictionary, all_mask: Dictionary, allowed: Dictionary, protected: Dictionary, rng: RandomNumberGenerator, flags: GenerationFlags, lists: Array) -> int:
+## ale nie ma miejsca na schody) / CONNECT_WAITING (obok nie ma jeszcze osiągalnego terenu — np. poziom
+## niżej dopiero dostanie schody; nie zużywa próby).
+static func _connect_region(ctx: GenerationContext, region: Dictionary, comps: Array, alive: Array[bool], layout: PlateauLayout, reach: Dictionary, env: Dictionary, rng: RandomNumberGenerator, flags: GenerationFlags, lists: Array) -> int:
+	var comp_level: Array[int] = env.comp_level
+	var heights := {}
 	var owners := {}
 	for c in region:
-		if layout.mask.has(c):
-			var o := _owner(comps, alive, c)
+		var h := layout.height_of(c)
+		heights[h] = true
+		if h > int(env.lo):
+			var o := _owner_at(comps, comp_level, alive, c, h)
 			if o >= 0:
 				owners[o] = true
-	# Kawałek może łączyć górę i ziemię (własne schody nieosiągalnego płaskowyżu) — próbujemy obu stron.
 	var candidates := 0
 	# a) Z góry kawałka w dół, na osiągalny teren obok.
 	var near := _near_reach(region, reach)
 	if not owners.is_empty() and not near.is_empty():
 		for i in owners:
 			candidates += 1
-			if _connect_near(ctx, comps[i], near, all_mask, allowed, protected, rng, flags, lists, i):
+			if _connect_piece(ctx, comps, i, near, env, rng, flags, lists):
 				return CONNECT_ADDED
-	# b) Z sąsiedniego płaskowyżu o osiągalnej górze w dół, do ziemi kawałka.
+	# b) Z sąsiedniego kawałka poziomu h+1 o osiągalnej górze w dół, do kawałka.
 	var near_region := _grow(region, 2)
 	for i in range(comps.size()):
-		if alive[i] and not owners.has(i) and _top_reached(comps[i], layout, reach) and _touches(comps[i], layout, region):
+		if not alive[i] or owners.has(i) or not heights.has(comp_level[i] - 1):
+			continue
+		if _top_reached(comps[i], layout, reach, comp_level[i]) and _touches(comps[i], layout, region):
 			candidates += 1
-			if _connect_near(ctx, comps[i], near_region, all_mask, allowed, protected, rng, flags, lists, i):
+			if _connect_piece(ctx, comps, i, near_region, env, rng, flags, lists):
 				return CONNECT_ADDED
 	return CONNECT_FAILED if candidates > 0 else CONNECT_WAITING
+
+
+## _connect_near z parametrami poziomu kawałka i.
+static func _connect_piece(ctx: GenerationContext, comps: Array, i: int, near: Dictionary, env: Dictionary, rng: RandomNumberGenerator, flags: GenerationFlags, lists: Array) -> bool:
+	var k: int = (env.comp_level as Array)[i]
+	return _connect_near(ctx, comps[i], near, (env.levels as Dictionary)[k], (env.add_ok as Dictionary)[k], (env.guard as Dictionary)[k], rng, flags, lists, i)
+
+
+## Dół bez dojścia (brak miejsca na schody) -> zasypany: jego kratki dołączają do kawałka ziemi
+## poziomu wyżej, który go otacza. True, gdy coś zasypano.
+static func _fill_pits(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, sunk: Dictionary) -> bool:
+	var comp_level: Array[int] = env.comp_level
+	var filled := false
+	for region in _components(sunk, DIRS8):
+		var h := layout.height_of((region as Dictionary).keys()[0])
+		for i in range(comps.size()):
+			if alive[i] and comp_level[i] == h + 1 and _touches(comps[i], layout, region):
+				(comps[i] as Dictionary).merge(region)
+				((env.levels as Dictionary)[h + 1] as Dictionary).merge(region)
+				filled = true
+				break
+	return filled
 
 
 static func _unreached_top(layout: PlateauLayout, reach: Dictionary) -> Dictionary:
@@ -232,9 +495,10 @@ static func _island_key(island: Dictionary) -> Vector2i:
 	return best
 
 
-static func _owner(comps: Array, alive: Array[bool], c: Vector2i) -> int:
+## Kawałek poziomu `level` zawierający c (-1 gdy brak).
+static func _owner_at(comps: Array, comp_level: Array[int], alive: Array[bool], c: Vector2i, level: int) -> int:
 	for i in range(comps.size()):
-		if alive[i] and (comps[i] as Dictionary).has(c):
+		if alive[i] and comp_level[i] == level and (comps[i] as Dictionary).has(c):
 			return i
 	return -1
 
@@ -265,6 +529,7 @@ static func _with_field(layout: PlateauLayout, ctx: GenerationContext, flags: Ge
 	layout.noise_frequency = flags.plateau_noise_frequency
 	layout.noise_octaves = flags.plateau_noise_octaves
 	layout.threshold = flags.plateau_threshold
+	layout.noise_block = flags.plateau_block
 	return layout
 
 
@@ -343,21 +608,34 @@ static func make_noise(noise_seed: int, frequency: float, octaves: int = 3) -> F
 	return noise
 
 
-static func _noise_mask(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary) -> Dictionary:
+static func _noise_mask(ctx: GenerationContext, flags: GenerationFlags, allowed: Dictionary, threshold: float) -> Dictionary:
 	var noise := make_noise(noise_seed_for(ctx.seed_value), flags.plateau_noise_frequency, flags.plateau_noise_octaves)
 	var mask := {}
 	for c in allowed:
-		if noise.get_noise_2d(float(c.x), float(c.y)) > flags.plateau_threshold:
+		if sample_height(noise, c, flags.plateau_block) > threshold:
 			mask[c] = true
 	return mask
 
 
-static func _clean(ctx: GenerationContext, mask: Dictionary, allowed: Dictionary, min_area: int) -> Dictionary:
+## Wysokość pola w kratce c. block > 1: jedna próbka na blok block×block (środek bloku) — proste
+## krawędzie i kąty proste (tarasy); 1 = próbka w każdej kratce. Publiczne — podgląd mapy wysokości.
+static func sample_height(noise: FastNoiseLite, c: Vector2i, block: int = 1) -> float:
+	if block <= 1:
+		return noise.get_noise_2d(float(c.x), float(c.y))
+	var bx := floori(float(c.x) / block) * block
+	var by := floori(float(c.y) / block) * block
+	return noise.get_noise_2d(bx + block * 0.5, by + block * 0.5)
+
+
+## Czyszczenie maski: domknięcie i otwarcie z promieniem `radius` (1 = szczeliny/wypustki < 3;
+## większy = gładsze, bardziej regularne brzegi), zasypanie kieszeni, min. powierzchnia.
+static func _clean(ctx: GenerationContext, mask: Dictionary, allowed: Dictionary, min_area: int, radius: int = 1) -> Dictionary:
 	var m := mask
+	var r := maxi(radius, 1)
 	for _i in range(CLEAN_ITERS):
 		var before := m.size()
-		m = _erode(ctx, _dilate(m, allowed))   # domknięcie: szczeliny < 3 (też przy ścianach)
-		m = _dilate(_erode(ctx, m), allowed)   # otwarcie: wypustki < 3 w otwartym terenie
+		m = _erode_n(ctx, _dilate_n(m, allowed, r), r)   # domknięcie (też przy ścianach)
+		m = _dilate_n(_erode_n(ctx, m, r), allowed, r)   # otwarcie (wypustki w otwartym terenie)
 		m = _fill_holes(ctx, m, allowed)
 		m = _drop_small(m, min_area)
 		if m.size() == before:
@@ -439,7 +717,15 @@ static func _carve_makes_thin(ctx: GenerationContext, comp: Dictionary, add: Arr
 			var q := Vector2i(x, y)
 			if after.has(q) and _thin(ctx, after, q):
 				return true
+			if not after.has(q) and GridUtils.is_walkable(ctx.grid, q) and _slot(after, q):
+				return true  # szczelina szerokości 1 wcięta w kawałek
 	return false
+
+
+## Szczelina: kratka spoza m z kratkami m po obu przeciwnych stronach (1 kratka szerokości/wysokości).
+static func _slot(m: Dictionary, c: Vector2i) -> bool:
+	return (m.has(c + Vector2i(0, -1)) and m.has(c + Vector2i(0, 1))) \
+		or (m.has(c + Vector2i(-1, 0)) and m.has(c + Vector2i(1, 0)))
 
 
 ## Lite = płaskowyż albo prawdziwa ściana (ściany podpierają płaskowyż przy erozji).
@@ -457,6 +743,13 @@ static func _erode(ctx: GenerationContext, m: Dictionary) -> Dictionary:
 				break
 		if keep:
 			out[c] = true
+	return out
+
+
+static func _dilate_n(m: Dictionary, allowed: Dictionary, n: int) -> Dictionary:
+	var out := m
+	for _i in range(n):
+		out = _dilate(out, allowed)
 	return out
 
 
@@ -583,29 +876,18 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 				if out.size() >= cap:
 					break
 				var y: int = r[3]
-				var best_lo := 0
-				var best_len := 0
-				var cur_lo := 0
-				var cur_len := 0
-				for x in range(r[1] + flank, r[2] - flank + 1):
-					if _is_interior(ctx, comp, Vector2i(x, y - 1)):
-						if cur_len == 0:
-							cur_lo = x
-						cur_len += 1
-						if cur_len > best_len:
-							best_len = cur_len
-							best_lo = cur_lo
-					else:
-						cur_len = 0
+				var seg := _best_segment(ctx, comp, r[1], r[2], y, false, Vector2i(0, -1), flank)
+				var best_lo: int = seg.x
+				var best_len: int = seg.y
 				if allow_1w:
 					if best_len < 1:
 						continue
-					var s: int = 1 if best_len < 2 else rng.randi_range(2, mini(max_w, best_len))
+					var s: int = 1 if best_len < 2 else _stair_width(rng, max_w, best_len)
 					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
 				else:
 					if best_len < 2:
 						continue
-					var s: int = rng.randi_range(2, mini(max_w, best_len))
+					var s: int = _stair_width(rng, max_w, best_len)
 					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
 	return out
 
@@ -664,29 +946,18 @@ static func _pick_stairs_north(ctx: GenerationContext, comp: Dictionary, rng: Ra
 				if out.size() >= cap:
 					break
 				var y: int = r[3]
-				var best_lo := 0
-				var best_len := 0
-				var cur_lo := 0
-				var cur_len := 0
-				for x in range(r[1] + flank, r[2] - flank + 1):
-					if _is_interior(ctx, comp, Vector2i(x, y + 1)):
-						if cur_len == 0:
-							cur_lo = x
-						cur_len += 1
-						if cur_len > best_len:
-							best_len = cur_len
-							best_lo = cur_lo
-					else:
-						cur_len = 0
+				var seg := _best_segment(ctx, comp, r[1], r[2], y, false, Vector2i(0, 1), flank)
+				var best_lo: int = seg.x
+				var best_len: int = seg.y
 				if allow_1w:
 					if best_len < 1:
 						continue
-					var s: int = 1 if best_len < 2 else rng.randi_range(2, mini(max_w, best_len))
+					var s: int = 1 if best_len < 2 else _stair_width(rng, max_w, best_len)
 					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
 				else:
 					if best_len < 2:
 						continue
-					var s: int = rng.randi_range(2, mini(max_w, best_len))
+					var s: int = _stair_width(rng, max_w, best_len)
 					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
 	return out
 
@@ -760,30 +1031,19 @@ static func _pick_stairs_side(ctx: GenerationContext, comp: Dictionary, rng: Ran
 				if out.size() >= limit:
 					break
 				var x: int = r[3]
-				var best_lo := 0
-				var best_len := 0
-				var cur_lo := 0
-				var cur_len := 0
-				for y in range(r[1] + flank, r[2] - flank + 1):
-					if _is_interior(ctx, comp, Vector2i(x + interior_dx, y)):
-						if cur_len == 0:
-							cur_lo = y
-						cur_len += 1
-						if cur_len > best_len:
-							best_len = cur_len
-							best_lo = cur_lo
-					else:
-						cur_len = 0
+				var seg := _best_segment(ctx, comp, r[1], r[2], x, true, Vector2i(interior_dx, 0), flank)
+				var best_lo: int = seg.x
+				var best_len: int = seg.y
 				if allow_1h:
 					if best_len < 1:
 						continue
-					var height := 1 if best_len < 3 else 3
+					var height := 1 if best_len < 3 else _side_height(rng, flags, best_len)
 					var top_y := rng.randi_range(best_lo, best_lo + best_len - height)
 					out.append(Vector3i(x, top_y, height))
 				else:
 					if best_len < 3:
 						continue
-					var height := 3
+					var height := _side_height(rng, flags, best_len)
 					var top_y := rng.randi_range(best_lo, best_lo + best_len - height)
 					out.append(Vector3i(x, top_y, height))
 	return out
@@ -960,11 +1220,11 @@ static func _absorb_pockets(ctx: GenerationContext, comps: Array, blockers: Arra
 ## Dziury po łataniu maski: małe (≤ POCKET_MAX) grupy podłogi zamknięte ortogonalnie płaskowyżem
 ## lub ścianą -> płaskowyż. Były barierami/nieosiągalne, więc łączność się nie zmienia.
 ## Nie przy schodach ani portalach.
-static func _seal_holes(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, protected: Dictionary, lists: Array) -> bool:
+static func _seal_holes(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, protected: Dictionary, lists: Array, comp_level: Array[int]) -> bool:
 	var sealed := false
 	var seen := {}
 	for start in layout.blocked.keys():
-		if layout.mask.has(start) or seen.has(start):
+		if layout.height_of(start) != 0 or seen.has(start):
 			continue
 		# Flood po podłodze spoza maski; za duże = otwarta ziemia, nie dziura.
 		var hole := {start: true}
@@ -976,13 +1236,10 @@ static func _seal_holes(ctx: GenerationContext, comps: Array, alive: Array[bool]
 			var p: Vector2i = queue.pop_back()
 			for d in DIRS4:
 				var n: Vector2i = p + d
-				if layout.mask.has(n):
+				if layout.height_of(n) == 1:
 					if owner < 0:
-						for k in range(comps.size()):
-							if alive[k] and (comps[k] as Dictionary).has(n):
-								owner = k
-								break
-				elif GridUtils.is_walkable(ctx.grid, n) and not hole.has(n):
+						owner = _owner_at(comps, comp_level, alive, n, 1)
+				elif layout.height_of(n) == 0 and GridUtils.is_walkable(ctx.grid, n) and not hole.has(n):
 					hole[n] = true
 					seen[n] = true
 					queue.append(n)
@@ -1001,6 +1258,78 @@ static func _seal_holes(ctx: GenerationContext, comps: Array, alive: Array[bool]
 			(comps[owner] as Dictionary).merge(hole)
 			sealed = true
 	return sealed
+
+
+## Kształt po naprawie: szczeliny i wypustki szerokości 1 między poziomami (np. wcięcie w lico po
+## rzeźbieniu, kanał albo język ziemi przy dole). Kratka wysokości h
+## - z wyższym terenem po obu przeciwnych stronach -> dołącza do kawałka poziomu h+1,
+## - z niższym terenem po obu przeciwnych stronach -> odpada z kawałka poziomu h (obniżona o 1).
+## Nie przy samych schodach (flanki, margines 1) ani w strefie ochronnej (portale, pierścień wyższego
+## poziomu). True, gdy coś zmieniono.
+static func _fill_slots(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, lists: Array, protect_flanks: bool = false) -> bool:
+	var comp_level: Array[int] = env.comp_level
+	var guard: Dictionary = env.guard_base
+	var changed := false
+	var cand := {}
+	for c in layout.heights:
+		for d in DIRS4:
+			cand[c + d] = true
+		cand[c] = true
+	var pairs := [[Vector2i(0, -1), Vector2i(0, 1)], [Vector2i(-1, 0), Vector2i(1, 0)]]
+	# Ochrona schodów (faktycznie postawionych): przy obniżaniu schody + 1 kratka dookoła (flanki
+	# muszą zostać licem); przy zasypywaniu tylko same schody i kratka za stopą (zejście zostaje wolne)
+	# — zasypana szczelina obok schodów to zwykle właśnie brakujący kawałek lica przy flance.
+	var near_stairs := {}
+	var keep_free := {}
+	for sc in layout.stair_cells():
+		keep_free[sc] = true
+		for d in DIRS8 + [Vector2i.ZERO]:
+			near_stairs[sc + d] = true
+	for pair in layout.stair_pairs():
+		var foot: Vector2i = pair[1]
+		keep_free[foot + (foot - (pair[0] as Vector2i))] = true  # kratka za stopą, w kierunku zejścia
+	if protect_flanks:
+		# Końcowe domknięcie: nie psujemy już flank postawionych schodów (brak kolejnej naprawy).
+		var lst := [layout.stairs, layout.stairs_north, layout.stairs_east, layout.stairs_west]
+		for dir in 4:
+			for st in lst[dir]:
+				for fo in _stair_flanks(dir, st):
+					keep_free[fo[0]] = true
+					keep_free[(fo[0] as Vector2i) + (fo[1] as Vector2i)] = true
+	for c in cand:
+		if not GridUtils.is_walkable(ctx.grid, c):
+			continue
+		var h := layout.height_of(c)
+		var up := -1    # kawałek poziomu h+1 do dołączenia
+		var down := -1  # kawałek poziomu h, z którego kratka odpada
+		for pr in pairs:
+			var a: Vector2i = c + pr[0]
+			var b: Vector2i = c + pr[1]
+			if not (GridUtils.is_walkable(ctx.grid, a) and GridUtils.is_walkable(ctx.grid, b)):
+				continue
+			if layout.height_of(a) > h and layout.height_of(b) > h:
+				up = _owner_at(comps, comp_level, alive, a, h + 1)
+				if up < 0:
+					up = _owner_at(comps, comp_level, alive, b, h + 1)
+				break
+			if layout.height_of(a) < h and layout.height_of(b) < h and h > int(env.lo):
+				down = _owner_at(comps, comp_level, alive, c, h)
+				break
+		if up >= 0:
+			if (guard.get(h + 1, {}) as Dictionary).has(c) or keep_free.has(c):
+				continue
+			(comps[up] as Dictionary)[c] = true
+			((env.levels as Dictionary)[h + 1] as Dictionary)[c] = true
+			changed = true
+		elif down >= 0:
+			if (guard.get(h, {}) as Dictionary).has(c) or near_stairs.has(c):
+				continue
+			(comps[down] as Dictionary).erase(c)
+			((env.levels as Dictionary)[h] as Dictionary).erase(c)
+			if h <= 0:
+				(env.pit_cells as Dictionary)[c] = true
+			changed = true
+	return changed
 
 
 ## Filtr pickerów: pusty `near` = bez ograniczeń.
@@ -1034,11 +1363,108 @@ static func _pick_any(ctx: GenerationContext, comp: Dictionary, rng: RandomNumbe
 
 ## Pierwszy kandydat (od najdłuższego biegu lica), który nie koliduje z istniejącymi schodami.
 static func _add_first(cands: Array[Vector3i], lists: Array, dir: int, i: int) -> bool:
+	if cands.is_empty():
+		return false
+	# Najpierw z rozstawem STAIR_GAP od schodów wszystkich kawałków, potem (gdy trzeba dla dojścia) bliżej.
+	var spaced := {}
+	for k in 4:
+		for j in range((lists[k] as Array).size()):
+			for st in lists[k][j]:
+				_mark_spaced(spaced, k, st)
+	for c in cands:
+		if _cells_free(_one_stair_cells(dir, c), spaced):
+			var one: Array[Vector3i] = [c]
+			if _add_new(one, lists, dir, i):
+				return true
 	for c in cands:
 		var one: Array[Vector3i] = [c]
 		if _add_new(one, lists, dir, i):
 			return true
 	return false
+
+
+## Kratki jednych schodów (kierunek dir).
+static func _one_stair_cells(dir: int, st: Vector3i) -> Array[Vector2i]:
+	var tmp := PlateauLayout.new()
+	var lst: Array = [tmp.stairs, tmp.stairs_north, tmp.stairs_east, tmp.stairs_west]
+	(lst[dir] as Array).append(st)
+	return tmp.stair_cells()
+
+
+static func _cells_free(cells: Array[Vector2i], zone: Dictionary) -> bool:
+	for c in cells:
+		if zone.has(c):
+			return false
+	return true
+
+
+## Zaznacza schody w strefie rozstawu (kratki + STAIR_GAP dookoła).
+static func _mark_spaced(zone: Dictionary, dir: int, st: Vector3i) -> void:
+	for c in _one_stair_cells(dir, st):
+		for dy in range(-STAIR_GAP, STAIR_GAP + 1):
+			for dx in range(-STAIR_GAP, STAIR_GAP + 1):
+				zone[c + Vector2i(dx, dy)] = true
+
+
+static func _as_v3(a: Array) -> Array[Vector3i]:
+	var out: Array[Vector3i] = []
+	out.assign(a)
+	return out
+
+
+## Najdłuższy ciąg kratek biegu lica [a..b] (wiersz/kolumna `fixed`), nad którymi (inner) jest wnętrze
+## kawałka — z flanką `flank` od każdego końca (0 przy ścianie). Gdy flanka > 1, sprawdzamy też flankę 1
+## i bierzemy ją, jeśli schody wyjdą co najmniej o 2 szersze (krótkie lica przy tarasach z bloków).
+## Zwraca Vector2i(początek, długość).
+static func _best_segment(ctx: GenerationContext, comp: Dictionary, a: int, b: int, fixed: int, vertical: bool, inner: Vector2i, flank: int) -> Vector2i:
+	var best := _segment_with_flank(ctx, comp, a, b, fixed, vertical, inner, flank)
+	if flank > 1:
+		var alt := _segment_with_flank(ctx, comp, a, b, fixed, vertical, inner, 1)
+		if alt.y >= best.y + 2:
+			best = alt
+	return best
+
+
+static func _segment_with_flank(ctx: GenerationContext, comp: Dictionary, a: int, b: int, fixed: int, vertical: bool, inner: Vector2i, flank: int) -> Vector2i:
+	var before := Vector2i(fixed, a - 1) if vertical else Vector2i(a - 1, fixed)
+	var after := Vector2i(fixed, b + 1) if vertical else Vector2i(b + 1, fixed)
+	var best_lo := 0
+	var best_len := 0
+	var cur_lo := 0
+	var cur_len := 0
+	for t in range(a + _end_flank(ctx, before, flank), b - _end_flank(ctx, after, flank) + 1):
+		var c := Vector2i(fixed, t) if vertical else Vector2i(t, fixed)
+		if _is_interior(ctx, comp, c + inner):
+			if cur_len == 0:
+				cur_lo = t
+			cur_len += 1
+			if cur_len > best_len:
+				best_len = cur_len
+				best_lo = cur_lo
+		else:
+			cur_len = 0
+	return Vector2i(best_lo, best_len)
+
+
+## Flanka przy końcu biegu lica: 0, gdy za końcem jest ściana jaskini (wzniesienie wchodzi w ścianę,
+## lico ciągnie się pod nią — schody mogą iść od ściany do ściany), inaczej `flank` (róg/moduł IN).
+static func _end_flank(ctx: GenerationContext, beyond: Vector2i, flank: int) -> int:
+	return 0 if not GridUtils.is_walkable(ctx.grid, beyond) else flank
+
+
+## Wysokość schodów bocznych (E/W): >= 3 (góra + środek + dół modułu), dłuższe dokładają wierszy
+## środkowych — jak szerokość S/N, z górnej części tego, co mieści bok (do stair_max_width).
+static func _side_height(rng: RandomNumberGenerator, flags: GenerationFlags, best_len: int) -> int:
+	var hi := mini(maxi(flags.stair_max_width, 3), best_len)
+	var lo := maxi(3, ceili(hi * 2.0 / 3.0))
+	return rng.randi_range(mini(lo, hi), hi)
+
+
+## Szerokość schodów: z górnej części tego, co mieści lico (2..stair_max_width) — szerokie schody.
+static func _stair_width(rng: RandomNumberGenerator, max_w: int, best_len: int) -> int:
+	var hi := mini(max_w, best_len)
+	var lo := maxi(2, ceili(hi * 2.0 / 3.0))
+	return rng.randi_range(mini(lo, hi), hi)
 
 
 ## Dopisuje kandydata do listy kierunku `dir` (0 S, 1 N, 2 E, 3 W) komponentu i. Schody tego samego
@@ -1080,31 +1506,74 @@ static func _stair_zone(lists: Array, i: int, margin: int) -> Dictionary:
 
 # --- Złożenie i spójność --------------------------------------------------------------------
 
-static func _assemble(ctx: GenerationContext, comps: Array, comp_stairs_south: Array, comp_stairs_north: Array, comp_stairs_east: Array, comp_stairs_west: Array, alive: Array[bool], min_area: int = 0) -> PlateauLayout:
+## Składa układ z żywych kawałków: poziomy (zagnieżdżone: poziom k tylko wewnątrz k-1), wysokości,
+## schody łączące sąsiednie wysokości, bariery (kratka wyżej niż ortogonalny sąsiad + stopa lica).
+static func _assemble(ctx: GenerationContext, comps: Array, lists: Array, alive: Array[bool], env: Dictionary, min_area: int = 0) -> PlateauLayout:
+	var comp_level: Array[int] = env.comp_level
+	var lo: int = env.lo
+	var hi: int = env.hi
 	var layout := PlateauLayout.new()
+	layout.min_level = lo
+	layout.max_level = hi
+	for k in range(lo + 1, hi + 1):
+		var m := {}
+		for i in range(comps.size()):
+			if alive[i] and comp_level[i] == k:
+				m.merge(comps[i])
+		if k >= 1 and min_area > 0:
+			m = _drop_small(m, min_area)
+		if k <= 0 and min_area > 0:
+			# Dół (podłoga poza „ziemią nad dołem”) mniejszy niż min_area -> zasypany, jak małe płaskowyże.
+			var sunk := {}
+			for c in env.pit_cells:
+				if not m.has(c):
+					sunk[c] = true
+			for comp in _components(sunk, DIRS8):
+				if (comp as Dictionary).size() < min_area:
+					m.merge(comp)
+		if k > lo + 1 and layout.levels.has(k - 1):
+			var nested := {}
+			var below: Dictionary = layout.levels[k - 1]
+			for c in m:
+				if below.has(c):
+					nested[c] = true
+			m = nested
+		layout.levels[k] = m
+	layout.mask = layout.levels.get(1, {})
+	for k in range(1, hi + 1):
+		for c in layout.levels[k]:
+			layout.heights[c] = k
+	if lo < 0:
+		for c in env.pit_cells:
+			var h := lo
+			for k in range(lo + 1, 1):
+				if (layout.levels[k] as Dictionary).has(c):
+					h = k
+				else:
+					break
+			if h < 0:
+				layout.heights[c] = h
+	# Schody żywych kawałków, o ile nadal łączą sąsiednie wysokości (góra = stopa + 1).
+	var targets := [layout.stairs, layout.stairs_north, layout.stairs_east, layout.stairs_west]
 	for i in range(comps.size()):
-		if alive[i]:
-			layout.mask.merge(comps[i])
-			for st in comp_stairs_south[i]:
-				layout.stairs.append(st)
-			for st in comp_stairs_north[i]:
-				layout.stairs_north.append(st)
-			for st in comp_stairs_east[i]:
-				layout.stairs_east.append(st)
-			for st in comp_stairs_west[i]:
-				layout.stairs_west.append(st)
-	if min_area > 0:
-		layout.mask = _drop_small(layout.mask, min_area)
-		# Schody odrzuconych kawałków znikają razem z nimi (strona płaskowyżu musi być w masce).
-		layout.stairs = layout.stairs.filter(func(st): return layout.mask.has(Vector2i(st.x, st.z)))
-		layout.stairs_north = layout.stairs_north.filter(func(st): return layout.mask.has(Vector2i(st.x, st.z)))
-		layout.stairs_east = layout.stairs_east.filter(func(st): return layout.mask.has(Vector2i(st.x, st.y)))
-		layout.stairs_west = layout.stairs_west.filter(func(st): return layout.mask.has(Vector2i(st.x, st.y)))
-	# Bariery: komórki płaskowyżu z ortogonalną ziemią obok + stopy lica.
-	for c in layout.mask:
+		if not alive[i]:
+			continue
+		for dir in 4:
+			for st in lists[dir][i]:
+				if _stair_ok(ctx, layout, dir, st):
+					(targets[dir] as Array).append(st)
+	# Bariery: kratka wyżej niż chodliwy sąsiad ortogonalny; kratka pod nią od południa to stopa lica.
+	var cand := {}
+	for c in layout.heights:
+		cand[c] = true
+		if int(layout.heights[c]) < 0:
+			for d in DIRS4:
+				cand[c + d] = true
+	for c in cand:
+		var hc := layout.height_of(c)
 		for d in DIRS4:
 			var n: Vector2i = c + d
-			if GridUtils.is_walkable(ctx.grid, n) and not layout.mask.has(n):
+			if GridUtils.is_walkable(ctx.grid, n) and layout.height_of(n) < hc:
 				layout.blocked[c] = true
 				if d == Vector2i(0, 1):
 					layout.blocked[n] = true
@@ -1114,6 +1583,52 @@ static func _assemble(ctx: GenerationContext, comps: Array, comp_stairs_south: A
 		if not layout.blocked.has(c):
 			layout.top[c] = true
 	return layout
+
+
+## Czy schody (kierunek dir: 0 S, 1 N, 2 E, 3 W) łączą górę i stopę o wysokościach różnych o 1.
+static func _stair_ok(ctx: GenerationContext, layout: PlateauLayout, dir: int, st: Vector3i) -> bool:
+	var tmp := PlateauLayout.new()
+	var lst: Array = [tmp.stairs, tmp.stairs_north, tmp.stairs_east, tmp.stairs_west]
+	(lst[dir] as Array).append(st)
+	for pair in tmp.stair_pairs():
+		var top: Vector2i = pair[0]
+		var foot: Vector2i = pair[1]
+		if not GridUtils.is_walkable(ctx.grid, foot) or layout.height_of(top) != layout.height_of(foot) + 1:
+			return false
+		# Za stopą (w kierunku zejścia) nie może być znów wyżej — schody nie schodzą w szczelinę.
+		var landing: Vector2i = foot + (foot - top)
+		if GridUtils.is_walkable(ctx.grid, landing) and layout.height_of(landing) > layout.height_of(foot):
+			return false
+	# Flanki (kratki lica tuż obok schodów) na tej samej wysokości co góra, z terenem o 1 niżej za nimi —
+	# inaczej schody stoją w rogu (np. po zasypaniu szczeliny obok) i nie pasują do kafli lica.
+	var h := layout.height_of(_stair_top(dir, st))
+	for fo in _stair_flanks(dir, st):
+		var f: Vector2i = fo[0]
+		var out: Vector2i = fo[1]
+		if not GridUtils.is_walkable(ctx.grid, f):
+			continue  # schody dochodzą do ściany jaskini — lico ciągnie się pod nią, flanka zbędna
+		if layout.height_of(f) != h:
+			return false
+		if not GridUtils.is_walkable(ctx.grid, f + out) or layout.height_of(f + out) != h - 1:
+			return false
+	return true
+
+
+## Kratka góry schodów (dowolna z górnych) — do wysokości schodów.
+static func _stair_top(dir: int, st: Vector3i) -> Vector2i:
+	return Vector2i(st.x, st.z) if dir <= 1 else Vector2i(st.x, st.y)
+
+
+## Flanki schodów: [kratka flanki, kierunek zejścia] dla obu końców.
+static func _stair_flanks(dir: int, st: Vector3i) -> Array:
+	match dir:
+		0:
+			return [[Vector2i(st.x - 1, st.z), Vector2i(0, 1)], [Vector2i(st.x + st.y, st.z), Vector2i(0, 1)]]
+		1:
+			return [[Vector2i(st.x - 1, st.z), Vector2i(0, -1)], [Vector2i(st.x + st.y, st.z), Vector2i(0, -1)]]
+		2:
+			return [[Vector2i(st.x, st.y - 1), Vector2i(1, 0)], [Vector2i(st.x, st.y + st.z), Vector2i(1, 0)]]
+	return [[Vector2i(st.x, st.y - 1), Vector2i(-1, 0)], [Vector2i(st.x, st.y + st.z), Vector2i(-1, 0)]]
 
 
 static func _bfs(ctx: GenerationContext, start: Vector2i, blocked: Dictionary) -> Dictionary:
@@ -1134,21 +1649,24 @@ static func _bfs(ctx: GenerationContext, start: Vector2i, blocked: Dictionary) -
 	return seen
 
 
-## Czy jakakolwiek komórka góry komponentu jest osiągalna (schody prowadzą na górę).
-static func _top_reached(comp: Dictionary, layout: PlateauLayout, reach: Dictionary) -> bool:
+## Czy jakaś kratka góry kawałka poziomu `level` (wysokość == level) jest osiągalna.
+static func _top_reached(comp: Dictionary, layout: PlateauLayout, reach: Dictionary, level: int) -> bool:
 	for c in comp:
-		if layout.top.has(c) and reach.has(c):
+		if reach.has(c) and layout.height_of(c) == level:
 			return true
 	return false
 
 
-## Czy bariery komponentu (jego komórki-bariery i stopy lica pod nim) sąsiadują z `cells`.
+## Czy bariery kawałka (jego kratki-bariery i stopy lica przy nim) sąsiadują z `cells`.
+## Liczone od strony `cells` (kawałek poziomu 0 wokół dołów bywa całą mapą).
 static func _touches(comp: Dictionary, layout: PlateauLayout, cells: Dictionary) -> bool:
-	for c in comp:
-		for b in [c, c + Vector2i(0, 1), c + Vector2i(0, -1), c + Vector2i(1, 0), c + Vector2i(-1, 0)]:
+	var offs := [Vector2i.ZERO, Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]
+	for r in cells:
+		for d in DIRS4:
+			var b: Vector2i = r + d
 			if not layout.blocked.has(b):
 				continue
-			for d in DIRS4:
-				if cells.has(b + d):
+			for o in offs:
+				if comp.has(b - o):
 					return true
 	return false
