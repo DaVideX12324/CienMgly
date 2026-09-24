@@ -52,6 +52,26 @@ enum Id {
 	FACADE_3H,
 	NICHE_STANDARD,
 	NICHE_SECRET,
+
+	# --- Platformy: schody w licu klifu 2H (moduły 2-częściowe: base (0,0) + top (0,-1)).
+	STAIR_LEFT,
+	STAIR_MID,
+	STAIR_RIGHT,
+
+	# --- Platformy: schody w rimie północnym (moduły 2-częściowe: base (0,0) + top (0,-1)).
+	STAIR_NORTH_LEFT,
+	STAIR_NORTH_MID,
+	STAIR_NORTH_RIGHT,
+
+	# --- Platformy: schody pojedyncze 1W (South / North)
+	STAIR_SINGLE,
+	STAIR_NORTH_SINGLE,
+
+	# --- Platformy: schody boczne (East / West, 1H i 3H)
+	STAIR_EAST_3H,
+	STAIR_EAST_1H,
+	STAIR_WEST_3H,
+	STAIR_WEST_1H,
 }
 
 

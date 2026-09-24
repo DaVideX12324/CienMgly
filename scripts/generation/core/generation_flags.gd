@@ -1,4 +1,4 @@
-﻿class_name GenerationFlags
+class_name GenerationFlags
 extends RefCounted
 
 # --- Topologia ---
@@ -17,6 +17,16 @@ var enable_pillars: bool = true
 var enable_2h_facades: bool = true
 var enable_3h_facades: bool = true
 var enable_floor_decorations: bool = true
+
+# --- Płaskowyże (jeden poziom) — maska z szumu na podłodze; domyślnie WYŁĄCZONE (parytet) ---
+var enable_platforms: bool = false
+var plateau_noise_frequency: float = 0.02   # wielkość plam: MNIEJSZA = większe płaskowyże (0.02 ≈ plamy ~50 kratek, map-wide)
+var plateau_threshold: float = 0.1         # próg szumu -1..1: NIŻSZY = więcej płaskowyżu (0.1 ≈ ~40% mapy)
+var plateau_noise_octaves: int = 3         # szczegółowość brzegów: mniej = gładsze, większe plamy
+var plateau_min_area: int = 40             # mniejsze komponenty odpadają
+var plateau_portal_margin: int = 4         # odstęp od stref wejścia/wyjścia
+var platform_max_stairs: int = 4           # schody na komponent (najdłuższe biegi lica)
+var stair_max_width: int = 3               # schody: min. 2 ([L][R]), szersze dokładają MID
 
 # --- Prawdopodobieństwa (nadpisują profil, gdy >= 0.0) ---
 var niche_spawn_chance: float = 0.15

@@ -9,6 +9,7 @@ const LEGACY_FACADE_WINS := {
 	&"RIM_BASE": 50, &"RIM_TIP": 51,
 	&"SIDE_WALL_FIXED": 60, &"STEP": 65, &"FACADE": 70, &"CONNECTOR": 70,
 	&"OUT_CORNER": 70, &"NICHE": 75, &"PILLAR": 80, &"PORTAL_CLEAR": 1000,
+	&"PLATFORM": 70, &"STAIR": 75,
 }
 
 const README_RIM_WINS := {
@@ -17,6 +18,7 @@ const README_RIM_WINS := {
 	&"CORNER": 60, &"OUT_CORNER": 60, &"STEP": 60,
 	&"RIM_BASE": 70, &"RIM_BOWL": 70, &"RIM_BOWL_DECORATED": 70, &"RIM_TIP": 71,
 	&"PILLAR": 80, &"NICHE": 90, &"PORTAL_CLEAR": 1000,
+	&"PLATFORM": 70, &"STAIR": 75,
 }
 
 static func get_table(preset_id: StringName, overrides: Dictionary = {}) -> Dictionary:

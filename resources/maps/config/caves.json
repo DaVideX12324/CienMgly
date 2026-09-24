@@ -25,13 +25,21 @@
     "niche_spawn_chance": 0.15,
     "secret_niche_spawn_chance": 0.3,
     "force_theme": -1,
-    "debug_log_edge_kinds": false
+    "debug_log_edge_kinds": false,
+    "enable_platforms": true,
+    "plateau_noise_frequency": 0.006,
+    "plateau_threshold": 0.2,
+    "plateau_min_area": 20,
+    "plateau_portal_margin": 0,
+    "platform_max_stairs": 8,
+    "stair_max_width": 6
   },
   "tilesets": {
     "default": "caves_rock",
     "enabled": [
       "caves_rock",
-      "caves_roots"
+      "caves_roots",
+      "caves_platform"
     ],
     "forbidden_contact_policy": "use_default",
     "missing_tileset_policy": "default"

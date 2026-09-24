@@ -70,7 +70,13 @@ static func place(
 	var table := ctx.priority_table
 
 	if left_y != -1 and y > left_y:
-		if edge.facade_height == 2:
+		if edge.facade_height == 2 and ctx.plateau_mode:
+			# Płaskowyż: stopień lica 2H = moduł IN (2 części: base + top); narożnik wewnętrzny
+			# nad nim daje EdgeAnalyzer (INNER_CORNER SE). Bez fallbacku na stałe ścian.
+			_try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT, &"A", table)
+			state.mark(pos, &"FACADE")
+			state.mark(pos + Vector2i(0, -1), &"FACADE")
+		elif edge.facade_height == 2:
 			# 2H reużywa końcówkę FACADE_2H WEST (te same kafle).
 			if not _try(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, &"WEST", table):
 				_queue(plan, pos, CaveTileConstants.WALL_2H_WEST_BASE, &"FACADE", table, pos)
@@ -105,7 +111,11 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 
 	elif right_y != -1 and y > right_y:
-		if edge.facade_height == 2:
+		if edge.facade_height == 2 and ctx.plateau_mode:
+			_try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT, &"A", table)
+			state.mark(pos, &"FACADE")
+			state.mark(pos + Vector2i(0, -1), &"FACADE")
+		elif edge.facade_height == 2:
 			if not _try(ctx, plan, pos, TileModuleRole.Id.FACADE_2H, &"EAST", table):
 				_queue(plan, pos, CaveTileConstants.WALL_2H_EAST_BASE, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)

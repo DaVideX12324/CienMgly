@@ -39,6 +39,7 @@ class GenerationResult:
 	var portal_zone: Dictionary = {}  # Vector2i -> bool (union entrance+exit)
 	var corridors: Array[Dictionary] = []  # { from, to, width } — do debugowania
 	var preprocess_stats: Dictionary = {}  # ile komórek zmienił każdy pass
+	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 
 
 # --- Inicjalizacja RNG ---

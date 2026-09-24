@@ -3,6 +3,9 @@ extends RefCounted
 
 const MapGeneratorBase = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
 const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
+const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
+
+const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, entrance_room_idx: int, exit_room_idx: int) -> void:
 	var rooms := ctx.rooms
@@ -34,3 +37,36 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 				})
 		else:
 			result.chest_spawns.append(center)
+
+	if ctx.plateau != null and not ctx.plateau.is_empty():
+		_nudge_off_plateau(ctx, result)
+
+
+## Spawn na barierze płaskowyżu (rim, bok, lico, stopa) -> najbliższa wolna podłoga (BFS).
+## Góra płaskowyżu jest dozwolona (osiągalna schodami).
+static func _nudge_off_plateau(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult) -> void:
+	var covered: Dictionary = ctx.plateau.blocked
+
+	for e in result.enemy_spawns:
+		if covered.has(e["pos"]):
+			e["pos"] = _nearest_free(ctx, e["pos"], covered)
+	for i in range(result.chest_spawns.size()):
+		if covered.has(result.chest_spawns[i]):
+			result.chest_spawns[i] = _nearest_free(ctx, result.chest_spawns[i], covered)
+
+
+static func _nearest_free(ctx: GenerationContext, start: Vector2i, covered: Dictionary) -> Vector2i:
+	var seen := {start: true}
+	var queue: Array[Vector2i] = [start]
+	var head := 0
+	while head < queue.size():
+		var p := queue[head]
+		head += 1
+		if not covered.has(p) and not ctx.portal_zone.has(p) and GridUtils.is_walkable(ctx.grid, p):
+			return p
+		for d in DIRS4:
+			var n := p + d
+			if not seen.has(n) and GridUtils.in_bounds(n, ctx.width, ctx.height):
+				seen[n] = true
+				queue.append(n)
+	return start

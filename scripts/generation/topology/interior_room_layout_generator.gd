@@ -18,6 +18,7 @@ const SpikeCleanupPass = preload("res://modules/quiz_rpg/scripts/generation/prep
 const ThinBridgeCleanupPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/thin_bridge_cleanup_pass.gd")
 const StaircaseNormalizerPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/staircase_normalizer_pass.gd")
 const SpawnPlanner = preload("res://modules/quiz_rpg/scripts/generation/spawn/spawn_planner.gd")
+const PlateauPass = preload("res://modules/quiz_rpg/scripts/generation/topology/plateau_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -183,6 +184,11 @@ static func generate_layout(
 
 		# P11. Drugie spłaszczanie wybrzuszeń (przeniesione z apply_cave_tiles KROK 0)
 		GridPreprocessor.run(ctx, [ShortBulgeFlattenPass.new()])
+
+	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
+	# żeby SpawnPlanner mógł zsunąć spawny z barier.
+	ctx.plateau = PlateauPass.run(ctx, flags)
+	result.plateau = ctx.plateau
 
 	# P12. Spawny wrogów i skrzyń
 	if not rooms.is_empty():

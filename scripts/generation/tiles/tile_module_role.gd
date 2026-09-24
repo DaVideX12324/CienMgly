@@ -32,6 +32,18 @@ enum Id {
 	RIM_WEST,
 	NICHE_STANDARD,
 	NICHE_SECRET,
+	STAIR_LEFT,
+	STAIR_MID,
+	STAIR_RIGHT,
+	STAIR_NORTH_LEFT,
+	STAIR_NORTH_MID,
+	STAIR_NORTH_RIGHT,
+	STAIR_SINGLE,
+	STAIR_NORTH_SINGLE,
+	STAIR_EAST_3H,
+	STAIR_EAST_1H,
+	STAIR_WEST_3H,
+	STAIR_WEST_1H,
 }
 
 ## Klucz, pod którym NamedTileSetDefinition przechowuje wpis danego modułu
@@ -61,6 +73,18 @@ static func to_storage_role(module_role: Id) -> int:
 		Id.RIM_WEST: return TileRole.Id.RIM_WEST
 		Id.NICHE_STANDARD: return TileRole.Id.NICHE_STANDARD
 		Id.NICHE_SECRET: return TileRole.Id.NICHE_SECRET
+		Id.STAIR_LEFT: return TileRole.Id.STAIR_LEFT
+		Id.STAIR_MID: return TileRole.Id.STAIR_MID
+		Id.STAIR_RIGHT: return TileRole.Id.STAIR_RIGHT
+		Id.STAIR_NORTH_LEFT: return TileRole.Id.STAIR_NORTH_LEFT
+		Id.STAIR_NORTH_MID: return TileRole.Id.STAIR_NORTH_MID
+		Id.STAIR_NORTH_RIGHT: return TileRole.Id.STAIR_NORTH_RIGHT
+		Id.STAIR_SINGLE: return TileRole.Id.STAIR_SINGLE
+		Id.STAIR_NORTH_SINGLE: return TileRole.Id.STAIR_NORTH_SINGLE
+		Id.STAIR_EAST_3H: return TileRole.Id.STAIR_EAST_3H
+		Id.STAIR_EAST_1H: return TileRole.Id.STAIR_EAST_1H
+		Id.STAIR_WEST_3H: return TileRole.Id.STAIR_WEST_3H
+		Id.STAIR_WEST_1H: return TileRole.Id.STAIR_WEST_1H
 		_: return TileRole.Id.NONE
 
 ## Ile części ma mieć poprawny moduł (0 = dowolnie). Do walidacji kształtu.
@@ -68,6 +92,11 @@ static func expected_part_count(module_role: Id) -> int:
 	match module_role:
 		Id.FACADE_2H: return 2
 		Id.FACADE_3H: return 3
+		Id.STAIR_LEFT, Id.STAIR_MID, Id.STAIR_RIGHT: return 2
+		Id.STAIR_NORTH_LEFT, Id.STAIR_NORTH_MID, Id.STAIR_NORTH_RIGHT: return 2
+		Id.STAIR_SINGLE, Id.STAIR_NORTH_SINGLE: return 2
+		Id.STAIR_EAST_1H, Id.STAIR_WEST_1H: return 2
+		Id.STAIR_EAST_3H, Id.STAIR_WEST_3H: return 6
 		_: return 0
 
 static func name_of(module_role: int) -> String:

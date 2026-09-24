@@ -206,9 +206,12 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 					and GridUtils.is_walkable(grid, Vector2i(cx, fy - 3))
 
 
-			var is_horizontal_facade: bool = FacadeSegmentDetector.has_same_y(facade_cols, x - 1, y, 1) \
-				and FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, 1)
-			var is_2h: bool = is_horizontal_facade and edge.solid_depth == 2
+			# Płaskowyż: poziomo = sąsiedzi na DOKŁADNIE tej samej wysokości — stopień o 1 ma
+			# przejść do STEP (moduł IN), a nie do skrótu 2H z końcówką WEST/EAST.
+			var horiz_tol: int = 0 if ctx.plateau_mode else 1
+			var is_horizontal_facade: bool = FacadeSegmentDetector.has_same_y(facade_cols, x - 1, y, horiz_tol) \
+				and FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, horiz_tol)
+			var is_2h: bool = is_horizontal_facade and (edge.solid_depth == 2 or ctx.plateau_mode)
 
 			if is_2h:
 				edge.edge_kind = EdgeKind.Kind.FACADE
@@ -232,7 +235,10 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				and not check_2h_col.call(x - 2, y) \
 				and not check_2h_col.call(x - 3, y)
 
-			if not self_is_2h and ((left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any)):
+			# Tryb płaskowyżu: wszystko jest 2H, łączników 2H<->3H nie ma.
+			if ctx.plateau_mode:
+				pass
+			elif not self_is_2h and ((left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any)):
 				edge.edge_kind = EdgeKind.Kind.CONNECTOR
 				edge.orientation = EdgeKind.Orientation.EAST
 				edge.facade_height = 3
@@ -256,7 +262,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			#
 			# X jest aktualną stopą fasady. Warunek wykorzystuje wyłącznie
 			# podłogę po boku oraz podłogę po przekątnej nad tym bokiem.
-			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)))
+			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or ctx.plateau_mode)
 			var opening_depth: int = 2 if is_2h_col else 3
 
 			var w_open := _has_out_corner_opening(

@@ -11,12 +11,17 @@ next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
 [node name="Floor" type="TileMapLayer" parent="." unique_id=1561698726 groups=["tilemap"]]
 z_index = -2
 y_sort_enabled = true
+position = Vector2(0, 1)
 
 [node name="FloorDecor" type="TileMapLayer" parent="." unique_id=1226661710]
 z_index = -1
 y_sort_enabled = true
 
 [node name="Walls" type="TileMapLayer" parent="." unique_id=916338244]
+y_sort_enabled = true
+
+[node name="Platforms" type="TileMapLayer" parent="."]
+z_index = -1
 y_sort_enabled = true
 
 [node name="Spawns" type="Node2D" parent="." unique_id=779057147]
