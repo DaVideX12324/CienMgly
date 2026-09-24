@@ -1,8 +1,6 @@
 class_name PortalGenerator
 extends RefCounted
 
-const CellType = preload("res://modules/quiz_rpg/scripts/generation/core/cell_type.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
 
 ## Wyrzeźbi dedykowany tunel portalowy z komory ku krawędzi mapy, zakończony niszą wejściową/wyjściową.
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}

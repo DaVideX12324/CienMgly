@@ -1,9 +1,6 @@
 class_name SpawnPlanner
 extends RefCounted
 
-const MapGeneratorBase = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
 
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 

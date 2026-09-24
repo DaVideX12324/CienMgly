@@ -1061,7 +1061,7 @@ func _resolve_attack(correct: bool) -> void:
 		return
 	_active_enemy_index = target_index
 	var target := _enemy_units[_active_enemy_index]
-	var target_label := str(target.get("name", enemy_name_str))
+	var target_name_str := str(target.get("name", enemy_name_str))
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
 	var hit_success: bool = _ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance
 	var audio := get_node_or_null("/root/AudioService")
@@ -1081,11 +1081,11 @@ func _resolve_attack(correct: bool) -> void:
 		_refresh_enemy_cache()
 		_sync_enemy_display_hit(_active_enemy_index)
 		if crit:
-			result_label.text = "%s: krytyk! -%d HP" % [target_label, dmg]
+			result_label.text = "%s: krytyk! -%d HP" % [target_name_str, dmg]
 			result_label.add_theme_color_override("font_color", Color.GOLD)
 			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "KRYT -%d" % dmg, Color.GOLD, 16)
 		else:
-			result_label.text = "%s: trafienie! -%d HP" % [target_label, dmg]
+			result_label.text = "%s: trafienie! -%d HP" % [target_name_str, dmg]
 			result_label.add_theme_color_override("font_color", Color.GREEN)
 			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
 		HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
@@ -1855,8 +1855,7 @@ func _apply_responsive_enemy_layout() -> void:
 	else:
 		needed_separation = maxf(needed_separation, 50.0)
 
-	var dynamic_separation: int = int(needed_separation * width_ratio)
-
+	
 	# Ustaw dynamiczny odstęp i autodopasowanie w kontenerach rzędów wrogów
 	for child in enemy_sprite_node.get_children():
 		if not str(child.name).begins_with("EnemyRow"):

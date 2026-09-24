@@ -1,8 +1,6 @@
 class_name TerrainPaintExecutor
 extends RefCounted
 
-const TerrainPaintPlan = preload("res://modules/quiz_rpg/scripts/generation/core/terrain_paint_plan.gd")
-const TerrainAutotileSolver = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_autotile_solver.gd")
 
 ## Wykonuje zaplanowane batche autotilingu terenu na warstwach.
 ## Używa własnego solvera (TerrainAutotileSolver) zamiast set_cells_terrain_connect,

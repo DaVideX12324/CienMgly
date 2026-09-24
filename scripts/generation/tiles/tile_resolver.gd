@@ -7,18 +7,6 @@ extends RefCounted
 ## Zwraca null, gdy dynamiczny system nie jest aktywny (brak profilu / pola / definicji)
 ## — wtedy placer używa swojego dotychczasowego fallbacku na stałych CaveTileConstants.
 
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const TileRef = preload("res://modules/quiz_rpg/scripts/generation/core/tile_ref.gd")
-const TileRole = preload("res://modules/quiz_rpg/scripts/generation/core/tile_role.gd")
-const MapTileProfile = preload("res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd")
-const NamedTileSetDefinition = preload("res://modules/quiz_rpg/scripts/generation/tiles/named_tileset_definition.gd")
-const TileSetPairRule = preload("res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd")
-const TileRoleEntry = preload("res://modules/quiz_rpg/scripts/generation/core/tile_role_entry.gd")
-const TileVariant = preload("res://modules/quiz_rpg/scripts/generation/core/tile_variant.gd")
-const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
-const VariantSelector = preload("res://modules/quiz_rpg/scripts/generation/tiles/variant_selector.gd")
-const ResolvedTileModulePart = preload("res://modules/quiz_rpg/scripts/generation/tiles/resolved_tile_module_part.gd")
-const MixedPool = preload("res://modules/quiz_rpg/scripts/generation/tiles/mixed_pool.gd")
 
 
 ## MIXED: deterministycznie wybiera JEDEN kompatybilny source z puli dla danego anchor.
@@ -277,10 +265,10 @@ static func _find_variant(variants: Array, variant_id: StringName) -> TileVarian
 static func _transition_parts(
 	rule: TileSetPairRule,
 	storage_role: int,
-	anchor_pos: Vector2i,
-	world_seed: int,
+	_anchor_pos: Vector2i,
+	_world_seed: int,
 	tileset_id: StringName,
-	module_role: int
+	_module_role: int
 ) -> Array:
 	# Przejście jako pojedynczy kafelek (legacy transition_entries). Moduły wielokaflowe
 	# w przejściach: gdy pojawi się potrzeba, transition_entries można rozszerzyć o warianty.
@@ -379,7 +367,7 @@ static func _apply_forbidden_policy(
 ## Znajdź istotne ID sąsiada różne od własnego (pierwsze inne). Pusty -> brak granicy.
 static func _find_relevant_neighbor_id(
 	ctx: GenerationContext,
-	pos: Vector2i,
+	_pos: Vector2i,
 	neighbor_positions: Array[Vector2i],
 	own_id: StringName
 ) -> StringName:

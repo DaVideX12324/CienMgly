@@ -10,19 +10,6 @@ const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/maps/caves.tres"
 # =========================================================================
 # FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)
 # =========================================================================
-const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const InteriorRoomLayoutGenerator = preload("res://modules/quiz_rpg/scripts/generation/topology/interior_room_layout_generator.gd")
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const EdgeAnalyzer = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analyzer.gd")
-const TilePlacementPlanner = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_planner.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
-const TerrainPaintExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_paint_executor.gd")
-const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
 const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---

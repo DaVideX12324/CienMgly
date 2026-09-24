@@ -1,4 +1,4 @@
-﻿class_name TerrainPaintPlan
+class_name TerrainPaintPlan
 extends RefCounted
 
 class TerrainBatch:
@@ -12,12 +12,12 @@ class TerrainBatch:
 
 var batches: Array[TerrainBatch] = []
 
-func add_batch(layer_name: StringName, cells_arr: Array[Vector2i], t_set: int, t_idx: int, ord: int = 0, ignore_empty: bool = true) -> void:
+func add_batch(layer_name: StringName, cells_arr: Array[Vector2i], t_set: int, t_idx: int, order_idx: int = 0, ignore_empty: bool = true) -> void:
 	var b := TerrainBatch.new()
 	b.layer = layer_name
 	b.cells = cells_arr
 	b.terrain_set = t_set
 	b.terrain = t_idx
-	b.order = ord
+	b.order = order_idx
 	b.ignore_empty_terrains = ignore_empty
 	batches.append(b)

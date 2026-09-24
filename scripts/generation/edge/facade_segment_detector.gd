@@ -1,9 +1,6 @@
 class_name FacadeSegmentDetector
 extends RefCounted
 
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const FacadeSegment = preload("res://modules/quiz_rpg/scripts/generation/edge/facade_segment.gd")
 
 ## Wykrywa ścisłe, poziome segmenty (ten sam y, kolejne x: x, x+1, x+2...)
 ## i nadaje komórkom w edges odpowiedni segment_kind (SINGLE, START, MIDDLE, END).
@@ -53,17 +50,17 @@ static func _commit_run(y: int, xs: Array[int], edges: Dictionary, out_segments:
 	var seg_idx := out_segments.size()
 	out_segments.append(seg)
 
-	var len := xs.size()
-	for i in range(len):
+	var seg_len := xs.size()
+	for i in range(seg_len):
 		var p := Vector2i(xs[i], y)
 		if edges.has(p):
 			var ctx: EdgeContext = edges[p]
 			ctx.segment_index = seg_idx
-			if len == 1:
+			if seg_len == 1:
 				ctx.segment_kind = EdgeKind.SegmentKind.SINGLE
 			elif i == 0:
 				ctx.segment_kind = EdgeKind.SegmentKind.START
-			elif i == len - 1:
+			elif i == seg_len - 1:
 				ctx.segment_kind = EdgeKind.SegmentKind.END
 			else:
 				ctx.segment_kind = EdgeKind.SegmentKind.MIDDLE

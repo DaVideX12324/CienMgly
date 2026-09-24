@@ -1,8 +1,6 @@
 class_name TilePlacementExecutor
 extends RefCounted
 
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 
 ## Wykonuje zaplanowane kafelkowanie set_cell / erase_cell na zadanej warstwie. Każda pozycja
 ## występuje w planie raz, więc kolejność wstawiania nie zmienia wyniku (bez sortowania).

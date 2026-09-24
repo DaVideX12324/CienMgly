@@ -1,14 +1,6 @@
 ﻿class_name SlopePlacer
 extends RefCounted
 
-const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/tiling/cave_tile_constants.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
 
 static func _queue(
 	plan: TilePlacementPlan,

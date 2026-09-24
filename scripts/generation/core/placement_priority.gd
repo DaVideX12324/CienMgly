@@ -1,7 +1,6 @@
 ﻿class_name PlacementPriority
 extends RefCounted
 
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 
 const LEGACY_FACADE_WINS := {
 	&"SOLID_FILL": 10, &"RIM_BOWL": 15, &"FLOOR_BASE": 20, &"FLOOR_DECOR": 30,

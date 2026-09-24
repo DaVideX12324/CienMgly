@@ -8,11 +8,8 @@ const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generatio
 const OverworldForestGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/dungeon_generator.gd")
 const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
-const GeneratorBehaviourConfig = preload("res://modules/quiz_rpg/scripts/generation/tiles/generator_behaviour_config.gd")
 const TileSetFieldScript = preload("res://modules/quiz_rpg/scripts/generation/core/tileset_field.gd")
 const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
-const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
-const TerrainPaintExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_paint_executor.gd")
 const LoadingOverlayScript = preload("res://modules/quiz_rpg/scripts/ui/generation_loading_overlay.gd")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.

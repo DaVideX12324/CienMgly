@@ -1,21 +1,9 @@
 class_name RimPlacer
 extends RefCounted
 
-const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/tiling/cave_tile_constants.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
-const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
-const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 ## Ścieżka modułowa dla rima rock (1 kafel, kategoria RIM_BASE, tie_breaker=0).
-static func _try_rim(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
+static func _try_rim(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary) -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id)
 	if parts.is_empty():
 		return false
@@ -28,7 +16,7 @@ static func _try_rim(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vecto
 		p.alternative_tile = rp.tile.alternative_tile
 		p.category = &"RIM_BASE"
 		PlacementPriority.assign(p, table)
-		plan.queue(p)
+		placement_plan.queue(p)
 	return true
 
 
@@ -42,14 +30,14 @@ static func _get_variant_noise(ctx: GenerationContext) -> FastNoiseLite:
 	return n
 
 
-static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
+static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
 	p.pos = pos
 	p.layer = &"Walls"
 	p.atlas_coords = atlas_coords
 	p.category = category
 	PlacementPriority.assign(p, table)
-	plan.queue(p)
+	placement_plan.queue(p)
 
 
 ## Planuje górny szczyt ściany (TOP_RIM), misy i dekoracje tips w porządku kanonicznym (y, x).
@@ -57,10 +45,9 @@ static func plan(
 	ctx: GenerationContext,
 	edges: Dictionary,
 	state: LegacyPlacementState,
-	plan: TilePlacementPlan
+	placement_plan: TilePlacementPlan
 ) -> void:
 	var scan := ctx.scan_bounds()
-	var grid := ctx.grid
 	var table := ctx.priority_table
 	var v_noise := _get_variant_noise(ctx)
 
@@ -92,8 +79,8 @@ static func plan(
 					_:
 						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 
-				if not _try_rim(ctx, plan, pos, role, variant_id, table):
-					_queue(plan, pos, rim_t, &"RIM_BASE", table)
+				if not _try_rim(ctx, placement_plan, pos, role, variant_id, table):
+					_queue(placement_plan, pos, rim_t, &"RIM_BASE", table)
 				state.mark(pos, &"RIM")
 
 			else:
@@ -115,8 +102,8 @@ static func plan(
 						t_base = CaveTileConstants.ROOT_TOP_BASE[1] if is_b else CaveTileConstants.ROOT_TOP_BASE[0]
 						t_tips = CaveTileConstants.ROOT_TOP_TIPS[1] if is_b else CaveTileConstants.ROOT_TOP_TIPS[0]
 
-				_queue(plan, pos, t_base, &"RIM_BASE", table)
+				_queue(placement_plan, pos, t_base, &"RIM_BASE", table)
 				state.mark(pos, &"RIM")
 				if can_place_top:
-					_queue(plan, p_top, t_tips, &"RIM_TIP", table)
+					_queue(placement_plan, p_top, t_tips, &"RIM_TIP", table)
 					state.mark(p_top, &"RIM")

@@ -1,23 +1,13 @@
 class_name SolidFillPlacer
 extends RefCounted
 
-const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/tiling/cave_tile_constants.gd")
-const LegacyTileHash = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_tile_hash.gd")
-const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
-const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
 ## Planuje wypełnienie pustki poza mapą oraz litej skały wewnątrz mapy.
 static func plan(
 	ctx: GenerationContext,
-	edges: Dictionary,
+	_edges: Dictionary,
 	state: LegacyPlacementState,
-	plan: TilePlacementPlan
+	placement_plan: TilePlacementPlan
 ) -> void:
 	var width := ctx.width
 	var height := ctx.height
@@ -37,7 +27,7 @@ static func plan(
 				p.atlas_coords = CaveTileConstants.WALL_INSIDE
 				p.category = &"SOLID_FILL"
 				PlacementPriority.assign(p, table)
-				plan.queue(p)
+				placement_plan.queue(p)
 
 	# Krok B: Właściwe komórki litej skały w granicach mapy
 	# Wynik resolvera zależy tu tylko od (zestaw kratki, roll) — cache zamiast wywołania na kratkę.
@@ -82,5 +72,5 @@ static func plan(
 				p.atlas_coords = rp.tile.atlas_coords
 				p.alternative_tile = rp.tile.alternative_tile
 			PlacementPriority.assign(p, table)
-			plan.queue(p)
+			placement_plan.queue(p)
 			state.mark(pos, &"ROCK")

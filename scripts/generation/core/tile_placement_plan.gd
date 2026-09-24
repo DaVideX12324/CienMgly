@@ -1,7 +1,6 @@
 ﻿class_name TilePlacementPlan
 extends RefCounted
 
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 
 ## layer -> Dictionary[Vector2i -> TilePlacement]
 var by_layer: Dictionary = {}

@@ -5,7 +5,6 @@ extends RefCounted
 ## EdgeAnalyzera). Placer/adapter zamienia geometrię (np. FACADE_TOP_2H w kotwicy)
 ## na jedno żądanie modułu (FACADE_2H) w znanej pozycji.
 
-const TileRole = preload("res://modules/quiz_rpg/scripts/generation/core/tile_role.gd")
 
 enum Id {
 	NONE = 0,

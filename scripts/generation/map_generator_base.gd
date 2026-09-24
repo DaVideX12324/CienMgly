@@ -118,7 +118,7 @@ static func carve_corridor(grid: Dictionary, from: Vector2i, to: Vector2i, width
 
 
 static func _carve_brush(grid: Dictionary, center: Vector2i, width: int, type: int) -> void:
-	var half := width / 2
+	var half := floori(width / 2.0)
 	for dy in range(-half, half + 1):
 		for dx in range(-half, half + 1):
 			grid[center + Vector2i(dx, dy)] = type
@@ -199,8 +199,8 @@ static func create_default_tileset(texture_path: String, collision_coords: Array
 	source.texture = tex
 	source.texture_region_size = Vector2i(16, 16)
 	
-	var cols := int(tex.get_width() / 16)
-	var rows := int(tex.get_height() / 16)
+	var cols := int(tex.get_width() / 16.0)
+	var rows := int(tex.get_height() / 16.0)
 	
 	var col_set: Dictionary = {}
 	for c in collision_coords:

@@ -125,9 +125,9 @@ func _position_seed(enemy: Variant) -> int:
 	return 0
 
 
-func _deterministic_point(viewport_size: Vector2, seed: int) -> Vector2:
-	var x := fposmod(float(seed * 73), maxf(viewport_size.x, 1.0))
-	var y := fposmod(float(seed * 41), maxf(viewport_size.y, 1.0))
+func _deterministic_point(viewport_size: Vector2, seed_val: int) -> Vector2:
+	var x := fposmod(float(seed_val * 73), maxf(viewport_size.x, 1.0))
+	var y := fposmod(float(seed_val * 41), maxf(viewport_size.y, 1.0))
 	return Vector2(x, y)
 
 

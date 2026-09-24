@@ -5,7 +5,6 @@ extends RefCounted
 ## kotwicy + seed + identyfikatorów (NIE z współdzielonego ctx.tile_rng). Dzięki temu
 ## wynik jest niezależny od kolejności iteracji komórek i stabilny dla danego seeda.
 
-const TileVariant = preload("res://modules/quiz_rpg/scripts/generation/core/tile_variant.gd")
 
 ## Wybiera aktywny wariant ważony wagą, lub null gdy brak aktywnych.
 static func choose_variant_for_anchor(

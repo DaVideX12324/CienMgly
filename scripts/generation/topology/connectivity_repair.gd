@@ -1,9 +1,6 @@
 class_name ConnectivityRepair
 extends RefCounted
 
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const OrganicCorridorCarver = preload("res://modules/quiz_rpg/scripts/generation/topology/organic_corridor_carver.gd")
 
 static func repair(ctx: GenerationContext, corridor_width: int) -> void:
 	var rooms := ctx.rooms
