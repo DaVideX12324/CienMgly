@@ -1,13 +1,6 @@
 class_name EdgeAnalyzer
 extends RefCounted
 
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const FacadeSegmentDetector = preload("res://modules/quiz_rpg/scripts/generation/edge/facade_segment_detector.gd")
-const FacadeHeightResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/facade_height_resolver.gd")
-const EdgeAnalysisResult = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analysis_result.gd")
 
 
 ## Mierzy głębokość litej ściany w danym kierunku od komórki podłogi (§9.5).

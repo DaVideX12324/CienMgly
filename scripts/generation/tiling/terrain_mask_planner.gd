@@ -1,9 +1,6 @@
 class_name TerrainMaskPlanner
 extends RefCounted
 
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const TerrainPaintPlan = preload("res://modules/quiz_rpg/scripts/generation/core/terrain_paint_plan.gd")
-const FloorPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/floor_placer.gd")
 
 ## Wygładza maskę terenu, dopełniając klastry i eliminując ząbkowane styki diagonalne.
 static func clean_terrain_mask(candidates: Dictionary) -> Array[Vector2i]:

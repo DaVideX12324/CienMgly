@@ -389,7 +389,7 @@ func _build_height_mask_image(res) -> Image:
 		for px in range(w):
 			var v: float
 			if block > 1:
-				v = PlateauPassScript.sample_height(noise, Vector2i(px / s, py / s), block)
+				v = PlateauPassScript.sample_height(noise, Vector2i(int(float(px) / s), int(float(py) / s)), block)
 			else:
 				v = noise.get_noise_2d((px + 0.5) / s, fy)
 			band[py * w + px] = _field_band(pl, v)

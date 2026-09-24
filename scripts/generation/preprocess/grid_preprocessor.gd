@@ -1,10 +1,6 @@
 ﻿class_name GridPreprocessor
 extends RefCounted
 
-const CellType = preload("res://modules/quiz_rpg/scripts/generation/core/cell_type.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const GridPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd")
 
 ## Uruchamia passy w PODANEJ kolejności. Zapisuje statystyki do ctx.preprocess_stats.
 static func run(ctx: GenerationContext, passes: Array[GridPass]) -> void:

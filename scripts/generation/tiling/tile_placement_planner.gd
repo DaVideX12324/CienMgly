@@ -1,22 +1,7 @@
 class_name TilePlacementPlanner
 extends RefCounted
 
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const EdgeAnalysisResult = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_analysis_result.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TerrainPaintPlan = preload("res://modules/quiz_rpg/scripts/generation/core/terrain_paint_plan.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
 
-const SolidFillPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/solid_fill_placer.gd")
-const FloorPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/floor_placer.gd")
-const TerrainMaskPlanner = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_mask_planner.gd")
-const FacadePhasePlanner = preload("res://modules/quiz_rpg/scripts/generation/tiling/facade_phase_planner.gd")
-const SideWallPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/side_wall_placer.gd")
-const RimPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/rim_placer.gd")
-const CornerPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/corner_placer.gd")
-const PortalClearPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/portal_clear_placer.gd")
-const PlateauPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/plateau_placer.gd")
 const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 ## Główny orkiestrator planowania kafelkowania (Etap 5).

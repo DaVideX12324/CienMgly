@@ -1,27 +1,15 @@
 class_name SideWallPlacer
 extends RefCounted
 
-const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/tiling/cave_tile_constants.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
-const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
-const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
-static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
+static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
 	p.pos = pos
 	p.layer = &"Walls"
 	p.atlas_coords = atlas_coords
 	p.category = category
 	PlacementPriority.assign(p, table)
-	plan.queue(p)
+	placement_plan.queue(p)
 
 
 ## A′: wariant to tylko A/B (var_idx). Motyw roots wybiera RODZINĘ (force_id niżej).
@@ -30,7 +18,7 @@ static func _variant_id(var_idx: int) -> StringName:
 
 
 ## Ścieżka modułowa dla ściany bocznej (1 kafel, wymuszony wariant + rodzina). true jeśli położono.
-static func _try_side(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+static func _try_side(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
@@ -43,7 +31,7 @@ static func _try_side(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vect
 		p.alternative_tile = rp.tile.alternative_tile
 		p.category = &"SIDE_WALL"
 		PlacementPriority.assign(p, table)
-		plan.queue(p)
+		placement_plan.queue(p)
 	return true
 
 
@@ -52,7 +40,7 @@ static func plan(
 	ctx: GenerationContext,
 	edges: Dictionary,
 	state: LegacyPlacementState,
-	plan: TilePlacementPlan
+	placement_plan: TilePlacementPlan
 ) -> void:
 	var scan := ctx.scan_bounds()
 	var table := ctx.priority_table
@@ -75,17 +63,17 @@ static func plan(
 			if edge.orientation == EdgeKind.Orientation.EAST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
 				var var_idx: int = 1 if is_under_inner_corner else _side_variant(ctx, pos)
-				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
+				if not _try_side(ctx, placement_plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_WEST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_WEST[var_idx]
-					_queue(plan, pos, side_t, &"SIDE_WALL", table)
+					_queue(placement_plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
 
 			elif edge.orientation == EdgeKind.Orientation.WEST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(-1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
 				var var_idx: int = 1 if is_under_inner_corner else _side_variant(ctx, pos)
-				if not _try_side(ctx, plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
+				if not _try_side(ctx, placement_plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_EAST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_EAST[var_idx]
-					_queue(plan, pos, side_t, &"SIDE_WALL", table)
+					_queue(placement_plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
 
 

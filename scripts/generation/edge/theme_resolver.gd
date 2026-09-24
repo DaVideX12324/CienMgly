@@ -1,7 +1,6 @@
 class_name ThemeResolver
 extends RefCounted
 
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
 
 enum RefPoint {
 	SELF,

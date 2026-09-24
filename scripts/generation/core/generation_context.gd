@@ -1,7 +1,6 @@
 class_name GenerationContext
 extends RefCounted
 
-const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
 
 # --- Wejście (niezmienne po konstrukcji) ---
 var profile: RefCounted = null

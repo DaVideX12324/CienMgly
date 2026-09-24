@@ -7,10 +7,6 @@ extends RefCounted
 ## JSON NIE trzyma współrzędnych atlasu — te są w custom .tres (NamedTileSetDefinition).
 ## JSON wskazuje profil (.tres), aktywne zestawy, reguły zachowania i parametry generatora.
 
-const MapTileProfile = preload("res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd")
-const TileRole = preload("res://modules/quiz_rpg/scripts/generation/core/tile_role.gd")
-const TileSetPairRule = preload("res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd")
-const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
 
 # Rozpoznawane klucze bloku "generation" (parametry topologii). seed/width/height
 # = 0 oznacza "auto" (bierz z UI/@export albo wbudowany default).
@@ -135,14 +131,14 @@ static func load_from_json_path(json_path: String) -> GeneratorBehaviourConfig:
 
 
 ## Walidacja MapTileProfile (§Walidacja README). Zwraca listę błędów krytycznych.
-static func validate_profile(profile: MapTileProfile) -> Array[String]:
+static func validate_profile(target_profile: MapTileProfile) -> Array[String]:
 	var out: Array[String] = []
-	if profile == null:
+	if target_profile == null:
 		out.append("Profil jest null.")
 		return out
 
 	var seen_ids := {}
-	for definition in profile.tilesets:
+	for definition in target_profile.tilesets:
 		if definition == null:
 			out.append("Profil zawiera pusty wpis tileset.")
 			continue
@@ -165,21 +161,21 @@ static func validate_profile(profile: MapTileProfile) -> Array[String]:
 			seen_roles[entry.role] = true
 			out.append_array(_validate_entry(definition.id, entry))
 
-	if String(profile.default_tileset_id).is_empty():
+	if String(target_profile.default_tileset_id).is_empty():
 		out.append("Profil nie ma default_tileset_id.")
-	elif profile.get_tileset(profile.default_tileset_id) == null:
-		out.append("default_tileset_id '%s' nie istnieje w profilu." % profile.default_tileset_id)
+	elif target_profile.get_tileset(target_profile.default_tileset_id) == null:
+		out.append("default_tileset_id '%s' nie istnieje w profilu." % target_profile.default_tileset_id)
 
-	for rule in profile.pair_rules:
+	for rule in target_profile.pair_rules:
 		if rule == null:
 			continue
-		if profile.get_tileset(rule.first_tileset_id) == null:
+		if target_profile.get_tileset(rule.first_tileset_id) == null:
 			out.append("Reguła pary wskazuje nieistniejące id '%s'." % rule.first_tileset_id)
-		if profile.get_tileset(rule.second_tileset_id) == null:
+		if target_profile.get_tileset(rule.second_tileset_id) == null:
 			out.append("Reguła pary wskazuje nieistniejące id '%s'." % rule.second_tileset_id)
 
 	# Pule MIXED: id, źródła istnieją, źródła wzajemnie ALLOWED (nie FORBIDDEN).
-	for pool in profile.mixed_pools:
+	for pool in target_profile.mixed_pools:
 		if pool == null:
 			continue
 		if String(pool.id).is_empty():
@@ -187,11 +183,11 @@ static func validate_profile(profile: MapTileProfile) -> Array[String]:
 		if pool.sources.is_empty():
 			out.append("MixedPool '%s' nie ma źródeł." % pool.id)
 		for sid in pool.sources:
-			if profile.get_tileset(sid) == null:
+			if target_profile.get_tileset(sid) == null:
 				out.append("MixedPool '%s' -> nieistniejące źródło '%s'." % [pool.id, sid])
 		for i in range(pool.sources.size()):
 			for j in range(i + 1, pool.sources.size()):
-				var r: TileSetPairRule = profile.get_pair_rule(pool.sources[i], pool.sources[j])
+				var r: TileSetPairRule = target_profile.get_pair_rule(pool.sources[i], pool.sources[j])
 				if r == null or r.mode == TileSetPairRule.Mode.FORBIDDEN:
 					out.append("MixedPool '%s' -> '%s' i '%s' nie są ALLOWED (nie mogą się mieszać)." % [pool.id, pool.sources[i], pool.sources[j]])
 

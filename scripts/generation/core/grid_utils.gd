@@ -1,7 +1,6 @@
 ﻿class_name GridUtils
 extends RefCounted
 
-const CellType = preload("res://modules/quiz_rpg/scripts/generation/core/cell_type.gd")
 
 ## Zwraca true jeśli komórka jest przechodnia (podłoga, drzwi, wejście lub wyjście).
 ## Zgodnie z doktryną §6.8, stan siatki logicznej jest binarny.

@@ -1,7 +1,6 @@
 class_name OrganicCaveRoomCarver
 extends "res://modules/quiz_rpg/scripts/generation/topology/room_carver.gd"
 
-const MapGeneratorBase = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
 
 func carve(ctx: GenerationContext, rect: Rect2i) -> void:
 	var grid := ctx.grid

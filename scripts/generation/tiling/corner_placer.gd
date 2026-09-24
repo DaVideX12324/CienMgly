@@ -1,31 +1,19 @@
 class_name CornerPlacer
 extends RefCounted
 
-const CaveTileConstants = preload("res://modules/quiz_rpg/scripts/generation/tiling/cave_tile_constants.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
-const EdgeContext = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_context.gd")
-const LegacyPlacementState = preload("res://modules/quiz_rpg/scripts/generation/tiling/legacy_placement_state.gd")
-const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
-const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
 
-static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
+static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
 	p.pos = pos
 	p.layer = &"Walls"
 	p.atlas_coords = atlas_coords
 	p.category = category
 	PlacementPriority.assign(p, table)
-	plan.queue(p)
+	placement_plan.queue(p)
 
 
 ## Ścieżka modułowa (1 kafel, kategoria CORNER, tie_breaker=0 jak legacy). true jeśli położono.
-static func _try_corner(ctx: GenerationContext, plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+static func _try_corner(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
@@ -38,7 +26,7 @@ static func _try_corner(ctx: GenerationContext, plan: TilePlacementPlan, pos: Ve
 		p.alternative_tile = rp.tile.alternative_tile
 		p.category = &"CORNER"
 		PlacementPriority.assign(p, table)
-		plan.queue(p)
+		placement_plan.queue(p)
 	return true
 
 
@@ -47,7 +35,7 @@ static func plan(
 	ctx: GenerationContext,
 	edges: Dictionary,
 	state: LegacyPlacementState,
-	plan: TilePlacementPlan
+	placement_plan: TilePlacementPlan
 ) -> void:
 	var scan := ctx.scan_bounds()
 	var table := ctx.priority_table
@@ -62,7 +50,7 @@ static func plan(
 			if not state.is_empty_or_rock(pos):
 				continue
 
-			var wall_cells: Dictionary = plan.by_layer.get(&"Walls", {})
+			var wall_cells: Dictionary = placement_plan.by_layer.get(&"Walls", {})
 			var placement_under: TilePlacement = wall_cells.get(pos + Vector2i(0, 1))
 			var tile_under: Vector2i = placement_under.atlas_coords if placement_under != null else Vector2i(-1, -1)
 
@@ -94,6 +82,6 @@ static func plan(
 						tile = CaveTileConstants.CRNR_SE_IN
 
 			if tile != Vector2i(-1, -1):
-				if not _try_corner(ctx, plan, pos, module_role, variant_id, table, force_id):
-					_queue(plan, pos, tile, &"CORNER", table)
+				if not _try_corner(ctx, placement_plan, pos, module_role, variant_id, table, force_id):
+					_queue(placement_plan, pos, tile, &"CORNER", table)
 				state.mark(pos, &"CORNER")

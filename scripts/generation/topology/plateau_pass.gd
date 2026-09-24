@@ -1,12 +1,6 @@
 class_name PlateauPass
 extends RefCounted
 
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
-const CellType = preload("res://modules/quiz_rpg/scripts/generation/core/cell_type.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const SeededNoise = preload("res://modules/quiz_rpg/scripts/generation/core/seeded_noise.gd")
-const PlateauLayout = preload("res://modules/quiz_rpg/scripts/generation/core/plateau_layout.gd")
 
 ## Topologia wysokości terenu: płaskowyże (1, 2…) i zagłębienia (-1…) z jednego pola szumu, maska z szumu na podłodze całej mapy, czyszczona
 ## morfologicznie (ściany liczą się jako lite — płaskowyż dosuwa się do ścian i zostają półki
@@ -465,7 +459,7 @@ static func _connect_piece(ctx: GenerationContext, comps: Array, i: int, near: D
 
 ## Dół bez dojścia (brak miejsca na schody) -> zasypany: jego kratki dołączają do kawałka ziemi
 ## poziomu wyżej, który go otacza. True, gdy coś zasypano.
-static func _fill_pits(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, sunk: Dictionary) -> bool:
+static func _fill_pits(_ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, sunk: Dictionary) -> bool:
 	var comp_level: Array[int] = env.comp_level
 	var filled := false
 	for region in _components(sunk, DIRS8):
@@ -994,7 +988,7 @@ static func _is_west_face(ctx: GenerationContext, comp: Dictionary, c: Vector2i,
 ## Zwraca Vector3i(edge_x, top_y, height), gdzie height to 1 lub 3.
 static func _pick_stairs_side(ctx: GenerationContext, comp: Dictionary, rng: RandomNumberGenerator, is_east: bool, flags: GenerationFlags, allow_1h: bool = false, cap: int = -1, near: Dictionary = {}) -> Array[Vector3i]:
 	var out: Array[Vector3i] = []
-	var limit: int = maxi(flags.platform_max_stairs / 2, 1) if cap < 0 else cap
+	var limit: int = maxi(floori(flags.platform_max_stairs / 2.0), 1) if cap < 0 else cap
 	if limit <= 0:
 		return out
 	for require_two_deep in [true, false]:
@@ -1266,7 +1260,7 @@ static func _seal_holes(ctx: GenerationContext, comps: Array, alive: Array[bool]
 ## - z niższym terenem po obu przeciwnych stronach -> odpada z kawałka poziomu h (obniżona o 1).
 ## Nie przy samych schodach (flanki, margines 1) ani w strefie ochronnej (portale, pierścień wyższego
 ## poziomu). True, gdy coś zmieniono.
-static func _fill_slots(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, lists: Array, protect_flanks: bool = false) -> bool:
+static func _fill_slots(ctx: GenerationContext, comps: Array, alive: Array[bool], layout: PlateauLayout, env: Dictionary, _lists: Array, protect_flanks: bool = false) -> bool:
 	var comp_level: Array[int] = env.comp_level
 	var guard: Dictionary = env.guard_base
 	var changed := false

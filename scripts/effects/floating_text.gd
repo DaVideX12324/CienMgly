@@ -37,7 +37,7 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var alpha = 1.0 - (_elapsed / _lifetime)
-	var scale = 1.0 + _elapsed * 0.3
+	var current_scale := 1.0 + _elapsed * 0.3
 	var draw_color = Color(color, alpha)
 
 	draw_string(
@@ -46,6 +46,6 @@ func _draw() -> void:
 		text,
 		HORIZONTAL_ALIGNMENT_CENTER,
 		-1,
-		int(font_size * scale),
+		int(font_size * current_scale),
 		draw_color
 	)

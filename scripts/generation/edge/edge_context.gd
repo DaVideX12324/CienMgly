@@ -1,7 +1,6 @@
 class_name EdgeContext
 extends RefCounted
 
-const EdgeKind = preload("res://modules/quiz_rpg/scripts/generation/edge/edge_kind.gd")
 
 var pos: Vector2i = Vector2i.ZERO
 

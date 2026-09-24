@@ -1,13 +1,6 @@
 class_name PlateauPlacer
 extends RefCounted
 
-const GenerationContext = preload("res://modules/quiz_rpg/scripts/generation/core/generation_context.gd")
-const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
-const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
-const PlacementPriority = preload("res://modules/quiz_rpg/scripts/generation/core/placement_priority.gd")
-const TileResolver = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_resolver.gd")
-const TileModuleRole = preload("res://modules/quiz_rpg/scripts/generation/tiles/tile_module_role.gd")
-const PlateauRenderer = preload("res://modules/quiz_rpg/scripts/generation/tiling/plateau_renderer.gd")
 
 ## Kafle płaskowyżów na warstwie Platforms: kształt z PlateauRenderera (pipeline ścian w trybie
 ## płaskowyżu), potem schody [LEFT][MID…][RIGHT] w miejscu lica (kategoria STAIR > FACADE).
@@ -17,7 +10,7 @@ const LAYER := &"Platforms"
 const LEVEL_TIE_STEP := 1000000  # wyższy poziom wygrywa remis w tej samej kratce
 
 
-static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
+static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> void:
 	if ctx.plateau == null or ctx.plateau.is_empty() or ctx.map_tile_profile == null:
 		return
 	var table: Dictionary = ctx.priority_table
@@ -41,7 +34,7 @@ static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
 					focus[c] = true
 			if focus.is_empty():
 				continue
-		var res: Dictionary = PlateauRenderer.render(ctx, m, plan.by_layer.get(&"Walls", {}), focus)
+		var res: Dictionary = PlateauRenderer.render(ctx, m, placement_plan.by_layer.get(&"Walls", {}), focus)
 		if int(res.missing) > 0:
 			push_warning("PlateauPlacer: %d kafli bez roli w '%s' (pominięte)" % [res.missing, PlateauRenderer.TILESET_ID])
 		for pos in res.tiles:
@@ -56,11 +49,11 @@ static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
 			p.origin = src.origin
 			p.tie_breaker = src.tie_breaker + (k - pl.min_level) * LEVEL_TIE_STEP
 			PlacementPriority.assign(p, table)
-			plan.queue(p)
+			placement_plan.queue(p)
 
 	for st in ctx.plateau.stairs:
 		if st.y == 1:
-			_put_stair(ctx, plan, Vector2i(st.x, st.z + 1), TileModuleRole.Id.STAIR_SINGLE, table)
+			_put_stair(ctx, placement_plan, Vector2i(st.x, st.z + 1), TileModuleRole.Id.STAIR_SINGLE, table)
 		else:
 			for x in range(st.x, st.x + st.y):
 				var role: int = TileModuleRole.Id.STAIR_MID
@@ -68,11 +61,11 @@ static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
 					role = TileModuleRole.Id.STAIR_LEFT
 				elif x == st.x + st.y - 1:
 					role = TileModuleRole.Id.STAIR_RIGHT
-				_put_stair(ctx, plan, Vector2i(x, st.z + 1), role, table)
+				_put_stair(ctx, placement_plan, Vector2i(x, st.z + 1), role, table)
 
 	for st in ctx.plateau.stairs_north:
 		if st.y == 1:
-			_put_stair(ctx, plan, Vector2i(st.x, st.z), TileModuleRole.Id.STAIR_NORTH_SINGLE, table)
+			_put_stair(ctx, placement_plan, Vector2i(st.x, st.z), TileModuleRole.Id.STAIR_NORTH_SINGLE, table)
 		else:
 			for x in range(st.x, st.x + st.y):
 				var role: int = TileModuleRole.Id.STAIR_NORTH_MID
@@ -80,20 +73,20 @@ static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
 					role = TileModuleRole.Id.STAIR_NORTH_LEFT
 				elif x == st.x + st.y - 1:
 					role = TileModuleRole.Id.STAIR_NORTH_RIGHT
-				_put_stair(ctx, plan, Vector2i(x, st.z), role, table)
+				_put_stair(ctx, placement_plan, Vector2i(x, st.z), role, table)
 
 	for st in ctx.plateau.stairs_east:
 		var role: int = TileModuleRole.Id.STAIR_EAST_1H if st.z == 1 else TileModuleRole.Id.STAIR_EAST_3H
-		_put_stair(ctx, plan, Vector2i(st.x, st.y), role, table, st.z)
+		_put_stair(ctx, placement_plan, Vector2i(st.x, st.y), role, table, st.z)
 
 	for st in ctx.plateau.stairs_west:
 		var role: int = TileModuleRole.Id.STAIR_WEST_1H if st.z == 1 else TileModuleRole.Id.STAIR_WEST_3H
-		_put_stair(ctx, plan, Vector2i(st.x, st.y), role, table, st.z)
+		_put_stair(ctx, placement_plan, Vector2i(st.x, st.y), role, table, st.z)
 
 
 ## height > 3 (schody boczne 3H): moduł rozciągnięty — wiersz górny, środkowy powtórzony
 ## height-2 razy, dolny (tak jak szerokie schody S/N dokładają modułów MID).
-static func _put_stair(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, table: Dictionary, height: int = 0) -> void:
+static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan, anchor: Vector2i, role: int, table: Dictionary, height: int = 0) -> void:
 	var parts := TileResolver.resolve_strict(ctx, PlateauRenderer.TILESET_ID, anchor, role)
 	if parts.is_empty():
 		push_warning("PlateauPlacer: brak %s w '%s'" % [TileModuleRole.name_of(role), PlateauRenderer.TILESET_ID])
@@ -119,4 +112,4 @@ static func _put_stair(ctx: GenerationContext, plan: TilePlacementPlan, anchor: 
 		p.origin = anchor
 		p.tie_breaker = 10
 		PlacementPriority.assign(p, table)
-		plan.queue(p)
+		placement_plan.queue(p)

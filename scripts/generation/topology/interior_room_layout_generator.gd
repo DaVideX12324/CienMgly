@@ -1,24 +1,6 @@
 class_name InteriorRoomLayoutGenerator
 extends "res://modules/quiz_rpg/scripts/generation/topology/topology_generator.gd"
 
-const MapGeneratorBase = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
-const CellType = preload("res://modules/quiz_rpg/scripts/generation/core/cell_type.gd")
-const GridUtils = preload("res://modules/quiz_rpg/scripts/generation/core/grid_utils.gd")
-const GenerationFlags = preload("res://modules/quiz_rpg/scripts/generation/core/generation_flags.gd")
-const OrganicCaveRoomCarver = preload("res://modules/quiz_rpg/scripts/generation/topology/organic_cave_room_carver.gd")
-const OrganicCorridorCarver = preload("res://modules/quiz_rpg/scripts/generation/topology/organic_corridor_carver.gd")
-const ConnectivityRepair = preload("res://modules/quiz_rpg/scripts/generation/topology/connectivity_repair.gd")
-const PortalGenerator = preload("res://modules/quiz_rpg/scripts/generation/topology/portal_generator.gd")
-const GridPreprocessor = preload("res://modules/quiz_rpg/scripts/generation/preprocess/grid_preprocessor.gd")
-const JunctionSmoothingPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/junction_smoothing_pass.gd")
-const Remove1hWallsPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/remove_1h_walls_pass.gd")
-const WallThicknessPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/wall_thickness_pass.gd")
-const ShortBulgeFlattenPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/short_bulge_flatten_pass.gd")
-const SpikeCleanupPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/spike_cleanup_pass.gd")
-const ThinBridgeCleanupPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/thin_bridge_cleanup_pass.gd")
-const StaircaseNormalizerPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/staircase_normalizer_pass.gd")
-const SpawnPlanner = preload("res://modules/quiz_rpg/scripts/generation/spawn/spawn_planner.gd")
-const PlateauPass = preload("res://modules/quiz_rpg/scripts/generation/topology/plateau_pass.gd")
 const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
@@ -114,7 +96,7 @@ static func generate_layout(
 				unconnected_indices.remove_at(best_unconn_idx)
 
 		# Dodatkowe korytarze pętlowe
-		var extra_loops := mini(3, rooms.size() / 3)
+		var extra_loops := mini(3, floori(rooms.size() / 3.0))
 		var loop_attempts := 0
 		var loops_added := 0
 		while loops_added < extra_loops and loop_attempts < 25:

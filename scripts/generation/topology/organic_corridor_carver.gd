@@ -69,7 +69,7 @@ func carve(ctx: GenerationContext, from: Vector2i, to: Vector2i, width: int) -> 
 			var final_radius := int((dynamic_width + funnel_factor) / 2.0) + 1
 			GridUtils.carve_circle(grid, Vector2i(int(cur_pos.x), int(cur_pos.y)), final_radius, map_w, map_h, CellType.FLOOR)
 	else:
-		var mid := (from + to) / 2
+		var mid := Vector2i(floori((from.x + to.x) / 2.0), floori((from.y + to.y) / 2.0))
 		var dir := Vector2(to - from).normalized()
 		var normal := Vector2(-dir.y, dir.x)
 		var jitter := normal * rng.randf_range(-3.0, 3.0)
@@ -86,4 +86,4 @@ func carve(ctx: GenerationContext, from: Vector2i, to: Vector2i, width: int) -> 
 			for s in range(steps + 1):
 				var t := float(s) / maxf(float(steps), 1.0)
 				var cur := p0.lerp(p1, t)
-				GridUtils.carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), width / 2 + 1, map_w, map_h, CellType.FLOOR)
+				GridUtils.carve_circle(grid, Vector2i(int(cur.x), int(cur.y)), floori(width / 2.0) + 1, map_w, map_h, CellType.FLOOR)
