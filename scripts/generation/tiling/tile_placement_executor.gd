@@ -4,27 +4,23 @@ extends RefCounted
 const TilePlacementPlan = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement_plan.gd")
 const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/tile_placement.gd")
 
-## Wykonuje zaplanowane kafelkowanie set_cell / erase_cell na zadanej warstwie w porządku kanonicznym (y, x).
+## Wykonuje zaplanowane kafelkowanie set_cell / erase_cell na zadanej warstwie. Każda pozycja
+## występuje w planie raz, więc kolejność wstawiania nie zmienia wyniku (bez sortowania).
 static func execute(layer: TileMapLayer, plan: TilePlacementPlan, layer_name: StringName) -> int:
 	if layer == null:
 		return 0
-
 	var cells: Dictionary = plan.by_layer.get(layer_name, {})
-	if cells.is_empty():
-		return 0
-
 	var positions: Array = cells.keys()
-	positions.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-		return a.y < b.y or (a.y == b.y and a.x < b.x)
-	)
+	place_range(layer, cells, positions, 0, positions.size())
+	return positions.size()
 
-	var count := 0
-	for pos in positions:
+
+## Wstawia positions[from..to) z cells (pos -> TilePlacement) — do wykonania porcjami między klatkami.
+static func place_range(layer: TileMapLayer, cells: Dictionary, positions: Array, from: int, to: int) -> void:
+	for i in range(from, mini(to, positions.size())):
+		var pos: Vector2i = positions[i]
 		var p: TilePlacement = cells[pos]
 		if p.is_erase():
 			layer.erase_cell(pos)
 		else:
 			layer.set_cell(pos, p.source_id, p.atlas_coords, p.alternative_tile)
-		count += 1
-
-	return count

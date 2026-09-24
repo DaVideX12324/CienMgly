@@ -16,6 +16,7 @@ const RimPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/rim_
 const CornerPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/corner_placer.gd")
 const MapTileProfile = preload("res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd")
 const TileSetField = preload("res://modules/quiz_rpg/scripts/generation/core/tileset_field.gd")
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 ## Renderuje płaskowyże istniejącym pipeline'em ścian w trybie płaskowyżu (fasady 2H, moduły IN).
 ## Region płaskowyżu P = maska M (podłoga) + krawędzie prawdziwych ścian patrzące na M (E_M):
@@ -25,6 +26,9 @@ const TileSetField = preload("res://modules/quiz_rpg/scripts/generation/core/til
 const TILESET_ID := &"caves_platform"
 const LAYER := &"Platforms"
 const WINDOW_MARGIN := 6
+# Poszerzenie bboxa kawałka P do prostokąta skanu (kafle zostają tylko w P i stopach lica, a analiza
+# kratki sięga kilka kratek dalej — głębokość bryły max 6).
+const SCAN_GROW := 10
 const DIRS4: Array[Vector2i] = [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
 const DIAG4: Array[Vector2i] = [Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(1, 1)]
 const FOOT_SEARCH := 3  # fasada ściany: stopa najwyżej 3 kratki niżej
@@ -44,16 +48,23 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 
 	var region := build_region(real_ctx, mask, wall_cells)
 	result.region = region
-	var sgrid := _synthetic_grid(real_ctx, region, wall_cells)
+	# Okno całości (bbox P + margines) wyznacza syntetyczny grid; pipeline skanuje jednak tylko
+	# rozłączne okna skupisk płaskowyżów (współrzędne globalne — hashe pozycji bez zmian).
+	var box := _window(region)
+	var scans := _scan_windows(real_ctx, region)
+	var sgrid := _synthetic_grid(real_ctx, region, wall_cells, box, scans)
 	var sctx := _synthetic_ctx(real_ctx, sgrid, platform_set)
 
-	var analysis = EdgeAnalyzer.analyze(sctx)
 	var plan := TilePlacementPlan.new()
 	var state := LegacyPlacementState.new()
-	FacadePhasePlanner.plan(sctx, analysis, state, plan)
-	SideWallPlacer.plan(sctx, analysis.edges, state, plan)
-	RimPlacer.plan(sctx, analysis.edges, state, plan)
-	CornerPlacer.plan(sctx, analysis.edges, state, plan)
+	for i in scans.size():
+		GenProgress.sub(float(i) / scans.size())
+		sctx.scan_rect = scans[i]
+		var analysis = EdgeAnalyzer.analyze(sctx)
+		FacadePhasePlanner.plan(sctx, analysis, state, plan)
+		SideWallPlacer.plan(sctx, analysis.edges, state, plan)
+		RimPlacer.plan(sctx, analysis.edges, state, plan)
+		CornerPlacer.plan(sctx, analysis.edges, state, plan)
 
 	var tiles: Dictionary = result.tiles
 	for layer_name in plan.by_layer:
@@ -118,8 +129,8 @@ static func _faces_mask(real_ctx: GenerationContext, w: Vector2i, mask: Dictiona
 	return false
 
 
-## Syntetyczny grid: bryła (WALL) = P ∪ void ∪ wszystko poza oknem wokół P; reszta = FLOOR.
-static func _synthetic_grid(real_ctx: GenerationContext, region: Dictionary, wall_cells: Dictionary) -> Dictionary:
+## Okno wokół P: bbox regionu + WINDOW_MARGIN. Poza oknem syntetyczny grid to bryła.
+static func _window(region: Dictionary) -> Rect2i:
 	var box := Rect2i()
 	var first := true
 	for c in region:
@@ -128,13 +139,56 @@ static func _synthetic_grid(real_ctx: GenerationContext, region: Dictionary, wal
 			first = false
 		else:
 			box = box.expand(c)
-	box = box.grow(WINDOW_MARGIN)
+	return box.grow(WINDOW_MARGIN)
+
+
+## Rozłączne prostokąty skanu: bbox każdego kawałka P poszerzony o SCAN_GROW,
+## nachodzące na siebie scalone (skupisko liczone razem, jak przy skanie całej mapy).
+static func _scan_windows(real_ctx: GenerationContext, region: Dictionary) -> Array[Rect2i]:
+	var map_rect := Rect2i(0, 0, real_ctx.width, real_ctx.height)
+	var rects: Array[Rect2i] = []
+	var seen := {}
+	for start in region:
+		if seen.has(start):
+			continue
+		var box := Rect2i(start, Vector2i.ONE)
+		seen[start] = true
+		var stack: Array[Vector2i] = [start]
+		while not stack.is_empty():
+			var c: Vector2i = stack.pop_back()
+			box = box.expand(c)
+			for d in DIRS4 + DIAG4:
+				var n: Vector2i = c + d
+				if region.has(n) and not seen.has(n):
+					seen[n] = true
+					stack.append(n)
+		rects.append(box.grow(SCAN_GROW).intersection(map_rect))
+	var merged := true
+	while merged:
+		merged = false
+		for i in rects.size():
+			for j in range(i + 1, rects.size()):
+				if rects[i].intersects(rects[j]):
+					rects[i] = rects[i].merge(rects[j])
+					rects.remove_at(j)
+					merged = true
+					break
+			if merged:
+				break
+	return rects
+
+
+## Syntetyczny grid: bryła (WALL) = P ∪ void ∪ wszystko poza oknem wokół P; reszta = FLOOR.
+## Zapisuje tylko prostokąty skanu — brak wpisu = niechodliwe, tak samo jak WALL (analiza pyta
+## wyłącznie o chodliwość), więc każde okno widzi dokładnie ten grid co skan całej mapy.
+static func _synthetic_grid(real_ctx: GenerationContext, region: Dictionary, wall_cells: Dictionary, box: Rect2i, scans: Array[Rect2i]) -> Dictionary:
 	var sgrid := {}
-	for y in range(real_ctx.height):
-		for x in range(real_ctx.width):
-			var c := Vector2i(x, y)
-			var solid: bool = not box.has_point(c) or region.has(c) or is_void(real_ctx, wall_cells, c)
-			sgrid[c] = CellType.WALL if solid else CellType.FLOOR
+	for win in scans:
+		for y in range(win.position.y, win.end.y):
+			for x in range(win.position.x, win.end.x):
+				var c := Vector2i(x, y)
+				var solid: bool = not box.has_point(c) or region.has(c) or is_void(real_ctx, wall_cells, c)
+				sgrid[c] = CellType.WALL if solid else CellType.FLOOR
 	return sgrid
 
 

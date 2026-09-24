@@ -27,6 +27,9 @@ var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka 
 # Tryb płaskowyżu (tylko syntetyczny kontekst PlateauRenderera): fasady zawsze 2H, stopień
 # lica 2H = moduł IN (STEP_LEFT/RIGHT 2-częściowy). Domyślnie false — ściany bez zmian.
 var plateau_mode: bool = false
+# Prostokąt skanowania EdgeAnalyzera i placerów ścian (pusty = cała mapa). PlateauRenderer
+# zawęża nim drugi przebieg pipeline'u do okolicy płaskowyżów — współrzędne zostają globalne.
+var scan_rect: Rect2i = Rect2i()
 
 # --- Named TileSet System (opcjonalne; null => placery używają stałych) ---
 var map_tile_profile: MapTileProfile = null
@@ -44,6 +47,11 @@ var preprocess_stats: Dictionary = {}
 var debug_pos: Vector2i = Vector2i.ZERO
 
 ## Efektywna wartość cechy: profil AND flagi runtime.
+## Obszar skanowania pętli (y, x): scan_rect albo cała mapa.
+func scan_bounds() -> Rect2i:
+	return scan_rect if scan_rect.has_area() else Rect2i(0, 0, width, height)
+
+
 func feature(key: StringName) -> bool:
 	var allowed: bool = true
 	if profile != null and "features" in profile:

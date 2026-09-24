@@ -23,6 +23,7 @@ const TilePlacement = preload("res://modules/quiz_rpg/scripts/generation/core/ti
 const TilePlacementExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/tile_placement_executor.gd")
 const TerrainPaintExecutor = preload("res://modules/quiz_rpg/scripts/generation/tiling/terrain_paint_executor.gd")
 const ThemeResolver = preload("res://modules/quiz_rpg/scripts/generation/edge/theme_resolver.gd")
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -224,7 +225,9 @@ static func generate(
 
 
 
-## Nanosi dopasowane kafelki z caves.tres na warstwy Floor, FloorDecor i Walls (Etap 5 pipeline).
+## Nanosi dopasowane kafelki z caves.tres na warstwy Floor, FloorDecor, Walls i Platforms (Etap 5 pipeline).
+## = plan_cave_tiles (czyste dane) + execute_cave_tiles (warstwy). Synchronicznie; do generowania w tle
+## wołaj obie części osobno (plan w wątku roboczym, wykonanie w głównym).
 static func apply_cave_tiles(
 	floor_layer: TileMapLayer,
 	walls_layer: TileMapLayer,
@@ -238,12 +241,21 @@ static func apply_cave_tiles(
 	generator_behaviour: Dictionary = {},
 	platforms_layer: TileMapLayer = null
 ) -> void:
-	if flags == null:
-		flags = GenerationFlags.new()
-
 	# Reset globalnego seeda dla operacji silnika (np. set_cells_terrain_connect)
 	seed(rng.seed)
+	var plans := plan_cave_tiles(result, rng, theme_override, flags, map_tile_profile, tileset_field, generator_behaviour)
+	execute_cave_tiles(prepare_cave_layers(floor_layer, walls_layer, result, floor_decor_layer, platforms_layer), plans)
 
+
+## Przygotowuje warstwy (FloorDecor / Platforms jako rodzeństwo Floor, gdy brak) i czyści je.
+## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Walls", &"Platforms"}.
+static func prepare_cave_layers(
+	floor_layer: TileMapLayer,
+	walls_layer: TileMapLayer,
+	result: GenerationResult,
+	floor_decor_layer: TileMapLayer = null,
+	platforms_layer: TileMapLayer = null
+) -> Dictionary:
 	if floor_decor_layer == null and floor_layer.get_parent():
 		floor_decor_layer = floor_layer.get_parent().get_node_or_null("FloorDecor") as TileMapLayer
 		if not floor_decor_layer:
@@ -272,6 +284,28 @@ static func apply_cave_tiles(
 	walls_layer.clear()
 	if platforms_layer:
 		platforms_layer.clear()
+
+	return {
+		&"Floor": floor_layer,
+		&"FloorDecor": floor_decor_layer,
+		&"Walls": walls_layer,
+		&"Platforms": platforms_layer,
+	}
+
+
+## Plan kafelkowania jaskini: {"tiles": TilePlacementPlan, "terrain": TerrainPaintPlan}.
+## Czyste dane (bez węzłów) — można wołać z wątku roboczego.
+static func plan_cave_tiles(
+	result: GenerationResult,
+	rng: RandomNumberGenerator,
+	theme_override: int = -1,
+	flags: GenerationFlags = null,
+	map_tile_profile: MapTileProfile = null,
+	tileset_field: TileSetField = null,
+	generator_behaviour: Dictionary = {}
+) -> Dictionary:
+	if flags == null:
+		flags = GenerationFlags.new()
 
 	var portal_zone: Dictionary = {}
 	for p in result.entrance_zone:
@@ -305,20 +339,18 @@ static func apply_cave_tiles(
 	if map_tile_profile != null and ctx.tileset_field == null:
 		ctx.tileset_field = TileSetField.new()
 
-	var layers: Dictionary = {
-		&"Floor": floor_layer,
-		&"FloorDecor": floor_decor_layer,
-		&"Walls": walls_layer,
-		&"Platforms": platforms_layer,
-	}
-
+	GenProgress.begin(&"edges")
 	var analysis := EdgeAnalyzer.analyze(ctx)
-	var plans := TilePlacementPlanner.plan(ctx, analysis)
+	return TilePlacementPlanner.plan(ctx, analysis)
 
+
+## Wykonuje plan na warstwach (główny wątek): Floor, teren, Walls, Platforms.
+static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
+	GenProgress.begin(&"paint")
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
 	TerrainPaintExecutor.execute(layers, plans.terrain)
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
-	TilePlacementExecutor.execute(layers[&"Platforms"], plans.tiles, &"Platforms")
+	TilePlacementExecutor.execute(layers.get(&"Platforms"), plans.tiles, &"Platforms")
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:

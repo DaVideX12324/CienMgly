@@ -4,6 +4,8 @@ extends RefCounted
 ## Bazowa klasa generatora map w module Quiz RPG.
 ## Odpowiada za wspolne algorytmy siatki, szumy, sciezki A*, oraz budowanie wezlow mapy.
 
+const GenProgressScript = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+
 enum CellType {
 	VOID = 0,
 	FLOOR = 1,
@@ -274,8 +276,14 @@ static func spawn_entities(
 	enemy_scenes: Array[PackedScene] = [],
 	chest_scene: PackedScene = null,
 	door_scene: PackedScene = null,
-	cell_size: int = 16
+	cell_size: int = 16,
+	per_frame: int = 0
 ) -> void:
+	# per_frame > 0: co tyle instancji czekamy klatkę (generowanie w tle — pasek ładowania żyje).
+	# 0 = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
+	var total: int = result.enemy_spawns.size() + result.chest_spawns.size() + (result.doors.size() if door_scene else 0)
+	var made := 0
+
 	# 1. Spawns / Spawn
 	var spawns_node := target_node.get_node_or_null("Spawns")
 	if not spawns_node:
@@ -312,6 +320,10 @@ static func spawn_entities(
 				if enemy_inst:
 					enemy_inst.position = Vector2(pos.x * cell_size + cell_size * 0.5, pos.y * cell_size + cell_size * 0.5)
 					enemies_node.add_child(enemy_inst)
+			made += 1
+			if per_frame > 0 and made % per_frame == 0:
+				GenProgressScript.sub(float(made) / total)
+				await target_node.get_tree().process_frame
 
 	# 3. Objects / Skrzynie
 	var objects_node := target_node.get_node_or_null("Objects")
@@ -330,6 +342,10 @@ static func spawn_entities(
 			if chest_inst:
 				chest_inst.position = Vector2(c_pos.x * cell_size + cell_size * 0.5, c_pos.y * cell_size + cell_size * 0.5)
 				objects_node.add_child(chest_inst)
+			made += 1
+			if per_frame > 0 and made % per_frame == 0:
+				GenProgressScript.sub(float(made) / total)
+				await target_node.get_tree().process_frame
 
 	# 4. Drzwi
 	if door_scene:
@@ -348,6 +364,10 @@ static func spawn_entities(
 			if door_inst:
 				door_inst.position = Vector2(d_pos.x * cell_size + cell_size * 0.5, d_pos.y * cell_size + cell_size * 0.5)
 				doors_node.add_child(door_inst)
+			made += 1
+			if per_frame > 0 and made % per_frame == 0:
+				GenProgressScript.sub(float(made) / total)
+				await target_node.get_tree().process_frame
 
 	# 5. Wejscie / Wyjscie - trigger zony
 	_setup_exit_trigger(target_node, result.exit_pos, cell_size)

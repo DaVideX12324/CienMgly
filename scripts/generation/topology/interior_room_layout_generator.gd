@@ -19,6 +19,7 @@ const ThinBridgeCleanupPass = preload("res://modules/quiz_rpg/scripts/generation
 const StaircaseNormalizerPass = preload("res://modules/quiz_rpg/scripts/generation/preprocess/staircase_normalizer_pass.gd")
 const SpawnPlanner = preload("res://modules/quiz_rpg/scripts/generation/spawn/spawn_planner.gd")
 const PlateauPass = preload("res://modules/quiz_rpg/scripts/generation/topology/plateau_pass.gd")
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -32,6 +33,7 @@ static func generate_layout(
 	flags: GenerationFlags,
 	result: MapGeneratorBase.GenerationResult
 ) -> GenerationContext:
+	GenProgress.begin(&"rooms")
 	var ctx := GenerationContext.new()
 	ctx.flags = flags
 	ctx.seed_value = seed_val
@@ -80,6 +82,7 @@ static func generate_layout(
 	result.rooms = rooms
 
 	# P3. Korytarze jaskiniowe - MST + pętle
+	GenProgress.begin(&"corridors")
 	var corridor_carver := OrganicCorridorCarver.new()
 	if rooms.size() >= 2:
 		var connected_indices: Array[int] = [0]
@@ -125,6 +128,7 @@ static func generate_layout(
 					loops_added += 1
 
 	# P4. Morfologiczne wygładzenie styków komór i korytarzy
+	GenProgress.begin(&"smoothing")
 	if flags.enable_junction_smoothing:
 		GridPreprocessor.run(ctx, [JunctionSmoothingPass.new()])
 
@@ -136,9 +140,11 @@ static func generate_layout(
 	])
 
 	# P8. Twarda gwarancja spójności
+	GenProgress.begin(&"connectivity")
 	ConnectivityRepair.repair(ctx, corridor_width)
 
 	# P9. Dedykowane wejście i wyjście
+	GenProgress.begin(&"portals")
 	var entrance_room_idx := 0
 	var exit_room_idx: int = rooms.size() - 1
 	if not rooms.is_empty():
@@ -187,10 +193,12 @@ static func generate_layout(
 
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
 	# żeby SpawnPlanner mógł zsunąć spawny z barier.
+	GenProgress.begin(&"plateaus")
 	ctx.plateau = PlateauPass.run(ctx, flags)
 	result.plateau = ctx.plateau
 
 	# P12. Spawny wrogów i skrzyń
+	GenProgress.begin(&"spawns")
 	if not rooms.is_empty():
 		SpawnPlanner.plan_spawns(ctx, result, entrance_room_idx, exit_room_idx)
 

@@ -17,6 +17,7 @@ const RimPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/rim_
 const CornerPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/corner_placer.gd")
 const PortalClearPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/portal_clear_placer.gd")
 const PlateauPlacer = preload("res://modules/quiz_rpg/scripts/generation/tiling/plateau_placer.gd")
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
 
 ## Główny orkiestrator planowania kafelkowania (Etap 5).
 ## Koordynuje sekwencję placerów i generuje plany:
@@ -30,9 +31,11 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	var state := LegacyPlacementState.new()
 
 	# 1. Solid fill (zewnętrzny void padding oraz lita skała)
+	GenProgress.begin(&"rock")
 	SolidFillPlacer.plan(ctx, analysis.edges, state, tiles)
 
 	# 2. Baza podłogi (Floor)
+	GenProgress.begin(&"floor")
 	var ground_cells: Array[Vector2i] = FloorPlacer.plan(ctx, tiles)
 
 	# 3. Maski terenu: błoto na Floor oraz mech/trawa na FloorDecor (bez barier i schodów
@@ -42,6 +45,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	TerrainMaskPlanner.plan_grass(ctx, terrain, terrain_cells)
 
 	# 4. Fasady południowe (2H, 3H, łączniki, narożniki OUT, schodki, nisze i FAZA 2.5)
+	GenProgress.begin(&"walls")
 	FacadePhasePlanner.plan(ctx, analysis, state, tiles)
 
 	# 5. Ściany pionowe zachodnie i wschodnie
@@ -57,6 +61,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	PortalClearPlacer.plan(ctx, tiles)
 
 	# 9. Płaskowyże na osobnej warstwie Platforms (po ścianach — renderer czyta plan Walls)
+	GenProgress.begin(&"plateau_tiles")
 	PlateauPlacer.plan(ctx, tiles)
 
 	return {

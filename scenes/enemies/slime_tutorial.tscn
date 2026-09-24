@@ -8,10 +8,6 @@
 radius = 5.0
 height = 18.0
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_xvnoq"]
-radius = 5.0
-height = 18.0
-
 [node name="Enemy" unique_id=1491906518 instance=ExtResource("1_base")]
 y_sort_enabled = true
 script = ExtResource("2_script")
@@ -31,11 +27,6 @@ animation = &"slime_idle"
 position = Vector2(0, -4)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_fix")
-
-[node name="CollisionShape2D" parent="Node2D" parent_id_path=PackedInt32Array(321684898) index="0" unique_id=1145610831]
-position = Vector2(0, -4)
-rotation = 1.5707964
-shape = SubResource("CapsuleShape2D_xvnoq")
 
 [node name="CollisionShape2D" parent="DetectionArea" parent_id_path=PackedInt32Array(2045348945) index="0" unique_id=1963073735]
 debug_color = Color(0, 0.6, 0.69803923, 0)
