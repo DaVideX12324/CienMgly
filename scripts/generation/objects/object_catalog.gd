@@ -17,7 +17,7 @@ extends RefCounted
 const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid",
-	"levels", "terrain", "terrain_margin", "cluster", "keep_paths", "priority", "flip_h",
+	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
 ]
 ## Tagi kontekstu rozpoznawane przez ObjectFeatures.
 const CONTEXT_TAGS := [
@@ -129,6 +129,15 @@ func _parse(d: Dictionary) -> void:
 			continue
 		seen[def.id] = true
 		defs.append(def)
+	# Towarzysze muszą wskazywać obiekty z katalogu.
+	for od in defs:
+		var ok: Array[Dictionary] = []
+		for c in od.companions:
+			if seen.has(c["id"]):
+				ok.append(c)
+			else:
+				errors.append("Obiekt '%s': towarzysz '%s' nie istnieje w katalogu." % [od.id, c["id"]])
+		od.companions = ok
 	defs.sort_custom(func(a: ObjectDef, b: ObjectDef) -> bool:
 		return a.priority > b.priority or (a.priority == b.priority and a.order < b.order))
 
@@ -285,6 +294,25 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			def.cluster_radius = maxi(int(cl.get("radius", 2)), 1)
 		else:
 			errors.append("%s: cluster to {\"size\": [a, b], \"radius\": r}." % tag)
+	var comps = m.get("companions", [])
+	if comps is Array:
+		for c in comps:
+			if not (c is Dictionary) or String(c.get("id", "")).is_empty():
+				errors.append("%s: companions to lista {\"id\": obiekt, \"count\": [a, b], \"radius\": r}." % tag)
+				continue
+			var cmin := 1
+			var cmax := 1
+			var cnt = c.get("count", 1)
+			if cnt is Array and cnt.size() == 2:
+				cmin = int(cnt[0])
+				cmax = maxi(int(cnt[1]), cmin)
+			else:
+				cmin = int(cnt)
+				cmax = cmin
+			def.companions.append({"id": StringName(String(c["id"])), "min": maxi(cmin, 0), "max": maxi(cmax, 0),
+				"radius": clampi(int(c.get("radius", 2)), 1, 6)})
+	else:
+		errors.append("%s: companions musi być listą." % tag)
 	def.keep_paths = bool(m.get("keep_paths", true))
 	def.flip_h = bool(m.get("flip_h", false))
 

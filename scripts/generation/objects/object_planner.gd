@@ -25,7 +25,10 @@ var owner := PackedInt32Array()    # indeks defa + 1, który zajął kratkę (US
 var stamp := PackedInt32Array()    # odstęp `spacing`: indeks defa + 1 w promieniu kotwicy
 var reach0 := PackedByteArray()    # osiągalne z wejścia przed obiektami
 var entrance_i := -1
-var free_pts := {}                 # free: idx kratki -> Array[Vector2] punktów bieżącego defa
+var free_pts := {}                 # free: marker defa -> {idx kratki -> Array[Vector2] punktów}
+var defs_by_id := {}               # id -> ObjectDef (towarzysze)
+var markers := {}                  # id -> marker (indeks defa + 1)
+var in_companions := false         # towarzysze nie dostawiają własnych towarzyszy
 
 
 ## Plan obiektów dla wyniku generacji. `features` można podać, gdy są już policzone.
@@ -52,6 +55,9 @@ func _run(result, catalog: ObjectCatalog) -> void:
 	_reserve_paths(result)
 	if catalog == null:
 		return
+	for di in range(catalog.defs.size()):
+		defs_by_id[catalog.defs[di].id] = catalog.defs[di]
+		markers[catalog.defs[di].id] = di + 1
 	for di in range(catalog.defs.size()):
 		_place_def(catalog.defs[di], di + 1)
 	_verify_reach()
@@ -214,7 +220,6 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 		target = int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 	if target <= 0:
 		return
-	free_pts.clear()
 	var placed := 0
 	# Tryb free przy dużej gęstości: kilka przejść po kandydatach (kilka punktów na kratkę).
 	var passes := 1
@@ -230,7 +235,7 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 			k -= 1
 			if def.cluster_min > 0:
 				placed += _place_cluster(def, marker, i, rng, target - placed)
-			elif _try_place(def, marker, i, rng):
+			elif _place_one(def, marker, i, rng):
 				placed += 1
 		if placed >= target:
 			break
@@ -261,7 +266,7 @@ func _candidates(def: ObjectDef) -> PackedInt32Array:
 
 
 func _place_cluster(def: ObjectDef, marker: int, seed_i: int, rng: RandomNumberGenerator, left: int) -> int:
-	if not _try_place(def, marker, seed_i, rng):
+	if not _place_one(def, marker, seed_i, rng):
 		return 0
 	var size := mini(rng.randi_range(def.cluster_min, def.cluster_max), left)
 	var placed := 1
@@ -276,9 +281,44 @@ func _place_cluster(def: ObjectDef, marker: int, seed_i: int, rng: RandomNumberG
 		var i := f.idx(q)
 		if plan.occupancy[i] & ObjectPlan.FORBID or not f.rules_ok(i, def):
 			continue
-		if _try_place(def, marker, i, rng):
+		if _place_one(def, marker, i, rng):
 			placed += 1
 	return placed
+
+
+## Jedna sztuka + jej towarzysze (grupa mieszana, np. duży grzyb z małymi wokół).
+func _place_one(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) -> bool:
+	if not _try_place(def, marker, i, rng):
+		return false
+	if not def.companions.is_empty() and not in_companions:
+		_place_companions(def, f.cell(i), rng)
+	return true
+
+
+## Towarzysze wokół kotwicy `c` (Chebyshev <= radius): każdy wg WŁASNYCH reguł (teren, kontekst,
+## zajętość, odstępy), liczba z [min, max]. RNG rodzica — deterministycznie.
+func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) -> void:
+	in_companions = true
+	for comp in def.companions:
+		var cdef: ObjectDef = defs_by_id.get(comp["id"])
+		if cdef == null:
+			continue
+		var cm: int = markers[comp["id"]]
+		var n := rng.randi_range(int(comp["min"]), int(comp["max"]))
+		var r := int(comp["radius"])
+		var placed := 0
+		var tries := n * 5
+		while placed < n and tries > 0:
+			tries -= 1
+			var q := c + Vector2i(rng.randi_range(-r, r), rng.randi_range(-r, r))
+			if not f.in_bounds(q):
+				continue
+			var i := f.idx(q)
+			if plan.occupancy[i] & ObjectPlan.FORBID or not f.rules_ok(i, cdef):
+				continue
+			if _try_place(cdef, cm, i, rng):
+				placed += 1
+	in_companions = false
 
 
 func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) -> bool:
@@ -336,12 +376,15 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 	var pt := Vector2((c.x + rng.randf()) * cs, (c.y + rng.randf()) * cs)
 	var reach := ceili(def.spacing_px / cs)
 	var sp2 := def.spacing_px * def.spacing_px
+	if not free_pts.has(marker):
+		free_pts[marker] = {}
+	var mine: Dictionary = free_pts[marker]
 	for dy in range(-reach, reach + 1):
 		for dx in range(-reach, reach + 1):
 			var q := c + Vector2i(dx, dy)
 			if not f.in_bounds(q):
 				continue
-			var pts = free_pts.get(f.idx(q))
+			var pts = mine.get(f.idx(q))
 			if pts == null:
 				continue
 			for other in pts:
@@ -362,10 +405,10 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 	pl.cells = cells
 	pl.offset = pt - def.base_point(c)
 	_finish(pl, marker, rng)
-	if free_pts.has(i):
-		(free_pts[i] as Array).append(pt)
+	if mine.has(i):
+		(mine[i] as Array).append(pt)
 	else:
-		free_pts[i] = [pt]
+		mine[i] = [pt]
 	return true
 
 
