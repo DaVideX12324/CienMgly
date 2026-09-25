@@ -27,8 +27,26 @@ const TEMPLATES := {
 }
 
 
-static func biome_json_path(biome: String) -> String:
-	return "%s/objects_%s.json" % [CONFIG_DIR, biome]
+static func biome_json_path(biome: String, config_dir: String = CONFIG_DIR) -> String:
+	return "%s/objects_%s.json" % [config_dir, biome]
+
+
+## Jedna zapisana scena (wtyczka edytora): dopisuje ją albo aktualizuje wpis z metadanych.
+## Tylko sceny z folderu biomu, który ma katalog. {} = scena poza zasięgiem (nic nie robiono).
+static func sync_scene(scene_path: String, scenes_root: String = SCENES_ROOT, config_dir: String = CONFIG_DIR) -> Dictionary:
+	if not scene_path.ends_with(".tscn"):
+		return {}
+	var biome := biome_of(scene_path, scenes_root)
+	if biome.is_empty():
+		return {}
+	var json_path := biome_json_path(biome, config_dir)
+	if not FileAccess.file_exists(json_path):
+		return {}
+	ObjectBake.forget(scene_path)
+	var rep := sync_biome(json_path, scenes_root.path_join(biome), PackedStringArray([scene_path]), false, false, true)
+	rep["biome"] = biome
+	rep["json"] = json_path
+	return rep
 
 
 ## Biom sceny = pierwszy folder pod SCENES_ROOT ("" gdy scena leży poza folderem biomu).
@@ -59,7 +77,7 @@ static func scan(dir_path: String) -> PackedStringArray:
 ## only: tylko te sceny (tryb ręczny); pusto = wszystkie nowe sceny biomu (tryb automatyczny).
 ## Wynik: {added: [id], missing: [ścieżka], removed: [id], errors: [str], written: bool}.
 static func sync_biome(json_path: String, biome_dir: String, only: PackedStringArray = PackedStringArray(), remove_missing := false, dry_run := false, update_existing := false) -> Dictionary:
-	var report := {"added": [], "updated": [], "missing": [], "removed": [], "errors": [], "written": false}
+	var report := {"added": [], "updated": [], "missing": [], "removed": [], "unused_groups": [], "errors": [], "written": false}
 	var data := {"groups": {}, "objects": []}
 	if FileAccess.file_exists(json_path):
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(json_path))
@@ -140,6 +158,15 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 		_apply_meta(entry, bake, sp, report["errors"], false)
 		objects.append(entry)
 		report["added"].append(id)
+
+	# Grupy bez obiektów — tylko raport (mogą mieć ręcznie dostrojone wartości).
+	var used := {}
+	for o in objects:
+		if o is Dictionary:
+			used[String(o.get("group", ""))] = true
+	for g in groups:
+		if not used.has(String(g)):
+			report["unused_groups"].append(String(g))
 
 	var check := ObjectCatalog.from_dict(data)
 	report["errors"].append_array(check.errors)
