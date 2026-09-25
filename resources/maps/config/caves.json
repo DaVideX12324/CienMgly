@@ -66,6 +66,7 @@
     "solid_fill_enabled": true
   },
   "debug": {
-    "validate_tile_profile_on_load": true
+    "validate_tile_profile_on_load": true,
+    "print_map_report": true
   }
 }
