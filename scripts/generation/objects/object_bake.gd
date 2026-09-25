@@ -11,6 +11,8 @@ extends RefCounted
 ## tworzy jej instancję.
 ##
 ## Origin sceny = punkt y-sortu = środek kratki kotwicy (dolnego wiersza podstawy).
+## Konwencja (decyzja usera): obiekt z kolizją ma StaticBody2D jako KORZEŃ sceny (bez Node2D nad nim);
+## zagnieżdżone body działa, ale ustawia nested_body (narzędzie / wtyczka katalogu to zgłaszają).
 
 const META_PREFIX := "object_"
 const BAKEABLE := ["Node2D", "Sprite2D", "StaticBody2D", "CollisionShape2D", "CollisionPolygon2D"]
@@ -23,6 +25,7 @@ var sprites: Array[Dictionary] = []  # {tex: Texture2D, src: Rect2, dst: Rect2, 
 var shapes: Array[Dictionary] = []   # {shape: Shape2D, xform: Transform2D}
 var collision_layer := 0
 var bounds := Rect2()               # obrys kształtów kolizji względem origin (pusty = brak kolizji)
+var nested_body := false            # StaticBody2D nie jest korzeniem (niezgodne z konwencją)
 var meta := {}                      # metadane korzenia "object_<pole>" -> pole katalogu (bez prefiksu)
 
 # @tool: narzędzie edytora (sync_object_catalogs) woła to w edytorze, a tam static var skryptów bez
@@ -102,6 +105,8 @@ func _walk(node: Node, parent_xf: Transform2D, in_static: bool) -> void:
 		if not (node as Node2D).visible:
 			return
 	if node is StaticBody2D:
+		if node.get_parent() != null:
+			nested_body = true
 		in_static = true
 		collision_layer |= (node as StaticBody2D).collision_layer
 	elif node is Sprite2D:

@@ -129,6 +129,7 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 			if sc.is_empty() or not scope.has(sc[0]):
 				continue
 			var b := ObjectBake.bake(sc[0])
+			_check_structure(b, report["errors"])
 			if not b.error.is_empty() or b.meta.is_empty():
 				continue
 			var before: String = JSON.stringify(o)
@@ -147,6 +148,7 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 		if not bake.error.is_empty():
 			report["errors"].append("%s: %s" % [sp, bake.error])
 			continue
+		_check_structure(bake, report["errors"])
 		var kind := _kind(bake)
 		var group := String(bake.meta.get("group", _group_of(sp, biome_dir, kind)))
 		if not groups.has(group):
@@ -180,6 +182,12 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 			f.close()
 			report["written"] = true
 	return report
+
+
+## Konwencja scen obiektów: obiekt z kolizją ma StaticBody2D jako korzeń.
+static func _check_structure(bake: ObjectBake, errors: Array) -> void:
+	if bake.nested_body:
+		errors.append("%s: StaticBody2D powinien być korzeniem sceny (bez Node2D nad nim)." % bake.path)
 
 
 ## Pola z metadanych sceny do wpisu. id tylko przy aktualizacji (przy dodawaniu już ustawione),
