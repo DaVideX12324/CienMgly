@@ -69,6 +69,8 @@ class GenJob extends RefCounted:
 	var corridor: int = 3
 	var flags = null
 	var behaviour: Dictionary = {}
+	var debug_report := false       # caves.json debug.print_map_report — raport mapy do Output
+	var level_key := ""
 	var result: RefCounted = null
 	var rng: RandomNumberGenerator = null
 	var plans: Dictionary = {}
@@ -189,6 +191,8 @@ func generate_level(seed_val: int = 0) -> void:
 	var job := _prepare_job(seed_val)
 	job.run()
 	_apply_job(job)
+	if job.debug_report:
+		print(map_report(job))
 	generation_finished.emit()
 
 
@@ -217,7 +221,46 @@ func generate_level_async(seed_val: int = 0) -> void:
 	GenProgress.stop()
 	overlay.close()
 	is_generating = false
+	if job.debug_report:
+		print(map_report(job, progress))
 	generation_finished.emit()
+
+
+## Raport wygenerowanej mapy (debug.print_map_report w companion-JSON): seed i rozmiar do odtworzenia
+## w eksploratorze map, parametry generacji, flagi jaskini, płaskowyże, obiekty, encje, nawigacja
+## i czasy etapów (generowanie w tle).
+func map_report(job: GenJob, progress = null) -> String:
+	var r = job.result
+	var lines := PackedStringArray()
+	lines.append("===== [Mapa] %s =====" % (job.level_key if not job.level_key.is_empty() else name))
+	if r == null:
+		lines.append("  brak wyniku generacji")
+		return "\n".join(lines)
+	lines.append("  seed %d, rozmiar %dx%d  (eksplorator map: seed %d, wymiary %d x %d)" % [r.seed_used, r.width, r.height, r.seed_used, r.width, r.height])
+	lines.append("  generacja: pokoje %d (max_rooms %d), rozmiar pokoju %d..%d, korytarz %d" % [r.rooms.size(), job.rooms_count, job.min_room, job.max_room, job.corridor])
+	lines.append("  wejście %s, wyjście %s, spawn gracza %s" % [r.entrance_pos, r.exit_pos, r.player_spawn])
+	if job.flags != null:
+		var parts := PackedStringArray()
+		for k in GeneratorBehaviourConfig.FLAG_BOOL_KEYS + GeneratorBehaviourConfig.FLAG_FLOAT_KEYS + GeneratorBehaviourConfig.FLAG_INT_KEYS + GeneratorBehaviourConfig.FLAG_STRING_KEYS:
+			var v = job.flags.get(k)
+			parts.append("%s=%s" % [k, ("%.3f" % v) if v is float else str(v)])
+		lines.append("  flagi:")
+		for i in range(0, parts.size(), 6):
+			lines.append("    " + ", ".join(parts.slice(i, i + 6)))
+	var pl = r.plateau
+	if pl != null and not pl.is_empty():
+		lines.append("  płaskowyże: maska %d kratek, poziomy %d..%d, schody S/N/E/W %d/%d/%d/%d, naprawa: +%d schodów, -%d płaskowyżów, %d kratek góry zablokowanych" % [
+			pl.mask.size(), pl.min_level, pl.max_level, pl.stairs.size(), pl.stairs_north.size(), pl.stairs_east.size(), pl.stairs_west.size(),
+			pl.connect_stairs, pl.dropped_pieces, pl.unreachable_top])
+	if r.objects != null:
+		lines.append("  obiekty: %d (plan %.1f ms, zdjętych dla osiągalności %d) %s" % [r.objects.placements.size(), r.objects.time_usec / 1000.0, r.objects.removed_for_reach, r.objects.stats])
+	var chests: int = r.chest_spawns.size() + (r.objects.cells_with_scene("chest").size() if r.objects != null else 0)
+	lines.append("  wrogowie %d, skrzynie %d" % [r.enemy_spawns.size(), chests])
+	if r.nav_polygon != null:
+		lines.append("  nawigacja: %d wielokątów (siatka z generatora)" % r.nav_polygon.get_polygon_count())
+	if progress != null:
+		lines.append("  czasy etapów:\n" + progress.report())
+	return "\n".join(lines)
 
 
 func _exit_tree() -> void:
@@ -273,6 +316,8 @@ func _prepare_job(seed_val: int) -> GenJob:
 	job.width = gen_width
 	job.height = gen_height
 	job.flags = cave_flags
+	job.level_key = level_key
+	job.debug_report = cfg != null and bool(cfg.debug().get("print_map_report", false))
 
 	match level_type:
 		LevelType.CAVE_DUNGEON:
