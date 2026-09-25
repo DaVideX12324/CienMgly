@@ -393,12 +393,16 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 		if not _cell_free(def, j) or f.height_at(j) != h:
 			return false
 		cells.append(j)
+	var offset := Vector2.ZERO
+	if def.placement == ObjectDef.Placement.GRID_JITTER:
+		offset = Vector2(rng.randf_range(-def.jitter_px, def.jitter_px), rng.randf_range(-def.jitter_px, def.jitter_px))
+	if _shape_on_reserved(def, def.base_point(anchor) + offset):
+		return false
 	var pl := ObjectPlacement.new()
 	pl.def = def
 	pl.cell = anchor
 	pl.cells = cells
-	if def.placement == ObjectDef.Placement.GRID_JITTER:
-		pl.offset = Vector2(rng.randf_range(-def.jitter_px, def.jitter_px), rng.randf_range(-def.jitter_px, def.jitter_px))
+	pl.offset = offset
 	_finish(pl, marker, rng)
 	if def.spacing > 1:
 		var s := def.spacing - 1
@@ -408,6 +412,23 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 				if f.in_bounds(q):
 					stamp[f.idx(q)] = marker
 	return true
+
+
+## Czy kształt kolizji obiektu w punkcie `pt` zachodzi (choćby częściowo) na zarezerwowane przejście.
+## Kratki kształtu liczone są po środkach (≈ pokrycie ≥ połowy), więc skała mogła wystawać na przejście
+## i zwężać je poniżej szerokości wroga (siatka nawigacji się tam rwała).
+func _shape_on_reserved(def: ObjectDef, pt: Vector2) -> bool:
+	if not (def.is_solid() and def.keep_paths):
+		return false
+	var cs := float(ObjectDef.CELL)
+	var ctr := pt + def.shape_offset
+	var half := def.shape_rect * 0.5 if def.shape_radius <= 0.0 else Vector2(def.shape_radius, def.shape_radius)
+	for y in range(floori((ctr.y - half.y) / cs), floori((ctr.y + half.y - 0.001) / cs) + 1):
+		for x in range(floori((ctr.x - half.x) / cs), floori((ctr.x + half.x - 0.001) / cs) + 1):
+			var q := Vector2i(x, y)
+			if f.in_bounds(q) and plan.occupancy[f.idx(q)] & ObjectPlan.RESERVED:
+				return true
+	return false
 
 
 ## Kratka wolna dla obiektu: bez FORBID i innego obiektu; z kolizją — nie na przejściu (keep_paths).
@@ -453,6 +474,8 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 		for j in cells:
 			if j < 0 or not _cell_free(def, j) or f.height_at(j) != h:
 				return false
+		if _shape_on_reserved(def, pt):
+			return false
 	else:
 		cells.append(i)
 	var pl := ObjectPlacement.new()
