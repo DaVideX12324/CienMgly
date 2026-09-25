@@ -18,6 +18,9 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 		"tier": 3
 	})
 
+	# Skrzynie stawia generator obiektów, gdy jego katalog je ma (INTERACTIVE ze sceną "chest").
+	var chests_by_objects: bool = result.objects != null and result.objects.interactive_scenes.has("chest")
+
 	# Wrogowie i skrzynie w pokojach pośrednich
 	for i in range(rooms.size()):
 		if i == entrance_room_idx or i == exit_room_idx:
@@ -32,7 +35,7 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 					"pos": center + offset,
 					"tier": rng.randi_range(1, 2)
 				})
-		else:
+		elif not chests_by_objects:
 			result.chest_spawns.append(center)
 
 	var covered := {}

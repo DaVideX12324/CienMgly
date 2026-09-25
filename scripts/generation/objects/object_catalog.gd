@@ -15,14 +15,14 @@ extends RefCounted
 ## "atlas" (+ "variants") z TileSetu poziomu.
 
 const KEYS := [
-	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count",
-	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid",
+	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
+	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
 ]
 ## Tagi kontekstu rozpoznawane przez ObjectFeatures.
 const CONTEXT_TAGS := [
 	"wall_n", "wall_s", "wall_e", "wall_w", "wall_any", "corner", "open", "center",
-	"room", "corridor", "dead_end", "niche", "plateau_edge",
+	"room", "corridor", "dead_end", "niche", "plateau_edge", "plateau_top", "portal_room",
 ]
 const LEVELS := ["ground", "plateau", "pit"]
 ## Teren podłogi (ObjectFeatures): trawa (FloorDecor), błoto (Floor), goła podłoga.
@@ -274,6 +274,13 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			def.avoid.append(StringName(String(t)))
 		else:
 			errors.append("%s: nieznany tag w avoid '%s'." % [tag, t])
+	for key in ["require", "prefer"]:
+		for t in m.get(key, []):
+			if String(t) in CONTEXT_TAGS:
+				(def.require if key == "require" else def.prefer).append(StringName(String(t)))
+			else:
+				errors.append("%s: nieznany tag w %s '%s'." % [tag, key, t])
+	def.per_room = clampf(float(m.get("per_room", 0.0)), 0.0, 1.0)
 	for lv in m.get("levels", []):
 		if String(lv) in LEVELS:
 			def.levels.append(StringName(String(lv)))

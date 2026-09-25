@@ -7,7 +7,8 @@ extends RefCounted
 ## Tagi: wall_n/s/e/w (ściana ortogonalnie z tej strony), wall_any, corner (ściany z dwóch prostopadłych
 ## stron), niche (ściany z trzech stron), dead_end (nisza albo najwyżej 1 chodliwy sąsiad ortogonalny),
 ## open (≥ 2 kratki od ściany), center (≥ 3), room / corridor (wewnątrz prostokąta pokoju / poza),
-## plateau_edge (sąsiaduje z barierą płaskowyżu).
+## plateau_edge (sąsiaduje z barierą płaskowyżu), plateau_top (wysokość > 0), portal_room (pokój
+## najbliższy wejściu albo wyjściu).
 
 const WALL_N := 1
 const WALL_S := 2
@@ -28,6 +29,8 @@ var dist := PackedByteArray()     # odległość Chebysheva do ściany (0 = ści
 var room := PackedInt32Array()    # indeks pokoju (prostokąt z ctx.rooms) albo -1
 var level := PackedByteArray()    # wysokość + HEIGHT_OFFSET
 var edge := PackedByteArray()     # 1 = sąsiaduje (8) z barierą płaskowyżu
+var room_count := 0
+var portal_rooms := {}            # indeks pokoju -> true (wejście / wyjście w nim albo przy nim)
 var terrain := PackedByteArray()  # TERRAIN_* — teren podłogi (trawa wygrywa z błotem)
 var floor_cells := PackedInt32Array()
 var tag_cells := {}               # StringName -> PackedInt32Array
@@ -72,6 +75,8 @@ func has_tag(i: int, tag: StringName) -> bool:
 		&"room": return room[i] >= 0
 		&"corridor": return room[i] < 0
 		&"plateau_edge": return int(edge[i]) == 1
+		&"plateau_top": return int(level[i]) > HEIGHT_OFFSET
+		&"portal_room": return room[i] >= 0 and portal_rooms.has(room[i])
 	return false
 
 
@@ -114,6 +119,9 @@ func rules_ok(i: int, def: ObjectDef) -> bool:
 		return false
 	for t in def.avoid:
 		if has_tag(i, t):
+			return false
+	for t in def.require:
+		if not has_tag(i, t):
 			return false
 	if def.context.is_empty():
 		return true
@@ -186,6 +194,20 @@ func _build(result) -> void:
 			d = mini(d, int(dist[i + width - 1]) + 1)
 			dist[i] = d
 
+	room_count = result.rooms.size()
+	# Pokój wejścia / wyjścia = najbliższy portalowi (alkowa portalu leży zwykle za prostokątem pokoju).
+	for p in [result.entrance_pos, result.exit_pos]:
+		var best := -1
+		var best_d := 1 << 30
+		for r_i in range(result.rooms.size()):
+			var r: Rect2i = result.rooms[r_i]
+			var dx := maxi(maxi(r.position.x - p.x, p.x - (r.end.x - 1)), 0)
+			var dy := maxi(maxi(r.position.y - p.y, p.y - (r.end.y - 1)), 0)
+			if dx + dy < best_d:
+				best_d = dx + dy
+				best = r_i
+		if best >= 0:
+			portal_rooms[best] = true
 	for r_i in range(result.rooms.size()):
 		var r: Rect2i = result.rooms[r_i]
 		for y in range(maxi(r.position.y, 0), mini(r.end.y, height)):
@@ -231,6 +253,8 @@ func _build(result) -> void:
 	var l_dead: Array[int] = []
 	var l_niche: Array[int] = []
 	var l_edge: Array[int] = []
+	var l_top: Array[int] = []
+	var l_portal: Array[int] = []
 	var floor_list: Array[int] = []
 	for y in range(height):
 		for x in range(width):
@@ -261,11 +285,14 @@ func _build(result) -> void:
 			if room[i] >= 0: l_room.append(i)
 			else: l_corr.append(i)
 			if edge[i] == 1: l_edge.append(i)
+			if int(level[i]) > HEIGHT_OFFSET: l_top.append(i)
+			if room[i] >= 0 and portal_rooms.has(room[i]): l_portal.append(i)
 	floor_cells = PackedInt32Array(floor_list)
 	var lists := {
 		&"wall_n": l_n, &"wall_s": l_s, &"wall_e": l_e, &"wall_w": l_w, &"wall_any": l_any,
 		&"corner": l_corner, &"open": l_open, &"center": l_center, &"room": l_room,
 		&"corridor": l_corr, &"dead_end": l_dead, &"niche": l_niche, &"plateau_edge": l_edge,
+		&"plateau_top": l_top, &"portal_room": l_portal,
 	}
 	for tg in ObjectCatalog.CONTEXT_TAGS:
 		tag_cells[StringName(tg)] = PackedInt32Array(lists[StringName(tg)])

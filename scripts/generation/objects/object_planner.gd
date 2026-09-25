@@ -56,6 +56,8 @@ func _run(result, catalog: ObjectCatalog) -> void:
 	if catalog == null:
 		return
 	for di in range(catalog.defs.size()):
+		if catalog.defs[di].klass == ObjectDef.Klass.INTERACTIVE:
+			plan.interactive_scenes[catalog.defs[di].scene] = true
 		defs_by_id[catalog.defs[di].id] = catalog.defs[di]
 		markers[catalog.defs[di].id] = di + 1
 	for di in range(catalog.defs.size()):
@@ -210,35 +212,89 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 	var cands := _candidates(def)
 	if cands.is_empty():
 		return
+	if def.per_room > 0.0:
+		_place_per_room(def, marker, cands, rng)
+		return
+	var total := cands.size()
+	# prefer: najpierw kandydaci z tagami preferowanymi, potem reszta (każda część losowo).
+	var pref := PackedInt32Array()
+	if not def.prefer.is_empty():
+		var rest := PackedInt32Array()
+		for i in cands:
+			if _preferred(i, def):
+				pref.append(i)
+			else:
+				rest.append(i)
+		cands = rest
 	var target := 0
 	if def.count_min >= 0:
 		target = rng.randi_range(def.count_min, def.count_max)
 	else:
 		# Zaokrąglenie losowe: 0.4 sztuki -> 1 sztuka w 40% map (zwykłe round dawało rzadkim
 		# obiektom na małych mapach zawsze 0).
-		var want := def.density * cands.size() / 100.0
+		var want := def.density * total / 100.0
 		target = int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 	if target <= 0:
 		return
 	var placed := 0
+	if not pref.is_empty():
+		placed = _pick(def, marker, pref, rng, target, 0)
 	# Tryb free przy dużej gęstości: kilka przejść po kandydatach (kilka punktów na kratkę).
 	var passes := 1
 	if def.placement == ObjectDef.Placement.FREE:
-		passes = clampi(ceili(float(target) / cands.size()) + 1, 1, 4)
+		passes = clampi(ceili(float(target) / maxi(cands.size(), 1)) + 1, 1, 4)
 	for _pass in range(passes):
-		var k := cands.size()
-		while k > 0 and placed < target:
-			var j := rng.randi_range(0, k - 1)
-			var i := cands[j]
-			cands[j] = cands[k - 1]
-			cands[k - 1] = i
-			k -= 1
-			if def.cluster_min > 0:
-				placed += _place_cluster(def, marker, i, rng, target - placed)
-			elif _place_one(def, marker, i, rng):
-				placed += 1
 		if placed >= target:
 			break
+		placed = _pick(def, marker, cands, rng, target, placed)
+
+
+## Losowanie bez powtórzeń z `cands` (tasowanie w miejscu) aż do `target` sztuk.
+func _pick(def: ObjectDef, marker: int, cands: PackedInt32Array, rng: RandomNumberGenerator, target: int, placed: int) -> int:
+	var k := cands.size()
+	while k > 0 and placed < target:
+		var j := rng.randi_range(0, k - 1)
+		var i := cands[j]
+		cands[j] = cands[k - 1]
+		cands[k - 1] = i
+		k -= 1
+		if def.cluster_min > 0:
+			placed += _place_cluster(def, marker, i, rng, target - placed)
+		elif _place_one(def, marker, i, rng):
+			placed += 1
+	return placed
+
+
+func _preferred(i: int, def: ObjectDef) -> bool:
+	for t in def.prefer:
+		if f.has_tag(i, t):
+			return true
+	return false
+
+
+## per_room: w każdym pokoju poza portalowymi (losowa kolejność) z szansą per_room jedna sztuka —
+## najpierw w kratkach preferowanych, potem w pozostałych kratkach pokoju.
+func _place_per_room(def: ObjectDef, marker: int, cands: PackedInt32Array, rng: RandomNumberGenerator) -> void:
+	var by_room := {}
+	for i in cands:
+		var r := f.room[i]
+		if r < 0 or f.portal_rooms.has(r):
+			continue
+		if not by_room.has(r):
+			by_room[r] = [PackedInt32Array(), PackedInt32Array()]
+		(by_room[r] as Array)[0 if _preferred(i, def) else 1].append(i)
+	var rooms: Array = range(f.room_count)
+	for k in range(rooms.size() - 1, 0, -1):
+		var j := rng.randi_range(0, k)
+		var t = rooms[k]
+		rooms[k] = rooms[j]
+		rooms[j] = t
+	for r in rooms:
+		if not by_room.has(r) or rng.randf() >= def.per_room:
+			continue
+		var parts: Array = by_room[r]
+		if _pick(def, marker, parts[0], rng, 1, 0) == 0:
+			_pick(def, marker, parts[1], rng, 1, 0)
 
 
 ## Kratki kotwic spełniające reguły i wolne od FORBID (bez duplikatów między tagami).
@@ -451,46 +507,71 @@ func _finish(pl: ObjectPlacement, marker: int, rng: RandomNumberGenerator) -> vo
 # --- 4. Osiągalność ----------------------------------------------------------------------
 
 ## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> zdejmij przeszkody stykające się
-## (8-sąsiedztwo) z odciętym kawałkiem; powtarzaj do skutku.
+## (8-sąsiedztwo) z odciętym kawałkiem. Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada
+## (obstawiony przeszkodami) -> zdejmij przeszkody wokół niego, a gdy się nie da — jego samego.
+## Powtarzaj do skutku.
 func _verify_reach() -> void:
 	if entrance_i < 0:
 		return
 	var w := f.width
+	var n := f.width * f.height
 	for _round in range(REACH_ROUNDS):
 		var parent := _bfs_parents(entrance_i, true)
 		var cut := {}
 		for i in range(parent.size()):
 			if reach0[i] == 1 and parent[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID:
 				cut[i] = true
-		if cut.is_empty():
+		var boxed := {}
+		for pl in plan.placements:
+			if pl.def.klass != ObjectDef.Klass.INTERACTIVE:
+				continue
+			var ok := false
+			for j in pl.cells:
+				for k in [j - 1, j + 1, j - w, j + w]:
+					if k >= 0 and k < n and absi(k % w - j % w) <= 1 and parent[k] != -1 and not plan.occupancy[k] & ObjectPlan.SOLID:
+						ok = true
+			if not ok:
+				boxed[pl] = true
+		if cut.is_empty() and boxed.is_empty():
 			return
 		var near := {}
-		for i in cut:
+		var src: Array = cut.keys()
+		for pl in boxed:
+			src.append_array(Array(pl.cells))
+		for i in src:
 			for dy in range(-1, 2):
 				for dx in range(-1, 2):
 					var j: int = i + dy * w + dx
-					if j >= 0 and j < parent.size() and absi(j % w - i % w) <= 1:
+					if j >= 0 and j < n and absi(j % w - i % w) <= 1:
 						near[j] = true
 		var keep: Array[ObjectPlacement] = []
 		var removed := 0
 		for pl in plan.placements:
 			var hit := false
-			if pl.def.is_solid():
+			if pl.def.is_solid() and not boxed.has(pl):
 				for j in pl.cells:
 					if near.has(j):
 						hit = true
 						break
 			if hit:
 				removed += 1
-				for j in pl.cells:
-					plan.occupancy[j] &= ~(ObjectPlan.USED | ObjectPlan.SOLID)
 			else:
 				keep.append(pl)
 		if removed == 0:
-			return
+			if boxed.is_empty():
+				return
+			# Nic wokół nie da się zdjąć — zdejmij obstawione obiekty interaktywne.
+			keep = []
+			for pl in plan.placements:
+				if boxed.has(pl):
+					removed += 1
+				else:
+					keep.append(pl)
 		plan.removed_for_reach += removed
 		plan.placements = keep
-		# Zdjęcie mogło odsłonić kratki innych obiektów (dzielone przez free) — odtwórz bity.
+		# Odtwórz bity zajętości z pozostałych obiektów (zdjęte kratki bywają dzielone przez free).
+		for i in range(n):
+			plan.occupancy[i] &= ~(ObjectPlan.USED | ObjectPlan.SOLID)
 		for pl in keep:
 			var bits := ObjectPlan.USED | (ObjectPlan.SOLID if pl.def.is_solid() else 0)
 			for j in pl.cells:

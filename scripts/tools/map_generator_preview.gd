@@ -906,7 +906,7 @@ func _generate_current_map_impl() -> void:
 			last_exit_pos.x, last_exit_pos.y,
 			dist,
 			res.enemy_spawns.size() if "enemy_spawns" in res else 0,
-			res.chest_spawns.size() if "chest_spawns" in res else 0,
+			_chest_cells(res).size(),
 			extra_stats
 		]
 
@@ -1118,7 +1118,7 @@ func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
 		info.tags.append("🏁 META (Wyjście)")
 
 	if res:
-		if "chest_spawns" in res and tile_pos in res.chest_spawns:
+		if tile_pos in _chest_cells(res):
 			info.tags.append("📦 Skrzynia")
 		if "enemy_spawns" in res:
 			for esp in res.enemy_spawns:
@@ -1279,3 +1279,13 @@ func _on_tile_overlay_draw() -> void:
 				var d_bg := Rect2(mid_pos.x - 3, mid_pos.y - d_size.y + 1, d_size.x + 6, d_size.y + 3)
 				_tile_overlay.draw_rect(d_bg, Color(0.1, 0.1, 0.05, 0.9), true)
 				_tile_overlay.draw_string(font, mid_pos, dist_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1.0, 0.9, 0.3))
+
+
+## Skrzynie mapy: z SpawnPlanner (chest_spawns) i z generatora obiektów (INTERACTIVE "chest").
+func _chest_cells(res) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if "chest_spawns" in res:
+		out.append_array(res.chest_spawns)
+	if "objects" in res and res.objects != null:
+		out.append_array(res.objects.cells_with_scene("chest"))
+	return out
