@@ -188,6 +188,9 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 static func _check_structure(bake: ObjectBake, errors: Array) -> void:
 	if bake.nested_body:
 		errors.append("%s: StaticBody2D powinien być korzeniem sceny (bez Node2D nad nim)." % bake.path)
+	var bit := ObjectBake.object_layer_bit()
+	if bake.has_collision() and bake.collision_layer & bit == 0:
+		errors.append("%s: kolizja obiektu nie jest na warstwie %s (collision_layer %d, oczekiwany bit %d) — gracz przez nią przejdzie." % [bake.path, ObjectBake.OBJECT_LAYER_NAME, bake.collision_layer, bit])
 
 
 ## Pola z metadanych sceny do wpisu. id tylko przy aktualizacji (przy dodawaniu już ustawione),

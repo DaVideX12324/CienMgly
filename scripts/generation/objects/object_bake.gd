@@ -15,6 +15,8 @@ extends RefCounted
 ## zagnieżdżone body działa, ale ustawia nested_body (narzędzie / wtyczka katalogu to zgłaszają).
 
 const META_PREFIX := "object_"
+const OBJECT_LAYER_NAME := "ObjectCollisions"
+const OBJECT_LAYER_FALLBACK := 6
 const BAKEABLE := ["Node2D", "Sprite2D", "StaticBody2D", "CollisionShape2D", "CollisionPolygon2D"]
 
 var path := ""
@@ -66,6 +68,15 @@ static func clear_cache() -> void:
 	_lock()
 	_cache.clear()
 	_mutex.unlock()
+
+
+## Bit warstwy fizyki obiektów: warstwa nazwana "ObjectCollisions" w Project Settings
+## (layer_names/2d_physics), a bez nazwy — warstwa 6.
+static func object_layer_bit() -> int:
+	for i in range(1, 33):
+		if String(ProjectSettings.get_setting("layer_names/2d_physics/layer_%d" % i, "")) == OBJECT_LAYER_NAME:
+			return 1 << (i - 1)
+	return 1 << (OBJECT_LAYER_FALLBACK - 1)
 
 
 func has_collision() -> bool:
