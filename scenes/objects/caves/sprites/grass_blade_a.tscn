@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_mxb3h"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3k2h0"]
+atlas = ExtResource("1_mxb3h")
+region = Rect2(247, 35, 3, 11)
+filter_clip = true
+
+[node name="GrassBladeA" type="Node2D" unique_id=1523179518]
+metadata/object_group = "plants"
+metadata/object_terrain = ["grass"]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=54585926]
+texture = SubResource("AtlasTexture_3k2h0")
+centered = false
+offset = Vector2(-1, -9)

@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Props.png" id="1_gqh22"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bv28c"]
+atlas = ExtResource("1_gqh22")
+region = Rect2(358, 36, 20, 26)
+filter_clip = true
+
+[node name="MushroomPurpleSmallIcicles" type="Node2D" unique_id=443718183]
+metadata/object_group = "mushrooms_small"
+metadata/object_terrain = ["grass"]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=674874476]
+texture = SubResource("AtlasTexture_bv28c")
+centered = false
+offset = Vector2(-10, -24)

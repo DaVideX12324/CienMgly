@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_hvxf6"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j3urv"]
+atlas = ExtResource("1_hvxf6")
+region = Rect2(229, 19, 7, 10)
+filter_clip = true
+
+[node name="StalagmiteSmall" type="Node2D" unique_id=2012459230]
+metadata/object_group = "stalagmites_small"
+metadata/object_terrain = ["mud", "plain"]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=26077653]
+texture = SubResource("AtlasTexture_j3urv")
+centered = false
+offset = Vector2(-3, -8)

@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_2w78b"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kutj3"]
+atlas = ExtResource("1_2w78b")
+region = Rect2(261, 54, 5, 5)
+filter_clip = true
+
+[node name="MushroomBrownD" type="Node2D" unique_id=103753282]
+metadata/object_group = "mushrooms_brown"
+metadata/object_terrain = ["mud", "plain"]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=751397145]
+texture = SubResource("AtlasTexture_kutj3")
+centered = false
+offset = Vector2(-3, -3)

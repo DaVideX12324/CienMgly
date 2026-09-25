@@ -1,14 +1,37 @@
 {
   "groups": {
-    "sprites": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 3.0,
-                 "cluster": { "size": [2, 4], "radius": 2 } },
-    "static":  { "class": "PROP", "placement": "free", "spacing_px": 48, "density": 0.8,
-                 "context": ["open"], "flip_h": true }
+    "sprites": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 3, "cluster": { "size": [2, 4], "radius": 2 } },
+    "static": { "class": "PROP", "placement": "free", "spacing_px": 48, "density": 0.8, "context": ["open"], "flip_h": true },
+    "mushrooms_big": { "class": "PROP", "placement": "free", "spacing_px": 112, "density": 2, "flip_h": true, "priority": 450 },
+    "corals": { "class": "PROP", "placement": "free", "spacing_px": 80, "density": 0.3, "flip_h": true, "priority": 420 },
+    "mushrooms_medium": { "class": "PROP", "placement": "free", "spacing_px": 36, "density": 2, "flip_h": true, "cluster": { "size": [2, 3], "radius": 2 } },
+    "stalagmites": { "class": "PROP", "placement": "free", "spacing_px": 28, "density": 2.5, "context": ["wall_any"], "flip_h": true, "cluster": { "size": [2, 3], "radius": 2 } },
+    "rocks": { "class": "PROP", "placement": "free", "spacing_px": 40, "density": 0.4, "flip_h": true },
+    "mushrooms_small": { "class": "DECAL", "placement": "grid_jitter", "jitter": 4, "density": 6, "flip_h": true, "cluster": { "size": [2, 5], "radius": 2 } },
+    "stalagmites_small": { "class": "DECAL", "placement": "grid_jitter", "jitter": 4, "density": 1.5, "context": ["wall_any"], "flip_h": true, "cluster": { "size": [2, 4], "radius": 2 } },
+    "plants": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 12, "flip_h": true, "cluster": { "size": [3, 6], "radius": 2 } },
+    "mushrooms_brown": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 1.5, "flip_h": true, "cluster": { "size": [3, 6], "radius": 2 } },
+    "rubble": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 3, "flip_h": true, "cluster": { "size": [2, 5], "radius": 2 } },
+    "coral_sprouts": { "class": "DECAL", "placement": "grid_jitter", "jitter": 4, "density": 1, "flip_h": true, "cluster": { "size": [2, 3], "radius": 1 } }
   },
   "objects": [
-    { "id": "pebble_mini", "group": "sprites",
-      "scene": "res://modules/quiz_rpg/scenes/objects/caves/sprites/pebble_mini.tscn" },
-    { "id": "rock_big", "group": "static",
-      "scene": "res://modules/quiz_rpg/scenes/objects/caves/static/rock_big.tscn" }
+    { "id": "pebble_mini", "group": "sprites", "scene": "res://modules/quiz_rpg/scenes/objects/caves/sprites/pebble_mini.tscn" },
+    { "id": "rock_big", "group": "static", "scene": "res://modules/quiz_rpg/scenes/objects/caves/static/rock_big.tscn" },
+    { "id": "pebble_medium", "group": "sprites", "scene": "res://modules/quiz_rpg/scenes/objects/caves/sprites/pebble_medium.tscn" },
+    { "id": "pebble_small", "group": "sprites", "scene": "res://modules/quiz_rpg/scenes/objects/caves/sprites/pebble_small.tscn" },
+    { "id": "pebble_large", "group": "static", "scene": "res://modules/quiz_rpg/scenes/objects/caves/static/pebble_large.tscn" },
+    { "id": "mushroom_purple_big", "group": "mushrooms_big", "terrain": ["grass"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_huge.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_huge_icicles.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_giant.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_giant_icicles.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_tall.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_tall_icicles.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_large.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_large_icicles.tscn"] },
+    { "id": "coral_red_big", "group": "corals", "scene": ["res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_huge.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_large.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_cluster.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_group.tscn"] },
+    { "id": "coral_red_medium", "group": "corals", "spacing_px": 40, "density": 0.5, "scene": ["res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_medium_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_medium_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/coral_red_horn.tscn"] },
+    { "id": "mushroom_purple_medium", "group": "mushrooms_medium", "terrain": ["grass"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_medium_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_medium_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_medium_c.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_medium_icicles_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_medium_icicles_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/mushroom_purple_medium_icicles_c.tscn"] },
+    { "id": "stalagmite", "group": "stalagmites", "terrain": ["mud", "plain"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/static/stalagmite_tall.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/stalagmite_medium.tscn", "res://modules/quiz_rpg/scenes/objects/caves/static/stalagmite_short.tscn"] },
+    { "id": "rock_brown_medium", "group": "rocks", "terrain": ["mud", "plain"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/static/rock_brown_medium.tscn"] },
+    { "id": "mushroom_purple_small", "group": "mushrooms_small", "terrain": ["grass"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_purple_small.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_purple_small_icicles.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_purple_tiny_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_purple_tiny_icicles_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_purple_tiny_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_purple_tiny_icicles_b.tscn"] },
+    { "id": "stalagmite_small", "group": "stalagmites_small", "terrain": ["mud", "plain"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/stalagmite_small.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/stalagmite_tiny.tscn"] },
+    { "id": "glow_plant", "group": "plants", "terrain": ["grass"], "density": 3, "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/glow_plant.tscn"] },
+    { "id": "grass_blades", "group": "plants", "terrain": ["grass"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/grass_blade_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/grass_blade_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/grass_blade_c.tscn"] },
+    { "id": "mushroom_brown", "group": "mushrooms_brown", "terrain": ["mud", "plain"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_brown_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_brown_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_brown_c.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_brown_d.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/mushroom_brown_e.tscn"] },
+    { "id": "rubble_brown", "group": "rubble", "terrain": ["mud", "plain"], "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/rock_brown_small_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/rock_brown_small_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/rock_brown_small_c.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/rock_brown_tiny.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/pebble_brown.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/dirt_speck_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/dirt_speck_b.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/dirt_speck_c.tscn"] },
+    { "id": "coral_sprout", "group": "coral_sprouts", "scene": ["res://modules/quiz_rpg/scenes/objects/caves/sprites/coral_sprout_a.tscn", "res://modules/quiz_rpg/scenes/objects/caves/sprites/coral_sprout_b.tscn"] }
   ]
 }

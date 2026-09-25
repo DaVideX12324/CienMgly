@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_v106r"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mw1ms"]
+atlas = ExtResource("1_v106r")
+region = Rect2(193, 117, 46, 41)
+filter_clip = true
+
+[node name="CoralRedCluster" type="Node2D" unique_id=974653678]
+metadata/object_group = "corals"
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1912345056]
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=1896787189]
+texture = SubResource("AtlasTexture_mw1ms")
+centered = false
+offset = Vector2(-23, -39)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=1248951930]
+polygon = PackedVector2Array(-5, -6, 5, -6, 7, -4, 7, 0, 5, 2, -5, 2, -7, 0, -7, -4)

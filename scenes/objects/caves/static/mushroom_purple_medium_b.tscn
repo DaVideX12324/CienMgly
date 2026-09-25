@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Props.png" id="1_b3hqn"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aawq6"]
+atlas = ExtResource("1_b3hqn")
+region = Rect2(291, 3, 27, 28)
+filter_clip = true
+
+[node name="MushroomPurpleMediumB" type="Node2D" unique_id=903778250]
+metadata/object_group = "mushrooms_medium"
+metadata/object_terrain = ["grass"]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1108415696]
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=1231237645]
+texture = SubResource("AtlasTexture_aawq6")
+centered = false
+offset = Vector2(-11, -26)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=1858935081]
+polygon = PackedVector2Array(-4, -4, 4, -4, 5, -3, 5, 1, 4, 2, -4, 2, -5, 1, -5, -3)

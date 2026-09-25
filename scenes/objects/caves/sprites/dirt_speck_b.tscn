@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_ldpjv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2xhav"]
+atlas = ExtResource("1_ldpjv")
+region = Rect2(214, 104, 4, 3)
+filter_clip = true
+
+[node name="DirtSpeckB" type="Node2D" unique_id=1515552415]
+metadata/object_group = "rubble"
+metadata/object_terrain = ["mud", "plain"]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=532437507]
+texture = SubResource("AtlasTexture_2xhav")
+centered = false
+offset = Vector2(-2, -1)
