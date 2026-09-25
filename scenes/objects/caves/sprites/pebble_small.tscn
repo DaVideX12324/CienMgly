@@ -4,7 +4,7 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_yfsik"]
 atlas = ExtResource("1_ens0p")
-region = Rect2(240, 80, 16, 16)
+region = Rect2(224, 80, 16, 16)
 
 [node name="RockMini" type="Node2D" unique_id=440265832]
 

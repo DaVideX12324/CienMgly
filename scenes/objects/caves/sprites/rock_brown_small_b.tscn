@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_fgph8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_775op"]
+atlas = ExtResource("1_fgph8")
+region = Rect2(214, 53, 6, 5)
+filter_clip = true
+
+[node name="RockBrownSmallB" type="Node2D" unique_id=1032636231]
+metadata/object_group = "rubble"
+metadata/object_terrain = ["mud", "plain"]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1726222058]
+texture = SubResource("AtlasTexture_775op")
+centered = false
+offset = Vector2(-3, -3)
