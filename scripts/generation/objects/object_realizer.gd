@@ -2,13 +2,13 @@ class_name ObjectRealizer
 extends RefCounted
 
 ## ObjectPlan -> scena (główny wątek). Trzy ścieżki, wg tego, czego obiekt potrzebuje:
-## - kafel (placement grid + atlas, nie INTERACTIVE): warstwa Decals (DECAL, pod encjami) albo
+## - kafel (placement grid + atlas, nie INTERACTIVE): warstwa Decals (DECAL) albo
 ##   Props (PROP, y-sort); kolizja z warstwy fizyki TileSetu;
 ## - canvas item (grid_jitter / free): RenderingServer pod węzłem Objects (y-sort razem z encjami),
 ##   grafika = region atlasu TileSetu; kolizja: kształty w jednym statycznym body PhysicsServer2D
 ##   na fragment CHUNK×CHUNK kratek;
 ## - wypieczona scena (DECAL/PROP z "scene", statyczna — ObjectBake): canvas item ze sprite'ami sceny
-##   (PROP pod Objects z y-sortem, DECAL pod DecalItems z -1) + jej kształty w body fragmentu;
+##   (PROP pod Objects, DECAL pod DecalItems — oba z = 0 z y-sortem) + jej kształty w body fragmentu;
 ##   scena niestatyczna (skrypt, animacja…) -> instancja;
 ## - scena (INTERACTIVE): instancja w Objects (alias ze `scenes` albo ścieżka res://).
 ## RID-y trzyma węzeł ObjectRuntime poziomu (zwalniane przy regeneracji i usunięciu poziomu).
@@ -19,6 +19,9 @@ const RUNTIME_NAME := "ObjectRuntime"
 const DECALS := "Decals"
 const PROPS := "Props"
 const DECAL_ITEMS := "DecalItems"
+## DECAL sortuje się po GÓRNEJ krawędzi kratki (origin = jej środek), więc postać stojąca na nim
+## albo niżej zawsze go przykrywa, a ściana nad nim nachodzi na niego jak na podłogę.
+const DECAL_SORT_LIFT := ObjectDef.CELL * 0.5
 const GROUP := &"generated_objects"
 
 
@@ -60,7 +63,10 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 		elif not def.bakes.is_empty():
 			var b := def.bakes[pl.variant]
 			if b.static_ok:
-				_place_baked(decal_items if def.klass == ObjectDef.Klass.DECAL else objects, b, pl, runtime)
+				if def.klass == ObjectDef.Klass.DECAL:
+					_place_baked(decal_items, b, pl, runtime, DECAL_SORT_LIFT)
+				else:
+					_place_baked(objects, b, pl, runtime)
 				if b.has_collision() and def.is_solid():
 					_add_baked_shapes(runtime, chunk_bodies, space, b.collision_layer if b.collision_layer != 0 else layer_bits, b, pl)
 			else:
@@ -87,14 +93,16 @@ static func _objects_node(level: Node2D) -> Node2D:
 	return objects
 
 
-## Wypieczone DECAL-e: płasko pod encjami (bez y-sortu), nad podłogą.
+## Wypieczone DECAL-e: z = 0 z y-sortem (nad trawą z FloorDecor, która na z = -1 sortuje się
+## kaflami po Y i przykrywała cały węzeł); pod postaciami dzięki DECAL_SORT_LIFT.
 static func _decal_items_node(level: Node2D) -> Node2D:
 	var n := level.get_node_or_null(DECAL_ITEMS) as Node2D
 	if n == null:
 		n = Node2D.new()
 		n.name = DECAL_ITEMS
-		n.z_index = -1
 		level.add_child(n)
+	n.z_index = 0
+	n.y_sort_enabled = true
 	return n
 
 
@@ -105,11 +113,8 @@ static func _layer(level: Node2D, tileset: TileSet, layer_name: String) -> TileM
 		layer.name = layer_name
 		level.add_child(layer)
 	layer.tile_set = tileset
-	if layer_name == DECALS:
-		layer.z_index = -1   # nad FloorDecor (później w drzewie), pod encjami
-	else:
-		layer.z_index = 0
-		layer.y_sort_enabled = true
+	layer.z_index = 0   # Decals też na 0 — na -1 przykrywa je trawa (FloorDecor) i ściany
+	layer.y_sort_enabled = true
 	return layer
 
 
@@ -182,12 +187,21 @@ static func _origin_xform(pl: ObjectPlacement) -> Transform2D:
 
 
 ## Wypieczona scena: jeden canvas item na obiekt (y-sort po origin), sprite'y jako komendy rysowania.
-static func _place_baked(parent: Node2D, b: ObjectBake, pl: ObjectPlacement, runtime: ObjectRuntime) -> void:
+## Transformacja canvas itemu: origin obiektu podniesiony o sort_lift (punkt y-sortu).
+static func item_xform(pl: ObjectPlacement, sort_lift: float = 0.0) -> Transform2D:
+	var xf := _origin_xform(pl)
+	xf.origin.y -= sort_lift
+	return xf
+
+
+## sort_lift: punkt y-sortu o tyle px wyżej niż origin (rysunek bez zmian).
+static func _place_baked(parent: Node2D, b: ObjectBake, pl: ObjectPlacement, runtime: ObjectRuntime, sort_lift: float = 0.0) -> void:
 	var item := RenderingServer.canvas_item_create()
 	RenderingServer.canvas_item_set_parent(item, parent.get_canvas_item())
-	RenderingServer.canvas_item_set_transform(item, _origin_xform(pl))
+	RenderingServer.canvas_item_set_transform(item, item_xform(pl, sort_lift))
+	var back := Transform2D(0.0, Vector2(0.0, sort_lift))
 	for sp in b.sprites:
-		RenderingServer.canvas_item_add_set_transform(item, sp["xform"])
+		RenderingServer.canvas_item_add_set_transform(item, back * (sp["xform"] as Transform2D))
 		RenderingServer.canvas_item_add_texture_rect_region(item, sp["dst"], (sp["tex"] as Texture2D).get_rid(), sp["src"], sp["color"])
 	runtime.items.append(item)
 	runtime.counts["items"] += 1
