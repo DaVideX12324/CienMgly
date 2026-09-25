@@ -28,6 +28,8 @@ enum LevelType {
 
 @export var level_type: LevelType = LevelType.FOREST_OVERWORLD
 @export var map_seed: int = 0
+## Nadpisania GenerationFlags (nazwa flagi -> wartość) ponad companion-JSON — ustawia eksplorator map.
+var flag_overrides: Dictionary = {}
 @export var map_width: int = 160
 @export var map_height: int = 160
 @export var custom_tileset: TileSet = null
@@ -308,6 +310,10 @@ func _prepare_job(seed_val: int) -> GenJob:
 
 	# Flagi generacji z JSON (wspólne dla topologii i tilingu). Brak JSON => null => domyślne.
 	var cave_flags = cfg.build_flags() if cfg != null else null
+	# Nadpisania flag z eksploratora map (np. enable_bulge_flatten) — ponad companion-JSON.
+	if cave_flags != null:
+		for k in flag_overrides:
+			cave_flags.set(k, flag_overrides[k])
 
 	var job := GenJob.new()
 	job.is_cave = level_type == LevelType.CAVE_DUNGEON

@@ -34,6 +34,7 @@ const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/c
 @onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
 @onready var check_edge_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask
 var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_ensure_height_mask_check)
+var check_bulge: CheckBox = null  # flaga generatora enable_bulge_flatten (_ensure_flag_checks)
 @onready var btn_generate: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnGenerate
 
 @onready var btn_fit_all: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1/BtnFitAll
@@ -322,6 +323,21 @@ func _ensure_height_mask_check() -> void:
 	box.move_child(check_height_mask, check_edge_mask.get_index() + 1)
 
 
+## Checkboxy flag generatora pod CheckNav (w kodzie). Stan początkowy z caves.json.
+func _ensure_flag_checks() -> void:
+	if check_bulge or not check_nav:
+		return
+	check_bulge = CheckBox.new()
+	check_bulge.name = "CheckBulgeFlatten"
+	check_bulge.text = "Spłaszczanie wybrzuszeń ścian"
+	check_bulge.tooltip_text = "Flaga enable_bulge_flatten (ShortBulgeFlattenPass): wyrównuje wąskie ściany 3H+ przy 2H. Zmiana przegenerowuje mapę."
+	var cfg = GeneratorBehaviourConfig.load_from_json_path("res://modules/quiz_rpg/resources/maps/config/caves.json")
+	check_bulge.button_pressed = cfg.build_flags().enable_bulge_flatten
+	var box := check_nav.get_parent()
+	box.add_child(check_bulge)
+	box.move_child(check_bulge, check_nav.get_index() + 1)
+
+
 func _toggle_height_mask() -> void:
 	var should_show := not is_instance_valid(_height_mask_sprite)
 	if check_height_mask:
@@ -543,6 +559,9 @@ func _setup_ui() -> void:
 	_ensure_height_mask_check()
 	if check_height_mask:
 		check_height_mask.toggled.connect(_on_height_mask_toggled)
+	_ensure_flag_checks()
+	if check_bulge:
+		check_bulge.toggled.connect(func(_on: bool) -> void: _generate_current_map())
 
 	# 6. Kamera
 	btn_fit_all.pressed.connect(fit_to_screen)
@@ -834,6 +853,8 @@ func _generate_current_map_impl() -> void:
 	proc_level.set("cave_max_rooms", int(spin_rooms.value) if spin_rooms else 0)
 	proc_level.set("spawn_entities_enabled", check_entities.button_pressed if check_entities else true)
 	proc_level.set("setup_nav_enabled", check_nav.button_pressed if check_nav else true)
+	if check_bulge:
+		proc_level.set("flag_overrides", {"enable_bulge_flatten": check_bulge.button_pressed})
 	level_container.add_child(proc_level)
 	if proc_level.get("is_generating") == true:
 		await proc_level.generation_finished
