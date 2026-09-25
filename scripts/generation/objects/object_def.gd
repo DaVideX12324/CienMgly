@@ -42,6 +42,7 @@ var terrain_margin: int = 0           # ten sam teren w promieniu (Chebyshev) �
 var cluster_min: int = 0              # cluster: {"size": [a, b], "radius": r} — skupiska
 var cluster_max: int = 0
 var cluster_radius: int = 0
+var companions: Array[Dictionary] = [] # {id: StringName, min, max, radius} — dostawiane wokół każdej sztuki
 var keep_paths: bool = true           # z kolizją: nie na zarezerwowanych przejściach
 var priority: int = 0                 # większy = rozmieszczany wcześniej
 var flip_h: bool = false              # losowe odbicie (canvas item / scena)
