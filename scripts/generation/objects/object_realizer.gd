@@ -216,6 +216,18 @@ static func _add_baked_shapes(runtime: ObjectRuntime, chunk_bodies: Dictionary, 
 		runtime.counts["shapes"] += 1
 
 
+## Pierwszy węzeł sceny z właściwością unique_id (skrypt skrzyni bywa w dziecku korzenia).
+static func _set_unique_id(node: Node, id: String) -> bool:
+	if "unique_id" in node:
+		if String(node.get("unique_id")).is_empty():
+			node.set("unique_id", id)
+		return true
+	for c in node.get_children():
+		if _set_unique_id(c, id):
+			return true
+	return false
+
+
 ## Scena: pozycja = środek dolnego wiersza podstawy (1×1 -> środek kratki, jak dotychczasowe skrzynie).
 static func _place_scene(objects: Node2D, pl: ObjectPlacement, path: String, scenes: Dictionary, cache: Dictionary, runtime: ObjectRuntime) -> void:
 	var packed: PackedScene = cache.get(path)
@@ -231,6 +243,8 @@ static func _place_scene(objects: Node2D, pl: ObjectPlacement, path: String, sce
 	if inst == null:
 		return
 	inst.position = pl.origin()
+	# Stałe id (stan skrzyni w LevelStateManager): obiekt + kratka — ta sama mapa = te same id.
+	_set_unique_id(inst, "%s_%d_%d" % [pl.def.id, pl.cell.x, pl.cell.y])
 	if pl.flip:
 		inst.scale.x = -1.0
 	inst.add_to_group(GROUP)

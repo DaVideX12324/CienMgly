@@ -16,6 +16,7 @@ var occupancy := PackedByteArray()
 var stats := {}           # id obiektu -> liczba
 var removed_for_reach := 0  # przeszkody zdjęte, bo odcinały teren
 var time_usec := 0
+var interactive_scenes := {}  # sceny INTERACTIVE z katalogu (np. &"chest") — kto inny ich nie stawia
 
 
 func count(def_id: StringName) -> int:
@@ -28,6 +29,15 @@ func solid_cells() -> Dictionary:
 	for i in range(occupancy.size()):
 		if occupancy[i] & SOLID:
 			out[Vector2i(i % width, i / width)] = true
+	return out
+
+
+## Postawione obiekty ze sceną `scene` (alias albo ścieżka) — np. skrzynie dla podglądu.
+func cells_with_scene(scene: String) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for p in placements:
+		if p.def.scene == scene:
+			out.append(p.cell)
 	return out
 
 

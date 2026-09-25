@@ -36,6 +36,9 @@ var shape_radius: float = 0.0         # … albo koło
 var shape_offset := Vector2.ZERO      # przesunięcie kształtu względem punktu obiektu
 var context: Array[StringName] = []   # tagi kontekstu — wystarczy jeden (OR); pusto = bez wymagań
 var avoid: Array[StringName] = []     # tagi wykluczające
+var require: Array[StringName] = []   # tagi wymagane WSZYSTKIE (AND) — np. ["room"] + context ["wall_any"]
+var prefer: Array[StringName] = []    # tagi próbowane najpierw (nisza, ślepy zaułek…), potem reszta
+var per_room: float = 0.0             # >0: w każdym pokoju poza portalowymi szansa na 1 sztukę (zamiast density)
 var levels: Array[StringName] = []    # "ground" / "plateau" / "pit"; pusto = każda wysokość
 var terrain: Array[StringName] = []   # "grass" / "mud" / "plain" (goła podłoga); pusto = każdy teren
 var terrain_margin: int = 0           # ten sam teren w promieniu (Chebyshev) — z dala od brzegu plamy
