@@ -88,6 +88,19 @@ var _gm: Node   # GameManager
 @onready var _nav_agent: NavigationAgent2D = get_node_or_null("NavigationAgent2D")
 var _grid: Dictionary = {}   # siatka mapy (ProceduralLevel.last_result.grid) — widoczność po kratkach
 
+# Ruch po siatce nawigacji (NavOutlines z generatora).
+const REPATH_INTERVAL := 0.25    # trasa przeliczana najwyżej co tyle s…
+const REPATH_DISTANCE := 8.0     # …albo gdy cel przesunie się o pół kratki
+const ARRIVE_DISTANCE := 6.0
+const STEER_RATE := 10.0         # płynny obrót kierunku (zamiast losowych drgań z Amon-Ra)
+const WANDER_PATH_FACTOR := 1.6  # cel wałęsania odrzucany, gdy ścieżka dłuższa niż promień × to (za ścianą)
+const WANDER_TRIES := 6
+var _nav_target := Vector2.INF
+var _repath_timer := 0.0
+var _move_dir := Vector2.ZERO
+var _path := PackedVector2Array()   # ścieżka z NavigationServer2D (własne śledzenie — agent tylko do RVO)
+var _path_i := 0
+
 
 func _ready() -> void:
 	_apply_enemy_data()
@@ -125,6 +138,7 @@ func _ready() -> void:
 		_raycast.collision_mask = SIGHT_RAY_MASK | ObjectBake.object_layer_bit()
 
 	_setup_detection_area()
+	_setup_nav_agent()
 
 	var cheat_service := get_node_or_null("/root/CheatService")
 	if cheat_service and cheat_service.has_signal("enemies_toggled"):
@@ -394,38 +408,63 @@ func _patrol(delta: float) -> void:
 func _idle_wander(delta: float) -> void:
 	wander_timer -= delta
 	if is_idle_pause:
-		velocity = Vector2.ZERO
+		_move_towards(Vector2.ZERO, 0.0, delta)
 		if wander_timer <= 0.0:
 			_set_new_wander_target()
 		return
 
-	var to_target = wander_target - global_position
-	if wander_timer <= 0.0 or to_target.length() < 12.0:
+	if wander_timer <= 0.0 or global_position.distance_to(wander_target) < ARRIVE_DISTANCE * 2.0:
 		_set_new_wander_target()
 		return
 
-	velocity = to_target.normalized() * (patrol_speed * 0.5)
-	move_and_slide()
+	var dir := _nav_direction(wander_target, delta)
+	if dir == Vector2.ZERO:
+		_set_new_wander_target()
+		return
+	_move_towards(dir, patrol_speed * 0.5, delta)
 
-	if is_on_wall():
+	if is_on_wall() and not _has_nav_path():
 		_set_new_wander_target(get_wall_normal())
 
 
+## Nowy cel wałęsania w promieniu `wander_radius`. Z siatką nawigacji: punkt przyciągnięty do siatki,
+## ścieżka nie dłuższa niż promień × WANDER_PATH_FACTOR (cel za ścianą = długi objazd -> odrzuć).
+## Bez siatki (jeszcze się wczytuje / poziom bez niej): cel na czystej linii po siatce mapy.
 func _set_new_wander_target(bias_normal: Vector2 = Vector2.ZERO) -> void:
 	if randf() < 0.25 and bias_normal == Vector2.ZERO:
-		is_idle_pause = true
-		wander_timer = randf_range(1.0, 2.5)
-		velocity = Vector2.ZERO
+		_start_idle_pause()
 		return
 
 	is_idle_pause = false
 	wander_timer = randf_range(2.0, 4.0)
+	var map := _nav_map()
+	var grid := _map_grid()
+	for _i in range(WANDER_TRIES):
+		var random_dir := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+		if bias_normal != Vector2.ZERO:
+			random_dir = (random_dir + bias_normal * 1.8).normalized()
+		var cand := global_position + random_dir * randf_range(30.0, wander_radius)
+		if map.is_valid():
+			var path := NavigationServer2D.map_get_path(map, global_position, cand, true)
+			if not path.is_empty():
+				var length := 0.0
+				for k in range(path.size() - 1):
+					length += path[k].distance_to(path[k + 1])
+				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0:
+					wander_target = path[path.size() - 1]
+					return
+				continue
+		if grid.is_empty() or GridSight.has_line(grid, global_position, cand):
+			wander_target = cand
+			return
+	_start_idle_pause()
 
-	var random_dir = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
-	if bias_normal != Vector2.ZERO:
-		random_dir = (random_dir + bias_normal * 1.8).normalized()
 
-	wander_target = global_position + random_dir * randf_range(30.0, wander_radius)
+func _start_idle_pause() -> void:
+	is_idle_pause = true
+	wander_timer = randf_range(1.0, 2.5)
+	_move_dir = Vector2.ZERO
+	velocity = Vector2.ZERO
 
 
 func _follow_patrol_path(delta: float) -> void:
@@ -454,19 +493,78 @@ func _chase(delta: float) -> void:
 		memory_timer -= delta
 		if memory_timer <= 0.0:
 			state = State.PATROL
-			velocity = Vector2.ZERO
+			_move_towards(Vector2.ZERO, 0.0, delta)
 			_set_new_wander_target()
 			return
 
-	# Walka jest uruchamiana wyłącznie przez wejście collidera Enemy
-	# do Player/InteractionArea. Nie używaj wyniku NavigationAgent2D
-	# bez walidacji: wadliwy następny punkt potrafił stale kierować AI ku górze.
-	var direction := (last_seen_player_pos - global_position).normalized()
-	velocity = direction * patrol_speed * 1.3
-	move_and_slide()
+	# Walka startuje wyłącznie z kontaktu (collider wroga w Player/InteractionArea). Ruch po ścieżce
+	# siatki nawigacji; u celu (ostatnio widziana pozycja) wróg stoi, a nie „idzie w miejscu”.
+	_move_towards(_nav_direction(last_seen_player_pos, delta), patrol_speed * 1.3, delta)
 
-	if is_on_wall():
+
+# --- Ruch po siatce nawigacji ---------------------------------------------------------------
+
+func _setup_nav_agent() -> void:
+	if _nav_agent == null:
+		return
+	_nav_agent.path_desired_distance = ARRIVE_DISTANCE
+	_nav_agent.target_desired_distance = ARRIVE_DISTANCE
+	# Bez RVO: agent przekazuje prędkość do avoidance tylko przy własnym celu nawigacji, a ścieżkę
+	# prowadzimy sami. Wrogowie i tak nie zbijają się w punkt — kolidują ze sobą (warstwa Enemies).
+	_nav_agent.avoidance_enabled = false
+
+
+## Mapa nawigacji wroga, gdy już zsynchronizowana (pierwsza synchronizacja po dodaniu regionu) —
+## zapytania przed nią kończą się błędem. Pusty RID = brak.
+func _nav_map() -> RID:
+	var map: RID = _nav_agent.get_navigation_map() if _nav_agent != null else get_world_2d().navigation_map
+	if not map.is_valid() or NavigationServer2D.map_get_iteration_id(map) == 0:
+		return RID()
+	return map
+
+
+func _has_nav_path() -> bool:
+	return not _path.is_empty()
+
+
+## Kierunek ruchu do `target` po ścieżce siatki nawigacji. Ścieżkę pobieramy sami
+## (NavigationServer2D.map_get_path co REPATH_INTERVAL albo gdy cel się przesunie) i sami za nią idziemy:
+## NavigationAgent2D potrafił trzymać ścieżkę policzoną od (0, 0) — sprzed ustawienia pozycji — i prowadził
+## wroga „ku górze” (ponowne ustawienie tego samego celu nie wymusza przeliczenia).
+## Bez ścieżki (mapa jeszcze się wczytuje, poziom bez siatki, cel poza siatką) — prosto, ale tylko przy
+## czystej linii po siatce mapy. ZERO = u celu (albo u najbliższego osiągalnego punktu) / stój.
+func _nav_direction(target: Vector2, delta: float) -> Vector2:
+	if global_position.distance_to(target) <= ARRIVE_DISTANCE:
+		return Vector2.ZERO
+	var map := _nav_map()
+	if map.is_valid():
+		_repath_timer -= delta
+		if _repath_timer <= 0.0 or _nav_target.distance_to(target) > REPATH_DISTANCE:
+			_path = NavigationServer2D.map_get_path(map, global_position, target, true)
+			_path_i = 1
+			_nav_target = target
+			_repath_timer = REPATH_INTERVAL
+		if not _path.is_empty():
+			while _path_i < _path.size() and global_position.distance_to(_path[_path_i]) <= ARRIVE_DISTANCE:
+				_path_i += 1
+			if _path_i >= _path.size():
+				return Vector2.ZERO
+			return (_path[_path_i] - global_position).normalized()
+	var grid := _map_grid()
+	if grid.is_empty() or GridSight.has_line(grid, global_position, target):
+		return (target - global_position).normalized()
+	return Vector2.ZERO
+
+
+## Ruch w kierunku `dir` z płynnym obrotem (zamiast losowych drgań toru z Amon-Ra). ZERO = stój.
+func _move_towards(dir: Vector2, speed: float, delta: float) -> void:
+	if dir == Vector2.ZERO:
+		_move_dir = Vector2.ZERO
 		velocity = Vector2.ZERO
+		return
+	_move_dir = dir if _move_dir == Vector2.ZERO else _move_dir.slerp(dir, clampf(STEER_RATE * delta, 0.0, 1.0)).normalized()
+	velocity = _move_dir * speed
+	move_and_slide()
 
 
 func _setup_detection_area() -> void:
