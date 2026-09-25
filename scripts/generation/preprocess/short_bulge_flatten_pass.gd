@@ -9,6 +9,8 @@ func get_id() -> StringName:
 
 
 func apply(ctx: GenerationContext) -> int:
+	if ctx.flags != null and not ctx.flags.enable_bulge_flatten:
+		return 0
 	var grid := ctx.grid
 	var width := ctx.width
 	var height := ctx.height
