@@ -65,6 +65,11 @@ var _last_facing_dir: String = "down"
 enum EnemyShape { DIAMOND, CIRCLE, TRIANGLE, SQUARE, HEXAGON }
 @export var shape_type: EnemyShape = EnemyShape.DIAMOND
 
+## Maska promienia widoczności (jak w Amon-Ra: promień trafia zasłonę albo gracza): warstwa 1 „Player”
+## + warstwa 3 „GroundCollisions” (ściany); do tego warstwa obiektów „ObjectCollisions” (ObjectBake).
+## Domyślna maska RayCast2D (1) nie widziała ścian — wróg widział przez nie.
+const SIGHT_RAY_MASK := 1 | 4
+
 const OUTLINE_COLOR := Color(0.15, 0.1, 0.1)
 const EYE_COLOR    := Color(1.0, 0.9, 0.2)
 
@@ -75,13 +80,18 @@ var _gm: Node   # GameManager
 
 @onready var _raycast: RayCast2D = get_node_or_null("RayCast2D")
 @onready var _nav_agent: NavigationAgent2D = get_node_or_null("NavigationAgent2D")
+var _grid: Dictionary = {}   # siatka mapy (ProceduralLevel.last_result.grid) — widoczność po kratkach
 
 
 func _ready() -> void:
 	_apply_enemy_data()
-	_ps = CoreManager.get_singleton("PlayerStats")
-	_dm = CoreManager.get_singleton("DifficultyManager")
-	_gm = CoreManager.get_singleton("GameManager")
+	# Węzeł zamiast identyfikatora autoloadu — skrypt kompiluje się też w testach (-s), gdzie
+	# identyfikatory autoloadów nie istnieją w czasie kompilacji.
+	var core := _core()
+	if core:
+		_ps = core.get_singleton("PlayerStats")
+		_dm = core.get_singleton("DifficultyManager")
+		_gm = core.get_singleton("GameManager")
 
 	add_to_group("enemies")
 	add_to_group("interactable")
@@ -106,6 +116,7 @@ func _ready() -> void:
 
 	if _raycast:
 		_raycast.enabled = true
+		_raycast.collision_mask = SIGHT_RAY_MASK | ObjectBake.object_layer_bit()
 
 	_setup_detection_area()
 
@@ -222,31 +233,42 @@ func _direction_name_from_velocity(vel: Vector2) -> String:
 	return "down" if vel.y > 0.0 else "up"
 
 
+## Widoczność jak w Amon-Ra: promień z wroga do kształtu kolizji gracza; ściany i obiekty z kolizją
+## zasłaniają (inni wrogowie nie). Dodatkowo linia po siatce mapy: kolizje ścian są tylko na krawędziach
+## kafli, więc promień potrafił przeciec przez litą skałę (~15% linii przez ścianę).
 func _has_line_of_sight_to_player() -> bool:
-	if _raycast == null or not is_instance_valid(player_ref):
-		return true
-
-	# Bardzo blisko / w srodku wroga -- raycast moze byc niestabilny przy
-	# zerowej dlugosci, wiec traktujemy to jako widoczne bez sprawdzania.
+	if not is_instance_valid(player_ref):
+		return false
 	var distance := global_position.distance_to(player_ref.global_position)
 	if distance > detection_radius:
 		return false
-	if distance < 50.0:
-		return true
 
-	var to_player := player_ref.global_position - _raycast.global_position
-	_raycast.target_position = _raycast.to_local(_raycast.global_position + to_player.limit_length(300.0))
-	_raycast.force_raycast_update()
-	var collider := _raycast.get_collider()
+	if _raycast != null:
+		var target := player_ref.global_position
+		var shape := player_ref.get_node_or_null("CollisionShape2D") as Node2D
+		if shape:
+			target = shape.global_position
+		_raycast.target_position = _raycast.to_local(target)
+		_raycast.force_raycast_update()
+		# is_colliding, nie sam collider: przeszkody z generatora obiektów to ciała PhysicsServer2D bez
+		# węzła — get_collider() zwraca dla nich null mimo trafienia.
+		if _raycast.is_colliding():
+			var collider := _raycast.get_collider()
+			if collider != player_ref and not ((collider is Node) and (collider as Node).is_in_group("player")):
+				return false
 
-	# Brak collidera = raycast nie trafil w nic blokujace -- droga jest czysta.
-	if collider == null:
-		return true
-	if collider == player_ref:
-		return true
-	if collider is Node and (collider as Node).is_in_group("player"):
-		return true
-	return false
+	var grid := _map_grid()
+	if not grid.is_empty() and not GridSight.has_line(grid, global_position, player_ref.global_position):
+		return false
+	return true
+
+
+## Siatka mapy z poziomu (pusta dla poziomów robionych ręcznie). Szukana ponownie, dopóki pusta —
+## wróg bywa dodany, zanim poziom ustawi last_result.
+func _map_grid() -> Dictionary:
+	if _grid.is_empty():
+		_grid = GridSight.grid_for(self)
+	return _grid
 
 
 func _draw() -> void:
@@ -604,8 +626,13 @@ func _persist_boss_defeat() -> void:
 			lsm.register_device_progress(story_id)
 
 
+func _core() -> Node:
+	return get_node_or_null("/root/CoreManager")
+
+
 func _get_level_state_manager() -> Node:
-	var s: Variant = CoreManager.get_singleton("LevelStateManager")
+	var core := _core()
+	var s: Variant = core.get_singleton("LevelStateManager") if core else null
 	if s is Node:
 		return s
 	return get_node_or_null("/root/LevelStateManager")
@@ -617,8 +644,9 @@ func _get_level_manager() -> Node:
 		var lm := game_root.find_child("level_manager", true, false)
 		if lm is Node:
 			return lm
-	if CoreManager and CoreManager.has_method("get_active_module"):
-		var module_root: Variant = CoreManager.call("get_active_module")
+	var core := _core()
+	if core and core.has_method("get_active_module"):
+		var module_root: Variant = core.call("get_active_module")
 		if module_root is Node:
 			var lm2 := (module_root as Node).find_child("level_manager", true, false)
 			if lm2 is Node:
