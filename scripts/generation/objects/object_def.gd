@@ -26,7 +26,9 @@ var count_max: int = -1
 var atlas: Array[Vector2i] = []       # warianty grafiki (atlas coords w TileSecie poziomu)
 var size := Vector2i.ONE              # rozmiar sprite'a w kratkach (w × h), dół = wiersz kotwicy
 var footprint: Array[Vector2i] = []   # kratki podstawy względem kotwicy (y <= 0)
-var scene: String = ""                # INTERACTIVE: ścieżka res:// albo alias (np. "chest")
+var scene: String = ""                # pierwsza scena: INTERACTIVE — ścieżka res:// albo alias (np. "chest")
+var scenes: Array[String] = []        # warianty ze scen (DECAL/PROP): "scene": "a.tscn" albo ["a.tscn", "b.tscn"]
+var bakes: Array[ObjectBake] = []     # wypieczone sceny wariantów (DECAL/PROP)
 var collision: Collision = Collision.NONE
 var shape_rect := Vector2.ZERO        # kształt kolizji (px): prostokąt w × h …
 var shape_radius: float = 0.0         # … albo koło
@@ -61,6 +63,11 @@ func base_point(cell: Vector2i) -> Vector2:
 	return Vector2((cell.x + footprint_size().x * 0.5) * CELL, (cell.y + 1) * CELL)
 
 
+## Liczba wariantów grafiki (atlas albo sceny).
+func variant_count() -> int:
+	return maxi(atlas.size(), scenes.size())
+
+
 ## Czy obiekt rysowany jest kaflem (siatka + grafika z atlasu), a nie canvas itemem / sceną.
 func renders_as_tile() -> bool:
-	return klass != Klass.INTERACTIVE and placement == Placement.GRID and not atlas.is_empty()
+	return klass != Klass.INTERACTIVE and placement == Placement.GRID and scenes.is_empty() and not atlas.is_empty()

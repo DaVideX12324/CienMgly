@@ -35,14 +35,19 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 		else:
 			result.chest_spawns.append(center)
 
+	var covered := {}
 	if ctx.plateau != null and not ctx.plateau.is_empty():
-		_nudge_off_plateau(ctx, result)
+		covered = ctx.plateau.blocked
+	if result.objects != null:
+		covered = covered.duplicate()
+		covered.merge(result.objects.solid_cells())
+	if not covered.is_empty():
+		_nudge_off(ctx, result, covered)
 
 
-## Spawn na barierze płaskowyżu (rim, bok, lico, stopa) -> najbliższa wolna podłoga (BFS).
-## Góra płaskowyżu jest dozwolona (osiągalna schodami).
-static func _nudge_off_plateau(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult) -> void:
-	var covered: Dictionary = ctx.plateau.blocked
+## Spawn na barierze płaskowyżu (rim, bok, lico, stopa) albo na przeszkodzie z generatora obiektów
+## -> najbliższa wolna podłoga (BFS). Góra płaskowyżu jest dozwolona (osiągalna schodami).
+static func _nudge_off(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, covered: Dictionary) -> void:
 
 	for e in result.enemy_spawns:
 		if covered.has(e["pos"]):

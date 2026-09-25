@@ -7,8 +7,11 @@ extends RefCounted
 ##
 ## {
 ##   "groups":  { "rubble": { "class": "DECAL", "placement": "grid_jitter", "density": 3 } },
-##   "objects": [ { "id": "pebbles", "group": "rubble", "atlas": [12, 20], "variants": 4 } ]
+##   "objects": [ { "id": "pebbles", "group": "rubble", "scene": ["res://…/pebble_a.tscn", "res://…/pebble_b.tscn"] } ]
 ## }
+##
+## Grafika: "scene" (scena albo lista scen = warianty; statyczne są wypiekane — ObjectBake) albo
+## "atlas" (+ "variants") z TileSetu poziomu.
 
 const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count",
@@ -179,13 +182,32 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	if def.footprint.is_empty():
 		for x in range(def.size.x):
 			def.footprint.append(Vector2i(x, 0))
-	def.scene = String(m.get("scene", ""))
+	var sc = m.get("scene", "")
+	if sc is Array:
+		for x in sc:
+			def.scenes.append(String(x))
+	elif not String(sc).is_empty():
+		def.scenes.append(String(sc))
+	def.scene = def.scenes[0] if not def.scenes.is_empty() else ""
+	if def.klass != ObjectDef.Klass.INTERACTIVE:
+		for sp in def.scenes:
+			var b := ObjectBake.bake(sp)
+			if not b.error.is_empty():
+				errors.append("%s: %s." % [tag, b.error])
+				return null
+			def.bakes.append(b)
 
 	var default_collision := "none"
 	if def.klass == ObjectDef.Klass.PROP:
 		default_collision = "shape"
 	elif def.klass == ObjectDef.Klass.INTERACTIVE:
 		default_collision = "scene"
+	if not def.bakes.is_empty():
+		# Sceny: kolizja z węzłów sceny (StaticBody2D), chyba że JSON mówi inaczej.
+		default_collision = "none"
+		for b in def.bakes:
+			if b.has_collision() or not b.static_ok:
+				default_collision = "shape"
 	var coll_s := String(m.get("collision", default_collision))
 	if not COLLISIONS.has(coll_s):
 		errors.append("%s: collision musi być jednym z %s." % [tag, COLLISIONS.keys()])
@@ -200,6 +222,17 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	var fsize := def.footprint_size()
 	def.shape_rect = Vector2(fsize.x * ObjectDef.CELL - 4, 8)
 	def.shape_offset = Vector2(0, -4)
+	# Sceny: kształt dla planera (zajętość kratek) = obrys kolizji wszystkich wariantów.
+	# Origin sceny leży pół kratki nad punktem obiektu (ObjectPlacement.origin).
+	var sb := Rect2()
+	var has_sb := false
+	for b in def.bakes:
+		if b.has_collision():
+			sb = b.bounds if not has_sb else sb.merge(b.bounds)
+			has_sb = true
+	if has_sb:
+		def.shape_rect = sb.size
+		def.shape_offset = sb.get_center() - Vector2(0, ObjectDef.CELL * 0.5)
 	if m.has("shape"):
 		var sh = m["shape"]
 		if sh is Dictionary:
@@ -251,8 +284,8 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		if def.scene.is_empty():
 			errors.append("%s: INTERACTIVE wymaga 'scene' (ścieżka res:// albo alias)." % tag)
 			return null
-	elif def.atlas.is_empty():
-		errors.append("%s: brak 'atlas' (grafika z atlasu TileSetu poziomu)." % tag)
+	elif def.atlas.is_empty() and def.scenes.is_empty():
+		errors.append("%s: brak grafiki — 'scene' (scena .tscn) albo 'atlas' (kafel TileSetu poziomu)." % tag)
 		return null
 	return def
 
