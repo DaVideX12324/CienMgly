@@ -9,6 +9,7 @@ var enable_junction_smoothing: bool = true
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
+var enable_bulge_flatten: bool = true   # ShortBulgeFlattenPass: wyrównanie wąskich wybrzuszeń 3H+ przy 2H
 
 # --- Tiling ---
 var enable_terrain_smoothing: bool = true
