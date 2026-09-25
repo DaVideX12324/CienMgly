@@ -9,6 +9,10 @@ extends RefCounted
 ## - Grupa, której nie ma w katalogu, powstaje z szablonu wg zawartości sceny (ObjectBake):
 ##   skrypt / węzły spoza wypiekania -> INTERACTIVE, kolizja -> PROP, reszta -> DECAL.
 ##   Scena leżąca wprost w folderze biomu dostaje grupę z nazwy szablonu (sprites / static / interactive).
+## - Metadane korzenia sceny "object_<pole>" (Inspector -> Add Metadata) trafiają do wpisu obiektu:
+##   object_group = "plants" (grupa zamiast folderu), object_id, object_terrain = ["grass"],
+##   object_density… — dowolne pole katalogu. Przy dodawaniu zawsze; istniejące wpisy tylko
+##   z update_existing (wtedy pola z metadanych nadpisują wpis, reszta zostaje).
 ## - Obiekty wskazujące nieistniejące sceny: raport, a z remove_missing — usunięcie.
 ## Istniejące wpisy (gęstości, reguły) zostają nietknięte; plik jest przepisywany w czytelnym układzie
 ## (grupa / obiekt w jednej linii).
@@ -54,8 +58,8 @@ static func scan(dir_path: String) -> PackedStringArray:
 ## Synchronizacja katalogu `json_path` ze scenami w `biome_dir`.
 ## only: tylko te sceny (tryb ręczny); pusto = wszystkie nowe sceny biomu (tryb automatyczny).
 ## Wynik: {added: [id], missing: [ścieżka], removed: [id], errors: [str], written: bool}.
-static func sync_biome(json_path: String, biome_dir: String, only: PackedStringArray = PackedStringArray(), remove_missing := false, dry_run := false) -> Dictionary:
-	var report := {"added": [], "missing": [], "removed": [], "errors": [], "written": false}
+static func sync_biome(json_path: String, biome_dir: String, only: PackedStringArray = PackedStringArray(), remove_missing := false, dry_run := false, update_existing := false) -> Dictionary:
+	var report := {"added": [], "updated": [], "missing": [], "removed": [], "errors": [], "written": false}
 	var data := {"groups": {}, "objects": []}
 	if FileAccess.file_exists(json_path):
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(json_path))
@@ -97,6 +101,26 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 	data["objects"] = keep
 	objects = keep
 
+	# Istniejące wpisy z metadanych ich (pierwszej) sceny — tylko na życzenie.
+	if update_existing:
+		var scope := {}
+		for sp in (only if not only.is_empty() else scan(biome_dir)):
+			scope[sp] = true
+		for o in objects:
+			var sc := _scenes_of(o)
+			if sc.is_empty() or not scope.has(sc[0]):
+				continue
+			var b := ObjectBake.bake(sc[0])
+			if not b.error.is_empty() or b.meta.is_empty():
+				continue
+			var before: String = JSON.stringify(o)
+			_apply_meta(o, b, sc[0], report["errors"], true)
+			if JSON.stringify(o) != before:
+				report["updated"].append(String(o.get("id", "")))
+				var g := String(o.get("group", ""))
+				if not g.is_empty() and not groups.has(g):
+					groups[g] = (TEMPLATES[_kind(b)] as Dictionary).duplicate(true)
+
 	var todo := only if not only.is_empty() else scan(biome_dir)
 	for sp in todo:
 		if known.has(sp) or not sp.ends_with(".tscn"):
@@ -106,18 +130,20 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 			report["errors"].append("%s: %s" % [sp, bake.error])
 			continue
 		var kind := _kind(bake)
-		var group := _group_of(sp, biome_dir, kind)
+		var group := String(bake.meta.get("group", _group_of(sp, biome_dir, kind)))
 		if not groups.has(group):
 			groups[group] = (TEMPLATES[kind] as Dictionary).duplicate(true)
-		var id := _unique_id(sp.get_file().get_basename().to_snake_case(), ids)
+		var id := _unique_id(String(bake.meta.get("id", sp.get_file().get_basename().to_snake_case())), ids)
 		ids[id] = true
 		known[sp] = true
-		objects.append({"id": id, "group": group, "scene": sp})
+		var entry := {"id": id, "group": group, "scene": sp}
+		_apply_meta(entry, bake, sp, report["errors"], false)
+		objects.append(entry)
 		report["added"].append(id)
 
 	var check := ObjectCatalog.from_dict(data)
 	report["errors"].append_array(check.errors)
-	var changed: bool = not report["added"].is_empty() or not report["removed"].is_empty() or not FileAccess.file_exists(json_path)
+	var changed: bool = not report["added"].is_empty() or not report["removed"].is_empty() or not report["updated"].is_empty() or not FileAccess.file_exists(json_path)
 	if changed and not dry_run:
 		var f := FileAccess.open(json_path, FileAccess.WRITE)
 		if f == null:
@@ -127,6 +153,37 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 			f.close()
 			report["written"] = true
 	return report
+
+
+## Pola z metadanych sceny do wpisu. id tylko przy aktualizacji (przy dodawaniu już ustawione),
+## scene nigdy (wpis wskazuje tę scenę). Nieznane pole -> błąd w raporcie.
+static func _apply_meta(entry: Dictionary, bake: ObjectBake, scene_path: String, errors: Array, with_id: bool) -> void:
+	for k in bake.meta:
+		if k == "scene" or (k == "id" and not with_id):
+			continue
+		if not k in ObjectCatalog.KEYS:
+			errors.append("%s: nieznane pole metadanych '%s%s' (znane: %s)." % [scene_path, ObjectBake.META_PREFIX, k, ObjectCatalog.KEYS])
+			continue
+		entry[k] = _json_value(bake.meta[k])
+
+
+## Wartość metadanych Godota -> wartość JSON (wektory jako [x, y], tablice packed jako listy).
+static func _json_value(v):
+	if v is Vector2i or v is Vector2:
+		return [v.x, v.y]
+	if v is StringName:
+		return String(v)
+	if v is Array or v is PackedStringArray or v is PackedInt32Array or v is PackedFloat32Array or v is PackedVector2Array:
+		var out := []
+		for x in v:
+			out.append(_json_value(x))
+		return out
+	if v is Dictionary:
+		var d := {}
+		for k in v:
+			d[String(k)] = _json_value(v[k])
+		return d
+	return v
 
 
 ## Szablon grupy wg zawartości sceny.
