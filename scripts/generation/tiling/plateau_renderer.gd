@@ -143,6 +143,10 @@ static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, regio
 		return _on_wall_base(real_ctx, wall_cells, t) or _on_wall_base(real_ctx, wall_cells, t + Vector2i(0, 1))
 	if no_tile or w.out_corner:
 		return false
+	# Pod górą modułu ściany głównej wchłaniamy tylko rim północny płaskowyżu (środek rimu: RIM_BASE bez
+	# out_corner). Ściany boczne, narożniki i końce rimu (wsch./zach., out_corner) zostają — decyzja usera.
+	if not (String(p.category).begins_with("RIM") and not p.out_corner):
+		return false
 	return _is_module_top(wall_cells, w)
 
 
