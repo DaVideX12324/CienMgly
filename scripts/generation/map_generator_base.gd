@@ -43,6 +43,7 @@ class GenerationResult:
 	var preprocess_stats: Dictionary = {}  # ile komórek zmienił każdy pass
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
+	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
 
 # --- Inicjalizacja RNG ---

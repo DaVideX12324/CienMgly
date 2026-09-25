@@ -185,6 +185,9 @@ static func generate_layout(
 		GenProgress.begin(&"objects")
 		var catalog := ObjectCatalog.load_path(flags.objects_catalog)
 		if not catalog.defs.is_empty():
+			# Teren (błoto / trawa) liczony tu, bo obiekty go czytają; planer kafli użyje tych masek
+			# (ten sam seed — procedural_level planuje kafle z result.seed_used).
+			result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
 
 	# P12. Spawny wrogów i skrzyń

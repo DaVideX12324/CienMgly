@@ -16,7 +16,7 @@ extends RefCounted
 const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid",
-	"levels", "cluster", "keep_paths", "priority", "flip_h",
+	"levels", "terrain", "terrain_margin", "cluster", "keep_paths", "priority", "flip_h",
 ]
 ## Tagi kontekstu rozpoznawane przez ObjectFeatures.
 const CONTEXT_TAGS := [
@@ -24,6 +24,8 @@ const CONTEXT_TAGS := [
 	"room", "corridor", "dead_end", "niche", "plateau_edge",
 ]
 const LEVELS := ["ground", "plateau", "pit"]
+## Teren podłogi (ObjectFeatures): trawa (FloorDecor), błoto (Floor), goła podłoga.
+const TERRAINS := ["grass", "mud", "plain"]
 const CLASSES := {"DECAL": ObjectDef.Klass.DECAL, "PROP": ObjectDef.Klass.PROP, "INTERACTIVE": ObjectDef.Klass.INTERACTIVE}
 const PLACEMENTS := {"grid": ObjectDef.Placement.GRID, "grid_jitter": ObjectDef.Placement.GRID_JITTER, "free": ObjectDef.Placement.FREE}
 const COLLISIONS := {"none": ObjectDef.Collision.NONE, "tile": ObjectDef.Collision.TILE, "shape": ObjectDef.Collision.SHAPE, "scene": ObjectDef.Collision.SCENE}
@@ -260,6 +262,12 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			def.levels.append(StringName(String(lv)))
 		else:
 			errors.append("%s: nieznany poziom '%s' (znane: %s)." % [tag, lv, LEVELS])
+	for tr in m.get("terrain", []):
+		if String(tr) in TERRAINS:
+			def.terrain.append(StringName(String(tr)))
+		else:
+			errors.append("%s: nieznany teren '%s' (znane: %s)." % [tag, tr, TERRAINS])
+	def.terrain_margin = clampi(int(m.get("terrain_margin", 0)), 0, 3)
 	if m.has("cluster"):
 		var cl = m["cluster"]
 		if cl is Dictionary:

@@ -76,7 +76,9 @@ class GenJob extends RefCounted:
 	func run() -> void:
 		if is_cave:
 			result = gen_script.generate(width, height, seed_value, min_room, max_room, rooms_count, corridor, flags)
-			rng = base_script.create_rng(seed_value)
+			# Seed faktycznie użyty przez topologię (== seed_value, gdy > 0; przy losowym seedzie
+			# kafle i teren dostają ten sam, więc maski terenu z etapu obiektów pasują).
+			rng = base_script.create_rng(result.seed_used)
 			plans = gen_script.plan_cave_tiles(result, rng, -1, flags,
 				behaviour.get("profile"), behaviour.get("field"), behaviour.get("raw", {}))
 		else:
