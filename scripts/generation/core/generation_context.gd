@@ -23,6 +23,7 @@ var rooms: Array[Rect2i] = []
 var entrance_pos: Vector2i = Vector2i.ZERO
 var exit_pos: Vector2i = Vector2i.ZERO
 var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (grid zostaje FLOOR)
+var terrain_masks: Dictionary = {}  # {seed, mud, grass} policzone w topologii (TerrainMaskPlanner.compute_masks)
 # Tryb płaskowyżu (tylko syntetyczny kontekst PlateauRenderera): fasady zawsze 2H, stopień
 # lica 2H = moduł IN (STEP_LEFT/RIGHT 2-częściowy). Domyślnie false — ściany bez zmian.
 var plateau_mode: bool = false

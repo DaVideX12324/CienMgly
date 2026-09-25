@@ -25,79 +25,67 @@ static func clean_terrain_mask(candidates: Dictionary) -> Array[Vector2i]:
 	return out
 
 
-## Planuje organiczne plamy błota/ziemi (Terrain 1 'Mud') na warstwie Floor.
-static func plan_mud(
-	ctx: GenerationContext,
-	terrain_plan: TerrainPaintPlan,
-	ground_cells: Array[Vector2i] = []
-) -> Array[Vector2i]:
-	var cells := ground_cells
-	if cells.is_empty():
-		cells = FloorPlacer.get_ground_cells(ctx)
+## Maski terenu (błoto, trawa) dla komórek terenu — czysta funkcja seeda i komórek, więc generator
+## obiektów liczy je już w topologii (GenerationResult.terrain_masks), a planer kafli używa tych
+## samych masek, gdy seed się zgadza. {seed: int, mud: Array[Vector2i], grass: Array[Vector2i]}.
+static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]) -> Dictionary:
+	var smoothing := ctx.flags != null and ctx.flags.enable_terrain_smoothing
+	return {
+		"seed": ctx.seed_value,
+		"mud": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value + 202, 0.035, -0.02, smoothing),
+		"grass": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value, 0.13, 0.10, smoothing),
+	}
 
-	var mud_noise := FastNoiseLite.new()
-	mud_noise.seed = ctx.seed_value + 202
-	mud_noise.frequency = 0.035
 
-	var mud_candidates := {}
+## Maski dla wyniku generacji (bez planu kafli): komórki terenu jak w TilePlacementPlanner
+## (podłoga + 2 kratki, bez barier i schodów płaskowyżu), strefa portali z wejścia i wyjścia.
+static func compute_for_result(result, seed_value: int, flags: GenerationFlags) -> Dictionary:
+	var ctx := GenerationContext.new()
+	ctx.grid = result.grid
+	ctx.width = result.width
+	ctx.height = result.height
+	ctx.seed_value = seed_value
+	ctx.flags = flags
+	ctx.plateau = result.plateau
+	for p in result.entrance_zone:
+		ctx.portal_zone[p] = true
+	for p in result.exit_zone:
+		ctx.portal_zone[p] = true
+	var cells := TilePlacementPlanner.terrain_cells(ctx, FloorPlacer.get_ground_cells(ctx))
+	return compute_masks(ctx, cells)
+
+
+static func _mask(cells: Array[Vector2i], portal_zone: Dictionary, noise_seed: int, frequency: float, threshold: float, smoothing: bool) -> Array[Vector2i]:
+	var noise := FastNoiseLite.new()
+	noise.seed = noise_seed
+	noise.frequency = frequency
+	var candidates := {}
 	for p in cells:
-		if ctx.portal_zone.has(p):
+		if portal_zone.has(p):
 			continue
-		if mud_noise.get_noise_2d(float(p.x), float(p.y)) > -0.02:
-			mud_candidates[p] = true
-
-	var mud_cells: Array[Vector2i] = []
-	if ctx.flags != null and ctx.flags.enable_terrain_smoothing:
-		mud_cells = clean_terrain_mask(mud_candidates)
-	else:
-		var mud_cells_set := {}
-		for p in mud_candidates.keys():
-			if mud_candidates.has(p + Vector2i(1, 0)) and mud_candidates.has(p + Vector2i(0, 1)) and mud_candidates.has(p + Vector2i(1, 1)):
-				mud_cells_set[p] = true
-				mud_cells_set[p + Vector2i(1, 0)] = true
-				mud_cells_set[p + Vector2i(0, 1)] = true
-				mud_cells_set[p + Vector2i(1, 1)] = true
-		for p in mud_cells_set.keys():
-			mud_cells.append(p)
-
-	terrain_plan.add_batch(&"Floor", mud_cells, 0, 1, 0, true)
-	return mud_cells
+		if noise.get_noise_2d(float(p.x), float(p.y)) > threshold:
+			candidates[p] = true
+	if smoothing:
+		return clean_terrain_mask(candidates)
+	var cells_set := {}
+	for p in candidates.keys():
+		if candidates.has(p + Vector2i(1, 0)) and candidates.has(p + Vector2i(0, 1)) and candidates.has(p + Vector2i(1, 1)):
+			cells_set[p] = true
+			cells_set[p + Vector2i(1, 0)] = true
+			cells_set[p + Vector2i(0, 1)] = true
+			cells_set[p + Vector2i(1, 1)] = true
+	var out: Array[Vector2i] = []
+	for p in cells_set.keys():
+		out.append(p)
+	return out
 
 
-## Planuje organiczne plamy mchu / trawy (Terrain 2 'Grass') na warstwie FloorDecor.
-static func plan_grass(
-	ctx: GenerationContext,
-	terrain_plan: TerrainPaintPlan,
-	ground_cells: Array[Vector2i] = []
-) -> Array[Vector2i]:
-	var cells := ground_cells
-	if cells.is_empty():
-		cells = FloorPlacer.get_ground_cells(ctx)
-
-	var grass_noise := FastNoiseLite.new()
-	grass_noise.seed = ctx.seed_value
-	grass_noise.frequency = 0.13
-
-	var grass_candidates := {}
-	for p in cells:
-		if ctx.portal_zone.has(p):
-			continue
-		if grass_noise.get_noise_2d(float(p.x), float(p.y)) > 0.10:
-			grass_candidates[p] = true
-
-	var grass_cells: Array[Vector2i] = []
-	if ctx.flags != null and ctx.flags.enable_terrain_smoothing:
-		grass_cells = clean_terrain_mask(grass_candidates)
-	else:
-		var grass_cells_set := {}
-		for p in grass_candidates.keys():
-			if grass_candidates.has(p + Vector2i(1, 0)) and grass_candidates.has(p + Vector2i(0, 1)) and grass_candidates.has(p + Vector2i(1, 1)):
-				grass_cells_set[p] = true
-				grass_cells_set[p + Vector2i(1, 0)] = true
-				grass_cells_set[p + Vector2i(0, 1)] = true
-				grass_cells_set[p + Vector2i(1, 1)] = true
-		for p in grass_cells_set.keys():
-			grass_cells.append(p)
-
-	terrain_plan.add_batch(&"FloorDecor", grass_cells, 0, 2, 1, true)
-	return grass_cells
+## Plamy błota (Terrain 1 'Mud') na Floor i mchu / trawy (Terrain 2 'Grass') na FloorDecor.
+## Gotowe maski z ctx.terrain_masks, gdy policzone tym samym seedem; inaczej liczone tutaj.
+static func plan_masks(ctx: GenerationContext, terrain_plan: TerrainPaintPlan, terrain_cells: Array[Vector2i]) -> Dictionary:
+	var masks: Dictionary = ctx.terrain_masks
+	if masks.is_empty() or int(masks.get("seed", 0)) != ctx.seed_value:
+		masks = compute_masks(ctx, terrain_cells)
+	terrain_plan.add_batch(&"Floor", masks["mud"], 0, 1, 0, true)
+	terrain_plan.add_batch(&"FloorDecor", masks["grass"], 0, 2, 1, true)
+	return masks

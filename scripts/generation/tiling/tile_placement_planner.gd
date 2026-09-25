@@ -25,9 +25,8 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 
 	# 3. Maski terenu: błoto na Floor oraz mech/trawa na FloorDecor (bez barier i schodów
 	# płaskowyżu — baza podłogi pod nimi zostaje, bo rimy są półprzezroczyste)
-	var terrain_cells := _without_plateau_edges(ctx, ground_cells)
-	TerrainMaskPlanner.plan_mud(ctx, terrain, terrain_cells)
-	TerrainMaskPlanner.plan_grass(ctx, terrain, terrain_cells)
+	var terrain_cells := terrain_cells(ctx, ground_cells)
+	TerrainMaskPlanner.plan_masks(ctx, terrain, terrain_cells)
 
 	# 4. Fasady południowe (2H, 3H, łączniki, narożniki OUT, schodki, nisze i FAZA 2.5)
 	GenProgress.begin(&"walls")
@@ -56,7 +55,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 
 
 ## Komórki terenu bez barier i schodów płaskowyżu. Bez płaskowyżu zwraca wejście bez zmian (parytet).
-static func _without_plateau_edges(ctx: GenerationContext, cells: Array[Vector2i]) -> Array[Vector2i]:
+static func terrain_cells(ctx: GenerationContext, cells: Array[Vector2i]) -> Array[Vector2i]:
 	if ctx.plateau == null or ctx.plateau.is_empty():
 		return cells
 	var covered: Dictionary = ctx.plateau.blocked.duplicate()

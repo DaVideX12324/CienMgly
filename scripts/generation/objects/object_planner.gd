@@ -240,7 +240,7 @@ func _candidates(def: ObjectDef) -> PackedInt32Array:
 	var seen := {}
 	var dedup := def.context.size() > 1
 	# Jeden tag (albo żaden), bez avoid i poziomów: lista tagu to już dokładnie kandydaci.
-	if not dedup and def.avoid.is_empty() and def.levels.is_empty():
+	if not dedup and def.avoid.is_empty() and def.levels.is_empty() and def.terrain.is_empty():
 		for i in base:
 			if not plan.occupancy[i] & ObjectPlan.FORBID:
 				out.append(i)

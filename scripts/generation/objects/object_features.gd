@@ -15,6 +15,10 @@ const WALL_E := 4
 const WALL_W := 8
 const DIST_CAP := 15
 const HEIGHT_OFFSET := 8
+const TERRAIN_PLAIN := 0
+const TERRAIN_MUD := 1
+const TERRAIN_GRASS := 2
+const TERRAIN_NAMES: Array[StringName] = [&"plain", &"mud", &"grass"]
 
 var width := 0
 var height := 0
@@ -24,6 +28,7 @@ var dist := PackedByteArray()     # odległość Chebysheva do ściany (0 = ści
 var room := PackedInt32Array()    # indeks pokoju (prostokąt z ctx.rooms) albo -1
 var level := PackedByteArray()    # wysokość + HEIGHT_OFFSET
 var edge := PackedByteArray()     # 1 = sąsiaduje (8) z barierą płaskowyżu
+var terrain := PackedByteArray()  # TERRAIN_* — teren podłogi (trawa wygrywa z błotem)
 var floor_cells := PackedInt32Array()
 var tag_cells := {}               # StringName -> PackedInt32Array
 
@@ -70,6 +75,29 @@ func has_tag(i: int, tag: StringName) -> bool:
 	return false
 
 
+func terrain_name(i: int) -> StringName:
+	return TERRAIN_NAMES[terrain[i]]
+
+
+## Teren kratki na liście obiektu; z marginesem — cała chodliwa okolica w promieniu ma ten sam teren.
+func terrain_ok(i: int, def: ObjectDef) -> bool:
+	if def.terrain.is_empty():
+		return true
+	var t := int(terrain[i])
+	if not TERRAIN_NAMES[t] in def.terrain:
+		return false
+	var r := def.terrain_margin
+	if r > 0:
+		var x0 := i % width
+		var y0 := i / width
+		for y in range(maxi(y0 - r, 0), mini(y0 + r, height - 1) + 1):
+			for x in range(maxi(x0 - r, 0), mini(x0 + r, width - 1) + 1):
+				var j := y * width + x
+				if walk[j] == 1 and int(terrain[j]) != t:
+					return false
+	return true
+
+
 func level_ok(i: int, levels: Array[StringName]) -> bool:
 	if levels.is_empty():
 		return true
@@ -82,7 +110,7 @@ func level_ok(i: int, levels: Array[StringName]) -> bool:
 
 ## Reguły kontekstu obiektu w kratce (context: wystarczy jeden tag; avoid: żaden; wysokość).
 func rules_ok(i: int, def: ObjectDef) -> bool:
-	if not level_ok(i, def.levels):
+	if not level_ok(i, def.levels) or not terrain_ok(i, def):
 		return false
 	for t in def.avoid:
 		if has_tag(i, t):
@@ -164,6 +192,17 @@ func _build(result) -> void:
 			for x in range(maxi(r.position.x, 0), mini(r.end.x, width)):
 				if room[y * width + x] < 0:
 					room[y * width + x] = r_i
+
+	# Teren: maski z etapu obiektów (te same maluje planer kafli); bez nich — policz tym samym seedem.
+	terrain.resize(n)
+	var masks: Dictionary = result.terrain_masks
+	if masks.is_empty():
+		var flags = result.flags_used if result.flags_used != null else GenerationFlags.new()
+		masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
+	for key in [["mud", TERRAIN_MUD], ["grass", TERRAIN_GRASS]]:
+		for c in masks.get(key[0], []):
+			if in_bounds(c):
+				terrain[idx(c)] = key[1]
 
 	var pl = result.plateau
 	if pl != null and not pl.is_empty():

@@ -36,6 +36,8 @@ var shape_offset := Vector2.ZERO      # przesunięcie kształtu względem punktu
 var context: Array[StringName] = []   # tagi kontekstu — wystarczy jeden (OR); pusto = bez wymagań
 var avoid: Array[StringName] = []     # tagi wykluczające
 var levels: Array[StringName] = []    # "ground" / "plateau" / "pit"; pusto = każda wysokość
+var terrain: Array[StringName] = []   # "grass" / "mud" / "plain" (goła podłoga); pusto = każdy teren
+var terrain_margin: int = 0           # ten sam teren w promieniu (Chebyshev) — z dala od brzegu plamy
 var cluster_min: int = 0              # cluster: {"size": [a, b], "radius": r} — skupiska
 var cluster_max: int = 0
 var cluster_radius: int = 0

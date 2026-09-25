@@ -316,6 +316,7 @@ static func plan_cave_tiles(
 	ctx.exit_pos = result.exit_pos
 	ctx.rooms = result.rooms
 	ctx.plateau = result.plateau
+	ctx.terrain_masks = result.terrain_masks
 
 	# Named TileSet System (opcjonalne). Gdy jest profil, ale nie ma pola przypisań,
 	# tworzymy puste pole -> resolver używa default_tileset_id dla każdej komórki
