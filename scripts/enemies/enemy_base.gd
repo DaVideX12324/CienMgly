@@ -67,6 +67,8 @@ var _flash_timer: float = 0.0
 var _flash_color: Color = Color.WHITE
 var _uses_directional_animations: bool = false
 var _last_facing_dir: String = "down"
+var _anim_walk_2way: StringName = &""   # 2-way: animacja chodu / spoczynku wykryta w SpriteFrames
+var _anim_idle_2way: StringName = &""   # („walk”, „slime_walk”…), patrz _resolve_2way_anims
 
 enum EnemyShape { DIAMOND, CIRCLE, TRIANGLE, SQUARE, HEXAGON }
 @export var shape_type: EnemyShape = EnemyShape.DIAMOND
@@ -128,6 +130,7 @@ func _ready() -> void:
 			_use_programmer_art = false
 		if sprite.sprite_frames.has_animation("walk_down") or sprite.sprite_frames.has_animation("idle_down"):
 			_uses_directional_animations = true
+		_resolve_2way_anims(sprite.sprite_frames)
 
 	if _use_programmer_art:
 		if sprite:
@@ -247,10 +250,8 @@ func _update_sprite_animation() -> void:
 		if sprite.animation != anim_name or not sprite.is_playing():
 			sprite.play(anim_name)
 	else:
-		var anim_name := "walk" if moving else "idle"
-		if not sprite.sprite_frames.has_animation(anim_name):
-			anim_name = "idle"
-		if not sprite.sprite_frames.has_animation(anim_name):
+		var anim_name := _anim_walk_2way if moving else _anim_idle_2way
+		if anim_name == &"":
 			return
 		if sprite.animation != anim_name or not sprite.is_playing():
 			sprite.play(anim_name)
@@ -259,6 +260,32 @@ func _update_sprite_animation() -> void:
 			var dir := velocity.normalized()
 			if absf(dir.x) > flip_threshold:
 				sprite.flip_h = dir.x < 0.0
+
+
+## 2-way: nazwy animacji chodu i spoczynku. Dokładnie „walk” / „idle” albo z przedrostkiem
+## („slime_walk”, „slime_idle” — sceny z Amon-Ra); brak chodu -> spoczynek i odwrotnie; nic nie pasuje ->
+## pierwsza animacja zestawu (żeby sprite w ogóle się animował).
+func _resolve_2way_anims(frames: SpriteFrames) -> void:
+	_anim_walk_2way = _find_anim(frames, "walk")
+	_anim_idle_2way = _find_anim(frames, "idle")
+	if _anim_walk_2way == &"":
+		_anim_walk_2way = _anim_idle_2way
+	if _anim_idle_2way == &"":
+		_anim_idle_2way = _anim_walk_2way
+	if _anim_walk_2way == &"":
+		var names := frames.get_animation_names()
+		if not names.is_empty():
+			_anim_walk_2way = StringName(names[0])
+			_anim_idle_2way = _anim_walk_2way
+
+
+static func _find_anim(frames: SpriteFrames, key: String) -> StringName:
+	if frames.has_animation(key):
+		return StringName(key)
+	for n in frames.get_animation_names():
+		if String(n).ends_with("_" + key) or String(n).begins_with(key + "_"):
+			return StringName(n)
+	return &""
 
 
 ## Kierunek 4-way z histerezą: oś musi przewyższać drugą o `direction_hysteresis`, inaczej zostaje
