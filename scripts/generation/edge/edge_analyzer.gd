@@ -92,6 +92,17 @@ static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
 
 ## Czy komórka jest poziomem MID fasady 3H (stopa o 1 niżej o wysokości 3H).
 ## Fasada 2H NIE MA poziomu MID - jej moduł na y_foot - 1 to TOP!
+## Grubość ściany (kolumna: podłoga -> ściana -> podłoga), przy której schodek skosu dy == 1 jest gładkim
+## skosem 2H (WALL_2H_SLOPE) zamiast narożnika 3H. Jedno źródło dla StepPlacer (WEST/EAST) i _is_facade_mid.
+## 3..5: od cienkich skosów (119 250×250, depth 4/5) po małe filary (118945 160×160, depth 3) — decyzja usera.
+static func slope_2h_depth(depth: int) -> bool:
+	return depth >= slope_min_depth and depth <= 5
+
+
+## Dolna granica grubości skosu 2H (3 — decyzja usera; zmienna tylko dla renderów porównawczych).
+static var slope_min_depth := 3
+
+
 static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictionary) -> bool:
 	if _is_facade_top_2h(edges, p):
 		return false
@@ -104,7 +115,7 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 	# się jako mid — Z WYJĄTKIEM skosu dy == 1 o ścianie głębokości 4, który StepPlacer
 	# renderuje jako gładki narożnik 2H (WALL_2H_SLOPE). Taki kafel NIE ma poziomu MID
 	# fasady 3H, więc nie może wymuszać ścian bocznych / narożników wewnętrznych obok.
-	if foot.edge_kind == EdgeKind.Kind.STEP and foot.step_dy == 1 and (foot.solid_depth == 4 or foot.solid_depth == 5):
+	if foot.edge_kind == EdgeKind.Kind.STEP and foot.step_dy == 1 and slope_2h_depth(foot.solid_depth):
 		var fx: int = foot.pos.x
 		var fy: int = foot.pos.y
 		var is_west: bool = foot.orientation == EdgeKind.Orientation.WEST
