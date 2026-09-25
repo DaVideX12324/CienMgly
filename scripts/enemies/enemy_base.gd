@@ -450,9 +450,7 @@ func _idle_wander(delta: float) -> void:
 		return
 	_move_towards(dir, patrol_speed * 0.5, delta)
 
-	# Ściana na drodze = siatka nawigacji nie zgadza się ze ścianami (np. ręcznie narysowana w poziomie)
-	# albo cel bez siatki — nowy cel, odbity od ściany.
-	if is_on_wall():
+	if is_on_wall() and not _has_nav_path():
 		_set_new_wander_target(get_wall_normal())
 
 
@@ -475,15 +473,15 @@ func _set_new_wander_target(bias_normal: Vector2 = Vector2.ZERO) -> void:
 		var cand := global_position + random_dir * randf_range(30.0, wander_radius)
 		if map.is_valid():
 			var path := NavigationServer2D.map_get_path(map, global_position, cand, true)
-			if _path_starts_here(path):
+			if not path.is_empty():
 				var length := 0.0
 				for k in range(path.size() - 1):
 					length += path[k].distance_to(path[k + 1])
-				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0 and _path_clear(path):
+				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0:
 					wander_target = path[path.size() - 1]
 					return
 				continue
-		if _segment_clear(global_position, cand):
+		if grid.is_empty() or GridSight.has_line(grid, global_position, cand):
 			wander_target = cand
 			return
 	_start_idle_pause()
@@ -570,8 +568,6 @@ func _nav_direction(target: Vector2, delta: float) -> Vector2:
 		_repath_timer -= delta
 		if _repath_timer <= 0.0 or _nav_target.distance_to(target) > REPATH_DISTANCE:
 			_path = NavigationServer2D.map_get_path(map, global_position, target, true)
-			if not _path_starts_here(_path):
-				_path = PackedVector2Array()
 			_path_i = 1
 			_nav_target = target
 			_repath_timer = REPATH_INTERVAL
@@ -580,45 +576,11 @@ func _nav_direction(target: Vector2, delta: float) -> Vector2:
 				_path_i += 1
 			if _path_i >= _path.size():
 				return Vector2.ZERO
-			# Siatka niezgodna ze ścianami (ręcznie narysowana w poziomie) — odcinek przez ścianę:
-			# nie ufamy ścieżce, idziemy jak dawniej prosto do celu (move_and_slide ślizga po ścianie).
-			if _segment_clear(global_position, _path[_path_i]):
-				return (_path[_path_i] - global_position).normalized()
-			_path = PackedVector2Array()
-			return (target - global_position).normalized()
+			return (_path[_path_i] - global_position).normalized()
 	var grid := _map_grid()
 	if grid.is_empty() or GridSight.has_line(grid, global_position, target):
 		return (target - global_position).normalized()
 	return Vector2.ZERO
-
-
-## Czy odcinek jest wolny od ścian i przeszkód: promień fizyki po tym, z czym wróg się zderza (jego maska
-## bez warstwy wrogów — ściany bywają na różnych warstwach: jaskinie 3, tileset tutoriala domyślnie 1)
-## i — na mapie z generatora — linia po siatce (kolizje ścian są tam tylko na krawędziach kafli).
-func _segment_clear(a: Vector2, b: Vector2) -> bool:
-	var grid := _map_grid()
-	if not grid.is_empty() and not GridSight.has_line(grid, a, b):
-		return false
-	if not is_inside_tree():
-		return true
-	var q := PhysicsRayQueryParameters2D.create(a, b, collision_mask & ~collision_layer, [get_rid()])
-	return get_world_2d().direct_space_state.intersect_ray(q).is_empty()
-
-
-func _path_clear(path: PackedVector2Array) -> bool:
-	if path.is_empty() or not _segment_clear(global_position, path[0]):
-		return false
-	for k in range(path.size() - 1):
-		if not _segment_clear(path[k], path[k + 1]):
-			return false
-	return true
-
-
-## Ścieżka zaczyna się przy wrogu (stoi na siatce nawigacji). Poza siatką — np. ręcznie narysowana siatka
-## poziomu nie pokrywa miejsca wroga — map_get_path zaczyna od najbliższego punktu siatki, często za
-## ścianą, i wróg szedł prosto w tę ścianę („tylko w górę”).
-func _path_starts_here(path: PackedVector2Array) -> bool:
-	return not path.is_empty() and path[0].distance_to(global_position) <= ARRIVE_DISTANCE * 2.0
 
 
 ## Ruch w kierunku `dir` z płynnym obrotem (zamiast losowych drgań toru z Amon-Ra). ZERO = stój.
