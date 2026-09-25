@@ -8,6 +8,8 @@ region = Rect2(226, 32, 12, 16)
 filter_clip = true
 
 [node name="StalagmiteShort" type="StaticBody2D" unique_id=424825835]
+collision_layer = 32
+collision_mask = 0
 metadata/object_group = "stalagmites"
 metadata/object_terrain = ["mud", "plain"]
 

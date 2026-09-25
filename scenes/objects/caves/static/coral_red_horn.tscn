@@ -8,6 +8,8 @@ region = Rect2(214, 163, 23, 24)
 filter_clip = true
 
 [node name="CoralRedHorn" type="StaticBody2D" unique_id=1962479324]
+collision_layer = 32
+collision_mask = 0
 metadata/object_group = "corals"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=345658139]

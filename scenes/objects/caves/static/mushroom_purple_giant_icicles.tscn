@@ -8,6 +8,8 @@ region = Rect2(83, 105, 72, 147)
 filter_clip = true
 
 [node name="MushroomPurpleGiantIcicles" type="StaticBody2D" unique_id=935492174]
+collision_layer = 32
+collision_mask = 0
 metadata/object_group = "mushrooms_big"
 metadata/object_terrain = ["grass"]
 

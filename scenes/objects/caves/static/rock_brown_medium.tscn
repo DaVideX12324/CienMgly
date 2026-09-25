@@ -8,6 +8,8 @@ region = Rect2(194, 67, 12, 8)
 filter_clip = true
 
 [node name="RockBrownMedium" type="StaticBody2D" unique_id=1015743166]
+collision_layer = 32
+collision_mask = 0
 metadata/object_group = "rocks"
 metadata/object_terrain = ["mud", "plain"]
 

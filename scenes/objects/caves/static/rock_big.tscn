@@ -7,6 +7,8 @@ atlas = ExtResource("1_387pw")
 region = Rect2(208, 64, 16, 16)
 
 [node name="RockBig" type="StaticBody2D" unique_id=602519643]
+collision_layer = 32
+collision_mask = 0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=894498650]
 position = Vector2(0, -2)

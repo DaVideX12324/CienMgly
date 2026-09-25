@@ -49,9 +49,8 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 	var source: TileSetAtlasSource = null
 	if tileset != null and tileset.has_source(SOURCE_ID):
 		source = tileset.get_source(SOURCE_ID) as TileSetAtlasSource
-	var layer_bits := 1
-	if tileset != null and tileset.get_physics_layers_count() > 0:
-		layer_bits = tileset.get_physics_layer_collision_layer(0)
+	# Warstwa fizyki obiektów ("ObjectCollisions") — gracz i wrogowie mają ją w masce.
+	var layer_bits := ObjectBake.object_layer_bit()
 	var space := level.get_world_2d().space if level.is_inside_tree() else RID()
 	var chunk_bodies := {}
 	var scene_cache := {}
