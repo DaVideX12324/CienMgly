@@ -392,8 +392,8 @@ func _shape_cells(def: ObjectDef, pt: Vector2) -> PackedInt32Array:
 
 func _finish(pl: ObjectPlacement, marker: int, rng: RandomNumberGenerator) -> void:
 	var def := pl.def
-	if def.atlas.size() > 1:
-		pl.variant = rng.randi_range(0, def.atlas.size() - 1)
+	if def.variant_count() > 1:
+		pl.variant = rng.randi_range(0, def.variant_count() - 1)
 	pl.flip = def.flip_h and rng.randf() < 0.5
 	var bits := ObjectPlan.USED | (ObjectPlan.SOLID if def.is_solid() else 0)
 	for j in pl.cells:
