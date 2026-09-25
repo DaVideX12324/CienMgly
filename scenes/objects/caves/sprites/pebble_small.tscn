@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bpk3hjxkemx37"]
+
+[ext_resource type="Texture2D" uid="uid://07y6clqgwkss" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_ens0p"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yfsik"]
+atlas = ExtResource("1_ens0p")
+region = Rect2(240, 80, 16, 16)
+
+[node name="RockMini" type="Node2D" unique_id=440265832]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=355552858]
+texture = SubResource("AtlasTexture_yfsik")
+offset = Vector2(0, -3)

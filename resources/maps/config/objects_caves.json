@@ -1,4 +1,14 @@
 {
-  "groups": {},
-  "objects": []
+  "groups": {
+    "sprites": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 3.0,
+                 "cluster": { "size": [2, 4], "radius": 2 } },
+    "static":  { "class": "PROP", "placement": "free", "spacing_px": 48, "density": 0.8,
+                 "context": ["open"], "flip_h": true }
+  },
+  "objects": [
+    { "id": "pebble_mini", "group": "sprites",
+      "scene": "res://modules/quiz_rpg/scenes/objects/caves/sprites/pebble_mini.tscn" },
+    { "id": "rock_big", "group": "static",
+      "scene": "res://modules/quiz_rpg/scenes/objects/caves/static/rock_big.tscn" }
+  ]
 }

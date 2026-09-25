@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dwkj4kmmlo8a8"]
+
+[ext_resource type="Texture2D" uid="uid://07y6clqgwkss" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png" id="1_387pw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yfsik"]
+atlas = ExtResource("1_387pw")
+region = Rect2(208, 64, 16, 16)
+
+[node name="RockBig" type="Node2D" unique_id=289385574]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1583831079]
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=894498650]
+position = Vector2(0, -2)
+texture = SubResource("AtlasTexture_yfsik")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=436058403]
+polygon = PackedVector2Array(-6, 0, -4, 2, -1, 2, 0, 4, 2, 4, 5, 0, 4, -2, 1, -3, -3, -3, -6, -2)
