@@ -39,6 +39,12 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 @export var memory_duration: float = 3.0
 @export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
+## 2-way: odbicie w poziomie dopiero, gdy |kierunek.x| (wektor znormalizowany) przekracza próg —
+## ruch prawie pionowy nie przerzuca sprite'a. 0 = każdy ruch w bok.
+@export_range(0.0, 0.95, 0.05) var flip_threshold: float = 0.3
+## 4-way: o ile składowa jednej osi musi przewyższać drugą, żeby zmienić kierunek (histereza jak
+## w Amon-Ra) — na skosach zostaje poprzedni kierunek, sprite nie migocze.
+@export_range(0.0, 0.9, 0.05) var direction_hysteresis: float = 0.5
 
 enum State { IDLE, PATROL, CHASING, COMBAT, DEFEATED }
 var state: State = State.PATROL
@@ -203,34 +209,53 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 
 
+const MOVING_EPS := 5.0
+
+
 func _update_sprite_animation() -> void:
 	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if sprite == null or sprite.sprite_frames == null:
 		return
 
-	var moving := velocity.length() > 5.0
+	var moving := velocity.length() > MOVING_EPS
 
 	if _uses_directional_animations:
 		if moving:
 			_last_facing_dir = _direction_name_from_velocity(velocity)
+		var frames := sprite.sprite_frames
 		var anim_name := ("walk_" if moving else "idle_") + _last_facing_dir
-		if not sprite.sprite_frames.has_animation(anim_name):
+		if not frames.has_animation(anim_name):
 			anim_name = "idle_" + _last_facing_dir
+		if not frames.has_animation(anim_name):
+			anim_name = "walk_" + _last_facing_dir
+		if not frames.has_animation(anim_name):
+			return
 		if sprite.animation != anim_name or not sprite.is_playing():
 			sprite.play(anim_name)
 	else:
 		var anim_name := "walk" if moving else "idle"
 		if not sprite.sprite_frames.has_animation(anim_name):
+			anim_name = "idle"
+		if not sprite.sprite_frames.has_animation(anim_name):
 			return
 		if sprite.animation != anim_name or not sprite.is_playing():
 			sprite.play(anim_name)
-		sprite.flip_h = velocity.x < 0.0
+		# Odbicie tylko przy wyraźnym ruchu w bok; w bezruchu zostaje ostatnie.
+		if moving:
+			var dir := velocity.normalized()
+			if absf(dir.x) > flip_threshold:
+				sprite.flip_h = dir.x < 0.0
 
 
+## Kierunek 4-way z histerezą: oś musi przewyższać drugą o `direction_hysteresis`, inaczej zostaje
+## poprzedni kierunek (skosy i drgania toru nie przełączają animacji co klatkę).
 func _direction_name_from_velocity(vel: Vector2) -> String:
-	if abs(vel.x) > abs(vel.y):
-		return "right" if vel.x > 0.0 else "left"
-	return "down" if vel.y > 0.0 else "up"
+	var v := vel.normalized()
+	if absf(v.x) > absf(v.y) + direction_hysteresis:
+		return "right" if v.x > 0.0 else "left"
+	if absf(v.y) > absf(v.x) + direction_hysteresis:
+		return "down" if v.y > 0.0 else "up"
+	return _last_facing_dir
 
 
 ## Widoczność jak w Amon-Ra: promień z wroga do kształtu kolizji gracza; ściany i obiekty z kolizją
