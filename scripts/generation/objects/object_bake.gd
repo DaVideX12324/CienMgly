@@ -1,3 +1,4 @@
+@tool
 class_name ObjectBake
 extends RefCounted
 
@@ -22,12 +23,20 @@ var shapes: Array[Dictionary] = []   # {shape: Shape2D, xform: Transform2D}
 var collision_layer := 0
 var bounds := Rect2()               # obrys kształtów kolizji względem origin (pusty = brak kolizji)
 
-static var _cache := {}
-static var _mutex := Mutex.new()
+# @tool: narzędzie edytora (sync_object_catalogs) woła to w edytorze, a tam static var skryptów bez
+# @tool nie są inicjalizowane. Mutex i tak tworzony leniwie (_lock) — na wypadek starego stanu edytora.
+static var _cache: Dictionary = {}
+static var _mutex: Mutex = null
+
+
+static func _lock() -> void:
+	if _mutex == null:
+		_mutex = Mutex.new()
+	_mutex.lock()
 
 
 static func bake(scene_path: String) -> ObjectBake:
-	_mutex.lock()
+	_lock()
 	var cached: ObjectBake = _cache.get(scene_path)
 	_mutex.unlock()
 	if cached != null:
@@ -35,14 +44,14 @@ static func bake(scene_path: String) -> ObjectBake:
 	var b := ObjectBake.new()
 	b.path = scene_path
 	b._bake()
-	_mutex.lock()
+	_lock()
 	_cache[scene_path] = b
 	_mutex.unlock()
 	return b
 
 
 static func clear_cache() -> void:
-	_mutex.lock()
+	_lock()
 	_cache.clear()
 	_mutex.unlock()
 

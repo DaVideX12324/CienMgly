@@ -1,3 +1,4 @@
+@tool
 class_name ObjectCatalog
 extends RefCounted
 
@@ -34,14 +35,21 @@ var path: String = ""
 var defs: Array[ObjectDef] = []
 var errors: Array[String] = []
 
-static var _cache := {}
-static var _cache_mutex := Mutex.new()
+# @tool + leniwy mutex: jak w ObjectBake (narzędzie edytora).
+static var _cache: Dictionary = {}
+static var _cache_mutex: Mutex = null
+
+
+static func _lock() -> void:
+	if _cache_mutex == null:
+		_cache_mutex = Mutex.new()
+	_cache_mutex.lock()
 
 
 ## Katalog z pliku (cache po ścieżce — generowanie w wątku roboczym woła to przy każdej mapie).
 ## Pusta ścieżka albo brak pliku -> pusty katalog z błędem.
 static func load_path(json_path: String) -> ObjectCatalog:
-	_cache_mutex.lock()
+	_lock()
 	var cached: ObjectCatalog = _cache.get(json_path)
 	_cache_mutex.unlock()
 	if cached != null:
@@ -58,7 +66,7 @@ static func load_path(json_path: String) -> ObjectCatalog:
 			cat.errors.append("Niepoprawny JSON katalogu obiektów '%s'." % json_path)
 	for e in cat.errors:
 		push_warning("ObjectCatalog: " + e)
-	_cache_mutex.lock()
+	_lock()
 	_cache[json_path] = cat
 	_cache_mutex.unlock()
 	return cat
@@ -72,7 +80,7 @@ static func from_dict(d: Dictionary) -> ObjectCatalog:
 
 
 static func clear_cache() -> void:
-	_cache_mutex.lock()
+	_lock()
 	_cache.clear()
 	_cache_mutex.unlock()
 
