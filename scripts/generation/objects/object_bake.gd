@@ -52,6 +52,13 @@ static func bake(scene_path: String) -> ObjectBake:
 	return b
 
 
+## Zapomina wypiek jednej sceny (zapisana w edytorze -> następny bake czyta ją od nowa).
+static func forget(scene_path: String) -> void:
+	_lock()
+	_cache.erase(scene_path)
+	_mutex.unlock()
+
+
 static func clear_cache() -> void:
 	_lock()
 	_cache.clear()

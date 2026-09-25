@@ -16,11 +16,12 @@ extends EditorScript
 ## Metadane w scenie (zaznacz korzeń sceny -> Inspector -> Add Metadata), prefiks "object_":
 ##   object_group = "plants"      grupa zamiast nazwy folderu
 ##   object_terrain = ["grass"]   albo inne pole katalogu: object_density, object_context, object_id…
-## Istniejące wpisy aktualizuje z metadanych tylko UPDATE_EXISTING = true.
+## Istniejące wpisy aktualizuje z metadanych (UPDATE_EXISTING). Wtyczka addons/object_catalog_sync
+## robi to samo automatycznie przy zapisie sceny — narzędzie przydaje się do hurtu i sprzątania.
 
 const DRY_RUN := false          # true = tylko raport, bez zapisu
 const REMOVE_MISSING := false   # true = usuń obiekty wskazujące nieistniejące sceny
-const UPDATE_EXISTING := false  # true = pola z metadanych scen (object_*) nadpisują też istniejące wpisy
+const UPDATE_EXISTING := true   # pola z metadanych scen (object_*) nadpisują też istniejące wpisy (jak wtyczka)
 
 
 func _run() -> void:
@@ -59,6 +60,8 @@ func _run() -> void:
 		print("  dodane: %s" % (", ".join(rep["added"]) if not rep["added"].is_empty() else "—"))
 		if not rep["updated"].is_empty():
 			print("  zaktualizowane z metadanych: %s" % ", ".join(rep["updated"]))
+		if not rep["unused_groups"].is_empty():
+			print("  grupy bez obiektów (zostają w pliku): %s" % ", ".join(rep["unused_groups"]))
 		if not rep["missing"].is_empty():
 			print("  obiekty z brakującymi scenami: %s%s" % [", ".join(rep["missing"]), " (usunięte: %s)" % ", ".join(rep["removed"]) if REMOVE_MISSING else " (REMOVE_MISSING = true, żeby usunąć)"])
 		for e in rep["errors"]:
