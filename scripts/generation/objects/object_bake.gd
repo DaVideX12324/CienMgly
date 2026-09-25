@@ -12,6 +12,7 @@ extends RefCounted
 ##
 ## Origin sceny = punkt y-sortu = środek kratki kotwicy (dolnego wiersza podstawy).
 
+const META_PREFIX := "object_"
 const BAKEABLE := ["Node2D", "Sprite2D", "StaticBody2D", "CollisionShape2D", "CollisionPolygon2D"]
 
 var path := ""
@@ -22,6 +23,7 @@ var sprites: Array[Dictionary] = []  # {tex: Texture2D, src: Rect2, dst: Rect2, 
 var shapes: Array[Dictionary] = []   # {shape: Shape2D, xform: Transform2D}
 var collision_layer := 0
 var bounds := Rect2()               # obrys kształtów kolizji względem origin (pusty = brak kolizji)
+var meta := {}                      # metadane korzenia "object_<pole>" -> pole katalogu (bez prefiksu)
 
 # @tool: narzędzie edytora (sync_object_catalogs) woła to w edytorze, a tam static var skryptów bez
 # @tool nie są inicjalizowane. Mutex i tak tworzony leniwie (_lock) — na wypadek starego stanu edytora.
@@ -69,6 +71,10 @@ func _bake() -> void:
 		error = "'%s' nie jest sceną" % path
 		return
 	var root := packed.instantiate()
+	# Metadane korzenia (Inspector -> Add Metadata): object_group, object_terrain… -> pola katalogu.
+	for k in root.get_meta_list():
+		if String(k).begins_with(META_PREFIX):
+			meta[String(k).substr(META_PREFIX.length())] = root.get_meta(k)
 	static_ok = true
 	_walk(root, Transform2D.IDENTITY, false)
 	root.free()

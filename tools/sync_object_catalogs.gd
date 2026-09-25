@@ -12,9 +12,15 @@ extends EditorScript
 ##
 ## Nowy obiekt: id = nazwa pliku, grupa = folder (sprites / static / …), reszta z grupy — gęstości
 ## i reguły stroisz potem w JSON-ie. Brakująca grupa powstaje z szablonu wg zawartości sceny.
+##
+## Metadane w scenie (zaznacz korzeń sceny -> Inspector -> Add Metadata), prefiks "object_":
+##   object_group = "plants"      grupa zamiast nazwy folderu
+##   object_terrain = ["grass"]   albo inne pole katalogu: object_density, object_context, object_id…
+## Istniejące wpisy aktualizuje z metadanych tylko UPDATE_EXISTING = true.
 
 const DRY_RUN := false          # true = tylko raport, bez zapisu
 const REMOVE_MISSING := false   # true = usuń obiekty wskazujące nieistniejące sceny
+const UPDATE_EXISTING := false  # true = pola z metadanych scen (object_*) nadpisują też istniejące wpisy
 
 
 func _run() -> void:
@@ -45,12 +51,14 @@ func _run() -> void:
 		return
 	for biome in by_biome:
 		var json_path := ObjectCatalogSync.biome_json_path(biome)
-		var rep := ObjectCatalogSync.sync_biome(json_path, ObjectCatalogSync.SCENES_ROOT.path_join(biome), by_biome[biome], REMOVE_MISSING, DRY_RUN)
+		var rep := ObjectCatalogSync.sync_biome(json_path, ObjectCatalogSync.SCENES_ROOT.path_join(biome), by_biome[biome], REMOVE_MISSING, DRY_RUN, UPDATE_EXISTING)
 		print("[%s] %s" % [biome, json_path])
 		if not rep.has("added"):
 			push_error("[%s] synchronizacja przerwana błędem — szczegóły wyżej w Output." % biome)
 			continue
 		print("  dodane: %s" % (", ".join(rep["added"]) if not rep["added"].is_empty() else "—"))
+		if not rep["updated"].is_empty():
+			print("  zaktualizowane z metadanych: %s" % ", ".join(rep["updated"]))
 		if not rep["missing"].is_empty():
 			print("  obiekty z brakującymi scenami: %s%s" % [", ".join(rep["missing"]), " (usunięte: %s)" % ", ".join(rep["removed"]) if REMOVE_MISSING else " (REMOVE_MISSING = true, żeby usunąć)"])
 		for e in rep["errors"]:
