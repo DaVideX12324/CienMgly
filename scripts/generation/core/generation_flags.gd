@@ -17,6 +17,11 @@ var enable_pillars: bool = true
 var enable_2h_facades: bool = true
 var enable_3h_facades: bool = true
 var enable_floor_decorations: bool = true
+# Plamy terenu podłogi (szum > próg): MNIEJSZA częstotliwość = większe plamy, NIŻSZY próg = więcej.
+var terrain_mud_frequency: float = 0.035
+var terrain_mud_threshold: float = -0.02
+var terrain_grass_frequency: float = 0.13
+var terrain_grass_threshold: float = 0.10
 
 # --- Płaskowyże (jeden poziom) — maska z szumu na podłodze; domyślnie WYŁĄCZONE (parytet) ---
 var enable_platforms: bool = false

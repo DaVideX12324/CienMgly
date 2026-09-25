@@ -29,11 +29,12 @@ static func clean_terrain_mask(candidates: Dictionary) -> Array[Vector2i]:
 ## obiektów liczy je już w topologii (GenerationResult.terrain_masks), a planer kafli używa tych
 ## samych masek, gdy seed się zgadza. {seed: int, mud: Array[Vector2i], grass: Array[Vector2i]}.
 static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]) -> Dictionary:
+	var fl: GenerationFlags = ctx.flags if ctx.flags != null else GenerationFlags.new()
 	var smoothing := ctx.flags != null and ctx.flags.enable_terrain_smoothing
 	return {
 		"seed": ctx.seed_value,
-		"mud": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value + 202, 0.035, -0.02, smoothing),
-		"grass": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value, 0.13, 0.10, smoothing),
+		"mud": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value + 202, fl.terrain_mud_frequency, fl.terrain_mud_threshold, smoothing),
+		"grass": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value, fl.terrain_grass_frequency, fl.terrain_grass_threshold, smoothing),
 	}
 
 
