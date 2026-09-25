@@ -178,11 +178,20 @@ func _build(result) -> void:
 						edge[idx(q)] = 1
 
 	# Listy per tag jako zwykłe Array (referencje) — Packed* ze słownika to kopia przy zapisie.
-	var tags: Array[StringName] = []
-	var lists: Array = []
-	for tg in ObjectCatalog.CONTEXT_TAGS:
-		tags.append(StringName(tg))
-		lists.append([])
+	# Tagi liczone wprost z bitów (bez has_tag na kratkę × tag — to najgorętsza pętla).
+	var l_n: Array[int] = []
+	var l_s: Array[int] = []
+	var l_e: Array[int] = []
+	var l_w: Array[int] = []
+	var l_any: Array[int] = []
+	var l_corner: Array[int] = []
+	var l_open: Array[int] = []
+	var l_center: Array[int] = []
+	var l_room: Array[int] = []
+	var l_corr: Array[int] = []
+	var l_dead: Array[int] = []
+	var l_niche: Array[int] = []
+	var l_edge: Array[int] = []
 	var floor_list: Array[int] = []
 	for y in range(height):
 		for x in range(width):
@@ -196,9 +205,28 @@ func _build(result) -> void:
 			if x == 0 or walk[i - 1] == 0: b |= WALL_W
 			walls[i] = b
 			floor_list.append(i)
-			for t_i in range(tags.size()):
-				if has_tag(i, tags[t_i]):
-					(lists[t_i] as Array).append(i)
+			if b != 0:
+				l_any.append(i)
+				if b & WALL_N: l_n.append(i)
+				if b & WALL_S: l_s.append(i)
+				if b & WALL_E: l_e.append(i)
+				if b & WALL_W: l_w.append(i)
+				if (b & (WALL_N | WALL_S)) != 0 and (b & (WALL_E | WALL_W)) != 0: l_corner.append(i)
+				var nb := _bits(b)
+				if nb == 3: l_niche.append(i)
+				if nb >= 3: l_dead.append(i)
+			var d := int(dist[i])
+			if d >= 2:
+				l_open.append(i)
+				if d >= 3: l_center.append(i)
+			if room[i] >= 0: l_room.append(i)
+			else: l_corr.append(i)
+			if edge[i] == 1: l_edge.append(i)
 	floor_cells = PackedInt32Array(floor_list)
-	for t_i in range(tags.size()):
-		tag_cells[tags[t_i]] = PackedInt32Array(lists[t_i])
+	var lists := {
+		&"wall_n": l_n, &"wall_s": l_s, &"wall_e": l_e, &"wall_w": l_w, &"wall_any": l_any,
+		&"corner": l_corner, &"open": l_open, &"center": l_center, &"room": l_room,
+		&"corridor": l_corr, &"dead_end": l_dead, &"niche": l_niche, &"plateau_edge": l_edge,
+	}
+	for tg in ObjectCatalog.CONTEXT_TAGS:
+		tag_cells[StringName(tg)] = PackedInt32Array(lists[StringName(tg)])
