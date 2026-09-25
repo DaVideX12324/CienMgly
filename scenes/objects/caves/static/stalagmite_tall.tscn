@@ -7,16 +7,14 @@ atlas = ExtResource("1_iuval")
 region = Rect2(192, 0, 16, 48)
 filter_clip = true
 
-[node name="StalagmiteTall" type="Node2D" unique_id=1402545439]
+[node name="StalagmiteTall" type="StaticBody2D" unique_id=149185187]
 metadata/object_group = "stalagmites"
 metadata/object_terrain = ["mud", "plain"]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=664422463]
-
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=2054129898]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2054129898]
 texture = SubResource("AtlasTexture_x0fnd")
 centered = false
 offset = Vector2(-8, -46)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=1874395890]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1874395890]
 polygon = PackedVector2Array(-5, -6, 5, -6, 7, -4, 7, 0, 5, 2, -5, 2, -7, 0, -7, -4)

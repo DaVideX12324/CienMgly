@@ -7,15 +7,13 @@ atlas = ExtResource("1_yssrj")
 region = Rect2(148, 114, 41, 44)
 filter_clip = true
 
-[node name="CoralRedLarge" type="Node2D" unique_id=857728723]
+[node name="CoralRedLarge" type="StaticBody2D" unique_id=131441395]
 metadata/object_group = "corals"
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1581953018]
-
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=1974489800]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1974489800]
 texture = SubResource("AtlasTexture_y2ldm")
 centered = false
 offset = Vector2(-14, -42)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=1482240886]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1482240886]
 polygon = PackedVector2Array(-6, -6, 6, -6, 8, -4, 8, 0, 6, 2, -6, 2, -8, 0, -8, -4)

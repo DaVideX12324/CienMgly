@@ -7,16 +7,14 @@ atlas = ExtResource("1_ql7pk")
 region = Rect2(99, 3, 87, 88)
 filter_clip = true
 
-[node name="MushroomPurpleHugeIcicles" type="Node2D" unique_id=1617958092]
+[node name="MushroomPurpleHugeIcicles" type="StaticBody2D" unique_id=1257983428]
 metadata/object_group = "mushrooms_big"
 metadata/object_terrain = ["grass"]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=2077106879]
-
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=277699534]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=277699534]
 texture = SubResource("AtlasTexture_gfege")
 centered = false
 offset = Vector2(-55, -86)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=948271461]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=948271461]
 polygon = PackedVector2Array(-13, -8, 13, -8, 15, -6, 15, 0, 13, 2, -13, 2, -15, 0, -15, -6)

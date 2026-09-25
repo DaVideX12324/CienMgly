@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://cpj0imtwfxs24"]
 
 [ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Props.png" id="1_4qm7c"]
 
@@ -7,16 +7,14 @@ atlas = ExtResource("1_4qm7c")
 region = Rect2(256, 32, 32, 32)
 filter_clip = true
 
-[node name="MushroomPurpleMediumIciclesA" type="Node2D" unique_id=1267542397]
+[node name="MushroomPurpleMediumIciclesA" type="StaticBody2D" unique_id=1696411568]
 metadata/object_group = "mushrooms_medium"
 metadata/object_terrain = ["grass"]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=406147995]
-
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=215934376]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=215934376]
 texture = SubResource("AtlasTexture_ee4kg")
 centered = false
 offset = Vector2(-16, -30)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=70467724]
-polygon = PackedVector2Array(-8, -4, 8, -4, 9, -3, 9, 1, 8, 2, -8, 2, -9, 1, -9, -3)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=70467724]
+polygon = PackedVector2Array(1, -1, 8, -1, 9, 1, 8, 2, 1, 2, 0, 1)
