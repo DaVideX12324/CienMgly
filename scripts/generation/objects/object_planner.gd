@@ -208,7 +208,10 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 	if def.count_min >= 0:
 		target = rng.randi_range(def.count_min, def.count_max)
 	else:
-		target = int(round(def.density * cands.size() / 100.0))
+		# Zaokrąglenie losowe: 0.4 sztuki -> 1 sztuka w 40% map (zwykłe round dawało rzadkim
+		# obiektom na małych mapach zawsze 0).
+		var want := def.density * cands.size() / 100.0
+		target = int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 	if target <= 0:
 		return
 	free_pts.clear()
