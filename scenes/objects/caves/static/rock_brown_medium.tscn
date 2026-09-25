@@ -7,16 +7,14 @@ atlas = ExtResource("1_8wsqd")
 region = Rect2(194, 67, 12, 8)
 filter_clip = true
 
-[node name="RockBrownMedium" type="Node2D" unique_id=1080872431]
+[node name="RockBrownMedium" type="StaticBody2D" unique_id=1015743166]
 metadata/object_group = "rocks"
 metadata/object_terrain = ["mud", "plain"]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=806954259]
-
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=999216959]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=999216959]
 texture = SubResource("AtlasTexture_w5b3q")
 centered = false
 offset = Vector2(-6, -6)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=1134921179]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1134921179]
 polygon = PackedVector2Array(-4, -2, 4, -2, 5, -1, 5, 1, 4, 2, -4, 2, -5, 1, -5, -1)

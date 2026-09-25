@@ -7,16 +7,14 @@ atlas = ExtResource("1_i414d")
 region = Rect2(3, 3, 87, 88)
 filter_clip = true
 
-[node name="MushroomPurpleHuge" type="Node2D" unique_id=462853883]
+[node name="MushroomPurpleHuge" type="StaticBody2D" unique_id=1464201050]
 metadata/object_group = "mushrooms_big"
 metadata/object_terrain = ["grass"]
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1241910273]
-
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=1144730674]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1144730674]
 texture = SubResource("AtlasTexture_wpspe")
 centered = false
 offset = Vector2(-55, -86)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D" unique_id=683093130]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=683093130]
 polygon = PackedVector2Array(-13, -8, 13, -8, 15, -6, 15, 0, 13, 2, -13, 2, -15, 0, -15, -6)
