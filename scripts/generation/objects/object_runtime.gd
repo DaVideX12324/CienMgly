@@ -27,3 +27,9 @@ func clear() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
 		clear()
+	elif what == NOTIFICATION_ENTER_TREE:
+		# Realizacja poza drzewem (poziom jeszcze nie dodany) — ciała dostają przestrzeń fizyki teraz.
+		var space := get_viewport().world_2d.space
+		for b in bodies:
+			if not PhysicsServer2D.body_get_space(b).is_valid():
+				PhysicsServer2D.body_set_space(b, space)
