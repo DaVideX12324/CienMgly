@@ -27,6 +27,7 @@ const STAGES: Array = [
 	[&"floor", 22.0, "Podłoga"],
 	[&"walls", 17.0, "Ściany"],
 	[&"plateau_tiles", 38.0, "Płaskowyże"],
+	[&"navmesh", 30.0, "Ścieżki przeciwników"],
 	[&"paint", 34.0, "Układanie kafli"],
 	[&"entities", 104.0, "Potwory i skrzynie"],
 	[&"navigation", 1.0, "Nawigacja"],

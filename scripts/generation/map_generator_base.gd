@@ -43,6 +43,7 @@ class GenerationResult:
 	var preprocess_stats: Dictionary = {}  # ile komórek zmienił każdy pass
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
+	var nav_polygon: NavigationPolygon = null  # siatka nawigacji z NavOutlines (null = prostokąt mapy)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
 
@@ -401,6 +402,12 @@ static func setup_navigation_region(target_node: Node2D, result: GenerationResul
 		nav_node = NavigationRegion2D.new()
 		nav_node.name = "NavigationRegion2D"
 		target_node.add_child(nav_node)
+
+	# Siatka z generatora (NavOutlines, wypieczona w wątku roboczym): podłoga bez ścian, barier
+	# płaskowyżów i przeszkód — gotowa, bez bake'a na głównym wątku.
+	if result.nav_polygon != null:
+		nav_node.navigation_polygon = result.nav_polygon
+		return
 
 	var nav_poly := NavigationPolygon.new()
 	nav_poly.agent_radius = 8.0

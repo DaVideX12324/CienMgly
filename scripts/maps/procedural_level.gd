@@ -81,6 +81,9 @@ class GenJob extends RefCounted:
 			rng = base_script.create_rng(result.seed_used)
 			plans = gen_script.plan_cave_tiles(result, rng, -1, flags,
 				behaviour.get("profile"), behaviour.get("field"), behaviour.get("raw", {}))
+			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym.
+			GenProgress.begin(&"navmesh")
+			result.nav_polygon = NavOutlines.build_polygon(result)
 		else:
 			result = gen_script.generate(width, height, seed_value)
 			rng = base_script.create_rng(seed_value)
