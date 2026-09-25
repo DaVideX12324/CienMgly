@@ -47,6 +47,9 @@ func _run() -> void:
 		var json_path := ObjectCatalogSync.biome_json_path(biome)
 		var rep := ObjectCatalogSync.sync_biome(json_path, ObjectCatalogSync.SCENES_ROOT.path_join(biome), by_biome[biome], REMOVE_MISSING, DRY_RUN)
 		print("[%s] %s" % [biome, json_path])
+		if not rep.has("added"):
+			push_error("[%s] synchronizacja przerwana błędem — szczegóły wyżej w Output." % biome)
+			continue
 		print("  dodane: %s" % (", ".join(rep["added"]) if not rep["added"].is_empty() else "—"))
 		if not rep["missing"].is_empty():
 			print("  obiekty z brakującymi scenami: %s%s" % [", ".join(rep["missing"]), " (usunięte: %s)" % ", ".join(rep["removed"]) if REMOVE_MISSING else " (REMOVE_MISSING = true, żeby usunąć)"])
