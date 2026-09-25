@@ -75,9 +75,9 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - left_y
-			# Skos "1-dół-1-bok" o ścianie 4/5 (warunkowy top) zostaje ścieżką legacy —
+			# Skos "1-dół-1-bok" o ścianie 3/5 (warunkowy top) zostaje ścieżką legacy —
 			# nie mapuje się na moduł o stałej liczbie części. Reszta = narożnik 3H STEP_LEFT.
-			if dy == 1 and (right_y == y + 1 or right_y == -1) and (edge.solid_depth == 4 or edge.solid_depth == 5):
+			if dy == 1 and (right_y == y + 1 or right_y == -1) and EdgeAnalyzer.slope_2h_depth(edge.solid_depth):
 				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
 				var p_top := pos + Vector2i(0, -2)
@@ -113,7 +113,7 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - right_y
-			if dy == 1 and (left_y == y + 1 or left_y == -1) and (edge.solid_depth == 4 or edge.solid_depth == 5):
+			if dy == 1 and (left_y == y + 1 or left_y == -1) and EdgeAnalyzer.slope_2h_depth(edge.solid_depth):
 				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
 				var p_top := pos + Vector2i(0, -2)
