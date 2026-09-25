@@ -22,6 +22,8 @@
     "enable_2h_facades": true,
     "enable_3h_facades": true,
     "enable_floor_decorations": true,
+    "terrain_grass_frequency": 0.05,
+    "terrain_grass_threshold": 0.0,
     "niche_spawn_chance": 0.15,
     "secret_niche_spawn_chance": 0.3,
     "force_theme": -1,
