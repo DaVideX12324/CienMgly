@@ -386,6 +386,9 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
 		await MapGeneratorBaseScript.spawn_entities(self, job.result, enemy_scenes, chest_scene, door_scene, 16, per_frame)
+		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
+		var walls := get_node_or_null("Walls") as TileMapLayer
+		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, per_frame)
 
 	# 4. Nawigacja 2D
 	GenProgress.begin(&"navigation")
