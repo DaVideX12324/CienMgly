@@ -12,9 +12,10 @@ extends RefCounted
 # = 0 oznacza "auto" (bierz z UI/@export albo wbudowany default).
 const GEN_KEYS := ["min_room_size", "max_room_size", "max_rooms", "corridor_width", "seed", "width", "height"]
 # Rozpoznawane klucze bloku "flags" (1:1 z właściwościami GenerationFlags).
-const FLAG_BOOL_KEYS := ["enable_meandering", "enable_variable_width", "enable_funnels", "enable_junction_smoothing", "enable_grid_cleanup", "enable_terrain_smoothing", "enable_decorative_niches", "enable_pillars", "enable_2h_facades", "enable_3h_facades", "enable_floor_decorations", "debug_log_edge_kinds", "enable_platforms"]
+const FLAG_BOOL_KEYS := ["enable_meandering", "enable_variable_width", "enable_funnels", "enable_junction_smoothing", "enable_grid_cleanup", "enable_terrain_smoothing", "enable_decorative_niches", "enable_pillars", "enable_2h_facades", "enable_3h_facades", "enable_floor_decorations", "debug_log_edge_kinds", "enable_platforms", "enable_objects"]
 const FLAG_FLOAT_KEYS := ["niche_spawn_chance", "secret_niche_spawn_chance", "plateau_noise_frequency", "plateau_threshold", "plateau_level_step", "plateau_pit_threshold", "plateau_coverage", "plateau_high_coverage", "plateau_pit_coverage"]
 const FLAG_INT_KEYS := ["force_theme", "plateau_noise_octaves", "plateau_min_area", "platform_max_stairs", "stair_max_width", "plateau_levels", "plateau_level_ring", "plateau_pit_levels", "plateau_smooth", "plateau_block"]
+const FLAG_STRING_KEYS := ["objects_catalog"]
 
 ## Id puli MIXED do wypełnienia pola (JSON tilesets.mixed), lub "" gdy brak.
 func mixed_pool_id() -> StringName:
@@ -62,6 +63,8 @@ func build_flags(base: GenerationFlags = null) -> GenerationFlags:
 		if fl.has(k): f.set(k, float(fl[k]))
 	for k in FLAG_INT_KEYS:
 		if fl.has(k): f.set(k, int(fl[k]))
+	for k in FLAG_STRING_KEYS:
+		if fl.has(k): f.set(k, String(fl[k]))
 	return f
 
 func default_tileset_id() -> StringName:
@@ -122,7 +125,7 @@ static func load_from_json_path(json_path: String) -> GeneratorBehaviourConfig:
 	for k in cfg.generation():
 		if not GEN_KEYS.has(k):
 			cfg.warnings.append("Nieznany parametr 'generation.%s' — pominięto." % k)
-	var known_flags := FLAG_BOOL_KEYS + FLAG_FLOAT_KEYS + FLAG_INT_KEYS
+	var known_flags := FLAG_BOOL_KEYS + FLAG_FLOAT_KEYS + FLAG_INT_KEYS + FLAG_STRING_KEYS
 	for k in cfg.flags():
 		if not known_flags.has(k):
 			cfg.warnings.append("Nieznana flaga 'flags.%s' — pominięto." % k)

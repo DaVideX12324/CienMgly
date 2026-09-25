@@ -179,6 +179,14 @@ static func generate_layout(
 	ctx.plateau = PlateauPass.run(ctx, flags)
 	result.plateau = ctx.plateau
 
+	# P11c. Obiekty statyczne i interaktywne (ObjectPlanner) — przed wrogami, którzy omijają zajętość.
+	result.portal_zone = ctx.portal_zone
+	if flags.enable_objects:
+		GenProgress.begin(&"objects")
+		var catalog := ObjectCatalog.load_path(flags.objects_catalog)
+		if not catalog.defs.is_empty():
+			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
+
 	# P12. Spawny wrogów i skrzyń
 	GenProgress.begin(&"spawns")
 	if not rooms.is_empty():

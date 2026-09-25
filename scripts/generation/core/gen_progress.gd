@@ -20,6 +20,7 @@ const STAGES: Array = [
 	[&"connectivity", 3.0, "Sprawdzanie przejść"],
 	[&"portals", 15.0, "Wejście i wyjście"],
 	[&"plateaus", 28.0, "Wznoszenie płaskowyżów"],
+	[&"objects", 10.0, "Rozmieszczanie obiektów"],
 	[&"spawns", 0.5, "Rozmieszczanie potworów"],
 	[&"edges", 62.0, "Analiza krawędzi"],
 	[&"rock", 34.0, "Lita skała"],

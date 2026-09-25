@@ -42,7 +42,9 @@
     "plateau_block": 4,
     "plateau_smooth": 1,
     "platform_max_stairs": 8,
-    "stair_max_width": 8
+    "stair_max_width": 8,
+    "enable_objects": true,
+    "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_caves.json"
   },
   "tilesets": {
     "default": "caves_rock",

@@ -37,6 +37,10 @@ var plateau_pit_threshold: float = 0.3     # doły tam, gdzie szum < -próg (NI�
 var platform_max_stairs: int = 4           # maks. schodów „z wyglądu” na płaskowyż — liczba losowana 0..max (S, potem N, E, W); schody dla osiągalności ponad to
 var stair_max_width: int = 3               # schody: min. 2 ([L][R]), szersze dokładają MID
 
+# --- Obiekty statyczne i interaktywne (ObjectPlanner) — domyślnie WYŁĄCZONE (parytet) ---
+var enable_objects: bool = false
+var objects_catalog: String = ""           # katalog JSON obiektów biomu (res://…/objects_caves.json)
+
 # --- Prawdopodobieństwa (nadpisują profil, gdy >= 0.0) ---
 var niche_spawn_chance: float = 0.15
 var secret_niche_spawn_chance: float = 0.3

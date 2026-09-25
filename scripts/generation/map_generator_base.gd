@@ -42,6 +42,7 @@ class GenerationResult:
 	var corridors: Array[Dictionary] = []  # { from, to, width } — do debugowania
 	var preprocess_stats: Dictionary = {}  # ile komórek zmienił każdy pass
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
+	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
 
 
 # --- Inicjalizacja RNG ---
