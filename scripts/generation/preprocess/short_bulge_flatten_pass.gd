@@ -1,6 +1,9 @@
 class_name ShortBulgeFlattenPass
 extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
 
+const MAX_CARVE := 4   # najgrubsza ściana nad wybrzuszeniem, którą wolno przekopać
+
+
 func get_id() -> StringName:
 	return &"short_bulge_flatten"
 
@@ -40,11 +43,19 @@ func apply(ctx: GenerationContext) -> int:
 
 					if bulge_width < 4 and (left_is_2h or right_is_2h):
 						for bx in range(bulge_start, bulge_end + 1):
+							# Spłaszczamy tylko cienką ścianę: podłoga nad nią w zasięgu MAX_CARVE kratek.
+							# Bez limitu lita skała nad wybrzuszeniem była przekopywana aż do podłogi albo
+							# brzegu mapy — 1-szeroki tunel przez pół mapy (seed 841186 160×160, x=87).
+							var cells: Array[Vector2i] = []
 							var cy := y - 3
-							while cy >= 0 and not GridUtils.is_walkable(grid, Vector2i(bx, cy)):
-								grid[Vector2i(bx, cy)] = CellType.FLOOR
-								changed_count += 1
+							while cy >= 0 and not GridUtils.is_walkable(grid, Vector2i(bx, cy)) and cells.size() < MAX_CARVE:
+								cells.append(Vector2i(bx, cy))
 								cy -= 1
+							if cy < 0 or not GridUtils.is_walkable(grid, Vector2i(bx, cy)):
+								continue
+							for c in cells:
+								grid[c] = CellType.FLOOR
+								changed_count += 1
 				else:
 					x += 1
 			else:
