@@ -27,6 +27,9 @@ var terrain_masks: Dictionary = {}  # {seed, mud, grass} policzone w topologii (
 # Tryb płaskowyżu (tylko syntetyczny kontekst PlateauRenderera): fasady zawsze 2H, stopień
 # lica 2H = moduł IN (STEP_LEFT/RIGHT 2-częściowy). Domyślnie false — ściany bez zmian.
 var plateau_mode: bool = false
+# Kratki ściany małych wolnostojących wysp (EdgeAnalyzer.small_wall_islands): fasada pod nimi zawsze 2H.
+# Liczone w EdgeAnalyzer.analyze, gdy puste (flaga small_pillar_2h_max_area).
+var force_2h_cells: Dictionary = {}
 # Prostokąt skanowania EdgeAnalyzera i placerów ścian (pusty = cała mapa). PlateauRenderer
 # zawęża nim drugi przebieg pipeline'u do okolicy płaskowyżów — współrzędne zostają globalne.
 var scan_rect: Rect2i = Rect2i()

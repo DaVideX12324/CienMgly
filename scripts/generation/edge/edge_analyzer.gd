@@ -142,6 +142,77 @@ static func _is_inner_corner(edges: Dictionary, p: Vector2i) -> bool:
 	return e.edge_kind == EdgeKind.Kind.INNER_CORNER
 	
 ## Główna analiza geometryczna całej siatki mapy (Wariant A) zgodnie z §9.3 i §9.6.
+## Kratki małych przekrzywionych wysp ściany: komponent 8-spójny kratek niechodliwych o polu <= max_area,
+## niedotykający brzegu mapy, z górami i dołami kolumn w różnych rzędach (_skewed). Duże bryły (i ściana przy brzegu)
+## są oznaczane w całości raz.
+static func small_wall_islands(ctx: GenerationContext, max_area: int, walk := PackedByteArray(), r := Rect2i()) -> Dictionary:
+	# Płaska mapa chodliwości całej mapy z ramką 1 kratki (z analyze, gdy skan obejmuje całą mapę).
+	var full := Rect2i(-1, -1, ctx.width + 2, ctx.height + 2)
+	if walk.is_empty() or r != full:
+		r = full
+		walk = _walkable_bytes(ctx.grid, r)
+	var w := r.size.x
+	var offs: Array[int] = [-w - 1, -w, -w + 1, -1, 1, w - 1, w, w + 1]
+	# 0 = nieznana, 1 = duża bryła / przy brzegu, 2 = mała wyspa (sprawdzona), 3 = bieżące przeszukiwanie
+	var state := PackedByteArray()
+	state.resize(walk.size())
+	var out := {}
+	for start in walk.size():
+		if walk[start] == 1 or state[start] != 0:
+			continue
+		# Szybka ścieżka: kratka ściany obok znanej dużej bryły należy do niej (skan wierszami — lewy
+		# i górni sąsiedzi są już oznaczeni), bez przeszukiwania.
+		if state[start - 1] == 1 or state[start - w] == 1 or state[start - w - 1] == 1 or state[start - w + 1] == 1:
+			state[start] = 1
+			continue
+		# Przeszukiwanie z limitem: kończy się po max_area kratkach albo na kratce dużej bryły,
+		# więc wnętrza dużych brył nie są przechodzone w całości.
+		var comp := PackedInt32Array([start])
+		state[start] = 3
+		var is_big := false
+		var i := 0
+		while i < comp.size() and not is_big:
+			var p: int = comp[i]
+			i += 1
+			var x: int = p % w + r.position.x
+			var y: int = p / w + r.position.y
+			if x <= 0 or y <= 0 or x >= ctx.width - 1 or y >= ctx.height - 1:
+				is_big = true
+				break
+			for o in offs:
+				var n: int = p + o
+				if walk[n] == 1 or state[n] == 3:
+					continue
+				if state[n] == 1 or comp.size() >= max_area:
+					is_big = true
+					break
+				state[n] = 3
+				comp.append(n)
+		var mark: int = 1 if is_big else 2
+		var cells: Array[Vector2i] = []
+		for p in comp:
+			state[p] = mark
+			if not is_big:
+				cells.append(Vector2i(p % w + r.position.x, p / w + r.position.y))
+		if not is_big and _skewed(cells):
+			for c in cells:
+				out[c] = true
+	return out
+
+
+## Wyspa przekrzywiona: ani góry, ani doły kolumn nie leżą w jednym rzędzie (schodkowy filar po skosie).
+## Filar o równej górze (np. 2/3/3/3/2 z krótszymi końcami na dole) dobrze wygląda jako 3H z końcówkami.
+static func _skewed(comp: Array[Vector2i]) -> bool:
+	var top := {}
+	var bottom := {}
+	for p in comp:
+		top[p.x] = mini(top.get(p.x, p.y), p.y)
+		bottom[p.x] = maxi(bottom.get(p.x, p.y), p.y)
+	var t: Array = top.values()
+	var b: Array = bottom.values()
+	return t.min() != t.max() and b.min() != b.max()
+
+
 static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var width := ctx.width
 	var scan := ctx.scan_bounds()
@@ -152,6 +223,8 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# zamiast 8 wywołań GridUtils.is_walkable na kratkę. Poza siatką = niechodliwe (jak wcześniej).
 	var walk_rect := scan.grow(1)
 	var walk := _walkable_bytes(grid, walk_rect)
+	if not ctx.plateau_mode and ctx.force_2h_cells.is_empty() and ctx.flags != null and ctx.flags.small_pillar_2h_max_area > 0:
+		ctx.force_2h_cells = small_wall_islands(ctx, ctx.flags.small_pillar_2h_max_area, walk, walk_rect)
 	var ww := walk_rect.size.x
 
 	# Przebieg 1: Inicjalizacja kontekstów 3x3 dla wszystkich komórek w porządku (y, x).
@@ -222,7 +295,9 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var horiz_tol: int = 0 if ctx.plateau_mode else 1
 			var is_horizontal_facade: bool = FacadeSegmentDetector.has_same_y(facade_cols, x - 1, y, horiz_tol) \
 				and FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, horiz_tol)
-			var is_2h: bool = is_horizontal_facade and (edge.solid_depth == 2 or ctx.plateau_mode)
+			# Wymuszone 2H: płaskowyż albo mała wolnostojąca wyspa ściany nad stopą.
+			var force_2h: bool = ctx.plateau_mode or ctx.force_2h_cells.has(pos + Vector2i(0, -1))
+			var is_2h: bool = is_horizontal_facade and (edge.solid_depth == 2 or force_2h)
 
 			if is_2h:
 				edge.edge_kind = EdgeKind.Kind.FACADE
@@ -246,8 +321,8 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				and not check_2h_col.call(x - 2, y) \
 				and not check_2h_col.call(x - 3, y)
 
-			# Tryb płaskowyżu: wszystko jest 2H, łączników 2H<->3H nie ma.
-			if ctx.plateau_mode:
+			# Tryb płaskowyżu / mała wyspa: wszystko jest 2H, łączników 2H<->3H nie ma.
+			if force_2h:
 				pass
 			elif not self_is_2h and ((left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any)):
 				edge.edge_kind = EdgeKind.Kind.CONNECTOR
@@ -273,7 +348,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			#
 			# X jest aktualną stopą fasady. Warunek wykorzystuje wyłącznie
 			# podłogę po boku oraz podłogę po przekątnej nad tym bokiem.
-			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or ctx.plateau_mode)
+			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or force_2h)
 			var opening_depth: int = 2 if is_2h_col else 3
 
 			# Sąsiednie lico wyklucza narożnik (-> schodek), gdy się z tym stykają. Lico 3H zajmuje stopę
