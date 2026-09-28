@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bwgv74752eupy"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://bojpruruqjo3f" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/statue_masculine.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://c8u8re5akb7rj" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/statue_masculine.tres" id="2_frames"]
 [ext_resource type="Resource" uid="uid://ynch3ip31f3y" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/statue_masculine.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
