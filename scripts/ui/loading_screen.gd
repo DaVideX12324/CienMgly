@@ -1,0 +1,103 @@
+extends CanvasLayer
+
+## Ekran ładowania: tytuł, pasek postępu, opis etapu. Scena: scenes/ui/loading_screen.tscn
+## (wygląd edytuje się tam). Źródło postępu do wyboru:
+##   track(source)             — obiekt z fraction() -> 0..1 i opcjonalnie label() -> String,
+##                               np. GenProgress generatora map (procedural_level);
+##   track_resource_load(path) — wczytywanie zasobu w tle (ResourceLoader.load_threaded_request),
+##                               np. ręcznie robiona mapa jak tutorial_area;
+##   set_progress(frac, label) — ręcznie, bez źródła.
+## close() dociąga pasek do 100%, wygasza ekran i usuwa węzeł.
+
+const FADE_TIME := 0.25
+
+## Nagłówek nad paskiem.
+@export var title: String = "Ładowanie…":
+	set(value):
+		title = value
+		if is_node_ready():
+			_title.text = value
+
+var _source = null  # obiekt z fraction() / label()
+var _target := 0.0
+var _label := ""
+var _shown := 0.0
+var _closing := false
+
+@onready var _root: Control = %Root
+@onready var _title: Label = %Title
+@onready var _bar: ProgressBar = %Bar
+@onready var _stage: Label = %Stage
+@onready var _percent: Label = %Percent
+
+
+## Postęp wczytywania zasobu w tle (ResourceLoader). Zakłada, że load_threaded_request(path) już
+## wywołano; zasób odbiera wywołujący przez ResourceLoader.load_threaded_get(path).
+class ResourceLoadProgress:
+	var path: String
+	var text: String
+	var _progress: Array = []
+
+	func _init(p_path: String, p_text: String) -> void:
+		path = p_path
+		text = p_text
+
+	func fraction() -> float:
+		var status := ResourceLoader.load_threaded_get_status(path, _progress)
+		if status == ResourceLoader.THREAD_LOAD_LOADED:
+			return 1.0
+		return float(_progress[0]) if not _progress.is_empty() else 0.0
+
+	func label() -> String:
+		return text
+
+
+func _ready() -> void:
+	_title.text = title
+	_bar.value = 0.0
+	_percent.text = ""
+	_stage.text = ""
+
+
+## Podpina źródło postępu (fraction(), opcjonalnie label()) — od tej chwili pasek za nim podąża.
+func track(source) -> void:
+	_source = source
+
+
+## Pasek za wczytywaniem zasobu w tle; load_threaded_request(path) musi być już wywołane.
+func track_resource_load(path: String, label: String = "Wczytywanie mapy") -> void:
+	track(ResourceLoadProgress.new(path, label))
+
+
+## Postęp ustawiany ręcznie (odpina źródło).
+func set_progress(fraction: float, label: String = "") -> void:
+	_source = null
+	_target = clampf(fraction, 0.0, 1.0)
+	_label = label
+
+
+func _process(delta: float) -> void:
+	if _closing:
+		return
+	if _source != null:
+		_target = _source.fraction()
+		_label = _source.label() if _source.has_method("label") else ""
+	# Płynnie za postępem, ale bez zostawania w tyle przy dużych skokach.
+	_shown = minf(_target, lerpf(_shown, _target, clampf(delta * 12.0, 0.0, 1.0)) + delta * 0.05)
+	_bar.value = _shown * 100.0
+	_percent.text = "%d%%" % int(round(_shown * 100.0))
+	if _label != "":
+		_stage.text = _label + "…"
+
+
+## Pasek na 100% i zanik; węzeł usuwa się sam.
+func close() -> void:
+	if _closing:
+		return
+	_closing = true
+	_shown = 1.0
+	_bar.value = 100.0
+	_percent.text = "100%"
+	var tw := create_tween()
+	tw.tween_property(_root, "modulate:a", 0.0, FADE_TIME)
+	tw.tween_callback(queue_free)
