@@ -10,10 +10,14 @@ extends CanvasLayer
 ##   set_progress(frac, label) — ręcznie, bez źródła.
 ## close() dociąga pasek do 100%, wygasza ekran i usuwa węzeł.
 ##
+## Dopasowywanie układu: `paused` (inspektor, Remote w trakcie gry albo klawisz Pause/Break) zatrzymuje
+## pasek, a close() czeka ze zniknięciem do zdjęcia pauzy. Scena uruchomiona sama (F6) pokazuje
+## podgląd: grafika z folderu preview_key, nazwa preview_location, pasek na preview_progress.
+##
 ## Tło: losowa grafika z folderu mapy BACKGROUND_DIR/<klucz>/ (set_background_for) — dowolne pliki
 ## .png/.jpg/.webp, nazwy bez znaczenia. Brak folderu lub grafik = ciemne tło.
-## Pod paskiem ładowania: pas %Band w kolorze dolnej krawędzi grafiki (edge_color), od dołu ekranu
-## do góry bloku z nazwą lokacji i paskiem + miękkie przejście BAND_FADE w obraz.
+## Pod paskiem ładowania: pas %Band w kolorze dolnej krawędzi grafiki (edge_color). Wysokość pasa
+## i miejsce przejścia w obraz (offsety gradientu) ustawia się w edytorze — skrypt zmienia tylko kolory.
 ## Klucze (nazwy folderów): mapa ręczna = nazwa pliku sceny (tutorial_area), mapa generowana =
 ## ProceduralLevel.loading_screen_key albo biom z typu poziomu (cave, castle, forest).
 ## Prompty i zasady grafik: BACKGROUND_DIR/loading_screen_prompts.md.
@@ -21,8 +25,6 @@ extends CanvasLayer
 const FADE_TIME := 0.25
 const BACKGROUND_DIR := "res://modules/quiz_rpg/assets/textures/loading_screens/"
 const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
-## Wysokość (px) miękkiego przejścia od grafiki do jednolitego pasa pod paskiem ładowania.
-const BAND_FADE := 64.0
 ## Dolna część grafiki (ułamek wysokości), z której uśredniany jest kolor pasa.
 const BAND_SAMPLE := 0.02
 
@@ -48,7 +50,23 @@ const BAND_SAMPLE := 0.02
 			_art.texture = value
 			_apply_band()
 
+## Pauza ekranu (do dopasowywania układu): pasek stoi, close() czeka ze zniknięciem do jej zdjęcia.
+## Przełącza też klawisz Pause/Break.
+@export var paused: bool = false:
+	set(value):
+		paused = value
+		if not paused and _close_pending:
+			close()
+
+@export_group("Podgląd (scena uruchomiona sama, F6)")
+## Folder grafik tła do podglądu (jak klucz mapy).
+@export var preview_key: String = "cave"
+@export var preview_location: String = "Jaskinia Żółtych Łez"
+@export_range(0.0, 1.0, 0.01) var preview_progress: float = 0.4
+@export_group("")
+
 var _source = null  # obiekt z fraction() / label()
+var _close_pending := false
 var _target := 0.0
 var _label := ""
 var _shown := 0.0
@@ -57,7 +75,6 @@ var _closing := false
 @onready var _root: Control = %Root
 @onready var _art: TextureRect = %Art
 @onready var _band: TextureRect = %Band
-@onready var _bottom: Control = %MarginContainer
 @onready var _title: Label = %Title
 @onready var _location: Label = %Location
 @onready var _bar: ProgressBar = %Bar
@@ -113,11 +130,29 @@ func _ready() -> void:
 	_title.text = title
 	_apply_location()
 	_art.texture = background
-	_bottom.resized.connect(_layout_band)
 	_apply_band()
 	_bar.value = 0.0
 	_percent.text = ""
 	_stage.text = ""
+	if get_tree().current_scene == self:
+		_show_preview()
+
+
+## Podgląd przy uruchomieniu samej sceny (F6) — do dopasowywania układu.
+func _show_preview() -> void:
+	set_background_for(preview_key)
+	if location.is_empty():
+		location = preview_location
+	if title == "Ładowanie…":
+		title = "Generowanie jaskini…"
+	set_progress(preview_progress, "Podgląd układu")
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_PAUSE:
+		paused = not paused
+		print("[LoadingScreen] pauza: ", paused)
+		get_viewport().set_input_as_handled()
 
 
 func _apply_location() -> void:
@@ -154,14 +189,6 @@ func _apply_band() -> void:
 	grad.set_color(0, Color(c, 0.0))
 	grad.set_color(1, c)
 	grad.set_color(2, c)
-	_layout_band()
-
-
-## Pas sięga od dołu ekranu do góry bloku z nazwą i paskiem, plus BAND_FADE przejścia.
-func _layout_band() -> void:
-	var height := _bottom.size.y + BAND_FADE
-	_band.offset_top = -height
-	(_band.texture as GradientTexture2D).gradient.set_offset(1, BAND_FADE / height)
 
 
 ## Podpina źródło postępu (fraction(), opcjonalnie label()) — od tej chwili pasek za nim podąża.
@@ -182,7 +209,7 @@ func set_progress(fraction: float, label: String = "") -> void:
 
 
 func _process(delta: float) -> void:
-	if _closing:
+	if _closing or paused:
 		return
 	if _source != null:
 		_target = _source.fraction()
@@ -199,6 +226,10 @@ func _process(delta: float) -> void:
 func close() -> void:
 	if _closing:
 		return
+	if paused:
+		_close_pending = true
+		return
+	_close_pending = false
 	_closing = true
 	_shown = 1.0
 	_bar.value = 100.0
