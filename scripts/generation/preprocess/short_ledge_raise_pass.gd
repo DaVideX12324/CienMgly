@@ -3,7 +3,7 @@ extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
 
 ## Wypustki 2H przy licu 3H+: w rzędzie stóp fasady wąski (1–MAX_LEDGE kolumn) odcinek ściany o grubości
 ## dokładnie 2, stykający się z kolumną 3H+ na tej samej stopie. Pipeline stawiałby na nim rim i lico 2H
-## obok lica 3H. Odwrotność ShortBulgeFlattenPass (wąskie 3H+ przy 2H).
+## obok lica 3H.
 ## Naprawa: podniesienie do 3H (kratka podłogi nad wypustką -> ściana), gdy nad nią zostają co najmniej
 ## 2 kratki podłogi i to nie strefa portalu; inaczej wypustka jest usuwana (jej 2 kratki -> podłoga).
 ## Małe wolnostojące wyspy ściany (pole <= ISLAND_MAX) zostają bez zmian — mają własną regułę kafli

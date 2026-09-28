@@ -344,7 +344,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 
 	# Flagi generacji z JSON (wspólne dla topologii i tilingu). Brak JSON => null => domyślne.
 	var cave_flags = cfg.build_flags() if cfg != null else null
-	# Nadpisania flag z eksploratora map (np. enable_bulge_flatten) — ponad companion-JSON.
+	# Nadpisania flag z eksploratora map (nazwa flagi -> wartość) — ponad companion-JSON.
 	if cave_flags != null:
 		for k in flag_overrides:
 			cave_flags.set(k, flag_overrides[k])
