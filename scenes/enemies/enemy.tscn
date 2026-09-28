@@ -6,6 +6,7 @@
 size = Vector2(14, 8)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
+resource_local_to_scene = true
 radius = 70.0
 
 [node name="Enemy" type="CharacterBody2D" unique_id=151771770 groups=["enemies", "interactable"]]
