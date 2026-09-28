@@ -12,9 +12,10 @@ height = 14.0
 enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
-position = Vector2(-2, -24)
+position = Vector2(0, 4)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
+offset = Vector2(-2, -28)
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
 position = Vector2(0, 4.0)
