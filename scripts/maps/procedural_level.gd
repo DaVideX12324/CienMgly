@@ -45,6 +45,9 @@ var flag_overrides: Dictionary = {}
 @export var map_height: int = 160
 @export var custom_tileset: TileSet = null
 @export var enemy_scenes: Array[PackedScene] = []
+## Pula do spawn_entities (indeks = tier - 1): enemy_scenes z edytora albo domyślna pula typu poziomu,
+## w której tier może mieć kilka wariantów (tablica scen).
+var _enemy_pool: Array = []
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -167,13 +170,19 @@ func _ready() -> void:
 
 
 func _ensure_default_resources() -> void:
-	if enemy_scenes.is_empty():
-		var enemy_paths: Array[String] = []
+	if not enemy_scenes.is_empty():
+		_enemy_pool = enemy_scenes.duplicate()
+	else:
+		_enemy_pool = []
+		var enemy_paths: Array = []  # element: ścieżka albo tablica ścieżek (warianty tieru)
 		if level_type == LevelType.CAVE_DUNGEON:
 			enemy_paths = [
-				"res://modules/quiz_rpg/scenes/enemies/slime_tutorial.tscn",
-				"res://modules/quiz_rpg/scenes/enemies/slime_1.tscn",
-				"res://modules/quiz_rpg/scenes/enemies/slime_tutorial_boss.tscn"
+				"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_immature.tscn",
+				[
+					"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_long.tscn",
+					"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_heavy.tscn",
+				],
+				"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_old.tscn"
 			]
 		elif level_type == LevelType.FOREST_OVERWORLD:
 			enemy_paths = [
@@ -187,11 +196,17 @@ func _ensure_default_resources() -> void:
 				"res://modules/quiz_rpg/scenes/enemies/ork_1.tscn",
 				"res://modules/quiz_rpg/scenes/enemies/knowledge_guardian.tscn"
 			]
-		for ep in enemy_paths:
-			if ResourceLoader.exists(ep):
-				var p := load(ep) as PackedScene
-				if p:
-					enemy_scenes.append(p)
+		for entry in enemy_paths:
+			var variants: Array[PackedScene] = []
+			for ep in (entry if entry is Array else [entry]):
+				if ResourceLoader.exists(ep):
+					var p := load(ep) as PackedScene
+					if p:
+						variants.append(p)
+			if variants.size() == 1:
+				_enemy_pool.append(variants[0])
+			elif variants.size() > 1:
+				_enemy_pool.append(variants)
 
 	if chest_scene == null:
 		var cp := "res://modules/quiz_rpg/scenes/objects/closed_chest_tutorial.tscn"
@@ -460,7 +475,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		await MapGeneratorBaseScript.spawn_entities(self, job.result, enemy_scenes, chest_scene, door_scene, 16, per_frame)
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, chest_scene, door_scene, 16, per_frame)
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, per_frame)
