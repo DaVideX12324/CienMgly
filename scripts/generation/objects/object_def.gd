@@ -34,6 +34,7 @@ var collision: Collision = Collision.NONE
 var shape_rect := Vector2.ZERO        # kształt kolizji (px): prostokąt w × h …
 var shape_radius: float = 0.0         # … albo koło
 var shape_offset := Vector2.ZERO      # przesunięcie kształtu względem punktu obiektu
+var visual_rect := Rect2()            # obrys grafiki względem punktu obiektu (px; z odbiciem, gdy flip_h)
 var context: Array[StringName] = []   # tagi kontekstu — wystarczy jeden (OR); pusto = bez wymagań
 var avoid: Array[StringName] = []     # tagi wykluczające
 var require: Array[StringName] = []   # tagi wymagane WSZYSTKIE (AND) — np. ["room"] + context ["wall_any"]
@@ -54,6 +55,12 @@ var order: int = 0                    # kolejność w pliku (remisy priorytetu)
 
 func is_solid() -> bool:
 	return collision != Collision.NONE
+
+
+## Obiekt większy niż jedna kratka — podstawa na kilku kratkach albo grafika szersza / wyższa niż
+## 1,5 kratki (drobna dekoracja lekko wystająca poza kratkę się nie liczy). Nie może zakrywać ścian.
+func is_large() -> bool:
+	return footprint.size() > 1 or visual_rect.size.x > CELL * 1.5 or visual_rect.size.y > CELL * 1.5
 
 
 func footprint_size() -> Vector2i:

@@ -27,6 +27,7 @@ var sprites: Array[Dictionary] = []  # {tex: Texture2D, src: Rect2, dst: Rect2, 
 var shapes: Array[Dictionary] = []   # {shape: Shape2D, xform: Transform2D}
 var collision_layer := 0
 var bounds := Rect2()               # obrys kształtów kolizji względem origin (pusty = brak kolizji)
+var visual := Rect2()               # obrys sprite'ów względem origin (pusty = brak grafiki); zostaje też dla scen niewypiekanych
 var nested_body := false            # StaticBody2D nie jest korzeniem (niezgodne z konwencją)
 var meta := {}                      # metadane korzenia "object_<pole>" -> pole katalogu (bez prefiksu)
 
@@ -173,6 +174,8 @@ func _add_sprite(s: Sprite2D, xf: Transform2D) -> void:
 	if s.flip_v:
 		dst.size.y = -dst.size.y
 	sprites.append({"tex": tex, "src": src, "dst": dst, "xform": xf, "color": s.modulate * s.self_modulate})
+	var vr := (xf * dst).abs()
+	visual = vr if visual.size == Vector2.ZERO else visual.merge(vr)
 
 
 func _add_shape(shape: Shape2D, xf: Transform2D) -> void:

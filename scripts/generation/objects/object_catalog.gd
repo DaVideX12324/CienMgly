@@ -239,6 +239,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		errors.append("%s: collision 'scene' tylko dla INTERACTIVE." % tag)
 		def.collision = ObjectDef.Collision.SHAPE
 	var fsize := def.footprint_size()
+	_visual_rect(def)
 	def.shape_rect = Vector2(fsize.x * ObjectDef.CELL - 4, 8)
 	def.shape_offset = Vector2(0, -4)
 	# Sceny: kształt dla planera (zajętość kratek) = obrys kolizji wszystkich wariantów.
@@ -339,6 +340,21 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		errors.append("%s: brak grafiki — 'scene' (scena .tscn) albo 'atlas' (kafel TileSetu poziomu)." % tag)
 		return null
 	return def
+
+
+## Obrys grafiki względem punktu obiektu (środek dołu podstawy): sceny — suma sprite'ów wariantów
+## (origin sceny leży pół kratki nad punktem, ObjectPlacement.origin); kafle z atlasu — `size` w kratkach.
+func _visual_rect(def: ObjectDef) -> void:
+	var vr := Rect2()
+	for b in def.bakes:
+		if b.visual.size == Vector2.ZERO:
+			continue
+		var r := Rect2(b.visual.position - Vector2(0, ObjectDef.CELL * 0.5), b.visual.size)
+		vr = r if vr.size == Vector2.ZERO else vr.merge(r)
+	if vr.size == Vector2.ZERO and not def.atlas.is_empty():
+		var sz := Vector2(def.size) * ObjectDef.CELL
+		vr = Rect2(Vector2(-sz.x * 0.5, -sz.y), sz)
+	def.visual_rect = vr
 
 
 func _vec(v, fallback: Vector2i, tag: String, field: String) -> Vector2i:
