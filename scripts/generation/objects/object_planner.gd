@@ -16,6 +16,7 @@ const PORTAL_RING := 2
 const STAIR_RING := 1
 const SPAWN_RING := 1
 const REACH_ROUNDS := 8
+const VISUAL_MARGIN := 3.0  # px: przezroczyste brzegi sprite'a mogą lekko zachodzić na ścianę
 
 var f: ObjectFeatures
 var plan: ObjectPlan
@@ -398,6 +399,8 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 		offset = Vector2(rng.randf_range(-def.jitter_px, def.jitter_px), rng.randf_range(-def.jitter_px, def.jitter_px))
 	if _shape_on_reserved(def, def.base_point(anchor) + offset):
 		return false
+	if _visual_on_wall(def, def.base_point(anchor) + offset):
+		return false
 	var pl := ObjectPlacement.new()
 	pl.def = def
 	pl.cell = anchor
@@ -427,6 +430,24 @@ func _shape_on_reserved(def: ObjectDef, pt: Vector2) -> bool:
 		for x in range(floori((ctr.x - half.x) / cs), floori((ctr.x + half.x - 0.001) / cs) + 1):
 			var q := Vector2i(x, y)
 			if f.in_bounds(q) and plan.occupancy[f.idx(q)] & ObjectPlan.RESERVED:
+				return true
+	return false
+
+
+## Czy grafika dużego obiektu (większego niż kratka) w punkcie `pt` zakrywa ścianę albo wystaje poza mapę.
+## Przy losowym odbiciu sprawdzane są obie strony.
+func _visual_on_wall(def: ObjectDef, pt: Vector2) -> bool:
+	if not def.is_large() or def.visual_rect.size == Vector2.ZERO:
+		return false
+	var r := def.visual_rect
+	if def.flip_h:
+		r = r.merge(Rect2(Vector2(-r.end.x, r.position.y), r.size))
+	r = Rect2(r.position + pt, r.size).grow(-VISUAL_MARGIN)
+	var cs := float(ObjectDef.CELL)
+	for y in range(floori(r.position.y / cs), floori((r.end.y - 0.001) / cs) + 1):
+		for x in range(floori(r.position.x / cs), floori((r.end.x - 0.001) / cs) + 1):
+			var q := Vector2i(x, y)
+			if not f.in_bounds(q) or f.walk[f.idx(q)] == 0:
 				return true
 	return false
 
@@ -478,6 +499,8 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 			return false
 	else:
 		cells.append(i)
+	if _visual_on_wall(def, pt):
+		return false
 	var pl := ObjectPlacement.new()
 	pl.def = def
 	pl.cell = c
@@ -525,6 +548,47 @@ func _finish(pl: ObjectPlacement, marker: int, rng: RandomNumberGenerator) -> vo
 		plan.occupancy[j] |= bits
 		owner[j] = marker
 	plan.placements.append(pl)
+	if def.klass == ObjectDef.Klass.INTERACTIVE:
+		_reserve_access(pl)
+
+
+## Dojście do obiektu interaktywnego (skrzynia — często w niszy z jednym wejściem): najkrótsza droga
+## (BFS od wolnych sąsiadów, bez barier i przeszkód z kolizją) do sieci przejść (RESERVED) albo wejścia,
+## poszerzona o 1 -> RESERVED na kratkach niezajętych przez obiekty. Przeszkody z kolizją nie zachodzą na
+## RESERVED nawet częściowo (_shape_on_reserved), więc nie zasłonią skrzyni (sama zajętość środkami kratek
+## przepuszczała kamień w połowie wejścia do niszy). Obstawioną skrzynię i tak łapie _verify_reach.
+func _reserve_access(pl: ObjectPlacement) -> void:
+	if reach0.is_empty():
+		return
+	var w := f.width
+	var n := reach0.size()
+	var walkable := func(k: int) -> bool:
+		return _movable(k) and reach0[k] == 1 and not plan.occupancy[k] & (ObjectPlan.USED | ObjectPlan.SOLID)
+	var prev := {}
+	var queue: Array[int] = []
+	for j in pl.cells:
+		for k in [j - 1, j + 1, j - w, j + w]:
+			if k >= 0 and k < n and absi(k % w - j % w) <= 1 and not prev.has(k) and walkable.call(k):
+				prev[k] = -1
+				queue.append(k)
+	var goal := -1
+	var qi := 0
+	while qi < queue.size():
+		var i: int = queue[qi]
+		qi += 1
+		if plan.occupancy[i] & ObjectPlan.RESERVED or i == entrance_i:
+			goal = i
+			break
+		for k in [i - 1, i + 1, i - w, i + w]:
+			if k >= 0 and k < n and absi(k % w - i % w) <= 1 and not prev.has(k) and walkable.call(k):
+				prev[k] = i
+				queue.append(k)
+	var i := goal
+	while i >= 0:
+		for j in [i, i - 1, i + 1, i - w, i + w]:
+			if j >= 0 and j < n and absi(j % w - i % w) <= 1 and _movable(j) and not plan.occupancy[j] & ObjectPlan.USED:
+				plan.occupancy[j] |= ObjectPlan.RESERVED
+		i = prev[i]
 
 
 # --- 4. Osiągalność ----------------------------------------------------------------------
