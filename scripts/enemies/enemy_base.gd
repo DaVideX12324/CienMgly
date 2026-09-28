@@ -33,7 +33,13 @@ const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_d
 @export var counts_toward_device: bool = true
 @export_group("Movement")
 @export var patrol_speed: float = 80.0
-@export var detection_radius: float = 150.0
+## Promień DetectionArea (px). Zmiana (też w trakcie gry, np. ze zdalnego inspektora) od razu zmienia
+## kształt kolizji — widać go przy „Visible Collision Shapes”. Kształt jest local_to_scene w enemy.tscn,
+## więc każdy wróg ma własny. Uwaga: przypisane enemy_data nadpisuje tę wartość w _ready.
+@export var detection_radius: float = 150.0:
+	set(value):
+		detection_radius = value
+		_sync_detection_shape()
 @export_group("AI Behavior")
 @export var wander_radius: float = 100.0
 @export var memory_duration: float = 3.0
@@ -608,12 +614,17 @@ func _setup_detection_area() -> void:
 			var shape = CircleShape2D.new()
 			shape.radius = detection_radius
 			var col = CollisionShape2D.new()
+			col.name = "CollisionShape2D"
 			col.shape = shape
 			det_area.add_child(col)
 		else:
-			var col = det_area.get_child(0)
-			if col is CollisionShape2D and col.shape is CircleShape2D:
-				col.shape.radius = detection_radius
+			_sync_detection_shape()
+
+
+func _sync_detection_shape() -> void:
+	var col := get_node_or_null("DetectionArea/CollisionShape2D") as CollisionShape2D
+	if col and col.shape is CircleShape2D:
+		col.shape.radius = detection_radius
 
 
 func _on_detection_area_body_entered(body: Node2D) -> void:
