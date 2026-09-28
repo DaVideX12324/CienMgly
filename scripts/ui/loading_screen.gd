@@ -12,6 +12,8 @@ extends CanvasLayer
 ##
 ## Tło: losowa grafika z folderu mapy BACKGROUND_DIR/<klucz>/ (set_background_for) — dowolne pliki
 ## .png/.jpg/.webp, nazwy bez znaczenia. Brak folderu lub grafik = ciemne tło.
+## Pod paskiem ładowania: pas %Band w kolorze dolnej krawędzi grafiki (edge_color), od dołu ekranu
+## do góry bloku z nazwą lokacji i paskiem + miękkie przejście BAND_FADE w obraz.
 ## Klucze (nazwy folderów): mapa ręczna = nazwa pliku sceny (tutorial_area), mapa generowana =
 ## ProceduralLevel.loading_screen_key albo biom z typu poziomu (cave, castle, forest).
 ## Prompty i zasady grafik: BACKGROUND_DIR/loading_screen_prompts.md.
@@ -19,6 +21,10 @@ extends CanvasLayer
 const FADE_TIME := 0.25
 const BACKGROUND_DIR := "res://modules/quiz_rpg/assets/textures/loading_screens/"
 const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
+## Wysokość (px) miękkiego przejścia od grafiki do jednolitego pasa pod paskiem ładowania.
+const BAND_FADE := 64.0
+## Dolna część grafiki (ułamek wysokości), z której uśredniany jest kolor pasa.
+const BAND_SAMPLE := 0.02
 
 ## Nazwa lokacji nad paskiem (duży ozdobny napis, font Jacquard 24). Pusta = ukryta.
 @export var location: String = "":
@@ -40,6 +46,7 @@ const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 		background = value
 		if is_node_ready():
 			_art.texture = value
+			_apply_band()
 
 var _source = null  # obiekt z fraction() / label()
 var _target := 0.0
@@ -49,6 +56,8 @@ var _closing := false
 
 @onready var _root: Control = %Root
 @onready var _art: TextureRect = %Art
+@onready var _band: TextureRect = %Band
+@onready var _bottom: Control = %MarginContainer
 @onready var _title: Label = %Title
 @onready var _location: Label = %Location
 @onready var _bar: ProgressBar = %Bar
@@ -104,6 +113,8 @@ func _ready() -> void:
 	_title.text = title
 	_apply_location()
 	_art.texture = background
+	_bottom.resized.connect(_layout_band)
+	_apply_band()
 	_bar.value = 0.0
 	_percent.text = ""
 	_stage.text = ""
@@ -112,6 +123,45 @@ func _ready() -> void:
 func _apply_location() -> void:
 	_location.text = location
 	_location.visible = not location.is_empty()
+
+
+## Średni kolor dolnego pasa grafiki (BAND_SAMPLE wysokości) — tło pod paskiem ładowania.
+static func edge_color(tex: Texture2D) -> Color:
+	var img := tex.get_image() if tex != null else null
+	if img == null or img.is_empty():
+		return Color(0.05, 0.045, 0.04)
+	if img.is_compressed():
+		img.decompress()
+	var w := img.get_width()
+	var h := img.get_height()
+	var rows := maxi(2, int(h * BAND_SAMPLE))
+	var step := maxi(1, w / 256)
+	var sum := Color(0, 0, 0, 0)
+	var n := 0
+	for y in range(h - rows, h):
+		for x in range(0, w, step):
+			sum += img.get_pixel(x, y)
+			n += 1
+	return Color(sum.r / n, sum.g / n, sum.b / n, 1.0)
+
+
+func _apply_band() -> void:
+	_band.visible = background != null
+	if background == null:
+		return
+	var c := edge_color(background)
+	var grad: Gradient = (_band.texture as GradientTexture2D).gradient
+	grad.set_color(0, Color(c, 0.0))
+	grad.set_color(1, c)
+	grad.set_color(2, c)
+	_layout_band()
+
+
+## Pas sięga od dołu ekranu do góry bloku z nazwą i paskiem, plus BAND_FADE przejścia.
+func _layout_band() -> void:
+	var height := _bottom.size.y + BAND_FADE
+	_band.offset_top = -height
+	(_band.texture as GradientTexture2D).gradient.set_offset(1, BAND_FADE / height)
 
 
 ## Podpina źródło postępu (fraction(), opcjonalnie label()) — od tej chwili pasek za nim podąża.

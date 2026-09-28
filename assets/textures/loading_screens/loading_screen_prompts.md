@@ -15,9 +15,9 @@ Dla każdej strefy **3–4 warianty** — ekran losuje jedną grafikę z folderu
    cluster shading, limited atmospheric color palette`.
 3. **Kadr:** szeroki widok lokacji z lekko podwyższonej kamery (establishing shot), wyraźna głębia
    i perspektywa atmosferyczna, jeden mocny punkt zainteresowania w środku / górnej połowie kadru.
-4. **Dolna krawędź:** najniższe **~12% kadru** zasłania pasek ładowania (pas z napisem i pasek
-   postępu prawie na całą szerokość, z marginesem 20 px od dołu i boków) — ma być spokojne
-   i ciemniejsze (cień, ziemia, woda, mgła), bez ważnych detali.
+4. **Dolna krawędź:** ma być spokojna i ciemna (cień, ziemia, woda, mgła, jednolity pas), bez ważnych
+   detali. Ekran bierze jej średni kolor i dorysowuje z niego pas pod nazwą lokacji i paskiem ładowania
+   (~20% wysokości ekranu, z miękkim przejściem w obraz) — im równiejszy kolor dołu, tym gładsze łączenie.
 5. **Brzegi:** grafika wypełnia ekran z zachowaniem proporcji, więc na ekranach innych niż 16:9 brzegi
    są przycinane — nic ważnego przy samych krawędziach.
 6. **Czystość sceny:** bez postaci, potworów, tekstu, logo i elementów UI
