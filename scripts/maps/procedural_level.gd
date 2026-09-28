@@ -10,7 +10,7 @@ const DungeonGeneratorScript = preload("res://modules/quiz_rpg/scripts/generatio
 const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
 const TileSetFieldScript = preload("res://modules/quiz_rpg/scripts/generation/core/tileset_field.gd")
 const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
-const LoadingOverlayScript = preload("res://modules/quiz_rpg/scripts/ui/generation_loading_overlay.gd")
+const LoadingOverlayScene = preload("res://modules/quiz_rpg/scenes/ui/generation_loading_overlay.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
 signal generation_finished
@@ -207,7 +207,8 @@ func generate_level_async(seed_val: int = 0) -> void:
 	is_generating = true
 	var job := _prepare_job(seed_val)
 	var progress := GenProgress.new()
-	var overlay = LoadingOverlayScript.new(_loading_title())
+	var overlay = LoadingOverlayScene.instantiate()
+	overlay.title = _loading_title()
 	add_child(overlay)
 	overlay.track(progress)
 	GenProgress.start(progress)
