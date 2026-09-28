@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b7lq2gdnovl1a"]
 
 [ext_resource type="Script" uid="uid://dydtt68h87os1" path="res://modules/quiz_rpg/scripts/ui/loading_screen.gd" id="1_screen"]
+[ext_resource type="FontFile" uid="uid://d385eln565v0s" path="res://assets/fonts/Jacquard24-Regular.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
 content_margin_left = 20.0
@@ -74,6 +75,19 @@ theme_override_constants/margin_bottom = 40
 [node name="Bottom" type="VBoxContainer" parent="Root/MarginContainer" unique_id=128819430]
 layout_mode = 2
 theme_override_constants/separation = 20
+
+[node name="Location" type="Label" parent="Root/MarginContainer/Bottom"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.6, 1)
+theme_override_colors/font_shadow_color = Color(0.02, 0.015, 0.01, 0.9)
+theme_override_colors/font_outline_color = Color(0.08, 0.05, 0.03, 1)
+theme_override_constants/shadow_offset_x = 4
+theme_override_constants/shadow_offset_y = 4
+theme_override_constants/outline_size = 12
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 96
 
 [node name="Info" type="PanelContainer" parent="Root/MarginContainer/Bottom" unique_id=696628184]
 layout_mode = 2

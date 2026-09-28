@@ -31,6 +31,11 @@ const LOADING_SCREEN_KEYS := {
 	LevelType.DUNGEON_CASTLE: "castle",
 	LevelType.CAVE_DUNGEON: "cave",
 }
+const LOCATION_NAMES := {
+	LevelType.FOREST_OVERWORLD: "Las",
+	LevelType.DUNGEON_CASTLE: "Zamek",
+	LevelType.CAVE_DUNGEON: "Jaskinia",
+}
 
 @export var level_type: LevelType = LevelType.FOREST_OVERWORLD
 @export var map_seed: int = 0
@@ -59,6 +64,8 @@ var flag_overrides: Dictionary = {}
 ## Folder grafik ekranu ładowania (assets/textures/loading_screens/<klucz>/). Puste = biom z typu
 ## poziomu (LOADING_SCREEN_KEYS).
 @export var loading_screen_key: String = ""
+## Nazwa lokacji na ekranie ładowania. Puste = nazwa z typu poziomu (LOCATION_NAMES).
+@export var location_name: String = ""
 
 var last_result: RefCounted = null
 var is_generating: bool = false
@@ -218,6 +225,7 @@ func generate_level_async(seed_val: int = 0) -> void:
 	var progress := GenProgress.new()
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
+	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")
 	overlay.set_background_for(loading_screen_key if not loading_screen_key.is_empty() else LOADING_SCREEN_KEYS.get(level_type, ""))
 	add_child(overlay)
 	overlay.track(progress)
