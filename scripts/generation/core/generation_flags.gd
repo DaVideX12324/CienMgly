@@ -10,6 +10,7 @@ var enable_junction_smoothing: bool = true
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
 var enable_bulge_flatten: bool = true   # ShortBulgeFlattenPass: wyrównanie wąskich wybrzuszeń 3H+ przy 2H
+var enable_ledge_fix: bool = true       # ShortLedgeRaisePass: wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte
 # Małe wolnostojące PRZEKRZYWIONE wyspy ściany (pole <= max_area kratek, najwyżej max_width kolumn, żadna
 # kolumna wyższa niż max_height, nie przy brzegu mapy, góry i doły kolumn w różnych rzędach): lico zawsze 2H,
 # bez łączników 2H<->3H — schodkowy filar dostaje jeden styl zamiast mieszanki 2H/3H. max_area 0 = wył.

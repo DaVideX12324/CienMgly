@@ -173,6 +173,9 @@ static func generate_layout(
 		# P11. Drugie spłaszczanie wybrzuszeń (przeniesione z apply_cave_tiles KROK 0)
 		GridPreprocessor.run(ctx, [ShortBulgeFlattenPass.new()])
 
+	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte (także bez spłaszczania wybrzuszeń).
+	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new()])
+
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
 	# żeby SpawnPlanner mógł zsunąć spawny z barier.
 	GenProgress.begin(&"plateaus")
