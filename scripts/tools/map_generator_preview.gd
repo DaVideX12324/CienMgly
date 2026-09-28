@@ -527,8 +527,8 @@ func _setup_ui() -> void:
 
 	# 3. Presety rozmiaru
 	opt_size_preset.clear()
-	opt_size_preset.add_item("Kompaktowy (50 x 50)", 50)
-	opt_size_preset.add_item("Średni (100 x 100)", 100)
+	opt_size_preset.add_item("Kompaktowy (100 x 100)", 100)
+	opt_size_preset.add_item("Średni (160 x 160)", 160)
 	opt_size_preset.add_item("Duży (250 x 250)", 250)
 	opt_size_preset.add_item("Ogromny (500 x 500)", 500)
 	opt_size_preset.add_item("Własny (Custom)", -1)

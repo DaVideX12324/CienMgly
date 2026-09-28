@@ -8,15 +8,24 @@
 radius = 4.0
 height = 16.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_xp0tu"]
+resource_local_to_scene = true
+radius = 70.0
+
 [node name="Enemy" unique_id=2110895761 instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
-position = Vector2(1, -24)
+y_sort_enabled = true
+position = Vector2(0, 4)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
+offset = Vector2(1, -28)
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
-position = Vector2(0, 4.0)
+position = Vector2(0, 4)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_body")
+
+[node name="CollisionShape2D" parent="DetectionArea" parent_id_path=PackedInt32Array(2045348945) index="0" unique_id=1963073735]
+shape = SubResource("CircleShape2D_xp0tu")

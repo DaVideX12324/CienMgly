@@ -6,17 +6,9 @@
 script = ExtResource("1_data")
 enemy_name = "Ciężki Grzyb"
 quiz_id = "ogolne"
-quiz_category = "ogolne"
-is_boss = false
-question_count = 3
 max_hp = 100
 damage_on_wrong = 14
 xp_reward = 60
-encounter_tier = 2
-min_encounter_size = 1
-max_encounter_size = 3
 patrol_speed = 40.0
 detection_radius = 100.0
-body_color = Color(0.9, 0.2, 0.2, 1)
-shape_type = 0
 metadata/_custom_type_script = "uid://c2e6oyqepnkc4"

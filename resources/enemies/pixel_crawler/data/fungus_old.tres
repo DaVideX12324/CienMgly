@@ -6,17 +6,11 @@
 script = ExtResource("1_data")
 enemy_name = "Stary Grzyb"
 quiz_id = "ogolne"
-quiz_category = "ogolne"
 is_boss = true
-question_count = 3
 max_hp = 270
 damage_on_wrong = 24
 xp_reward = 388
 encounter_tier = 4
-min_encounter_size = 1
-max_encounter_size = 3
 patrol_speed = 50.0
 detection_radius = 100.0
-body_color = Color(0.9, 0.2, 0.2, 1)
-shape_type = 0
 metadata/_custom_type_script = "uid://c2e6oyqepnkc4"

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://clwp7qt6yqnoi"]
+[gd_scene format=3 uid="uid://cj7w38wgsm75c"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
 [ext_resource type="SpriteFrames" uid="uid://b6fr21idnykbh" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/stone_golem.tres" id="2_frames"]
@@ -8,15 +8,23 @@
 radius = 3.0
 height = 13.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_exw84"]
+resource_local_to_scene = true
+radius = 70.0
+
 [node name="Enemy" unique_id=579509098 instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
-position = Vector2(1, -24)
+position = Vector2(0, 5)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
+offset = Vector2(1, -29)
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
-position = Vector2(0, 5.0)
+position = Vector2(0, 5)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_body")
+
+[node name="CollisionShape2D" parent="DetectionArea" parent_id_path=PackedInt32Array(2045348945) index="0" unique_id=1963073735]
+shape = SubResource("CircleShape2D_exw84")
