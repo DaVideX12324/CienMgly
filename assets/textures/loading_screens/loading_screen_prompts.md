@@ -23,6 +23,9 @@ Dla każdej strefy **3 warianty** — ekran losuje jedną grafikę z folderu map
 6. **Czystość sceny:** bez postaci, potworów, tekstu, logo i elementów UI
    (`No characters, no monsters, no text, no logo, no UI`).
 
+**Referencje:** przy każdej strefie są mockupy map zrobione przez autora paczki (`Social/MockUp*`) —
+dołącz je do promptu jako obraz referencyjny (styl, paleta, kafle); gdzie mockupu nie ma, zaznaczono „brak”.
+
 **Wspólny dopisek (wklejany na końcu każdego promptu):**
 ```text
 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
@@ -35,8 +38,8 @@ Dla każdej strefy **3 warianty** — ekran losuje jedną grafikę z folderu map
 ---
 
 ### 1. Tutorial Dungeon (tutorial_area)
-- **Referencja w projekcie:** `../battle_backgrounds/tutorial_area/variant_1_gate.jpg` … `variant_4_chamber.jpg`
-  (fioletowo-szara cegła, szara posadzka z płyt, pochodnie, tarcze strzeleckie i manekiny treningowe)
+- **Referencja (mockup autora):** brak — tileset tutoriala (`legacy_amonra/atlases/Dungeon tileset`) nie ma
+  mockupu mapy; kierunek stylu: tła walk `../battle_backgrounds/tutorial_area/`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/tutorial_area/`
 
 #### Wariant 1: Brama Lochu Treningowego (Training Dungeon Gate)
@@ -60,8 +63,8 @@ A 16-bit pixel art JRPG loading screen illustration of a wide stone staircase de
 ---
 
 ### 2. Cave (cave — jaskinie generowane)
-- **Referencja w projekcie:** tileset jaskiń `modules/quiz_rpg/resources/maps/caves.tres` (brązowa ziemia,
-  zielony mech, skalne ściany z kolcami i splątanymi korzeniami), `../battle_backgrounds/pixel_crawler/cave/`
+- **Referencja (mockup autora):** `assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Social/MockUp_01.png`
+  (wersja paczki używana przez jaskinie w grze), `assets/pixel_crawler/environments/cave/Social/MockUp_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/cave/`
 
 #### Wariant 1: Wejście do Jaskini (Cave Mouth)
@@ -85,7 +88,7 @@ A 16-bit pixel art JRPG loading screen illustration of a tall cave grotto with a
 ---
 
 ### 3. Miasto (town)
-- **Referencja w projekcie:** brak — hub fabularny: sklep, zapis, NPC, magiczna bariera Strażnika nad miastem
+- **Referencja (mockup autora):** brak — hub fabularny: sklep, zapis, NPC, magiczna bariera Strażnika nad miastem
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/town/`
 
 #### Wariant 1: Miasto pod Barierą (Town Under the Barrier)
@@ -109,7 +112,7 @@ A 16-bit pixel art JRPG loading screen illustration of a stone town gate at nigh
 ---
 
 ### 4. Sewer (sewer)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/sewer/`
 
 #### Wariant 1: Kanał Główny (Main Sewer Canal)
@@ -130,7 +133,7 @@ A 16-bit pixel art JRPG loading screen illustration of the end of a sewer tunnel
 ---
 
 ### 5. Cemetery (cemetery)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/cemetery/Pixel Crawler - Cemetery/Environment/Props/Graves.png`, `Tree.png`, `Structures/Walls.png`
+- **Referencja (mockup autora):** brak — paczka Cemetery nie ma mockupu mapy (tylko propsy)
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/cemetery/`
 
 #### Wariant 1: Wzgórze Nagrobków (Graveyard Hill)
@@ -151,7 +154,7 @@ A 16-bit pixel art JRPG loading screen illustration of a small stone gravekeeper
 ---
 
 ### 6. Fairy Forest (fairy_forest)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_03.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_04.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/fairy_forest/`
 
 #### Wariant 1: Rozstaje Trzech Bram (Crossroads of Three Gates)
@@ -173,7 +176,8 @@ A 16-bit pixel art JRPG loading screen illustration of a colossal ancient elder 
 ---
 
 ### 7. Desert → Desert Temple (desert, desert_temple)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png` … `MockUp-03.png`, `Social/Desert-Gold.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png`, `MockUp-02.png`, `MockUp-03.png`;
+  świątynia: `assets/textures/legacy_amonra/atlases/ArenaFinalAssets/Desert_Dungeon_Pack/Desert_Dungeon_Preview.png`
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/desert/` (otwarta mapa),
   `modules/quiz_rpg/assets/textures/loading_screens/desert_temple/` (świątynia)
 
@@ -195,7 +199,7 @@ A 16-bit pixel art JRPG loading screen illustration of a vast golden burial cham
 ---
 
 ### 8. Volcano → Forge (volcano, forge)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png` … `MockUp-02.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/volcano/`,
   `modules/quiz_rpg/assets/textures/loading_screens/forge/`
 
@@ -217,7 +221,7 @@ A 16-bit pixel art JRPG loading screen illustration of huge ancient iron gates s
 ---
 
 ### 9. Dense Forest → biom zimowy (forest, winter)
-- **Referencja w projekcie:** brak dedykowanej paczki; poziom generowany `FOREST_OVERWORLD` → folder `forest`
+- **Referencja (mockup autora):** las: `assets/pixel_crawler/environments/world_build/MockUps/Trees.png`; biom zimowy: brak
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/forest/`,
   `modules/quiz_rpg/assets/textures/loading_screens/winter/`
 
@@ -239,7 +243,7 @@ A 16-bit pixel art JRPG loading screen illustration of a frozen snowy clearing s
 ---
 
 ### 10. Library (library)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`, `Assets/Tiles.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/library/`
 
 #### Wariant 1: Wielka Nawa Biblioteki (Grand Library Nave)
@@ -260,7 +264,7 @@ A 16-bit pixel art JRPG loading screen illustration of a sealed restricted secti
 ---
 
 ### 11. Garden (garden)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`, `Assets/Tiles.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/garden/`
 
 #### Wariant 1: Labirynt Żywopłotów (Hedge Maze)
@@ -281,7 +285,7 @@ A 16-bit pixel art JRPG loading screen illustration of a sunken garden sanctuary
 ---
 
 ### 12. Castle (castle — finał)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`, `Assets/Tiles.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/castle/`
 
 #### Wariant 1: Zamek Arcymaga (The Archmage's Castle)
