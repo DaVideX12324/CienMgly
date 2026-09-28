@@ -383,7 +383,7 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 			img.fill_rect(Rect2i(x * 16, y * 16, 16, 1), col_grid)
 			img.fill_rect(Rect2i(x * 16, y * 16, 1, 16), col_grid)
 
-	var tiles_tex = load("res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Tiles.png") as Texture2D
+	var tiles_tex = load("res://assets/pixel_crawler/environments/cave/Assets/Tiles.png") as Texture2D
 	if not tiles_tex:
 		return img
 

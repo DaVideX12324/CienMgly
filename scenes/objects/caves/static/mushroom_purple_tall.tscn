@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Assets/Props.png" id="1_3vhtj"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/cave/Assets/Props.png" id="1_3vhtj"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_wi01o"]
 atlas = ExtResource("1_3vhtj")

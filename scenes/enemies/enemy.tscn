@@ -10,24 +10,19 @@ resource_local_to_scene = true
 radius = 70.0
 
 [node name="Enemy" type="CharacterBody2D" unique_id=151771770 groups=["enemies", "interactable"]]
+y_sort_enabled = true
 collision_layer = 2
 collision_mask = 39
 motion_mode = 1
 platform_on_leave = 2
 script = ExtResource("1_enemy")
 patrol_speed = 50.0
-detection_radius = 70.0
+detection_radius = 100.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1014503738]
 position = Vector2(0, -8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1351730875]
-shape = SubResource("RectangleShape2D_enemy")
-
-[node name="Node2D" type="RigidBody2D" parent="." unique_id=1785282346]
-
-[node name="EnemiesColision" type="CollisionShape2D" parent="Node2D" unique_id=262376909]
-scale = Vector2(0.4, 0.4)
 shape = SubResource("RectangleShape2D_enemy")
 
 [node name="DetectionArea" type="Area2D" parent="." unique_id=2045348945]
