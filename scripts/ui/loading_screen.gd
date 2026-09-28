@@ -20,6 +20,13 @@ const FADE_TIME := 0.25
 const BACKGROUND_DIR := "res://modules/quiz_rpg/assets/textures/loading_screens/"
 const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 
+## Nazwa lokacji nad paskiem (duży ozdobny napis, font Jacquard 24). Pusta = ukryta.
+@export var location: String = "":
+	set(value):
+		location = value
+		if is_node_ready():
+			_apply_location()
+
 ## Tytuł (lewa strona pasa nad paskiem postępu).
 @export var title: String = "Ładowanie…":
 	set(value):
@@ -43,6 +50,7 @@ var _closing := false
 @onready var _root: Control = %Root
 @onready var _art: TextureRect = %Art
 @onready var _title: Label = %Title
+@onready var _location: Label = %Location
 @onready var _bar: ProgressBar = %Bar
 @onready var _stage: Label = %Stage
 @onready var _percent: Label = %Percent
@@ -94,10 +102,16 @@ func set_background_for(keys) -> bool:
 
 func _ready() -> void:
 	_title.text = title
+	_apply_location()
 	_art.texture = background
 	_bar.value = 0.0
 	_percent.text = ""
 	_stage.text = ""
+
+
+func _apply_location() -> void:
+	_location.text = location
+	_location.visible = not location.is_empty()
 
 
 ## Podpina źródło postępu (fraction(), opcjonalnie label()) — od tej chwili pasek za nim podąża.
