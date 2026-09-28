@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://zdcfcwqnvulcx"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://b5u6sk75incsd"]
 
 [ext_resource type="Texture2D" uid="uid://csy8j7pct7qx1" path="res://assets/pixel_crawler/environments/garden/Enemies/Old/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://1t8iyntd4xvi" path="res://assets/pixel_crawler/environments/garden/Enemies/Old/Run-Sheet.png" id="2_walk"]

@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://ltlkmgnykqxlg"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://bnnxdrwt7ld2f"]
 
 [ext_resource type="Texture2D" uid="uid://cyxtse0c3q3sj" path="res://assets/pixel_crawler/environments/garden/Enemies/Feminine/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://ce0low3py5igj" path="res://assets/pixel_crawler/environments/garden/Enemies/Feminine/Run-Sheet.png" id="2_walk"]

@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://m0d8ljvusedyk"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://be5mtd433rqpa"]
 
 [ext_resource type="Texture2D" uid="uid://d1mhhiplncpt2" path="res://assets/pixel_crawler/environments/garden/Enemies/Medusa/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://dw6jl8isu0dlb" path="res://assets/pixel_crawler/environments/garden/Enemies/Medusa/Run-Sheet.png" id="2_walk"]

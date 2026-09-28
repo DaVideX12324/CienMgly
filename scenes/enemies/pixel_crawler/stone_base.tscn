@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://2jl8yzi2lqdq1"]
+[gd_scene format=3 uid="uid://c5igxbrle5atq"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://m0ezp2anmqix4" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/stone_base.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://2ke2xcf6fv4" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/stone_base.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://crn5igaduaip2" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/stone_base.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 13.0
 
 [node name="Enemy" unique_id=751756650 instance=ExtResource("1_base")]
-enemy_name = "Kamieniak"
-quiz_id = "ogolne"
-hp = 60
-max_hp = 60
-damage_on_wrong = 10
-xp_reward = 40
-encounter_tier = 1
-patrol_speed = 50.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(1, -24)

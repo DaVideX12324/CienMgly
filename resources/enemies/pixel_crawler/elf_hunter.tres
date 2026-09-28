@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://xjdswieoumzum"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cwld5u6hfrb1"]
 
 [ext_resource type="Texture2D" uid="uid://3tyh1mca1qcg" path="res://assets/pixel_crawler/characters/elf_crew/Elf - Hunter/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://b4aapdev6b67i" path="res://assets/pixel_crawler/characters/elf_crew/Elf - Hunter/Run/Run-Sheet.png" id="2_walk"]

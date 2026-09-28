@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://50dipxh1lz54u"]
+[gd_scene format=3 uid="uid://d1qr7ryk16b51"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://dl8fz27ijy81w" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/rat_warrior.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://c7uwa1n0auurx" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/rat_warrior.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://b1qgiimgduw5i" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/rat_warrior.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 16.0
 
 [node name="Enemy" unique_id=1463089935 instance=ExtResource("1_base")]
-enemy_name = "Szczur Wojownik"
-quiz_id = "ogolne"
-hp = 100
-max_hp = 100
-damage_on_wrong = 18
-xp_reward = 85
-encounter_tier = 3
-patrol_speed = 70.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

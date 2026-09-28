@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://tt6h28m7tc42x"]
+[gd_scene format=3 uid="uid://i444x1x0cra4"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://7p3w70k8y65t3" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/bandit_sorcerer.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bstyij78hk5ry" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/bandit_sorcerer.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://dsa1psaj8iklx" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/bandit_sorcerer.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 10.0
 
 [node name="Enemy" unique_id=528904167 instance=ExtResource("1_base")]
-enemy_name = "Bandyta Czarownik"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 16
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 55.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

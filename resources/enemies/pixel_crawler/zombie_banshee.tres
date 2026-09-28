@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://1k02c8gtdchsx"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://i8g75jj38vfe"]
 
 [ext_resource type="Texture2D" uid="uid://ce7pgjrcky2vb" path="res://assets/pixel_crawler/characters/zombie_crew/Zombie - Banshee/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://bfijmtvrd53l4" path="res://assets/pixel_crawler/characters/zombie_crew/Zombie - Banshee/Run/Run-Sheet.png" id="2_walk"]

@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://2hgw3dzkuo4ei"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://fltxyksway25"]
 
 [ext_resource type="Texture2D" uid="uid://cl68jpfmfcteg" path="res://assets/pixel_crawler/characters/royal_crew/Soldier/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://b017tixn4l4pm" path="res://assets/pixel_crawler/characters/royal_crew/Soldier/Run-Sheet.png" id="2_walk"]

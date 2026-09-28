@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://2to7ri1vcinf2"]
+[gd_scene format=3 uid="uid://rt4m4l4d3i4p"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://p86ngx8n7478u" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_archer.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://sj53qknycp7s" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_archer.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://f3jnwmsbab01" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/royal_archer.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 10.0
 
 [node name="Enemy" unique_id=273585248 instance=ExtResource("1_base")]
-enemy_name = "Łucznik"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 14
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 70.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

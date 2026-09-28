@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://mn5ayhwdzkuzt"]
+[gd_scene format=3 uid="uid://2wn7b5mbx8qj"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://2hgw3dzkuo4ei" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_soldier.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://fltxyksway25" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_soldier.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://dykrlymtlgcgc" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/royal_soldier.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 10.0
 
 [node name="Enemy" unique_id=1307583262 instance=ExtResource("1_base")]
-enemy_name = "Żołnierz"
-quiz_id = "ogolne"
-hp = 50
-max_hp = 50
-damage_on_wrong = 10
-xp_reward = 40
-encounter_tier = 1
-patrol_speed = 60.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

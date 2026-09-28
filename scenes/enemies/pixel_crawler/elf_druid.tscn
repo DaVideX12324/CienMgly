@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://g24rtyeaeeptp"]
+[gd_scene format=3 uid="uid://dlyfqhy0ojq4q"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://1hjahjpwydkkf" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/elf_druid.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bi00tmgwgantm" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/elf_druid.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://t37b8va5x0ht" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/elf_druid.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 16.0
 
 [node name="Enemy" unique_id=244128665 instance=ExtResource("1_base")]
-enemy_name = "Elf Druid"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 16
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 60.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(-2, -24)

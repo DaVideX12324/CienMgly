@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://igge8p0stfsg2"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://pmn2l6bo01xj"]
 
 [ext_resource type="Texture2D" uid="uid://oiif5ye3fy5t" path="res://assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Enemies/Baldits/Tracker/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://dl5y87whcg6l7" path="res://assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Enemies/Baldits/Tracker/Run/Run-Sheet.png" id="2_walk"]

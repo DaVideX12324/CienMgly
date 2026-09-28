@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://whwkvxqm7c7x7"]
+[gd_scene format=3 uid="uid://dc3en3lg21q65"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://hw0hajmkufwmj" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/skeleton_mage.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bjokfjc2xovwc" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/skeleton_mage.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://eu0jq6ye7om8" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/skeleton_mage.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 11.0
 
 [node name="Enemy" unique_id=780700038 instance=ExtResource("1_base")]
-enemy_name = "Szkielet Mag"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 16
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 55.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

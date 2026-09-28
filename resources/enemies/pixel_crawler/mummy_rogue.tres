@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://u5cf8irbo8fqs"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://bwx7l7u08yds"]
 
 [ext_resource type="Texture2D" uid="uid://cm4y634k7pg0i" path="res://assets/pixel_crawler/enemies/desert_mummy/Mummy - Rogue/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://bhebpvxwea24a" path="res://assets/pixel_crawler/enemies/desert_mummy/Mummy - Rogue/Run/Run-Sheet.png" id="2_walk"]

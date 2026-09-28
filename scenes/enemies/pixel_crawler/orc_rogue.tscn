@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://6mkpd5lm44maa"]
+[gd_scene format=3 uid="uid://5aac0xtbs7o5"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://jtje514ves5oy" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/orc_rogue.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://dxwf5yc4dlku2" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/orc_rogue.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://dvhdkuwf3uj2x" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/orc_rogue.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 12.0
 
 [node name="Enemy" unique_id=409232351 instance=ExtResource("1_base")]
-enemy_name = "Ork Łotrzyk"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 14
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 85.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(1, -24)
