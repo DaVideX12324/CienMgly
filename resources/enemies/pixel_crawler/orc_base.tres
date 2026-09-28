@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://jafpuzqrz60yn"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://bwof6nfdnsd2q"]
 
 [ext_resource type="Texture2D" uid="uid://cis1y4p4fskqc" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://dkmqxbo7d8nvh" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc/Run/Run-Sheet.png" id="2_walk"]

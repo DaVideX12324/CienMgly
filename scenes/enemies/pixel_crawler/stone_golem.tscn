@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://4l2z8nc7q2dgo"]
+[gd_scene format=3 uid="uid://clwp7qt6yqnoi"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://zdu0mdzu16st2" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/stone_golem.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://b6fr21idnykbh" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/stone_golem.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://cbq8mtqk28o3n" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/stone_golem.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 13.0
 
 [node name="Enemy" unique_id=579509098 instance=ExtResource("1_base")]
-enemy_name = "Kamienny Golem"
-quiz_id = "ogolne"
-hp = 120
-max_hp = 120
-damage_on_wrong = 18
-xp_reward = 85
-encounter_tier = 3
-patrol_speed = 45.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(1, -24)

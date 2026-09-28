@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://dudmr6xgnscls"]
+[gd_scene format=3 uid="uid://d1xyk35o8uy5k"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://eitfsajfihj4d" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/mummy_warrior.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://nfj67l5xaodl" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/mummy_warrior.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://d0x1of7hr0int" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/mummy_warrior.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 13.0
 
 [node name="Enemy" unique_id=1641474649 instance=ExtResource("1_base")]
-enemy_name = "Mumia Wojownik"
-quiz_id = "ogolne"
-hp = 100
-max_hp = 100
-damage_on_wrong = 18
-xp_reward = 85
-encounter_tier = 3
-patrol_speed = 60.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(-1, -24)

@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://m0ezp2anmqix4"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://2ke2xcf6fv4"]
 
 [ext_resource type="Texture2D" uid="uid://0lee5j64g0lq" path="res://assets/pixel_crawler/enemies/stone_enemy/Stone - Base/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://cqyqku84cx7kv" path="res://assets/pixel_crawler/enemies/stone_enemy/Stone - Base/Run/Run-Sheet.png" id="2_walk"]

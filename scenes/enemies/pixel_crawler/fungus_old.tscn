@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://o4aybceqpzyju"]
+[gd_scene format=3 uid="uid://depa2safrp3oo"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://pg8o75ifx2jk5" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/fungus_old.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://b7gp30ky4wf8i" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/fungus_old.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://dgrl7y1a73e3a" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/fungus_old.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 16.0
 
 [node name="Enemy" unique_id=1406570050 instance=ExtResource("1_base")]
-enemy_name = "Stary Grzyb"
-quiz_id = "ogolne"
-hp = 100
-max_hp = 100
-damage_on_wrong = 20
-xp_reward = 85
-encounter_tier = 3
-patrol_speed = 50.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(2, -24)

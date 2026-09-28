@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://hw0hajmkufwmj"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://bjokfjc2xovwc"]
 
 [ext_resource type="Texture2D" uid="uid://bosbsqr5of32y" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Mage/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://y63bvk1m3qjv" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Mage/Run/Run-Sheet.png" id="2_walk"]

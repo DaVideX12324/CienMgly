@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://o7czu5ee858cw"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cevnepfltdood"]
 
 [ext_resource type="Texture2D" uid="uid://cxyl3kve5ohqg" path="res://assets/pixel_crawler/characters/royal_crew/Priest/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://dqn4hqdctl7lj" path="res://assets/pixel_crawler/characters/royal_crew/Priest/Run-Sheet.png" id="2_walk"]

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemyData" format=3 uid="uid://ccd8xk2mg5y6o"]
+
+[ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+enemy_name = "Szczur Mag"
+quiz_id = "ogolne"
+quiz_category = "ogolne"
+is_boss = false
+question_count = 3
+max_hp = 70
+damage_on_wrong = 16
+xp_reward = 60
+encounter_tier = 2
+min_encounter_size = 1
+max_encounter_size = 3
+patrol_speed = 60.0
+detection_radius = 100.0
+body_color = Color(0.9, 0.2, 0.2, 1)
+shape_type = 0
+metadata/_custom_type_script = "uid://c2e6oyqepnkc4"

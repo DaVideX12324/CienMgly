@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://errgq10vbchmj"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://bntoj5e42dmql"]
 
 [ext_resource type="Texture2D" uid="uid://b0olt1tv4jm5i" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Rogue/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://cy3g4b0e1huij" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Rogue/Run/Run-Sheet.png" id="2_walk"]

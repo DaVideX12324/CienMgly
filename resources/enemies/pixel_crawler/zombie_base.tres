@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://52ijdllpulgfp"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cwnamjwfebohu"]
 
 [ext_resource type="Texture2D" uid="uid://sfrn0y7xd6fd" path="res://assets/pixel_crawler/characters/zombie_crew/Zombie - Base/Idle/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://qfsreb814i43" path="res://assets/pixel_crawler/characters/zombie_crew/Zombie - Base/Run/Run-Sheet.png" id="2_walk"]

@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://eh7je1koatkhm"]
+[gd_scene format=3 uid="uid://q2l4l3gine5k"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://yjkddwh6eihg8" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/orc_warrior.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://e4n1306k4mud" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/orc_warrior.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://7cjgyoixs1i7" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/orc_warrior.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 13.0
 
 [node name="Enemy" unique_id=1440159209 instance=ExtResource("1_base")]
-enemy_name = "Ork Wojownik"
-quiz_id = "ogolne"
-hp = 100
-max_hp = 100
-damage_on_wrong = 18
-xp_reward = 85
-encounter_tier = 3
-patrol_speed = 60.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(2, -32)

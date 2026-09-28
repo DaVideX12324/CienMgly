@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://gtk1wwnnn1e8v"]
+[gd_scene format=3 uid="uid://qb3x4iov4so6"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://m0d8ljvusedyk" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/statue_medusa.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://be5mtd433rqpa" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/statue_medusa.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://ke7brpq28vmm" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/statue_medusa.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 15.0
 
 [node name="Enemy" unique_id=1887493745 instance=ExtResource("1_base")]
-enemy_name = "Meduza"
-quiz_id = "ogolne"
-hp = 100
-max_hp = 100
-damage_on_wrong = 20
-xp_reward = 85
-encounter_tier = 3
-patrol_speed = 60.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(4, -24)

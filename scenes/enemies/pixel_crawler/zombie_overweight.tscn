@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://fmrq6m1teumbf"]
+[gd_scene format=3 uid="uid://bju5x4k8gahbp"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://kw08raq72kz01" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/zombie_overweight.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bo0xe40x2t5v7" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/zombie_overweight.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://dl3a21s5o7trn" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/zombie_overweight.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 10.0
 
 [node name="Enemy" unique_id=1854963730 instance=ExtResource("1_base")]
-enemy_name = "Zombie Grubas"
-quiz_id = "ogolne"
-hp = 100
-max_hp = 100
-damage_on_wrong = 14
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 40.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

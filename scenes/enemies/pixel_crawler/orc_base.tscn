@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://yh3yegzthc007"]
+[gd_scene format=3 uid="uid://d0uux41h3i0rg"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://jafpuzqrz60yn" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/orc_base.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bwof6nfdnsd2q" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/orc_base.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://r8k27egalwtq" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/orc_base.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 12.0
 
 [node name="Enemy" unique_id=381493795 instance=ExtResource("1_base")]
-enemy_name = "Ork"
-quiz_id = "ogolne"
-hp = 50
-max_hp = 50
-damage_on_wrong = 10
-xp_reward = 40
-encounter_tier = 1
-patrol_speed = 60.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(1, -24)

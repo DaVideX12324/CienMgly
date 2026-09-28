@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://80rjsmn5eh84k"]
+[gd_scene format=3 uid="uid://djmnle6612dhu"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://u5cf8irbo8fqs" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/mummy_rogue.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bwx7l7u08yds" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/mummy_rogue.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://bncnothugdawn" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/mummy_rogue.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 11.0
 
 [node name="Enemy" unique_id=2040189883 instance=ExtResource("1_base")]
-enemy_name = "Mumia Łotrzyk"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 14
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 80.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)

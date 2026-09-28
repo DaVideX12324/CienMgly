@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://x0laks5cemgqx"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://s411hms0e67d"]
 
 [ext_resource type="Texture2D" uid="uid://cdnhyin4mcytr" path="res://assets/pixel_crawler/environments/library/Enemies/Scholars/Censor/Idle-Sheet.png" id="1_idle"]
 [ext_resource type="Texture2D" uid="uid://cqc3d6fca5l3t" path="res://assets/pixel_crawler/environments/library/Enemies/Scholars/Censor/Run-Sheet.png" id="2_walk"]

@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://2d28fcl2o8llz"]
+[gd_scene format=3 uid="uid://dv72ya0lgfeiv"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://errgq10vbchmj" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/rat_rogue.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://bntoj5e42dmql" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/rat_rogue.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://dk0vngpelk6yj" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/rat_rogue.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 16.0
 
 [node name="Enemy" unique_id=1430772316 instance=ExtResource("1_base")]
-enemy_name = "Szczur Łotrzyk"
-quiz_id = "ogolne"
-hp = 70
-max_hp = 70
-damage_on_wrong = 14
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 90.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(-1, -24)

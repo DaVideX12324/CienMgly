@@ -1,21 +1,15 @@
-[gd_scene format=3 uid="uid://zxyb5zo1pqili"]
+[gd_scene format=3 uid="uid://bbbgn5nhhcvgv"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="SpriteFrames" uid="uid://zdcfcwqnvulcx" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/statue_old.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" uid="uid://b5u6sk75incsd" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/statue_old.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://beiqeecanfiu7" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/statue_old.tres" id="3_data"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 3.0
 height = 10.0
 
 [node name="Enemy" unique_id=1635166493 instance=ExtResource("1_base")]
-enemy_name = "Posąg Starca"
-quiz_id = "ogolne"
-hp = 90
-max_hp = 90
-damage_on_wrong = 14
-xp_reward = 60
-encounter_tier = 2
-patrol_speed = 45.0
+enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(0, -24)
