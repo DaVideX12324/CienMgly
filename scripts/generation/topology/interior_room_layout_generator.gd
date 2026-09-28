@@ -117,8 +117,7 @@ static func generate_layout(
 	# P5–P7. Wymuszenie minimalnej grubości murów i eliminacja ścian 1H
 	GridPreprocessor.run(ctx, [
 		Remove1hWallsPass.new(),
-		WallThicknessPass.new(),
-		ShortBulgeFlattenPass.new()
+		WallThicknessPass.new()
 	])
 
 	# P8. Twarda gwarancja spójności
@@ -170,10 +169,7 @@ static func generate_layout(
 			StaircaseNormalizerPass.new()
 		], 4)
 
-		# P11. Drugie spłaszczanie wybrzuszeń (przeniesione z apply_cave_tiles KROK 0)
-		GridPreprocessor.run(ctx, [ShortBulgeFlattenPass.new()])
-
-	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte (także bez spłaszczania wybrzuszeń).
+	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte.
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new()])
 
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
