@@ -4,7 +4,7 @@ Gotowe prompty do grafik tła ekranu ładowania (16:9, Pixel Art) dla wszystkich
 `docs/game_design.md`. Styl jest spójny z tłami walk (`../battle_backgrounds/pixel_crawler_prompts.md`),
 ale kadr jest inny: zamiast płaskiej areny walki — **szeroki, klimatyczny widok całej lokacji**
 („establishing shot”), który zapowiada, dokąd gracz się wybiera.
-Dla każdej strefy **3 warianty** — ekran losuje jedną grafikę z folderu mapy przy każdym ładowaniu.
+Dla każdej strefy **3–4 warianty** — ekran losuje jedną grafikę z folderu mapy przy każdym ładowaniu.
 
 ---
 
@@ -24,7 +24,9 @@ Dla każdej strefy **3 warianty** — ekran losuje jedną grafikę z folderu map
    (`No characters, no monsters, no text, no logo, no UI`).
 
 **Referencje:** przy każdej strefie są mockupy map zrobione przez autora paczki (`Social/MockUp*`) —
-dołącz je do promptu jako obraz referencyjny (styl, paleta, kafle); gdzie mockupu nie ma, zaznaczono „brak”.
+dołącz je do promptu jako obraz referencyjny. Gdy strefa ma kilka mockupów, każdy wariant bazuje na
+innym (linia *Referencja* przy wariancie, a prompt opisuje to, co na nim widać). Mockupy to widok mapy
+z góry — bierzemy z nich paletę, materiały i props, nie perspektywę. Gdzie mockupu nie ma — „brak”.
 
 **Wspólny dopisek (wklejany na końcu każdego promptu):**
 ```text
@@ -64,7 +66,9 @@ A 16-bit pixel art JRPG loading screen illustration of a wide stone staircase de
 
 ### 2. Cave (cave — jaskinie generowane)
 - **Referencja (mockup autora):** `assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Social/MockUp_01.png`
-  (wersja paczki używana przez jaskinie w grze), `assets/pixel_crawler/environments/cave/Social/MockUp_01.png`
+  (wersja paczki używana przez jaskinie w grze; `environments/cave/Social/MockUp_01.png` to ten sam obraz) —
+  wszystkie warianty bazują na nim: fioletowe grzyby-parasole ociekające błękitem, czerwone grzyby-trąbki,
+  brązowa ziemia z plamami mchu, skalne ściany z korzeniami i kolcami, kamienne stopnie, kamyki.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/cave/`
 
 #### Wariant 1: Wejście do Jaskini (Cave Mouth)
@@ -112,22 +116,29 @@ A 16-bit pixel art JRPG loading screen illustration of a stone town gate at nigh
 ---
 
 ### 4. Sewer (sewer)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Wspólne z mockupów:** jaskrawozielony toksyczny szlam, ciemna cegła z zielonymi kaflami przy ścianach, miedziane barierki i rury, łukowe kraty odpływów, żelazne kratki w posadzce, kamienne filary z lampkami, drewniane kładki z desek.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/sewer/`
 
-#### Wariant 1: Kanał Główny (Main Sewer Canal)
+#### Wariant 1: Skrzyżowanie Kanałów (Canal Crossroads)
+*Referencja:* `MockUp-01.png` — skrzyżowanie kanałów w kształcie T, kładki z desek, miedziane barierki, pionowe miedziane rury.
+*Opis scenerii:* Trzy kanały szlamu zbiegają się w jednym miejscu, nad nimi drewniane kładki; na brzegach kratki, miedziane barierki i okrągłe wyloty rur w ścianach.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a long vaulted sewer tunnel, wide establishing shot with deep perspective. A channel of glowing toxic green sludge flowing down the middle, narrow stone walkways on both sides, mossy brick arches repeating into the distance, rusty copper pipes along the walls dripping water, a single grated light shaft from the street above. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of an underground sewer junction where three canals of glowing lime-green toxic sludge meet in a T-shape, wide establishing shot from a slightly elevated camera. Wooden plank bridges spanning the canals, copper pipe railings along dark brick walkways, round copper pipe outlets and arched copper drain grates in dark brick walls with dark green tiles, tall vertical copper pipes, stone pillars with small wall lamps, iron floor grates, a few crates and sacks by the wall. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 2: Śluzy i Przełączniki (Sluice Gate Junction)
+#### Wariant 2: Magazyn nad Kanałem (Storage Hall by the Canal)
+*Referencja:* `MockUp-02.png` — długa hala z rzędem łukowych krat odpływów, beczki, skrzynie, stół z krzesłami, szeroki kanał z kładką.
+*Opis scenerii:* Długa, kamienna hala kanałów z rzędem łukowych krat w ścianie, beczkami i skrzyniami przemytników, a u dołu szeroki kanał szlamu przecięty kładką.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a large underground sewer junction with massive iron sluice gates, wide establishing shot. Several canals meeting in a round brick chamber, heavy gears and lever mechanisms on the walls, chains and valves, green-tinted water pouring through half-open gates, old lanterns on iron hooks, damp stone and hanging moss. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a long sewer storage hall, wide establishing shot. A row of large arched copper drain grates in a dark brick wall with dark green tiles, stone pillars with small lamps, big iron floor grates, stacks of wooden crates and barrels, a rough wooden table with chairs, a wooden ladder to an upper hatch, and along the front a wide channel of glowing lime-green sludge crossed by a narrow wooden plank bridge behind a copper railing. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 3: Wyjście ku Cmentarzowi (Grate to the Cemetery)
+*Referencja:* `MockUp-01.png` — ceglane ściany, miedziane rury i kraty jako rama kadru.
+*Opis scenerii:* Koniec tunelu kanałów: przez zardzewiałą kratę widać mglisty, nocny cmentarz.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of the end of a sewer tunnel with a rusted iron grate opening onto a misty night graveyard, wide establishing shot. Wet brick tunnel walls in the foreground framing the view, pale moonlight falling through the grate, silhouettes of crooked gravestones and a dead tree visible outside in blue fog. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of the end of a sewer tunnel with a large arched copper grate opening onto a misty night graveyard, wide establishing shot. Dark wet brick walls with dark green tiles and copper pipes framing the view, a thin stream of lime-green sludge running toward the grate, pale moonlight falling through the bars, silhouettes of crooked gravestones and a dead tree outside in blue fog. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 ---
@@ -154,68 +165,102 @@ A 16-bit pixel art JRPG loading screen illustration of a small stone gravekeeper
 ---
 
 ### 6. Fairy Forest (fairy_forest)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_04.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_04.png`
+- **Wspólne z mockupów:** gęste zielone i fioletowe korony drzew, pomarańczowe krzewy, świecące turkusowe kamienie runiczne w błękitnej poświacie, świecące fioletowe dzwonki, błękitny potok, skarpy z odsłoniętą ziemią.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/fairy_forest/`
 
 #### Wariant 1: Rozstaje Trzech Bram (Crossroads of Three Gates)
-*Opis scenerii:* Hub-skrzyżowanie: polana z trzema starymi kamiennymi bramami prowadzącymi w różne strony (piasek, żar, śnieg w prześwitach) i ledwie widoczną czwartą ścieżką wśród paproci.
+*Referencja:* `MockUp_01.png` — polany ze świecącymi kamieniami runicznymi w błękitnej mgiełce, wielkie dęby, fioletowe drzewa, pień.
+*Opis scenerii:* Hub-skrzyżowanie: polana z kamieniami runicznymi i trzema starymi łukami prowadzącymi w różne strony (piasek, żar, śnieg w prześwitach) oraz ledwie widoczną czwartą ścieżką.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of an enchanted forest crossroads glade, wide establishing shot. Three ancient moss-covered stone archways standing around a clearing, each glimpsing a different land through it: golden desert dunes, glowing red volcanic light, and snowy pines; a barely visible fourth overgrown path hidden among ferns, glowing runestones, floating fireflies and soft god rays through tall trees. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of an enchanted forest crossroads glade, wide establishing shot. Glowing teal runestones standing in pools of soft blue mist, huge green oaks and trees with purple foliage, orange shrubs and an old tree stump; three ancient moss-covered stone archways around the clearing, each glimpsing a different land: golden desert dunes, glowing red volcanic light, and snowy pines; a barely visible fourth overgrown path hidden among ferns, fireflies. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2: Magiczny Potok (Enchanted Stream)
+*Referencja:* `MockUp_02.png` — błękitny potok przecinający las po skosie, polany z ziemią, świecące kamienie runiczne.
+*Opis scenerii:* Błękitny potok wijący się przez las, na brzegach skarpy i polanki, przy wodzie świecące kamienie.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a magical forest stream at dusk, wide establishing shot. Crystal-clear water winding between mossy boulders, giant mushrooms and glowing blue bellflowers on the banks, a small wooden footbridge, huge ancient trees with hanging vines, fireflies and floating light motes, pink and turquoise evening light. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a bright blue stream winding diagonally through a magical forest, wide establishing shot. Grassy banks with small earthen cliffs and bare dirt clearings, trees with green and purple foliage, orange shrubs, tree stumps, glowing teal runestones in blue mist near the water, tiny white flowers, soft dusk light. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 3: Pradawne Drzewo (The Elder Tree)
+#### Wariant 3: Fioletowe Drzewo i Dzwonki (Violet Tree & Bellflowers)
+*Referencja:* `MockUp_03.png` — wielkie drzewo o fioletowych liściach, świecące fioletowe dzwonki, potok, pnącza z pomarańczowymi kwiatami, skarpy.
+*Opis scenerii:* Pradawne drzewo o fioletowej koronie nad potokiem, wokół świecące dzwonki i skręcone pnącza.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a colossal ancient elder tree in the heart of a fairy forest, wide establishing shot. Enormous glowing roots spreading across a clearing, carved runes shining softly in the bark, small lanterns hanging from branches, a ring of standing stones around the trunk, drifting glowing pollen, deep green and gold palette. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a colossal ancient tree with a violet canopy standing above a forest stream, wide establishing shot. Clusters of glowing purple bellflowers, twisting green vines with orange trumpet flowers, rocky earthen ledges, a bright blue stream curving past the roots, drifting glowing pollen, deep green and violet palette. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+```
+
+#### Wariant 4: Zacieniony Gąszcz (Sunbeam Thicket)
+*Referencja:* `MockUp_04.png` — ciemny, gęsty las, skośne smugi światła, wysokie pnące łodygi, czerwone grzyby, szare kamienie, fioletowe dzwonki.
+*Opis scenerii:* Mroczny gąszcz, do którego wpadają skośne smugi słońca; mała polanka z grzybami i świecącymi kwiatami.
+```text
+A 16-bit pixel art JRPG loading screen illustration of a dark dense fairy forest thicket pierced by diagonal sunbeams, wide establishing shot. A small mossy clearing surrounded by thick shadowy canopies, tall curling vine stalks with orange buds, little red-capped mushrooms, grey stones, glowing purple bellflowers, floating light motes in the beams. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 ---
 
 ### 7. Desert → Desert Temple (desert, desert_temple)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png`, `MockUp-02.png`, `MockUp-03.png`;
+- **Mockupy autora:** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png`, `MockUp-02.png`, `MockUp-03.png`;
   świątynia: `assets/textures/legacy_amonra/atlases/ArenaFinalAssets/Desert_Dungeon_Pack/Desert_Dungeon_Preview.png`
+- **Wspólne z mockupów:** pomarańczowy piasek z ciemniejszymi plamami, grzbiety i ostańce z czerwonej skały, gigantyczne kły/kości, kaktusy, suche krzaki, otwory jaskiń w skałach; świątynia z piaskowca z filarami i schodami.
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/desert/` (otwarta mapa),
   `modules/quiz_rpg/assets/textures/loading_screens/desert_temple/` (świątynia)
 
-#### Wariant 1 (desert): Morze Wydm (Sea of Dunes)
+#### Wariant 1 (desert): Morze Wydm i Ostańców (Dunes & Red Mesas)
+*Referencja:* `MockUp-01.png` — piasek, grzbiety czerwonej skały, otwory jaskiń, kły, kaktusy, suche drzewka.
+*Opis scenerii:* Bezkresna pustynia o zachodzie, grzbiety czerwonych skał z otworami jaskiń, na horyzoncie sylwetka świątyni.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of an endless golden desert at sunset, wide establishing shot. Rolling sand dunes with wind ripples, half-buried sandstone pillars and a broken statue head, sun-bleached bones, a distant oasis with palm trees, and on the horizon the silhouette of a great sandstone temple, orange and magenta sky with heat haze. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a vast orange desert at sunset, wide establishing shot. Sand with darker patches, winding ridges and pillars of red rock with dark cave openings, giant pale curved tusks half-buried in the sand, green cacti, dry thorny bushes and dead trees, and on the far horizon the silhouette of a great sandstone temple, orange and magenta sky with heat haze. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 2 (desert_temple): Fasada Świątyni (Temple Facade)
+#### Wariant 2 (desert): Kanion Kłów (Canyon of Tusks)
+*Referencja:* `MockUp-02.png` — koliste zagłębienie otoczone skałą, ogromne kły, kaktusy, samotne kolumny z piaskowca.
+*Opis scenerii:* Kotlina w czerwonym kanionie z ogromnymi kłami wystającymi z piasku i resztkami kolumn dawnej drogi do świątyni.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a colossal sandstone temple facade carved into a cliff, wide establishing shot. Giant guardian statues flanking a dark doorway half-choked with sand, hieroglyph-like carvings (no readable text), golden sun disc above the entrance, crumbling steps, sand pouring from cracks, harsh midday light with deep shadows. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a red rock canyon basin in the desert, wide establishing shot. A ring of low red rock ridges around a sandy hollow, enormous pale curved tusks and bones jutting from the sand, green cacti and dry red shrubs, a few lonely broken sandstone columns marking an ancient road, harsh afternoon sun with long shadows. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 3 (desert_temple): Złota Krypta (Golden Crypt)
+#### Wariant 3 (desert_temple): Ruiny u Wrót Świątyni (Temple Ruins)
+*Referencja:* `MockUp-03.png` — ruiny z piaskowca, filary, szerokie schody, wyłom w murze, obelisk, dzbany i posągi.
+*Opis scenerii:* Wejście do świątyni: szerokie schody, filary, wyłom w murze prowadzący w ciemność, obelisk i posągi strażników.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a vast golden burial chamber deep inside a desert temple, wide establishing shot. Rows of sandstone columns, a raised sarcophagus on a stepped dais, heaps of gold coins and treasure, braziers with blue flames, a glowing fragment of an ancient artifact resting on an altar, thin beams of sunlight through ceiling cracks. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of sandstone temple ruins at the edge of the desert, wide establishing shot. Wide stone stairs leading up between carved sandstone pillars, a broken wall with a dark breach into the temple, a tall obelisk, guardian statues, clay pots and a small chest among rubble, red rock ridges with giant tusks in the foreground sand, harsh midday light. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+```
+
+#### Wariant 4 (desert_temple): Komnaty Grobowca (Tomb Chambers)
+*Referencja:* `Desert_Dungeon_Preview.png` — komnaty z piaskowca, pochodnie, dzbany, ciemna studnia, schody, skrzynia skarbu.
+*Opis scenerii:* Wnętrze świątyni: ciąg komnat z piaskowca, ciemna studnia pośrodku, pochodnie na ścianach, skrzynia ze skarbem.
+```text
+A 16-bit pixel art JRPG loading screen illustration of sandstone tomb chambers deep inside a desert temple, wide establishing shot. Connected rooms of pale sandstone bricks and floor tiles, a dark square pit in the middle of the main chamber, wall torches with warm flames, clay pots and urns, short stairs between levels, a golden treasure chest glowing on a dais, thin beams of dusty light. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 ---
 
 ### 8. Volcano → Forge (volcano, forge)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
+- **Wspólne z mockupów:** ciemnofioletowo-szara posadzka, ściany z czerwonej cegły z pomarańczowo żarzącymi się szczelinami i łukowymi wrotami w jodełkę, kanały i baseny lawy, metalowe kraty-mosty nad lawą, kamienne posągi krasnoludów, piece i kowadła na postumentach.
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/volcano/`,
   `modules/quiz_rpg/assets/textures/loading_screens/forge/`
 
-#### Wariant 1 (volcano): Platformy nad Lawą (Lava Platforms)
+#### Wariant 1 (volcano): Kraty nad Lawą (Grated Lava Walkways)
+*Referencja:* `MockUp-01.png` — jezioro lawy z posągami krasnoludów, metalowe kraty-mosty nad kanałem lawy, piece na postumentach.
+*Opis scenerii:* Rozżarzona hala nad jeziorem lawy: posągi krasnoludów stoją w lawie, przez kanał prowadzą metalowe kraty.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a volcanic caldera, wide establishing shot. Floating basalt platforms and narrow rock bridges over a glowing lake of molten lava, rising embers and heat shimmer, jagged black rock spires, rivers of magma pouring from the crater walls, dark red smoky sky. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a volcanic hall above a glowing lake of molten lava, wide establishing shot. Stone dwarf statues standing in the lava, a lava channel crossed by heavy metal grate walkways, dark purple-grey stone floor with small forge furnaces on square pedestals, red brick walls with glowing orange slit vents and chevron-patterned arched gates, rising embers and heat shimmer. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 2 (forge): Wielka Kuźnia (The Great Forge)
+#### Wariant 2 (forge): Sala Wielkiego Pieca (Great Furnace Hall)
+*Referencja:* `MockUp-00.png` — symetryczna sala, łukowe wrota z żarzącą się jodełką, dwa baseny lawy, kratowany pomost, czerwone filary.
+*Opis scenerii:* Symetryczna hala kuźni: pośrodku kratowany pomost prowadzący do wielkich łukowych wrót, po bokach baseny lawy.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a colossal dwarven forge built inside a volcano, wide establishing shot. A giant anvil on a stone platform, massive bellows and chains, channels of molten metal glowing orange, racks of weapons and armor, runic carvings glowing on the pillars, sparks everywhere, warm orange against deep shadow. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a grand symmetrical forge hall, wide establishing shot. A central metal grate walkway leading to a huge arched gate glowing with orange chevron patterns, two rectangular basins of bright molten lava on both sides, red brick pillars and walls with glowing orange rune slits, stone buttresses with glowing lines, dark purple-grey stone floor with scattered rubble. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 3 (forge): Stare Wrota Kuźni (Ancient Forge Gates)
+#### Wariant 3 (forge): Wrota Zbrojowni (Armory Gates)
+*Referencja:* `MockUp-02.png` — łukowe wrota, kraty z pomarańczowymi pierścieniami, posągi krasnoludów, skrzynie, kałuże ciemnej wody, kraty-mosty nad lawą.
+*Opis scenerii:* Korytarze zbrojowni z zakratowanymi wrotami, posągami i skrzyniami; u dołu kanał lawy pod kratami.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of huge ancient iron gates sealed with glowing runes at the end of a lava-lit tunnel, wide establishing shot. Obsidian walls, cooled lava rock floor with glowing cracks, heavy chains and a giant keyhole mechanism, braziers burning on both sides. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of an ancient dwarven armory with massive barred gates, wide establishing shot. Red brick walls with gothic arched doors glowing orange, iron portcullis gates decorated with glowing orange rings, stone dwarf statues, treasure chests and weapon racks, dark puddles of cooled water on the purple-grey stone floor, and along the bottom a lava channel under heavy metal grates. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 ---
@@ -285,22 +330,36 @@ A 16-bit pixel art JRPG loading screen illustration of a sunken garden sanctuary
 ---
 
 ### 12. Castle (castle — finał)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
+- **Wspólne z mockupów:** ciemnoszary kamień, posadzka w granatową szachownicę, czerwone dywany ze złotym obszyciem, fioletowe proporce, kamienne popiersia na cokołach, rośliny w donicach, świeczniki, bursztynowe witraże.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/castle/`
 
 #### Wariant 1: Zamek Arcymaga (The Archmage's Castle)
+*Referencja:* brak mockupu z zewnątrz — paleta i detale z `MockUp_01.png` (kamień, fioletowe proporce, bursztynowe okna).
+*Opis scenerii:* Mroczny zamek na klifie nocą, nad najwyższą wieżą wirujący krąg magii urządzenia.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a towering dark castle on a cliff, wide establishing shot at night. Gothic spires and battlements, a long stone bridge leading to the main gate, a swirling violet magical glow and a giant rotating arcane circle above the highest tower, storm clouds lit by purple lightning. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a towering dark grey stone castle on a cliff, wide establishing shot at night. Gothic spires and battlements, purple banners with gold trim, warm amber stained glass windows, a long stone bridge leading to the main gate, a swirling violet magical glow and a giant rotating arcane circle above the highest tower, storm clouds lit by purple lightning. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2: Sala Tronowa (Throne Hall)
+*Referencja:* `MockUp_01.png` — tron pod bursztynowym witrażem, popiersia, fioletowe proporce, czerwony dywan, drzewka w donicach, komnata z kominkiem, tarcze herbowe.
+*Opis scenerii:* Sala tronowa: czerwony dywan prowadzi do tronu pod bursztynowym witrażem, po bokach popiersia i proporce.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a grand gothic throne hall, wide establishing shot with deep perspective. A long red carpet between massive stone pillars, royal red and purple banners with gold trim, iron chandeliers with candles, an empty ornate throne beneath a huge amber stained glass window. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a gothic castle throne hall, wide establishing shot with deep perspective. A long red carpet with gold trim across a dark blue checkerboard floor, purple banners with gold trim on grey stone pillars, potted topiary trees in clay pots, marble busts on pedestals flanking an empty ornate throne beneath a glowing amber stained glass window, a side chamber with a roaring fireplace, red and yellow heraldic shields on the walls. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
-#### Wariant 3: Komnata Urządzenia (The Device Chamber)
+#### Wariant 3: Galeria Popiersi (Hall of Busts)
+*Referencja:* `MockUp_02.png` — dywan w kształcie litery U, popiersia na cokołach, kamienne słupki, świece, fioletowe proporce, ławy.
+*Opis scenerii:* Galeria bohaterów: czerwony dywan okrąża podwójny rząd popiersi, przy ścianach świece i proporce.
 ```text
-A 16-bit pixel art JRPG loading screen illustration of a circular arcane chamber at the top of a castle tower, wide establishing shot. A huge magical machine of brass rings and floating crystals in the center, glowing runic circles on the floor, beams of violet energy rising through an open dome into a stormy sky, scattered scrolls and instruments. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+A 16-bit pixel art JRPG loading screen illustration of a castle gallery of heroes, wide establishing shot. A red carpet with gold trim forming a U around two rows of marble portrait busts on stone pedestals, small carved stone posts between them, dark blue checkerboard floor, grey stone walls with purple banners and wall candles casting warm light, red cushioned benches, potted cypress trees. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
+```
+
+#### Wariant 4: Komnata Urządzenia (The Device Chamber)
+*Referencja:* brak mockupu — paleta z `MockUp_01.png` / `MockUp_02.png`.
+*Opis scenerii:* Okrągła komnata na szczycie wieży z wielką magiczną maszyną — cel całej gry.
+```text
+A 16-bit pixel art JRPG loading screen illustration of a circular arcane chamber at the top of a castle tower, wide establishing shot. A huge magical machine of brass rings and floating crystals in the center, glowing violet runic circles on a dark blue checkerboard floor, purple banners, beams of violet energy rising through an open dome into a stormy sky, scattered scrolls and instruments. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, wide establishing shot, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 ---
