@@ -26,6 +26,12 @@ enum LevelType {
 	CAVE_DUNGEON
 }
 
+const LOADING_SCREEN_KEYS := {
+	LevelType.FOREST_OVERWORLD: "forest",
+	LevelType.DUNGEON_CASTLE: "castle",
+	LevelType.CAVE_DUNGEON: "cave",
+}
+
 @export var level_type: LevelType = LevelType.FOREST_OVERWORLD
 @export var map_seed: int = 0
 ## Nadpisania GenerationFlags (nazwa flagi -> wartość) ponad companion-JSON — ustawia eksplorator map.
@@ -50,6 +56,9 @@ var flag_overrides: Dictionary = {}
 ## Generowanie w tle (wątek roboczy) z ekranem ładowania. false = jak dawniej: cała mapa w _ready
 ## w jednej klatce (testy, narzędzia, które czytają last_result od razu po add_child).
 @export var async_generation: bool = true
+## Folder grafik ekranu ładowania (assets/textures/loading_screens/<klucz>/). Puste = biom z typu
+## poziomu (LOADING_SCREEN_KEYS).
+@export var loading_screen_key: String = ""
 
 var last_result: RefCounted = null
 var is_generating: bool = false
@@ -209,6 +218,7 @@ func generate_level_async(seed_val: int = 0) -> void:
 	var progress := GenProgress.new()
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
+	overlay.set_background_for(loading_screen_key if not loading_screen_key.is_empty() else LOADING_SCREEN_KEYS.get(level_type, ""))
 	add_child(overlay)
 	overlay.track(progress)
 	GenProgress.start(progress)

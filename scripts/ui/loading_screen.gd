@@ -8,15 +8,30 @@ extends CanvasLayer
 ##                               np. ręcznie robiona mapa jak tutorial_area;
 ##   set_progress(frac, label) — ręcznie, bez źródła.
 ## close() dociąga pasek do 100%, wygasza ekran i usuwa węzeł.
+##
+## Tło: losowa grafika z folderu mapy BACKGROUND_DIR/<klucz>/ (set_background_for) — dowolne pliki
+## .png/.jpg/.webp, nazwy bez znaczenia. Brak folderu lub grafik = ciemne tło.
+## Klucze (nazwy folderów): mapa ręczna = nazwa pliku sceny (tutorial_area), mapa generowana =
+## ProceduralLevel.loading_screen_key albo biom z typu poziomu (cave, castle, forest).
+## Prompty i zasady grafik: BACKGROUND_DIR/loading_screen_prompts.md.
 
 const FADE_TIME := 0.25
+const BACKGROUND_DIR := "res://modules/quiz_rpg/assets/textures/loading_screens/"
+const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 
-## Nagłówek nad paskiem.
+## Tytuł (lewa strona pasa nad paskiem postępu).
 @export var title: String = "Ładowanie…":
 	set(value):
 		title = value
 		if is_node_ready():
 			_title.text = value
+
+## Grafika tła (zakrywa ekran, proporcje zachowane). null = ciemne tło.
+@export var background: Texture2D = null:
+	set(value):
+		background = value
+		if is_node_ready():
+			_art.texture = value
 
 var _source = null  # obiekt z fraction() / label()
 var _target := 0.0
@@ -25,6 +40,7 @@ var _shown := 0.0
 var _closing := false
 
 @onready var _root: Control = %Root
+@onready var _art: TextureRect = %Art
 @onready var _title: Label = %Title
 @onready var _bar: ProgressBar = %Bar
 @onready var _stage: Label = %Stage
@@ -52,8 +68,32 @@ class ResourceLoadProgress:
 		return text
 
 
+## Grafiki tła z folderu mapy BACKGROUND_DIR/<klucz>/. ResourceLoader.list_directory widzi pliki
+## także w wyeksportowanej grze (tam na dysku są tylko .import/.remap).
+static func background_paths(key: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	var dir := BACKGROUND_DIR + key + "/"
+	if key.is_empty() or not DirAccess.dir_exists_absolute(dir):
+		return out
+	for f in ResourceLoader.list_directory(dir):
+		if f.get_extension().to_lower() in BACKGROUND_EXTS:
+			out.append(dir + f)
+	return out
+
+
+## Losowa grafika pierwszego klucza, który ma jakąkolwiek; false = brak (zostaje obecne tło).
+func set_background_for(keys) -> bool:
+	for key in ([keys] if keys is String else keys):
+		var paths := background_paths(key)
+		if not paths.is_empty():
+			background = load(paths[randi() % paths.size()]) as Texture2D
+			return background != null
+	return false
+
+
 func _ready() -> void:
 	_title.text = title
+	_art.texture = background
 	_bar.value = 0.0
 	_percent.text = ""
 	_stage.text = ""
