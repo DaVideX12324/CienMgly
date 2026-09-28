@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://aa7ex665fl86y"]
+
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="SpriteFrames" uid="uid://gjjzblzuk70mb" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/mummy_mage.tres" id="2_frames"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
+radius = 3.0
+height = 10.0
+
+[node name="Enemy" unique_id=1659308732 instance=ExtResource("1_base")]
+enemy_name = "Mumia Mag"
+quiz_id = "ogolne"
+hp = 70
+max_hp = 70
+damage_on_wrong = 16
+xp_reward = 60
+encounter_tier = 2
+patrol_speed = 55.0
+
+[node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
+position = Vector2(0, -24)
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+
+[node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
+position = Vector2(0, 5.0)
+rotation = 1.570796
+shape = SubResource("CapsuleShape2D_body")
