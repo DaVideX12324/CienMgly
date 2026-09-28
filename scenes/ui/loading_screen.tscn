@@ -3,24 +3,32 @@
 [ext_resource type="Script" uid="uid://dydtt68h87os1" path="res://modules/quiz_rpg/scripts/ui/loading_screen.gd" id="1_screen"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
-bg_color = Color(0.03, 0.025, 0.02, 0.72)
 content_margin_left = 20.0
 content_margin_top = 8.0
 content_margin_right = 20.0
 content_margin_bottom = 8.0
+bg_color = Color(0.03, 0.025, 0.02, 0.72)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back"]
 bg_color = Color(0.16, 0.14, 0.12, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
 bg_color = Color(0.78, 0.58, 0.32, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
-[node name="LoadingScreen" type="CanvasLayer"]
+[node name="LoadingScreen" type="CanvasLayer" unique_id=69467971]
 process_mode = 3
 layer = 100
 script = ExtResource("1_screen")
 
-[node name="Root" type="Control" parent="."]
+[node name="Root" type="Control" parent="." unique_id=623006737]
 unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 15
@@ -29,7 +37,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="Root"]
+[node name="Background" type="ColorRect" parent="Root" unique_id=1723008004]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,7 +46,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.05, 0.045, 0.04, 1)
 
-[node name="Art" type="TextureRect" parent="Root"]
+[node name="Art" type="TextureRect" parent="Root" unique_id=272275985]
 unique_name_in_owner = true
 texture_filter = 2
 layout_mode = 1
@@ -50,44 +58,51 @@ grow_vertical = 2
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Bottom" type="VBoxContainer" parent="Root"]
+[node name="MarginContainer" type="MarginContainer" parent="Root" unique_id=769227903]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -55.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_constants/separation = 0
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
 
-[node name="Info" type="PanelContainer" parent="Root/Bottom"]
+[node name="Bottom" type="VBoxContainer" parent="Root/MarginContainer" unique_id=128819430]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Info" type="PanelContainer" parent="Root/MarginContainer/Bottom" unique_id=696628184]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info")
 
-[node name="Row" type="HBoxContainer" parent="Root/Bottom/Info"]
+[node name="Row" type="HBoxContainer" parent="Root/MarginContainer/Bottom/Info" unique_id=1538968957]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Root/Bottom/Info/Row"]
+[node name="Title" type="Label" parent="Root/MarginContainer/Bottom/Info/Row" unique_id=1671191793]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Ładowanie…"
 
-[node name="Stage" type="Label" parent="Root/Bottom/Info/Row"]
+[node name="Stage" type="Label" parent="Root/MarginContainer/Bottom/Info/Row" unique_id=1353379874]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0.75)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
 
-[node name="Percent" type="Label" parent="Root/Bottom/Info/Row"]
+[node name="Percent" type="Label" parent="Root/MarginContainer/Bottom/Info/Row" unique_id=1744787810]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0.75)
 layout_mode = 2
 size_flags_vertical = 8
 
-[node name="Bar" type="ProgressBar" parent="Root/Bottom"]
+[node name="Bar" type="ProgressBar" parent="Root/MarginContainer/Bottom" unique_id=1786609036]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2

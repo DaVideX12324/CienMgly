@@ -1,7 +1,8 @@
 extends CanvasLayer
 
 ## Ekran ładowania: tytuł, pasek postępu, opis etapu. Scena: scenes/ui/loading_screen.tscn
-## (wygląd edytuje się tam). Źródło postępu do wyboru:
+## (wygląd edytuje się tam; skrypt szuka węzłów po unikalnych nazwach %Root, %Art, %Title, %Stage,
+## %Percent, %Bar, więc można je dowolnie przenosić w drzewie, np. do MarginContainer). Źródło postępu do wyboru:
 ##   track(source)             — obiekt z fraction() -> 0..1 i opcjonalnie label() -> String,
 ##                               np. GenProgress generatora map (procedural_level);
 ##   track_resource_load(path) — wczytywanie zasobu w tle (ResourceLoader.load_threaded_request),
