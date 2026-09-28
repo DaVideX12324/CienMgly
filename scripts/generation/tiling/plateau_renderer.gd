@@ -140,7 +140,8 @@ static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, regio
 		return true
 	if p.category == &"FACADE":
 		var t: Vector2i = pos if region.has(pos) else pos + Vector2i(0, -1)
-		return _on_wall_base(real_ctx, wall_cells, t) or _on_wall_base(real_ctx, wall_cells, t + Vector2i(0, 1))
+		return _on_wall_base(real_ctx, wall_cells, t) or _on_wall_base(real_ctx, wall_cells, t + Vector2i(0, 1)) \
+			or _on_wall_top(real_ctx, wall_cells, t)
 	if no_tile or w.out_corner:
 		return false
 	# Pod górą modułu ściany głównej wchłaniamy tylko rim północny płaskowyżu (środek rimu: RIM_BASE bez
@@ -154,6 +155,16 @@ static func _absorbed(real_ctx: GenerationContext, wall_cells: Dictionary, regio
 static func _on_wall_base(real_ctx: GenerationContext, wall_cells: Dictionary, c: Vector2i) -> bool:
 	var w: TilePlacement = wall_cells.get(c)
 	return GridUtils.is_walkable(real_ctx.grid, c) and w != null and w.category == &"FACADE" and not w.out_corner
+
+
+## Góra płaskowyżu tuż za ścianą jaskini: kratka ściany głównej (nie podłoga) z górą modułu (rim albo
+## najwyższa część lica), nie narożnik out — lico płaskowyżu schowałoby się za nią.
+static func _on_wall_top(real_ctx: GenerationContext, wall_cells: Dictionary, c: Vector2i) -> bool:
+	if GridUtils.is_walkable(real_ctx.grid, c):
+		return false
+	var w: TilePlacement = wall_cells.get(c)
+	return w != null and w.atlas_coords.x >= 0 and w.category != &"SOLID_FILL" and not w.out_corner \
+		and _is_module_top(wall_cells, w)
 
 
 ## Najwyższa część modułu ściany: rim (moduł 1-kaflowy) albo część lica bez części tego samego
