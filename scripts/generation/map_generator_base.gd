@@ -273,10 +273,21 @@ static func apply_grid_to_layers(
 
 # --- Wstawianie encji (gracz, wrogowie, skrzynie) ---
 
+## Wpis puli wrogów: jedna scena albo tablica wariantów tego samego tieru. Wariant zależy od
+## pozycji spawnu (nie od globalnego RNG), więc ten sam seed daje tych samych wrogów.
+static func _pick_enemy_variant(entry: Variant, pos: Vector2i) -> PackedScene:
+	if entry is Array:
+		var variants: Array = entry
+		if variants.is_empty():
+			return null
+		return variants[posmod(hash(pos), variants.size())] as PackedScene
+	return entry as PackedScene
+
+
 static func spawn_entities(
 	target_node: Node2D,
 	result: GenerationResult,
-	enemy_scenes: Array[PackedScene] = [],
+	enemy_scenes: Array = [],  # indeks = tier - 1; element: PackedScene albo tablica wariantów
 	chest_scene: PackedScene = null,
 	door_scene: PackedScene = null,
 	cell_size: int = 16,
@@ -317,7 +328,7 @@ static func spawn_entities(
 			var pos: Vector2i = spawn_info.get("pos", Vector2i.ZERO)
 			var tier: int = spawn_info.get("tier", 1)
 			var scene_idx := mini(tier - 1, enemy_scenes.size() - 1)
-			var enemy_packed: PackedScene = enemy_scenes[scene_idx]
+			var enemy_packed: PackedScene = _pick_enemy_variant(enemy_scenes[scene_idx], pos)
 			if enemy_packed:
 				var enemy_inst := enemy_packed.instantiate() as Node2D
 				if enemy_inst:
