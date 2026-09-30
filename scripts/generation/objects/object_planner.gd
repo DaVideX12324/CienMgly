@@ -477,17 +477,19 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 	if not free_pts.has(marker):
 		free_pts[marker] = {}
 	var mine: Dictionary = free_pts[marker]
-	for dy in range(-reach, reach + 1):
-		for dx in range(-reach, reach + 1):
-			var q := c + Vector2i(dx, dy)
-			if not f.in_bounds(q):
-				continue
-			var pts = mine.get(f.idx(q))
-			if pts == null:
-				continue
-			for other in pts:
-				if pt.distance_squared_to(other) < sp2:
-					return false
+	if not mine.is_empty():
+		# Kubełki w promieniu `reach` przycięte do mapy (bez in_bounds/idx na kratkę — przy spacing_px
+		# 112 to 225 kratek na próbę).
+		var w := f.width
+		for y in range(maxi(c.y - reach, 0), mini(c.y + reach, f.height - 1) + 1):
+			var row := y * w
+			for x in range(maxi(c.x - reach, 0), mini(c.x + reach, w - 1) + 1):
+				var pts = mine.get(row + x)
+				if pts == null:
+					continue
+				for other in pts:
+					if pt.distance_squared_to(other) < sp2:
+						return false
 	var cells := PackedInt32Array()
 	if def.is_solid():
 		cells = _shape_cells(def, pt)
