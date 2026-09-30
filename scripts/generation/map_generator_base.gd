@@ -43,7 +43,7 @@ class GenerationResult:
 	var preprocess_stats: Dictionary = {}  # ile komórek zmienił każdy pass
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
-	var nav_polygon: NavigationPolygon = null  # siatka nawigacji z NavOutlines (null = prostokąt mapy)
+	var nav_polygons: Array[NavigationPolygon] = []  # siatka nawigacji z NavOutlines w kawałkach (puste = prostokąt mapy)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
 
@@ -414,10 +414,22 @@ static func setup_navigation_region(target_node: Node2D, result: GenerationResul
 		nav_node.name = "NavigationRegion2D"
 		target_node.add_child(nav_node)
 
+	# Kawałki z poprzedniej generacji (regeneracja w tej samej scenie).
+	for child in nav_node.get_children():
+		if child is NavigationRegion2D and String(child.name).begins_with("NavChunk"):
+			nav_node.remove_child(child)
+			child.queue_free()
+
 	# Siatka z generatora (NavOutlines, wypieczona w wątku roboczym): podłoga bez ścian, barier
-	# płaskowyżów i przeszkód — gotowa, bez bake'a na głównym wątku.
-	if result.nav_polygon != null:
-		nav_node.navigation_polygon = result.nav_polygon
+	# płaskowyżów i przeszkód — gotowa, bez bake'a na głównym wątku. Jeden region na kawałek;
+	# sąsiednie regiony serwer nawigacji łączy na wspólnych krawędziach.
+	if not result.nav_polygons.is_empty():
+		nav_node.navigation_polygon = null
+		for i in range(result.nav_polygons.size()):
+			var chunk := NavigationRegion2D.new()
+			chunk.name = "NavChunk%d" % i
+			chunk.navigation_polygon = result.nav_polygons[i]
+			nav_node.add_child(chunk)
 		return
 
 	var nav_poly := NavigationPolygon.new()
