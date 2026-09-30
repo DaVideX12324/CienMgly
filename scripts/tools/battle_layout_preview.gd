@@ -1,17 +1,17 @@
 @tool
 extends Control
 
-## Edytor wymiarów pola walki (WYSIWYG): scenes/tools/battle_layout_preview.tscn.
+## Edytor pól walki (WYSIWYG): scenes/tools/battle_layout_preview.tscn.
 ## 1. Przeciągnij plik `<grafika>_layout.tres` (obok grafiki tła) do „layout”.
-## 2. Przesuwaj / rozciągaj myszą prostokąty (uchwyty edytora 2D):
-##    - Field (żółty) — górna i dolna krawędź pola walki (wysokość, odstęp od dolnego paska UI),
-##    - BackRowMargin / FrontRowMargin — szerokość = margines rzędu tylnego / przedniego od krawędzi
-##      ekranu (prawa strona lustrzanie).
-##    Wartości od razu trafiają do pliku układu (zapis po chwili bez ruchu); działa też odwrotnie —
-##    zmiana w inspektorze przesuwa prostokąty.
-## Tło, dolny pasek i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout — jak w grze.
+## 2. Każde pole walki to prostokąt „Field…” — obszar stóp wrogów: dolna krawędź = rząd przedni,
+##    górna = rząd najdalszy. Przesuwaj / rozciągaj myszą (uchwyty edytora 2D).
+##    Nowe pole (np. platforma): zaznacz prostokąt i Ctrl+D. Usunięcie pola: Delete na prostokącie.
+## 3. Rzędy, pojemność rzędu, skale i wcięcie tylnego rzędu: inspektor pliku układu → fields → pole.
+## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa prostokąty.
+## Tło, dolny pasek i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout — jak w grze
+## (1920×1080, dolny pasek UI 250 px).
 
-## Wymiary pola walki do edycji (plik obok grafiki tła).
+## Pola walki do edycji (plik obok grafiki tła).
 @export var layout: BattleBackgroundLayout:
 	set(v):
 		if layout and layout.changed.is_connected(_on_layout_changed):
@@ -19,20 +19,11 @@ extends Control
 		layout = v
 		if layout:
 			layout.changed.connect(_on_layout_changed)
-		_on_layout_changed()
-## Wysokość dolnego paska UI walki (jak BattleWindow w scenie walki).
-@export var band_height := 250.0:
+		_rebuild_nodes()
+## Przykładowi wrogowie w każdym rzędzie (najwyżej pojemność rzędu).
+@export_range(1, 8) var preview_per_row := 2:
 	set(v):
-		band_height = v
-		_on_layout_changed()
-## Wrogowie w rzędzie przednim / tylnym (w grze przydział jest losowy).
-@export_range(0, 5) var front_count := 2:
-	set(v):
-		front_count = v
-		queue_redraw()
-@export_range(0, 5) var back_count := 1:
-	set(v):
-		back_count = v
+		preview_per_row = v
 		queue_redraw()
 ## Grafika wroga do podglądu (pierwsza klatka).
 @export var enemy_frames: SpriteFrames:
@@ -40,81 +31,102 @@ extends Control
 		enemy_frames = v
 		queue_redraw()
 
-const SAVE_DELAY := 0.6  # s bez zmian po przeciągnięciu -> zapis pliku układu
+const SAVE_DELAY := 0.6          # s bez zmian po przeciągnięciu -> zapis pliku układu
+const BAND := 250.0              # dolny pasek UI walki (obszar bitwy = REF_AREA)
+const COLORS: Array[Color] = [Color(1.0, 0.85, 0.2), Color(0.4, 0.8, 1.0), Color(1.0, 0.45, 0.8), Color(0.5, 1.0, 0.5)]
 
-var _last := Vector4(-1, -1, -1, -1)   # wysokość, odstęp od dołu, margines przedni, margines tylny
+var _nodes: Array[ReferenceRect] = []   # prostokąt pola i (ta sama kolejność co layout.fields)
 var _dirty_time := -1.0
-
-
-func _ref_size() -> Vector2:
-	return size if size.x > 0.0 and size.y > 0.0 else BattleBackgroundLayout.REF_SIZE
-
-
-func _field_bottom() -> float:
-	return _ref_size().y - band_height
-
-
-func _nodes() -> Array:
-	return [get_node_or_null("Field") as Control, get_node_or_null("BackRowMargin") as Control, get_node_or_null("FrontRowMargin") as Control]
-
-
-## Prostokąty istnieją (przy wczytywaniu sceny `layout` ustawia się przed dziećmi).
-func _nodes_ready(n: Array) -> bool:
-	for x in n:
-		if not is_instance_valid(x):
-			return false
-	return true
+var _syncing := false
 
 
 func _ready() -> void:
-	_on_layout_changed()
+	_rebuild_nodes()
 
 
-## Układ -> prostokąty (po wczytaniu pliku albo zmianie w inspektorze).
+## Prostokąty = pola z pliku (po wczytaniu pliku albo zmianie listy pól w inspektorze).
+func _rebuild_nodes() -> void:
+	queue_redraw()
+	if not is_inside_tree():
+		return
+	for c in get_children():
+		if c is ReferenceRect and str(c.name).begins_with("Field"):
+			remove_child(c)
+			c.queue_free()
+	_nodes.clear()
+	if layout == null:
+		return
+	for i in range(layout.fields.size()):
+		_nodes.append(_make_node(i))
+	_apply_rects()
+
+
+func _make_node(i: int) -> ReferenceRect:
+	var r := ReferenceRect.new()
+	r.name = "Field%d" % (i + 1)
+	r.border_color = COLORS[i % COLORS.size()]
+	r.border_width = 3.0
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(r)
+	if Engine.is_editor_hint() and get_tree() and get_tree().edited_scene_root:
+		r.owner = get_tree().edited_scene_root
+	return r
+
+
+## Plik -> prostokąty (bez przebudowy węzłów).
+func _apply_rects() -> void:
+	if layout == null:
+		return
+	_syncing = true
+	for i in range(mini(_nodes.size(), layout.fields.size())):
+		if is_instance_valid(_nodes[i]):
+			_nodes[i].position = layout.fields[i].rect.position
+			_nodes[i].size = layout.fields[i].rect.size
+	_syncing = false
+
+
 func _on_layout_changed() -> void:
 	queue_redraw()
-	var n := _nodes()
-	if layout == null or not _nodes_ready(n):
+	if _syncing or layout == null:
 		return
-	var field: Control = n[0]
-	var bottom := _field_bottom() - layout.field_bottom_margin
-	field.position = Vector2(0.0, bottom - layout.field_height)
-	field.size = Vector2(_ref_size().x, layout.field_height)
-	_place_rows(layout.back_row_side_margin, layout.front_row_side_margin)
-	_last = Vector4(layout.field_height, layout.field_bottom_margin, layout.front_row_side_margin, layout.back_row_side_margin)
+	if layout.fields.size() != _nodes.size():
+		_rebuild_nodes()
+	else:
+		_apply_rects()
 
 
-## Paski marginesów rzędów: górna / dolna połowa pola walki, od lewej krawędzi.
-func _place_rows(back_margin: float, front_margin: float) -> void:
-	var n := _nodes()
-	var field: Control = n[0]
-	var half := field.size.y * 0.5
-	(n[1] as Control).position = Vector2(0.0, field.position.y)
-	(n[1] as Control).size = Vector2(back_margin, half)
-	(n[2] as Control).position = Vector2(0.0, field.position.y + half)
-	(n[2] as Control).size = Vector2(front_margin, half)
-
-
-## Prostokąty -> układ (przeciąganie w edytorze), zapis pliku po chwili bez zmian.
+## Prostokąty -> plik: przeciąganie, nowe pole (Ctrl+D), usunięte pole (Delete).
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() or layout == null:
 		return
-	var n := _nodes()
-	if not _nodes_ready(n):
-		return
-	var field: Control = n[0]
-	var cur := Vector4(roundf(field.size.y), roundf(_field_bottom() - field.position.y - field.size.y),
-		roundf((n[2] as Control).size.x), roundf((n[1] as Control).size.x))
-	if cur != _last:
-		_last = cur
-		if layout.changed.is_connected(_on_layout_changed):
-			layout.changed.disconnect(_on_layout_changed)
-		layout.field_height = cur.x
-		layout.field_bottom_margin = cur.y
-		layout.front_row_side_margin = cur.z
-		layout.back_row_side_margin = cur.w
-		layout.changed.connect(_on_layout_changed)
-		_place_rows(cur.w, cur.z)
+	var changed := false
+	var fields: Array[BattleField] = layout.fields.duplicate()
+	# Usunięte prostokąty -> usuń pola (od końca, żeby indeksy się zgadzały).
+	for i in range(_nodes.size() - 1, -1, -1):
+		if not is_instance_valid(_nodes[i]) or _nodes[i].get_parent() != self:
+			_nodes.remove_at(i)
+			fields.remove_at(i)
+			changed = true
+	# Nowe prostokąty (zduplikowane) -> nowe pola z kopią ustawień pola źródłowego.
+	for c in get_children():
+		if c is ReferenceRect and str(c.name).begins_with("Field") and not _nodes.has(c):
+			var src: BattleField = fields[fields.size() - 1] if not fields.is_empty() else BattleField.new()
+			var f := src.duplicate() as BattleField
+			f.rect = Rect2(c.position, c.size)
+			fields.append(f)
+			_nodes.append(c)
+			(c as ReferenceRect).border_color = COLORS[(fields.size() - 1) % COLORS.size()]
+			changed = true
+	# Przesunięte / rozciągnięte prostokąty.
+	for i in range(_nodes.size()):
+		var r := Rect2(_nodes[i].position.round(), _nodes[i].size.round())
+		if fields[i].rect != r:
+			fields[i].rect = r
+			changed = true
+	if changed:
+		_syncing = true
+		layout.fields = fields
+		_syncing = false
 		_dirty_time = SAVE_DELAY
 		queue_redraw()
 	elif _dirty_time > 0.0:
@@ -124,35 +136,48 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var view := _ref_size()
-	var field := Rect2(Vector2.ZERO, Vector2(view.x, _field_bottom()))
+	var view := BattleBackgroundLayout.REF_SIZE
+	var area := BattleBackgroundLayout.REF_AREA
 	var l: BattleBackgroundLayout = layout if layout else BattleBackgroundLayout.new()
 	# Tło jak w grze: wypełnia obszar bitwy (skala „cover”, wyśrodkowane).
-	draw_rect(field, Color(0.08, 0.07, 0.11))
+	draw_rect(Rect2(Vector2.ZERO, area), Color(0.08, 0.07, 0.11))
 	if l.texture:
 		var ts := l.texture.get_size()
-		var k := maxf(field.size.x / ts.x, field.size.y / ts.y)
-		var origin := (field.size - ts * k) * 0.5
-		draw_texture_rect_region(l.texture, field, Rect2(-origin / k, field.size / k))
-	draw_rect(Rect2(0.0, field.end.y, view.x, band_height), Color(0.02, 0.02, 0.05))
-	# Pole walki i przykładowi wrogowie (górna połowa — rząd tylny, dolna — przedni).
-	var offs := l.section_offsets(view)
-	var sec := Rect2(0.0, field.end.y + offs.x, view.x, offs.y - offs.x)
-	draw_rect(sec, Color(1.0, 0.85, 0.2, 0.08))
-	var total := front_count + back_count
-	var front_scale := BattleBackgroundLayout.enemy_scale(total, false, view)
-	for row in [[true, back_count, sec.position.y + sec.size.y * 0.5], [false, front_count, sec.end.y]]:
-		var back: bool = row[0]
-		var cnt: int = row[1]
-		var row_bottom: float = row[2]
-		var m := float(l.row_margin(back, front_scale, view.x))
-		var col := Color(0.4, 0.8, 1.0, 0.9) if back else Color(0.4, 1.0, 0.5, 0.9)
-		# Linia, od której zaczynają się sloty wrogów (margines + połowa wroga), obie strony.
-		for x in [m, view.x - m]:
-			draw_line(Vector2(x, row_bottom - sec.size.y * 0.5), Vector2(x, row_bottom), Color(col, 0.5), 1.0)
-		for i in range(cnt):
-			var cx := m + (view.x - 2.0 * m) * (i + 0.5) / cnt
-			_draw_enemy(Vector2(cx, row_bottom - 8.0), BattleBackgroundLayout.enemy_scale(total, back, view), col)
+		var k := maxf(area.x / ts.x, area.y / ts.y)
+		var origin := (area - ts * k) * 0.5
+		draw_texture_rect_region(l.texture, Rect2(Vector2.ZERO, area), Rect2(-origin / k, area / k))
+	draw_rect(Rect2(0.0, area.y, view.x, BAND), Color(0.02, 0.02, 0.05))
+	# Rzędy pól i przykładowi wrogowie (miejsca liczone jak w grze).
+	var fl := l.active_fields()
+	var spots: Array = []
+	for fi in range(fl.size()):
+		var f: BattleField = fl[fi]
+		var n := mini(preview_per_row, f.row_capacity)
+		for r in range(f.rows - 1, -1, -1):  # od tyłu — przedni rząd rysowany na wierzchu
+			for k in range(n):
+				var sp := BattleBackgroundLayout.Spot.new()
+				sp.field = fi
+				sp.row = r
+				sp.k = k
+				sp.n = n
+				spots.append(sp)
+	var total := spots.size()
+	for fi in range(fl.size()):
+		var f: BattleField = fl[fi]
+		var col := COLORS[fi % COLORS.size()]
+		for r in range(f.rows):
+			var a := BattleBackgroundLayout.Spot.new()
+			a.field = fi
+			a.row = r
+			a.k = 0
+			a.n = 1
+			var y := l.foot(a, area, view).y
+			var inset := f.back_row_inset * f.row_t(r)
+			draw_line(Vector2(f.rect.position.x + inset, y), Vector2(f.rect.end.x - inset, y), Color(col, 0.7), 2.0)
+	for sp in spots:
+		var col := COLORS[sp.field % COLORS.size()]
+		var sc := BattleBackgroundLayout.enemy_scale(total, view) * l.spot_scale(sp)
+		_draw_enemy(l.foot(sp, area, view), sc, col)
 
 
 func _draw_enemy(foot: Vector2, sc: float, col: Color) -> void:
@@ -162,9 +187,30 @@ func _draw_enemy(foot: Vector2, sc: float, col: Color) -> void:
 		if anims.size() > 0 and enemy_frames.get_frame_count(anims[0]) > 0:
 			tex = enemy_frames.get_frame_texture(anims[0], 0)
 	if tex:
+		# Jak EnemyBattleDisplay: dolny nieprzezroczysty wiersz grafiki na linii stóp.
 		var sz := tex.get_size() * sc
-		draw_texture_rect(tex, Rect2(foot - Vector2(sz.x * 0.5, sz.y), sz), false)
+		var bottom := float(_visible_bottom(tex)) * sc
+		draw_texture_rect(tex, Rect2(foot - Vector2(sz.x * 0.5, bottom), sz), false)
 	else:
 		var w := BattleBackgroundLayout.ENEMY_BASE_PX * sc
 		draw_rect(Rect2(foot - Vector2(w * 0.5, w), Vector2(w, w)), Color(col, 0.5))
 	draw_circle(foot, 5.0, col)
+
+
+var _bottom_cache := {}
+
+
+func _visible_bottom(tex: Texture2D) -> int:
+	if _bottom_cache.has(tex):
+		return _bottom_cache[tex]
+	var h := tex.get_height()
+	var img := tex.get_image()
+	if img:
+		for y in range(img.get_height() - 1, -1, -1):
+			for x in range(img.get_width()):
+				if img.get_pixel(x, y).a > 0.05:
+					h = y + 1
+					_bottom_cache[tex] = h
+					return h
+	_bottom_cache[tex] = h
+	return h

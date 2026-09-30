@@ -1,11 +1,17 @@
 [gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_c0ead"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/desert/variant_1.png" id="2_gyhp3"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_gyhp3"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_df2m0"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/desert/variant_1.png" id="3_1vg0r"]
+
+[sub_resource type="Resource" id="Resource_t8dc8"]
+script = ExtResource("1_gyhp3")
+rect = Rect2(168, 605, 1584, 190)
+rows = 2
+row_capacity = 5
+back_row_inset = 108.0
 
 [resource]
-script = ExtResource("1_c0ead")
-texture = ExtResource("2_gyhp3")
-field_height = 380.0
-front_row_side_margin = 168.0
-back_row_side_margin = 276.0
+script = ExtResource("2_df2m0")
+texture = ExtResource("3_1vg0r")
+fields = Array[ExtResource("1_gyhp3")]([SubResource("Resource_t8dc8")])
