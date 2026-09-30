@@ -78,13 +78,7 @@ static func place(
 			# Skos o ścianie 3–5 ze schodkiem o 1 z przynajmniej jednej strony (warunkowy top) zostaje
 			# ścieżką legacy — nie mapuje się na moduł o stałej liczbie części. Reszta = narożnik 3H STEP_LEFT.
 			if EdgeAnalyzer.slope_2h_steps(dy, right_y, y) and EdgeAnalyzer.slope_2h_depth(edge.solid_depth):
-				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
-				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
-				var p_top := pos + Vector2i(0, -2)
-				var e_top: EdgeContext = edges.get(p_top)
-				if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
-					_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
-					state.mark(p_top, &"FACADE")
+				place_slope(edge, state, plan, table, false, edges)
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
@@ -114,13 +108,7 @@ static func place(
 		else:
 			var dy: int = y - right_y
 			if EdgeAnalyzer.slope_2h_steps(dy, left_y, y) and EdgeAnalyzer.slope_2h_depth(edge.solid_depth):
-				_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE, &"FACADE", table, pos)
-				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID, &"FACADE", table, pos)
-				var p_top := pos + Vector2i(0, -2)
-				var e_top: EdgeContext = edges.get(p_top)
-				if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
-					_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP, &"FACADE", table, pos)
-					state.mark(p_top, &"FACADE")
+				place_slope(edge, state, plan, table, true, edges)
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
@@ -135,3 +123,16 @@ static func place(
 
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
+
+
+## Gładki skos 2H (base, mid, top — top pomijany pod ścianą boczną) w kolumnie `edge.pos`.
+## right: kafle skosu prawego (niżej z lewej). Stopień skosu i górny koniec skosu (fasada obok stopnia).
+static func place_slope(edge: EdgeContext, state: LegacyPlacementState, plan: TilePlacementPlan, table: Dictionary, right: bool, edges: Dictionary) -> void:
+	var pos := edge.pos
+	_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
+	_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
+	var p_top := pos + Vector2i(0, -2)
+	var e_top: EdgeContext = edges.get(p_top)
+	if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
+		_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
+		state.mark(p_top, &"FACADE")
