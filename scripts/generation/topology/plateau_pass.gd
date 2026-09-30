@@ -907,17 +907,16 @@ static func _slot(m: Dictionary, c: Vector2i) -> bool:
 		or (m.has(c + Vector2i(-1, 0)) and m.has(c + Vector2i(1, 0)))
 
 
-## Lite = płaskowyż albo prawdziwa ściana (ściany podpierają płaskowyż przy erozji).
-static func _solid(ctx: GenerationContext, m: Dictionary, c: Vector2i) -> bool:
-	return m.has(c) or not GridUtils.is_walkable(ctx.grid, c)
-
-
+## Erozja: zostają kratki, których wszyscy sąsiedzi (8) są lici — płaskowyż albo prawdziwa ściana
+## (ściany podpierają płaskowyż przy erozji).
 static func _erode(ctx: GenerationContext, m: Dictionary) -> Dictionary:
 	var out := {}
+	var grid := ctx.grid
 	for c in m:
 		var keep := true
 		for d in DIRS8:
-			if not _solid(ctx, m, c + d):
+			var n: Vector2i = c + d
+			if not m.has(n) and GridUtils.is_walkable(grid, n):
 				keep = false
 				break
 		if keep:
@@ -991,12 +990,24 @@ static func _drop_small(m: Dictionary, min_area: int) -> Dictionary:
 
 static func _components(cells: Dictionary, dirs: Array[Vector2i]) -> Array:
 	var out: Array = []
-	var seen := {}
+	if cells.is_empty():
+		return out
+	# Odwiedzone w tablicy bajtów na prostokącie otaczającym (zamiast drugiego słownika) — ta sama
+	# kolejność przeglądania, więc te same komponenty w tej samej kolejności kratek.
+	var lo := Vector2i(1 << 30, 1 << 30)
+	var hi := -lo
+	for c in cells:
+		lo = lo.min(c)
+		hi = hi.max(c)
+	var w := hi.x - lo.x + 1
+	var seen := PackedByteArray()
+	seen.resize(w * (hi.y - lo.y + 1))
 	for start in cells:
-		if seen.has(start):
+		var si: int = (start.y - lo.y) * w + (start.x - lo.x)
+		if seen[si]:
 			continue
 		var comp := {start: true}
-		seen[start] = true
+		seen[si] = 1
 		var queue: Array[Vector2i] = [start]
 		var head := 0
 		while head < queue.size():
@@ -1004,10 +1015,12 @@ static func _components(cells: Dictionary, dirs: Array[Vector2i]) -> Array:
 			head += 1
 			for d in dirs:
 				var n: Vector2i = p + d
-				if cells.has(n) and not seen.has(n):
-					seen[n] = true
-					comp[n] = true
-					queue.append(n)
+				if cells.has(n):
+					var ni := (n.y - lo.y) * w + (n.x - lo.x)
+					if not seen[ni]:
+						seen[ni] = 1
+						comp[n] = true
+						queue.append(n)
 		out.append(comp)
 	return out
 
@@ -1041,7 +1054,7 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 		if not out.is_empty():
 			break
 		var rows := {}  # y -> Array[x]
-		for c in comp:
+		for c in _face_scan(comp, near, Vector2i(0, 1)):
 			if not _is_face(ctx, comp, c, require_two_deep) or not _faces_near(near, c + Vector2i(0, 1)):
 				continue
 			if not rows.has(c.y):
@@ -1111,7 +1124,7 @@ static func _pick_stairs_north(ctx: GenerationContext, comp: Dictionary, rng: Ra
 		if not out.is_empty():
 			break
 		var rows := {}  # y -> Array[x]
-		for c in comp:
+		for c in _face_scan(comp, near, Vector2i(0, -1)):
 			if not _is_rim_face(ctx, comp, c, require_two_deep) or not _faces_near(near, c + Vector2i(0, -1)):
 				continue
 			if not rows.has(c.y):
@@ -1194,7 +1207,7 @@ static func _pick_stairs_side(ctx: GenerationContext, comp: Dictionary, rng: Ran
 		if not out.is_empty():
 			break
 		var cols := {}  # x -> Array[y]
-		for c in comp:
+		for c in _face_scan(comp, near, Vector2i(1 if is_east else -1, 0)):
 			var ok := _is_east_face(ctx, comp, c, require_two_deep) if is_east else _is_west_face(ctx, comp, c, require_two_deep)
 			if not ok or not _faces_near(near, c + Vector2i(1 if is_east else -1, 0)):
 				continue
@@ -1537,6 +1550,21 @@ static func _faces_near(near: Dictionary, outer: Vector2i) -> bool:
 	return near.is_empty() or near.has(outer)
 
 
+## Kratki kawałka do sprawdzenia jako lico, którego zewnętrzna kratka to c + `outer`: przy `near`
+## mniejszym od kawałka tylko kratki naprzeciw `near` (reszta i tak odpada na _faces_near — kawałek
+## ziemi bywa całą mapą, a `near` to okolica jednego nieosiągalnego miejsca). Kolejność bez znaczenia:
+## biegi lica są potem sortowane po pełnym kluczu (długość, linia, początek).
+static func _face_scan(comp: Dictionary, near: Dictionary, outer: Vector2i):
+	if near.is_empty() or near.size() >= comp.size():
+		return comp
+	var cells: Array[Vector2i] = []
+	for o in near:
+		var c: Vector2i = o - outer
+		if comp.has(c):
+			cells.append(c)
+	return cells
+
+
 ## Jedne schody, których zewnętrzna strona trafia w `near`: pełne (S, N, E, W) -> wyrzeźbione miejsce
 ## na pełne (z dala od istniejących schodów — ich flanki muszą zostać licem) -> wąskie 1W / 1H.
 static func _connect_near(ctx: GenerationContext, comp: Dictionary, near: Dictionary, all_mask: Dictionary, allowed: Dictionary, protected: Dictionary, rng: RandomNumberGenerator, flags: GenerationFlags, lists: Array, i: int) -> bool:
@@ -1778,11 +1806,13 @@ static func _assemble(ctx: GenerationContext, comps: Array, lists: Array, alive:
 		if int(layout.heights[c]) < 0:
 			for d in DIRS4:
 				cand[c + d] = true
+	var heights := layout.heights
+	var grid := ctx.grid
 	for c in cand:
-		var hc := layout.height_of(c)
+		var hc: int = heights.get(c, 0)
 		for d in DIRS4:
 			var n: Vector2i = c + d
-			if GridUtils.is_walkable(ctx.grid, n) and layout.height_of(n) < hc:
+			if int(heights.get(n, 0)) < hc and GridUtils.is_walkable(grid, n):
 				layout.blocked[c] = true
 				if d == Vector2i(0, 1):
 					layout.blocked[n] = true
