@@ -80,6 +80,9 @@ var _label := ""
 var _shown := 0.0
 var _closing := false
 var _anim_t := 0.0
+## Lewa krawędź błysku (px od początku paska) i pozostała przerwa do następnego przejścia.
+var _shine_x := -SHINE_WIDTH
+var _shine_wait := 0.0
 
 @onready var _root: Control = %Root
 @onready var _art: TextureRect = %Art
@@ -221,7 +224,7 @@ func set_progress(fraction: float, label: String = "") -> void:
 
 func _process(delta: float) -> void:
 	_anim_t += delta
-	_animate()
+	_animate(delta)
 	if _closing or paused:
 		return
 	if _source != null:
@@ -234,7 +237,7 @@ func _process(delta: float) -> void:
 
 
 ## Błysk na pasku i kropki po nazwie etapu (niezależnie od postępu).
-func _animate() -> void:
+func _animate(delta: float) -> void:
 	if _label != "":
 		_stage.text = _label + ".".repeat(1 + int(_anim_t / DOTS_STEP) % 3)
 	if _fill_clip == null or _shine == null:
@@ -243,9 +246,21 @@ func _animate() -> void:
 	_fill_clip.position = Vector2.ZERO
 	_fill_clip.size = Vector2(fill_w, _bar.size.y)
 	_shine.visible = fill_w >= 1.0
-	var period := (fill_w + SHINE_WIDTH) / SHINE_SPEED + SHINE_GAP
 	_shine.size = Vector2(SHINE_WIDTH, _bar.size.y)
-	_shine.position = Vector2(fmod(_anim_t, period) * SHINE_SPEED - SHINE_WIDTH, 0.0)
+	# Stan zamiast fmod(czas, okres): okres zależy od szerokości wypełnienia, która rośnie z paskiem,
+	# więc wzór skakał (także w lewo). Tu błysk tylko jedzie w prawo; po dojściu do końca wypełnienia
+	# czeka SHINE_GAP i startuje od nowa (rosnące wypełnienie po prostu wydłuża trasę).
+	if _shine_wait > 0.0:
+		_shine_wait -= delta
+		_shine.visible = false
+		return
+	_shine_x += SHINE_SPEED * delta
+	if _shine_x >= fill_w:
+		_shine_x = -SHINE_WIDTH
+		_shine_wait = SHINE_GAP
+		_shine.visible = false
+		return
+	_shine.position = Vector2(_shine_x, 0.0)
 
 
 ## Pasek na 100% i zanik; węzeł usuwa się sam.
