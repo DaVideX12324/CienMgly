@@ -11,6 +11,8 @@ extends Control
 ## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa pola.
 ## Tło, dolny pasek, linie rzędów i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout —
 ## jak w grze (1920×1080, dolny pasek UI 250 px).
+## Przykładowi wrogowie: grafiki z „enemy_sprites” po kolei; ilu na każdym polu — „field_counts”
+## (bez wpisu dla pola — „preview_per_row” w każdym rzędzie).
 
 ## Pola walki do edycji (plik obok grafiki tła).
 @export var layout: BattleBackgroundLayout:
@@ -21,15 +23,22 @@ extends Control
 		if layout:
 			layout.changed.connect(_on_layout_changed)
 		_rebuild_nodes()
-## Przykładowi wrogowie w każdym rzędzie (najwyżej pojemność rzędu).
+## Przykładowi wrogowie w każdym rzędzie pola bez wpisu w field_counts (najwyżej pojemność rzędu).
 @export_range(1, 8) var preview_per_row := 2:
 	set(v):
 		preview_per_row = v
 		queue_redraw()
-## Grafika wroga do podglądu (pierwsza klatka).
-@export var enemy_frames: SpriteFrames:
+## Ilu wrogów na polu 1, 2, … (rozdzieleni po rzędach od przedniego, najwyżej rzędy × pojemność).
+## Pole bez wpisu albo z -1 — preview_per_row w każdym rzędzie; 0 — pole puste.
+@export var field_counts := PackedInt32Array():
 	set(v):
-		enemy_frames = v
+		field_counts = v
+		queue_redraw()
+## Grafiki wrogów do podglądu (klatka postoju jak w walce), rozdawane po kolei: pole 1 od przedniego
+## rzędu od lewej, potem pole 2… Gdy lista krótsza niż liczba wrogów — od początku.
+@export var enemy_sprites: Array[SpriteFrames] = []:
+	set(v):
+		enemy_sprites = v
 		queue_redraw()
 
 const SAVE_DELAY := 0.6          # s bez zmian po przeciągnięciu -> zapis pliku układu
@@ -174,30 +183,48 @@ func _draw() -> void:
 			for r in range(f.rows):
 				var line := f.row_line(r)
 				draw_line(line[0], line[1], Color(col, 0.7), 2.0)
-	# Przykładowi wrogowie (miejsca liczone jak w grze), dalsze rzędy najpierw.
+	# Przykładowi wrogowie (miejsca liczone jak w grze); grafiki po kolei od przedniego rzędu pola 1.
 	var spots: Array = []
 	for fi in range(fl.size()):
-		var f: BattleField = fl[fi]
-		var n := mini(preview_per_row, f.row_capacity)
-		for r in range(f.rows - 1, -1, -1):
-			for k in range(n):
+		var per_row := _row_counts(fl[fi], fi)
+		for r in range(per_row.size()):
+			for k in range(per_row[r]):
 				var sp := BattleBackgroundLayout.Spot.new()
 				sp.field = fi
 				sp.row = r
 				sp.k = k
-				sp.n = n
+				sp.n = per_row[r]
 				spots.append(sp)
+	var feet: Array[Vector2] = []
 	for sp in spots:
+		feet.append(l.foot(sp, area, view))
+	# Rysowanie od najdalszej linii stóp (wyżej na ekranie), żeby bliżsi zasłaniali dalszych.
+	var order: Array = range(spots.size())
+	order.sort_custom(func(a: int, b: int) -> bool: return feet[a].y < feet[b].y)
+	for i in order:
+		var sp: BattleBackgroundLayout.Spot = spots[i]
 		var sc := BattleBackgroundLayout.enemy_scale(spots.size(), view) * l.spot_scale(sp)
-		_draw_enemy(l.foot(sp, area, view), sc, COLORS[sp.field % COLORS.size()])
+		var frames: SpriteFrames = enemy_sprites[i % enemy_sprites.size()] if not enemy_sprites.is_empty() else null
+		_draw_enemy(feet[i], sc, COLORS[sp.field % COLORS.size()], frames)
 
 
-func _draw_enemy(foot: Vector2, sc: float, col: Color) -> void:
-	var tex: Texture2D = null
-	if enemy_frames:
-		var anims := enemy_frames.get_animation_names()
-		if anims.size() > 0 and enemy_frames.get_frame_count(anims[0]) > 0:
-			tex = enemy_frames.get_frame_texture(anims[0], 0)
+## Ilu przykładowych wrogów w każdym rzędzie pola (indeks 0 = przedni).
+func _row_counts(f: BattleField, fi: int) -> Array[int]:
+	var out: Array[int] = []
+	out.resize(f.rows)
+	var total := field_counts[fi] if fi < field_counts.size() else -1
+	if total < 0:
+		out.fill(mini(preview_per_row, f.row_capacity))
+		return out
+	out.fill(0)
+	total = mini(total, f.rows * f.row_capacity)
+	for e in range(total):  # po kolei do rzędów, od przedniego
+		out[e % f.rows] += 1
+	return out
+
+
+func _draw_enemy(foot: Vector2, sc: float, col: Color, frames: SpriteFrames) -> void:
+	var tex := _idle_texture(frames)
 	if tex:
 		# Jak EnemyBattleDisplay: dolny nieprzezroczysty wiersz grafiki na linii stóp.
 		var sz := tex.get_size() * sc
@@ -207,6 +234,33 @@ func _draw_enemy(foot: Vector2, sc: float, col: Color) -> void:
 		var w := BattleBackgroundLayout.ENEMY_BASE_PX * sc
 		draw_rect(Rect2(foot - Vector2(w * 0.5, w), Vector2(w, w)), Color(col, 0.5))
 	draw_circle(foot, 5.0, col)
+
+
+## Pierwsza klatka animacji postoju — wybór jak w EnemyBattleDisplay.
+func _idle_texture(frames: SpriteFrames) -> Texture2D:
+	if frames == null:
+		return null
+	var anims := frames.get_animation_names()
+	if anims.is_empty():
+		return null
+	var anim := ""
+	for candidate: String in ["idle_down", "slime_idle", "idle"]:
+		if frames.has_animation(candidate):
+			anim = candidate
+			break
+	if anim == "":
+		for candidate: String in anims:
+			if candidate.contains("idle"):
+				anim = candidate
+				break
+	if anim == "":
+		for candidate: String in ["walk_down", "slime_walk", "walk"]:
+			if frames.has_animation(candidate):
+				anim = candidate
+				break
+	if anim == "":
+		anim = anims[0]
+	return frames.get_frame_texture(anim, 0) if frames.get_frame_count(anim) > 0 else null
 
 
 func _visible_bottom(tex: Texture2D) -> int:
