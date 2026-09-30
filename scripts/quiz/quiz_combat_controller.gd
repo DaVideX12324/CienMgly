@@ -29,11 +29,14 @@ const ENEMY_DISPLAY_SCALE_DEFAULT := Vector2(7.2, 7.2)
 const ENEMY_DISPLAY_SCALE_FOCUSED := Vector2(7.9, 7.9)
 const QUIZ_TYPES_STANDARD := ["multiple_choice", "true_false"]
 const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_tiles", "matching"]
-const PARTY_COMMAND_WIDTH := 0.24  # okno komend drużyny (lewa strona)
-const ACTOR_COMMAND_WIDTH := 0.25  # okno komend postaci (prawa strona)
-const STATUS_ONLY_WIDTH := 0.72    # sam status: wyśrodkowany, węższy
-const GAUGE_HEIGHT := 8
-const LOG_LINES := 3               # log bitwy u góry: tyle ostatnich komunikatów (jak w RPG Makerze)
+
+## Wygląd i układ ekranu są w scenie (WYSIWYG) i w motywie QuizTheme.THEME_PATH; tutaj tylko to, co
+## zależy od fazy tury. Szerokości okien dolnego pasa jako część szerokości ekranu.
+@export_range(0.1, 0.6, 0.01) var party_command_width := 0.24  ## okno komend drużyny (lewa strona)
+@export_range(0.1, 0.6, 0.01) var actor_command_width := 0.25  ## okno komend postaci (prawa strona)
+@export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
+@export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
+@export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -64,7 +67,7 @@ var turn_number := 0
 @onready var action_panel: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel
 @onready var primary_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu
 @onready var action_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu
-@onready var result_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ResultLabel
+@onready var result_label: Label = $TopWindow/VBox/ResultSink/ResultLabel  # źródło komunikatów logu
 @onready var player_hp_bar: ProgressBar = $Battlefield/FieldContent/PlayerSection/PlayerHPBar
 @onready var enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyNameLabel
 @onready var player_name_label: Label = $Battlefield/FieldContent/PlayerSection/PlayerName
@@ -130,14 +133,16 @@ var _dm: Node
 var _gm: Node
 var _quiz_panel_controller
 var _band_mode: Band = Band.PARTY_COMMAND
-var _corner_label: Label = null
-var _top_window: PanelContainer = null    # u góry: pytanie quizu + czas albo log bitwy
-var _top_vbox: VBoxContainer = null
-var _timer_row: HBoxContainer = null
-var _log_label: RichTextLabel = null
+@onready var _corner_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/CornerInfo") as Label
+@onready var _top_window: PanelContainer = $TopWindow           # u góry: pytanie quizu + czas albo log bitwy
+@onready var _top_vbox: VBoxContainer = $TopWindow/VBox
+@onready var _timer_row: HBoxContainer = $TopWindow/VBox/TimerRow
+@onready var _log_label: RichTextLabel = $TopWindow/VBox/BattleLog
+@onready var _message_window: PanelContainer = $BattleWindow/WindowMargin/VBox/MessageWindow  # po bitwie
+@onready var _victory_label: Label = $BattleWindow/WindowMargin/VBox/MessageWindow/VictoryLog
+var _band_height := 250.0  # wysokość dolnego pasa ze sceny (BattleWindow.offset_top)
 var _log_lines: Array[String] = []
 var _last_logged := ""
-var _message_window: PanelContainer = null  # komunikaty po bitwie — cały dolny pas
 
 
 func setup(
@@ -226,19 +231,21 @@ func _ready() -> void:
 		_action_buttons[i].mouse_entered.connect(func(): _highlight_action(action_index))
 
 	_setup_party_layout()
-	_apply_rm_style()
+	if battle_window:
+		_band_height = -battle_window.offset_top
 	_init_party_state()
 	_quiz_panel_controller = QuizPanelController.new()
-	_quiz_panel_controller.setup(command_vbox)
+	_quiz_panel_controller.setup(command_vbox, {
+		"question_label": $TopWindow/VBox/QuestionLabel,
+		"timer_label": $TopWindow/VBox/TimerRow/TimerLabel,
+		"timer_bar": $TopWindow/VBox/TimerRow/TimerBar,
+		"result_label": result_label,
+		"correct_answer_label": $TopWindow/VBox/CorrectAnswerLabel,
+	})
 	_quiz_panel_controller.answered.connect(_on_quiz_answered)
-	_quiz_panel_controller.apply_visual_style(func(btn: Button, font_sz: int):
-		btn.add_theme_font_size_override("font_size", QuizTheme.snap(font_sz))
-		btn.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
-	)
 	_quiz_panel_controller.show_index_prefix = false
 	_quiz_panel_controller.selection_styler = func(btn: Button, selected: bool) -> void:
 		QuizTheme.set_menu_item_selected(btn, selected)
-	_setup_rm_quiz_and_log()
 
 	if battle_background and battle_background.has_signal("layout_config_changed"):
 		if not battle_background.layout_config_changed.is_connected(_on_battle_background_layout_changed):
@@ -1938,12 +1945,9 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 
 
 func _get_desired_battle_window_height(is_quiz: bool) -> float:
-	# Wysokość jak przed stylem RPG Makera (user: 28% ekranu to za dużo).
-	var vp_size: Vector2 = get_viewport_rect().size
-	var base_h: float = 320.0 if is_quiz else 260.0
-	var scaled_h: float = float(_ui_scale_px(int(base_h)))
-	var max_allowed: float = vp_size.y * (0.42 if is_quiz else 0.32) if vp_size.y > 0.0 else 380.0
-	return clampf(scaled_h, 250.0, max_allowed)
+	# Wysokość pasa jak w scenie (BattleWindow.offset_top), przeskalowana skalą UI; quiz — wyżej.
+	var h: float = _band_height + (quiz_band_extra_height if is_quiz else 0.0)
+	return h * _get_ui_scale_factor()
 
 
 func _update_window_heights(is_quiz: bool = false) -> void:
@@ -1953,153 +1957,6 @@ func _update_window_heights(is_quiz: bool = false) -> void:
 	var battlefield := get_node_or_null("Battlefield") as Control
 	if battlefield:
 		battlefield.offset_bottom = -menu_h
-
-
-func _apply_party_rows_scaling() -> void:
-	var row_h: float = maxf(float(_ui_scale_px(56)), 44.0)
-	var name_min_w: float = maxf(float(_ui_scale_px(220)), 140.0)
-	var stat_sep: int = maxi(_ui_scale_px(24), 12)
-	for row in party_rows:
-		if row == null:
-			continue
-		row.custom_minimum_size.y = row_h
-		row.add_theme_constant_override("separation", stat_sep)
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var name_label := row.get_node_or_null("NameLabel") as Label
-		if name_label:
-			name_label.custom_minimum_size.x = name_min_w
-			name_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN  # w linii wartości, nad paskami
-			_rm_label(name_label, Color.WHITE)
-		for stat_name in ["StatLP", "StatSP", "StatTP"]:
-			var stat_box := row.get_node_or_null(stat_name) as Control
-			if stat_box == null:
-				continue
-			stat_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var label := stat_box.find_child("Label", true, false) as Label
-			var value_label := stat_box.find_child("ValueLabel", true, false) as Label
-			var bar := stat_box.find_child("Bar", true, false) as ProgressBar
-			if label:
-				_rm_label(label, QuizTheme.LABEL_COLOR)
-			if value_label:
-				_rm_label(value_label, Color.WHITE)
-				value_label.custom_minimum_size.x = 0
-				value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-				value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			if bar:
-				bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				bar.custom_minimum_size = Vector2(0, GAUGE_HEIGHT)
-
-
-## Tekst jak w RPG Makerze: rozmiar bazowy czcionki modułu, czarny obrys.
-func _rm_label(label: Label, color: Color) -> void:
-	label.add_theme_font_size_override("font_size", QuizTheme.PX)
-	label.add_theme_color_override("font_color", color)
-	label.add_theme_color_override("font_outline_color", Color.BLACK)
-	label.add_theme_constant_override("outline_size", 6)
-
-
-## Wygląd RPG Makera na istniejącym drzewie sceny (ścieżki węzłów zostają — kod się do nich odwołuje):
-## okna jako QuizTheme.WINDOW bez ramy wokół całego pasa, pozycje menu bez tła z podkreśleniem
-## zaznaczenia, wiersz drużyny: etykieta i wartość w jednej linii, cienki pasek pod nimi.
-func _apply_rm_style() -> void:
-	if battle_window:
-		# Tło pod oknami pasa (pole bitwy kończy się nad pasem — bez tego po bokach wyśrodkowanego
-		# statusu widać szare tło okna gry).
-		var band_bg := StyleBoxFlat.new()
-		band_bg.bg_color = Color(0.02, 0.02, 0.05)
-		battle_window.add_theme_stylebox_override("panel", band_bg)
-	var outer_margin := get_node_or_null("BattleWindow/WindowMargin") as MarginContainer
-	if outer_margin:
-		for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
-			outer_margin.add_theme_constant_override(side, 0)
-	var top_row := get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow") as Control
-	if top_row:
-		top_row.visible = false  # tura / seria — mały wskaźnik w rogu okna statusu (_corner_label)
-	if content_row:
-		content_row.add_theme_constant_override("separation", 0)
-	for panel in [command_panel_container, party_panel_container]:
-		if panel:
-			panel.remove_theme_stylebox_override("panel")
-			panel.theme_type_variation = QuizTheme.WINDOW
-	for margin_path in ["BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin", "BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin"]:
-		var m := get_node_or_null(margin_path) as MarginContainer
-		if m:
-			for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
-				m.add_theme_constant_override(side, 6)
-	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
-		if btn:
-			btn.theme_type_variation = QuizTheme.MENU_ITEM
-			btn.flat = false  # flat nie rysuje stylu — podkreślenie zaznaczenia to styl przycisku
-			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			btn.text = btn.text.trim_prefix("► ")
-			QuizTheme.set_menu_item_selected(btn, false)
-	var action_title: Control = command_vbox.find_child("ActionTitle", true, false) as Control if command_vbox else null
-	if action_title:
-		action_title.visible = false
-	for row in party_rows:
-		_rm_party_row(row)
-	if party_panel_container and _corner_label == null:
-		# Nakładka w prawym dolnym rogu okna statusu (w PanelContainerze — kontener rozciąga ją na
-		# całe okno, tekst wyrównany do prawego dolnego rogu).
-		_corner_label = Label.new()
-		_corner_label.name = "CornerInfo"
-		_corner_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_corner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		_corner_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		_rm_label(_corner_label, QuizTheme.TEXT_DIM)
-		_corner_label.size_flags_vertical = Control.SIZE_SHRINK_END
-		_corner_label.size_flags_horizontal = Control.SIZE_SHRINK_END
-		party_panel_container.add_child(_corner_label)
-
-
-## Wiersz drużyny: StatX (HBox: Label, Bar, ValueLabel) -> kolumna [etykieta ... wartość] nad paskiem.
-func _rm_party_row(row: HBoxContainer) -> void:
-	if row == null:
-		return
-	var fills := {"StatLP": [Color(0.91, 0.55, 0.24), Color(0.95, 0.75, 0.32)],
-		"StatSP": [Color(0.27, 0.55, 0.9), Color(0.36, 0.75, 0.95)],
-		"StatTP": [Color(0.08, 0.66, 0.24), Color(0.24, 0.86, 0.35)]}
-	for stat_name in ["StatLP", "StatSP", "StatTP"]:
-		var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
-		if stat_box == null or stat_box.get_node_or_null("Col") != null:
-			continue
-		var label := stat_box.get_node_or_null("Label") as Label
-		var bar := stat_box.get_node_or_null("Bar") as ProgressBar
-		var value_label := stat_box.get_node_or_null("ValueLabel") as Label
-		var col := VBoxContainer.new()
-		col.name = "Col"
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 0)
-		var line := HBoxContainer.new()
-		line.name = "Line"
-		stat_box.add_child(col)
-		col.add_child(line)
-		for n in [label, value_label]:
-			if n:
-				n.reparent(line, false)
-		if bar:
-			bar.reparent(col, false)
-			bar.show_percentage = false
-		_style_gauge(bar, fills[stat_name][0], fills[stat_name][1])
-
-
-## Pasek jak w RPG Makerze: gradient w poziomie, ciemne tło, bez zaokrągleń.
-func _style_gauge(bar: ProgressBar, c1: Color, c2: Color) -> void:
-	if bar == null:
-		return
-	var grad := Gradient.new()
-	grad.set_color(0, c1)
-	grad.set_color(1, c2)
-	var tex := GradientTexture2D.new()
-	tex.gradient = grad
-	tex.width = 64
-	tex.height = 1
-	var fill := StyleBoxTexture.new()
-	fill.texture = tex
-	bar.add_theme_stylebox_override("fill", fill)
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(0.13, 0.13, 0.22)
-	bar.add_theme_stylebox_override("background", bg)
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
@@ -2117,20 +1974,20 @@ func _set_band_mode(mode: Band) -> void:
 			command_panel_container.visible = true
 			content_row.move_child(command_panel_container, 0)
 			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
-			command_panel_container.custom_minimum_size = Vector2(vp_w * PARTY_COMMAND_WIDTH, 0)
+			command_panel_container.custom_minimum_size = Vector2(vp_w * party_command_width, 0)
 			party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			party_panel_container.custom_minimum_size = Vector2.ZERO
 		Band.ACTOR_COMMAND:
 			command_panel_container.visible = true
 			content_row.move_child(party_panel_container, 0)
 			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
-			command_panel_container.custom_minimum_size = Vector2(vp_w * ACTOR_COMMAND_WIDTH, 0)
+			command_panel_container.custom_minimum_size = Vector2(vp_w * actor_command_width, 0)
 			party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			party_panel_container.custom_minimum_size = Vector2.ZERO
 		Band.STATUS_ONLY:
 			command_panel_container.visible = false
 			party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			party_panel_container.custom_minimum_size = Vector2(vp_w * STATUS_ONLY_WIDTH, 0)
+			party_panel_container.custom_minimum_size = Vector2(vp_w * status_only_width, 0)
 
 
 func _update_corner_label() -> void:
@@ -2145,27 +2002,8 @@ func _apply_responsive_layout() -> void:
 	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
 	_update_window_heights(is_quiz)
 
-	# 1. Scalowanie przycisków komend
-	var btn_h: float = maxf(float(_ui_scale_px(40)), 30.0)
-	var btn_font_sz: int = maxi(_ui_scale_px(18), 14)
-	var all_menu_btns: Array[Button] = [engage_btn, run_btn]
-	if exit_btn:
-		all_menu_btns.append(exit_btn)
-	all_menu_btns.append_array([atk_btn, def_btn, skills_btn, items_btn])
-	for b in all_menu_btns:
-		if b:
-			b.custom_minimum_size.y = btn_h
-			b.add_theme_font_size_override("font_size", QuizTheme.snap(btn_font_sz))
-	# 2. Scalowanie etykiet nagłówka
-	var hdr_font_sz: int = maxi(_ui_scale_px(18), 14)
-	if turn_label:
-		turn_label.add_theme_font_size_override("font_size", QuizTheme.snap(hdr_font_sz))
-	if streak_label:
-		streak_label.add_theme_font_size_override("font_size", QuizTheme.snap(hdr_font_sz))
-	# 3. Scalowanie wierszy drużyny
-	_apply_party_rows_scaling()
-
-	# 4. Scalowanie potworków i ich odstępów
+	# Przyciski, wiersze drużyny, czcionki: wygląd ze sceny i motywu (bez nadpisań z kodu).
+	# Rozmieszczenie potworków i ich odstępów:
 	_apply_responsive_enemy_layout()
 	if not is_quiz:
 		_set_band_mode(_band_mode)
@@ -2356,7 +2194,6 @@ func _refresh_stats_panel() -> void:
 			_set_party_stat(row, "StatTP", int(member.get("tp", 0)), int(member.get("tp_max", 1)), "%d/%d" % [int(member.get("tp", 0)), int(member.get("tp_max", 1))])
 		else:
 			row.visible = false
-	_apply_party_rows_scaling()
 
 
 func _style_party_row(_row: HBoxContainer) -> void:
@@ -2588,40 +2425,14 @@ func _on_exit_pressed() -> void:
 
 
 func _get_or_create_victory_log() -> Label:
-	# Jak w RPG Makerze: komunikaty po bitwie zajmują cały dolny pas (okno statusu i komend znika),
-	# log u góry gaśnie.
-	var label := get_node_or_null("VictoryLog") as Label
-	if label == null and _message_window:
-		label = _message_window.find_child("VictoryLog", true, false) as Label
-	if label == null:
-		label = Label.new()
-		label.name = "VictoryLog"
-		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		_rm_label(label, Color.WHITE)
-		label.add_theme_constant_override("line_spacing", 10)
-		label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-		var holder: Node = self
-		var band_vbox := get_node_or_null("BattleWindow/WindowMargin/VBox") as VBoxContainer
-		if band_vbox:
-			_message_window = PanelContainer.new()
-			_message_window.name = "MessageWindow"
-			_message_window.theme_type_variation = QuizTheme.WINDOW
-			_message_window.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			band_vbox.add_child(_message_window)
-			holder = _message_window
-		else:
-			label.position = Vector2(24, 620)
-			label.custom_minimum_size = Vector2(800, 160)
-		holder.add_child(label)
+	# Jak w RPG Makerze: komunikaty po bitwie zajmują cały dolny pas (MessageWindow ze sceny; okna
+	# statusu i komend znikają), log u góry gaśnie.
 	if content_row:
 		content_row.visible = false
-	if _message_window:
-		_message_window.visible = true
+	_message_window.visible = true
 	_clear_battle_log()
-	if _top_window:
-		_top_window.visible = false
-	return label
+	_top_window.visible = false
+	return _victory_label
 
 
 func _show_message_sequence(lines: Array[String]) -> void:
@@ -2670,84 +2481,6 @@ func _find_current_map_node() -> Node:
 	return null
 
 
-## Okno u góry (styl RPG Makera): w czasie quizu pytanie i pasek czasu, poza nim log bitwy (ostatnie
-## LOG_LINES komunikatów). Etykiety wyniku i poprawnej odpowiedzi przeniesione tutaj; result_label jest
-## tylko źródłem komunikatów (kod ustawia go jak dotąd) — wyświetla je _log_label.
-func _setup_rm_quiz_and_log() -> void:
-	var qpc = _quiz_panel_controller
-	if qpc == null or _top_window != null:
-		return
-	_top_window = PanelContainer.new()
-	_top_window.name = "TopWindow"
-	_top_window.add_theme_stylebox_override("panel", QuizTheme.log_style())
-	_top_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_top_window)
-	_top_window.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	_top_vbox = VBoxContainer.new()
-	_top_vbox.add_theme_constant_override("separation", 6)
-	_top_window.add_child(_top_vbox)
-
-	var q: Label = qpc.question_label
-	q.reparent(_top_vbox, false)
-	q.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_rm_label(q, Color.WHITE)
-	_timer_row = HBoxContainer.new()
-	_timer_row.add_theme_constant_override("separation", 16)
-	_top_vbox.add_child(_timer_row)
-	var bar: ProgressBar = qpc.timer_bar
-	bar.reparent(_timer_row, false)
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	bar.custom_minimum_size = Vector2(0, GAUGE_HEIGHT + 2)
-	_style_gauge(bar, Color(0.9, 0.72, 0.22), Color(0.98, 0.86, 0.36))
-	var tl: Label = qpc.timer_label
-	tl.reparent(_timer_row, false)
-	_rm_label(tl, Color(1.0, 0.86, 0.45))
-
-	_log_label = RichTextLabel.new()
-	_log_label.name = "BattleLog"
-	_log_label.bbcode_enabled = true
-	_log_label.fit_content = true
-	_log_label.scroll_active = false
-	_log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_log_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_log_label.add_theme_font_size_override("normal_font_size", QuizTheme.PX)
-	_log_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_log_label.add_theme_constant_override("outline_size", 6)
-	_log_label.add_theme_constant_override("line_separation", 8)
-	_top_vbox.add_child(_log_label)
-
-	var ca: Label = qpc.correct_answer_label
-	ca.reparent(_top_vbox, false)
-	_rm_label(ca, Color(0.35, 0.95, 0.45))
-	# result_label: niewidoczne źródło komunikatów (zerowa wysokość, przycięte).
-	var sink := Control.new()
-	sink.name = "ResultSink"
-	sink.clip_contents = true
-	sink.custom_minimum_size = Vector2.ZERO
-	sink.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_top_vbox.add_child(sink)
-	result_label.reparent(sink, false)
-	# Dolna część quizu: odpowiedzi jedna pod drugą, jak pozycje menu.
-	var quiz_panel: Control = qpc.quiz_panel
-	for n in ["QuizTitle", "HintLabel"]:
-		var c := quiz_panel.get_node_or_null(n) as Control
-		if c:
-			c.visible = false
-			c.set_meta("rm_hidden", true)
-	var mc := quiz_panel.get_node_or_null("MC_Box") as GridContainer
-	if mc:
-		mc.columns = 1
-		mc.add_theme_constant_override("v_separation", 0)
-	for btn: Button in qpc.mc_buttons + qpc.tf_buttons:
-		btn.theme_type_variation = QuizTheme.MENU_ITEM
-		btn.flat = false
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		btn.add_theme_color_override("font_outline_color", Color.BLACK)
-		btn.add_theme_constant_override("outline_size", 6)
-
-
 func _result_home() -> Node:
 	var sink := _top_vbox.get_node_or_null("ResultSink") if _top_vbox else null
 	return sink if sink else command_vbox
@@ -2757,12 +2490,12 @@ func _top_home() -> Node:
 	return _top_vbox if _top_vbox else command_vbox
 
 
-## Komunikat do logu u góry (ostatnie LOG_LINES).
+## Komunikat do logu u góry (ostatnie log_lines).
 func _push_log(text: String, color: Color) -> void:
 	if text.strip_edges() == "":
 		return
 	_log_lines.append("[color=#%s]%s[/color]" % [color.to_html(false), text.replace("[", "[lb]")])
-	while _log_lines.size() > LOG_LINES:
+	while _log_lines.size() > log_lines:
 		_log_lines.pop_front()
 	if _log_label:
 		_log_label.text = "\n".join(_log_lines)
