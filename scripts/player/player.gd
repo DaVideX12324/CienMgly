@@ -28,6 +28,11 @@ const MAX_TRAIL_POINTS := 96
 var _bob_time: float = 0.0
 var _is_moving: bool = false
 
+# Nietykalność po wygranej walce (grant_encounter_immunity): wrogowie nie zaczynają walki, gracz miga.
+const ENCOUNTER_IMMUNITY_SEC := 5.0
+const IMMUNITY_BLINK_HZ := 8.0
+var _immunity_left: float = 0.0
+
 
 func _ready() -> void:
 	_gm = CoreManager.get_singleton("GameManager")
@@ -47,6 +52,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _immunity_left > 0.0:
+		_tick_immunity(delta)
 	if not can_move or not (_gm and _gm.is_exploring()):
 		velocity = Vector2.ZERO
 		_is_moving = false
@@ -179,6 +186,33 @@ func set_can_move(value: bool) -> void:
 	if not value:
 		velocity = Vector2.ZERO
 		_is_moving = false
+
+
+## Po wygranej walce: przez `seconds` wrogowie nie zaczynają walki (EnemyBase.start_combat), gracz miga.
+func grant_encounter_immunity(seconds: float = ENCOUNTER_IMMUNITY_SEC) -> void:
+	_immunity_left = maxf(_immunity_left, seconds)
+
+
+func is_encounter_immune() -> bool:
+	return _immunity_left > 0.0
+
+
+## Odliczanie w _physics_process (pauza wstrzymuje). Po końcu wróg, który wciąż stoi przy graczu, zaczyna
+## walkę — wejście do obszaru interakcji już było, więc body_entered się nie powtórzy.
+func _tick_immunity(delta: float) -> void:
+	_immunity_left -= delta
+	if _immunity_left > 0.0:
+		modulate.a = 0.4 if fmod(_immunity_left * IMMUNITY_BLINK_HZ, 1.0) < 0.5 else 1.0
+		return
+	_immunity_left = 0.0
+	modulate.a = 1.0
+	var interaction_area := get_node_or_null("InteractionArea") as Area2D
+	if interaction_area == null or not interaction_area.monitoring:
+		return
+	for body in interaction_area.get_overlapping_bodies():
+		if body.is_in_group("enemies") and body.has_method("engage_from_player_interaction"):
+			body.engage_from_player_interaction(self)
+			return
 
 
 func apply_hero_data(hero_data: Dictionary) -> void:

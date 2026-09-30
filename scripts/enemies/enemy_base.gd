@@ -669,6 +669,9 @@ func start_combat(player: Node2D) -> void:
 		return
 	if get_tree().paused:
 		return
+	# Nietykalność po wygranej walce (Player.grant_encounter_immunity) — bez walki zaraz po poprzedniej.
+	if player.has_method("is_encounter_immune") and player.is_encounter_immune():
+		return
 
 	state = State.COMBAT
 	velocity = Vector2.ZERO
@@ -703,11 +706,17 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		if is_boss:
 			_persist_boss_defeat()
 		# XP dodaje ekran walki (QuizCombatController._end_combat, razem z komunikatem) — tu już nie.
+		# Gracz rusza od razu (bez czekania na animację znikania) i dostaje nietykalność na kolejne walki.
+		if _gm:
+			_gm.change_state(_gm.GameState.EXPLORING)
+		if player.has_method("grant_encounter_immunity"):
+			player.grant_encounter_immunity()
 		var tween: Tween = create_tween()
 		tween.tween_property(self, "scale", Vector2(0.1, 0.1), 0.4).set_ease(Tween.EASE_IN)
 		tween.parallel().tween_property(self, "modulate:a", 0.0, 0.5)
 		await tween.finished
 		queue_free()
+		return
 	else:
 		state = State.IDLE
 		await get_tree().create_timer(2.0).timeout
