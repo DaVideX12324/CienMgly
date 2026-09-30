@@ -28,7 +28,7 @@ var owner := PackedInt32Array()    # indeks defa + 1, który zajął kratkę (US
 var stamp := PackedInt32Array()    # odstęp `spacing`: indeks defa + 1 w promieniu kotwicy
 var reach0 := PackedByteArray()    # osiągalne z wejścia przed obiektami
 var entrance_i := -1
-var free_pts := {}                 # free: marker defa -> {idx kratki -> Array[Vector2] punktów}
+var free_pts := {}                 # free: marker defa -> {kubełek (bok >= spacing_px) -> Array[Vector2] punktów}
 var defs_by_id := {}               # id -> ObjectDef (towarzysze)
 var markers := {}                  # id -> marker (indeks defa + 1)
 var in_companions := false         # towarzysze nie dostawiają własnych towarzyszy
@@ -475,19 +475,18 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 	var c := f.cell(i)
 	var cs := float(ObjectDef.CELL)
 	var pt := Vector2((c.x + rng.randf()) * cs, (c.y + rng.randf()) * cs)
-	var reach := ceili(def.spacing_px / cs)
 	var sp2 := def.spacing_px * def.spacing_px
+	# Kubełki o boku >= spacing_px: punkt bliżej niż spacing_px leży w kubełku sąsiednim (3×3), więc
+	# 9 odczytów zamiast (2·ceil(spacing/kratka)+1)² kubełków-kratek (przy 112 px — 225) na próbę.
+	var bs := maxf(def.spacing_px, cs)
+	var bucket := Vector2i(floori(pt.x / bs), floori(pt.y / bs))
 	if not free_pts.has(marker):
 		free_pts[marker] = {}
 	var mine: Dictionary = free_pts[marker]
 	if not mine.is_empty():
-		# Kubełki w promieniu `reach` przycięte do mapy (bez in_bounds/idx na kratkę — przy spacing_px
-		# 112 to 225 kratek na próbę).
-		var w := f.width
-		for y in range(maxi(c.y - reach, 0), mini(c.y + reach, f.height - 1) + 1):
-			var row := y * w
-			for x in range(maxi(c.x - reach, 0), mini(c.x + reach, w - 1) + 1):
-				var pts = mine.get(row + x)
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var pts = mine.get(bucket + Vector2i(dx, dy))
 				if pts == null:
 					continue
 				for other in pts:
@@ -512,10 +511,10 @@ func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) 
 	pl.cells = cells
 	pl.offset = pt - def.base_point(c)
 	_finish(pl, marker, rng)
-	if mine.has(i):
-		(mine[i] as Array).append(pt)
+	if mine.has(bucket):
+		(mine[bucket] as Array).append(pt)
 	else:
-		mine[i] = [pt]
+		mine[bucket] = [pt]
 	return true
 
 
