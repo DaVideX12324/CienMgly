@@ -35,28 +35,28 @@ theme_override_constants/separation = 10
 [node name="Title" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "Quiz"
 horizontal_alignment = 1
 
 [node name="Question" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 27
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="TimerLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 text = "Czas: 15.0 s"
 horizontal_alignment = 1
 
 [node name="Hint" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 27
 horizontal_alignment = 1
 
 [node name="HSep" type="HSeparator" parent="Panel/VBox"]
@@ -70,28 +70,28 @@ theme_override_constants/separation = 6
 [node name="Btn0" type="Button" parent="Panel/VBox/MC_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 alignment = 0
 autowrap_mode = 3
 
 [node name="Btn1" type="Button" parent="Panel/VBox/MC_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 alignment = 0
 autowrap_mode = 3
 
 [node name="Btn2" type="Button" parent="Panel/VBox/MC_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 alignment = 0
 autowrap_mode = 3
 
 [node name="Btn3" type="Button" parent="Panel/VBox/MC_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 alignment = 0
 autowrap_mode = 3
 
@@ -103,13 +103,13 @@ theme_override_constants/separation = 6
 [node name="BtnTrue" type="Button" parent="Panel/VBox/TF_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 alignment = 0
 
 [node name="BtnFalse" type="Button" parent="Panel/VBox/TF_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 alignment = 0
 
 [node name="FillText_Box" type="VBoxContainer" parent="Panel/VBox"]
@@ -122,18 +122,18 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 autowrap_mode = 3
 
 [node name="Input" type="LineEdit" parent="Panel/VBox/FillText_Box"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 placeholder_text = "Wpisz odpowiedz..."
 
 [node name="Confirm" type="Button" parent="Panel/VBox/FillText_Box"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 text = "Zatwierdz (Enter)"
 
 [node name="FillTiles_Box" type="VBoxContainer" parent="Panel/VBox"]
@@ -154,7 +154,7 @@ size_flags_horizontal = 3
 
 [node name="Confirm" type="Button" parent="Panel/VBox/FillTiles_Box"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 27
 text = "Zatwierdz (Enter)"
 
 [node name="Matching_Box" type="VBoxContainer" parent="Panel/VBox"]
@@ -177,14 +177,14 @@ size_flags_horizontal = 3
 
 [node name="Confirm" type="Button" parent="Panel/VBox/Matching_Box"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 27
 text = "Zatwierdz (Enter)"
 
 [node name="ResultLabel" type="Label" parent="Panel/VBox"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 27
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -193,7 +193,7 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 27
 horizontal_alignment = 1
 autowrap_mode = 3
 

@@ -214,7 +214,7 @@ func _ready() -> void:
 	_quiz_panel_controller.setup(command_vbox)
 	_quiz_panel_controller.answered.connect(_on_quiz_answered)
 	_quiz_panel_controller.apply_visual_style(func(btn: Button, font_sz: int):
-		btn.add_theme_font_size_override("font_size", font_sz)
+		btn.add_theme_font_size_override("font_size", QuizTheme.snap(font_sz))
 		btn.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 	)
 
@@ -512,13 +512,13 @@ func _build_target_menu() -> void:
 		name_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_text.text = str(entry.get("name", enemy_name_str))
-		name_text.add_theme_font_size_override("font_size", _ui_scale_px(20))
+		name_text.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(20)))
 		name_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 		var hp_text: Label = Label.new()
 		hp_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hp_text.text = "%d/%d HP" % [int(entry.get("hp", 0)), int(entry.get("max_hp", 1))]
-		hp_text.add_theme_font_size_override("font_size", _ui_scale_px(17))
+		hp_text.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(17)))
 		hp_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 		row_content.add_child(name_text)
 		row_content.add_child(hp_text)
@@ -767,11 +767,11 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.text = str(entry.get("name", "---"))
-		name_label.add_theme_font_size_override("font_size", _ui_scale_px(18))
+		name_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(18)))
 		var value_label: Label = Label.new()
 		value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		value_label.add_theme_font_size_override("font_size", _ui_scale_px(16))
+		value_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(16)))
 		var disabled: bool = false
 		if is_skill_menu:
 			var sp_cost: int = int(entry.get("sp_cost", 0))
@@ -1370,7 +1370,7 @@ func _build_actor_preview(
 		fallback.text = _fallback_actor_label(actor)
 		fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		fallback.add_theme_font_size_override("font_size", 52)
+		fallback.add_theme_font_size_override("font_size", QuizTheme.snap(52))
 		fallback.add_theme_color_override("font_color", accent.lightened(0.62) if is_active else accent.lightened(0.35))
 		center.add_child(fallback)
 
@@ -1950,7 +1950,7 @@ func _apply_party_rows_scaling() -> void:
 		var name_label := row.get_node_or_null("NameLabel") as Label
 		if name_label:
 			name_label.custom_minimum_size.x = name_min_w
-			name_label.add_theme_font_size_override("font_size", name_font_sz)
+			name_label.add_theme_font_size_override("font_size", QuizTheme.snap(name_font_sz))
 			name_label.add_theme_color_override("font_color", Color.WHITE)
 
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1964,11 +1964,11 @@ func _apply_party_rows_scaling() -> void:
 			var bar := stat_box.get_node_or_null("Bar") as ProgressBar
 			var value_label := stat_box.get_node_or_null("ValueLabel") as Label
 			if label:
-				label.add_theme_font_size_override("font_size", stat_lbl_font_sz)
+				label.add_theme_font_size_override("font_size", QuizTheme.snap(stat_lbl_font_sz))
 				label.add_theme_color_override("font_color", Color(0.85, 0.90, 0.98))
 			if value_label:
 				value_label.custom_minimum_size.x = val_min_w
-				value_label.add_theme_font_size_override("font_size", val_font_sz)
+				value_label.add_theme_font_size_override("font_size", QuizTheme.snap(val_font_sz))
 				value_label.add_theme_color_override("font_color", Color.WHITE)
 			if bar:
 				bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1990,15 +1990,13 @@ func _apply_responsive_layout() -> void:
 	for b in all_menu_btns:
 		if b:
 			b.custom_minimum_size.y = btn_h
-			b.add_theme_font_size_override("font_size", btn_font_sz)
-
+			b.add_theme_font_size_override("font_size", QuizTheme.snap(btn_font_sz))
 	# 2. Scalowanie etykiet nagłówka
 	var hdr_font_sz: int = maxi(_ui_scale_px(18), 14)
 	if turn_label:
-		turn_label.add_theme_font_size_override("font_size", hdr_font_sz)
+		turn_label.add_theme_font_size_override("font_size", QuizTheme.snap(hdr_font_sz))
 	if streak_label:
-		streak_label.add_theme_font_size_override("font_size", hdr_font_sz)
-
+		streak_label.add_theme_font_size_override("font_size", QuizTheme.snap(hdr_font_sz))
 	# 3. Scalowanie wierszy drużyny
 	_apply_party_rows_scaling()
 
@@ -2428,7 +2426,7 @@ func _get_or_create_victory_log() -> Label:
 	label.custom_minimum_size = Vector2(800, 160)
 	label.size = Vector2(800, 160)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", QuizTheme.snap(22))
 	label.add_theme_color_override("font_color", Color.WHITE)
 	add_child(label)
 	return label

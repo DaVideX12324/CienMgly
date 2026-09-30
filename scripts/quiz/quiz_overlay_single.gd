@@ -194,23 +194,21 @@ func _on_scale_changed(_scale: float) -> void:
 	panel.offset_right = UIScaleService.sz(340.0)
 	panel.offset_bottom = UIScaleService.sz(300.0)
 	vbox.add_theme_constant_override("separation", UIScaleService.px(10))
-	title_label.add_theme_font_size_override("font_size", UIScaleService.px(24))
-	question_label.add_theme_font_size_override("font_size", UIScaleService.px(21))
-	timer_label.add_theme_font_size_override("font_size", UIScaleService.px(20))
-	hint_label.add_theme_font_size_override("font_size", UIScaleService.px(13))
-	result_label.add_theme_font_size_override("font_size", UIScaleService.px(22))
-	correct_label.add_theme_font_size_override("font_size", UIScaleService.px(18))
+	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(24)))
+	question_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(21)))
+	timer_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+	hint_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(13)))
+	result_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(22)))
+	correct_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(18)))
 	for btn in mc_buttons:
-		btn.add_theme_font_size_override("font_size", UIScaleService.px(20))
+		btn.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
 	for btn in tf_buttons:
-		btn.add_theme_font_size_override("font_size", UIScaleService.px(20))
-	fill_input.add_theme_font_size_override("font_size", UIScaleService.px(20))
-	fill_confirm.add_theme_font_size_override("font_size", UIScaleService.px(20))
-	pattern_label.add_theme_font_size_override("font_size", UIScaleService.px(20))
-	tiles_confirm.add_theme_font_size_override("font_size", UIScaleService.px(20))
-	match_confirm.add_theme_font_size_override("font_size", UIScaleService.px(18))
-
-
+		btn.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+	fill_input.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+	fill_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+	pattern_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+	tiles_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+	match_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(18)))
 func _build_ui() -> void:
 	var qtype := str(_question.get("type", "multiple_choice"))
 	mc_box.visible = false
@@ -282,12 +280,12 @@ func _build_fill_tiles() -> void:
 	var parts := text_with_gaps.split("___")
 	for i in range(parts.size()):
 		var label := Label.new()
-		label.add_theme_font_size_override("font_size", font_size)
+		label.add_theme_font_size_override("font_size", QuizTheme.snap(font_size))
 		label.text = parts[i]
 		gap_row.add_child(label)
 		if i < gaps.size():
 			var gap_button := Button.new()
-			gap_button.add_theme_font_size_override("font_size", font_size)
+			gap_button.add_theme_font_size_override("font_size", QuizTheme.snap(font_size))
 			gap_button.focus_mode = Control.FOCUS_NONE
 			gap_button.custom_minimum_size = UIScaleService.sz2(120, 36)
 			gap_button.text = "[ ___ ]"
@@ -297,7 +295,7 @@ func _build_fill_tiles() -> void:
 			_gap_buttons.append(gap_button)
 	for tile in tiles:
 		var tile_button := Button.new()
-		tile_button.add_theme_font_size_override("font_size", font_size)
+		tile_button.add_theme_font_size_override("font_size", QuizTheme.snap(font_size))
 		tile_button.text = str(tile)
 		tile_button.focus_mode = Control.FOCUS_NONE
 		var tile_text := str(tile)
@@ -522,7 +520,7 @@ func _apply_match_card_style(btn: Button, color: Color, is_matched: bool, is_sel
 		border_width = 1
 
 	btn.add_theme_color_override("font_color", font_color)
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", QuizTheme.snap(16))
 	btn.custom_minimum_size = Vector2(0, 42)
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 

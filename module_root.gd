@@ -3,6 +3,7 @@ extends Node
 signal exit_requested
 
 const START_SCENE := "res://modules/quiz_rpg/scenes/ui/main_menu.tscn"
+const QuizTheme = preload("res://modules/quiz_rpg/scripts/ui/quiz_theme.gd")
 
 var _host_api = null
 var _manifest: Dictionary = {}
@@ -17,7 +18,12 @@ func _ready() -> void:
 		_scene_root.name = "SceneRoot"
 		add_child(_scene_root)
 	_register_singletons()
+	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania
 	open_scene(START_SCENE)
+
+
+func _exit_tree() -> void:
+	QuizTheme.restore()
 
 
 func embedded_start(host_api, manifest: Dictionary = {}) -> void:

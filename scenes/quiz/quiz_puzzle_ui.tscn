@@ -107,7 +107,7 @@ theme_override_constants/separation = 10
 [node name="TitleLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "Zagadka"
 horizontal_alignment = 1
 

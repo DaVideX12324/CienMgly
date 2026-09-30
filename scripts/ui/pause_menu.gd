@@ -1405,10 +1405,10 @@ func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:
 
 
 func _apply_scaling() -> void:
-	context_title_label.add_theme_font_size_override("font_size", _ui_px(28))
+	context_title_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(28)))
 	var title_label: Label = left_panel.get_node("Margin/LeftVBox/TitleLabel") as Label
-	title_label.add_theme_font_size_override("font_size", _ui_px(26))
-	toast_label.add_theme_font_size_override("font_size", _ui_px(18))
+	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(26)))
+	toast_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
 	_apply_row_scaling(_menu_rows)
 	_apply_row_scaling(_item_tab_rows)
 	_apply_row_scaling(_item_rows)
@@ -1442,9 +1442,9 @@ func _apply_row_scaling(rows: Array[Control]) -> void:
 		if content:
 			content.add_theme_constant_override("separation", _ui_px(10))
 		if left_label:
-			left_label.add_theme_font_size_override("font_size", _ui_px(18))
+			left_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
 		if right_label:
-			right_label.add_theme_font_size_override("font_size", _ui_px(17))
+			right_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(17)))
 		if underline:
 			_configure_selection_underline(underline, row)
 
@@ -1562,7 +1562,7 @@ func _apply_actor_header_scaling(header: HBoxContainer) -> void:
 	header.add_theme_constant_override("separation", _ui_px(12))
 	portrait.custom_minimum_size = Vector2(_ui_px(128), _ui_px(128))
 	info_box.add_theme_constant_override("separation", _ui_px(6))
-	name_label.add_theme_font_size_override("font_size", _ui_px(22))
+	name_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(22)))
 	_apply_bar_row_scaling(hp_row)
 	_apply_bar_row_scaling(sp_row)
 

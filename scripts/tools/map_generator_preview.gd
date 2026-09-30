@@ -7,6 +7,7 @@ extends Node2D
 const ProceduralLevelScript = preload("res://modules/quiz_rpg/scripts/maps/procedural_level.gd")
 const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
 const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
+const QuizTheme = preload("res://modules/quiz_rpg/scripts/ui/quiz_theme.gd")
 @onready var camera: Camera2D = $Camera2D
 @onready var level_container: Node2D = $LevelContainer
 @onready var hud: CanvasLayer = $CanvasLayer
@@ -83,6 +84,7 @@ var _cam_start_pos: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
+	QuizTheme.apply()  # uruchomiony sam (F6) nie ma module_root — ten sam wygląd co w grze
 	_ensure_nodes()
 	_setup_tile_overlay()
 	_setup_ui()
@@ -997,6 +999,7 @@ func _set_exploring(on: bool) -> void:
 
 
 func _exit_tree() -> void:
+	QuizTheme.restore()
 	_set_exploring(false)
 	var core := get_node_or_null("/root/CoreManager")
 	if _own_game_manager and core and core.get_active_module_id() == "" 			and core.get_singleton("GameManager") == _own_game_manager:

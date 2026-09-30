@@ -109,11 +109,11 @@ func setup(p_command_vbox: VBoxContainer) -> void:
 
 func apply_visual_style(button_styler: Callable) -> void:
 	question_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0))
-	question_label.add_theme_font_size_override("font_size", 20)
+	question_label.add_theme_font_size_override("font_size", QuizTheme.snap(20))
 	hint_label.add_theme_color_override("font_color", TEXT_SECONDARY)
-	hint_label.add_theme_font_size_override("font_size", 14)
+	hint_label.add_theme_font_size_override("font_size", QuizTheme.snap(14))
 	correct_answer_label.add_theme_color_override("font_color", Color(0.35, 0.95, 0.45))
-	correct_answer_label.add_theme_font_size_override("font_size", 16)
+	correct_answer_label.add_theme_font_size_override("font_size", QuizTheme.snap(16))
 	for btn in mc_buttons:
 		button_styler.call(btn, 17)
 	for btn in tf_buttons:
@@ -628,7 +628,7 @@ func _build_fill_tiles(question: Dictionary) -> void:
 			var label := Label.new()
 			label.text = parts[i]
 			label.autowrap_mode = TextServer.AUTOWRAP_OFF
-			label.add_theme_font_size_override("font_size", 18)
+			label.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 			label.add_theme_color_override("font_color", TEXT_PRIMARY)
 			gap_row.add_child(label)
 		if i < gaps.size():
@@ -636,7 +636,7 @@ func _build_fill_tiles(question: Dictionary) -> void:
 			gap_button.text = "[ ___ ]"
 			gap_button.focus_mode = Control.FOCUS_NONE
 			gap_button.custom_minimum_size = Vector2(120, 36)
-			gap_button.add_theme_font_size_override("font_size", 16)
+			gap_button.add_theme_font_size_override("font_size", QuizTheme.snap(16))
 			var gap_index := i
 			gap_button.pressed.connect(func(): _on_gap_clicked(gap_index))
 			gap_row.add_child(gap_button)
@@ -646,7 +646,7 @@ func _build_fill_tiles(question: Dictionary) -> void:
 		tile_button.text = str(tile)
 		tile_button.focus_mode = Control.FOCUS_NONE
 		tile_button.custom_minimum_size = Vector2(90, 36)
-		tile_button.add_theme_font_size_override("font_size", 16)
+		tile_button.add_theme_font_size_override("font_size", QuizTheme.snap(16))
 		var tile_text := str(tile)
 		tile_button.pressed.connect(func(): _on_tile_clicked(tile_text, tile_button))
 		tile_row.add_child(tile_button)
@@ -927,7 +927,7 @@ func _apply_match_card_style(btn: Button, color: Color, is_matched: bool, is_sel
 		border_width = 1
 
 	btn.add_theme_color_override("font_color", font_color)
-	btn.add_theme_font_size_override("font_size", 16)
+	btn.add_theme_font_size_override("font_size", QuizTheme.snap(16))
 	btn.custom_minimum_size = Vector2(0, 42)
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 

@@ -116,7 +116,7 @@ func _build_save_slots_panel() -> void:
 
 	_save_slots_title = Label.new()
 	_save_slots_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_save_slots_title.add_theme_font_size_override("font_size", 26)
+	_save_slots_title.add_theme_font_size_override("font_size", QuizTheme.snap(26))
 	_save_slots_title.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5, 1))
 	vbox.add_child(_save_slots_title)
 
@@ -124,7 +124,7 @@ func _build_save_slots_panel() -> void:
 	hint.text = "Sloty dzialaja jak w Amon-Ra: wybierz zapis, pusty slot albo dodaj kolejny."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_font_size_override("font_size", 13)
+	hint.add_theme_font_size_override("font_size", QuizTheme.snap(13))
 	hint.add_theme_color_override("font_color", Color(0.68, 0.68, 0.76, 1))
 	vbox.add_child(hint)
 
@@ -205,7 +205,7 @@ func _create_slot_row(slot_summary: Dictionary) -> Control:
 
 	var title := Label.new()
 	title.text = "%s - %s" % [str(slot_summary.get("slot_name", "Slot")), str(slot_summary.get("title", ""))]
-	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 	title.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98, 1))
 	text_box.add_child(title)
 
@@ -217,7 +217,7 @@ func _create_slot_row(slot_summary: Dictionary) -> Control:
 	var detail := Label.new()
 	detail.text = str(slot_summary.get("detail", ""))
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.add_theme_font_size_override("font_size", 13)
+	detail.add_theme_font_size_override("font_size", QuizTheme.snap(13))
 	detail.add_theme_color_override("font_color", Color(0.58, 0.58, 0.66, 1))
 	text_box.add_child(detail)
 
