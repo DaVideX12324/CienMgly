@@ -4,14 +4,14 @@
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_df2m0"]
 [ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/desert/variant_1.png" id="3_1vg0r"]
 
-[sub_resource type="Resource" id="Resource_t8dc8"]
+[sub_resource type="Resource" id="Resource_gyhp3"]
 script = ExtResource("1_gyhp3")
-rect = Rect2(168, 605, 1584, 190)
+quad = PackedVector2Array(168, 795, 1752, 795, 1644, 605, 276, 605)
 rows = 2
 row_capacity = 5
-back_row_inset = 108.0
+auto_depth_scale = false
 
 [resource]
 script = ExtResource("2_df2m0")
 texture = ExtResource("3_1vg0r")
-fields = Array[ExtResource("1_gyhp3")]([SubResource("Resource_t8dc8")])
+fields = Array[ExtResource("1_gyhp3")]([SubResource("Resource_gyhp3")])

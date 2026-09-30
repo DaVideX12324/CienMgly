@@ -4,14 +4,14 @@
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_o8xfp"]
 [ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_3_stairs.jpg" id="3_ybrud"]
 
-[sub_resource type="Resource" id="Resource_w35pl"]
+[sub_resource type="Resource" id="Resource_ngidx"]
 script = ExtResource("1_ngidx")
-rect = Rect2(240, 632.5, 1440, 162.5)
+quad = PackedVector2Array(240, 795, 1680, 795, 1432.4, 632.5, 487.6, 632.5)
 rows = 2
 row_capacity = 5
-back_row_inset = 247.60000000000002
+auto_depth_scale = false
 
 [resource]
 script = ExtResource("2_o8xfp")
 texture = ExtResource("3_ybrud")
-fields = Array[ExtResource("1_ngidx")]([SubResource("Resource_w35pl")])
+fields = Array[ExtResource("1_ngidx")]([SubResource("Resource_ngidx")])
