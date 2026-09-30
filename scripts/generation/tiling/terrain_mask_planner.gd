@@ -90,10 +90,20 @@ static func shape_mask(candidates: Dictionary, domain: Array[Vector2i]) -> Array
 		if candidates.has(c):
 			s[i] = 1
 	# Kratki domeny leżą >= 2 od brzegu prostokąta, więc sąsiedzi +-1 zawsze w tablicy.
+	# Decyzja kratki (usuń / dołóż ją albo sąsiada) zależy tylko od jej okna 3×3, a obie fazy stosują
+	# zmiany dopiero po przejrzeniu listy. Kratka, wokół której nic się nie zmieniło od jej poprzedniej
+	# fazy, powtórzyłaby tamtą decyzję bez skutku (usunięta zmieniłaby własne okno, dołożona kratka
+	# też leży w oknie, odrzucona — ban/domena — dalej odpada), więc po pierwszej rundzie przeglądane
+	# są tylko kratki przy zmianach. Wynik jak przy przeglądaniu całej domeny w każdej rundzie.
+	var stamp := PackedInt32Array()
+	stamp.resize(w * h)
+	var drop_todo := dlist
+	var add_todo := dlist
+	var grew := PackedInt32Array()
 	for _round in range(SHAPE_ROUNDS):
 		var dropped := 0
 		var drop := PackedInt32Array()
-		for i in dlist:
+		for i in drop_todo:
 			if s[i] == 1 and _verts(s, i, w) == 0:
 				drop.append(i)
 		for i in drop:
@@ -101,8 +111,10 @@ static func shape_mask(candidates: Dictionary, domain: Array[Vector2i]) -> Array
 			if grown_at[i] == 1:
 				banned[i] = 1
 		dropped = drop.size()
+		if _round > 0:
+			add_todo = _around(grew, drop, dom, stamp, _round * 2, w)
 		var add := PackedInt32Array()
-		for i in dlist:
+		for i in add_todo:
 			if s[i] == 1:
 				var v := _verts(s, i, w)
 				if v == (V_TL | V_BR):
@@ -120,14 +132,15 @@ static func shape_mask(candidates: Dictionary, domain: Array[Vector2i]) -> Array
 					add.append(i + w)
 			elif _near(s, i, w) and not _gap2(s, i, w):
 				add.append(i)
-		var grown := 0
+		grew = PackedInt32Array()
 		for i in add:
 			if dom[i] == 1 and s[i] == 0 and banned[i] == 0:
 				s[i] = 1
 				grown_at[i] = 1
-				grown += 1
-		if dropped == 0 and grown == 0:
+				grew.append(i)
+		if dropped == 0 and grew.is_empty():
 			break
+		drop_todo = _around(drop, grew, dom, stamp, _round * 2 + 1, w)
 	# Przerwy, których nie dało się zasypać (zasypana kratka nie miałaby kafla) -> poszerz je:
 	# zdejmij teren wokół (przesmyk 1-szeroki staje się >= 2).
 	for i in dlist:
@@ -147,6 +160,18 @@ static func shape_mask(candidates: Dictionary, domain: Array[Vector2i]) -> Array
 	for k in range(domain.size()):
 		if s[dlist[k]] == 1:
 			out.append(domain[k])
+	return out
+
+
+## Kratki domeny w oknie 3×3 wokół zmian `a` i `b`, bez powtórzeń (stamp == phase: już na liście).
+static func _around(a: PackedInt32Array, b: PackedInt32Array, dom: PackedByteArray, stamp: PackedInt32Array, phase: int, w: int) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	for src in [a, b]:
+		for c in src:
+			for j in [c - w - 1, c - w, c - w + 1, c - 1, c, c + 1, c + w - 1, c + w, c + w + 1]:
+				if dom[j] == 1 and stamp[j] != phase:
+					stamp[j] = phase
+					out.append(j)
 	return out
 
 
