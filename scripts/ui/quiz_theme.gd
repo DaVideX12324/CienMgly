@@ -37,6 +37,17 @@ static func window_style() -> StyleBox:
 	return sb
 
 
+## Pasek logu bitwy / pytania u góry ekranu (jak w RPG Makerze: ciemny, półprzezroczysty, bez ramki).
+static func log_style() -> StyleBox:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0.62)
+	sb.content_margin_left = 32
+	sb.content_margin_right = 32
+	sb.content_margin_top = 20
+	sb.content_margin_bottom = 20
+	return sb
+
+
 ## Pozycja menu: zaznaczona (biała linia pod tekstem) albo zwykła (bez tła); te same marginesy.
 static func menu_item_style(selected: bool) -> StyleBox:
 	var sb := StyleBoxFlat.new()
