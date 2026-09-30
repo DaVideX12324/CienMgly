@@ -16,6 +16,8 @@
     "enable_funnels": true,
     "enable_junction_smoothing": true,
     "enable_grid_cleanup": true,
+    "enable_ledge_fix": true,
+    "enable_small_pillar_2h": true,
     "enable_terrain_smoothing": true,
     "enable_decorative_niches": true,
     "enable_pillars": true,
