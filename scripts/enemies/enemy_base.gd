@@ -702,8 +702,7 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		state = State.DEFEATED
 		if is_boss:
 			_persist_boss_defeat()
-		if _ps:
-			_ps.add_xp(xp_reward)
+		# XP dodaje ekran walki (QuizCombatController._end_combat, razem z komunikatem) — tu już nie.
 		var tween: Tween = create_tween()
 		tween.tween_property(self, "scale", Vector2(0.1, 0.1), 0.4).set_ease(Tween.EASE_IN)
 		tween.parallel().tween_property(self, "modulate:a", 0.0, 0.5)
