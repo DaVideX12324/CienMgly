@@ -11,6 +11,9 @@ extends Resource
 ## Narożniki pola (px): kolejność dowolna — sortowane na przód-lewy, przód-prawy, tył-prawy, tył-lewy.
 @export var quad := PackedVector2Array([Vector2(240, 795), Vector2(1680, 795), Vector2(1460, 625), Vector2(460, 625)]):
 	set(v):
+		for p in v:
+			if not p.is_finite():
+				return  # NaN / nieskończoność (np. z edytora wielokąta) — zostaje poprzedni kształt
 		quad = sorted_quad(v) if v.size() == 4 else v
 		emit_changed()
 ## Liczba rzędów na polu.
