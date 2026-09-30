@@ -12,6 +12,8 @@ extends RefCounted
 ##    test podstawy / odstępów / zajętości, klastry, tryb free z odstępem w px (kubełki = kratki).
 ## 4. Weryfikacja osiągalności: teren odcięty przez przeszkody -> zdejmij przeszkody przy nim.
 
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+
 const PORTAL_RING := 2
 const STAIR_RING := 1
 const SPAWN_RING := 1
@@ -62,6 +64,7 @@ func _run(result, catalog: ObjectCatalog) -> void:
 		defs_by_id[catalog.defs[di].id] = catalog.defs[di]
 		markers[catalog.defs[di].id] = di + 1
 	for di in range(catalog.defs.size()):
+		GenProgress.sub_in(&"objects", float(di) / catalog.defs.size())
 		_place_def(catalog.defs[di], di + 1)
 	_verify_reach()
 	for pl in plan.placements:

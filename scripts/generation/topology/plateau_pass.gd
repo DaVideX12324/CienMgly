@@ -8,6 +8,8 @@ extends RefCounted
 ## chodliwego terenu, do którego nie da się dojść z wejścia, dostaje schody do osiągalnego terenu
 ## sąsiedniej wysokości (patrz _solve). Grid zostaje FLOOR — płaskowyż to nakładka.
 
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 const DIRS8: Array[Vector2i] = [
 	Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0),
@@ -37,6 +39,7 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout
 	var thr := _thresholds(ctx, flags, allowed)
 	var mask := _noise_mask(ctx, flags, allowed, thr.level)
 	mask = _clean(ctx, mask, allowed, flags.plateau_min_area, flags.plateau_smooth)
+	GenProgress.sub_in(&"plateaus", 0.3)
 	mask = _fill_wall_gaps(ctx, mask, allowed)
 	mask = _snap_strips(ctx, mask, allowed)
 	mask = _turn_up_at_walls(ctx, mask, allowed, true)
@@ -46,8 +49,11 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout
 	var levels := {}
 	if not mask.is_empty():
 		levels[1] = mask
+	GenProgress.sub_in(&"plateaus", 0.4)
 	_add_upper_levels(ctx, flags, allowed, levels, thr.high)
+	GenProgress.sub_in(&"plateaus", 0.7)
 	_add_pits(ctx, flags, allowed, levels, thr.pit)
+	GenProgress.begin(&"plateau_stairs")
 	var layout := _with_field(solve_levels(ctx, flags, levels), ctx, flags)
 	layout.threshold = thr.level  # podgląd rysuje pasma pola tymi progami
 	layout.high_threshold = thr.high
@@ -338,6 +344,8 @@ static func _solve(ctx: GenerationContext, flags: GenerationFlags, levels: Dicti
 	var dropped := 0
 	var layout: PlateauLayout = null
 	for _iter in range(MAX_REPAIR_ITERS):
+		# Liczba iteracji naprawy nie jest znana z góry — każda przybliża pasek o część reszty.
+		GenProgress.sub_in(&"plateau_stairs", 0.9 * (1.0 - pow(0.8, _iter)))
 		layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)
 		if _iter < SLOT_ITERS and _fill_slots(ctx, comps, alive, layout, env, lists):
 			layout = _assemble(ctx, comps, lists, alive, env, flags.plateau_min_area)

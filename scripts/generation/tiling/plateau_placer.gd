@@ -23,6 +23,8 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	var pl = ctx.plateau
 	var keys: Array = pl.levels.keys() if not pl.levels.is_empty() else [1]
 	keys.sort()
+	var jobs: Array = []  # [k, maska, focus, udział w postępie]
+	var total := 0.0
 	for k in keys:
 		var m: Dictionary = pl.levels.get(k, pl.mask)
 		if m.is_empty():
@@ -34,7 +36,18 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					focus[c] = true
 			if focus.is_empty():
 				continue
-		var res: Dictionary = PlateauRenderer.render(ctx, m, placement_plan.by_layer.get(&"Walls", {}), focus)
+		var share := float(focus.size() if k <= 0 else m.size())
+		jobs.append([k, m, focus, share])
+		total += share
+	var done := 0.0
+	for job in jobs:
+		var k: int = job[0]
+		var m: Dictionary = job[1]
+		var focus: Dictionary = job[2]
+		# Postęp paska: każdy poziom dostaje część etapu proporcjonalną do swojej wielkości.
+		var from := done / maxf(total, 1.0)
+		done += float(job[3])
+		var res: Dictionary = PlateauRenderer.render(ctx, m, placement_plan.by_layer.get(&"Walls", {}), focus, from, done / maxf(total, 1.0))
 		if int(res.missing) > 0:
 			push_warning("PlateauPlacer: %d kafli bez roli w '%s' (pominięte)" % [res.missing, PlateauRenderer.TILESET_ID])
 		for pos in res.tiles:

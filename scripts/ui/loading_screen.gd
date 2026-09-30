@@ -2,7 +2,8 @@ extends CanvasLayer
 
 ## Ekran ładowania: tytuł, pasek postępu, opis etapu. Scena: scenes/ui/loading_screen.tscn
 ## (wygląd edytuje się tam; skrypt szuka węzłów po unikalnych nazwach %Root, %Art, %Title, %Stage,
-## %Percent, %Bar, więc można je dowolnie przenosić w drzewie, np. do MarginContainer). Źródło postępu do wyboru:
+## %Percent, %Bar (opcjonalnie %FillClip + %Shine — błysk na pasku), więc można je dowolnie przenosić
+## w drzewie, np. do MarginContainer). Źródło postępu do wyboru:
 ##   track(source)             — obiekt z fraction() -> 0..1 i opcjonalnie label() -> String,
 ##                               np. GenProgress generatora map (procedural_level);
 ##   track_resource_load(path) — wczytywanie zasobu w tle (ResourceLoader.load_threaded_request),
@@ -27,6 +28,13 @@ const BACKGROUND_DIR := "res://modules/quiz_rpg/assets/textures/loading_screens/
 const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 ## Dolna część grafiki (ułamek wysokości), z której uśredniany jest kolor pasa.
 const BAND_SAMPLE := 0.02
+## Błysk przesuwający się po wypełnionej części paska (%Shine w %FillClip) — widać, że gra działa,
+## także gdy postęp chwilowo stoi. Szerokość i prędkość w px, przerwa między przejściami w s.
+const SHINE_WIDTH := 140.0
+const SHINE_SPEED := 600.0
+const SHINE_GAP := 0.6
+## Kropki po nazwie etapu: 1..3, zmiana co DOTS_STEP s.
+const DOTS_STEP := 0.4
 
 ## Nazwa lokacji nad paskiem (duży ozdobny napis, font Jacquard 24). Pusta = ukryta.
 @export var location: String = "":
@@ -71,6 +79,7 @@ var _target := 0.0
 var _label := ""
 var _shown := 0.0
 var _closing := false
+var _anim_t := 0.0
 
 @onready var _root: Control = %Root
 @onready var _art: TextureRect = %Art
@@ -80,6 +89,8 @@ var _closing := false
 @onready var _bar: ProgressBar = %Bar
 @onready var _stage: Label = %Stage
 @onready var _percent: Label = %Percent
+@onready var _fill_clip: Control = get_node_or_null("%FillClip")
+@onready var _shine: Control = get_node_or_null("%Shine")
 
 
 ## Postęp wczytywania zasobu w tle (ResourceLoader). Zakłada, że load_threaded_request(path) już
@@ -209,17 +220,32 @@ func set_progress(fraction: float, label: String = "") -> void:
 
 
 func _process(delta: float) -> void:
+	_anim_t += delta
+	_animate()
 	if _closing or paused:
 		return
 	if _source != null:
 		_target = _source.fraction()
 		_label = _source.label() if _source.has_method("label") else ""
 	# Płynnie za postępem, ale bez zostawania w tyle przy dużych skokach.
-	_shown = minf(_target, lerpf(_shown, _target, clampf(delta * 12.0, 0.0, 1.0)) + delta * 0.05)
+	_shown = minf(_target, lerpf(_shown, _target, clampf(delta * 8.0, 0.0, 1.0)) + delta * 0.05)
 	_bar.value = _shown * 100.0
 	_percent.text = "%d%%" % int(round(_shown * 100.0))
+
+
+## Błysk na pasku i kropki po nazwie etapu (niezależnie od postępu).
+func _animate() -> void:
 	if _label != "":
-		_stage.text = _label + "…"
+		_stage.text = _label + ".".repeat(1 + int(_anim_t / DOTS_STEP) % 3)
+	if _fill_clip == null or _shine == null:
+		return
+	var fill_w := _bar.size.x * _bar.value / 100.0
+	_fill_clip.position = Vector2.ZERO
+	_fill_clip.size = Vector2(fill_w, _bar.size.y)
+	_shine.visible = fill_w >= 1.0
+	var period := (fill_w + SHINE_WIDTH) / SHINE_SPEED + SHINE_GAP
+	_shine.size = Vector2(SHINE_WIDTH, _bar.size.y)
+	_shine.position = Vector2(fmod(_anim_t, period) * SHINE_SPEED - SHINE_WIDTH, 0.0)
 
 
 ## Pasek na 100% i zanik; węzeł usuwa się sam.

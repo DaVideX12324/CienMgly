@@ -38,6 +38,15 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="Gradient" id="Gradient_shine"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(1, 0.97, 0.88, 0, 1, 0.97, 0.88, 0.9, 1, 0.97, 0.88, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shine"]
+gradient = SubResource("Gradient_shine")
+width = 64
+height = 4
+
 [node name="LoadingScreen" type="CanvasLayer" unique_id=69467971]
 process_mode = 3
 layer = 100
@@ -156,3 +165,16 @@ layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_back")
 theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
 show_percentage = false
+
+[node name="FillClip" type="Control" parent="Root/MarginContainer/Bottom/Bar"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Shine" type="TextureRect" parent="Root/MarginContainer/Bottom/Bar/FillClip"]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_shine")
+expand_mode = 1

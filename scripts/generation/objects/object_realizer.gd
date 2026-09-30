@@ -1,6 +1,8 @@
 class_name ObjectRealizer
 extends RefCounted
 
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+
 ## ObjectPlan -> scena (główny wątek). Trzy ścieżki, wg tego, czego obiekt potrzebuje:
 ## - kafel (placement grid + atlas, nie INTERACTIVE): warstwa Decals (DECAL) albo
 ##   Props (PROP, y-sort); kolizja z warstwy fizyki TileSetu;
@@ -78,6 +80,7 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 				_add_shape(runtime, chunk_bodies, space, layer_bits, pl)
 		made += 1
 		if per_frame > 0 and made % per_frame == 0:
+			GenProgress.sub_in(&"props", float(made) / plan.placements.size())
 			await level.get_tree().process_frame
 	return runtime
 
