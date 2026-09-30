@@ -108,6 +108,7 @@ class GenJob extends RefCounted:
 			# w kawałkach (cała mapa naraz: minuty przy 500×500).
 			GenProgress.begin(&"navmesh")
 			result.nav_polygons = NavOutlines.build_chunks(result)
+			GenProgress.end(&"navmesh")
 		else:
 			result = gen_script.generate(width, height, seed_value)
 			rng = base_script.create_rng(seed_value)
@@ -462,6 +463,7 @@ func _apply_job_async(job: GenJob) -> void:
 				done += mini(PAINT_CHUNK, positions.size() - from)
 				GenProgress.sub(float(done) / maxf(total, 1))
 				await get_tree().process_frame
+		GenProgress.end(&"paint")
 	else:
 		_apply_grid_layers(job, layers)
 	await _finish_level(job, ENTITY_CHUNK)
@@ -482,15 +484,19 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
 		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, chest_scene, door_scene, 16, per_frame)
+		GenProgress.end(&"entities")
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
 		GenProgress.begin(&"props")
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, per_frame)
+		GenProgress.end(&"props")
+	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 
 	# 4. Nawigacja 2D
 	GenProgress.begin(&"navigation")
 	if setup_nav_enabled:
 		MapGeneratorBaseScript.setup_navigation_region(self, job.result)
+	GenProgress.end(&"navigation")
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()

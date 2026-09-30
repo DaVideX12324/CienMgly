@@ -329,6 +329,7 @@ static func plan_cave_tiles(
 
 	GenProgress.begin(&"edges")
 	var analysis := EdgeAnalyzer.analyze(ctx)
+	GenProgress.end(&"edges")
 	return TilePlacementPlanner.plan(ctx, analysis)
 
 
@@ -339,6 +340,7 @@ static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	TerrainPaintExecutor.execute(layers, plans.terrain)
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
 	TilePlacementExecutor.execute(layers.get(&"Platforms"), plans.tiles, &"Platforms")
+	GenProgress.end(&"paint")
 
 
 static func _is_walkable(grid: Dictionary, pos: Vector2i) -> bool:

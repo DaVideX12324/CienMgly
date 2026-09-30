@@ -63,6 +63,8 @@ static func generate_layout(
 	ctx.rooms = rooms
 	result.rooms = rooms
 
+	GenProgress.end(&"rooms")
+
 	# P3. Korytarze jaskiniowe - MST + pętle
 	GenProgress.begin(&"corridors")
 	var corridor_carver := OrganicCorridorCarver.new()
@@ -109,6 +111,8 @@ static func generate_layout(
 					corridor_carver.carve(ctx, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width)
 					loops_added += 1
 
+	GenProgress.end(&"corridors")
+
 	# P4. Morfologiczne wygładzenie styków komór i korytarzy
 	GenProgress.begin(&"smoothing")
 	if flags.enable_junction_smoothing:
@@ -121,9 +125,13 @@ static func generate_layout(
 		WallThicknessPass.new()
 	])
 
+	GenProgress.end(&"smoothing")
+
 	# P8. Twarda gwarancja spójności
 	GenProgress.begin(&"connectivity")
 	ConnectivityRepair.repair(ctx, corridor_width)
+
+	GenProgress.end(&"connectivity")
 
 	# P9. Dedykowane wejście i wyjście
 	GenProgress.begin(&"portals")
@@ -175,9 +183,11 @@ static func generate_layout(
 
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
 	# żeby SpawnPlanner mógł zsunąć spawny z barier.
+	GenProgress.end(&"portals")
 	GenProgress.begin(&"plateaus")
 	ctx.plateau = PlateauPass.run(ctx, flags)
 	result.plateau = ctx.plateau
+	GenProgress.end()  # plateaus albo plateau_stairs (PlateauPass.run zaczyna schody sam)
 
 	# P11c. Obiekty statyczne i interaktywne (ObjectPlanner) — przed wrogami, którzy omijają zajętość.
 	result.portal_zone = ctx.portal_zone
@@ -188,13 +198,16 @@ static func generate_layout(
 			# Teren (błoto / trawa) liczony tu, bo obiekty go czytają; planer kafli użyje tych masek
 			# (ten sam seed — procedural_level planuje kafle z result.seed_used).
 			result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
+			GenProgress.end(&"terrain")
 			GenProgress.begin(&"objects")
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
+		GenProgress.end()  # terrain (pusty katalog) albo objects
 
 	# P12. Spawny wrogów i skrzyń
 	GenProgress.begin(&"spawns")
 	if not rooms.is_empty():
 		SpawnPlanner.plan_spawns(ctx, result, entrance_room_idx, exit_room_idx)
+	GenProgress.end(&"spawns")
 
 	result.portal_zone = ctx.portal_zone
 	result.preprocess_stats = ctx.preprocess_stats
