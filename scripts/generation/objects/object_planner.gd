@@ -18,6 +18,12 @@ const PORTAL_RING := 2
 const STAIR_RING := 1
 const SPAWN_RING := 1
 const REACH_ROUNDS := 8
+const REACH_NEAR := 2       # przeszkody w tym promieniu (kratki) od odciętego terenu są zdejmowane
+# Przejezdność dla wroga (bity na kratkę): środek kratki / odcinek do środka kratki na E / na S za blisko
+# kształtu przeszkody (promień agenta siatki nawigacji).
+const CLR_CENTER := 1
+const CLR_EAST := 2
+const CLR_SOUTH := 4
 const VISUAL_MARGIN := 3.0  # px: przezroczyste brzegi sprite'a mogą lekko zachodzić na ścianę
 
 var f: ObjectFeatures
@@ -597,20 +603,24 @@ func _reserve_access(pl: ObjectPlacement) -> void:
 
 # --- 4. Osiągalność ----------------------------------------------------------------------
 
-## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> zdejmij przeszkody stykające się
-## (8-sąsiedztwo) z odciętym kawałkiem. Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada
-## (obstawiony przeszkodami) -> zdejmij przeszkody wokół niego, a gdy się nie da — jego samego.
-## Powtarzaj do skutku.
+## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> zdejmij przeszkody w promieniu
+## REACH_NEAR od odciętego kawałka. Osiągalność jak dla wroga (_bfs_agent): po środkach kratek, z odstępem
+## promienia agenta od dokładnych kształtów przeszkód (te same obrysy co siatka nawigacji) — sama zajętość
+## kratek przepuszczała szczeliny, w których siatka nawigacji się rwała (500×500: ~1/3 par bez ścieżki).
+## Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada (obstawiony przeszkodami) -> zdejmij przeszkody
+## wokół niego, a gdy się nie da — jego samego. Powtarzaj do skutku.
 func _verify_reach() -> void:
 	if entrance_i < 0:
 		return
 	var w := f.width
 	var n := f.width * f.height
 	for _round in range(REACH_ROUNDS):
-		var parent := _bfs_parents(entrance_i, true)
+		var clr := _clearance()
+		var parent := _bfs_agent(entrance_i, clr)
 		var cut := {}
 		for i in range(parent.size()):
-			if reach0[i] == 1 and parent[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID:
+			# Kratki, na których środku wróg się nie mieści (obrzeże przeszkody), nie liczą się jako odcięte.
+			if reach0[i] == 1 and parent[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID and clr[i] & CLR_CENTER == 0:
 				cut[i] = true
 		var boxed := {}
 		for pl in plan.placements:
@@ -630,10 +640,10 @@ func _verify_reach() -> void:
 		for pl in boxed:
 			src.append_array(Array(pl.cells))
 		for i in src:
-			for dy in range(-1, 2):
-				for dx in range(-1, 2):
+			for dy in range(-REACH_NEAR, REACH_NEAR + 1):
+				for dx in range(-REACH_NEAR, REACH_NEAR + 1):
 					var j: int = i + dy * w + dx
-					if j >= 0 and j < n and absi(j % w - i % w) <= 1:
+					if j >= 0 and j < n and absi(j % w - i % w) <= REACH_NEAR:
 						near[j] = true
 		var keep: Array[ObjectPlacement] = []
 		var removed := 0
@@ -667,3 +677,107 @@ func _verify_reach() -> void:
 			var bits := ObjectPlan.USED | (ObjectPlan.SOLID if pl.def.is_solid() else 0)
 			for j in pl.cells:
 				plan.occupancy[j] |= bits
+
+
+## Przejezdność dla wroga przy obecnych przeszkodach (bity CLR_* na kratkę). Próbki: środek kratki oraz
+## 3 punkty co 4 px na odcinku do środka kratki na E i na S — zajęte, gdy leżą w obrysie przeszkody albo
+## bliżej niż promień agenta. Ściany i bariery nie zwężają ruchu po środkach kratek (8 px > promień).
+func _clearance() -> PackedByteArray:
+	var w := f.width
+	var h := f.height
+	var out := PackedByteArray()
+	out.resize(w * h)
+	var r := NavOutlines.AGENT_RADIUS
+	var cs := float(ObjectDef.CELL)
+	var east := [Vector2(4, 0), Vector2(8, 0), Vector2(12, 0)]
+	var south := [Vector2(0, 4), Vector2(0, 8), Vector2(0, 12)]
+	for pl in plan.placements:
+		if not pl.def.is_solid():
+			continue
+		for poly in NavOutlines.placement_outlines(pl, plan):
+			var box := NavOutlines._bounds(poly).grow(r)
+			var x0 := maxi(floori(box.position.x / cs) - 1, 0)
+			var y0 := maxi(floori(box.position.y / cs) - 1, 0)
+			var x1 := mini(floori(box.end.x / cs), w - 1)
+			var y1 := mini(floori(box.end.y / cs), h - 1)
+			for y in range(y0, y1 + 1):
+				for x in range(x0, x1 + 1):
+					var i := y * w + x
+					if f.walk[i] == 0:
+						continue
+					var c := Vector2((x + 0.5) * cs, (y + 0.5) * cs)
+					var bits := int(out[i])
+					if bits & CLR_CENTER == 0 and _near_poly(poly, box, c, r):
+						bits |= CLR_CENTER
+					if bits & CLR_EAST == 0:
+						for o in east:
+							if _near_poly(poly, box, c + o, r):
+								bits |= CLR_EAST
+								break
+					if bits & CLR_SOUTH == 0:
+						for o in south:
+							if _near_poly(poly, box, c + o, r):
+								bits |= CLR_SOUTH
+								break
+					out[i] = bits
+	return out
+
+
+## Punkt w wielokącie albo bliżej niż r od jego krawędzi (box = obrys poszerzony o r — szybkie odrzucenie).
+static func _near_poly(poly: PackedVector2Array, box: Rect2, p: Vector2, r: float) -> bool:
+	if not box.has_point(p):
+		return false
+	if Geometry2D.is_point_in_polygon(p, poly):
+		return true
+	var r2 := r * r
+	for k in range(poly.size()):
+		var a := poly[k]
+		var b := poly[(k + 1) % poly.size()]
+		if p.distance_squared_to(Geometry2D.get_closest_point_to_segment(p, a, b)) < r2:
+			return true
+	return false
+
+
+## BFS z wejścia jak dla wroga: kratka chodliwa bez bariery i przeszkody, środek wolny (CLR_CENTER),
+## przejście do sąsiada tylko po wolnym odcinku (CLR_EAST / CLR_SOUTH kratki z lewej / z góry).
+func _bfs_agent(start: int, clr: PackedByteArray) -> PackedInt32Array:
+	var n := f.width * f.height
+	var parent := PackedInt32Array()
+	parent.resize(n)
+	parent.fill(-1)
+	if start < 0 or not _movable(start):
+		return parent
+	var ok := PackedByteArray()
+	ok.resize(n)
+	for i in range(n):
+		if f.walk[i] == 1 and blocked[i] == 0 and not plan.occupancy[i] & ObjectPlan.SOLID and clr[i] & CLR_CENTER == 0:
+			ok[i] = 1
+	ok[start] = 1  # strefa wejścia jest wolna od przeszkód (FORBID), start zawsze
+	parent[start] = start
+	var queue := PackedInt32Array()
+	queue.resize(n)
+	queue[0] = start
+	var tail := 1
+	var head := 0
+	var w := f.width
+	while head < tail:
+		var i := queue[head]
+		head += 1
+		var x := i % w
+		if x < w - 1 and ok[i + 1] == 1 and parent[i + 1] == -1 and clr[i] & CLR_EAST == 0:
+			parent[i + 1] = i
+			queue[tail] = i + 1
+			tail += 1
+		if x > 0 and ok[i - 1] == 1 and parent[i - 1] == -1 and clr[i - 1] & CLR_EAST == 0:
+			parent[i - 1] = i
+			queue[tail] = i - 1
+			tail += 1
+		if i + w < n and ok[i + w] == 1 and parent[i + w] == -1 and clr[i] & CLR_SOUTH == 0:
+			parent[i + w] = i
+			queue[tail] = i + w
+			tail += 1
+		if i - w >= 0 and ok[i - w] == 1 and parent[i - w] == -1 and clr[i - w] & CLR_SOUTH == 0:
+			parent[i - w] = i
+			queue[tail] = i - w
+			tail += 1
+	return parent
