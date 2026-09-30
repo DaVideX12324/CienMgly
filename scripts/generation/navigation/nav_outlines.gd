@@ -242,27 +242,34 @@ static func _bounds(poly: PackedVector2Array) -> Rect2:
 static func obstacle_outlines(plan: ObjectPlan) -> Array[PackedVector2Array]:
 	var out: Array[PackedVector2Array] = []
 	for pl in plan.placements:
-		var def := pl.def
-		if not def.is_solid():
-			continue
-		if not def.bakes.is_empty() and def.bakes[pl.variant].static_ok:
-			var b: ObjectBake = def.bakes[pl.variant]
-			var oxf := Transform2D(0.0, Vector2(-1.0 if pl.flip else 1.0, 1.0), 0.0, pl.origin())
-			for sh in b.shapes:
-				var poly := shape_polygon(sh["shape"])
-				if not poly.is_empty():
-					out.append((oxf * (sh["xform"] as Transform2D)) * poly)
-		elif def.klass != ObjectDef.Klass.INTERACTIVE and def.bakes.is_empty():
-			var ctr := pl.point() + def.shape_offset
-			if def.shape_radius > 0.0:
-				out.append(_circle(ctr, def.shape_radius))
-			else:
-				var hs := def.shape_rect * 0.5
-				out.append(PackedVector2Array([ctr + Vector2(-hs.x, -hs.y), ctr + Vector2(hs.x, -hs.y), ctr + Vector2(hs.x, hs.y), ctr + Vector2(-hs.x, hs.y)]))
+		out.append_array(placement_outlines(pl, plan))
+	return out
+
+
+## Obrysy przeszkody jednego obiektu (pusto, gdy bez kolizji) — siatka nawigacji i osiągalność planera.
+static func placement_outlines(pl: ObjectPlacement, plan: ObjectPlan) -> Array[PackedVector2Array]:
+	var out: Array[PackedVector2Array] = []
+	var def := pl.def
+	if not def.is_solid():
+		return out
+	if not def.bakes.is_empty() and def.bakes[pl.variant].static_ok:
+		var b: ObjectBake = def.bakes[pl.variant]
+		var oxf := Transform2D(0.0, Vector2(-1.0 if pl.flip else 1.0, 1.0), 0.0, pl.origin())
+		for sh in b.shapes:
+			var poly := shape_polygon(sh["shape"])
+			if not poly.is_empty():
+				out.append((oxf * (sh["xform"] as Transform2D)) * poly)
+	elif def.klass != ObjectDef.Klass.INTERACTIVE and def.bakes.is_empty():
+		var ctr := pl.point() + def.shape_offset
+		if def.shape_radius > 0.0:
+			out.append(_circle(ctr, def.shape_radius))
 		else:
-			for j in pl.cells:
-				var c := Vector2(j % plan.width, j / plan.width) * CELL
-				out.append(PackedVector2Array([c, c + Vector2(CELL, 0), c + Vector2(CELL, CELL), c + Vector2(0, CELL)]))
+			var hs := def.shape_rect * 0.5
+			out.append(PackedVector2Array([ctr + Vector2(-hs.x, -hs.y), ctr + Vector2(hs.x, -hs.y), ctr + Vector2(hs.x, hs.y), ctr + Vector2(-hs.x, hs.y)]))
+	else:
+		for j in pl.cells:
+			var c := Vector2(j % plan.width, j / plan.width) * CELL
+			out.append(PackedVector2Array([c, c + Vector2(CELL, 0), c + Vector2(CELL, CELL), c + Vector2(0, CELL)]))
 	return out
 
 
