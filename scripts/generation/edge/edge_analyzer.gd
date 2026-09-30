@@ -105,6 +105,14 @@ static func slope_2h_depth(depth: int) -> bool:
 static var slope_min_depth := 3
 
 
+## Czy schodek (dy = różnica do wyższego sąsiada, opposite_y = stopa sąsiada po drugiej stronie albo -1)
+## jest skosem 2H: wystarczy schodek o 1 z JEDNEJ strony — dy == 1 albo sąsiad naprzeciw o 1 niżej
+## (decyzja usera 2026-09-30; wcześniej obie naraz, więc np. stopień przy czubku klina, seed 119 160×160
+## (69, 59), zostawał narożnikiem 3H). Razem z slope_2h_depth — StepPlacer (WEST/EAST) i _is_facade_mid.
+static func slope_2h_steps(dy: int, opposite_y: int, y: int) -> bool:
+	return dy == 1 or opposite_y == y + 1
+
+
 static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictionary) -> bool:
 	if _is_facade_top_2h(edges, p):
 		return false
@@ -117,14 +125,13 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 	# się jako mid — Z WYJĄTKIEM skosu dy == 1 o ścianie głębokości 4, który StepPlacer
 	# renderuje jako gładki narożnik 2H (WALL_2H_SLOPE). Taki kafel NIE ma poziomu MID
 	# fasady 3H, więc nie może wymuszać ścian bocznych / narożników wewnętrznych obok.
-	if foot.edge_kind == EdgeKind.Kind.STEP and foot.step_dy == 1 and slope_2h_depth(foot.solid_depth):
+	if foot.edge_kind == EdgeKind.Kind.STEP and slope_2h_depth(foot.solid_depth):
 		var fx: int = foot.pos.x
 		var fy: int = foot.pos.y
 		var is_west: bool = foot.orientation == EdgeKind.Orientation.WEST
 		var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx - 1, fy, 4)
 		var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx + 1, fy, 4)
-		var opposite_ok: bool = (right_y == fy + 1 or right_y == -1) if is_west else (left_y == fy + 1 or left_y == -1)
-		if opposite_ok:
+		if slope_2h_steps(foot.step_dy, right_y if is_west else left_y, fy):
 			return false # gładki narożnik 2H — nie liczy się jako mid fasady 3H.
 
 	return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
