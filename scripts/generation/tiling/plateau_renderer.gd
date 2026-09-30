@@ -25,7 +25,8 @@ const VOID_REACH := 2   # o tyle kratek krawędzi ściany P dochodzi do voidu
 ## mask: komórki PODŁOGI płaskowyżu. wall_cells: warstwa Walls planu mapy (pos -> TilePlacement).
 ## focus (opcjonalnie): rysuj tylko okolicę tych kratek — dla „ziemi nad zagłębieniem” (maska = cała
 ## podłoga poza dołem), gdzie krawędzie są wyłącznie wokół dołów; okna skanu z kawałków focus.
-static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Dictionary, focus: Dictionary = {}) -> Dictionary:
+## progress_from/to: część etapu paska ładowania na to wywołanie (PlateauPlacer renderuje każdy poziom osobno).
+static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Dictionary, focus: Dictionary = {}, progress_from: float = 0.0, progress_to: float = 1.0) -> Dictionary:
 	var result := {"tiles": {}, "region": {}, "missing": 0}
 	if mask.is_empty() or real_ctx.map_tile_profile == null:
 		return result
@@ -59,14 +60,21 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 
 	var plan := TilePlacementPlan.new()
 	var state := LegacyPlacementState.new()
+	# Postęp ważony polem okien (jedno duże skupisko potrafi zająć większość czasu etapu).
+	var area_total := 0.0
+	for r in scans:
+		area_total += r.get_area()
+	var area_done := 0.0
 	for i in scans.size():
-		GenProgress.sub(float(i) / scans.size())
+		GenProgress.sub(lerpf(progress_from, progress_to, 0.9 * area_done / maxf(area_total, 1.0)))
+		area_done += scans[i].get_area()
 		sctx.scan_rect = scans[i]
 		var analysis = EdgeAnalyzer.analyze(sctx)
 		FacadePhasePlanner.plan(sctx, analysis, state, plan)
 		SideWallPlacer.plan(sctx, analysis.edges, state, plan)
 		RimPlacer.plan(sctx, analysis.edges, state, plan)
 		CornerPlacer.plan(sctx, analysis.edges, state, plan)
+	GenProgress.sub(lerpf(progress_from, progress_to, 0.9))
 
 	# Wchłanianie przez ściany główne (kafle płaskowyżu pod krawędzią ściany nakładałyby się z nią):
 	# void zawsze; lico płaskowyżu, gdy jego baza wypada na bazie lica ściany albo tuż pod nią

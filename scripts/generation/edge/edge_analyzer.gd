@@ -1,6 +1,8 @@
 class_name EdgeAnalyzer
 extends RefCounted
 
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+
 
 
 ## Mierzy głębokość litej ściany w danym kierunku od komórki podłogi (§9.5).
@@ -236,6 +238,8 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 
 	# Przebieg 1: Inicjalizacja kontekstów 3x3 dla wszystkich komórek w porządku (y, x).
 	for y in range(scan.position.y, scan.end.y):
+		if y % 16 == 0:
+			GenProgress.sub_in(&"edges", 0.5 * (y - scan.position.y) / maxf(scan.size.y, 1))
 		var row := (y - walk_rect.position.y) * ww - walk_rect.position.x
 		for x in range(scan.position.x, scan.end.x):
 			var pos := Vector2i(x, y)
@@ -251,6 +255,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 
 			edges[pos] = edge
 
+	GenProgress.sub_in(&"edges", 0.5)
 	# Przebieg 2: Identyfikacja stóp fasad (pierwszy wiersz podłogi pod sufitem o głębokości >= 2).
 	var facade_cols: Dictionary = {} # x -> Array of y
 	var facade_candidates: Array[Vector2i] = []
@@ -268,6 +273,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# Przebieg 3: Ścisła segmentacja pozioma fasad.
 	FacadeSegmentDetector.detect(facade_candidates, edges)
 
+	GenProgress.sub_in(&"edges", 0.6)
 	# Przebieg 4: Klasyfikacja fasad w kanonicznej kolejności kolumn (x rosnąco, y rosnąco).
 	var sorted_xs: Array = facade_cols.keys()
 	sorted_xs.sort()
@@ -402,6 +408,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			edge.orientation = EdgeKind.Orientation.SOUTH
 			edge.facade_height = 2 if is_2h_col else 3
 
+	GenProgress.sub_in(&"edges", 0.7)
 	# Przebieg 5: Klasyfikacja komórek ściany (TOP_RIM, SIDE_WALL, INNER_CORNER, SOLID_FILL).
 	var rim_cells: Array[Vector2i] = []
 
@@ -480,6 +487,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 						e_deep.edge_kind = EdgeKind.Kind.SOLID_FILL
 						e_deep.orientation = EdgeKind.Orientation.NONE
 
+	GenProgress.sub_in(&"edges", 0.8)
 	# Przebieg 5B (część 1): Wzorzec ściany bocznej typ B
 	# Pattern 2 (przy MID):
 	# 0  0  top              top  0  0
@@ -563,6 +571,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				edge_c.orientation = EdgeKind.Orientation.WEST
 				edge_c.is_protected_solid = false
 
+	GenProgress.sub_in(&"edges", 0.9)
 	# Przebieg 5B (część 2): Wzorzec INNER_CORNER
 	# 0  0  0                         0  0  0
 	# 0 [X] top              or      top [X] 0
@@ -624,6 +633,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				edge_c.orientation = EdgeKind.Orientation.SOUTH_EAST
 				edge_c.is_protected_solid = false
 
+	GenProgress.sub_in(&"edges", 0.95)
 	# Przebieg 6: Segmentacja pozioma rimów.
 	var rim_segments := FacadeSegmentDetector.detect(rim_cells, edges)
 

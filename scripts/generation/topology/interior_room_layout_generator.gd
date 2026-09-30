@@ -113,6 +113,7 @@ static func generate_layout(
 	GenProgress.begin(&"smoothing")
 	if flags.enable_junction_smoothing:
 		GridPreprocessor.run(ctx, [JunctionSmoothingPass.new()])
+	GenProgress.sub(0.6)
 
 	# P5–P7. Wymuszenie minimalnej grubości murów i eliminacja ścian 1H
 	GridPreprocessor.run(ctx, [
@@ -181,12 +182,13 @@ static func generate_layout(
 	# P11c. Obiekty statyczne i interaktywne (ObjectPlanner) — przed wrogami, którzy omijają zajętość.
 	result.portal_zone = ctx.portal_zone
 	if flags.enable_objects:
-		GenProgress.begin(&"objects")
+		GenProgress.begin(&"terrain")
 		var catalog := ObjectCatalog.load_path(flags.objects_catalog)
 		if not catalog.defs.is_empty():
 			# Teren (błoto / trawa) liczony tu, bo obiekty go czytają; planer kafli użyje tych masek
 			# (ten sam seed — procedural_level planuje kafle z result.seed_used).
 			result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
+			GenProgress.begin(&"objects")
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
 
 	# P12. Spawny wrogów i skrzyń

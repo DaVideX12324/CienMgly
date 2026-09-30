@@ -239,6 +239,8 @@ func generate_level_async(seed_val: int = 0) -> void:
 	is_generating = true
 	var job := _prepare_job(seed_val)
 	var progress := GenProgress.new()
+	# Wagi etapów są dla 250×250 — oczekiwany czas etapu rośnie z polem mapy (pasek płynie między kotwicami).
+	progress.ms_per_weight = 10.0 * float(job.width * job.height) / (250.0 * 250.0)
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
 	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")
@@ -449,7 +451,7 @@ func _apply_job_async(job: GenJob) -> void:
 		for layer_name in order:
 			if layer_name == &"Walls":
 				# Teren (błoto/trawa) między Floor a Walls — jak execute_cave_tiles.
-				TerrainPaintExecutor.execute(layers, job.plans.terrain)
+				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), PAINT_CHUNK)
 			var layer: TileMapLayer = layers.get(layer_name)
 			var cells: Dictionary = tiles.by_layer.get(layer_name, {})
 			if layer == null or cells.is_empty():
@@ -482,6 +484,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, chest_scene, door_scene, 16, per_frame)
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
+		GenProgress.begin(&"props")
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, per_frame)
 
 	# 4. Nawigacja 2D

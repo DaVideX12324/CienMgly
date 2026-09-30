@@ -1,6 +1,8 @@
 class_name SolidFillPlacer
 extends RefCounted
 
+const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+
 
 ## Planuje wypełnienie pustki poza mapą oraz litej skały wewnątrz mapy.
 static func plan(
@@ -17,6 +19,8 @@ static func plan(
 
 	# Krok A: Tło litej skały poza granicami logicznej siatki (-4..width+4, -4..height+4)
 	for y in range(-4, height + 4):
+		if y % 16 == 0:
+			GenProgress.sub_in(&"rock", 0.3 * (y + 4) / float(height + 8))
 		for x in range(-4, width + 4):
 			var pos := Vector2i(x, y)
 			var outside: bool = (pos.x < 0 or pos.x >= width or pos.y < 0 or pos.y >= height)
@@ -34,6 +38,8 @@ static func plan(
 	var resolver_on := TileResolver.is_active(ctx)
 	var cache := {}  # zestaw -> Array[100] części (null = jeszcze nie liczone)
 	for y in range(height):
+		if y % 16 == 0:
+			GenProgress.sub_in(&"rock", 0.3 + 0.7 * y / float(height))
 		for x in range(width):
 			var pos := Vector2i(x, y)
 			if GridUtils.is_walkable(ctx.grid, pos):
