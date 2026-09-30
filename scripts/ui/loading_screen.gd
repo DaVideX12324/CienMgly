@@ -29,10 +29,10 @@ const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 ## Dolna część grafiki (ułamek wysokości), z której uśredniany jest kolor pasa.
 const BAND_SAMPLE := 0.02
 ## Błysk przesuwający się po wypełnionej części paska (%Shine w %FillClip) — widać, że gra działa,
-## także gdy postęp chwilowo stoi. Szerokość i prędkość w px, przerwa między przejściami w s.
+## także gdy postęp chwilowo stoi. Szerokość i prędkość w px. Zapętla się bez przerwy względem
+## wypełnienia: po wyjściu za jego prawy koniec wraca na lewy (trasa = szerokość wypełnienia + błysku).
 const SHINE_WIDTH := 140.0
 const SHINE_SPEED := 600.0
-const SHINE_GAP := 0.6
 ## Kropki po nazwie etapu: 1..3, zmiana co DOTS_STEP s.
 const DOTS_STEP := 0.4
 
@@ -80,9 +80,8 @@ var _label := ""
 var _shown := 0.0
 var _closing := false
 var _anim_t := 0.0
-## Lewa krawędź błysku (px od początku paska) i pozostała przerwa do następnego przejścia.
+## Lewa krawędź błysku (px od początku paska).
 var _shine_x := -SHINE_WIDTH
-var _shine_wait := 0.0
 
 @onready var _root: Control = %Root
 @onready var _art: TextureRect = %Art
@@ -248,18 +247,12 @@ func _animate(delta: float) -> void:
 	_shine.visible = fill_w >= 1.0
 	_shine.size = Vector2(SHINE_WIDTH, _bar.size.y)
 	# Stan zamiast fmod(czas, okres): okres zależy od szerokości wypełnienia, która rośnie z paskiem,
-	# więc wzór skakał (także w lewo). Tu błysk tylko jedzie w prawo; po dojściu do końca wypełnienia
-	# czeka SHINE_GAP i startuje od nowa (rosnące wypełnienie po prostu wydłuża trasę).
-	if _shine_wait > 0.0:
-		_shine_wait -= delta
-		_shine.visible = false
-		return
+	# więc wzór skakał (także w lewo). Tu błysk jedzie w prawo ze stałą prędkością i przy końcu
+	# wypełnienia zawija się na początek (rosnące wypełnienie tylko wydłuża trasę); bez przerwy.
+	var track := fill_w + SHINE_WIDTH
 	_shine_x += SHINE_SPEED * delta
 	if _shine_x >= fill_w:
-		_shine_x = -SHINE_WIDTH
-		_shine_wait = SHINE_GAP
-		_shine.visible = false
-		return
+		_shine_x = fmod(_shine_x + SHINE_WIDTH, track) - SHINE_WIDTH
 	_shine.position = Vector2(_shine_x, 0.0)
 
 
