@@ -2,6 +2,7 @@ class_name InteriorRoomLayoutGenerator
 extends "res://modules/quiz_rpg/scripts/generation/topology/topology_generator.gd"
 
 const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const DiagonalTouchPassScript = preload("res://modules/quiz_rpg/scripts/generation/preprocess/diagonal_touch_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -178,8 +179,9 @@ static func generate_layout(
 			StaircaseNormalizerPass.new()
 		], 4)
 
-	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte.
-	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new()])
+	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte; potem skośne styki podłóg przez
+	# ścianę (100/000/001), które podniesienie wypustki mogło odtworzyć po WallThicknessPass.
+	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new()])
 
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
 	# żeby SpawnPlanner mógł zsunąć spawny z barier.
