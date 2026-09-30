@@ -3,6 +3,8 @@
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/tools/battle_layout_preview.gd" id="1_06b7j"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_2_training_layout.tres" id="2_f262x"]
 [ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_yxwq2"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_ork_1.tres" id="4_ork1"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_warhog.tres" id="5_whog"]
 
 [node name="BattleLayoutPreview" type="Control" unique_id=336054848]
 custom_minimum_size = Vector2(1920, 1080)
@@ -12,4 +14,4 @@ offset_right = 1920.0
 offset_bottom = 1080.0
 script = ExtResource("1_06b7j")
 layout = ExtResource("2_f262x")
-enemy_frames = ExtResource("3_yxwq2")
+enemy_sprites = Array[SpriteFrames]([ExtResource("3_yxwq2"), ExtResource("4_ork1"), ExtResource("5_whog")])
