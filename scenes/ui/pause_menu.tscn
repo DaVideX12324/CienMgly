@@ -63,7 +63,7 @@ theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox" unique_id=448530461]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "Menu"
 
 [node name="MenuListVBox" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox" unique_id=464216917 instance=ExtResource("2_gligw")]
@@ -92,7 +92,7 @@ theme_override_constants/separation = 14
 
 [node name="ContextTitleLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox" unique_id=3648772]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 27
 text = "Druzyna"
 
 [node name="ContextBody" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox" unique_id=453024316]

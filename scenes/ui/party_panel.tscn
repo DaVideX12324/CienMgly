@@ -65,13 +65,13 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=1980509735]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "Bohater"
 
 [node name="LevelLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=893253877]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "LV 1"
 
 [node name="HPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=571560188]
@@ -82,7 +82,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=1758450638]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "ZYCIE"
 
 [node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=235435160]
@@ -97,7 +97,7 @@ texture_progress = ExtResource("1_ncvew")
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=937053030]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "50/100"
 
 [node name="SPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=1065790764]
@@ -108,7 +108,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=1471744122]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "MANA"
 
 [node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=522337450]
@@ -123,7 +123,7 @@ texture_progress = ExtResource("2_6vp7q")
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=2122384789]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "50/100"
 
 [node name="PartyRow1" type="PanelContainer" parent="PartyListVBox" unique_id=1952016337]
@@ -163,13 +163,13 @@ stretch_mode = 5
 [node name="NameLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=475283320]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "Towarzysz"
 
 [node name="LevelLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=43141695]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "LV 1"
 
 [node name="HPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=1736342157]
@@ -180,7 +180,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1485807893]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "ZYCIE"
 
 [node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1793299602]
@@ -195,7 +195,7 @@ texture_progress = SubResource("GradientTexture1D_8jlx1")
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=231498647]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "50/100"
 
 [node name="SPRow" type="HBoxContainer" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=1578718037]
@@ -206,7 +206,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=1650402139]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "MANA"
 
 [node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=953737951]
@@ -221,5 +221,5 @@ texture_progress = ExtResource("2_6vp7q")
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=1212491405]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 27
 text = "50/100"

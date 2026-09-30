@@ -43,7 +43,7 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle" unique_id=292700474]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 27
 text = "🗺️ Eksplorator Map"
 
 [node name="BtnHideHUD" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxTitle" unique_id=1558833934]
@@ -183,7 +183,7 @@ text = "Pokaż maskę Edge Detection"
 [node name="BtnGenerate" type="Button" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=1701866369]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 27
 text = "🔄 Generuj Mapę"
 
 [node name="HSeparator5" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2033587675]

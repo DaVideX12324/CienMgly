@@ -165,7 +165,7 @@ func _ensure_popup() -> void:
 	icon_label.text = "?"
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon_label.add_theme_font_size_override("font_size", 40)
+	icon_label.add_theme_font_size_override("font_size", QuizTheme.snap(40))
 	icon_panel.add_child(icon_label)
 
 	var text_box := VBoxContainer.new()
@@ -174,13 +174,13 @@ func _ensure_popup() -> void:
 	row.add_child(text_box)
 
 	_popup_title = Label.new()
-	_popup_title.add_theme_font_size_override("font_size", 18)
+	_popup_title.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 	_popup_title.add_theme_color_override("font_color", Color(0.95, 0.86, 0.48, 1))
 	text_box.add_child(_popup_title)
 
 	_popup_message = Label.new()
 	_popup_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_popup_message.add_theme_font_size_override("font_size", 24)
+	_popup_message.add_theme_font_size_override("font_size", QuizTheme.snap(24))
 	text_box.add_child(_popup_message)
 
 	_popup_detail = Label.new()
