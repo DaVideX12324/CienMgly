@@ -13,8 +13,7 @@ var enable_ledge_fix: bool = true       # ShortLedgeRaisePass: wąskie wypustki 
 # Małe wolnostojące PRZEKRZYWIONE wyspy ściany (pole <= max_area kratek, najwyżej max_width kolumn, żadna
 # kolumna wyższa niż max_height, nie przy brzegu mapy, góry i doły kolumn w różnych rzędach): lico zawsze 2H,
 # bez łączników 2H<->3H — schodkowy filar dostaje jeden styl zamiast mieszanki 2H/3H. max_area 0 = wył.
-# Szersze pasy skały zostają przy zwykłym przejściu 2H->3H. enable_small_pillar_2h = false wyłącza regułę.
-var enable_small_pillar_2h: bool = true
+# Szersze pasy skały zostają przy zwykłym przejściu 2H->3H.
 var small_pillar_2h_max_area: int = 25
 var small_pillar_2h_max_width: int = 6
 var small_pillar_2h_max_height: int = 5

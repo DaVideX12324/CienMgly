@@ -258,7 +258,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# zamiast 8 wywołań GridUtils.is_walkable na kratkę. Poza siatką = niechodliwe (jak wcześniej).
 	var walk_rect := scan.grow(1)
 	var walk := _walkable_bytes(grid, walk_rect)
-	if not ctx.plateau_mode and ctx.force_2h_cells.is_empty() and ctx.flags != null and ctx.flags.enable_small_pillar_2h and ctx.flags.small_pillar_2h_max_area > 0:
+	if not ctx.plateau_mode and ctx.force_2h_cells.is_empty() and ctx.flags != null and ctx.flags.small_pillar_2h_max_area > 0:
 		ctx.force_2h_cells = small_wall_islands(ctx, ctx.flags.small_pillar_2h_max_area, ctx.flags.small_pillar_2h_max_width,
 			ctx.flags.small_pillar_2h_max_height, walk, walk_rect)
 	var ww := walk_rect.size.x

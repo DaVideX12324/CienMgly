@@ -34,9 +34,6 @@ const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/c
 @onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
 @onready var check_edge_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask
 var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_ensure_height_mask_check)
-# Testowe wyłączniki reguł ścian (tworzone w kodzie pod CheckNav, _ensure_rule_checks) -> flag_overrides.
-var check_ledge_fix: CheckBox = null
-var check_small_pillar_2h: CheckBox = null
 @onready var btn_generate: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnGenerate
 
 @onready var btn_fit_all: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1/BtnFitAll
@@ -313,26 +310,6 @@ func _hide_edge_mask() -> void:
 	_edge_mask_sprite = null
 
 
-## Wyłączniki reguł ścian do porównań (w kodzie, jak maska wysokości): odznaczone = flaga false.
-func _ensure_rule_checks() -> void:
-	if check_ledge_fix or not check_nav:
-		return
-	var box := check_nav.get_parent()
-	var at := check_nav.get_index() + 1
-	check_ledge_fix = CheckBox.new()
-	check_ledge_fix.name = "CheckLedgeFix"
-	check_ledge_fix.text = "Wypustki 2H -> 3H (ShortLedgeRaisePass)"
-	check_ledge_fix.button_pressed = true
-	box.add_child(check_ledge_fix)
-	box.move_child(check_ledge_fix, at)
-	check_small_pillar_2h = CheckBox.new()
-	check_small_pillar_2h.name = "CheckSmallPillar2H"
-	check_small_pillar_2h.text = "Małe przekrzywione filary zawsze 2H"
-	check_small_pillar_2h.button_pressed = true
-	box.add_child(check_small_pillar_2h)
-	box.move_child(check_small_pillar_2h, at + 1)
-
-
 ## Checkbox maski wysokości pod CheckEdgeMask (w kodzie, żeby nie zależeć od zapisu sceny).
 func _ensure_height_mask_check() -> void:
 	if check_height_mask or not check_edge_mask:
@@ -564,7 +541,6 @@ func _setup_ui() -> void:
 	if check_edge_mask:
 		check_edge_mask.toggled.connect(_on_edge_mask_toggled)
 	_ensure_height_mask_check()
-	_ensure_rule_checks()
 	if check_height_mask:
 		check_height_mask.toggled.connect(_on_height_mask_toggled)
 
@@ -858,12 +834,6 @@ func _generate_current_map_impl() -> void:
 	proc_level.set("cave_max_rooms", int(spin_rooms.value) if spin_rooms else 0)
 	proc_level.set("spawn_entities_enabled", check_entities.button_pressed if check_entities else true)
 	proc_level.set("setup_nav_enabled", check_nav.button_pressed if check_nav else true)
-	var overrides := {}
-	if check_ledge_fix and not check_ledge_fix.button_pressed:
-		overrides["enable_ledge_fix"] = false
-	if check_small_pillar_2h and not check_small_pillar_2h.button_pressed:
-		overrides["enable_small_pillar_2h"] = false
-	proc_level.set("flag_overrides", overrides)
 	level_container.add_child(proc_level)
 	if proc_level.get("is_generating") == true:
 		await proc_level.generation_finished
