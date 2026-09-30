@@ -104,9 +104,10 @@ class GenJob extends RefCounted:
 			rng = base_script.create_rng(result.seed_used)
 			plans = gen_script.plan_cave_tiles(result, rng, -1, flags,
 				behaviour.get("profile"), behaviour.get("field"), behaviour.get("raw", {}))
-			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym.
+			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym,
+			# w kawałkach (cała mapa naraz: minuty przy 500×500).
 			GenProgress.begin(&"navmesh")
-			result.nav_polygon = NavOutlines.build_polygon(result)
+			result.nav_polygons = NavOutlines.build_chunks(result)
 		else:
 			result = gen_script.generate(width, height, seed_value)
 			rng = base_script.create_rng(seed_value)
@@ -292,8 +293,11 @@ func map_report(job: GenJob, progress = null) -> String:
 		lines.append("  obiekty: %d (plan %.1f ms, zdjętych dla osiągalności %d) %s" % [r.objects.placements.size(), r.objects.time_usec / 1000.0, r.objects.removed_for_reach, r.objects.stats])
 	var chests: int = r.chest_spawns.size() + (r.objects.cells_with_scene("chest").size() if r.objects != null else 0)
 	lines.append("  wrogowie %d, skrzynie %d" % [r.enemy_spawns.size(), chests])
-	if r.nav_polygon != null:
-		lines.append("  nawigacja: %d wielokątów (siatka z generatora)" % r.nav_polygon.get_polygon_count())
+	if not r.nav_polygons.is_empty():
+		var polys := 0
+		for np in r.nav_polygons:
+			polys += np.get_polygon_count()
+		lines.append("  nawigacja: %d wielokątów w %d kawałkach (siatka z generatora)" % [polys, r.nav_polygons.size()])
 	if progress != null:
 		lines.append("  czasy etapów:\n" + progress.report())
 	return "\n".join(lines)
