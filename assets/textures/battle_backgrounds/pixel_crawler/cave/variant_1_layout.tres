@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_8s47p"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/variant_1.jpg" id="2_fq01s"]
+
+[resource]
+script = ExtResource("1_8s47p")
+texture = ExtResource("2_fq01s")
+field_height = 330.0
+back_row_side_margin = 483.0

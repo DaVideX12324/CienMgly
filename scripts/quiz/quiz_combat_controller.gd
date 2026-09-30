@@ -247,9 +247,9 @@ func _ready() -> void:
 	_quiz_panel_controller.selection_styler = func(btn: Button, selected: bool) -> void:
 		QuizTheme.set_menu_item_selected(btn, selected)
 
-	if battle_background and battle_background.has_signal("layout_config_changed"):
-		if not battle_background.layout_config_changed.is_connected(_on_battle_background_layout_changed):
-			battle_background.layout_config_changed.connect(_on_battle_background_layout_changed)
+	if battle_background and battle_background.has_signal("layout_changed"):
+		if not battle_background.layout_changed.is_connected(_on_battle_background_layout_changed):
+			battle_background.layout_changed.connect(_on_battle_background_layout_changed)
 	if battle_background and battle_background.has_method("set_context"):
 		battle_background.call("set_context", _find_current_map_node(), enemy, player, _enemy_units)
 	player_name_label.text = _ps.player_name if _ps else "Bohater"
@@ -1802,35 +1802,16 @@ func _get_resolution_scale_factor() -> float:
 
 
 func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
-	var res_scale: float = _get_resolution_scale_factor()
-	var total_scale_factor: float = clampf(res_scale, 0.7, 2.5)
-
-	var active_count: int = _enemy_active_layout_slots.size()
-	var base_scale_val: float = 7.2
-	if active_count <= 1:
-		base_scale_val = 8.5
-	elif active_count == 2:
-		base_scale_val = 7.2
-	elif active_count == 3:
-		base_scale_val = 6.2
-	elif active_count == 4:
-		base_scale_val = 5.6
-	else:
-		base_scale_val = 5.2
-
 	var is_back_row: bool = false
 	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size():
 		is_back_row = bool(_enemy_active_layout_slots[slot_index].get("is_back_row", false))
-
-	var perspective_mult: float = 0.82 if is_back_row else 1.0
-	var final_scale: float = base_scale_val * perspective_mult * total_scale_factor
+	var s: float = BattleBackgroundLayout.enemy_scale(_enemy_active_layout_slots.size(), is_back_row, get_viewport_rect().size)
 	if focused:
-		final_scale *= 1.1
+		s *= 1.1
+	return Vector2(s, s)
 
-	return Vector2(final_scale, final_scale)
 
-
-func _on_battle_background_layout_changed(_config: Dictionary) -> void:
+func _on_battle_background_layout_changed(_layout: BattleBackgroundLayout) -> void:
 	_apply_responsive_enemy_layout()
 
 
@@ -1845,21 +1826,14 @@ func _apply_responsive_enemy_layout() -> void:
 	var vp_size: Vector2 = get_viewport_rect().size
 	var width_ratio: float = clampf(vp_size.x / 1920.0, 0.75, 2.5) if vp_size.x > 0.0 else 1.0
 
-	var bg_config: Dictionary = {}
-	if battle_background and battle_background.has_method("get_enemy_layout_config"):
-		bg_config = battle_background.call("get_enemy_layout_config")
-
-	# Dopasuj pozycję i wysokość EnemySection pod profil tła
+	# Wymiary pola walki z pliku tła (BattleBackgroundLayout, `<grafika>_layout.tres` — inspektor).
+	var layout: BattleBackgroundLayout = battle_background.call("get_layout") if battle_background and battle_background.has_method("get_layout") else BattleBackgroundLayout.new()
 	if enemy_section:
-		var target_h: float = float(bg_config.get("enemy_section_height", 340.0))
-		var b_offset: float = float(bg_config.get("enemy_section_bottom_offset", -35.0))
-		var res_h_scale: float = clampf(vp_size.y / 1080.0, 0.75, 2.5) if vp_size.y > 0.0 else 1.0
-		var scaled_h: float = target_h * res_h_scale
-		var scaled_b: float = b_offset * res_h_scale
+		var offs: Vector2 = layout.section_offsets(vp_size)
 		enemy_section.anchor_top = 1.0
 		enemy_section.anchor_bottom = 1.0
-		enemy_section.offset_bottom = scaled_b
-		enemy_section.offset_top = scaled_b - scaled_h
+		enemy_section.offset_top = offs.x
+		enemy_section.offset_bottom = offs.y
 
 	# 1. Znajdź maksymalną skalę aktywnych potworów
 	var max_enemy_scale: float = 6.0
@@ -1899,10 +1873,7 @@ func _apply_responsive_enemy_layout() -> void:
 			if margin_container:
 				margin_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				var is_back: bool = (str(child.name) == "EnemyRow2")
-				var base_margin: float = 460.0 if is_back else 240.0
-				var margin_mult: float = float(bg_config.get("row2_margin_multiplier", 1.0)) if is_back else float(bg_config.get("row1_margin_multiplier", 1.0))
-				var monster_radius: float = (36.0 * max_enemy_scale * 0.5)
-				dynamic_margin = int((base_margin * margin_mult + monster_radius) * (vp_size.x / 1920.0))
+				dynamic_margin = layout.row_margin(is_back, max_enemy_scale, vp_size.x)
 				margin_container.add_theme_constant_override("margin_left", dynamic_margin)
 				margin_container.add_theme_constant_override("margin_right", dynamic_margin)
 

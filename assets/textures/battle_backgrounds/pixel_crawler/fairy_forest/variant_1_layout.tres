@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_focg5"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/fairy_forest/variant_1.jpg" id="2_nqkkf"]
+
+[resource]
+script = ExtResource("1_focg5")
+texture = ExtResource("2_nqkkf")
+field_height = 360.0
+front_row_side_margin = 192.0
+back_row_side_margin = 322.0

@@ -1,5 +1,7 @@
 extends RefCounted
 
+const LAYOUT_KEY := "res://modules/quiz_rpg/assets/textures/battle_backgrounds/default"  # -> default_layout.tres (BattleBackgroundLayout)
+
 const SKY_TOP := Color(0.015, 0.012, 0.028)
 const SKY_BOTTOM := Color(0.055, 0.045, 0.080)
 const TABLE := Color(0.28, 0.27, 0.31)
@@ -9,13 +11,9 @@ const FLOOR_A := Color(0.10, 0.055, 0.070)
 const FLOOR_B := Color(0.045, 0.040, 0.065)
 
 
-func get_enemy_layout_config() -> Dictionary:
-	return {
-		"enemy_section_height": 330.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 1.0,
-		"row1_margin_multiplier": 1.0,
-	}
+## Wymiary pola walki: plik obok (BattleBackgroundLayout.path_for(klucz)).
+func get_layout_key() -> String:
+	return LAYOUT_KEY
 
 
 func draw_background(canvas: Control, _context: Dictionary) -> void:

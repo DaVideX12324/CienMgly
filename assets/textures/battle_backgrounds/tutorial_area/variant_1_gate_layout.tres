@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_fx3pl"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_1_gate.jpg" id="2_12l6p"]
+
+[resource]
+script = ExtResource("1_fx3pl")
+texture = ExtResource("2_12l6p")
+field_height = 305.0
+back_row_side_margin = 515.2
