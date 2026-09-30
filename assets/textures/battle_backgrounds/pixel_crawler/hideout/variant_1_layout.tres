@@ -1,10 +1,17 @@
 [gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_1ov7y"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/hideout/variant_1.jpg" id="2_6nroi"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_6nroi"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_ogv0c"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/hideout/variant_1.jpg" id="3_q1t0b"]
+
+[sub_resource type="Resource" id="Resource_qu02k"]
+script = ExtResource("1_6nroi")
+rect = Rect2(240, 630, 1440, 165)
+rows = 2
+row_capacity = 5
+back_row_inset = 243.0
 
 [resource]
-script = ExtResource("1_1ov7y")
-texture = ExtResource("2_6nroi")
-field_height = 330.0
-back_row_side_margin = 483.0
+script = ExtResource("2_ogv0c")
+texture = ExtResource("3_q1t0b")
+fields = Array[ExtResource("1_6nroi")]([SubResource("Resource_qu02k")])

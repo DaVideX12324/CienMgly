@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_2_training_layout.tres" id="2_f262x"]
 [ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_yxwq2"]
 
-[node name="BattleLayoutPreview" type="Control" unique_id=812164222]
+[node name="BattleLayoutPreview" type="Control" unique_id=336054848]
 custom_minimum_size = Vector2(1920, 1080)
 layout_mode = 3
 anchors_preset = 0
@@ -13,30 +13,3 @@ offset_bottom = 1080.0
 script = ExtResource("1_06b7j")
 layout = ExtResource("2_f262x")
 enemy_frames = ExtResource("3_yxwq2")
-
-[node name="Field" type="ReferenceRect" parent="." unique_id=291384656]
-layout_mode = 0
-offset_top = 455.0
-offset_right = 1920.0
-offset_bottom = 795.0
-mouse_filter = 2
-border_color = Color(1, 0.85, 0.2, 1)
-border_width = 3.0
-
-[node name="BackRowMargin" type="ReferenceRect" parent="." unique_id=1485096301]
-layout_mode = 0
-offset_top = 455.0
-offset_right = 460.0
-offset_bottom = 625.0
-mouse_filter = 2
-border_color = Color(0.4, 0.8, 1, 1)
-border_width = 3.0
-
-[node name="FrontRowMargin" type="ReferenceRect" parent="." unique_id=424121911]
-layout_mode = 0
-offset_top = 625.0
-offset_right = 240.0
-offset_bottom = 795.0
-mouse_filter = 2
-border_color = Color(0.4, 1, 0.5, 1)
-border_width = 3.0

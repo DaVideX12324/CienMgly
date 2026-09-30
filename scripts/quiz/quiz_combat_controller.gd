@@ -110,6 +110,9 @@ var _enemy_display_node: Node2D = null
 var _enemy_name_label: Label = null
 var _enemy_displays: Array[Node2D] = []
 var _enemy_active_layout_slots: Array[Dictionary] = []
+var _enemy_wrapper_pool: Array[Dictionary] = []  # sloty wrogów ze sceny (wrapper + slot + pasek HP)
+var _enemy_field_layer: Control = null          # warstwa, na której sloty stoją w miejscach z pól walki
+var _battle_layout: BattleBackgroundLayout = null
 var _enemy_target_cursor_node: Label = null
 var _enemy_target_highlight_node: Control = null
 var _action_buttons: Array[Button] = []
@@ -1552,77 +1555,47 @@ func _clear_enemy_display() -> void:
 
 
 func _select_enemy_layout_slots(active_count: int) -> Array[Dictionary]:
+	# Miejsca wrogów z pól walki tła (BattleBackgroundLayout: pola, rzędy, pojemność); sloty ze sceny
+	# (wrapper: slot + pasek HP) przeniesione na warstwę pola bitwy i ustawiane w _apply_responsive_enemy_layout.
 	var selected: Array[Dictionary] = []
-	var rows: Array[Array] = _collect_enemy_row_layouts()
-	for row_layout in rows:
-		for slot_data in row_layout:
-			var wrapper: Control = slot_data.get("wrapper", null) as Control
-			if wrapper:
-				wrapper.visible = false
-
-	if rows.is_empty() or active_count <= 0:
+	if _enemy_wrapper_pool.is_empty():
+		for row_layout in _collect_enemy_row_layouts():
+			for slot_data in row_layout:
+				_enemy_wrapper_pool.append(slot_data)
+	for slot_data in _enemy_wrapper_pool:
+		var w: Control = slot_data.get("wrapper", null) as Control
+		if w:
+			w.visible = false
+	if _enemy_wrapper_pool.is_empty() or active_count <= 0:
 		return selected
-
-	var front_row: Array = rows[0] if rows.size() > 0 else []
-	var back_row: Array = rows[1] if rows.size() > 1 else []
-
-	var front_max: int = front_row.size()
-	var back_max: int = back_row.size()
-
-	# Losowy przydział przeciwników do rzędów (górnego i dolnego)
-	var front_indices: Array[int] = []
-	var back_indices: Array[int] = []
-
+	_ensure_enemy_field_layer()
+	_battle_layout = _get_battle_layout()
+	var prefs: Array = []
 	for enemy_idx in range(active_count):
-		var can_front: bool = front_indices.size() < front_max
-		var can_back: bool = back_indices.size() < back_max
-		var pref_row: String = ""
-		if enemy_idx < _enemy_units.size():
-			pref_row = str(_enemy_units[enemy_idx].get("row", "")).to_lower()
-
-		if pref_row == "front" and can_front:
-			front_indices.append(enemy_idx)
-		elif (pref_row == "back" or pref_row == "rear") and can_back:
-			back_indices.append(enemy_idx)
-		elif can_front and can_back:
-			if randf() < 0.5:
-				front_indices.append(enemy_idx)
-			else:
-				back_indices.append(enemy_idx)
-		elif can_front:
-			front_indices.append(enemy_idx)
-		elif can_back:
-			back_indices.append(enemy_idx)
-
-	selected.resize(active_count)
-
-	for f_slot_idx in range(front_indices.size()):
-		var enemy_idx: int = front_indices[f_slot_idx]
-		var slot_data: Dictionary = front_row[f_slot_idx]
+		prefs.append(str(_enemy_units[enemy_idx].get("row", "")) if enemy_idx < _enemy_units.size() else "")
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var spots: Array = _battle_layout.assign(active_count, prefs, rng)
+	for enemy_idx in range(mini(active_count, _enemy_wrapper_pool.size())):
+		var slot_data: Dictionary = _enemy_wrapper_pool[enemy_idx].duplicate()
+		var spot = spots[enemy_idx]
+		if spot == null:  # brak miejsca na polach — przedni rząd pierwszego pola
+			spot = BattleBackgroundLayout.Spot.new()
+		slot_data["spot"] = spot
+		slot_data["is_back_row"] = spot.row > 0
 		var wrapper: Control = slot_data.get("wrapper", null) as Control
 		var slot: Control = slot_data.get("slot", null) as Control
 		if wrapper:
+			if wrapper.get_parent() != _enemy_field_layer:
+				wrapper.reparent(_enemy_field_layer, false)
 			wrapper.visible = true
 			wrapper.remove_theme_stylebox_override("panel")
 			_bind_enemy_slot_target_input(wrapper, enemy_idx)
 		if slot:
 			_bind_enemy_slot_target_input(slot, enemy_idx)
-		selected[enemy_idx] = slot_data
-
-	for b_slot_idx in range(back_indices.size()):
-		var enemy_idx: int = back_indices[b_slot_idx]
-		var slot_data: Dictionary = back_row[b_slot_idx]
-		var wrapper: Control = slot_data.get("wrapper", null) as Control
-		var slot: Control = slot_data.get("slot", null) as Control
-		if wrapper:
-			wrapper.visible = true
-			wrapper.remove_theme_stylebox_override("panel")
-			_bind_enemy_slot_target_input(wrapper, enemy_idx)
-		if slot:
-			_bind_enemy_slot_target_input(slot, enemy_idx)
-		selected[enemy_idx] = slot_data
-
+		selected.append(slot_data)
 	return selected
+
 
 
 func _refresh_enemy_slot_highlight() -> void:
@@ -1802,113 +1775,69 @@ func _get_resolution_scale_factor() -> float:
 
 
 func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
-	var is_back_row: bool = false
-	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size():
-		is_back_row = bool(_enemy_active_layout_slots[slot_index].get("is_back_row", false))
-	var s: float = BattleBackgroundLayout.enemy_scale(_enemy_active_layout_slots.size(), is_back_row, get_viewport_rect().size)
+	var s: float = BattleBackgroundLayout.enemy_scale(_enemy_active_layout_slots.size(), get_viewport_rect().size)
+	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size() and _battle_layout:
+		var spot = _enemy_active_layout_slots[slot_index].get("spot", null)
+		if spot != null:
+			s *= _battle_layout.spot_scale(spot)
 	if focused:
 		s *= 1.1
 	return Vector2(s, s)
 
 
-func _on_battle_background_layout_changed(_layout: BattleBackgroundLayout) -> void:
+
+func _on_battle_background_layout_changed(layout: BattleBackgroundLayout) -> void:
+	_battle_layout = layout
 	_apply_responsive_enemy_layout()
 
 
 func _apply_responsive_enemy_layout() -> void:
-	if enemy_sprite_node == null:
+	if _enemy_field_layer == null or _enemy_active_layout_slots.is_empty():
 		return
-
-	var active_count: int = _enemy_active_layout_slots.size()
-	if active_count == 0:
-		return
-
+	if _battle_layout == null:
+		_battle_layout = _get_battle_layout()
 	var vp_size: Vector2 = get_viewport_rect().size
-	var width_ratio: float = clampf(vp_size.x / 1920.0, 0.75, 2.5) if vp_size.x > 0.0 else 1.0
-
-	# Wymiary pola walki z pliku tła (BattleBackgroundLayout, `<grafika>_layout.tres` — inspektor).
-	var layout: BattleBackgroundLayout = battle_background.call("get_layout") if battle_background and battle_background.has_method("get_layout") else BattleBackgroundLayout.new()
-	if enemy_section:
-		var offs: Vector2 = layout.section_offsets(vp_size)
-		enemy_section.anchor_top = 1.0
-		enemy_section.anchor_bottom = 1.0
-		enemy_section.offset_top = offs.x
-		enemy_section.offset_bottom = offs.y
-
-	# 1. Znajdź maksymalną skalę aktywnych potworów
-	var max_enemy_scale: float = 6.0
-	for slot_idx in range(active_count):
-		var s: float = _get_enemy_scale(slot_idx, false).x
-		if s > max_enemy_scale:
-			max_enemy_scale = s
-
-	# 2. Odstęp (separation) wprost proporcjonalny do wielkości potworów:
-	# Podstawa grafiki potworka ma ok. 36 px.
-	# Wizualna szerokość na ekranie = 36.0 * max_enemy_scale.
-	# Im potwory są większe, tym większy odstęp gwarantuje brak nakładania się na siebie.
-	var visual_w: float = 36.0 * max_enemy_scale
-	var slot_base_w: float = 150.0
-	var dynamic_gap: float = 45.0 + (max_enemy_scale * 10.0)
-	var needed_separation: float = maxf(visual_w - slot_base_w + dynamic_gap, 40.0)
-
-	if active_count <= 2:
-		needed_separation = maxf(needed_separation, 175.0 * (max_enemy_scale / 7.2))
-	elif active_count == 3:
-		needed_separation = maxf(needed_separation, 105.0 * (max_enemy_scale / 6.2))
-	elif active_count == 4:
-		needed_separation = maxf(needed_separation, 75.0 * (max_enemy_scale / 5.6))
-	else:
-		needed_separation = maxf(needed_separation, 50.0)
-
-	
-	# Ustaw dynamiczny odstęp i autodopasowanie w kontenerach rzędów wrogów
-	for child in enemy_sprite_node.get_children():
-		if not str(child.name).begins_with("EnemyRow"):
-			continue
-		var row_box: HBoxContainer = child.find_child("HBoxContainer", true, false) as HBoxContainer
-		if row_box:
-			row_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			var margin_container: MarginContainer = child.find_child("MarginContainer", true, false) as MarginContainer
-			var dynamic_margin: int = 240
-			if margin_container:
-				margin_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				var is_back: bool = (str(child.name) == "EnemyRow2")
-				dynamic_margin = layout.row_margin(is_back, max_enemy_scale, vp_size.x)
-				margin_container.add_theme_constant_override("margin_left", dynamic_margin)
-				margin_container.add_theme_constant_override("margin_right", dynamic_margin)
-
-			var row_visible_count: int = 0
-			for wrapper_child in row_box.get_children():
-				if wrapper_child is Control and wrapper_child.visible:
-					row_visible_count += 1
-			var count_for_sep: int = row_visible_count if row_visible_count > 0 else active_count
-			var avail_w: float = margin_container.size.x if (margin_container and margin_container.size.x > 0.0) else (vp_size.x - (float(dynamic_margin) * 2.0))
-			var max_sep: float = maxf((avail_w - (count_for_sep * 150.0)) / maxf(float(count_for_sep - 1), 1.0), 20.0)
-			var row_sep: int = int(clampf(needed_separation * width_ratio, 20.0, max_sep))
-			row_box.add_theme_constant_override("separation", row_sep)
-			for wrapper_child in row_box.get_children():
-				if wrapper_child is Control:
-					wrapper_child.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-					for inner in wrapper_child.get_children():
-						if inner is Control and str(inner.name).begins_with("EnemySlot"):
-							inner.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-
-	# 3. Aktualizuj pozycje i skale modeli w slotach (skalowanie od dołu)
-	for slot_idx in range(active_count):
+	var area: Vector2 = _enemy_field_layer.size
+	for slot_idx in range(_enemy_active_layout_slots.size()):
 		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
+		var wrapper: Control = slot_data.get("wrapper", null) as Control
 		var slot: Control = slot_data.get("slot", null) as Control
+		var spot = slot_data.get("spot", null)
+		if wrapper == null or slot == null or spot == null:
+			continue
+		var slot_sz: Vector2 = slot.custom_minimum_size if slot.custom_minimum_size != Vector2.ZERO else Vector2(150.0, 150.0)
+		wrapper.size = wrapper.get_combined_minimum_size()
+		# Stopy wroga (display: środek slotu, 8 px nad jego dołem) w miejscu z pola walki.
+		var foot: Vector2 = _battle_layout.foot(spot, area, vp_size)
+		wrapper.position = foot - Vector2(wrapper.size.x * 0.5, slot_sz.y - 8.0)
+		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
+			var display: Node2D = _enemy_displays[slot_idx]
+			display.position = Vector2(slot_sz.x * 0.5, slot_sz.y - 8.0)
+			var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
+			display.scale = _get_enemy_scale(slot_idx, is_focused)
+		if not slot.resized.is_connected(_on_enemy_slot_resized):
+			slot.resized.connect(_on_enemy_slot_resized.bind(slot))
 
-		if slot:
-			var slot_sz: Vector2 = slot.size if (slot.size.x > 0.0 and slot.size.y > 0.0) else slot.custom_minimum_size
-			if slot_sz == Vector2.ZERO:
-				slot_sz = Vector2(150.0, 150.0)
-			if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
-				var display: Node2D = _enemy_displays[slot_idx]
-				display.position = Vector2(slot_sz.x * 0.5, slot_sz.y - 8.0)
-				var is_focused: bool = (phase == Phase.TARGET_SELECT and slot_idx == _target_selected_idx) or slot_idx == _active_enemy_index
-				display.scale = _get_enemy_scale(slot_idx, is_focused)
-			if not slot.resized.is_connected(_on_enemy_slot_resized):
-				slot.resized.connect(_on_enemy_slot_resized.bind(slot))
+
+## Pola walki bieżącego tła (plik `<grafika>_layout.tres`).
+func _get_battle_layout() -> BattleBackgroundLayout:
+	if battle_background and battle_background.has_method("get_layout"):
+		return battle_background.call("get_layout")
+	return BattleBackgroundLayout.new()
+
+
+## Warstwa na całe pole bitwy, na której stoją sloty wrogów (pozycje z pól walki, nie z kontenerów).
+func _ensure_enemy_field_layer() -> void:
+	if _enemy_field_layer:
+		return
+	var field_content := get_node_or_null("Battlefield/FieldContent") as Control
+	_enemy_field_layer = Control.new()
+	_enemy_field_layer.name = "EnemyFieldLayer"
+	_enemy_field_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	(field_content if field_content else self).add_child(_enemy_field_layer)
+	_enemy_field_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_enemy_field_layer.resized.connect(_apply_responsive_enemy_layout)
+
 
 
 func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
