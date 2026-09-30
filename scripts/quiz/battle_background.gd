@@ -16,7 +16,7 @@ const GENERATORS: Dictionary = {
 	"default": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/default_battle_background.gd"),
 }
 
-signal layout_config_changed(config: Dictionary)
+signal layout_changed(layout: BattleBackgroundLayout)
 
 var _map_node: Node
 var _enemy: Node
@@ -30,17 +30,14 @@ func _ready() -> void:
 	_select_generator()
 
 
-func get_enemy_layout_config() -> Dictionary:
+## Wymiary pola walki dla bieżącego tła (plik `<grafika>_layout.tres`; brak — wartości domyślne).
+func get_layout() -> BattleBackgroundLayout:
 	if _generator == null:
 		_select_generator()
-	if _generator != null and _generator.has_method("get_enemy_layout_config"):
-		return _generator.call("get_enemy_layout_config")
-	return {
-		"enemy_section_height": 340.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 1.0,
-		"row1_margin_multiplier": 1.0,
-	}
+	var layout: BattleBackgroundLayout = null
+	if _generator != null and _generator.has_method("get_layout_key"):
+		layout = BattleBackgroundLayout.load_for(str(_generator.call("get_layout_key")))
+	return layout if layout != null else BattleBackgroundLayout.new()
 
 
 func set_context(map_node: Node, enemy: Node, player: Node, enemy_units: Array = []) -> void:
@@ -49,7 +46,7 @@ func set_context(map_node: Node, enemy: Node, player: Node, enemy_units: Array =
 	_player = player
 	_enemy_units = enemy_units.duplicate(true)
 	_select_generator()
-	layout_config_changed.emit(get_enemy_layout_config())
+	layout_changed.emit(get_layout())
 	queue_redraw()
 
 

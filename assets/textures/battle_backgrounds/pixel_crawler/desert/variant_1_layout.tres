@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_c0ead"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/desert/variant_1.png" id="2_gyhp3"]
+
+[resource]
+script = ExtResource("1_c0ead")
+texture = ExtResource("2_gyhp3")
+field_height = 380.0
+front_row_side_margin = 168.0
+back_row_side_margin = 276.0

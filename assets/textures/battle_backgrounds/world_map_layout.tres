@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="1_cbk6q"]
+
+[resource]
+script = ExtResource("1_cbk6q")
+field_height = 380.0
+front_row_side_margin = 156.0
+back_row_side_margin = 253.00000000000003

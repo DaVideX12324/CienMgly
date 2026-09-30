@@ -1,5 +1,7 @@
 extends RefCounted
 
+const LAYOUT_KEY := "res://modules/quiz_rpg/assets/textures/battle_backgrounds/world_map"  # -> world_map_layout.tres (BattleBackgroundLayout)
+
 const GRASS_A := Color(0.22, 0.45, 0.18)
 const GRASS_B := Color(0.25, 0.50, 0.20)
 const PATH := Color(0.55, 0.48, 0.35)
@@ -10,13 +12,9 @@ const TREE_LEAVES := Color(0.15, 0.50, 0.15)
 const TREE_LEAVES_2 := Color(0.20, 0.55, 0.20)
 
 
-func get_enemy_layout_config() -> Dictionary:
-	return {
-		"enemy_section_height": 380.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 0.55,
-		"row1_margin_multiplier": 0.65,
-	}
+## Wymiary pola walki: plik obok (BattleBackgroundLayout.path_for(klucz)).
+func get_layout_key() -> String:
+	return LAYOUT_KEY
 
 
 func draw_background(canvas: Control, context: Dictionary) -> void:

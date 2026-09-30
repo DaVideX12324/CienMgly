@@ -2,61 +2,9 @@ extends RefCounted
 
 ## Generator tla walki dla biomow i lochow Pixel Crawler.
 ## Obsluguje ladowanie tekstur dla konkretnego biomu (castle, cave, desert, fairy_forest, forge, garden, hideout itp.),
-## losowanie wariantow oraz zwracanie zindywidualizowanych profili ukladu wrogow (get_enemy_layout_config).
+## losowanie wariantow; wymiary pola walki w pliku obok grafiki (get_layout_key -> BattleBackgroundLayout).
 
 const BIOMES_DIR: String = "res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/"
-
-const BIOME_CONFIGS: Dictionary = {
-	"castle": {
-		"enemy_section_height": 340.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 1.0,
-		"row1_margin_multiplier": 1.0,
-	},
-	"cave": {
-		"enemy_section_height": 330.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 1.05,
-		"row1_margin_multiplier": 1.0,
-	},
-	"desert": {
-		"enemy_section_height": 380.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 0.60,
-		"row1_margin_multiplier": 0.70,
-	},
-	"fairy_forest": {
-		"enemy_section_height": 360.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 0.70,
-		"row1_margin_multiplier": 0.80,
-	},
-	"forge": {
-		"enemy_section_height": 350.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 0.95,
-		"row1_margin_multiplier": 1.0,
-	},
-	"garden": {
-		"enemy_section_height": 340.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 0.95,
-		"row1_margin_multiplier": 1.0,
-	},
-	"hideout": {
-		"enemy_section_height": 330.0,
-		"enemy_section_bottom_offset": -35.0,
-		"row2_margin_multiplier": 1.05,
-		"row1_margin_multiplier": 1.0,
-	},
-}
-
-const DEFAULT_CONFIG: Dictionary = {
-	"enemy_section_height": 340.0,
-	"enemy_section_bottom_offset": -35.0,
-	"row2_margin_multiplier": 1.0,
-	"row1_margin_multiplier": 1.0,
-}
 
 var _biome_name: String = "castle"
 var _cached_texture: Texture2D = null
@@ -74,8 +22,11 @@ func set_biome(biome: String) -> void:
 		_select_random_texture_for_biome(_biome_name)
 
 
-func get_enemy_layout_config() -> Dictionary:
-	return BIOME_CONFIGS.get(_biome_name, DEFAULT_CONFIG)
+## Wymiary pola walki: `<grafika>_layout.tres` obok wybranej grafiki biomu (BattleBackgroundLayout).
+func get_layout_key() -> String:
+	if _selected_variant_path == "":
+		_select_random_texture_for_biome(_biome_name)
+	return _selected_variant_path if _selected_variant_path != "" else BIOMES_DIR + _biome_name + "/variant_1"
 
 
 func _select_random_texture_for_biome(biome: String) -> void:
