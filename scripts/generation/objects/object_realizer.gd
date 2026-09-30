@@ -28,8 +28,10 @@ const GROUP := &"generated_objects"
 
 
 ## Czyści poprzednie obiekty i stawia nowe. `plan` == null -> tylko czyszczenie.
-## per_frame > 0: co tyle obiektów czeka klatkę (wołać z await); 0 = od razu.
-static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: Dictionary = {}, per_frame: int = 0) -> ObjectRuntime:
+## budget_ms > 0: po przekroczeniu tylu ms pracy czeka klatkę (wołać z await); 0 = od razu.
+## Budżet czasu zamiast stałej liczby obiektów — obiekt kosztuje mikrosekundy (kafel/canvas item),
+## a stała liczba na klatkę zamieniała ~10 tys. obiektów w ~1800 klatek czekania.
+static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: Dictionary = {}, budget_ms: int = 0) -> ObjectRuntime:
 	var runtime := level.get_node_or_null(RUNTIME_NAME) as ObjectRuntime
 	if runtime == null:
 		runtime = ObjectRuntime.new()
@@ -57,6 +59,8 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 	var chunk_bodies := {}
 	var scene_cache := {}
 	var made := 0
+	var budget_us := budget_ms * 1000
+	var slice_start := Time.get_ticks_usec()
 	for pl in plan.placements:
 		var def := pl.def
 		if def.klass == ObjectDef.Klass.INTERACTIVE:
@@ -79,9 +83,10 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 			if def.is_solid():
 				_add_shape(runtime, chunk_bodies, space, layer_bits, pl)
 		made += 1
-		if per_frame > 0 and made % per_frame == 0:
+		if budget_us > 0 and (made & 15) == 0 and Time.get_ticks_usec() - slice_start >= budget_us:
 			GenProgress.sub_in(&"props", float(made) / plan.placements.size())
 			await level.get_tree().process_frame
+			slice_start = Time.get_ticks_usec()
 	return runtime
 
 

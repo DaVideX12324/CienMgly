@@ -19,6 +19,8 @@ signal generation_finished
 const PAINT_CHUNK := 6000
 ## Encji (wrogów/skrzyń/drzwi) tworzonych na klatkę przy generowaniu w tle.
 const ENTITY_CHUNK := 6
+## Budżet pracy obiektów (ObjectRealizer) na klatkę, ms — reszta klatki dla paska ładowania.
+const PROPS_BUDGET_MS := 8
 
 enum LevelType {
 	FOREST_OVERWORLD,
@@ -488,7 +490,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
 		GenProgress.begin(&"props")
-		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, per_frame)
+		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
 		GenProgress.end(&"props")
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 
