@@ -3,13 +3,13 @@
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_hjwv4"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_kg4i7"]
 
-[sub_resource type="Resource" id="Resource_005yr"]
+[sub_resource type="Resource" id="Resource_hjwv4"]
 script = ExtResource("1_hjwv4")
-rect = Rect2(240, 630, 1440, 165)
+quad = PackedVector2Array(240, 795, 1680, 795, 1460, 630, 460, 630)
 rows = 2
 row_capacity = 5
-back_row_inset = 220.0
+auto_depth_scale = false
 
 [resource]
 script = ExtResource("2_kg4i7")
-fields = Array[ExtResource("1_hjwv4")]([SubResource("Resource_005yr")])
+fields = Array[ExtResource("1_hjwv4")]([SubResource("Resource_hjwv4")])

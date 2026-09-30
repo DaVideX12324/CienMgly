@@ -3,8 +3,8 @@ class_name BattleBackgroundLayout
 extends Resource
 
 ## Pola walki (gdzie stoją wrogowie) na konkretnym tle — plik obok grafiki tła (`<nazwa>_layout.tres`).
-## Edycja graficzna: scenes/tools/battle_layout_preview.tscn (prostokąty pól przeciągane myszą,
-## Ctrl+D = nowe pole, np. platforma). Współrzędne pól w px obszaru bitwy przy 1920 px szerokości
+## Edycja graficzna: scenes/tools/battle_layout_preview.tscn (narożniki pól — trapezów — przeciągane
+## myszą, Ctrl+D = nowe pole, np. platforma). Współrzędne pól w px obszaru bitwy przy 1920 px szerokości
 ## (REF_AREA = obszar nad dolnym paskiem UI przy 1920×1080); w grze: x skalowane szerokością ekranu,
 ## y liczone od dołu obszaru bitwy (skala wysokości ekranu). Liczenie położenia jest tylko tutaj —
 ## kontroler walki i podgląd używają tych samych funkcji.
@@ -43,25 +43,23 @@ static func load_for(texture_path: String) -> BattleBackgroundLayout:
 	return load(p) as BattleBackgroundLayout if ResourceLoader.exists(p) else null
 
 
-## Pola, a gdy lista pusta — jedno pole domyślne (dwa rzędy na środku obszaru bitwy).
+## Pola, a gdy lista pusta — jedno pole domyślne (trapez, dwa rzędy na środku obszaru bitwy).
 func active_fields() -> Array[BattleField]:
 	if not fields.is_empty():
 		return fields
 	var f := BattleField.new()
-	f.rect = Rect2(240.0, 625.0, 1440.0, 170.0)
 	f.rows = 2
 	f.row_capacity = 5
-	f.back_row_inset = 220.0
+	f.auto_depth_scale = false
 	return [f]
 
 
-## Prostokąt obszaru stóp pola w obszarze bitwy o rozmiarze `area_size` (px ekranu).
-func field_rect(field: BattleField, area_size: Vector2, viewport_size: Vector2) -> Rect2:
+## Punkt pola (px wzorcowe) -> obszar bitwy o rozmiarze `area_size` (px ekranu): x skalowane szerokością,
+## y liczone od dołu obszaru bitwy (skala wysokości ekranu).
+func to_screen(p: Vector2, area_size: Vector2, viewport_size: Vector2) -> Vector2:
 	var sx: float = area_size.x / REF_AREA.x if area_size.x > 0.0 else 1.0
 	var sy: float = clampf(viewport_size.y / REF_SIZE.y, 0.75, 2.5) if viewport_size.y > 0.0 else 1.0
-	var r := field.rect
-	var bottom: float = area_size.y - (REF_AREA.y - r.end.y) * sy
-	return Rect2(r.position.x * sx, bottom - r.size.y * sy, r.size.x * sx, r.size.y * sy)
+	return Vector2(p.x * sx, area_size.y - (REF_AREA.y - p.y) * sy)
 
 
 ## Miejsce wroga: pole, rząd (0 = przedni), k-ty z n w tym rzędzie.
@@ -80,7 +78,8 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 	var slots: Array = []  # [pole, rząd, linia stóp (px wzorcowe)]
 	for fi in range(fl.size()):
 		for r in range(fl[fi].rows):
-			slots.append([fi, r, fl[fi].rect.end.y - fl[fi].rect.size.y * fl[fi].row_t(r)])
+			var line: PackedVector2Array = fl[fi].row_line(r)
+			slots.append([fi, r, (line[0].y + line[1].y) * 0.5])
 	slots.sort_custom(func(a, b) -> bool: return a[2] > b[2])
 	var used: Array[int] = []
 	used.resize(slots.size())
@@ -120,18 +119,13 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 	return out
 
 
-## Linia stóp wroga na miejscu `spot` (równo na szerokość rzędu; dalsze rzędy węższe o wcięcie).
+## Linia stóp wroga na miejscu `spot`: równo na linii rzędu między lewym a prawym bokiem pola.
 func foot(spot: Spot, area_size: Vector2, viewport_size: Vector2) -> Vector2:
 	var fl := active_fields()
 	var field: BattleField = fl[clampi(spot.field, 0, fl.size() - 1)]
-	var r := field_rect(field, area_size, viewport_size)
-	var t := field.row_t(spot.row)
-	var sx: float = area_size.x / REF_AREA.x if area_size.x > 0.0 else 1.0
-	var inset := field.back_row_inset * t * sx
-	var y := r.end.y - r.size.y * t
-	var x0 := r.position.x + inset
-	var w := maxf(r.size.x - 2.0 * inset, 0.0)
-	return Vector2(x0 + w * (spot.k + 0.5) / maxi(spot.n, 1), y)
+	var line := field.row_line(spot.row)
+	var p := line[0].lerp(line[1], (spot.k + 0.5) / maxi(spot.n, 1))
+	return to_screen(p, area_size, viewport_size)
 
 
 func spot_scale(spot: Spot) -> float:
