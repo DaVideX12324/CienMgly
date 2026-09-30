@@ -1,0 +1,72 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="FontFile" path="res://modules/quiz_rpg/resources/ui/jersey15_pixel.res" id="1_6kev7"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ngncg"]
+content_margin_left = 32.0
+content_margin_top = 20.0
+content_margin_right = 32.0
+content_margin_bottom = 20.0
+bg_color = Color(0, 0, 0, 0.62)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_plpt2"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vname"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c553f"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 3
+border_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n23op"]
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+bg_color = Color(0.02, 0.02, 0.06, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.32, 0.32, 0.45, 0.9)
+
+[resource]
+default_font = ExtResource("1_6kev7")
+default_font_size = 27
+Button/colors/font_outline_color = Color(0, 0, 0, 1)
+Button/constants/outline_size = 6
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/constants/outline_size = 6
+LineEdit/colors/font_outline_color = Color(0, 0, 0, 1)
+LineEdit/constants/outline_size = 6
+QuizLog/base_type = &"PanelContainer"
+QuizLog/styles/panel = SubResource("StyleBoxFlat_ngncg")
+QuizMenuItem/base_type = &"Button"
+QuizMenuItem/colors/font_color = Color(0.86, 0.88, 0.94, 1)
+QuizMenuItem/colors/font_disabled_color = Color(0.45, 0.46, 0.52, 1)
+QuizMenuItem/colors/font_focus_color = Color(0.86, 0.88, 0.94, 1)
+QuizMenuItem/colors/font_hover_color = Color(1, 1, 1, 1)
+QuizMenuItem/colors/font_outline_color = Color(0, 0, 0, 1)
+QuizMenuItem/colors/font_pressed_color = Color(1, 1, 1, 1)
+QuizMenuItem/colors/font_selected_color = Color(1, 1, 1, 1)
+QuizMenuItem/constants/outline_size = 6
+QuizMenuItem/styles/disabled = SubResource("StyleBoxFlat_plpt2")
+QuizMenuItem/styles/focus = SubResource("StyleBoxEmpty_vname")
+QuizMenuItem/styles/hover = SubResource("StyleBoxFlat_plpt2")
+QuizMenuItem/styles/hover_pressed = SubResource("StyleBoxFlat_plpt2")
+QuizMenuItem/styles/normal = SubResource("StyleBoxFlat_plpt2")
+QuizMenuItem/styles/pressed = SubResource("StyleBoxFlat_plpt2")
+QuizMenuItem/styles/selected = SubResource("StyleBoxFlat_c553f")
+QuizWindow/base_type = &"PanelContainer"
+QuizWindow/styles/panel = SubResource("StyleBoxFlat_n23op")
+RichTextLabel/colors/font_outline_color = Color(0, 0, 0, 1)
+RichTextLabel/constants/outline_size = 6
