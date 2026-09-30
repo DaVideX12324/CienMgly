@@ -29,12 +29,11 @@ const ENEMY_DISPLAY_SCALE_DEFAULT := Vector2(7.2, 7.2)
 const ENEMY_DISPLAY_SCALE_FOCUSED := Vector2(7.9, 7.9)
 const QUIZ_TYPES_STANDARD := ["multiple_choice", "true_false"]
 const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_tiles", "matching"]
-const BAND_HEIGHT := 0.28          # dolny pas: część wysokości ekranu (RPG Maker MV ~ 4 wiersze)
-const BAND_HEIGHT_QUIZ := 0.30
 const PARTY_COMMAND_WIDTH := 0.24  # okno komend drużyny (lewa strona)
 const ACTOR_COMMAND_WIDTH := 0.25  # okno komend postaci (prawa strona)
 const STATUS_ONLY_WIDTH := 0.72    # sam status: wyśrodkowany, węższy
 const GAUGE_HEIGHT := 8
+const LOG_LINES := 3               # log bitwy u góry: tyle ostatnich komunikatów (jak w RPG Makerze)
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -132,6 +131,13 @@ var _gm: Node
 var _quiz_panel_controller
 var _band_mode: Band = Band.PARTY_COMMAND
 var _corner_label: Label = null
+var _top_window: PanelContainer = null    # u góry: pytanie quizu + czas albo log bitwy
+var _top_vbox: VBoxContainer = null
+var _timer_row: HBoxContainer = null
+var _log_label: RichTextLabel = null
+var _log_lines: Array[String] = []
+var _last_logged := ""
+var _message_window: PanelContainer = null  # komunikaty po bitwie — cały dolny pas
 
 
 func setup(
@@ -229,6 +235,10 @@ func _ready() -> void:
 		btn.add_theme_font_size_override("font_size", QuizTheme.snap(font_sz))
 		btn.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 	)
+	_quiz_panel_controller.show_index_prefix = false
+	_quiz_panel_controller.selection_styler = func(btn: Button, selected: bool) -> void:
+		QuizTheme.set_menu_item_selected(btn, selected)
+	_setup_rm_quiz_and_log()
 
 	if battle_background and battle_background.has_signal("layout_config_changed"):
 		if not battle_background.layout_config_changed.is_connected(_on_battle_background_layout_changed):
@@ -280,6 +290,7 @@ func _process(delta: float) -> void:
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
 	_update_corner_label()
+	_update_top_window()
 
 
 func _input(event: InputEvent) -> void:
@@ -399,7 +410,8 @@ func _start_player_turn() -> void:
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false)
 	phase = Phase.ACTION_SELECT
-	turn_label.text = "Tura %d - Twoj ruch" % turn_number
+	_clear_battle_log()
+	turn_label.text = "Tura %d - Twój ruch" % turn_number
 	player_base_damage = _get_player_attack_power()
 	if _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
@@ -997,7 +1009,7 @@ func _use_item(item_data: Dictionary) -> void:
 		_restore_party_tp(0, tp_restore)
 		effect_parts.append("+%d TP" % tp_restore)
 	if effect_parts.is_empty():
-		result_label.text = str(use_result.get("message", "Uzyto %s" % item_name))
+		result_label.text = str(use_result.get("message", "Użyto: %s" % item_name))
 		result_label.add_theme_color_override("font_color", Color.WHITE)
 	else:
 		result_label.text = "%s: %s" % [item_name, ", ".join(effect_parts)]
@@ -1045,6 +1057,7 @@ func _resolve_action(correct: bool) -> void:
 	quiz_correct = correct
 	phase = Phase.PLAYER_RESULT
 	_set_quiz_layout_active(false)
+	_set_band_mode(Band.STATUS_ONLY)  # wykonanie akcji: sam status, komunikaty w logu u góry
 	_quiz_panel_controller.hide_quiz()
 	result_label.visible = true
 	match chosen_action:
@@ -1105,7 +1118,7 @@ func _resolve_attack(correct: bool) -> void:
 	else:
 		if audio:
 			audio.play_sfx_by_name("attack")
-		var fail_type: String = ["Pudlo!", "Unik wroga!", "Blok wroga!"][randi() % 3]
+		var fail_type: String = ["Pudło!", "Unik wroga!", "Blok wroga!"][randi() % 3]
 		result_label.text = fail_type
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
 		_dodge_enemy_display(_active_enemy_index)
@@ -1118,11 +1131,11 @@ func _resolve_defend(correct: bool) -> void:
 	if audio:
 		audio.play_sfx_by_name("magic")
 	if correct:
-		result_label.text = "Pelna obrona!"
+		result_label.text = "Pełna obrona!"
 		result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
 		_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 	else:
-		result_label.text = "Czesciowa obrona."
+		result_label.text = "Częściowa obrona."
 		result_label.add_theme_color_override("font_color", Color(0.5, 0.6, 0.8))
 
 
@@ -1142,7 +1155,7 @@ func _resolve_heal(correct: bool) -> void:
 		result_label.text = "Leczenie +%d HP" % heal_amount
 		result_label.add_theme_color_override("font_color", Color.GREEN)
 	else:
-		result_label.text = "Slabe leczenie +%d HP" % heal_amount
+		result_label.text = "Słabe leczenie +%d HP" % heal_amount
 		result_label.add_theme_color_override("font_color", Color(0.6, 0.8, 0.5))
 	FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % heal_amount, Color.GREEN, 14)
 
@@ -1156,7 +1169,7 @@ func _try_flee() -> void:
 		_end_combat(false, true)
 	else:
 		result_label.visible = true
-		result_label.text = "Nie udalo sie uciec!"
+		result_label.text = "Nie udało się uciec!"
 		result_label.add_theme_color_override("font_color", Color.RED)
 		action_panel.visible = false
 		await get_tree().create_timer(1.0).timeout
@@ -1176,6 +1189,7 @@ func _enemy_turn() -> void:
 			continue
 		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
 		turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
+		_push_log("%s atakuje!" % enemy_label, Color.WHITE)
 		_active_enemy_index = enemy_index
 		_refresh_enemy_header()
 		if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
@@ -1191,7 +1205,7 @@ func _enemy_turn() -> void:
 			var audio := get_node_or_null("/root/AudioService")
 			if audio:
 				audio.play_sfx_by_name("hit")
-			result_label.text = "%s trafia w blok! 0 obrazen." % enemy_label
+			result_label.text = "%s trafia w blok! 0 obrażeń." % enemy_label
 			result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
 			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
@@ -1204,7 +1218,7 @@ func _enemy_turn() -> void:
 			if actual_damage <= 0:
 				if audio:
 					audio.play_sfx_by_name("hit")
-				result_label.text = "%s odbija sie od obrony!" % enemy_label
+				result_label.text = "%s odbija się od obrony!" % enemy_label
 				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
@@ -1262,13 +1276,13 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		var lvl_before :int= _ps.level if _ps else 1
 		if _ps:
 			_ps.add_xp(total_xp_reward)
-		var lines: Array[String] = ["%s and co. won the fight!" % (_ps.player_name if _ps else "Bohater")]
-		lines.append("%d EXP received!" % total_xp_reward)
+		var lines: Array[String] = ["%s i drużyna wygrywają walkę!" % (_ps.player_name if _ps else "Bohater")]
+		lines.append("Zdobyto %d EXP!" % total_xp_reward)
 		if _ps and _ps.level > lvl_before:
-			lines.append("%s reached LV %d!" % [_ps.player_name, _ps.level])
+			lines.append("%s osiąga poziom %d!" % [_ps.player_name, _ps.level])
 		var item_name := _roll_item_drop()
 		if item_name != "":
-			lines.append("Got %s!" % item_name)
+			lines.append("Zdobyto: %s!" % item_name)
 		_refresh_stats_panel()
 		await _show_message_sequence(lines)
 	elif fled:
@@ -1278,7 +1292,7 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 	else:
 		if audio:
 			audio.play_sfx_by_name("defeat")
-		await _show_message_sequence(["Porazka..."])
+		await _show_message_sequence(["Porażka..."])
 	_refresh_stats_panel()
 	enemy.hp = 0 if player_won else enemy.max_hp
 	_clear_enemy_display()
@@ -1924,10 +1938,12 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 
 
 func _get_desired_battle_window_height(is_quiz: bool) -> float:
-	var vp_h: float = get_viewport_rect().size.y
-	if vp_h <= 0.0:
-		return 300.0
-	return maxf(vp_h * (BAND_HEIGHT_QUIZ if is_quiz else BAND_HEIGHT), 220.0)
+	# Wysokość jak przed stylem RPG Makera (user: 28% ekranu to za dużo).
+	var vp_size: Vector2 = get_viewport_rect().size
+	var base_h: float = 320.0 if is_quiz else 260.0
+	var scaled_h: float = float(_ui_scale_px(int(base_h)))
+	var max_allowed: float = vp_size.y * (0.42 if is_quiz else 0.32) if vp_size.y > 0.0 else 380.0
+	return clampf(scaled_h, 250.0, max_allowed)
 
 
 func _update_window_heights(is_quiz: bool = false) -> void:
@@ -1987,7 +2003,11 @@ func _rm_label(label: Label, color: Color) -> void:
 ## zaznaczenia, wiersz drużyny: etykieta i wartość w jednej linii, cienki pasek pod nimi.
 func _apply_rm_style() -> void:
 	if battle_window:
-		battle_window.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		# Tło pod oknami pasa (pole bitwy kończy się nad pasem — bez tego po bokach wyśrodkowanego
+		# statusu widać szare tło okna gry).
+		var band_bg := StyleBoxFlat.new()
+		band_bg.bg_color = Color(0.02, 0.02, 0.05)
+		battle_window.add_theme_stylebox_override("panel", band_bg)
 	var outer_margin := get_node_or_null("BattleWindow/WindowMargin") as MarginContainer
 	if outer_margin:
 		for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
@@ -2314,9 +2334,9 @@ func _refresh_enemy_header() -> void:
 		return
 	if _active_enemy_index >= 0 and _active_enemy_index < _enemy_units.size():
 		var active_enemy := _enemy_units[_active_enemy_index]
-		enemy_name_label.text = "%s  (%d pozostalo)" % [str(active_enemy.get("name", enemy_name_str)), living_count]
+		enemy_name_label.text = "%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), living_count]
 	else:
-		enemy_name_label.text = "Wrogowie  (%d pozostalo)" % living_count
+		enemy_name_label.text = "Wrogowie  (%d pozostało)" % living_count
 	if _enemy_name_label:
 		_enemy_name_label.text = enemy_name_label.text
 
@@ -2429,10 +2449,10 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 		if command_vbox:
 			if _quiz_panel_controller and _quiz_panel_controller.quiz_panel and _quiz_panel_controller.quiz_panel.get_parent() != command_vbox:
 				_quiz_panel_controller.quiz_panel.reparent(command_vbox, false)
-			if result_label and result_label.get_parent() != command_vbox:
-				result_label.reparent(command_vbox, false)
-			if _quiz_panel_controller and _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != command_vbox:
-				_quiz_panel_controller.correct_answer_label.reparent(command_vbox, false)
+			if result_label and result_label.get_parent() != _result_home():
+				result_label.reparent(_result_home(), false)
+			if _quiz_panel_controller and _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != _top_home():
+				_quiz_panel_controller.correct_answer_label.reparent(_top_home(), false)
 
 		# Restore bottom bar layout: right panel stretches from left panel to the end
 		party_panel_container.visible = true
@@ -2568,18 +2588,39 @@ func _on_exit_pressed() -> void:
 
 
 func _get_or_create_victory_log() -> Label:
+	# Jak w RPG Makerze: komunikaty po bitwie zajmują cały dolny pas (okno statusu i komend znika),
+	# log u góry gaśnie.
 	var label := get_node_or_null("VictoryLog") as Label
-	if label:
-		return label
-	label = Label.new()
-	label.name = "VictoryLog"
-	label.position = Vector2(24, 620)
-	label.custom_minimum_size = Vector2(800, 160)
-	label.size = Vector2(800, 160)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", QuizTheme.snap(22))
-	label.add_theme_color_override("font_color", Color.WHITE)
-	add_child(label)
+	if label == null and _message_window:
+		label = _message_window.find_child("VictoryLog", true, false) as Label
+	if label == null:
+		label = Label.new()
+		label.name = "VictoryLog"
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_rm_label(label, Color.WHITE)
+		label.add_theme_constant_override("line_spacing", 10)
+		label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		var holder: Node = self
+		var band_vbox := get_node_or_null("BattleWindow/WindowMargin/VBox") as VBoxContainer
+		if band_vbox:
+			_message_window = PanelContainer.new()
+			_message_window.name = "MessageWindow"
+			_message_window.theme_type_variation = QuizTheme.WINDOW
+			_message_window.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			band_vbox.add_child(_message_window)
+			holder = _message_window
+		else:
+			label.position = Vector2(24, 620)
+			label.custom_minimum_size = Vector2(800, 160)
+		holder.add_child(label)
+	if content_row:
+		content_row.visible = false
+	if _message_window:
+		_message_window.visible = true
+	_clear_battle_log()
+	if _top_window:
+		_top_window.visible = false
 	return label
 
 
@@ -2627,3 +2668,129 @@ func _find_current_map_node() -> Node:
 			return node
 		node = node.get_parent()
 	return null
+
+
+## Okno u góry (styl RPG Makera): w czasie quizu pytanie i pasek czasu, poza nim log bitwy (ostatnie
+## LOG_LINES komunikatów). Etykiety wyniku i poprawnej odpowiedzi przeniesione tutaj; result_label jest
+## tylko źródłem komunikatów (kod ustawia go jak dotąd) — wyświetla je _log_label.
+func _setup_rm_quiz_and_log() -> void:
+	var qpc = _quiz_panel_controller
+	if qpc == null or _top_window != null:
+		return
+	_top_window = PanelContainer.new()
+	_top_window.name = "TopWindow"
+	_top_window.add_theme_stylebox_override("panel", QuizTheme.log_style())
+	_top_window.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_top_window)
+	_top_window.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_top_vbox = VBoxContainer.new()
+	_top_vbox.add_theme_constant_override("separation", 6)
+	_top_window.add_child(_top_vbox)
+
+	var q: Label = qpc.question_label
+	q.reparent(_top_vbox, false)
+	q.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_rm_label(q, Color.WHITE)
+	_timer_row = HBoxContainer.new()
+	_timer_row.add_theme_constant_override("separation", 16)
+	_top_vbox.add_child(_timer_row)
+	var bar: ProgressBar = qpc.timer_bar
+	bar.reparent(_timer_row, false)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.custom_minimum_size = Vector2(0, GAUGE_HEIGHT + 2)
+	_style_gauge(bar, Color(0.9, 0.72, 0.22), Color(0.98, 0.86, 0.36))
+	var tl: Label = qpc.timer_label
+	tl.reparent(_timer_row, false)
+	_rm_label(tl, Color(1.0, 0.86, 0.45))
+
+	_log_label = RichTextLabel.new()
+	_log_label.name = "BattleLog"
+	_log_label.bbcode_enabled = true
+	_log_label.fit_content = true
+	_log_label.scroll_active = false
+	_log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_log_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_log_label.add_theme_font_size_override("normal_font_size", QuizTheme.PX)
+	_log_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_log_label.add_theme_constant_override("outline_size", 6)
+	_log_label.add_theme_constant_override("line_separation", 8)
+	_top_vbox.add_child(_log_label)
+
+	var ca: Label = qpc.correct_answer_label
+	ca.reparent(_top_vbox, false)
+	_rm_label(ca, Color(0.35, 0.95, 0.45))
+	# result_label: niewidoczne źródło komunikatów (zerowa wysokość, przycięte).
+	var sink := Control.new()
+	sink.name = "ResultSink"
+	sink.clip_contents = true
+	sink.custom_minimum_size = Vector2.ZERO
+	sink.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_top_vbox.add_child(sink)
+	result_label.reparent(sink, false)
+	# Dolna część quizu: odpowiedzi jedna pod drugą, jak pozycje menu.
+	var quiz_panel: Control = qpc.quiz_panel
+	for n in ["QuizTitle", "HintLabel"]:
+		var c := quiz_panel.get_node_or_null(n) as Control
+		if c:
+			c.visible = false
+			c.set_meta("rm_hidden", true)
+	var mc := quiz_panel.get_node_or_null("MC_Box") as GridContainer
+	if mc:
+		mc.columns = 1
+		mc.add_theme_constant_override("v_separation", 0)
+	for btn: Button in qpc.mc_buttons + qpc.tf_buttons:
+		btn.theme_type_variation = QuizTheme.MENU_ITEM
+		btn.flat = false
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		btn.add_theme_color_override("font_outline_color", Color.BLACK)
+		btn.add_theme_constant_override("outline_size", 6)
+
+
+func _result_home() -> Node:
+	var sink := _top_vbox.get_node_or_null("ResultSink") if _top_vbox else null
+	return sink if sink else command_vbox
+
+
+func _top_home() -> Node:
+	return _top_vbox if _top_vbox else command_vbox
+
+
+## Komunikat do logu u góry (ostatnie LOG_LINES).
+func _push_log(text: String, color: Color) -> void:
+	if text.strip_edges() == "":
+		return
+	_log_lines.append("[color=#%s]%s[/color]" % [color.to_html(false), text.replace("[", "[lb]")])
+	while _log_lines.size() > LOG_LINES:
+		_log_lines.pop_front()
+	if _log_label:
+		_log_label.text = "\n".join(_log_lines)
+
+
+func _clear_battle_log() -> void:
+	_log_lines.clear()
+	_last_logged = ""
+	if _log_label:
+		_log_label.text = ""
+
+
+## Co klatkę: nowe komunikaty z result_label do logu; okno u góry widoczne w czasie quizu albo gdy
+## log nie jest pusty (pytanie i czas tylko w czasie quizu).
+func _update_top_window() -> void:
+	if _top_window == null:
+		return
+	if phase == Phase.COMBAT_END:
+		_top_window.visible = false
+		return
+	if result_label.visible and result_label.text != _last_logged:
+		_last_logged = result_label.text
+		_push_log(result_label.text, result_label.get_theme_color("font_color"))
+	elif not result_label.visible:
+		_last_logged = ""
+	var qpc = _quiz_panel_controller
+	var quiz_on: bool = qpc != null and qpc.quiz_panel.visible and not (quiz_modal_overlay and quiz_modal_overlay.visible)
+	qpc.question_label.visible = quiz_on
+	_timer_row.visible = quiz_on
+	_log_label.visible = not _log_lines.is_empty()
+	_top_window.visible = quiz_on or not _log_lines.is_empty() or qpc.correct_answer_label.visible

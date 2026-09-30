@@ -570,7 +570,7 @@ theme_override_constants/separation = 18
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 27
-text = "Tura 1 - Twoj ruch"
+text = "Tura 1 - Twój ruch"
 
 [node name="StreakLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=313790074]
 layout_mode = 2
@@ -649,7 +649,7 @@ flat = true
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "Umiejetnosci"
+text = "Umiejętności"
 flat = true
 
 [node name="DefBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1087095694]
@@ -769,11 +769,11 @@ autowrap_mode = 3
 
 [node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1299322072]
 layout_mode = 2
-placeholder_text = "Odpowiedz..."
+placeholder_text = "Odpowiedź..."
 
 [node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1371367524]
 layout_mode = 2
-text = "Zatwierdz"
+text = "Zatwierdź"
 flat = true
 
 [node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1736166103]
@@ -797,7 +797,7 @@ theme_override_constants/v_separation = 8
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Zatwierdz [Enter]"
+text = "Zatwierdź [Enter]"
 
 [node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1438959482]
 visible = false
@@ -824,7 +824,7 @@ theme_override_constants/separation = 6
 custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Zatwierdz [Enter]"
+text = "Zatwierdź [Enter]"
 
 [node name="ResultLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=405897888]
 visible = false
