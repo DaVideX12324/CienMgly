@@ -101,7 +101,10 @@ func _node_quad(p: Polygon2D) -> PackedVector2Array:
 		return PackedVector2Array()
 	var out := PackedVector2Array()
 	for v in p.polygon:
-		out.append((p.transform * v).round())
+		var w: Vector2 = p.transform * v
+		if not w.is_finite():
+			return PackedVector2Array()  # zły odczyt w trakcie edycji — pomiń klatkę
+		out.append(w.round())
 	return BattleField.sorted_quad(out)
 
 
@@ -109,6 +112,10 @@ func _node_quad(p: Polygon2D) -> PackedVector2Array:
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() or layout == null:
 		return
+	# Zmiany z węzłów idą tylko do pliku — blokada PRZED zapisem do pól, inaczej sygnał `changed` pola
+	# nadpisywał wielokąt w trakcie przeciągania narożnika (edytor wielokąta liczył na podmienionej
+	# tablicy -> NaN).
+	_syncing = true
 	var changed := false
 	var fields: Array[BattleField] = layout.fields.duplicate()
 	for i in range(_nodes.size() - 1, -1, -1):
@@ -133,12 +140,11 @@ func _process(delta: float) -> void:
 			fields[i].quad = q
 			changed = true
 	if changed:
-		_syncing = true
 		layout.fields = fields
-		_syncing = false
 		_dirty_time = SAVE_DELAY
 		queue_redraw()
-	elif _dirty_time > 0.0:
+	_syncing = false
+	if not changed and _dirty_time > 0.0:
 		_dirty_time -= delta
 		if _dirty_time <= 0.0 and layout.resource_path != "":
 			ResourceSaver.save(layout, layout.resource_path)
