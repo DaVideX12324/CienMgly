@@ -4,6 +4,9 @@ signal combat_finished(player_won: bool)
 
 enum Phase { ACTION_SELECT, TARGET_SELECT, QUIZ, PLAYER_RESULT, ENEMY_TURN, COMBAT_END }
 enum Action { ATTACK, DEFEND, HEAL, FLEE }
+## Dolny pas jak w RPG Makerze: komendy drużyny po lewej (Walcz / Uciekaj), komendy postaci po prawej
+## (status wtedy po lewej), sam status wyśrodkowany (tura wroga, komunikaty).
+enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY }
 
 const QuizPanelController = preload("res://scripts/shared/quiz/quiz_panel_controller.gd")
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
@@ -26,6 +29,12 @@ const ENEMY_DISPLAY_SCALE_DEFAULT := Vector2(7.2, 7.2)
 const ENEMY_DISPLAY_SCALE_FOCUSED := Vector2(7.9, 7.9)
 const QUIZ_TYPES_STANDARD := ["multiple_choice", "true_false"]
 const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_tiles", "matching"]
+const BAND_HEIGHT := 0.28          # dolny pas: część wysokości ekranu (RPG Maker MV ~ 4 wiersze)
+const BAND_HEIGHT_QUIZ := 0.30
+const PARTY_COMMAND_WIDTH := 0.24  # okno komend drużyny (lewa strona)
+const ACTOR_COMMAND_WIDTH := 0.25  # okno komend postaci (prawa strona)
+const STATUS_ONLY_WIDTH := 0.72    # sam status: wyśrodkowany, węższy
+const GAUGE_HEIGHT := 8
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -121,6 +130,8 @@ var _ps: Node
 var _dm: Node
 var _gm: Node
 var _quiz_panel_controller
+var _band_mode: Band = Band.PARTY_COMMAND
+var _corner_label: Label = null
 
 
 func setup(
@@ -209,6 +220,7 @@ func _ready() -> void:
 		_action_buttons[i].mouse_entered.connect(func(): _highlight_action(action_index))
 
 	_setup_party_layout()
+	_apply_rm_style()
 	_init_party_state()
 	_quiz_panel_controller = QuizPanelController.new()
 	_quiz_panel_controller.setup(command_vbox)
@@ -267,6 +279,7 @@ func _process(delta: float) -> void:
 		return
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
+	_update_corner_label()
 
 
 func _input(event: InputEvent) -> void:
@@ -1155,6 +1168,7 @@ func _enemy_turn() -> void:
 		_end_combat(true)
 		return
 	phase = Phase.ENEMY_TURN
+	_set_band_mode(Band.STATUS_ONLY)
 	result_label.visible = true
 	for enemy_index in range(_enemy_units.size()):
 		var enemy_unit := _enemy_units[enemy_index]
@@ -1294,11 +1308,7 @@ func _highlight_action(idx: int) -> void:
 	_selected_action_idx = clampi(idx, 0, buttons.size() - 1)
 	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
 		if btn:
-			btn.text = btn.text.trim_prefix("► ")
-			btn.add_theme_color_override("font_color", Color(0.80, 0.82, 0.88))
-	var selected := buttons[_selected_action_idx]
-	selected.text = "► " + selected.text
-	selected.add_theme_color_override("font_color", Color.WHITE)
+			QuizTheme.set_menu_item_selected(btn, btn == buttons[_selected_action_idx])
 
 
 func _flash_sprite(sprite_control: Control, color: Color) -> void:
@@ -1914,11 +1924,10 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 
 
 func _get_desired_battle_window_height(is_quiz: bool) -> float:
-	var vp_size: Vector2 = get_viewport_rect().size
-	var base_h: float = 320.0 if is_quiz else 260.0
-	var scaled_h: float = float(_ui_scale_px(int(base_h)))
-	var max_allowed: float = vp_size.y * (0.42 if is_quiz else 0.32) if vp_size.y > 0.0 else 380.0
-	return clampf(scaled_h, 250.0, max_allowed)
+	var vp_h: float = get_viewport_rect().size.y
+	if vp_h <= 0.0:
+		return 300.0
+	return maxf(vp_h * (BAND_HEIGHT_QUIZ if is_quiz else BAND_HEIGHT), 220.0)
 
 
 func _update_window_heights(is_quiz: bool = false) -> void:
@@ -1931,49 +1940,185 @@ func _update_window_heights(is_quiz: bool = false) -> void:
 
 
 func _apply_party_rows_scaling() -> void:
-	var row_h: float = maxf(float(_ui_scale_px(40)), 28.0)
-	var name_font_sz: int = maxi(_ui_scale_px(20), 16)
-	var stat_lbl_font_sz: int = maxi(_ui_scale_px(16), 13)
-	var val_font_sz: int = maxi(_ui_scale_px(16), 13)
-	var name_min_w: float = maxf(float(_ui_scale_px(140)), 90.0)
-	var bar_w: float = maxf(float(_ui_scale_px(100)), 60.0)
-	var bar_h: float = maxf(float(_ui_scale_px(10)), 6.0)
-	var val_min_w: float = maxf(float(_ui_scale_px(85)), 65.0)
-	var stat_sep: int = maxi(_ui_scale_px(8), 4)
-	var row_sep: int = maxi(_ui_scale_px(20), 10)
-
+	var row_h: float = maxf(float(_ui_scale_px(56)), 44.0)
+	var name_min_w: float = maxf(float(_ui_scale_px(220)), 140.0)
+	var stat_sep: int = maxi(_ui_scale_px(24), 12)
 	for row in party_rows:
 		if row == null:
 			continue
 		row.custom_minimum_size.y = row_h
-		row.add_theme_constant_override("separation", row_sep)
+		row.add_theme_constant_override("separation", stat_sep)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var name_label := row.get_node_or_null("NameLabel") as Label
 		if name_label:
 			name_label.custom_minimum_size.x = name_min_w
-			name_label.add_theme_font_size_override("font_size", QuizTheme.snap(name_font_sz))
-			name_label.add_theme_color_override("font_color", Color.WHITE)
-
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			name_label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN  # w linii wartości, nad paskami
+			_rm_label(name_label, Color.WHITE)
 		for stat_name in ["StatLP", "StatSP", "StatTP"]:
-			var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
+			var stat_box := row.get_node_or_null(stat_name) as Control
 			if stat_box == null:
 				continue
 			stat_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			stat_box.add_theme_constant_override("separation", stat_sep)
-			var label := stat_box.get_node_or_null("Label") as Label
-			var bar := stat_box.get_node_or_null("Bar") as ProgressBar
-			var value_label := stat_box.get_node_or_null("ValueLabel") as Label
+			var label := stat_box.find_child("Label", true, false) as Label
+			var value_label := stat_box.find_child("ValueLabel", true, false) as Label
+			var bar := stat_box.find_child("Bar", true, false) as ProgressBar
 			if label:
-				label.add_theme_font_size_override("font_size", QuizTheme.snap(stat_lbl_font_sz))
-				label.add_theme_color_override("font_color", Color(0.85, 0.90, 0.98))
+				_rm_label(label, QuizTheme.LABEL_COLOR)
 			if value_label:
-				value_label.custom_minimum_size.x = val_min_w
-				value_label.add_theme_font_size_override("font_size", QuizTheme.snap(val_font_sz))
-				value_label.add_theme_color_override("font_color", Color.WHITE)
+				_rm_label(value_label, Color.WHITE)
+				value_label.custom_minimum_size.x = 0
+				value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			if bar:
 				bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-				bar.custom_minimum_size = Vector2(bar_w, bar_h)
+				bar.custom_minimum_size = Vector2(0, GAUGE_HEIGHT)
+
+
+## Tekst jak w RPG Makerze: rozmiar bazowy czcionki modułu, czarny obrys.
+func _rm_label(label: Label, color: Color) -> void:
+	label.add_theme_font_size_override("font_size", QuizTheme.PX)
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 6)
+
+
+## Wygląd RPG Makera na istniejącym drzewie sceny (ścieżki węzłów zostają — kod się do nich odwołuje):
+## okna jako QuizTheme.WINDOW bez ramy wokół całego pasa, pozycje menu bez tła z podkreśleniem
+## zaznaczenia, wiersz drużyny: etykieta i wartość w jednej linii, cienki pasek pod nimi.
+func _apply_rm_style() -> void:
+	if battle_window:
+		battle_window.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	var outer_margin := get_node_or_null("BattleWindow/WindowMargin") as MarginContainer
+	if outer_margin:
+		for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
+			outer_margin.add_theme_constant_override(side, 0)
+	var top_row := get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow") as Control
+	if top_row:
+		top_row.visible = false  # tura / seria — mały wskaźnik w rogu okna statusu (_corner_label)
+	if content_row:
+		content_row.add_theme_constant_override("separation", 0)
+	for panel in [command_panel_container, party_panel_container]:
+		if panel:
+			panel.remove_theme_stylebox_override("panel")
+			panel.theme_type_variation = QuizTheme.WINDOW
+	for margin_path in ["BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin", "BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin"]:
+		var m := get_node_or_null(margin_path) as MarginContainer
+		if m:
+			for side in ["margin_left", "margin_top", "margin_right", "margin_bottom"]:
+				m.add_theme_constant_override(side, 6)
+	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
+		if btn:
+			btn.theme_type_variation = QuizTheme.MENU_ITEM
+			btn.flat = false  # flat nie rysuje stylu — podkreślenie zaznaczenia to styl przycisku
+			btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			btn.text = btn.text.trim_prefix("► ")
+			QuizTheme.set_menu_item_selected(btn, false)
+	var action_title: Control = command_vbox.find_child("ActionTitle", true, false) as Control if command_vbox else null
+	if action_title:
+		action_title.visible = false
+	for row in party_rows:
+		_rm_party_row(row)
+	if party_panel_container and _corner_label == null:
+		# Nakładka w prawym dolnym rogu okna statusu (w PanelContainerze — kontener rozciąga ją na
+		# całe okno, tekst wyrównany do prawego dolnego rogu).
+		_corner_label = Label.new()
+		_corner_label.name = "CornerInfo"
+		_corner_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_corner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		_corner_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		_rm_label(_corner_label, QuizTheme.TEXT_DIM)
+		_corner_label.size_flags_vertical = Control.SIZE_SHRINK_END
+		_corner_label.size_flags_horizontal = Control.SIZE_SHRINK_END
+		party_panel_container.add_child(_corner_label)
+
+
+## Wiersz drużyny: StatX (HBox: Label, Bar, ValueLabel) -> kolumna [etykieta ... wartość] nad paskiem.
+func _rm_party_row(row: HBoxContainer) -> void:
+	if row == null:
+		return
+	var fills := {"StatLP": [Color(0.91, 0.55, 0.24), Color(0.95, 0.75, 0.32)],
+		"StatSP": [Color(0.27, 0.55, 0.9), Color(0.36, 0.75, 0.95)],
+		"StatTP": [Color(0.08, 0.66, 0.24), Color(0.24, 0.86, 0.35)]}
+	for stat_name in ["StatLP", "StatSP", "StatTP"]:
+		var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
+		if stat_box == null or stat_box.get_node_or_null("Col") != null:
+			continue
+		var label := stat_box.get_node_or_null("Label") as Label
+		var bar := stat_box.get_node_or_null("Bar") as ProgressBar
+		var value_label := stat_box.get_node_or_null("ValueLabel") as Label
+		var col := VBoxContainer.new()
+		col.name = "Col"
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 0)
+		var line := HBoxContainer.new()
+		line.name = "Line"
+		stat_box.add_child(col)
+		col.add_child(line)
+		for n in [label, value_label]:
+			if n:
+				n.reparent(line, false)
+		if bar:
+			bar.reparent(col, false)
+			bar.show_percentage = false
+		_style_gauge(bar, fills[stat_name][0], fills[stat_name][1])
+
+
+## Pasek jak w RPG Makerze: gradient w poziomie, ciemne tło, bez zaokrągleń.
+func _style_gauge(bar: ProgressBar, c1: Color, c2: Color) -> void:
+	if bar == null:
+		return
+	var grad := Gradient.new()
+	grad.set_color(0, c1)
+	grad.set_color(1, c2)
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.width = 64
+	tex.height = 1
+	var fill := StyleBoxTexture.new()
+	fill.texture = tex
+	bar.add_theme_stylebox_override("fill", fill)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.13, 0.13, 0.22)
+	bar.add_theme_stylebox_override("background", bg)
+
+
+## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
+func _set_band_mode(mode: Band) -> void:
+	_band_mode = mode
+	if content_row == null or command_panel_container == null or party_panel_container == null:
+		return
+	if phase == Phase.QUIZ and not party_panel_container.visible:
+		return  # quiz zajmuje pas (_set_quiz_layout_active)
+	var vp_w: float = get_viewport_rect().size.x
+	party_panel_container.visible = true
+	content_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	match mode:
+		Band.PARTY_COMMAND:
+			command_panel_container.visible = true
+			content_row.move_child(command_panel_container, 0)
+			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
+			command_panel_container.custom_minimum_size = Vector2(vp_w * PARTY_COMMAND_WIDTH, 0)
+			party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			party_panel_container.custom_minimum_size = Vector2.ZERO
+		Band.ACTOR_COMMAND:
+			command_panel_container.visible = true
+			content_row.move_child(party_panel_container, 0)
+			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
+			command_panel_container.custom_minimum_size = Vector2(vp_w * ACTOR_COMMAND_WIDTH, 0)
+			party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			party_panel_container.custom_minimum_size = Vector2.ZERO
+		Band.STATUS_ONLY:
+			command_panel_container.visible = false
+			party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			party_panel_container.custom_minimum_size = Vector2(vp_w * STATUS_ONLY_WIDTH, 0)
+
+
+func _update_corner_label() -> void:
+	if _corner_label == null:
+		return
+	var streak := int(_ps.streak) if _ps else 0
+	var bonus := float(_ps.rng_bonus) * 100.0 if _ps else 0.0
+	_corner_label.text = "Tura %d  ·  seria %d  ·  +%.0f%%" % [turn_number, streak, bonus]
 
 
 func _apply_responsive_layout() -> void:
@@ -2002,6 +2147,8 @@ func _apply_responsive_layout() -> void:
 
 	# 4. Scalowanie potworków i ich odstępów
 	_apply_responsive_enemy_layout()
+	if not is_quiz:
+		_set_band_mode(_band_mode)
 
 
 func _on_enemy_slot_resized(slot: Control) -> void:
@@ -2227,15 +2374,16 @@ func _set_party_row_name(row: HBoxContainer, value: String) -> void:
 
 
 func _set_party_stat(row: HBoxContainer, stat_name: String, value: int, max_value: int, display_value: String) -> void:
-	var stat_box := row.get_node_or_null(stat_name) as HBoxContainer
+	var stat_box := row.get_node_or_null(stat_name) as Control
 	if stat_box == null:
 		return
-	var bar := stat_box.get_node_or_null("Bar") as ProgressBar
-	var value_label := stat_box.get_node_or_null("ValueLabel") as Label
+	var bar := stat_box.find_child("Bar", true, false) as ProgressBar
+	var value_label := stat_box.find_child("ValueLabel", true, false) as Label
 	if bar:
 		bar.value = (float(value) / float(maxi(max_value, 1))) * 100.0
 	if value_label:
-		value_label.text = display_value
+		# Jak w RPG Makerze: sama bieżąca wartość, pełna skala na pasku (display_value = "x/max").
+		value_label.text = display_value.get_slice("/", 0)
 
 
 func _setup_party_layout() -> void:
@@ -2295,6 +2443,7 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 			action_panel.visible = true
 		if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
 			_quiz_panel_controller.quiz_panel.visible = false
+		_set_band_mode(_band_mode)
 
 
 func _init_party_state() -> void:
@@ -2360,6 +2509,7 @@ func _show_primary_menu() -> void:
 	primary_menu.visible = true
 	action_menu.visible = false
 	_selected_action_idx = 0
+	_set_band_mode(Band.PARTY_COMMAND)
 
 
 func _show_action_menu() -> void:
@@ -2367,6 +2517,7 @@ func _show_action_menu() -> void:
 	primary_menu.visible = false
 	action_menu.visible = true
 	_selected_action_idx = 0
+	_set_band_mode(Band.ACTOR_COMMAND)
 
 
 func _get_visible_action_buttons() -> Array[Button]:
