@@ -29,12 +29,71 @@ const POCKET_MAX := 8         # odcięte kieszonki ziemi do tej wielkości -> p�
 const PORTAL_RING := 2        # pierścień wokół strefy portalu (bez krawędzi płaskowyżu)
 const TURN_UP_MAX := 3        # tyle kratek wyższego terenu między licem a ścianą nad nim -> granica skręca w górę
 const STRIP_MIN := 5          # węższy pas wzniesienia / ziemi między granicą poziomu a ścianą -> cały albo wcale
+const WALK_META := &"plateau_walk"
+
+
+## Chodliwość kratek jako płaska tablica (idx = y*w + x) i chodliwe kratki w kolejności kluczy ctx.grid —
+## liczone raz na przebieg (PlateauPass nie zmienia gridu), gorące pętle bez słowników.
+class WalkRaster:
+	var w := 0
+	var h := 0
+	var cells := PackedByteArray()   # 1 = chodliwa
+	var order := PackedInt32Array()  # chodliwe kratki w kolejności kluczy ctx.grid
+
+	func _init(ctx: GenerationContext) -> void:
+		var grid := ctx.grid
+		w = ctx.width
+		h = ctx.height
+		for c in grid:
+			w = maxi(w, c.x + 1)
+			h = maxi(h, c.y + 1)
+		cells.resize(w * h)
+		for c in grid:
+			if c.x >= 0 and c.y >= 0 and GridUtils.is_walkable(grid, c):
+				var i: int = c.y * w + c.x
+				cells[i] = 1
+				order.append(i)
+
+
+## Raster dla przebiegu (run / solve_levels): true, gdy utworzony tutaj — wtedy _walk_end go zdejmuje.
+static func _walk_begin(ctx: GenerationContext) -> bool:
+	if ctx.has_meta(WALK_META):
+		return false
+	ctx.set_meta(WALK_META, WalkRaster.new(ctx))
+	return true
+
+
+static func _walk_end(ctx: GenerationContext, own: bool) -> void:
+	if own:
+		ctx.remove_meta(WALK_META)
+
+
+static func _walk(ctx: GenerationContext) -> WalkRaster:
+	if not ctx.has_meta(WALK_META):
+		return WalkRaster.new(ctx)
+	return ctx.get_meta(WALK_META)
+
+
+## Kratki `m` jako bajty 1 na rastrze `wk` (poza rastrem pomijane).
+static func _mark(wk: WalkRaster, m: Dictionary) -> PackedByteArray:
+	var out := PackedByteArray()
+	out.resize(wk.w * wk.h)
+	for c in m:
+		if c.x >= 0 and c.y >= 0 and c.x < wk.w and c.y < wk.h:
+			out[c.y * wk.w + c.x] = 1
+	return out
 
 
 static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout:
 	if flags == null or not flags.enable_platforms or ctx.entrance_pos == Vector2i.ZERO:
 		return null
+	var own := _walk_begin(ctx)
+	var layout := _run(ctx, flags)
+	_walk_end(ctx, own)
+	return layout
 
+
+static func _run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout:
 	var allowed := _allowed_cells(ctx)
 	var thr := _thresholds(ctx, flags, allowed)
 	var mask := _noise_mask(ctx, flags, allowed, thr.level)
@@ -184,6 +243,13 @@ static func solve_mask(ctx: GenerationContext, flags: GenerationFlags, mask: Dic
 static func solve_levels(ctx: GenerationContext, flags: GenerationFlags, levels: Dictionary) -> PlateauLayout:
 	if levels.is_empty():
 		return PlateauLayout.new()
+	var own := _walk_begin(ctx)
+	var layout := _solve_levels(ctx, flags, levels)
+	_walk_end(ctx, own)
+	return layout
+
+
+static func _solve_levels(ctx: GenerationContext, flags: GenerationFlags, levels: Dictionary) -> PlateauLayout:
 	var allowed := _allowed_cells(ctx)
 	var lv := {}
 	for k in levels:
@@ -920,14 +986,26 @@ static func _slot(m: Dictionary, c: Vector2i) -> bool:
 ## (ściany podpierają płaskowyż przy erozji).
 static func _erode(ctx: GenerationContext, m: Dictionary) -> Dictionary:
 	var out := {}
-	var grid := ctx.grid
+	var wk := _walk(ctx)
+	var w := wk.w
+	var h := wk.h
+	var walk := wk.cells
+	var mm := _mark(wk, m)
 	for c in m:
 		var keep := true
-		for d in DIRS8:
-			var n: Vector2i = c + d
-			if not m.has(n) and GridUtils.is_walkable(grid, n):
-				keep = false
-				break
+		if c.x >= 1 and c.y >= 1 and c.x < w - 1 and c.y < h - 1:
+			# Sąsiad chodliwy spoza m (walk 1, mm 0) <=> walk > mm.
+			var i: int = c.y * w + c.x
+			keep = not (walk[i - w - 1] > mm[i - w - 1] or walk[i - w] > mm[i - w] or walk[i - w + 1] > mm[i - w + 1]
+				or walk[i - 1] > mm[i - 1] or walk[i + 1] > mm[i + 1]
+				or walk[i + w - 1] > mm[i + w - 1] or walk[i + w] > mm[i + w] or walk[i + w + 1] > mm[i + w + 1])
+		else:
+			# Brzeg rastra: poza nim nie ma podłogi (lite).
+			for d in DIRS8:
+				var n: Vector2i = c + d
+				if n.x >= 0 and n.y >= 0 and n.x < w and n.y < h and mm[n.y * w + n.x] == 0 and walk[n.y * w + n.x] == 1:
+					keep = false
+					break
 		if keep:
 			out[c] = true
 	return out
@@ -952,26 +1030,69 @@ static func _dilate(m: Dictionary, allowed: Dictionary) -> Dictionary:
 
 ## Zamknięte kieszenie podłogi (nie największy komponent, ≤ HOLE_MAX, w całości dozwolone) -> płaskowyż.
 static func _fill_holes(ctx: GenerationContext, m: Dictionary, allowed: Dictionary) -> Dictionary:
-	var ground := {}
-	for c in ctx.grid:
-		if GridUtils.is_walkable(ctx.grid, c) and not m.has(c):
-			ground[c] = true
-	var comps := _components(ground, DIRS4)
+	# Komponenty ziemi na płaskich tablicach (kolejka wszystkich komponentów w jednej tablicy) — ta sama
+	# kolejność startów (klucze ctx.grid) i sąsiadów (DIRS4) co _components, więc te same kieszenie
+	# w tej samej kolejności kratek; słowniki tylko dla zasypywanych kieszeni.
+	var wk := _walk(ctx)
+	var w := wk.w
+	var n := w * wk.h
+	var ground := PackedByteArray()  # 1 = ziemia (chodliwa poza m), 2 = odwiedzona
+	ground.resize(n)
+	for i in wk.order:
+		ground[i] = 1
+	for c in m:
+		if c.x >= 0 and c.y >= 0 and c.x < w and c.y < wk.h:
+			ground[c.y * w + c.x] = 0
+	var queue := PackedInt32Array()
+	queue.resize(wk.order.size())
+	var comp_start := PackedInt32Array()
+	var tail := 0
 	var largest := 0
-	for comp in comps:
-		largest = maxi(largest, (comp as Dictionary).size())
+	for s in wk.order:
+		if ground[s] != 1:
+			continue
+		ground[s] = 2
+		var first := tail
+		queue[tail] = s
+		tail += 1
+		var head := first
+		while head < tail:
+			var i := queue[head]
+			head += 1
+			var x := i % w
+			if x < w - 1 and ground[i + 1] == 1:
+				ground[i + 1] = 2
+				queue[tail] = i + 1
+				tail += 1
+			if x > 0 and ground[i - 1] == 1:
+				ground[i - 1] = 2
+				queue[tail] = i - 1
+				tail += 1
+			if i + w < n and ground[i + w] == 1:
+				ground[i + w] = 2
+				queue[tail] = i + w
+				tail += 1
+			if i >= w and ground[i - w] == 1:
+				ground[i - w] = 2
+				queue[tail] = i - w
+				tail += 1
+		comp_start.append(first)
+		largest = maxi(largest, tail - first)
+	comp_start.append(tail)
 	var out := m.duplicate()
-	for comp in comps:
-		var size: int = (comp as Dictionary).size()
-		if size == largest or size > HOLE_MAX:
+	for k in range(comp_start.size() - 1):
+		var a := comp_start[k]
+		var b := comp_start[k + 1]
+		if b - a == largest or b - a > HOLE_MAX:
 			continue
 		var ok := true
-		for c in comp:
-			if not allowed.has(c):
+		for j in range(a, b):
+			if not allowed.has(Vector2i(queue[j] % w, queue[j] / w)):
 				ok = false
 				break
 		if ok:
-			out.merge(comp)
+			for j in range(a, b):
+				out[Vector2i(queue[j] % w, queue[j] / w)] = true
 	return out
 
 
@@ -1001,35 +1122,41 @@ static func _components(cells: Dictionary, dirs: Array[Vector2i]) -> Array:
 	var out: Array = []
 	if cells.is_empty():
 		return out
-	# Odwiedzone w tablicy bajtów na prostokącie otaczającym (zamiast drugiego słownika) — ta sama
-	# kolejność przeglądania, więc te same komponenty w tej samej kolejności kratek.
+	# Przynależność i odwiedzone w tablicy bajtów na prostokącie otaczającym (+1 kratka marginesu, więc
+	# sąsiedzi zawsze w tablicy) zamiast słownika — ta sama kolejność przeglądania, więc te same
+	# komponenty w tej samej kolejności kratek.
 	var lo := Vector2i(1 << 30, 1 << 30)
 	var hi := -lo
 	for c in cells:
 		lo = lo.min(c)
 		hi = hi.max(c)
+	lo -= Vector2i.ONE
+	hi += Vector2i.ONE
 	var w := hi.x - lo.x + 1
-	var seen := PackedByteArray()
-	seen.resize(w * (hi.y - lo.y + 1))
+	var st := PackedByteArray()  # 1 = w cells, 2 = odwiedzona
+	st.resize(w * (hi.y - lo.y + 1))
+	for c in cells:
+		st[(c.y - lo.y) * w + (c.x - lo.x)] = 1
+	var offs := PackedInt32Array()
+	for d in dirs:
+		offs.append(d.y * w + d.x)
 	for start in cells:
 		var si: int = (start.y - lo.y) * w + (start.x - lo.x)
-		if seen[si]:
+		if st[si] != 1:
 			continue
 		var comp := {start: true}
-		seen[si] = 1
-		var queue: Array[Vector2i] = [start]
+		st[si] = 2
+		var queue := PackedInt32Array([si])
 		var head := 0
 		while head < queue.size():
 			var p := queue[head]
 			head += 1
-			for d in dirs:
-				var n: Vector2i = p + d
-				if cells.has(n):
-					var ni := (n.y - lo.y) * w + (n.x - lo.x)
-					if not seen[ni]:
-						seen[ni] = 1
-						comp[n] = true
-						queue.append(n)
+			for o in offs:
+				var ni := p + o
+				if st[ni] == 1:
+					st[ni] = 2
+					comp[Vector2i(ni % w + lo.x, ni / w + lo.y)] = true
+					queue.append(ni)
 		out.append(comp)
 	return out
 
@@ -1883,17 +2010,37 @@ static func _bfs(ctx: GenerationContext, start: Vector2i, blocked: Dictionary) -
 	var seen := {}
 	if not GridUtils.is_walkable(ctx.grid, start) or blocked.has(start):
 		return seen
-	seen[start] = true
-	var queue: Array[Vector2i] = [start]
+	# Na rastrze: ok = chodliwa i nie zablokowana; kolejność odwiedzin (i kluczy wyniku) jak dotąd.
+	var wk := _walk(ctx)
+	var w := wk.w
+	var h := wk.h
+	var ok := wk.cells.duplicate()
+	for c in blocked:
+		if c.x >= 0 and c.y >= 0 and c.x < w and c.y < h:
+			ok[c.y * w + c.x] = 0
+	var si := start.y * w + start.x
+	ok[si] = 2
+	var queue := PackedInt32Array([si])
 	var head := 0
 	while head < queue.size():
-		var p := queue[head]
+		var i := queue[head]
 		head += 1
-		for d in DIRS4:
-			var n: Vector2i = p + d
-			if not seen.has(n) and not blocked.has(n) and GridUtils.is_walkable(ctx.grid, n):
-				seen[n] = true
-				queue.append(n)
+		var x := i % w
+		# DIRS4: (1, 0), (-1, 0), (0, 1), (0, -1)
+		if x < w - 1 and ok[i + 1] == 1:
+			ok[i + 1] = 2
+			queue.append(i + 1)
+		if x > 0 and ok[i - 1] == 1:
+			ok[i - 1] = 2
+			queue.append(i - 1)
+		if i + w < w * h and ok[i + w] == 1:
+			ok[i + w] = 2
+			queue.append(i + w)
+		if i >= w and ok[i - w] == 1:
+			ok[i - w] = 2
+			queue.append(i - w)
+	for i in queue:
+		seen[Vector2i(i % w, i / w)] = true
 	return seen
 
 
