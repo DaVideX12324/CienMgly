@@ -2,8 +2,11 @@ extends RefCounted
 
 ## Znaczniki etapów generowania mapy: postęp dla paska ładowania + czas etapów (profil).
 ##
-## Kod generatora woła statyczne GenProgress.begin(&"etap") na początku etapu i opcjonalnie
-## GenProgress.sub(0..1) wewnątrz długich pętli. Aktywny obiekt ustawia wywołujący
+## Kod generatora woła statyczne GenProgress.begin(&"etap") na początku etapu, GenProgress.end(&"etap")
+## na jego końcu i opcjonalnie GenProgress.sub(0..1) wewnątrz długich pętli. sub() dochodzi najwyżej do
+## SUB_MAX etapu — cały etap zalicza dopiero end() (po ostatnim sub(1.0) kod etapu często jeszcze
+## pracuje), a 100% paska dopiero finish(). begin() zamyka etap, którego nikt nie zamknął (bez
+## przeskoku paska na jego koniec). Aktywny obiekt ustawia wywołujący
 ## (GenProgress.start(p) / GenProgress.stop()) — jedna generacja naraz. Bez aktywnego obiektu
 ## wszystkie wywołania to no-op, więc testy i podgląd działają bez zmian.
 ##
@@ -41,7 +44,11 @@ const STAGES: Array = [
 ## koniec etapu. Oczekiwany czas = waga × tempo (ms na jednostkę wagi); tempo startuje od
 ## `ms_per_weight` (wywołujący skaluje je rozmiarem mapy) i dopasowuje się do zmierzonych etapów.
 const CREEP_LINEAR := 0.8
-const CREEP_MAX := 0.97
+const CREEP_MAX := 0.95
+## Najdalej, dokąd w etapie dochodzi sub() — resztę dokłada end().
+const SUB_MAX := 0.95
+## Pasek przed finish() — 100% tylko na koniec całości.
+const BEFORE_FINISH := 0.99
 ## Ile jednostek wagi „waży” początkowe tempo przy uśrednianiu z pomiarem.
 const PRIOR_WEIGHT := 40.0
 
@@ -61,6 +68,8 @@ var _raw := {}           # etap -> waga z STAGES (jednostki ≈ 10 ms przy 250×
 var ms_per_weight := 10.0
 var _done_w := 0.0       # suma wag zakończonych etapów z listy
 var _done_ms := 0.0      # ich zmierzony czas
+var _last_stage: StringName = &""  # etap do opisu między end() a kolejnym begin()
+var _finished := false
 var order: Array[StringName] = []  # etapy w kolejności pierwszego wystąpienia
 
 
@@ -102,6 +111,14 @@ static func begin(stage: StringName) -> void:
 		p._begin(stage)
 
 
+## Koniec etapu: pasek na koniec etapu, zamknięty pomiar czasu. `stage` inny niż bieżący = no-op
+## (pusty = bieżący, np. po PlateauPass.run, który kończy się w plateaus albo plateau_stairs).
+static func end(stage: StringName = &"") -> void:
+	var p = _active
+	if p != null and (stage == &"" or p._stage == stage):
+		p._end()
+
+
 ## Postęp wewnątrz bieżącego etapu (0..1).
 static func sub(frac: float) -> void:
 	var p = _active
@@ -127,13 +144,15 @@ func fraction() -> float:
 		var t := (Time.get_ticks_usec() - _stage_start_usec) / 1000.0 / expected_ms
 		var k := CREEP_LINEAR * t if t < 1.0 else CREEP_LINEAR + (CREEP_MAX - CREEP_LINEAR) * (1.0 - exp(1.0 - t))
 		f = maxf(f, float(_base[_stage]) + float(_weight[_stage]) * k)
+	if not _finished:
+		f = minf(f, BEFORE_FINISH)
 	_mutex.unlock()
 	return f
 
 
 func label() -> String:
 	_mutex.lock()
-	var l: String = _labels.get(_stage, "")
+	var l: String = _labels.get(_stage if _stage != &"" else _last_stage, "")
 	_mutex.unlock()
 	return l
 
@@ -143,6 +162,7 @@ func finish() -> void:
 	_close_stage()
 	_mutex.lock()
 	_fraction = 1.0
+	_finished = true
 	_stage = &""
 	_mutex.unlock()
 
@@ -165,6 +185,7 @@ func _begin(stage: StringName) -> void:
 	_close_stage()
 	_mutex.lock()
 	_stage = stage
+	_last_stage = stage
 	_stage_start_usec = Time.get_ticks_usec()
 	if not times.has(stage):
 		times[stage] = 0
@@ -177,8 +198,16 @@ func _begin(stage: StringName) -> void:
 func _sub(frac: float) -> void:
 	_mutex.lock()
 	if _base.has(_stage):
-		_fraction = maxf(_fraction, float(_base[_stage]) + float(_weight[_stage]) * clampf(frac, 0.0, 1.0))
+		_fraction = maxf(_fraction, float(_base[_stage]) + float(_weight[_stage]) * SUB_MAX * clampf(frac, 0.0, 1.0))
 	_mutex.unlock()
+
+
+func _end() -> void:
+	_mutex.lock()
+	if _base.has(_stage):
+		_fraction = maxf(_fraction, float(_base[_stage]) + float(_weight[_stage]))
+	_mutex.unlock()
+	_close_stage()
 
 
 func _close_stage() -> void:

@@ -230,7 +230,7 @@ func _process(delta: float) -> void:
 	# Płynnie za postępem, ale bez zostawania w tyle przy dużych skokach.
 	_shown = minf(_target, lerpf(_shown, _target, clampf(delta * 8.0, 0.0, 1.0)) + delta * 0.05)
 	_bar.value = _shown * 100.0
-	_percent.text = "%d%%" % int(round(_shown * 100.0))
+	_percent.text = "%d%%" % int(_shown * 100.0)  # w dół: 100% dopiero przy close()
 
 
 ## Błysk na pasku i kropki po nazwie etapu (niezależnie od postępu).

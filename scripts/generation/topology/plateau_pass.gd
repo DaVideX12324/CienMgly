@@ -53,6 +53,7 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> PlateauLayout
 	_add_upper_levels(ctx, flags, allowed, levels, thr.high)
 	GenProgress.sub_in(&"plateaus", 0.7)
 	_add_pits(ctx, flags, allowed, levels, thr.pit)
+	GenProgress.end(&"plateaus")
 	GenProgress.begin(&"plateau_stairs")
 	var layout := _with_field(solve_levels(ctx, flags, levels), ctx, flags)
 	layout.threshold = thr.level  # podgląd rysuje pasma pola tymi progami
