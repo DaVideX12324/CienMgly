@@ -66,8 +66,8 @@ var _enemy_pool: Array = []
 ## Generowanie w tle (wątek roboczy) z ekranem ładowania. false = jak dawniej: cała mapa w _ready
 ## w jednej klatce (testy, narzędzia, które czytają last_result od razu po add_child).
 @export var async_generation: bool = true
-## Folder grafik ekranu ładowania (assets/textures/loading_screens/<klucz>/). Puste = biom z typu
-## poziomu (LOADING_SCREEN_KEYS).
+## Klucz mapy: folder grafik ekranu ładowania (assets/textures/loading_screens/<klucz>/) i teł walki
+## (battle_backgrounds/[pixel_crawler/]<klucz>/). Puste = biom z typu poziomu (LOADING_SCREEN_KEYS).
 @export var loading_screen_key: String = ""
 ## Nazwa lokacji na ekranie ładowania. Puste = nazwa z typu poziomu (LOCATION_NAMES).
 @export var location_name: String = ""
@@ -247,7 +247,7 @@ func generate_level_async(seed_val: int = 0) -> void:
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
 	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")
-	overlay.set_background_for(loading_screen_key if not loading_screen_key.is_empty() else LOADING_SCREEN_KEYS.get(level_type, ""))
+	overlay.set_background_for(get_map_key())
 	add_child(overlay)
 	overlay.track(progress)
 	GenProgress.start(progress)
@@ -314,6 +314,11 @@ func _exit_tree() -> void:
 		WorkerThreadPool.wait_for_task_completion(_task_id)
 		_task_id = -1
 		GenProgress.stop()
+
+
+## Klucz mapy (loading_screen_key albo biom z typu poziomu) — ekran ładowania i tło walki.
+func get_map_key() -> String:
+	return loading_screen_key if not loading_screen_key.is_empty() else str(LOADING_SCREEN_KEYS.get(level_type, ""))
 
 
 func _loading_title() -> String:

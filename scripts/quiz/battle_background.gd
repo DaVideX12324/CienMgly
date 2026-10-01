@@ -1,20 +1,24 @@
 extends Control
 
-const PIXEL_CRAWLER_GENERATOR: Script = preload("res://modules/quiz_rpg/scripts/quiz/background_generators/pixel_crawler_battle_background.gd")
+## Tło walki wg klucza mapy (_map_key): najpierw grafiki z folderu mapy (FolderGenerator:
+## battle_backgrounds/<klucz>/ albo battle_backgrounds/pixel_crawler/<klucz>/), gdy folderu z grafikami
+## nie ma — tło rysowane w kodzie (GENERATORS, „default” na końcu). Nowa mapa = nowy folder, bez kodu.
+const FolderGenerator: Script = preload("res://modules/quiz_rpg/scripts/quiz/background_generators/folder_battle_background.gd")
 
 const GENERATORS: Dictionary = {
 	"world_map": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/world_map_battle_background.gd"),
-	"tutorial_area": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/tutorial_area_battle_background.gd"),
-	"castle": PIXEL_CRAWLER_GENERATOR,
-	"cave": PIXEL_CRAWLER_GENERATOR,
-	"desert": PIXEL_CRAWLER_GENERATOR,
-	"fairy_forest": PIXEL_CRAWLER_GENERATOR,
-	"forge": PIXEL_CRAWLER_GENERATOR,
-	"garden": PIXEL_CRAWLER_GENERATOR,
-	"hideout": PIXEL_CRAWLER_GENERATOR,
-	"pixel_crawler": PIXEL_CRAWLER_GENERATOR,
 	"default": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/default_battle_background.gd"),
 }
+## Klucz mapy -> folder teł walki, gdy mapa nie ma własnego (las generowany -> baśniowy las).
+const KEY_ALIASES: Dictionary = {
+	"forest": "fairy_forest",
+}
+## Słowa w ścieżce skryptu / nazwie węzła mapy -> klucz (mapy bez get_map_key, biome ani sceny z folderem).
+const NAME_KEYWORDS: Array = [
+	["world_map", "world_map"], ["tutorial", "tutorial_area"], ["castle", "castle"], ["cave", "cave"],
+	["desert", "desert"], ["fairy", "fairy_forest"], ["forge", "forge"], ["garden", "garden"],
+	["hideout", "hideout"], ["dungeon", "castle"],
+]
 
 signal layout_changed(layout: BattleBackgroundLayout)
 
@@ -69,69 +73,48 @@ func _draw() -> void:
 
 func _select_generator() -> void:
 	var key: String = _map_key(_map_node)
-	var generator_script: Script = GENERATORS.get(key, GENERATORS["default"]) as Script
-	if generator_script == PIXEL_CRAWLER_GENERATOR:
-		_generator = generator_script.new(key)
+	var variants: PackedStringArray = FolderGenerator.variant_paths(_folder_key(key))
+	if not variants.is_empty():
+		_generator = FolderGenerator.new(variants)
 	else:
-		_generator = generator_script.new()
+		_generator = (GENERATORS.get(key, GENERATORS["default"]) as Script).new()
 
 
+func _folder_key(key: String) -> String:
+	return str(KEY_ALIASES.get(key, key))
+
+
+## Ma tło: folder z grafikami albo generator w kodzie.
+func _has_background(key: String) -> bool:
+	return key != "" and (GENERATORS.has(key) or not FolderGenerator.variant_paths(_folder_key(key)).is_empty())
+
+
+## Klucz mapy — ten sam co folder ekranu ładowania: get_map_key() mapy (ProceduralLevel: loading_screen_key
+## albo biom z typu poziomu), właściwości biome / theme…, nazwa pliku sceny mapy ręcznej (tutorial_area),
+## na końcu słowa w ścieżce skryptu / nazwie węzła. Pierwszy klucz, który ma tło.
 func _map_key(map_node: Node) -> String:
 	if map_node == null:
 		return "default"
+	var candidates: Array[String] = []
+	if map_node.has_method("get_map_key"):
+		candidates.append(str(map_node.call("get_map_key")))
 	for prop in ["biome", "theme", "dungeon_theme", "dungeon_type", "background_type"]:
-		if prop in map_node and str(map_node.get(prop)) != "":
-			var val: String = str(map_node.get(prop)).to_snake_case()
-			if GENERATORS.has(val):
-				return val
+		if prop in map_node:
+			candidates.append(str(map_node.get(prop)).to_snake_case())
 		if map_node.has_meta(prop):
-			var val_meta: String = str(map_node.get_meta(prop)).to_snake_case()
-			if GENERATORS.has(val_meta):
-				return val_meta
-
+			candidates.append(str(map_node.get_meta(prop)).to_snake_case())
+	if map_node.scene_file_path != "":
+		candidates.append(map_node.scene_file_path.get_file().get_basename())
+	candidates.append(str(map_node.name).to_snake_case())
+	for key in candidates:
+		if _has_background(key):
+			return key
 	var script: Script = map_node.get_script() as Script
+	var haystacks: Array[String] = [str(map_node.name).to_snake_case()]
 	if script != null:
-		var path: String = script.resource_path.to_snake_case()
-		if path.ends_with("/world_map.gd"):
-			return "world_map"
-		if path.ends_with("/tutorial_area.gd") or path.contains("tutorial_area"):
-			return "tutorial_area"
-		if path.contains("castle"):
-			return "castle"
-		if path.contains("cave"):
-			return "cave"
-		if path.contains("desert"):
-			return "desert"
-		if path.contains("fairy"):
-			return "fairy_forest"
-		if path.contains("forge"):
-			return "forge"
-		if path.contains("garden"):
-			return "garden"
-		if path.contains("hideout"):
-			return "hideout"
-		if path.contains("dungeon"):
-			return "castle"
-
-	var node_name: String = str(map_node.name).to_snake_case()
-	if GENERATORS.has(node_name):
-		return node_name
-	if node_name.contains("tutorial"):
-		return "tutorial_area"
-	if node_name.contains("castle"):
-		return "castle"
-	if node_name.contains("cave"):
-		return "cave"
-	if node_name.contains("desert"):
-		return "desert"
-	if node_name.contains("fairy"):
-		return "fairy_forest"
-	if node_name.contains("forge"):
-		return "forge"
-	if node_name.contains("garden"):
-		return "garden"
-	if node_name.contains("hideout"):
-		return "hideout"
-	if node_name.contains("dungeon"):
-		return "castle"
+		haystacks.push_front(script.resource_path.to_snake_case())
+	for text in haystacks:
+		for pair in NAME_KEYWORDS:
+			if text.contains(pair[0]):
+				return pair[1]
 	return "default"
