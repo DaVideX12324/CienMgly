@@ -46,8 +46,9 @@ First-person ground-level perspective: camera at human eye height or lower, look
 ---
 
 ### 1. Tutorial Dungeon (tutorial_area)
-- **Referencja (mockup autora):** brak — tileset tutoriala (`legacy_amonra/atlases/Dungeon tileset`) nie ma
-  mockupu mapy; kierunek stylu: tła walk `../battle_backgrounds/tutorial_area/`
+- **Referencja:** tileset tutoriala (`legacy_amonra/atlases/Dungeon tileset`) nie ma mockupu autora — zamiast
+  niego zrzuty prawdziwej mapy: `../battle_backgrounds/tutorial_area_reference/*.png` (opis materiałów:
+  `../battle_backgrounds/tutorial_area_prompts.md`)
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/tutorial_area/`
 
 #### Wariant 1: Brama Lochu Treningowego (Training Dungeon Gate)
