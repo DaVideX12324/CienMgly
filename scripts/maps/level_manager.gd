@@ -5,6 +5,11 @@ signal set_spawn(spawn: Vector2)
 const INITIAL_LEVEL_PATH := "res://modules/quiz_rpg/scenes/maps/tutorial_area.tscn"
 const DEFAULT_SPAWN_NAME := "Spawn"
 const LoadingScreenScene = preload("res://modules/quiz_rpg/scenes/ui/loading_screen.tscn")
+## Nazwa lokacji na ekranie ładowania (duży napis nad paskiem) wg nazwy pliku sceny mapy; brak = bez
+## napisu (ProceduralLevel ma własną: location_name / typ poziomu).
+const LOCATION_NAMES := {
+	"tutorial_area": "Starożytne Ruiny",
+}
 
 var current_level: Node = null
 var current_level_path: String = ""
@@ -90,13 +95,15 @@ func _load_level_scene(level_path: String, overlay: Node) -> PackedScene:
 
 
 ## Ekran ładowania nad sceną gry (jeden naraz). Tło: grafika z folderu o nazwie pliku sceny mapy
-## (loading_screens/<nazwa>/, np. tutorial_area); brak grafik = ciemne tło.
+## (loading_screens/<nazwa>/, np. tutorial_area); brak grafik = ciemne tło. Napis: LOCATION_NAMES.
 func _show_loading_screen(level_path: String) -> Node:
 	if is_instance_valid(_loading_screen) and not _loading_screen.is_queued_for_deletion():
 		return _loading_screen
 	_loading_screen = LoadingScreenScene.instantiate()
 	_loading_screen.process_mode = Node.PROCESS_MODE_ALWAYS
-	_loading_screen.set_background_for(level_path.get_file().get_basename())
+	var level_key := level_path.get_file().get_basename()
+	_loading_screen.location = LOCATION_NAMES.get(level_key, "")
+	_loading_screen.set_background_for(level_key)
 	add_child(_loading_screen)
 	return _loading_screen
 
