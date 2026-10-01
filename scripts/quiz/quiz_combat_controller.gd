@@ -119,6 +119,9 @@ var _action_buttons: Array[Button] = []
 var _selected_action_idx: int = 0
 var _victory_skip := false
 var _action_menu_open := false
+var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
+var _actor_selected_idx := 0
+var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
 var _list_menu_entries: Array[Dictionary] = []
@@ -232,6 +235,13 @@ func _ready() -> void:
 	for i in range(_action_buttons.size()):
 		var action_index := i
 		_action_buttons[i].mouse_entered.connect(func(): _highlight_action(action_index))
+	for i in range(party_rows.size()):
+		party_rows[i].draw.connect(_draw_party_row_cursor.bind(i))
+	# Kursor menu prowadzi ten skrypt (_unhandled_input); fokus Godota na przycisku przejmowałby
+	# strzałki / Enter (własna nawigacja fokusu) i rozjeżdżał się z podświetleniem.
+	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
+		if btn:
+			btn.focus_mode = Control.FOCUS_NONE
 
 	_setup_party_layout()
 	if battle_window:
@@ -306,7 +316,7 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if _is_pause_menu_open():
 		return
-	if _handle_hovered_enemy_click(event):
+	if _handle_hovered_enemy_click(event) or _handle_actor_row_mouse(event):
 		get_viewport().set_input_as_handled()
 
 
@@ -359,6 +369,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			_cancel_target_selection()
 			get_viewport().set_input_as_handled()
 			return
+	if phase == Phase.ACTION_SELECT and _actor_select_open:
+		if _is_menu_down(event):
+			_navigate_actor_list(1)
+			get_viewport().set_input_as_handled()
+			return
+		if _is_menu_up(event):
+			_navigate_actor_list(-1)
+			get_viewport().set_input_as_handled()
+			return
+		if _is_menu_accept(event):
+			_confirm_actor_selection()
+			get_viewport().set_input_as_handled()
+			return
+		if _is_menu_cancel(event):
+			_cancel_actor_selection()
+			get_viewport().set_input_as_handled()
+			return
 	if phase == Phase.ACTION_SELECT:
 		var menu_count := _get_visible_action_count()
 		if _is_action_menu_next(event):
@@ -373,7 +400,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if _action_menu_open and _is_menu_cancel(event):
 			_show_primary_menu()
-			_highlight_action(0)
+			_open_actor_select()  # jak w RPG Makerze: anulowanie komend postaci wraca do wyboru postaci
 			get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("ui_accept"):
@@ -813,10 +840,10 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 			var tp_cost: int = int(entry.get("tp_cost", 0))
 			if sp_cost > 0:
 				value_label.text = "SP %d" % sp_cost
-				disabled = _party_state.is_empty() or int(_party_state[0].get("sp", 0)) < sp_cost
+				disabled = not _has_active_actor() or int(_party_state[_active_actor_index].get("sp", 0)) < sp_cost
 			elif tp_cost > 0:
 				value_label.text = "TP %d" % tp_cost
-				disabled = _party_state.is_empty() or int(_party_state[0].get("tp", 0)) < tp_cost
+				disabled = not _has_active_actor() or int(_party_state[_active_actor_index].get("tp", 0)) < tp_cost
 			else:
 				value_label.text = "-"
 		else:
@@ -981,11 +1008,11 @@ func _consume_skill_cost(skill_data: Dictionary) -> void:
 	var sp_cost: int = int(skill_data.get("sp_cost", 0))
 	var tp_cost: int = int(skill_data.get("tp_cost", 0))
 	if sp_cost > 0:
-		_consume_party_sp(0, sp_cost)
-	if tp_cost > 0 and not _party_state.is_empty():
-		var member: Dictionary = _party_state[0]
+		_consume_party_sp(_active_actor_index, sp_cost)
+	if tp_cost > 0 and _has_active_actor():
+		var member: Dictionary = _party_state[_active_actor_index]
 		member["tp"] = clampi(int(member.get("tp", 0)) - tp_cost, 0, int(member.get("tp_max", PARTY_TP_MAX)))
-		_party_state[0] = member
+		_party_state[_active_actor_index] = member
 
 
 func _use_item(item_data: Dictionary) -> void:
@@ -1013,10 +1040,10 @@ func _use_item(item_data: Dictionary) -> void:
 		_flash_sprite(player_sprite_node, Color.GREEN)
 		FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % heal_amount, Color.GREEN, 14)
 	if sp_restore > 0:
-		_restore_party_sp(0, sp_restore)
+		_restore_party_sp(_active_actor_index, sp_restore)
 		effect_parts.append("+%d SP" % sp_restore)
 	if tp_restore > 0:
-		_restore_party_tp(0, tp_restore)
+		_restore_party_tp(_active_actor_index, tp_restore)
 		effect_parts.append("+%d TP" % tp_restore)
 	if effect_parts.is_empty():
 		result_label.text = str(use_result.get("message", "Użyto: %s" % item_name))
@@ -1326,6 +1353,8 @@ func _log(text: String) -> void:
 
 
 func _highlight_action(idx: int) -> void:
+	if _actor_select_open:
+		return  # kursor jest na liście drużyny
 	var buttons := _get_visible_action_buttons() if _action_menu_open else _get_visible_primary_buttons()
 	if buttons.is_empty():
 		return
@@ -2262,6 +2291,7 @@ func _restore_party_tp(index: int, amount: int) -> void:
 
 
 func _show_primary_menu() -> void:
+	_close_actor_select()
 	_action_menu_open = false
 	primary_menu.visible = true
 	action_menu.visible = false
@@ -2305,8 +2335,7 @@ func _on_engage_pressed() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
-	_show_action_menu()
-	_highlight_action(0)
+	_open_actor_select()
 
 
 func _on_run_pressed() -> void:
@@ -2315,7 +2344,120 @@ func _on_run_pressed() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
+	_close_actor_select()
 	_try_flee()
+
+
+## Wybór postaci po „Walcz”: komendy drużyny zostają po lewej, kursor (pasek) przechodzi na listę
+## drużyny w prawym oknie; zatwierdzenie otwiera komendy wybranej postaci.
+func _open_actor_select() -> void:
+	if _party_state.is_empty():
+		_show_action_menu()
+		_highlight_action(0)
+		return
+	for btn: Button in [engage_btn, run_btn, exit_btn]:
+		if btn:
+			QuizTheme.set_menu_item_selected(btn, false)
+	_actor_select_open = true
+	_actor_selected_idx = _active_actor_index if _is_actor_selectable(_active_actor_index) else _find_selectable_actor(0, 1)
+	_refresh_actor_selection()
+
+
+func _close_actor_select() -> void:
+	if not _actor_select_open:
+		return
+	_actor_select_open = false
+	_refresh_actor_selection()
+
+
+func _is_actor_selectable(index: int) -> bool:
+	if index < 0 or index >= _party_state.size() or index >= party_rows.size():
+		return false
+	return int(_party_state[index].get("lp", 0)) > 0
+
+
+func _has_active_actor() -> bool:
+	return _active_actor_index >= 0 and _active_actor_index < _party_state.size()
+
+
+## Pierwsza postać zdolna do walki od `start` w kierunku `step` (z zawinięciem); 0, gdy brak.
+func _find_selectable_actor(start: int, step: int) -> int:
+	var count := mini(_party_state.size(), party_rows.size())
+	if count <= 0:
+		return 0
+	for offset in range(count):
+		var idx := posmod(start + offset * step, count)
+		if _is_actor_selectable(idx):
+			return idx
+	return 0
+
+
+func _navigate_actor_list(delta: int) -> void:
+	var count := mini(_party_state.size(), party_rows.size())
+	if count <= 1:
+		return
+	_actor_selected_idx = _find_selectable_actor(posmod(_actor_selected_idx + delta, count), delta)
+	_refresh_actor_selection()
+
+
+func _confirm_actor_selection() -> void:
+	if not _is_actor_selectable(_actor_selected_idx):
+		return
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
+	_active_actor_index = _actor_selected_idx
+	_close_actor_select()
+	_show_action_menu()
+	_highlight_action(0)
+
+
+func _cancel_actor_selection() -> void:
+	_close_actor_select()
+	_show_primary_menu()
+	_highlight_action(0)
+
+
+func _refresh_actor_selection() -> void:
+	for row in party_rows:
+		row.queue_redraw()
+
+
+## Kursor na wierszu drużyny: ten sam styl „selected” co pozycje menu (pasek pod wierszem).
+func _draw_party_row_cursor(index: int) -> void:
+	if not _actor_select_open or index != _actor_selected_idx or index >= party_rows.size():
+		return
+	var row := party_rows[index]
+	var sb := row.get_theme_stylebox(&"selected", QuizTheme.MENU_ITEM)
+	if sb == null:
+		return
+	row.draw_style_box(sb, Rect2(Vector2.ZERO, row.size))
+
+
+## Mysz na liście drużyny w czasie wyboru postaci: najechanie przesuwa kursor, klik zatwierdza.
+func _handle_actor_row_mouse(event: InputEvent) -> bool:
+	if phase != Phase.ACTION_SELECT or not _actor_select_open:
+		return false
+	if not (event is InputEventMouseMotion or event is InputEventMouseButton):
+		return false
+	for i in range(party_rows.size()):
+		var row := party_rows[i]
+		if not row.is_visible_in_tree() or not Rect2(Vector2.ZERO, row.size).has_point(row.get_local_mouse_position()):
+			continue
+		if not _is_actor_selectable(i):
+			return false
+		if event is InputEventMouseMotion:
+			if _actor_selected_idx != i:
+				_actor_selected_idx = i
+				_refresh_actor_selection()
+			return false
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT:
+			_actor_selected_idx = i
+			_confirm_actor_selection()
+			return true
+		return false
+	return false
 
 
 func _on_exit_pressed() -> void:
