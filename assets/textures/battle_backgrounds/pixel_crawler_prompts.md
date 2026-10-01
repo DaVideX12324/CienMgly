@@ -59,7 +59,7 @@ Multi-level battle arena composition: ultra-wide panoramic frame with two or thr
 
 Klucz mapy wybiera `battle_background.gd` (ten sam co folder ekranu ładowania):
 jaskinie generowane → `cave`, zamek generowany → `castle`, las generowany → `fairy_forest` (alias
-`forest`), `tutorial_area` → `battle_backgrounds/tutorial_area/`. Pozostałe biomy czekają na mapy —
+`forest`), `tutorial_area` → `battle_backgrounds/tutorial_area/` (prompty: `tutorial_area_prompts.md`). Pozostałe biomy czekają na mapy —
 folder z grafikami zadziała sam, gdy mapa dostanie taki klucz.
 
 ---
