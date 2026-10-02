@@ -1827,6 +1827,7 @@ func _apply_responsive_enemy_layout() -> void:
 		_battle_layout = _get_battle_layout()
 	var vp_size: Vector2 = get_viewport_rect().size
 	var area: Vector2 = _enemy_field_layer.size
+	var depth_order: Array = []  # [linia stóp y, wrapper] — dalsi (wyżej na ekranie) rysowani pierwsi
 	for slot_idx in range(_enemy_active_layout_slots.size()):
 		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
 		var wrapper: Control = slot_data.get("wrapper", null) as Control
@@ -1839,6 +1840,7 @@ func _apply_responsive_enemy_layout() -> void:
 		# Stopy wroga (display: środek slotu, 8 px nad jego dołem) w miejscu z pola walki.
 		var foot: Vector2 = _battle_layout.foot(spot, area, vp_size)
 		wrapper.position = foot - Vector2(wrapper.size.x * 0.5, slot_sz.y - 8.0)
+		depth_order.append([foot.y, wrapper])
 		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:
 			var display: Node2D = _enemy_displays[slot_idx]
 			display.position = Vector2(slot_sz.x * 0.5, slot_sz.y - 8.0)
@@ -1846,6 +1848,12 @@ func _apply_responsive_enemy_layout() -> void:
 			display.scale = _get_enemy_scale(slot_idx, is_focused)
 		if not slot.resized.is_connected(_on_enemy_slot_resized):
 			slot.resized.connect(_on_enemy_slot_resized.bind(slot))
+	# Kolejność rysowania = głębia: tylny rząd pod przednim (stabilnie przy równej linii stóp).
+	depth_order.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	for i in range(depth_order.size()):
+		var w: Control = depth_order[i][1]
+		if w.get_parent() == _enemy_field_layer:
+			_enemy_field_layer.move_child(w, i)
 
 
 ## Pola walki bieżącego tła (plik `<grafika>_layout.tres`).
