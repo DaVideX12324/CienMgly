@@ -30,13 +30,18 @@ func _exit_tree() -> void:
 
 
 ## Motywy UI dla zakładki „Motyw” w opcjach hosta: [{id, name}], zapis w ustawieniach modułu
-## (klucze ui_skin / ui_brightness).
+## (klucze ui_skin / ui_brightness / ui_bar_style).
 func get_ui_skins() -> Array[Dictionary]:
 	return QuizTheme.SKINS
 
 
+## Style pasków dla zakładki „Motyw” (klucz ui_bar_style).
+func get_ui_bar_styles() -> Array[Dictionary]:
+	return QuizTheme.BAR_STYLES
+
+
 func _on_module_setting_changed(module_id: String, key: String, _value: Variant) -> void:
-	if module_id == QuizTheme.MODULE_ID and (key == QuizTheme.SETTING_SKIN or key == QuizTheme.SETTING_BRIGHTNESS):
+	if module_id == QuizTheme.MODULE_ID and key in [QuizTheme.SETTING_SKIN, QuizTheme.SETTING_BRIGHTNESS, QuizTheme.SETTING_BAR_STYLE]:
 		QuizTheme.apply_skin_from_settings()
 
 
