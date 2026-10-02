@@ -26,6 +26,7 @@
     "terrain_grass_threshold": 0.0,
     "niche_spawn_chance": 0.15,
     "secret_niche_spawn_chance": 0.3,
+    "passage_niche_spawn_chance": 1.0,
     "force_theme": -1,
     "debug_log_edge_kinds": false,
     "enable_platforms": true,

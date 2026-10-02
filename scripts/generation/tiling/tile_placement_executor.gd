@@ -21,4 +21,14 @@ static func place_range(layer: TileMapLayer, cells: Dictionary, positions: Array
 		if p.is_erase():
 			layer.erase_cell(pos)
 		else:
-			layer.set_cell(pos, p.source_id, p.atlas_coords, p.alternative_tile)
+			layer.set_cell(pos, p.source_id, p.atlas_coords, _alternative(layer, p))
+
+
+## Nisza-przejście: alternatywa PASSAGE_ALT kafla (inne kolizje), gdy TileSet ją ma — inaczej zwykły kafel.
+static func _alternative(layer: TileMapLayer, p: TilePlacement) -> int:
+	if not p.passage or layer.tile_set == null or not layer.tile_set.has_source(p.source_id):
+		return p.alternative_tile
+	var src := layer.tile_set.get_source(p.source_id) as TileSetAtlasSource
+	if src != null and src.has_tile(p.atlas_coords) and src.has_alternative_tile(p.atlas_coords, NichePlacer.PASSAGE_ALT):
+		return NichePlacer.PASSAGE_ALT
+	return p.alternative_tile

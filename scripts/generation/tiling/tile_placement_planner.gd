@@ -49,6 +49,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 
 	# 8. Czyszczenie kafelków ścian na strefach portali
 	PortalClearPlacer.plan(ctx, tiles)
+	NichePlacer.mark_passages(ctx, tiles)
 	GenProgress.end(&"walls")
 
 	# 9. Płaskowyże na osobnej warstwie Platforms (po ścianach — renderer czyta plan Walls)
