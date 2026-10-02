@@ -29,6 +29,10 @@ func _ready() -> void:
 	_update_load_button()
 	_style_menu()
 	stats_panel.visible = false
+	# Muzyka menu także po powrocie z gry („Zakończ grę” w menu Esc) — poziom zostawiał swoją.
+	var audio := get_node_or_null("/root/AudioService")
+	if audio and audio.has_method("play_music"):
+		audio.play_music("menu")
 
 
 func _process(delta: float) -> void:
