@@ -71,6 +71,16 @@ layout_mode = 2
 layout_mode = 2
 autowrap_mode = 3
 
+[node name="ScoreSpacer" type="Control" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox" unique_id=1739204551]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="ScoreLabel" type="Label" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox" unique_id=902615387]
+layout_mode = 2
+text = "Punkty 0
+Seria x0"
+
 [node name="RightPanel" type="PanelContainer" parent="PauseRoot/MainRow" unique_id=1988091729]
 layout_mode = 2
 size_flags_horizontal = 3
