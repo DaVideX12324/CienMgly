@@ -35,6 +35,11 @@ func get_ui_skins() -> Array[Dictionary]:
 	return QuizTheme.SKINS
 
 
+## Rozmiar tekstu ekranów hosta (opcje) dopasowany do pikselowej czcionki modułu (Jersey 15).
+func snap_font_size(size: int) -> int:
+	return QuizTheme.snap(size)
+
+
 ## Style pasków dla zakładki „Motyw” (klucz ui_bar_style).
 func get_ui_bar_styles() -> Array[Dictionary]:
 	return QuizTheme.BAR_STYLES
