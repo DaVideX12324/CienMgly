@@ -1,0 +1,42 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_orange_full.png" id="1_05esv"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_orange_empty.png" id="2_hiacr"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_silver_full.png" id="3_6qsx1"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_silver_empty.png" id="4_srtnp"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_green_full.png" id="5_snup2"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_green_empty.png" id="6_i0jjg"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_yellow_full.png" id="7_a4xq2"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_male_yellow_empty.png" id="8_ebrub"]
+
+[resource]
+QuizBarEnemy/constants/bar_cap_left = 4
+QuizBarEnemy/constants/bar_cap_right = 4
+QuizBarEnemy/constants/bar_scale = 2
+QuizBarEnemy/constants/bar_tile = 1
+QuizBarEnemy/icons/bar_progress = ExtResource("1_05esv")
+QuizBarEnemy/icons/bar_under = ExtResource("2_hiacr")
+QuizBarLP/constants/bar_cap_left = 4
+QuizBarLP/constants/bar_cap_right = 4
+QuizBarLP/constants/bar_scale = 2
+QuizBarLP/constants/bar_tile = 1
+QuizBarLP/icons/bar_progress = ExtResource("1_05esv")
+QuizBarLP/icons/bar_under = ExtResource("2_hiacr")
+QuizBarSP/constants/bar_cap_left = 4
+QuizBarSP/constants/bar_cap_right = 4
+QuizBarSP/constants/bar_scale = 2
+QuizBarSP/constants/bar_tile = 1
+QuizBarSP/icons/bar_progress = ExtResource("3_6qsx1")
+QuizBarSP/icons/bar_under = ExtResource("4_srtnp")
+QuizBarTP/constants/bar_cap_left = 4
+QuizBarTP/constants/bar_cap_right = 4
+QuizBarTP/constants/bar_scale = 2
+QuizBarTP/constants/bar_tile = 1
+QuizBarTP/icons/bar_progress = ExtResource("5_snup2")
+QuizBarTP/icons/bar_under = ExtResource("6_i0jjg")
+QuizBarTimer/constants/bar_cap_left = 4
+QuizBarTimer/constants/bar_cap_right = 4
+QuizBarTimer/constants/bar_scale = 2
+QuizBarTimer/constants/bar_tile = 1
+QuizBarTimer/icons/bar_progress = ExtResource("7_a4xq2")
+QuizBarTimer/icons/bar_under = ExtResource("8_ebrub")

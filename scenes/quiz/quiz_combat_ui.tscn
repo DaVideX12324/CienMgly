@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bmndbqqcgecbu" path="res://modules/quiz_rpg/scripts/quiz/quiz_combat_controller.gd" id="1_combat"]
 [ext_resource type="Theme" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="1_u2rx0"]
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_dark"]
 bg_color = Color(0.02, 0.03, 0.05, 0.9)
@@ -296,6 +297,7 @@ color = Color(0.3, 0.6, 1, 1)
 
 [node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer" unique_id=347917086]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -315,6 +317,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer1" unique_id=1589554787]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -334,6 +337,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer2" unique_id=2085553291]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -353,6 +357,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer3" unique_id=362736361]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -372,6 +377,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer4" unique_id=132120749]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -409,6 +415,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer" unique_id=405477884]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -428,6 +435,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer1" unique_id=1994615515]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -447,6 +455,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer2" unique_id=40865332]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -466,6 +475,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer3" unique_id=1063495788]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -485,6 +495,7 @@ mouse_filter = 1
 
 [node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer4" unique_id=2443933]
 theme_type_variation = &"QuizBarEnemy"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
@@ -871,6 +882,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=165655448]
 theme_type_variation = &"QuizBarLP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -905,6 +917,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1760073518]
 theme_type_variation = &"QuizBarSP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -938,6 +951,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=1720153271]
 theme_type_variation = &"QuizBarTP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -982,6 +996,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=1761014635]
 theme_type_variation = &"QuizBarLP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1016,6 +1031,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=636456736]
 theme_type_variation = &"QuizBarSP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1049,6 +1065,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=2103621860]
 theme_type_variation = &"QuizBarTP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1093,6 +1110,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=740423526]
 theme_type_variation = &"QuizBarLP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1127,6 +1145,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=484989898]
 theme_type_variation = &"QuizBarSP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1160,6 +1179,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1918702154]
 theme_type_variation = &"QuizBarTP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1204,6 +1224,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=764813116]
 theme_type_variation = &"QuizBarLP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1238,6 +1259,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1470212885]
 theme_type_variation = &"QuizBarSP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1271,6 +1293,7 @@ horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=994443156]
 theme_type_variation = &"QuizBarTP"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1367,6 +1390,7 @@ theme_override_constants/separation = 16
 
 [node name="TimerBar" type="ProgressBar" parent="Root/TopWindow/VBox/TimerRow" unique_id=82783259]
 theme_type_variation = &"QuizBarTimer"
+script = ExtResource("quiz_bar")
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3

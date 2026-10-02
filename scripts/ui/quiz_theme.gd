@@ -11,9 +11,10 @@ extends RefCounted
 ## restore() przywraca poprzednie (BitBomber i menu hosta bez zmian).
 ## Wywołania: module_root (_ready / _exit_tree) i narzędzia uruchamiane bez modułu (eksplorator map).
 ##
-## Motywy (Opcje -> Motyw): plik resources/ui/skins/<id>.tres nadpisuje style typów SKIN_TYPES
-## (okna, zaznaczenie, paski); „klasyczny” = sam THEME_PATH. Jasność mnoży kolor okien i zaznaczenia.
-## Wybór w ustawieniach modułu (SettingsService, klucze SETTING_SKIN / SETTING_BRIGHTNESS).
+## Motywy (Opcje -> Motyw): plik resources/ui/skins/<id>.tres nadpisuje style okien i zaznaczenia,
+## bars_<styl>.tres — paski (osobny wybór); „klasyczny” = sam THEME_PATH. Jasność mnoży kolor okien
+## i zaznaczenia. Wybór w ustawieniach modułu (SettingsService: SETTING_SKIN / SETTING_BRIGHTNESS /
+## SETTING_BAR_STYLE).
 
 const THEME_PATH := "res://modules/quiz_rpg/resources/ui/quiz_theme.tres"
 ## Czcionka pikselowa (FontFile z danymi Jersey 15, bez wygładzania — zapisane w zasobie, bo pliki
@@ -57,6 +58,21 @@ const SKINS: Array[Dictionary] = [
 	{"id": "st_beige_sq_flat", "name": "Jasny, kwadratowy"},
 	{"id": "st_beige_sq_3d", "name": "Jasny, kwadratowy, z głębią"},
 ]
+const SETTING_BAR_STYLE := "ui_bar_style"
+const DEFAULT_BAR_STYLE := "klasyczny"
+## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
+## Style z Pixel UI pack 3 (assets/UI/Pixel UI pack 3/Full.png, 05.png).
+const BAR_STYLES: Array[Dictionary] = [
+	{"id": "klasyczny", "name": "Klasyczne (gładkie)"},
+	{"id": "gradient", "name": "Gradientowe skośne"},
+	{"id": "skos", "name": "Skośne"},
+	{"id": "szpic", "name": "Zakończone szpicem"},
+	{"id": "prostokat", "name": "Prostokątne"},
+	{"id": "zdrowie", "name": "Czerwono-zielone"},
+	{"id": "pas", "name": "Pas (skrzydło)"},
+	{"id": "kropki", "name": "Segmentowe"},
+	{"id": "kropki_male", "name": "Segmentowe, małe"},
+]
 const BRIGHTNESS_MIN := 0.5
 const BRIGHTNESS_MAX := 1.5
 const LABEL_COLOR := Color(0.55, 0.70, 1.0)   # etykiety LP / SP / TP (jak w RPG Makerze)
@@ -70,6 +86,7 @@ static var _theme: Theme = null
 static var _base: Theme = null   # style „klasyczne” z THEME_PATH (przed nałożeniem motywu)
 static var _skin_id := DEFAULT_SKIN
 static var _brightness := 1.0
+static var _bar_style := DEFAULT_BAR_STYLE
 static var _selected_buttons: Array[WeakRef] = []  # zaznaczone pozycje (odświeżane po zmianie motywu)
 
 
@@ -148,46 +165,58 @@ static func restore() -> void:
 	_prev_default = null
 
 
-## Motyw i jasność z ustawień modułu (SettingsService); bez usługi — motyw domyślny.
+## Motyw, jasność i styl pasków z ustawień modułu (SettingsService); bez usługi — domyślne.
 static func apply_skin_from_settings() -> void:
 	var settings := _settings_service()
 	var id := DEFAULT_SKIN
 	var brightness := 1.0
+	var bars := DEFAULT_BAR_STYLE
 	if settings:
 		id = str(settings.call("get_module", MODULE_ID, SETTING_SKIN, DEFAULT_SKIN))
 		brightness = float(settings.call("get_module", MODULE_ID, SETTING_BRIGHTNESS, 1.0))
-	apply_skin(id, brightness)
+		bars = str(settings.call("get_module", MODULE_ID, SETTING_BAR_STYLE, DEFAULT_BAR_STYLE))
+	apply_skin(id, brightness, bars)
 
 
-## Nakłada motyw `id` (nieznany -> klasyczny) z jasnością `brightness` na motyw modułu — ekrany
-## z przypiętym motywem odświeżają się same (sygnał changed), domyślny motyw dostaje kopię typów.
-static func apply_skin(id: String, brightness: float = 1.0) -> void:
+## Nakłada na motyw modułu warstwy: motyw okien `id` (SKIN_DIR/<id>.tres), potem styl pasków `bar_style`
+## (SKIN_DIR/bars_<styl>.tres); nieznane / domyślne -> sam THEME_PATH. Jasność `brightness` mnoży kolor
+## okien i zaznaczenia. Ekrany z przypiętym motywem odświeżają się same (sygnał changed), domyślny
+## motyw dostaje kopię typów.
+static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = DEFAULT_BAR_STYLE) -> void:
 	var th := theme()
 	if _base == null:
 		_base = Theme.new()
 		for t in CUSTOM_TYPES:
 			_copy_type(th, _base, t)
-	var skin: Theme = null
-	if id != DEFAULT_SKIN and ResourceLoader.exists(SKIN_DIR + id + ".tres"):
-		skin = load(SKIN_DIR + id + ".tres") as Theme
+	var skin := _load_layer(id, DEFAULT_SKIN, "")
+	var bars := _load_layer(bar_style, DEFAULT_BAR_STYLE, "bars_")
 	_skin_id = id if skin != null else DEFAULT_SKIN
+	_bar_style = bar_style if bars != null else DEFAULT_BAR_STYLE
 	_brightness = clampf(brightness, BRIGHTNESS_MIN, BRIGHTNESS_MAX)
+	var layers: Array[Theme] = []  # od najważniejszej: styl pasków, motyw okien, baza
+	for l in [bars, skin, _base]:
+		if l != null:
+			layers.append(l)
 	for t in CUSTOM_TYPES:
-		var names := _base.get_stylebox_list(t)
-		if skin:
-			for n in skin.get_stylebox_list(t):
-				if not names.has(n):
-					names.append(n)
-		for n in names:
-			var sb: StyleBox = skin.get_stylebox(n, t) if skin and skin.has_stylebox(n, t) else _base.get_stylebox(n, t)
+		for n in _names(layers, t, Theme.DATA_TYPE_STYLEBOX):
+			var sb := _pick(layers, t, n, Theme.DATA_TYPE_STYLEBOX) as StyleBox
 			if BRIGHTNESS_TYPES.has(t) and not is_equal_approx(_brightness, 1.0):
 				sb = _brightened(sb, _brightness)
 			th.set_stylebox(n, t, sb)
-		for n in _base.get_color_list(t):
-			th.set_color(n, t, skin.get_color(n, t) if skin and skin.has_color(n, t) else _base.get_color(n, t))
+		for n in _names(layers, t, Theme.DATA_TYPE_COLOR):
+			th.set_color(n, t, _pick(layers, t, n, Theme.DATA_TYPE_COLOR))
+		# Ikony i stałe (tekstury pasków QuizBar) — tylko z warstw, które je mają; reszta usuwana.
+		for dt_kind: Theme.DataType in [Theme.DATA_TYPE_ICON, Theme.DATA_TYPE_CONSTANT]:
+			var keep := _names(layers, t, dt_kind)
+			for n in th.get_theme_item_list(dt_kind, t):
+				if not keep.has(n):
+					th.clear_theme_item(dt_kind, n, t)
+			for n in keep:
+				th.set_theme_item(dt_kind, n, t, _pick(layers, t, n, dt_kind))
 	if _depth > 0:
 		var dt := ThemeDB.get_default_theme()
 		for t in CUSTOM_TYPES:
+			dt.remove_type(t)
 			_copy_type(th, dt, t)
 	# Zaznaczenie ma styl wstawiony jako nadpisanie — przepisać nowym.
 	for w in _selected_buttons.duplicate():
@@ -195,6 +224,33 @@ static func apply_skin(id: String, brightness: float = 1.0) -> void:
 		if btn and bool(btn.get_meta(&"quiz_menu_selected", false)):
 			set_menu_item_selected(btn, true)
 	_selected_buttons = _selected_buttons.filter(func(w: WeakRef) -> bool: return w.get_ref() != null and bool((w.get_ref() as Button).get_meta(&"quiz_menu_selected", false)))
+
+
+static func _load_layer(id: String, default_id: String, prefix: String) -> Theme:
+	var path := SKIN_DIR + prefix + id + ".tres"
+	if id == default_id or not ResourceLoader.exists(path):
+		return null
+	return load(path) as Theme
+
+
+static func _names(layers: Array[Theme], t: StringName, kind: Theme.DataType) -> PackedStringArray:
+	var out := PackedStringArray()
+	for l in layers:
+		for n in l.get_theme_item_list(kind, t):
+			if not out.has(n):
+				out.append(n)
+	return out
+
+
+static func _pick(layers: Array[Theme], t: StringName, n: StringName, kind: Theme.DataType) -> Variant:
+	for l in layers:
+		if l.has_theme_item(kind, n, t):
+			return l.get_theme_item(kind, n, t)
+	return null
+
+
+static func bar_style() -> String:
+	return _bar_style
 
 
 static func skin_id() -> String:
@@ -235,6 +291,8 @@ static func _copy_type(src: Theme, dst: Theme, t: StringName) -> void:
 		dst.set_color(n, t, src.get_color(n, t))
 	for n in src.get_constant_list(t):
 		dst.set_constant(n, t, src.get_constant(n, t))
+	for n in src.get_icon_list(t):
+		dst.set_icon(n, t, src.get_icon(n, t))
 	for n in src.get_font_size_list(t):
 		dst.set_font_size(n, t, src.get_font_size(n, t))
 

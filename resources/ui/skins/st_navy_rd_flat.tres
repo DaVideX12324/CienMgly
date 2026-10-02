@@ -1,189 +1,44 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_empty.png" id="1_3mc5n"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_green.png" id="2_d8euq"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_red.png" id="3_abruh"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_blue.png" id="4_dnd8h"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_yellow.png" id="5_02nsx"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_navy_rd_flat.png" id="6_4ff70"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_beige_rd_flat.png" id="7_rwu5y"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_navy_rd_flat.png" id="1_b0s41"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_beige_rd_flat.png" id="2_era8m"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4fu1j"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("1_3mc5n")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_xkyy5"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("2_d8euq")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_di0gi"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("1_3mc5n")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_xvbhc"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("3_abruh")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0xna8"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("1_3mc5n")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_no8pi"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("4_dnd8h")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_jyyno"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("1_3mc5n")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5xwoe"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("2_d8euq")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_48kvc"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("1_3mc5n")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_klquq"]
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
-texture = ExtResource("5_02nsx")
-texture_margin_left = 4.0
-texture_margin_top = 4.0
-texture_margin_right = 4.0
-texture_margin_bottom = 4.0
-expand_margin_top = 1.0
-expand_margin_bottom = 1.0
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dwn55"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cj4sb"]
 content_margin_left = 32.0
 content_margin_top = 20.0
 content_margin_right = 32.0
 content_margin_bottom = 20.0
-texture = ExtResource("6_4ff70")
+texture = ExtResource("1_b0s41")
 texture_margin_left = 15.0
 texture_margin_top = 15.0
 texture_margin_right = 15.0
 texture_margin_bottom = 15.0
 modulate_color = Color(1, 1, 1, 0.92)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8icat"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4jd72"]
 content_margin_left = 12.0
 content_margin_top = 4.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
-texture = ExtResource("7_rwu5y")
+texture = ExtResource("2_era8m")
 texture_margin_left = 15.0
 texture_margin_top = 15.0
 texture_margin_right = 15.0
 texture_margin_bottom = 15.0
 modulate_color = Color(1, 1, 1, 0.3)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ofawt"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_r3x64"]
 content_margin_left = 18.0
 content_margin_top = 18.0
 content_margin_right = 18.0
 content_margin_bottom = 18.0
-texture = ExtResource("6_4ff70")
+texture = ExtResource("1_b0s41")
 texture_margin_left = 15.0
 texture_margin_top = 15.0
 texture_margin_right = 15.0
 texture_margin_bottom = 15.0
 
 [resource]
-QuizBarEnemy/styles/background = SubResource("StyleBoxTexture_4fu1j")
-QuizBarEnemy/styles/fill = SubResource("StyleBoxTexture_xkyy5")
-QuizBarLP/styles/background = SubResource("StyleBoxTexture_di0gi")
-QuizBarLP/styles/fill = SubResource("StyleBoxTexture_xvbhc")
-QuizBarSP/styles/background = SubResource("StyleBoxTexture_0xna8")
-QuizBarSP/styles/fill = SubResource("StyleBoxTexture_no8pi")
-QuizBarTP/styles/background = SubResource("StyleBoxTexture_jyyno")
-QuizBarTP/styles/fill = SubResource("StyleBoxTexture_5xwoe")
-QuizBarTimer/styles/background = SubResource("StyleBoxTexture_48kvc")
-QuizBarTimer/styles/fill = SubResource("StyleBoxTexture_klquq")
-QuizLog/styles/panel = SubResource("StyleBoxTexture_dwn55")
-QuizMenuItem/styles/selected = SubResource("StyleBoxTexture_8icat")
-QuizWindow/styles/panel = SubResource("StyleBoxTexture_ofawt")
+QuizLog/styles/panel = SubResource("StyleBoxTexture_cj4sb")
+QuizMenuItem/styles/selected = SubResource("StyleBoxTexture_4jd72")
+QuizWindow/styles/panel = SubResource("StyleBoxTexture_r3x64")

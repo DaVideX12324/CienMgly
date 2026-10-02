@@ -1,0 +1,21 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/zdrowie_rgb_full.png" id="1_j7vxn"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/zdrowie_rgb_empty.png" id="2_x2tll"]
+
+[resource]
+QuizBarEnemy/constants/bar_scale = 2
+QuizBarEnemy/icons/bar_progress = ExtResource("1_j7vxn")
+QuizBarEnemy/icons/bar_under = ExtResource("2_x2tll")
+QuizBarLP/constants/bar_scale = 2
+QuizBarLP/icons/bar_progress = ExtResource("1_j7vxn")
+QuizBarLP/icons/bar_under = ExtResource("2_x2tll")
+QuizBarSP/constants/bar_scale = 2
+QuizBarSP/icons/bar_progress = ExtResource("1_j7vxn")
+QuizBarSP/icons/bar_under = ExtResource("2_x2tll")
+QuizBarTP/constants/bar_scale = 2
+QuizBarTP/icons/bar_progress = ExtResource("1_j7vxn")
+QuizBarTP/icons/bar_under = ExtResource("2_x2tll")
+QuizBarTimer/constants/bar_scale = 2
+QuizBarTimer/icons/bar_progress = ExtResource("1_j7vxn")
+QuizBarTimer/icons/bar_under = ExtResource("2_x2tll")
