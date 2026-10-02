@@ -5,6 +5,7 @@ extends CanvasLayer
 @onready var new_game_btn: Button = $Center/Panel/Margin/VBox/BtnNewGame
 @onready var load_game_btn: Button = $Center/Panel/Margin/VBox/BtnLoadGame
 @onready var stats_btn: Button = $Center/Panel/Margin/VBox/BtnStats
+@onready var options_btn: Button = $Center/Panel/Margin/VBox/BtnOptions
 @onready var quit_btn: Button = $Center/Panel/Margin/VBox/BtnQuit
 @onready var close_stats_btn: Button = $StatsPanel/StatsMargin/StatsVBox/BtnCloseStats
 @onready var title_label: Label = $Center/Panel/Margin/VBox/Title
@@ -19,6 +20,8 @@ var _save_slots_title: Label
 var _save_slots_list: VBoxContainer
 var _save_slots_back_btn: Button
 var _slot_mode: String = "load"
+var _options_menu: CanvasLayer = null
+const HOST_OPTIONS_MENU_SCENE := "res://scenes/ui/options_menu.tscn"
 const MAX_MENU_SAVE_SLOTS := 20
 
 
@@ -48,6 +51,8 @@ func _connect_buttons() -> void:
 		load_game_btn.pressed.connect(_on_load_game)
 	if not stats_btn.pressed.is_connected(_on_stats):
 		stats_btn.pressed.connect(_on_stats)
+	if not options_btn.pressed.is_connected(_on_options):
+		options_btn.pressed.connect(_on_options)
 	if not quit_btn.pressed.is_connected(_on_quit):
 		quit_btn.pressed.connect(_on_quit)
 	if not close_stats_btn.pressed.is_connected(_on_close_stats):
@@ -89,6 +94,22 @@ func _on_stats() -> void:
 	stats_panel.visible = not stats_panel.visible
 	if stats_panel.visible:
 		_populate_stats()
+
+
+## Opcje hosta (ekran, dźwięk, motyw, sterowanie) — to samo okno co w menu Esc.
+func _on_options() -> void:
+	if _options_menu == null or not is_instance_valid(_options_menu):
+		if not ResourceLoader.exists(HOST_OPTIONS_MENU_SCENE):
+			push_warning("MainMenu: brak okna opcji %s" % HOST_OPTIONS_MENU_SCENE)
+			return
+		_options_menu = (load(HOST_OPTIONS_MENU_SCENE) as PackedScene).instantiate() as CanvasLayer
+		_options_menu.layer = layer + 5
+		add_child(_options_menu)
+	stats_panel.visible = false
+	if _options_menu.has_method("open"):
+		_options_menu.call("open")
+	else:
+		_options_menu.visible = true
 
 
 func _on_close_stats() -> void:
