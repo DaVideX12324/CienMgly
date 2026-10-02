@@ -2440,9 +2440,12 @@ func _handle_actor_row_mouse(event: InputEvent) -> bool:
 		return false
 	if not (event is InputEventMouseMotion or event is InputEventMouseButton):
 		return false
+	# Położenie ze zdarzenia (w _input już w układzie viewportu), nie z bieżącej pozycji kursora.
+	var mouse_pos: Vector2 = (event as InputEventMouse).position
 	for i in range(party_rows.size()):
 		var row := party_rows[i]
-		if not row.is_visible_in_tree() or not Rect2(Vector2.ZERO, row.size).has_point(row.get_local_mouse_position()):
+		var local: Vector2 = row.get_global_transform_with_canvas().affine_inverse() * mouse_pos
+		if not row.is_visible_in_tree() or not Rect2(Vector2.ZERO, row.size).has_point(local):
 			continue
 		if not _is_actor_selectable(i):
 			return false
