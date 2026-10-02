@@ -561,13 +561,13 @@ theme_override_constants/separation = 18
 [node name="TurnLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=2124071130]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 36
 text = "Tura 1 - Twój ruch"
 
 [node name="StreakLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/TopRow" unique_id=313790074]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 36
 text = "Seria: 0 | RNG: +0%"
 horizontal_alignment = 2
 

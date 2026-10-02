@@ -190,6 +190,7 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	theme = QuizTheme.combat_theme()  # większy tekst w walce (QuizTheme.COMBAT_FONT_SIZE), ten sam motyw
 	var settings := get_node_or_null("/root/SettingsService")
 	if settings and settings.has_signal("module_setting_changed"):
 		settings.module_setting_changed.connect(func(module_id: String, key: String, _v: Variant) -> void:
@@ -254,6 +255,7 @@ func _ready() -> void:
 		_band_height = -battle_window.offset_top
 	_init_party_state()
 	_quiz_panel_controller = QuizPanelController.new()
+	_quiz_panel_controller.text_size = QuizTheme.COMBAT_FONT_SIZE
 	_quiz_panel_controller.setup(command_vbox, {
 		"question_label": $TopWindow/VBox/QuestionLabel,
 		"timer_label": $TopWindow/VBox/TimerRow/TimerLabel,
@@ -580,13 +582,13 @@ func _build_target_menu() -> void:
 		name_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_text.text = str(entry.get("name", enemy_name_str))
-		name_text.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(20)))
+		name_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		name_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 		var hp_text: Label = Label.new()
 		hp_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hp_text.text = "%d/%d HP" % [int(entry.get("hp", 0)), int(entry.get("max_hp", 1))]
-		hp_text.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(17)))
+		hp_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		hp_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 		row_content.add_child(name_text)
 		row_content.add_child(hp_text)
@@ -835,11 +837,11 @@ func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_sk
 		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_label.text = str(entry.get("name", "---"))
-		name_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(18)))
+		name_label.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		var value_label: Label = Label.new()
 		value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		value_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_scale_px(16)))
+		value_label.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		var disabled: bool = false
 		if is_skill_menu:
 			var sp_cost: int = int(entry.get("sp_cost", 0))

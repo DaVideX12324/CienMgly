@@ -26,6 +26,9 @@ const TTF_PATH := "res://assets/fonts/Jersey15-Regular.ttf"
 const PX := 27
 ## Mnożnik przed zaokrągleniem: dotychczasowe rozmiary (Inter) 13–28 -> 27, 29–48 -> 54 itd.
 const SIZE_SCALE := 1.4
+## Tekst UI walki (ekran walki ma własną kopię motywu z tym rozmiarem — combat_theme). 36 = 4/3 siatki
+## Jersey 15: piksele liter nierówne (1–2 px), w praniu niewidoczne — docs/znane_problemy.md.
+const COMBAT_FONT_SIZE := 36
 
 ## Typy motywu (theme_type_variation) w stylu RPG Makera.
 const WINDOW := &"QuizWindow"          # PanelContainer: okno (status, komendy, komunikaty)
@@ -90,6 +93,7 @@ static var _prev_fallback: Font = null
 static var _prev_default: Font = null
 static var _prev_size := -1
 static var _theme: Theme = null
+static var _combat_theme: Theme = null
 static var _base: Theme = null   # style „klasyczne” z THEME_PATH (przed nałożeniem motywu)
 static var _skin_id := DEFAULT_SKIN
 static var _brightness := 1.0
@@ -225,6 +229,7 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 		for t in CUSTOM_TYPES:
 			dt.remove_type(t)
 			_copy_type(th, dt, t)
+	_sync_combat_theme()
 	# Zaznaczenie ma styl wstawiony jako nadpisanie — przepisać nowym.
 	for w in _selected_buttons.duplicate():
 		var btn := w.get_ref() as Button
@@ -263,6 +268,24 @@ static func combat_ui_compact() -> bool:
 
 static func bar_style() -> String:
 	return _bar_style
+
+
+## Motyw ekranu walki: kopia motywu modułu (z motywem okien / pasków) z większym tekstem; odświeżana
+## przy każdej zmianie motywu (apply_skin), więc ekrany, które go używają, aktualizują się same.
+static func combat_theme() -> Theme:
+	if _combat_theme == null:
+		_combat_theme = Theme.new()
+		_sync_combat_theme()
+	return _combat_theme
+
+
+static func _sync_combat_theme() -> void:
+	if _combat_theme == null:
+		return
+	_combat_theme.clear()
+	_combat_theme.merge_with(theme())
+	_combat_theme.default_font = theme().default_font
+	_combat_theme.default_font_size = COMBAT_FONT_SIZE
 
 
 static func skin_id() -> String:
