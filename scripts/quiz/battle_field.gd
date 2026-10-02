@@ -9,7 +9,7 @@ extends Resource
 ## obszaru bitwy = BattleBackgroundLayout.REF_AREA.y (nad dolnym paskiem UI).
 
 ## Narożniki pola (px): kolejność dowolna — sortowane na przód-lewy, przód-prawy, tył-prawy, tył-lewy.
-@export var quad := PackedVector2Array([Vector2(212, 770), Vector2(1708, 770), Vector2(1460, 625), Vector2(460, 625)]):
+@export var quad := PackedVector2Array([Vector2(222, 765), Vector2(1698, 765), Vector2(1460, 625), Vector2(460, 625)]):
 	set(v):
 		for p in v:
 			if not p.is_finite():
