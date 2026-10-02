@@ -37,6 +37,7 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
+@export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -189,6 +190,11 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var settings := get_node_or_null("/root/SettingsService")
+	if settings and settings.has_signal("module_setting_changed"):
+		settings.module_setting_changed.connect(func(module_id: String, key: String, _v: Variant) -> void:
+			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_COMBAT_COMPACT:
+				_set_band_mode(_band_mode))
 	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
 	if parent_canvas != null:
 		parent_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1918,25 +1924,30 @@ func _set_band_mode(mode: Band) -> void:
 	var vp_w: float = get_viewport_rect().size.x
 	party_panel_container.visible = true
 	content_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	# Opcje -> Motyw: „UI walki na szerokość treści” — okno drużyny o stałej szerokości, okna wyśrodkowane
+	# (inaczej rozciągnięte na cały ekran).
+	var compact := QuizTheme.combat_ui_compact()
+	var party_flags := Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_EXPAND_FILL
+	var party_min := Vector2(vp_w * compact_party_width, 0) if compact else Vector2.ZERO
 	match mode:
 		Band.PARTY_COMMAND:
 			command_panel_container.visible = true
 			content_row.move_child(command_panel_container, 0)
 			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
 			command_panel_container.custom_minimum_size = Vector2(vp_w * party_command_width, 0)
-			party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			party_panel_container.custom_minimum_size = Vector2.ZERO
+			party_panel_container.size_flags_horizontal = party_flags
+			party_panel_container.custom_minimum_size = party_min
 		Band.ACTOR_COMMAND:
 			command_panel_container.visible = true
 			content_row.move_child(party_panel_container, 0)
 			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
 			command_panel_container.custom_minimum_size = Vector2(vp_w * actor_command_width, 0)
-			party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			party_panel_container.custom_minimum_size = Vector2.ZERO
+			party_panel_container.size_flags_horizontal = party_flags
+			party_panel_container.custom_minimum_size = party_min
 		Band.STATUS_ONLY:
 			command_panel_container.visible = false
 			party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			party_panel_container.custom_minimum_size = Vector2(vp_w * status_only_width, 0)
+			party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
 
 
 func _update_corner_label() -> void:
