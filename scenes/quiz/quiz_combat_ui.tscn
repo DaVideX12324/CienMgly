@@ -839,6 +839,7 @@ theme_override_constants/separation = 4
 
 [node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1670251784]
 layout_mode = 2
+mouse_filter = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 4

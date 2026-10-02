@@ -1678,9 +1678,16 @@ func _bind_enemy_slot_target_input(slot: Control, slot_index: int) -> void:
 	var input_callable: Callable = Callable(self, "_on_enemy_slot_gui_input").bind(slot_index)
 	if not slot.gui_input.is_connected(input_callable):
 		slot.gui_input.connect(input_callable)
+	# Zejście z wroga kasuje „najechanego” — inaczej klik w listę celów trafiał w ostatnio najechany sprite
+	# (_handle_hovered_enemy_click).
+	var exit_callable: Callable = Callable(self, "_on_enemy_slot_exit").bind(slot_index)
+	if not slot.mouse_exited.is_connected(exit_callable):
+		slot.mouse_exited.connect(exit_callable)
 	if parent_control:
 		if not parent_control.mouse_entered.is_connected(hover_callable):
 			parent_control.mouse_entered.connect(hover_callable)
+		if not parent_control.mouse_exited.is_connected(exit_callable):
+			parent_control.mouse_exited.connect(exit_callable)
 		if not parent_control.gui_input.is_connected(input_callable):
 			parent_control.gui_input.connect(input_callable)
 
@@ -1697,6 +1704,11 @@ func _on_enemy_slot_hover(slot_index: int) -> void:
 	_target_selected_idx = target_index
 	_refresh_target_selection()
 	_refresh_enemy_slot_highlight()
+
+
+func _on_enemy_slot_exit(slot_index: int) -> void:
+	if _hovered_enemy_slot_index == slot_index:
+		_hovered_enemy_slot_index = -1
 
 
 func _on_enemy_slot_gui_input(event: InputEvent, slot_index: int) -> void:
