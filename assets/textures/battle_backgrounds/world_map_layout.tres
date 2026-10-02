@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Resource_1010w"]
 script = ExtResource("1_1010w")
-quad = PackedVector2Array(168.8, 770, 1751.2, 770, 1667, 605, 253, 605)
+quad = PackedVector2Array(171.4, 765, 1748.6, 765, 1667, 605, 253, 605)
 rows = 2
 row_capacity = 5
 auto_depth_scale = false
