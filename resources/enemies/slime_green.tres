@@ -109,7 +109,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_gpyvg")
 }],
-"loop": 0,
+"loop": false,
 "name": &"slime_death",
 "speed": 10.0
 }, {
@@ -126,7 +126,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_yj4uo")
 }],
-"loop": 0,
+"loop": false,
 "name": &"slime_hurt",
 "speed": 10.0
 }, {
@@ -143,7 +143,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_s0ioa")
 }],
-"loop": 1,
+"loop": true,
 "name": &"slime_idle",
 "speed": 7.0
 }, {
@@ -163,7 +163,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_flasd")
 }],
-"loop": 1,
+"loop": true,
 "name": &"slime_walk",
 "speed": 6.0
 }]
