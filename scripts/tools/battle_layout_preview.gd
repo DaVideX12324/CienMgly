@@ -43,6 +43,9 @@ extends Control
 
 const SAVE_DELAY := 0.6          # s bez zmian po przeciągnięciu -> zapis pliku układu
 const BAND := 250.0              # dolny pasek UI walki (obszar bitwy = REF_AREA)
+const FolderBackground := preload("res://modules/quiz_rpg/scripts/quiz/background_generators/folder_battle_background.gd")
+const ZONE_LINE := Color(1.0, 0.35, 0.35, 0.95)
+const ZONE_TEXT := Color(1.0, 0.8, 0.8)
 const COLORS: Array[Color] = [Color(1.0, 0.85, 0.2), Color(0.4, 0.8, 1.0), Color(1.0, 0.45, 0.8), Color(0.5, 1.0, 0.5)]
 
 var _nodes: Array[Polygon2D] = []   # czworobok pola i (ta sama kolejność co layout.fields)
@@ -170,7 +173,7 @@ func _draw() -> void:
 		var k := maxf(area.x / ts.x, area.y / ts.y)
 		var origin := (area - ts * k) * 0.5
 		draw_texture_rect_region(l.texture, Rect2(Vector2.ZERO, area), Rect2(-origin / k, area / k))
-	draw_rect(Rect2(0.0, area.y, view.x, BAND), Color(0.02, 0.02, 0.05))
+	_draw_ui_zones(view, area)
 	var fl := l.active_fields()
 	# Obrys pól i linie rzędów.
 	for fi in range(fl.size()):
@@ -221,6 +224,22 @@ func _row_counts(f: BattleField, fi: int) -> Array[int]:
 	for e in range(total):  # po kolei do rzędów, od przedniego
 		out[e % f.rows] += 1
 	return out
+
+
+## Strefy zasłonięte w walce: cień nad paskiem UI (jak w grze, FolderBackground.SHADOW_*) i dolny pasek
+## UI walki — z obrysem i podpisem, żeby pola walki stawiać nad nimi.
+func _draw_ui_zones(view: Vector2, area: Vector2) -> void:
+	var font := ThemeDB.fallback_font
+	var shadow := Rect2(0.0, area.y - FolderBackground.SHADOW_HEIGHT, view.x, FolderBackground.SHADOW_HEIGHT)
+	draw_rect(shadow, FolderBackground.SHADOW_COLOR)
+	draw_dashed_line(shadow.position, Vector2(view.x, shadow.position.y), ZONE_LINE, 2.0, 12.0)
+	draw_string(font, Vector2(view.x - 330.0, shadow.position.y + 25.0), "Cień nad UI (%d px)" % FolderBackground.SHADOW_HEIGHT,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 20, ZONE_TEXT)
+	var band := Rect2(0.0, area.y, view.x, BAND)
+	draw_rect(band, Color(0.02, 0.02, 0.05))
+	draw_rect(band.grow(-2.0), ZONE_LINE, false, 3.0)
+	draw_string(font, band.position + Vector2(24.0, 44.0), "Dolny pasek UI walki (%d px) — tu nie stawiaj wrogów" % BAND,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 26, ZONE_TEXT)
 
 
 func _draw_enemy(foot: Vector2, sc: float, col: Color, frames: SpriteFrames) -> void:
