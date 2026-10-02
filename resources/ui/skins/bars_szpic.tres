@@ -10,18 +10,18 @@
 [ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/szpic_yellow_empty.png" id="8_uu0l7"]
 
 [resource]
-QuizBarEnemy/constants/bar_scale = 2
+QuizBarEnemy/constants/bar_scale = 3
 QuizBarEnemy/icons/bar_progress = ExtResource("1_vtw8c")
 QuizBarEnemy/icons/bar_under = ExtResource("2_2fjsg")
-QuizBarLP/constants/bar_scale = 2
+QuizBarLP/constants/bar_scale = 3
 QuizBarLP/icons/bar_progress = ExtResource("1_vtw8c")
 QuizBarLP/icons/bar_under = ExtResource("2_2fjsg")
-QuizBarSP/constants/bar_scale = 2
+QuizBarSP/constants/bar_scale = 3
 QuizBarSP/icons/bar_progress = ExtResource("3_xibxi")
 QuizBarSP/icons/bar_under = ExtResource("4_655ev")
-QuizBarTP/constants/bar_scale = 2
+QuizBarTP/constants/bar_scale = 3
 QuizBarTP/icons/bar_progress = ExtResource("5_wfp50")
 QuizBarTP/icons/bar_under = ExtResource("6_8ikdd")
-QuizBarTimer/constants/bar_scale = 2
+QuizBarTimer/constants/bar_scale = 3
 QuizBarTimer/icons/bar_progress = ExtResource("7_wkjie")
 QuizBarTimer/icons/bar_under = ExtResource("8_uu0l7")

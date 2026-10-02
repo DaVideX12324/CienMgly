@@ -69,7 +69,8 @@ const BAR_STYLES: Array[Dictionary] = [
 	{"id": "szpic", "name": "Zakończone szpicem"},
 	{"id": "prostokat", "name": "Prostokątne"},
 	{"id": "zdrowie", "name": "Czerwono-zielone"},
-	{"id": "pas", "name": "Pas (skrzydło)"},
+	{"id": "pas", "name": "Pas, jednostronny"},
+	{"id": "pas2", "name": "Pas, dwustronny"},
 	{"id": "kropki", "name": "Segmentowe"},
 	{"id": "kropki_male", "name": "Segmentowe, małe"},
 ]
