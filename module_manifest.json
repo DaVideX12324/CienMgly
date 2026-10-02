@@ -5,5 +5,46 @@
   "version": "0.1.0",
   "entry_scene": "module_root.tscn",
   "quiz_path": "res://resources/quizzes",
-  "asset_path": "assets"
+  "asset_path": "assets",
+  "controls": [
+    {
+      "label": "Ruch postaci",
+      "actions": [
+        "move_up",
+        "move_down",
+        "move_left",
+        "move_right"
+      ]
+    },
+    {
+      "label": "Interakcja (skrzynie, drzwi, postacie)",
+      "actions": [
+        "interact"
+      ]
+    },
+    {
+      "label": "Wybór w menu i walce",
+      "keys": "Strzałki, W / S"
+    },
+    {
+      "label": "Zatwierdź",
+      "keys": "Enter, Z, Spacja"
+    },
+    {
+      "label": "Wróć / anuluj",
+      "keys": "Esc, X"
+    },
+    {
+      "label": "Odpowiedzi w quizie",
+      "keys": "1, 2, 3, 4"
+    },
+    {
+      "label": "Menu Esc: zakładki przedmiotów",
+      "keys": "Q / E"
+    },
+    {
+      "label": "Pauza i menu",
+      "keys": "Esc"
+    }
+  ]
 }
