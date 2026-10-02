@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://bpuxary8ukqnd"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="StatusPanel" type="VBoxContainer" unique_id=1379284490]
@@ -41,10 +42,12 @@ layout_mode = 2
 text = "Zycie"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/HPRow" unique_id=1867729771]
+theme_type_variation = &"QuizBarLP"
 layout_mode = 2
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=169374251]
 custom_minimum_size = Vector2(90, 0)
@@ -62,10 +65,12 @@ layout_mode = 2
 text = "Mana"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/SPRow" unique_id=462122799]
+theme_type_variation = &"QuizBarSP"
 layout_mode = 2
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=1721609964]
 custom_minimum_size = Vector2(90, 0)
@@ -90,10 +95,12 @@ layout_mode = 2
 text = "Zycie"
 
 [node name="BarProgress" type="ProgressBar" parent="StatusBarsVBox/StatusHPRow" unique_id=477757530]
+theme_type_variation = &"QuizBarLP"
 layout_mode = 2
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="StatusBarsVBox/StatusHPRow" unique_id=2043001169]
 custom_minimum_size = Vector2(90, 0)
@@ -111,10 +118,12 @@ layout_mode = 2
 text = "Mana"
 
 [node name="BarProgress" type="ProgressBar" parent="StatusBarsVBox/StatusSPRow" unique_id=1411324527]
+theme_type_variation = &"QuizBarSP"
 layout_mode = 2
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="StatusBarsVBox/StatusSPRow" unique_id=351755002]
 custom_minimum_size = Vector2(90, 0)

@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://bpuxary8ukqnd" path="res://modules/quiz_rpg/scenes/ui/status_panel.tscn" id="7_kuvrd"]
 [ext_resource type="PackedScene" uid="uid://c4mhyedx4g1d2" path="res://modules/quiz_rpg/scenes/ui/confirm_panel.tscn" id="8_ddwuj"]
 [ext_resource type="PackedScene" uid="uid://ddsk0jw6shqvq" path="res://modules/quiz_rpg/scenes/ui/save_panel.tscn" id="9_vaqrp"]
+[ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="10_theme"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=716895248]
 process_mode = 3
@@ -17,6 +18,7 @@ script = ExtResource("1_pause")
 
 [node name="PauseRoot" type="Control" parent="." unique_id=604391271]
 layout_mode = 3
+theme = ExtResource("10_theme")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -47,15 +49,12 @@ theme_override_constants/separation = 20
 
 [node name="LeftPanel" type="PanelContainer" parent="PauseRoot/MainRow" unique_id=1465010965]
 layout_mode = 2
+theme_type_variation = &"QuizWindow"
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 3.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel" unique_id=1601265872]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
 
 [node name="LeftVBox" type="VBoxContainer" parent="PauseRoot/MainRow/LeftPanel/Margin" unique_id=1863799007]
 layout_mode = 2
@@ -75,15 +74,12 @@ autowrap_mode = 3
 
 [node name="RightPanel" type="PanelContainer" parent="PauseRoot/MainRow" unique_id=1988091729]
 layout_mode = 2
+theme_type_variation = &"QuizWindow"
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 7.0
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel" unique_id=690490630]
 layout_mode = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 18
 
 [node name="RightVBox" type="VBoxContainer" parent="PauseRoot/MainRow/RightPanel/Margin" unique_id=1253515854]
 layout_mode = 2

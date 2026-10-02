@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://cwva0kpx3f8en"]
 
-[ext_resource type="Texture2D" uid="uid://ci6a4ydqycn4v" path="res://modules/quiz_rpg/resources/ui/pause_menu_HP_progress.tres" id="1_ncvew"]
-[ext_resource type="Texture2D" uid="uid://u0p6cairbxel" path="res://modules/quiz_rpg/resources/ui/pause_menu_SP_progress.tres" id="2_6vp7q"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
@@ -85,14 +84,15 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 27
 text = "ZYCIE"
 
-[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=235435160]
+[node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=235435160]
+theme_type_variation = &"QuizBarLP"
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 value = 50.0
-nine_patch_stretch = true
-texture_progress = ExtResource("1_ncvew")
+show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=937053030]
 custom_minimum_size = Vector2(90, 0)
@@ -111,14 +111,15 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 27
 text = "MANA"
 
-[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=522337450]
+[node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=522337450]
+theme_type_variation = &"QuizBarSP"
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 value = 50.0
-nine_patch_stretch = true
-texture_progress = ExtResource("2_6vp7q")
+show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=2122384789]
 custom_minimum_size = Vector2(90, 0)
@@ -183,14 +184,15 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 27
 text = "ZYCIE"
 
-[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1793299602]
+[node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1793299602]
+theme_type_variation = &"QuizBarLP"
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 value = 50.0
-nine_patch_stretch = true
-texture_progress = SubResource("GradientTexture1D_8jlx1")
+show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=231498647]
 custom_minimum_size = Vector2(90, 0)
@@ -209,14 +211,15 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 27
 text = "MANA"
 
-[node name="BarProgress" type="TextureProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=953737951]
+[node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=953737951]
+theme_type_variation = &"QuizBarSP"
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 value = 50.0
-nine_patch_stretch = true
-texture_progress = ExtResource("2_6vp7q")
+show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=1212491405]
 custom_minimum_size = Vector2(90, 0)
