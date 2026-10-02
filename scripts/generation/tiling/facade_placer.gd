@@ -122,6 +122,30 @@ static func place_2h(
 
 
 ## Stawia standardową prostą fasadę o wysokości 3 kratek (3H) z koroną.
+## Korona lica 3H (kafel nad górą lica, rząd -3) — tylko gdy ściana jest głębsza niż 3 (nad koroną skała).
+## Przy głębokości 3 rząd -3 to szczyt ściany — kładzie go RimPlacer.
+static func place_3h_crown(
+	ctx: GenerationContext,
+	pos: Vector2i,
+	state: LegacyPlacementState,
+	plan: TilePlacementPlan,
+	use_roots: bool,
+	edges: Dictionary = {}
+) -> void:
+	var grid := ctx.grid
+	var is_b: bool = _get_variant_noise(ctx).get_noise_2d(float(pos.x), float(pos.y)) > 0.0
+	var p_crown := pos + Vector2i(0, -3)
+	var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
+	var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+	var crown_free: bool = edge_crown == null or edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE
+	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
+		var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
+		if use_roots:
+			crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
+		_queue(plan, p_crown, crown_t, &"CORNER", ctx.priority_table, pos)
+		state.mark(p_crown, &"CORNER")
+
+
 static func place_3h(
 	ctx: GenerationContext,
 	edge: EdgeContext,
@@ -133,7 +157,6 @@ static func place_3h(
 	edges: Dictionary = {}
 ) -> void:
 	var pos := edge.pos
-	var grid := ctx.grid
 	var table := ctx.priority_table
 	var v_noise := _get_variant_noise(ctx)
 
@@ -146,16 +169,7 @@ static func place_3h(
 		mid_t = CaveTileConstants.ROOT_BOTTOM_MID[1] if is_b else CaveTileConstants.ROOT_BOTTOM_MID[0]
 		base_t = CaveTileConstants.ROOT_BOTTOM_BASE[1] if is_b else CaveTileConstants.ROOT_BOTTOM_BASE[0]
 
-	var p_crown := pos + Vector2i(0, -3)
-	var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-	var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
-	var crown_free: bool = edge_crown == null or edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE
-	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
-		var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
-		if use_roots:
-			crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
-		_queue(plan, p_crown, crown_t, &"CORNER", table, pos)
-		state.mark(p_crown, &"CORNER")
+	place_3h_crown(ctx, pos, state, plan, use_roots, edges)
 
 	# A′: motyw roots = wybór RODZINY (force caves_roots), wariant A/B niezależnie.
 	# Anchor = stopa; base @ (0,0), mid @ (0,-1), top @ (0,-2). Korona = osobny CORNER.

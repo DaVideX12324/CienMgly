@@ -51,7 +51,7 @@ static func plan(
 							state.mark(pos, &"FACADE")
 							state.mark(pos + Vector2i(0, -1), &"FACADE")
 							continue
-						if NichePlacer.try_place_legacy(ctx, edge, state, placement_plan, use_roots, facade_cols):
+						if NichePlacer.try_place_legacy(ctx, edge, state, placement_plan, use_roots, facade_cols, edges):
 							continue
 						FacadePlacer.place_3h(ctx, edge, state, placement_plan, use_roots, left_y, right_y, edges)
 						continue
