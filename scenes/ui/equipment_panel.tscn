@@ -1,5 +1,6 @@
 [gd_scene format=3 uid="uid://xd5v3vdabdmn"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="EquipmentPanel" type="VBoxContainer" unique_id=420274983]
@@ -41,10 +42,12 @@ layout_mode = 2
 text = "Zycie"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/HPRow" unique_id=1005126931]
+theme_type_variation = &"QuizBarLP"
 layout_mode = 2
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=376139188]
 custom_minimum_size = Vector2(90, 0)
@@ -62,10 +65,12 @@ layout_mode = 2
 text = "Mana"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/SPRow" unique_id=1024181917]
+theme_type_variation = &"QuizBarSP"
 layout_mode = 2
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
+script = ExtResource("quiz_bar")
 
 [node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=1395977082]
 custom_minimum_size = Vector2(90, 0)

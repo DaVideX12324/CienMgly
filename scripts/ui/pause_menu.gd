@@ -1248,8 +1248,32 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 			var progress_bar: Range = progress_value as Range
 			if progress_bar:
 				(progress_bar as Control).self_modulate = target_modulate
+		# Zaznaczenie: styl „selected” motywu (QuizMenuItem) za wierszem — w motywie klasycznym linia pod
+		# tekstem, w pikselowych podświetlony panel; dawna linia (ColorRect) zostaje ukryta.
 		if underline:
-			underline.visible = is_selected
+			underline.visible = false
+		var box: Panel = _ensure_row_selection_box(row)
+		if box:
+			if is_selected:
+				box.add_theme_stylebox_override(&"panel", QuizTheme.theme().get_stylebox(&"selected", QuizTheme.MENU_ITEM))
+			box.visible = is_selected
+
+
+## Panel na całą szerokość wiersza (pod treścią) rysujący styl zaznaczenia z motywu.
+func _ensure_row_selection_box(row: Control) -> Panel:
+	var host: Control = _get_row_selection_underline(row).get_parent() as Control if _get_row_selection_underline(row) else null
+	if host == null:
+		return null
+	var box := host.get_node_or_null("SelectionBox") as Panel
+	if box == null:
+		box = Panel.new()
+		box.name = "SelectionBox"
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.set_anchors_preset(Control.PRESET_FULL_RECT)
+		box.visible = false
+		host.add_child(box)
+		host.move_child(box, 0)
+	return box
 
 
 func _hide_rows(rows: Array[Control]) -> void:
