@@ -9,7 +9,8 @@ extends ProgressBar
 ## w granicach kształtu paska (koniec wypełnienia idzie za skosem). Stałe motywu: `bar_scale` =
 ## powiększenie pikseli grafiki (domyślnie 2); `bar_tile` = 1 — środek powtarzany zamiast rozciągany
 ## (paski modułowe: początek + segment + koniec; szerokość dociągana do pełnych segmentów);
-## `bar_cap_left` / `bar_cap_right` — szerokość początku / końca w px grafiki (bez nich: z kształtu).
+## `bar_cap_left` / `bar_cap_right` — szerokość początku / końca w px grafiki (bez nich: z kształtu);
+## `bar_center` = 1 — wypełnienie symetryczne od środka (ubywa z obu końców, pasek dwustronny).
 
 const _SHADER_CODE := """
 shader_type canvas_item;
@@ -20,6 +21,7 @@ uniform float dst_w;
 uniform float cap_l;
 uniform float cap_r;
 uniform bool tile;
+uniform bool center;
 uniform float ratio;
 uniform float row_l[32];
 uniform float row_r[32];
@@ -45,7 +47,8 @@ void fragment() {
 	float l = row_l[y];
 	float r = dst_w - (src_size.x - row_r[y]);
 	vec2 uv = (vec2(tx, p.y) + 0.5) / src_size;
-	vec4 c = (p.x < l + ratio * (r - l)) ? texture(progress_tex, uv) : texture(under_tex, uv);
+	bool filled = center ? abs(p.x + 0.5 - (l + r) * 0.5) < ratio * (r - l) * 0.5 : p.x < l + ratio * (r - l);
+	vec4 c = filled ? texture(progress_tex, uv) : texture(under_tex, uv);
 	COLOR = c * vcol;
 }
 """
@@ -132,6 +135,7 @@ func _draw() -> void:
 	m.set_shader_parameter(&"cap_l", caps.x)
 	m.set_shader_parameter(&"cap_r", caps.y)
 	m.set_shader_parameter(&"tile", tile)
+	m.set_shader_parameter(&"center", has_theme_constant(&"bar_center") and get_theme_constant(&"bar_center") != 0)
 	m.set_shader_parameter(&"row_l", rows[0])
 	m.set_shader_parameter(&"row_r", rows[1])
 	var span := max_value - min_value

@@ -3,7 +3,72 @@
 [ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_navy_rd_flat.png" id="1_b0s41"]
 [ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_beige_rd_flat.png" id="2_era8m"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cj4sb"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cj4sb"]
+bg_color = Color(0.08, 0.09, 0.1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.13725491, 0.22745098, 1)
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4jd72"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.13725491, 0.22745098, 1)
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r3x64"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.13725491, 0.22745098, 1)
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3mc5n"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.13725491, 0.22745098, 1)
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d8euq"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.078431375, 0.13725491, 0.22745098, 1)
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+anti_aliasing = false
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_abruh"]
 content_margin_left = 32.0
 content_margin_top = 20.0
 content_margin_right = 32.0
@@ -15,7 +80,7 @@ texture_margin_right = 15.0
 texture_margin_bottom = 15.0
 modulate_color = Color(1, 1, 1, 0.92)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4jd72"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dnd8h"]
 content_margin_left = 12.0
 content_margin_top = 4.0
 content_margin_right = 12.0
@@ -27,7 +92,7 @@ texture_margin_right = 15.0
 texture_margin_bottom = 15.0
 modulate_color = Color(1, 1, 1, 0.3)
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_r3x64"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_02nsx"]
 content_margin_left = 18.0
 content_margin_top = 18.0
 content_margin_right = 18.0
@@ -39,6 +104,11 @@ texture_margin_right = 15.0
 texture_margin_bottom = 15.0
 
 [resource]
-QuizLog/styles/panel = SubResource("StyleBoxTexture_cj4sb")
-QuizMenuItem/styles/selected = SubResource("StyleBoxTexture_4jd72")
-QuizWindow/styles/panel = SubResource("StyleBoxTexture_r3x64")
+QuizBarEnemy/styles/background = SubResource("StyleBoxFlat_cj4sb")
+QuizBarLP/styles/background = SubResource("StyleBoxFlat_4jd72")
+QuizBarSP/styles/background = SubResource("StyleBoxFlat_r3x64")
+QuizBarTP/styles/background = SubResource("StyleBoxFlat_3mc5n")
+QuizBarTimer/styles/background = SubResource("StyleBoxFlat_d8euq")
+QuizLog/styles/panel = SubResource("StyleBoxTexture_abruh")
+QuizMenuItem/styles/selected = SubResource("StyleBoxTexture_dnd8h")
+QuizWindow/styles/panel = SubResource("StyleBoxTexture_02nsx")

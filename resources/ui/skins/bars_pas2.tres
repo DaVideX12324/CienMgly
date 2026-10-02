@@ -1,0 +1,32 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_orange_full.png" id="1_dshtr"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_orange_empty.png" id="2_u6don"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_cyan_full.png" id="3_48gwh"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_cyan_empty.png" id="4_8noni"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_green_full.png" id="5_ux52g"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_green_empty.png" id="6_ipwe2"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_full.png" id="7_v3tdh"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_empty.png" id="8_85y81"]
+
+[resource]
+QuizBarEnemy/constants/bar_center = 1
+QuizBarEnemy/constants/bar_scale = 2
+QuizBarEnemy/icons/bar_progress = ExtResource("1_dshtr")
+QuizBarEnemy/icons/bar_under = ExtResource("2_u6don")
+QuizBarLP/constants/bar_center = 1
+QuizBarLP/constants/bar_scale = 2
+QuizBarLP/icons/bar_progress = ExtResource("1_dshtr")
+QuizBarLP/icons/bar_under = ExtResource("2_u6don")
+QuizBarSP/constants/bar_center = 1
+QuizBarSP/constants/bar_scale = 2
+QuizBarSP/icons/bar_progress = ExtResource("3_48gwh")
+QuizBarSP/icons/bar_under = ExtResource("4_8noni")
+QuizBarTP/constants/bar_center = 1
+QuizBarTP/constants/bar_scale = 2
+QuizBarTP/icons/bar_progress = ExtResource("5_ux52g")
+QuizBarTP/icons/bar_under = ExtResource("6_ipwe2")
+QuizBarTimer/constants/bar_center = 1
+QuizBarTimer/constants/bar_scale = 2
+QuizBarTimer/icons/bar_progress = ExtResource("7_v3tdh")
+QuizBarTimer/icons/bar_under = ExtResource("8_85y81")
