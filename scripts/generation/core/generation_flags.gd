@@ -57,6 +57,7 @@ var objects_catalog: String = ""           # katalog JSON obiektów biomu (res:/
 # --- Prawdopodobieństwa (nadpisują profil, gdy >= 0.0) ---
 var niche_spawn_chance: float = 0.15
 var secret_niche_spawn_chance: float = 0.3
+var passage_niche_spawn_chance: float = 1.0   # nisza-przejście (ściana o głębokości 3 nad niszą)
 
 # --- Debug ---
 var force_theme: int = -1

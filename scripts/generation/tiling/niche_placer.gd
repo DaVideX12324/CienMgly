@@ -1,6 +1,10 @@
 class_name NichePlacer
 extends RefCounted
 
+## Alternatywa kafla w TileSecie dla nisz-przejść (kafle OUT z szerszym otworem, szczyt ściany z innymi
+## kolizjami). Brak alternatywy = zwykły kafel.
+const PASSAGE_ALT := 1
+
 
 static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2i, category: StringName, table: Dictionary) -> void:
 	var p := TilePlacement.new()
@@ -78,11 +82,12 @@ static func try_place_legacy(
 	var force_id: StringName = &"caves_roots" if use_roots else &""
 	# Ściana o głębokości 3 nad którąś kolumną: rząd -3 to już jej szczyt — narożniki wewnętrzne korony
 	# wycinałyby w nim ząbek. Taka nisza to przejście: moduł OUT bez korony (szczyt kładzie RimPlacer,
-	# głębsza kolumna dostaje zwykłą koronę lica 3H), bez sekretnego pokoju.
-	var shallow := EdgeAnalyzer.measure_solid_depth(ctx, pos, Vector2i(0, -1)) <= 3 \
-		or EdgeAnalyzer.measure_solid_depth(ctx, pos_next, Vector2i(0, -1)) <= 3
-	if shallow:
-		if ctx.tile_rng.randf() >= ctx.flags.niche_spawn_chance:
+	# głębsza kolumna dostaje zwykłą koronę lica 3H), bez sekretnego pokoju. Kafle przejścia (OUT obu kolumn,
+	# szczyt nad płytszą) dostają przy wstawianiu alternatywę PASSAGE_ALT — mark_passages.
+	var depth_l := EdgeAnalyzer.measure_solid_depth(ctx, pos, Vector2i(0, -1))
+	var depth_r := EdgeAnalyzer.measure_solid_depth(ctx, pos_next, Vector2i(0, -1))
+	if depth_l <= 3 or depth_r <= 3:
+		if ctx.tile_rng.randf() >= ctx.flags.passage_niche_spawn_chance:
 			return false
 		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_SECRET, vid, table, force_id, false):
 			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP, &"FACADE", table)
@@ -94,6 +99,13 @@ static func try_place_legacy(
 		FacadePlacer.place_3h_crown(ctx, pos, state, plan, use_roots, edges)
 		FacadePlacer.place_3h_crown(ctx, pos_next, state, plan, use_roots, edges)
 		_mark8(state, pos, pos_next, false)
+		for dy in [-2, -1, 0]:
+			ctx.passage_cells[pos + Vector2i(0, dy)] = true
+			ctx.passage_cells[pos_next + Vector2i(0, dy)] = true
+		if depth_l == 3:
+			ctx.passage_cells[pos + Vector2i(0, -3)] = true
+		if depth_r == 3:
+			ctx.passage_cells[pos_next + Vector2i(0, -3)] = true
 		return true
 
 	var can_place_out_niche := state.can_place_out_niche(pos)
@@ -132,3 +144,14 @@ static func try_place_legacy(
 		return true
 
 	return false
+
+
+## Oznacza kafle Walls nisz-przejść (po wszystkich placerach — szczyt kładzie RimPlacer).
+static func mark_passages(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
+	if ctx.passage_cells.is_empty():
+		return
+	var cells: Dictionary = plan.get_placements(&"Walls")
+	for pos in ctx.passage_cells:
+		var p: TilePlacement = cells.get(pos)
+		if p != null and not p.is_erase():
+			p.passage = true

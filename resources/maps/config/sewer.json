@@ -24,6 +24,7 @@
     "enable_floor_decorations": true,
     "niche_spawn_chance": 0,
     "secret_niche_spawn_chance": 0,
+    "passage_niche_spawn_chance": 0,
     "force_theme": -1,
     "debug_log_edge_kinds": false
   },
