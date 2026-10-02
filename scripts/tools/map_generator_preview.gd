@@ -66,7 +66,7 @@ var current_height: int = 100
 var is_player_mode: bool = false
 var player_instance: Node2D = null
 var _prev_game_state: int = -1  # stan GameManagera sprzed spaceru graczem (przywracany po wyjściu)
-var _own_game_manager: Node = null  # GameManager podglądu, gdy moduł quiz_rpg nie jest aktywny (F6)
+var _own_singletons: Node = null  # singletony modułu podglądu, gdy moduł quiz_rpg nie jest aktywny (F6)
 
 # Ostatnie dane generacji
 var last_entrance_pos: Vector2i = Vector2i.ZERO
@@ -972,7 +972,7 @@ func _toggle_player_mode() -> void:
 
 ## Gracz rusza się tylko w stanie EXPLORING GameManagera (player.gd), a podgląd startuje w MENU —
 ## na czas spaceru przełączamy stan i przywracamy poprzedni po wyjściu. Podgląd uruchomiony sam (F6)
-## nie ma modułu quiz_rpg, więc i jego singletonów — wtedy tworzy własny GameManager.
+## nie ma modułu quiz_rpg, więc i jego singletonów — wtedy tworzy własne (_ensure_module_singletons).
 func _set_exploring(on: bool) -> void:
 	# Autoload przez ścieżkę, nie identyfikator: skrypty narzędziowe (-s) preloadują podgląd przed
 	# autoloadami i goły identyfikator CoreManager wywaliłby ich kompilację.
@@ -983,12 +983,10 @@ func _set_exploring(on: bool) -> void:
 	if gm == null:
 		if not on:
 			return
-		_own_game_manager = Node.new()
-		_own_game_manager.name = "GameManager"
-		_own_game_manager.set_script(load("res://modules/quiz_rpg/autoloads/game_manager.gd"))
-		add_child(_own_game_manager)
-		core.register_singleton("GameManager", _own_game_manager)
-		gm = _own_game_manager
+		_ensure_module_singletons(core)
+		gm = core.get_singleton("GameManager")
+		if gm == null:
+			return
 	if on:
 		if _prev_game_state < 0:
 			_prev_game_state = gm.current_state
@@ -998,11 +996,34 @@ func _set_exploring(on: bool) -> void:
 		_prev_game_state = -1
 
 
+## Singletony modułu jak w grze (GameManager, PlayerStats z drużyną, ekwipunek, trudność…): węzły
+## z module_root.tscn z ich ustawieniami, bez uruchamiania samego modułu (menu, sceny). Gracz ma wtedy
+## statystyki (HP, poziom, drużyna, ekwipunek) w walce jak w grze. Bez wybranego slotu — nic nie zapisuje do sejwów.
+func _ensure_module_singletons(core: Node) -> void:
+	if _own_singletons != null:
+		return
+	var module := (load("res://modules/quiz_rpg/module_root.tscn") as PackedScene).instantiate()
+	_own_singletons = Node.new()
+	_own_singletons.name = "PreviewModuleSingletons"
+	add_child(_own_singletons)
+	var names: Array[String] = ["GameManager", "SaveManager", "LootManager", "DifficultyManager", "PlayerStats", "InventoryService", "LevelStateManager"]
+	for singleton_name in names:
+		var n := module.get_node_or_null(singleton_name)
+		if n:
+			module.remove_child(n)
+			n.owner = null
+			_own_singletons.add_child(n)
+	module.free()
+	# Rejestracja po _ready wszystkich — jak w module_root._register_singletons.
+	for n in _own_singletons.get_children():
+		core.register_singleton(str(n.name), n)
+
+
 func _exit_tree() -> void:
 	QuizTheme.restore()
 	_set_exploring(false)
 	var core := get_node_or_null("/root/CoreManager")
-	if _own_game_manager and core and core.get_active_module_id() == "" 			and core.get_singleton("GameManager") == _own_game_manager:
+	if _own_singletons and core and core.get_active_module_id() == "" 			and core.get_singleton("GameManager") == _own_singletons.get_node_or_null("GameManager"):
 		core.unregister_module_singletons()
 
 
