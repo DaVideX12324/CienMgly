@@ -9,6 +9,7 @@ const HOST_OPTIONS_MENU_SCENE: String = "res://scenes/ui/options_menu.tscn"
 @onready var right_panel: PanelContainer = $PauseRoot/MainRow/RightPanel
 @onready var menu_list_vbox: VBoxContainer = $PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/MenuListVBox
 @onready var toast_label: Label = $PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/ToastLabel
+@onready var score_label: Label = $PauseRoot/MainRow/LeftPanel/Margin/LeftVBox/ScoreLabel
 @onready var context_title_label: Label = $PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextTitleLabel
 var party_panel: VBoxContainer
 var party_hint_label: Label
@@ -140,6 +141,8 @@ func _ready() -> void:
 			_ps.party_changed.connect(_on_player_data_changed)
 		if _ps.has_signal("hp_changed"):
 			_ps.hp_changed.connect(_on_player_hp_changed)
+		if _ps.has_signal("points_changed"):
+			_ps.points_changed.connect(func(_p: int) -> void: _refresh_score())
 
 
 func _cache_panel_nodes() -> void:
@@ -232,6 +235,7 @@ func _toggle_pause() -> void:
 		_mode = "left_menu"
 		_left_menu_index = 0
 		_show_default_party_panel()
+		_refresh_score()
 	else:
 		if _options_menu != null and is_instance_valid(_options_menu) and _options_menu.visible:
 			_options_menu.visible = false
@@ -1424,6 +1428,16 @@ func _on_player_data_changed() -> void:
 			_show_save_panel()
 
 
+## Punkty i seria (dawniej w HUD) — na dole lewego panelu.
+func _refresh_score() -> void:
+	if score_label == null:
+		return
+	score_label.visible = _ps != null
+	if _ps:
+		score_label.text = "Punkty %d
+Seria x%d" % [int(_ps.points), int(_ps.streak)]
+
+
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:
 	_on_player_data_changed()
 
@@ -1433,6 +1447,7 @@ func _apply_scaling() -> void:
 	var title_label: Label = left_panel.get_node("Margin/LeftVBox/TitleLabel") as Label
 	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(26)))
 	toast_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
+	score_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
 	_apply_row_scaling(_menu_rows)
 	_apply_row_scaling(_item_tab_rows)
 	_apply_row_scaling(_item_rows)
