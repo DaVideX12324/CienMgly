@@ -2,6 +2,64 @@
 
 [ext_resource type="FontFile" path="res://modules/quiz_rpg/resources/ui/jersey15_pixel.res" id="1_6kev7"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6kev7"]
+bg_color = Color(0.08, 0.09, 0.1, 0.95)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vname"]
+bg_color = Color(0.25, 0.95, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7xy4f"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+
+[sub_resource type="Gradient" id="Gradient_jfehw"]
+colors = PackedColorArray(0.91, 0.55, 0.24, 1, 0.95, 0.75, 0.32, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_hb0my"]
+gradient = SubResource("Gradient_jfehw")
+height = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_o7rqb"]
+texture = SubResource("GradientTexture2D_hb0my")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5l27r"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+
+[sub_resource type="Gradient" id="Gradient_nctxl"]
+colors = PackedColorArray(0.27, 0.55, 0.9, 1, 0.36, 0.75, 0.95, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_p5dk3"]
+gradient = SubResource("Gradient_nctxl")
+height = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wt216"]
+texture = SubResource("GradientTexture2D_p5dk3")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ihm6a"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+
+[sub_resource type="Gradient" id="Gradient_tccok"]
+colors = PackedColorArray(0.08, 0.66, 0.24, 1, 0.24, 0.86, 0.35, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_8gghv"]
+gradient = SubResource("Gradient_tccok")
+height = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_iy8pp"]
+texture = SubResource("GradientTexture2D_8gghv")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jyn8q"]
+bg_color = Color(0.13, 0.13, 0.22, 1)
+
+[sub_resource type="Gradient" id="Gradient_f2cbi"]
+colors = PackedColorArray(0.9, 0.72, 0.22, 1, 0.98, 0.86, 0.36, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_d2ebl"]
+gradient = SubResource("Gradient_f2cbi")
+height = 1
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_8n015"]
+texture = SubResource("GradientTexture2D_d2ebl")
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ngncg"]
 content_margin_left = 32.0
 content_margin_top = 20.0
@@ -48,6 +106,21 @@ Label/colors/font_outline_color = Color(0, 0, 0, 1)
 Label/constants/outline_size = 6
 LineEdit/colors/font_outline_color = Color(0, 0, 0, 1)
 LineEdit/constants/outline_size = 6
+QuizBarEnemy/base_type = &"ProgressBar"
+QuizBarEnemy/styles/background = SubResource("StyleBoxFlat_6kev7")
+QuizBarEnemy/styles/fill = SubResource("StyleBoxFlat_vname")
+QuizBarLP/base_type = &"ProgressBar"
+QuizBarLP/styles/background = SubResource("StyleBoxFlat_7xy4f")
+QuizBarLP/styles/fill = SubResource("StyleBoxTexture_o7rqb")
+QuizBarSP/base_type = &"ProgressBar"
+QuizBarSP/styles/background = SubResource("StyleBoxFlat_5l27r")
+QuizBarSP/styles/fill = SubResource("StyleBoxTexture_wt216")
+QuizBarTP/base_type = &"ProgressBar"
+QuizBarTP/styles/background = SubResource("StyleBoxFlat_ihm6a")
+QuizBarTP/styles/fill = SubResource("StyleBoxTexture_iy8pp")
+QuizBarTimer/base_type = &"ProgressBar"
+QuizBarTimer/styles/background = SubResource("StyleBoxFlat_jyn8q")
+QuizBarTimer/styles/fill = SubResource("StyleBoxTexture_8n015")
 QuizLog/base_type = &"PanelContainer"
 QuizLog/styles/panel = SubResource("StyleBoxFlat_ngncg")
 QuizMenuItem/base_type = &"Button"

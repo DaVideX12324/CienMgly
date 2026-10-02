@@ -10,6 +10,10 @@ extends RefCounted
 ## z motywu i dopisuje typy motywu (QuizWindow…) do domyślnego — dla ekranów bez przypiętego motywu;
 ## restore() przywraca poprzednie (BitBomber i menu hosta bez zmian).
 ## Wywołania: module_root (_ready / _exit_tree) i narzędzia uruchamiane bez modułu (eksplorator map).
+##
+## Motywy (Opcje -> Motyw): plik resources/ui/skins/<id>.tres nadpisuje style typów SKIN_TYPES
+## (okna, zaznaczenie, paski); „klasyczny” = sam THEME_PATH. Jasność mnoży kolor okien i zaznaczenia.
+## Wybór w ustawieniach modułu (SettingsService, klucze SETTING_SKIN / SETTING_BRIGHTNESS).
 
 const THEME_PATH := "res://modules/quiz_rpg/resources/ui/quiz_theme.tres"
 ## Czcionka pikselowa (FontFile z danymi Jersey 15, bez wygładzania — zapisane w zasobie, bo pliki
@@ -26,7 +30,35 @@ const SIZE_SCALE := 1.4
 const WINDOW := &"QuizWindow"          # PanelContainer: okno (status, komendy, komunikaty)
 const LOG := &"QuizLog"                # PanelContainer: pasek u góry (log bitwy / pytanie)
 const MENU_ITEM := &"QuizMenuItem"     # Button: pozycja menu bez tła; zaznaczona = styl „selected”
-const CUSTOM_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM]
+const BAR_LP := &"QuizBarLP"           # ProgressBar: paski drużyny, czasu odpowiedzi, HP wrogów
+const BAR_SP := &"QuizBarSP"
+const BAR_TP := &"QuizBarTP"
+const BAR_TIMER := &"QuizBarTimer"
+const BAR_ENEMY := &"QuizBarEnemy"
+const CUSTOM_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM, BAR_LP, BAR_SP, BAR_TP, BAR_TIMER, BAR_ENEMY]
+## Typy, których kolor zmienia suwak jasności (okna i zaznaczenie; paski zostają w swoich kolorach).
+const BRIGHTNESS_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM]
+
+const MODULE_ID := "quiz_rpg"
+const SETTING_SKIN := "ui_skin"
+const SETTING_BRIGHTNESS := "ui_brightness"
+const SKIN_DIR := "res://modules/quiz_rpg/resources/ui/skins/"
+const DEFAULT_SKIN := "klasyczny"
+## Dostępne motywy (kolejność w opcjach). Nowy motyw: plik SKIN_DIR + id + ".tres" i wpis tutaj.
+## Motywy st_*: panele z assets/UI/UI Assets pack_v.1_st (pliki buduje tests/build_ui_skins.gd).
+const SKINS: Array[Dictionary] = [
+	{"id": "klasyczny", "name": "Klasyczny (ciemny)"},
+	{"id": "st_navy_rd_flat", "name": "Granatowy, zaokrąglony"},
+	{"id": "st_navy_rd_3d", "name": "Granatowy, zaokrąglony, z głębią"},
+	{"id": "st_navy_sq_flat", "name": "Granatowy, kwadratowy"},
+	{"id": "st_navy_sq_3d", "name": "Granatowy, kwadratowy, z głębią"},
+	{"id": "st_beige_rd_flat", "name": "Jasny, zaokrąglony"},
+	{"id": "st_beige_rd_3d", "name": "Jasny, zaokrąglony, z głębią"},
+	{"id": "st_beige_sq_flat", "name": "Jasny, kwadratowy"},
+	{"id": "st_beige_sq_3d", "name": "Jasny, kwadratowy, z głębią"},
+]
+const BRIGHTNESS_MIN := 0.5
+const BRIGHTNESS_MAX := 1.5
 const LABEL_COLOR := Color(0.55, 0.70, 1.0)   # etykiety LP / SP / TP (jak w RPG Makerze)
 const TEXT_DIM := Color(0.62, 0.64, 0.74)
 
@@ -35,6 +67,10 @@ static var _prev_fallback: Font = null
 static var _prev_default: Font = null
 static var _prev_size := -1
 static var _theme: Theme = null
+static var _base: Theme = null   # style „klasyczne” z THEME_PATH (przed nałożeniem motywu)
+static var _skin_id := DEFAULT_SKIN
+static var _brightness := 1.0
+static var _selected_buttons: Array[WeakRef] = []  # zaznaczone pozycje (odświeżane po zmianie motywu)
 
 
 ## Motyw modułu (zasób). Brak pliku -> motyw zbudowany w kodzie (build_default_theme).
@@ -63,8 +99,11 @@ static func set_menu_item_selected(btn: Button, selected: bool) -> void:
 	for st in ["normal", "hover", "pressed", "hover_pressed"]:
 		btn.remove_theme_stylebox_override(st)
 	btn.remove_theme_color_override("font_color")
+	btn.set_meta(&"quiz_menu_selected", selected)
 	if not selected:
 		return
+	_selected_buttons = _selected_buttons.filter(func(w: WeakRef) -> bool: return w.get_ref() != null and w.get_ref() != btn)
+	_selected_buttons.append(weakref(btn))
 	var sb := btn.get_theme_stylebox(&"selected", MENU_ITEM)
 	for st in ["normal", "hover", "pressed", "hover_pressed"]:
 		btn.add_theme_stylebox_override(st, sb)
@@ -81,6 +120,7 @@ static func apply() -> void:
 	if f == null:
 		push_warning("QuizTheme: motyw bez czcionki")
 		return
+	apply_skin_from_settings()
 	var th := ThemeDB.get_default_theme()
 	_prev_fallback = ThemeDB.fallback_font
 	_prev_default = th.default_font
@@ -106,6 +146,83 @@ static func restore() -> void:
 		th.remove_type(t)
 	_prev_fallback = null
 	_prev_default = null
+
+
+## Motyw i jasność z ustawień modułu (SettingsService); bez usługi — motyw domyślny.
+static func apply_skin_from_settings() -> void:
+	var settings := _settings_service()
+	var id := DEFAULT_SKIN
+	var brightness := 1.0
+	if settings:
+		id = str(settings.call("get_module", MODULE_ID, SETTING_SKIN, DEFAULT_SKIN))
+		brightness = float(settings.call("get_module", MODULE_ID, SETTING_BRIGHTNESS, 1.0))
+	apply_skin(id, brightness)
+
+
+## Nakłada motyw `id` (nieznany -> klasyczny) z jasnością `brightness` na motyw modułu — ekrany
+## z przypiętym motywem odświeżają się same (sygnał changed), domyślny motyw dostaje kopię typów.
+static func apply_skin(id: String, brightness: float = 1.0) -> void:
+	var th := theme()
+	if _base == null:
+		_base = Theme.new()
+		for t in CUSTOM_TYPES:
+			_copy_type(th, _base, t)
+	var skin: Theme = null
+	if id != DEFAULT_SKIN and ResourceLoader.exists(SKIN_DIR + id + ".tres"):
+		skin = load(SKIN_DIR + id + ".tres") as Theme
+	_skin_id = id if skin != null else DEFAULT_SKIN
+	_brightness = clampf(brightness, BRIGHTNESS_MIN, BRIGHTNESS_MAX)
+	for t in CUSTOM_TYPES:
+		var names := _base.get_stylebox_list(t)
+		if skin:
+			for n in skin.get_stylebox_list(t):
+				if not names.has(n):
+					names.append(n)
+		for n in names:
+			var sb: StyleBox = skin.get_stylebox(n, t) if skin and skin.has_stylebox(n, t) else _base.get_stylebox(n, t)
+			if BRIGHTNESS_TYPES.has(t) and not is_equal_approx(_brightness, 1.0):
+				sb = _brightened(sb, _brightness)
+			th.set_stylebox(n, t, sb)
+		for n in _base.get_color_list(t):
+			th.set_color(n, t, skin.get_color(n, t) if skin and skin.has_color(n, t) else _base.get_color(n, t))
+	if _depth > 0:
+		var dt := ThemeDB.get_default_theme()
+		for t in CUSTOM_TYPES:
+			_copy_type(th, dt, t)
+	# Zaznaczenie ma styl wstawiony jako nadpisanie — przepisać nowym.
+	for w in _selected_buttons.duplicate():
+		var btn := w.get_ref() as Button
+		if btn and bool(btn.get_meta(&"quiz_menu_selected", false)):
+			set_menu_item_selected(btn, true)
+	_selected_buttons = _selected_buttons.filter(func(w: WeakRef) -> bool: return w.get_ref() != null and bool((w.get_ref() as Button).get_meta(&"quiz_menu_selected", false)))
+
+
+static func skin_id() -> String:
+	return _skin_id
+
+
+static func brightness() -> float:
+	return _brightness
+
+
+## Kopia stylu z kolorem przemnożonym przez `k` (tekstura: modulate; płaski: tło i ramka; alfa bez zmian).
+static func _brightened(sb: StyleBox, k: float) -> StyleBox:
+	if sb is StyleBoxTexture:
+		var t := sb.duplicate() as StyleBoxTexture
+		var c := t.modulate_color
+		t.modulate_color = Color(c.r * k, c.g * k, c.b * k, c.a)
+		return t
+	if sb is StyleBoxFlat:
+		var f := sb.duplicate() as StyleBoxFlat
+		f.bg_color = Color(minf(f.bg_color.r * k, 1.0), minf(f.bg_color.g * k, 1.0), minf(f.bg_color.b * k, 1.0), f.bg_color.a)
+		f.border_color = Color(minf(f.border_color.r * k, 1.0), minf(f.border_color.g * k, 1.0), minf(f.border_color.b * k, 1.0), f.border_color.a)
+		return f
+	return sb
+
+
+static func _settings_service() -> Node:
+	var tree := Engine.get_main_loop() as SceneTree
+	return tree.root.get_node_or_null("SettingsService") if tree else null
 
 
 static func _copy_type(src: Theme, dst: Theme, t: StringName) -> void:
