@@ -46,6 +46,10 @@ const BAND := 250.0              # dolny pasek UI walki (obszar bitwy = REF_AREA
 const FolderBackground := preload("res://modules/quiz_rpg/scripts/quiz/background_generators/folder_battle_background.gd")
 const ZONE_LINE := Color(1.0, 0.35, 0.35, 0.95)
 const ZONE_TEXT := Color(1.0, 0.8, 0.8)
+## Pasek HP wroga w walce: 12 px pod linią stóp (slot 8 px niżej + odstęp), 96 px szerokości; wysokość
+## zależy od stylu pasków (8–16 px) — rysowany najwyższy, żeby było widać najgorszy przypadek.
+const HP_BAR_OFFSET := 12.0
+const HP_BAR_SIZE := Vector2(96.0, 16.0)
 const COLORS: Array[Color] = [Color(1.0, 0.85, 0.2), Color(0.4, 0.8, 1.0), Color(1.0, 0.45, 0.8), Color(0.5, 1.0, 0.5)]
 
 var _nodes: Array[Polygon2D] = []   # czworobok pola i (ta sama kolejność co layout.fields)
@@ -253,6 +257,10 @@ func _draw_enemy(foot: Vector2, sc: float, col: Color, frames: SpriteFrames) -> 
 		var w := BattleBackgroundLayout.ENEMY_BASE_PX * sc
 		draw_rect(Rect2(foot - Vector2(w * 0.5, w), Vector2(w, w)), Color(col, 0.5))
 	draw_circle(foot, 5.0, col)
+	var bar := Rect2(foot + Vector2(-HP_BAR_SIZE.x * 0.5, HP_BAR_OFFSET), HP_BAR_SIZE)
+	draw_rect(bar, Color(0.06, 0.06, 0.08, 0.9))
+	draw_rect(Rect2(bar.position + Vector2(2, 2), Vector2(bar.size.x * 0.7, bar.size.y - 4)), Color(0.85, 0.15, 0.2))
+	draw_rect(bar, Color(0, 0, 0), false, 2.0)
 
 
 ## Pierwsza klatka animacji postoju — wybór jak w EnemyBattleDisplay.
