@@ -9,6 +9,9 @@ extends RefCounted
 const ROOT_DIR := "res://modules/quiz_rpg/assets/textures/battle_backgrounds/"
 const SEARCH_DIRS: Array[String] = [ROOT_DIR, ROOT_DIR + "pixel_crawler/"]
 const IMAGE_EXTS: Array[String] = ["png", "jpg", "jpeg", "webp"]
+## Cień nad dolnym paskiem UI walki (px, przy dolnej krawędzi obszaru walki) — też w podglądzie pól.
+const SHADOW_HEIGHT := 35.0
+const SHADOW_COLOR := Color(0.0, 0.0, 0.0, 0.35)
 
 var _variants: PackedStringArray
 var _cached_texture: Texture2D = null
@@ -78,6 +81,6 @@ func draw_background(canvas: Control, _context: Dictionary) -> void:
 func _draw_bottom_gradient(canvas: Control) -> void:
 	var h: float = canvas.size.y
 	var w: float = canvas.size.x
-	var grad_height: float = minf(35.0, h * 0.1)  # cień nad dolnym paskiem UI
+	var grad_height: float = minf(SHADOW_HEIGHT, h * 0.1)  # cień nad dolnym paskiem UI
 	var grad_y: float = h - grad_height
-	canvas.draw_rect(Rect2(0.0, grad_y, w, grad_height), Color(0.0, 0.0, 0.0, 0.35))
+	canvas.draw_rect(Rect2(0.0, grad_y, w, grad_height), SHADOW_COLOR)
