@@ -32,8 +32,8 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 
 ## Wygląd i układ ekranu są w scenie (WYSIWYG) i w motywie QuizTheme.THEME_PATH; tutaj tylko to, co
 ## zależy od fazy tury. Szerokości okien dolnego pasa jako część szerokości ekranu.
-@export_range(0.1, 0.6, 0.01) var party_command_width := 0.24  ## okno komend drużyny (lewa strona)
-@export_range(0.1, 0.6, 0.01) var actor_command_width := 0.25  ## okno komend postaci (prawa strona)
+@export_range(0.08, 0.6, 0.01) var party_command_width := 0.15  ## okno komend drużyny (lewa strona; szersze, gdy treść wymaga)
+@export_range(0.08, 0.6, 0.01) var actor_command_width := 0.15  ## okno komend postaci (prawa strona; szersze, gdy treść wymaga)
 @export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
