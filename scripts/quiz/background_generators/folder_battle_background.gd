@@ -78,6 +78,6 @@ func draw_background(canvas: Control, _context: Dictionary) -> void:
 func _draw_bottom_gradient(canvas: Control) -> void:
 	var h: float = canvas.size.y
 	var w: float = canvas.size.x
-	var grad_height: float = minf(70.0, h * 0.2)
+	var grad_height: float = minf(35.0, h * 0.1)  # cień nad dolnym paskiem UI
 	var grad_y: float = h - grad_height
 	canvas.draw_rect(Rect2(0.0, grad_y, w, grad_height), Color(0.0, 0.0, 0.0, 0.35))
