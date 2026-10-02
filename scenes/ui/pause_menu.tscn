@@ -18,12 +18,12 @@ script = ExtResource("1_pause")
 
 [node name="PauseRoot" type="Control" parent="." unique_id=604391271]
 layout_mode = 3
-theme = ExtResource("10_theme")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("10_theme")
 
 [node name="Background" type="ColorRect" parent="PauseRoot" unique_id=1644437718]
 layout_mode = 1
@@ -49,9 +49,8 @@ theme_override_constants/separation = 20
 
 [node name="LeftPanel" type="PanelContainer" parent="PauseRoot/MainRow" unique_id=1465010965]
 layout_mode = 2
-theme_type_variation = &"QuizWindow"
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 3.0
+theme_type_variation = &"QuizWindow"
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/LeftPanel" unique_id=1601265872]
 layout_mode = 2
@@ -62,7 +61,7 @@ theme_override_constants/separation = 14
 
 [node name="TitleLabel" type="Label" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox" unique_id=448530461]
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 66
 text = "Menu"
 
 [node name="MenuListVBox" parent="PauseRoot/MainRow/LeftPanel/Margin/LeftVBox" unique_id=464216917 instance=ExtResource("2_gligw")]
@@ -74,9 +73,9 @@ autowrap_mode = 3
 
 [node name="RightPanel" type="PanelContainer" parent="PauseRoot/MainRow" unique_id=1988091729]
 layout_mode = 2
-theme_type_variation = &"QuizWindow"
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 7.0
+size_flags_stretch_ratio = 5.0
+theme_type_variation = &"QuizWindow"
 
 [node name="Margin" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel" unique_id=690490630]
 layout_mode = 2
