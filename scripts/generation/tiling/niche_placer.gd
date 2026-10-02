@@ -13,11 +13,14 @@ static func _queue(plan: TilePlacementPlan, pos: Vector2i, atlas_coords: Vector2
 
 
 ## Moduł niszy: 8 części, 2 kolumny (offsety x=0 i x=1). Kategoria FACADE, tie_breaker=0.
-static func _place_niche(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+## with_crown = false: bez korony (narożniki wewnętrzne w rzędzie -3).
+static func _place_niche(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"", with_crown: bool = true) -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
 	for rp in parts:
+		if not with_crown and rp.offset.y <= -3:
+			continue
 		var p := TilePlacement.new()
 		p.pos = anchor + rp.offset
 		p.layer = rp.layer if rp.layer != &"" else &"Walls"
@@ -30,8 +33,8 @@ static func _place_niche(ctx: GenerationContext, plan: TilePlacementPlan, anchor
 	return true
 
 
-static func _mark8(state: LegacyPlacementState, pos: Vector2i, pos_next: Vector2i) -> void:
-	for dy in [-3, -2, -1, 0]:
+static func _mark8(state: LegacyPlacementState, pos: Vector2i, pos_next: Vector2i, with_crown: bool = true) -> void:
+	for dy in ([-3, -2, -1, 0] if with_crown else [-2, -1, 0]):
 		state.mark(pos + Vector2i(0, dy), &"FACADE")
 		state.mark(pos_next + Vector2i(0, dy), &"FACADE")
 
@@ -42,7 +45,8 @@ static func try_place_legacy(
 	state: LegacyPlacementState,
 	plan: TilePlacementPlan,
 	use_roots: bool,
-	facade_cols: Dictionary
+	facade_cols: Dictionary,
+	edges: Dictionary = {}
 ) -> bool:
 	var pos := edge.pos
 	var x := pos.x
@@ -72,6 +76,26 @@ static func try_place_legacy(
 
 	var vid: StringName = &"A"
 	var force_id: StringName = &"caves_roots" if use_roots else &""
+	# Ściana o głębokości 3 nad którąś kolumną: rząd -3 to już jej szczyt — narożniki wewnętrzne korony
+	# wycinałyby w nim ząbek. Taka nisza to przejście: moduł OUT bez korony (szczyt kładzie RimPlacer,
+	# głębsza kolumna dostaje zwykłą koronę lica 3H), bez sekretnego pokoju.
+	var shallow := EdgeAnalyzer.measure_solid_depth(ctx, pos, Vector2i(0, -1)) <= 3 \
+		or EdgeAnalyzer.measure_solid_depth(ctx, pos_next, Vector2i(0, -1)) <= 3
+	if shallow:
+		if ctx.tile_rng.randf() >= ctx.flags.niche_spawn_chance:
+			return false
+		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_SECRET, vid, table, force_id, false):
+			_queue(plan, pos + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP, &"FACADE", table)
+			_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID, &"FACADE", table)
+			_queue(plan, pos, CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE, &"FACADE", table)
+			_queue(plan, pos_next + Vector2i(0, -2), CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP, &"FACADE", table)
+			_queue(plan, pos_next + Vector2i(0, -1), CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID, &"FACADE", table)
+			_queue(plan, pos_next, CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE, &"FACADE", table)
+		FacadePlacer.place_3h_crown(ctx, pos, state, plan, use_roots, edges)
+		FacadePlacer.place_3h_crown(ctx, pos_next, state, plan, use_roots, edges)
+		_mark8(state, pos, pos_next, false)
+		return true
+
 	var can_place_out_niche := state.can_place_out_niche(pos)
 
 	# 1. Nisza sekretna (para modułów OUT + OUT)
