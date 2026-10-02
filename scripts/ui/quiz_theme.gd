@@ -59,6 +59,12 @@ const SKINS: Array[Dictionary] = [
 	{"id": "st_beige_sq_3d", "name": "Jasny, kwadratowy, z głębią"},
 ]
 const SETTING_BAR_STYLE := "ui_bar_style"
+## UI walki tylko na szerokość treści (okna wyśrodkowane) zamiast na cały ekran.
+const SETTING_COMBAT_COMPACT := "ui_combat_compact"
+## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
+const UI_OPTIONS: Array[Dictionary] = [
+	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
+]
 const DEFAULT_BAR_STYLE := "klasyczny"
 ## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
 ## Style z Pixel UI pack 3 (assets/UI/Pixel UI pack 3/Full.png, 05.png).
@@ -248,6 +254,11 @@ static func _pick(layers: Array[Theme], t: StringName, n: StringName, kind: Them
 		if l.has_theme_item(kind, n, t):
 			return l.get_theme_item(kind, n, t)
 	return null
+
+
+static func combat_ui_compact() -> bool:
+	var settings := _settings_service()
+	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_COMPACT, false)) if settings else false
 
 
 static func bar_style() -> String:

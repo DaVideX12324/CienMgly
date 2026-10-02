@@ -40,6 +40,11 @@ func snap_font_size(size: int) -> int:
 	return QuizTheme.snap(size)
 
 
+## Dodatkowe przełączniki wyglądu dla zakładki „Motyw”: [{key, label, type: "bool", default}].
+func get_ui_options() -> Array[Dictionary]:
+	return QuizTheme.UI_OPTIONS
+
+
 ## Style pasków dla zakładki „Motyw” (klucz ui_bar_style).
 func get_ui_bar_styles() -> Array[Dictionary]:
 	return QuizTheme.BAR_STYLES
