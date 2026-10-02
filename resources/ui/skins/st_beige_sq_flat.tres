@@ -1,0 +1,189 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_empty.png" id="1_ypsqf"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_green.png" id="2_0h0kx"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_red.png" id="3_woidg"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_blue.png" id="4_5785l"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/bar_yellow.png" id="5_tdwkg"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_beige_sq_flat.png" id="6_50nc2"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_navy_sq_flat.png" id="7_d7gj6"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_pewhk"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("1_ypsqf")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_sm657"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("2_0h0kx")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dkg5b"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("1_ypsqf")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_13xhn"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("3_woidg")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_20wjb"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("1_ypsqf")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_llglj"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("4_5785l")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_1s8hr"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("1_ypsqf")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bsp1x"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("2_0h0kx")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3stiy"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("1_ypsqf")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bv488"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("5_tdwkg")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+expand_margin_top = 1.0
+expand_margin_bottom = 1.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_1rmxv"]
+content_margin_left = 32.0
+content_margin_top = 20.0
+content_margin_right = 32.0
+content_margin_bottom = 20.0
+texture = ExtResource("6_50nc2")
+texture_margin_left = 15.0
+texture_margin_top = 15.0
+texture_margin_right = 15.0
+texture_margin_bottom = 15.0
+modulate_color = Color(1, 1, 1, 0.92)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5syf2"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+texture = ExtResource("7_d7gj6")
+texture_margin_left = 15.0
+texture_margin_top = 15.0
+texture_margin_right = 15.0
+texture_margin_bottom = 15.0
+modulate_color = Color(1, 1, 1, 0.3)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_m3vss"]
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+texture = ExtResource("6_50nc2")
+texture_margin_left = 15.0
+texture_margin_top = 15.0
+texture_margin_right = 15.0
+texture_margin_bottom = 15.0
+
+[resource]
+QuizBarEnemy/styles/background = SubResource("StyleBoxTexture_pewhk")
+QuizBarEnemy/styles/fill = SubResource("StyleBoxTexture_sm657")
+QuizBarLP/styles/background = SubResource("StyleBoxTexture_dkg5b")
+QuizBarLP/styles/fill = SubResource("StyleBoxTexture_13xhn")
+QuizBarSP/styles/background = SubResource("StyleBoxTexture_20wjb")
+QuizBarSP/styles/fill = SubResource("StyleBoxTexture_llglj")
+QuizBarTP/styles/background = SubResource("StyleBoxTexture_1s8hr")
+QuizBarTP/styles/fill = SubResource("StyleBoxTexture_bsp1x")
+QuizBarTimer/styles/background = SubResource("StyleBoxTexture_3stiy")
+QuizBarTimer/styles/fill = SubResource("StyleBoxTexture_bv488")
+QuizLog/styles/panel = SubResource("StyleBoxTexture_1rmxv")
+QuizMenuItem/styles/selected = SubResource("StyleBoxTexture_5syf2")
+QuizWindow/styles/panel = SubResource("StyleBoxTexture_m3vss")

@@ -12,186 +12,11 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.18, 0.22, 0.3, 0.95)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_hp_bg"]
-bg_color = Color(0.08, 0.09, 0.1, 0.95)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_hp_fill"]
-bg_color = Color(0.25, 0.95, 0.25, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_hp_fill"]
 bg_color = Color(0.9, 0.3, 0.3, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6br0c"]
 bg_color = Color(0.02, 0.02, 0.05, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yvuir"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_11o2h"]
-colors = PackedColorArray(0.91, 0.55, 0.24, 1, 0.95, 0.75, 0.32, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_njb0w"]
-gradient = SubResource("Gradient_11o2h")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_jcwvn"]
-texture = SubResource("GradientTexture2D_njb0w")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h4qm2"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_ciq8a"]
-colors = PackedColorArray(0.27, 0.55, 0.9, 1, 0.36, 0.75, 0.95, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_p7vgk"]
-gradient = SubResource("Gradient_ciq8a")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_oe6gf"]
-texture = SubResource("GradientTexture2D_p7vgk")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8lsde"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_6km3n"]
-colors = PackedColorArray(0.08, 0.66, 0.24, 1, 0.24, 0.86, 0.35, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_1htpt"]
-gradient = SubResource("Gradient_6km3n")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_k4e6g"]
-texture = SubResource("GradientTexture2D_1htpt")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w4q6s"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_15nod"]
-colors = PackedColorArray(0.91, 0.55, 0.24, 1, 0.95, 0.75, 0.32, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_0ee1l"]
-gradient = SubResource("Gradient_15nod")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_gvplj"]
-texture = SubResource("GradientTexture2D_0ee1l")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4yhlx"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_glex2"]
-colors = PackedColorArray(0.27, 0.55, 0.9, 1, 0.36, 0.75, 0.95, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_1ameb"]
-gradient = SubResource("Gradient_glex2")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_i2fnf"]
-texture = SubResource("GradientTexture2D_1ameb")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xej1r"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_pegoc"]
-colors = PackedColorArray(0.08, 0.66, 0.24, 1, 0.24, 0.86, 0.35, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_4g5wr"]
-gradient = SubResource("Gradient_pegoc")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_xi6fh"]
-texture = SubResource("GradientTexture2D_4g5wr")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fdfag"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_5qrm5"]
-colors = PackedColorArray(0.91, 0.55, 0.24, 1, 0.95, 0.75, 0.32, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_7sluy"]
-gradient = SubResource("Gradient_5qrm5")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_jajrf"]
-texture = SubResource("GradientTexture2D_7sluy")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l38v5"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_qt0t1"]
-colors = PackedColorArray(0.27, 0.55, 0.9, 1, 0.36, 0.75, 0.95, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_vety2"]
-gradient = SubResource("Gradient_qt0t1")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_hpgci"]
-texture = SubResource("GradientTexture2D_vety2")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1v1jt"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_ep7b5"]
-colors = PackedColorArray(0.08, 0.66, 0.24, 1, 0.24, 0.86, 0.35, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_vlrtg"]
-gradient = SubResource("Gradient_ep7b5")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_x5xs5"]
-texture = SubResource("GradientTexture2D_vlrtg")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5ysdy"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_lp81u"]
-colors = PackedColorArray(0.91, 0.55, 0.24, 1, 0.95, 0.75, 0.32, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_21lt4"]
-gradient = SubResource("Gradient_lp81u")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ca3h5"]
-texture = SubResource("GradientTexture2D_21lt4")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g0ii5"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_48kek"]
-colors = PackedColorArray(0.27, 0.55, 0.9, 1, 0.36, 0.75, 0.95, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_3c457"]
-gradient = SubResource("Gradient_48kek")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_e7t4k"]
-texture = SubResource("GradientTexture2D_3c457")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cc58q"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_cojd7"]
-colors = PackedColorArray(0.08, 0.66, 0.24, 1, 0.24, 0.86, 0.35, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_qsv2r"]
-gradient = SubResource("Gradient_cojd7")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_npjjg"]
-texture = SubResource("GradientTexture2D_qsv2r")
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wdicu"]
-bg_color = Color(0.13, 0.13, 0.22, 1)
-
-[sub_resource type="Gradient" id="Gradient_vxpq5"]
-colors = PackedColorArray(0.9, 0.72, 0.22, 1, 0.98, 0.86, 0.36, 1)
-
-[sub_resource type="GradientTexture2D" id="GradientTexture2D_5kuid"]
-gradient = SubResource("Gradient_vxpq5")
-height = 1
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_uaqnb"]
-texture = SubResource("GradientTexture2D_5kuid")
 
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
 process_mode = 3
@@ -470,11 +295,10 @@ offset_top = -16.0
 color = Color(0.3, 0.6, 1, 1)
 
 [node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer" unique_id=347917086]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer" unique_id=1354719110]
@@ -490,11 +314,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer1" unique_id=1589554787]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer" unique_id=1034919302]
@@ -510,11 +333,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer2" unique_id=2085553291]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer" unique_id=2103601440]
@@ -530,11 +352,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer3" unique_id=362736361]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer" unique_id=555046163]
@@ -550,11 +371,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer4" unique_id=132120749]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=189913761]
@@ -588,11 +408,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer" unique_id=405477884]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer" unique_id=1793056165]
@@ -608,11 +427,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar1" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer1" unique_id=1994615515]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer" unique_id=865972905]
@@ -628,11 +446,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar2" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer2" unique_id=40865332]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer3" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer" unique_id=1184342599]
@@ -648,11 +465,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar3" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer3" unique_id=1063495788]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="VBoxContainer4" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer" unique_id=563760635]
@@ -668,11 +484,10 @@ size_flags_horizontal = 4
 mouse_filter = 1
 
 [node name="EnemyHPBar4" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer4" unique_id=2443933]
+theme_type_variation = &"QuizBarEnemy"
 custom_minimum_size = Vector2(96, 8)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_enemy_hp_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_enemy_hp_fill")
 show_percentage = false
 
 [node name="PlayerSection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=334847837]
@@ -1055,12 +870,11 @@ text = "100"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=165655448]
+theme_type_variation = &"QuizBarLP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_yvuir")
-theme_override_styles/fill = SubResource("StyleBoxTexture_jcwvn")
 value = 100.0
 show_percentage = false
 
@@ -1090,12 +904,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1760073518]
+theme_type_variation = &"QuizBarSP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_h4qm2")
-theme_override_styles/fill = SubResource("StyleBoxTexture_oe6gf")
 show_percentage = false
 
 [node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1682715726]
@@ -1124,12 +937,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=1720153271]
+theme_type_variation = &"QuizBarTP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_8lsde")
-theme_override_styles/fill = SubResource("StyleBoxTexture_k4e6g")
 show_percentage = false
 
 [node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1659099946]
@@ -1169,12 +981,11 @@ text = "100"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=1761014635]
+theme_type_variation = &"QuizBarLP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_w4q6s")
-theme_override_styles/fill = SubResource("StyleBoxTexture_gvplj")
 value = 100.0
 show_percentage = false
 
@@ -1204,12 +1015,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=636456736]
+theme_type_variation = &"QuizBarSP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_4yhlx")
-theme_override_styles/fill = SubResource("StyleBoxTexture_i2fnf")
 show_percentage = false
 
 [node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=72093438]
@@ -1238,12 +1048,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=2103621860]
+theme_type_variation = &"QuizBarTP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_xej1r")
-theme_override_styles/fill = SubResource("StyleBoxTexture_xi6fh")
 show_percentage = false
 
 [node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=2091251807]
@@ -1283,12 +1092,11 @@ text = "100"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=740423526]
+theme_type_variation = &"QuizBarLP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_fdfag")
-theme_override_styles/fill = SubResource("StyleBoxTexture_jajrf")
 value = 100.0
 show_percentage = false
 
@@ -1318,12 +1126,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=484989898]
+theme_type_variation = &"QuizBarSP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_l38v5")
-theme_override_styles/fill = SubResource("StyleBoxTexture_hpgci")
 show_percentage = false
 
 [node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1004025915]
@@ -1352,12 +1159,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1918702154]
+theme_type_variation = &"QuizBarTP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_1v1jt")
-theme_override_styles/fill = SubResource("StyleBoxTexture_x5xs5")
 show_percentage = false
 
 [node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=635091655]
@@ -1397,12 +1203,11 @@ text = "100"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=764813116]
+theme_type_variation = &"QuizBarLP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_5ysdy")
-theme_override_styles/fill = SubResource("StyleBoxTexture_ca3h5")
 value = 100.0
 show_percentage = false
 
@@ -1432,12 +1237,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1470212885]
+theme_type_variation = &"QuizBarSP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_g0ii5")
-theme_override_styles/fill = SubResource("StyleBoxTexture_e7t4k")
 show_percentage = false
 
 [node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=2049204596]
@@ -1466,12 +1270,11 @@ text = "0"
 horizontal_alignment = 2
 
 [node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=994443156]
+theme_type_variation = &"QuizBarTP"
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
-theme_override_styles/background = SubResource("StyleBoxFlat_cc58q")
-theme_override_styles/fill = SubResource("StyleBoxTexture_npjjg")
 show_percentage = false
 
 [node name="CornerInfo" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=574272104]
@@ -1563,12 +1366,11 @@ layout_mode = 2
 theme_override_constants/separation = 16
 
 [node name="TimerBar" type="ProgressBar" parent="Root/TopWindow/VBox/TimerRow" unique_id=82783259]
+theme_type_variation = &"QuizBarTimer"
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_styles/background = SubResource("StyleBoxFlat_wdicu")
-theme_override_styles/fill = SubResource("StyleBoxTexture_uaqnb")
 value = 100.0
 show_percentage = false
 

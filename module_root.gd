@@ -18,12 +18,26 @@ func _ready() -> void:
 		_scene_root.name = "SceneRoot"
 		add_child(_scene_root)
 	_register_singletons()
-	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania
+	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania (z motywem z ustawień)
+	var settings := get_node_or_null("/root/SettingsService")
+	if settings and settings.has_signal("module_setting_changed"):
+		settings.module_setting_changed.connect(_on_module_setting_changed)
 	open_scene(START_SCENE)
 
 
 func _exit_tree() -> void:
 	QuizTheme.restore()
+
+
+## Motywy UI dla zakładki „Motyw” w opcjach hosta: [{id, name}], zapis w ustawieniach modułu
+## (klucze ui_skin / ui_brightness).
+func get_ui_skins() -> Array[Dictionary]:
+	return QuizTheme.SKINS
+
+
+func _on_module_setting_changed(module_id: String, key: String, _value: Variant) -> void:
+	if module_id == QuizTheme.MODULE_ID and (key == QuizTheme.SETTING_SKIN or key == QuizTheme.SETTING_BRIGHTNESS):
+		QuizTheme.apply_skin_from_settings()
 
 
 func embedded_start(host_api, manifest: Dictionary = {}) -> void:
