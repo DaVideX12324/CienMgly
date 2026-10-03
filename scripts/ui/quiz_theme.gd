@@ -99,6 +99,8 @@ static var _combat_theme: Theme = null
 static var _base: Theme = null   # style „klasyczne” z THEME_PATH (przed nałożeniem motywu)
 static var _skin_id := DEFAULT_SKIN
 static var _brightness := 1.0
+## Kopie stylów okien / zaznaczenia z jasnością: [kopia, oryginał] — set_brightness zmienia je w miejscu.
+static var _bright_pairs: Array = []
 static var _bar_style := DEFAULT_BAR_STYLE
 static var _selected_buttons: Array[WeakRef] = []  # zaznaczone pozycje (odświeżane po zmianie motywu)
 
@@ -206,6 +208,7 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 	_skin_id = id if skin != null else DEFAULT_SKIN
 	_bar_style = bar_style if bars != null else DEFAULT_BAR_STYLE
 	_brightness = clampf(brightness, BRIGHTNESS_MIN, BRIGHTNESS_MAX)
+	_bright_pairs.clear()
 	var layers: Array[Theme] = []  # od najważniejszej: styl pasków, motyw okien, baza
 	for l in [bars, skin, _base]:
 		if l != null:
@@ -213,7 +216,7 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 	for t in CUSTOM_TYPES:
 		for n in _names(layers, t, Theme.DATA_TYPE_STYLEBOX):
 			var sb := _pick(layers, t, n, Theme.DATA_TYPE_STYLEBOX) as StyleBox
-			if BRIGHTNESS_TYPES.has(t) and not is_equal_approx(_brightness, 1.0):
+			if BRIGHTNESS_TYPES.has(t):
 				sb = _brightened(sb, _brightness)
 			th.set_stylebox(n, t, sb)
 		for n in _names(layers, t, Theme.DATA_TYPE_COLOR):
@@ -299,18 +302,48 @@ static func brightness() -> float:
 
 
 ## Kopia stylu z kolorem przemnożonym przez `k` (tekstura: modulate; płaski: tło i ramka; alfa bez zmian).
+## Jasność bez przebudowy motywu: zmiana w miejscu kopii stylów okien / zaznaczenia (te same obiekty są
+## w motywie modułu, domyślnym i walki oraz w nadpisaniach zaznaczonych pozycji). Przebudowa całego motywu
+## przy każdym ruchu suwaka cięła grę (zgłoszenie usera 2026-10-04).
+static func set_brightness(brightness: float) -> void:
+	var k := clampf(brightness, BRIGHTNESS_MIN, BRIGHTNESS_MAX)
+	if is_equal_approx(k, _brightness):
+		return
+	_brightness = k
+	# Bez sygnału changed: przez motyw dociera do każdej kontrolki jako zmiana motywu (przeliczenie układu
+	# i kształtów tekstu). Kolor nie zmienia rozmiarów — wystarczy przerysować kontrolki.
+	for pair in _bright_pairs:
+		var copy := pair[0] as StyleBox
+		copy.set_block_signals(true)
+		_apply_brightness(copy, pair[1], k)
+		copy.set_block_signals(false)
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree:
+		for c in tree.root.find_children("*", "Control", true, false):
+			if (c as Control).is_visible_in_tree():
+				(c as Control).queue_redraw()
+
+
+## Kopia stylu z jasnością `k` (zapamiętana dla set_brightness). Tylko tło okna (tekstura / kolor stylu) —
+## tekst i paski w środku bez zmian.
 static func _brightened(sb: StyleBox, k: float) -> StyleBox:
-	if sb is StyleBoxTexture:
-		var t := sb.duplicate() as StyleBoxTexture
-		var c := t.modulate_color
-		t.modulate_color = Color(c.r * k, c.g * k, c.b * k, c.a)
-		return t
-	if sb is StyleBoxFlat:
-		var f := sb.duplicate() as StyleBoxFlat
-		f.bg_color = Color(minf(f.bg_color.r * k, 1.0), minf(f.bg_color.g * k, 1.0), minf(f.bg_color.b * k, 1.0), f.bg_color.a)
-		f.border_color = Color(minf(f.border_color.r * k, 1.0), minf(f.border_color.g * k, 1.0), minf(f.border_color.b * k, 1.0), f.border_color.a)
-		return f
-	return sb
+	if not (sb is StyleBoxTexture or sb is StyleBoxFlat):
+		return sb
+	var copy := sb.duplicate() as StyleBox
+	_apply_brightness(copy, sb, k)
+	_bright_pairs.append([copy, sb])
+	return copy
+
+
+static func _apply_brightness(copy: StyleBox, orig: StyleBox, k: float) -> void:
+	if copy is StyleBoxTexture:
+		var c := (orig as StyleBoxTexture).modulate_color
+		(copy as StyleBoxTexture).modulate_color = Color(c.r * k, c.g * k, c.b * k, c.a)
+	elif copy is StyleBoxFlat:
+		var bg := (orig as StyleBoxFlat).bg_color
+		var border := (orig as StyleBoxFlat).border_color
+		(copy as StyleBoxFlat).bg_color = Color(minf(bg.r * k, 1.0), minf(bg.g * k, 1.0), minf(bg.b * k, 1.0), bg.a)
+		(copy as StyleBoxFlat).border_color = Color(minf(border.r * k, 1.0), minf(border.g * k, 1.0), minf(border.b * k, 1.0), border.a)
 
 
 static func _settings_service() -> Node:
