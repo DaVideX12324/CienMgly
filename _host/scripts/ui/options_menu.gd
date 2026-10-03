@@ -38,6 +38,8 @@ signal closed
 
 @onready var _binds_list: VBoxContainer = $Panel/Margin/VBox/Tabs/Sterowanie/BindsScroll/BindsList
 @onready var _lbl_info: Label = $Panel/Margin/VBox/Tabs/Sterowanie/LblInfo
+@onready var _lbl_bind_game: Label = $Panel/Margin/VBox/Tabs/Sterowanie/LblBindGame
+@onready var _bind_game_option: OptionButton = $Panel/Margin/VBox/Tabs/Sterowanie/BindGameOption
 
 @onready var _panel: PanelContainer = $Panel
 @onready var _margin: MarginContainer = $Panel/Margin
@@ -96,6 +98,8 @@ var _bar_styles: Array = []     # [{id, name}] z aktywnego modułu (get_ui_bar_s
 var _skin_module_id := ""
 ## Przechwytywanie klawisza w zakładce „Sterowanie”: {module, action, slot, button, text}; puste = nie.
 var _capture: Dictionary = {}
+## Gra wybrana w liście „Gra:” zakładki „Sterowanie” (menu główne); "" = pierwsza.
+var _binds_module_id := ""
 var _syncing_skin := false
 
 var _countdown := 0.0
@@ -123,6 +127,7 @@ func _ready() -> void:
 	_skin_option.item_selected.connect(_on_skin_selected)
 	_bars_option.item_selected.connect(_on_bar_style_selected)
 	_slider_brightness.value_changed.connect(_on_brightness_changed)
+	_bind_game_option.item_selected.connect(_on_bind_game_selected)
 	_populate_binds()
 	_tabs.tab_changed.connect(func(_i: int) -> void: _sync_apply_button())
 	UIScaleService.scale_changed.connect(_on_scale_changed)
@@ -444,8 +449,8 @@ func _populate_question_sets() -> void:
 
 
 ## Zakładka „Sterowanie”: sekcje z manifestów modułów (pole "controls": [{label, actions, keys}], opcjonalnie
-## "action_labels": {akcja: nazwa}). W menu głównym — wszystkie moduły pod ich nazwami, w trakcie gry — tylko
-## aktywny moduł. Każda akcja ma InputBinds.SLOTS pola: klik -> „Naciśnij klawisz…” (Esc anuluje, Backspace
+## "action_labels": {akcja: nazwa}). W menu głównym — lista „Gra:” wybiera moduł (zamiast wszystkich naraz,
+## prośba usera 2026-10-04), w trakcie gry — tylko aktywny moduł, bez listy. Każda akcja ma InputBinds.SLOTS pola: klik -> „Naciśnij klawisz…” (Esc anuluje, Backspace
 ## czyści pole). Klawisz zajęty przez inną akcję tego samego modułu przechodzi do nowej (decyzja usera
 ## 2026-10-03). Sekcja bez akcji (sam opis "keys") — tylko tekst. Zapis: InputBinds.save_module.
 func _populate_binds() -> void:
@@ -462,22 +467,26 @@ func _populate_binds() -> void:
 		if active_id != "" and id != active_id:
 			continue
 		manifests.append(m)
+	var pick_game := active_id == "" and manifests.size() > 1
+	_lbl_bind_game.visible = pick_game
+	_bind_game_option.visible = pick_game
 	if manifests.is_empty():
 		_lbl_info.text = "Ten tryb nie opisuje sterowania." if active_id != "" else "Brak opisu sterowania w modułach."
 		return
-	if active_id != "":
-		_lbl_info.text = "Sterowanie: %s — kliknij pole, by zmienić klawisz." % str(manifests[0].get("name", active_id))
-	else:
-		_lbl_info.text = "Sterowanie w poszczególnych grach — kliknij pole, by zmienić klawisz."
+	if pick_game:
+		_bind_game_option.clear()
+		var picked := 0
+		for i in manifests.size():
+			var id := str(manifests[i].get("id", ""))
+			_bind_game_option.add_item(str(manifests[i].get("name", id)))
+			_bind_game_option.set_item_metadata(i, id)
+			if id == _binds_module_id:
+				picked = i
+		_bind_game_option.select(picked)
+		manifests = [manifests[picked]]
+	_lbl_info.text = "Sterowanie: %s — kliknij pole, by zmienić klawisz." % str(manifests[0].get("name", manifests[0].get("id", "")))
 	for m in manifests:
 		var module_id := str(m.get("id", ""))
-		if active_id == "":
-			var header := Label.new()
-			header.text = str(m.get("name", module_id))
-			header.add_theme_font_size_override("font_size", _fs(18))
-			header.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-			header.set_meta(&"bind_size", 18)
-			_binds_list.add_child(header)
 		for entry in m["controls"]:
 			if not (entry is Dictionary):
 				continue
@@ -505,6 +514,12 @@ func _populate_binds() -> void:
 		btn_reset.set_meta(&"bind_size", 13)
 		btn_reset.pressed.connect(_reset_binds.bind(module_id))
 		_binds_list.add_child(btn_reset)
+
+
+func _on_bind_game_selected(index: int) -> void:
+	_play_click()
+	_binds_module_id = str(_bind_game_option.get_item_metadata(index))
+	_populate_binds()
 
 
 ## Wiersz akcji: nazwa + InputBinds.SLOTS pól z klawiszami.
@@ -705,6 +720,9 @@ func _on_scale_changed(_scale: float) -> void:
 	_bars_option.add_theme_font_size_override("font_size", main_size)
 	_scale_popup_font(_bars_option, main_size)
 	_lbl_info.add_theme_font_size_override("font_size", _fs(14))
+	_lbl_bind_game.add_theme_font_size_override("font_size", main_size)
+	_bind_game_option.add_theme_font_size_override("font_size", main_size)
+	_scale_popup_font(_bind_game_option, main_size)
 	_lbl_sets.add_theme_font_size_override("font_size", main_size)
 	_lbl_sets_hint.add_theme_font_size_override("font_size", _fs(14))
 	for child in _sets_list.get_children():
