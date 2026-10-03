@@ -3,6 +3,8 @@
 
 extends Node
 
+const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
+
 ## Emitowany po każdym nowym kroku postępu urządzenia arcymaga (dla UI paska).
 signal device_progress_changed(count: int, total: int)
 
@@ -324,6 +326,17 @@ func is_device_complete() -> bool:
 	return device_total_bosses > 0 and get_device_progress() >= device_total_bosses
 
 
+## Stan poziomów zapisany pod dawnymi ścieżkami scen -> obecne. procedural_level.tscn był jedyną sceną
+## poziomu proceduralnego (jaskinia); teraz to baza, a jaskinia to levels/cave.tscn (2026-10-03) — seed mapy,
+## pokonani bossowie i skrzynie przechodzą na nową scenę.
+func _migrate_level_paths() -> void:
+	var old_path := QuizRpgPaths.path("scenes/maps/procedural_level.tscn")
+	var new_path := QuizRpgPaths.path("scenes/maps/levels/cave.tscn")
+	if level_states.has(old_path) and not level_states.has(new_path):
+		level_states[new_path] = level_states[old_path]
+		level_states.erase(old_path)
+
+
 ## SERIALIZACJA - dla SaveManager (format: {levels, device_progress, device_total_bosses};
 ## stary format = sam dict level_states, obsługiwany wstecznie).
 func serialize() -> Dictionary:
@@ -346,6 +359,7 @@ func deserialize(data: Dictionary) -> void:
 		_device_progress = {}
 		device_total_bosses = 0
 		device_counting_enabled = true
+	_migrate_level_paths()
 	print("[LevelStateManager] ✓ Restored %d levels, device %d/%d" % [level_states.keys().size(), get_device_progress(), device_total_bosses])
 	device_progress_changed.emit(get_device_progress(), device_total_bosses)
 

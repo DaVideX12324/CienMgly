@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://bsk3sooe4tsuq"]
+
+[ext_resource type="PackedScene" uid="uid://cc8kde0qlhh73" path="res://modules/quiz_rpg/scenes/maps/procedural_level.tscn" id="1_base"]
+
+[node name="Cave" instance=ExtResource("1_base")]
+level_type = 2
+next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+previous_level_path = "res://modules/quiz_rpg/scenes/maps/tutorial_area.tscn"
+location_name = "Jaskinia"

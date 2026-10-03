@@ -15,6 +15,9 @@ const MAX_SAVE_SLOT_COUNT := 20
 static var GAME_SCENE_PATH: String = QuizRpgPaths.path("scenes/game.tscn")
 static var INITIAL_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/tutorial_area.tscn")
 static var LEGACY_WORLD_MAP_SCENE_PATH: String = QuizRpgPaths.path("scenes/maps/world_map.tscn")
+## Dawniej jedna scena poziomu proceduralnego (jaskinia); teraz bazowa, a mapy to sceny dziedziczone (levels/).
+static var LEGACY_PROCEDURAL_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/procedural_level.tscn")
+static var CAVE_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/levels/cave.tscn")
 
 var current_save_slot: int = -1
 var is_loading: bool = false
@@ -417,6 +420,8 @@ func _normalize_level_path(level_path: String) -> String:
 	level_path = QuizRpgPaths.localize(level_path)
 	if level_path == "" or level_path == GAME_SCENE_PATH:
 		return INITIAL_LEVEL_PATH
+	if level_path == LEGACY_PROCEDURAL_LEVEL_PATH:
+		return CAVE_LEVEL_PATH  # stary zapis z bazowej sceny = jaskinia
 	return level_path
 
 

@@ -2,7 +2,7 @@ extends Node2D
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
-static var NEXT_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/procedural_level.tscn")
+static var NEXT_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/levels/cave.tscn")
 const NEXT_SPAWN_NAME := "Spawn"
 const LevelPortal = preload("level_portal.gd")
 
