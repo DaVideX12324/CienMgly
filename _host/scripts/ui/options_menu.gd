@@ -526,6 +526,7 @@ func _populate_binds() -> void:
 	_lbl_info.text = "Sterowanie: %s — kliknij pole, by zmienić klawisz." % str(manifests[0].get("name", manifests[0].get("id", "")))
 	for m in manifests:
 		var module_id := str(m.get("id", ""))
+		_add_control_options(module_id, m.get("control_options", []))
 		for entry in m["controls"]:
 			if not (entry is Dictionary):
 				continue
@@ -553,6 +554,43 @@ func _populate_binds() -> void:
 		btn_reset.set_meta(&"bind_size", 18)
 		btn_reset.pressed.connect(_reset_binds.bind(module_id))
 		_binds_list.add_child(btn_reset)
+
+
+## Opcje sterowania z manifestu modułu ("control_options": [{key, label, default, options: [{id, name}]}]),
+## np. domyślny chód / bieg w Cieniu Mgły — lista wyboru, zapis od razu (SettingsService.set_module ->
+## module_setting_changed, moduł odświeża się na żywo).
+func _add_control_options(module_id: String, options: Variant) -> void:
+	if not (options is Array):
+		return
+	for opt in options:
+		if not (opt is Dictionary) or not (opt.get("options", []) is Array):
+			continue
+		var key := str(opt.get("key", ""))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		var lbl := Label.new()
+		lbl.text = "  " + str(opt.get("label", key))
+		lbl.custom_minimum_size = Vector2(UIScaleService.px(220), 0)
+		lbl.add_theme_font_size_override("font_size", _fs(18))
+		lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+		lbl.set_meta(&"bind_size", 18)
+		row.add_child(lbl)
+		var choice := OptionButton.new()
+		choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		choice.add_theme_font_size_override("font_size", _fs(18))
+		choice.set_meta(&"bind_size", 18)
+		_scale_popup_font(choice, _fs(18))
+		var current := str(SettingsService.get_module(module_id, key, opt.get("default", "")))
+		var ids: Array = []
+		for item in opt["options"]:
+			ids.append(str(item.get("id", "")))
+			choice.add_item(str(item.get("name", item.get("id", "?"))))
+		choice.selected = maxi(0, ids.find(current))
+		choice.item_selected.connect(func(index: int) -> void:
+			_play_click()
+			SettingsService.set_module(module_id, key, ids[index]))
+		row.add_child(choice)
+		_binds_list.add_child(row)
 
 
 func _on_bind_game_selected(index: int) -> void:
