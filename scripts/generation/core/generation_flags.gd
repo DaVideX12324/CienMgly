@@ -16,6 +16,10 @@ var entrance_mode: String = "edge"
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
 var enable_ledge_fix: bool = true       # ShortLedgeRaisePass: wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte
+var enable_slope_thickness: bool = true # SlopeThicknessPass: ukośna ściana (skos) o grubości 3 -> 4
+# Reguła skosu 2H: true = narożnik wewnętrzny 3 kratki nad stopą (w ukośnym ciągu); false = dawna
+# (schodek o 1 + grubość 3–5) — tylko do porównań w testach (EdgeAnalyzer.slope_corner_rule).
+var slope_2h_corner_rule: bool = true
 # Małe wolnostojące PRZEKRZYWIONE wyspy ściany (pole <= max_area kratek, najwyżej max_width kolumn, żadna
 # kolumna wyższa niż max_height, nie przy brzegu mapy, góry i doły kolumn w różnych rzędach): lico zawsze 2H,
 # bez łączników 2H<->3H — schodkowy filar dostaje jeden styl zamiast mieszanki 2H/3H. max_area 0 = wył.

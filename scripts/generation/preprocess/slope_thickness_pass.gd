@@ -16,6 +16,10 @@ func get_id() -> StringName:
 	return &"slope_thickness"
 
 
+func is_enabled(ctx: GenerationContext) -> bool:
+	return ctx.flags == null or ctx.flags.enable_slope_thickness
+
+
 func apply(ctx: GenerationContext) -> int:
 	var total := 0
 	for _round in MAX_ROUNDS:

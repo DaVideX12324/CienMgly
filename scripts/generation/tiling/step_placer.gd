@@ -75,11 +75,10 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - left_y
-			# Skos o ścianie 3–5 ze schodkiem o 1 z przynajmniej jednej strony, w ukośnym ciągu z narożnikiem
-			# wewnętrznym 3 kratki nad stopą (EdgeAnalyzer.slope_2h_run), zostaje ścieżką legacy — nie mapuje
+			# Skos 2H (EdgeAnalyzer.slope_2h_step: narożnik wewnętrzny 3 kratki nad stopą w ukośnym ciągu)
+			# zostaje ścieżką legacy — nie mapuje
 			# się na moduł o stałej liczbie części. Reszta = narożnik 3H STEP_LEFT.
-			if EdgeAnalyzer.slope_2h_steps(dy, right_y, y) and EdgeAnalyzer.slope_2h_depth(edge.solid_depth) \
-					and EdgeAnalyzer.slope_2h_run(edges, pos, 1):
+			if EdgeAnalyzer.slope_2h_step(edges, edge, dy, right_y, true):
 				place_slope(edge, state, plan, table, false, edges)
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
@@ -109,8 +108,7 @@ static func place(
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
 		else:
 			var dy: int = y - right_y
-			if EdgeAnalyzer.slope_2h_steps(dy, left_y, y) and EdgeAnalyzer.slope_2h_depth(edge.solid_depth) \
-					and EdgeAnalyzer.slope_2h_run(edges, pos, -1):
+			if EdgeAnalyzer.slope_2h_step(edges, edge, dy, left_y, false):
 				place_slope(edge, state, plan, table, true, edges)
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
