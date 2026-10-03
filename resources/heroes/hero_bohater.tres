@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="QuizRpgHeroData" format=3]
+[gd_resource type="Resource" script_class="QuizRpgHeroData" format=3 uid="uid://bfe351vv043xk"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/heroes/hero_data.gd" id="1_hero_data"]
+[ext_resource type="Script" uid="uid://d3p8y55e66603" path="res://modules/quiz_rpg/scripts/heroes/hero_data.gd" id="1_hero_data"]
 [ext_resource type="PackedScene" uid="uid://player001" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="2_player_scene"]
 
 [resource]

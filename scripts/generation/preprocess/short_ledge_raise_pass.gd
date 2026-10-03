@@ -1,5 +1,5 @@
 class_name ShortLedgeRaisePass
-extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
+extends "grid_pass.gd"
 
 ## Wypustki 2H przy licu 3H+: w rzędzie stóp fasady wąski (1–MAX_LEDGE kolumn) odcinek ściany o grubości
 ## dokładnie 2, stykający się z kolumną 3H+ na tej samej stopie. Pipeline stawiałby na nim rim i lico 2H

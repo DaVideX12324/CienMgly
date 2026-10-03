@@ -1,6 +1,8 @@
 extends Node2D
 
-const NEXT_LEVEL_PATH := "res://modules/quiz_rpg/scenes/maps/procedural_level.tscn"
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
+static var NEXT_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/procedural_level.tscn")
 const NEXT_SPAWN_NAME := "Spawn"
 
 var _transitioning: bool = false

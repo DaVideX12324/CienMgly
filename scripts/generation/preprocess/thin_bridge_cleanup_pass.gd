@@ -1,5 +1,5 @@
 class_name ThinBridgeCleanupPass
-extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
+extends "grid_pass.gd"
 
 func get_id() -> StringName:
 	return &"thin_bridge_cleanup"

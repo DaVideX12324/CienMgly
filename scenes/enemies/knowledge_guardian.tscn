@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://dnluwdjkfowsl"]
 
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/knowledge_guardian.gd" id="2_script"]
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://bf0x3njxwpsxj" path="res://modules/quiz_rpg/scripts/enemies/knowledge_guardian.gd" id="2_script"]
 
 [node name="Enemy" instance=ExtResource("1_base")]
 script = ExtResource("2_script")

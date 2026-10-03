@@ -1,10 +1,10 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/tools/battle_layout_preview.gd" id="1_06b7j"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_2_training_layout.tres" id="2_f262x"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_yxwq2"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_ork_1.tres" id="4_ork1"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/enemy_warhog.tres" id="5_whog"]
+[ext_resource type="Script" uid="uid://7hjlw7v5vdm1" path="res://modules/quiz_rpg/scripts/tools/battle_layout_preview.gd" id="1_06b7j"]
+[ext_resource type="Resource" uid="uid://d218sqq5wg2y8" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_2_training_layout.tres" id="2_f262x"]
+[ext_resource type="SpriteFrames" uid="uid://hakd74l6xj11" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_yxwq2"]
+[ext_resource type="SpriteFrames" uid="uid://dahqhhfiusn31" path="res://modules/quiz_rpg/resources/enemies/enemy_ork_1.tres" id="4_ork1"]
+[ext_resource type="SpriteFrames" uid="uid://bjx77wr2i5rp8" path="res://modules/quiz_rpg/resources/enemies/enemy_warhog.tres" id="5_whog"]
 
 [node name="BattleLayoutPreview" type="Control" unique_id=336054848]
 custom_minimum_size = Vector2(1920, 1080)

@@ -1,5 +1,5 @@
 class_name RoundRoomCarver
-extends "res://modules/quiz_rpg/scripts/generation/topology/room_carver.gd"
+extends "room_carver.gd"
 
 ## Pokój okrągły / eliptyczny: sam rdzeń z OrganicCaveRoomCarver, bez wybrzuszeń
 ## (flaga room_shape = "round").

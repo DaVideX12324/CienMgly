@@ -1,7 +1,7 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/zdrowie_rgb_full.png" id="1_j7vxn"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/zdrowie_rgb_empty.png" id="2_x2tll"]
+[ext_resource type="Texture2D" uid="uid://ddprcodbv3ymb" path="res://modules/quiz_rpg/resources/ui/skins/bars/zdrowie_rgb_full.png" id="1_j7vxn"]
+[ext_resource type="Texture2D" uid="uid://k0mthjdarfgp" path="res://modules/quiz_rpg/resources/ui/skins/bars/zdrowie_rgb_empty.png" id="2_x2tll"]
 
 [resource]
 QuizBarEnemy/constants/bar_scale = 2

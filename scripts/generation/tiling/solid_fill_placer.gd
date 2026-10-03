@@ -1,7 +1,7 @@
 class_name SolidFillPlacer
 extends RefCounted
 
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgress = preload("../core/gen_progress.gd")
 
 
 ## Planuje wypełnienie pustki poza mapą oraz litej skały wewnątrz mapy.

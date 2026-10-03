@@ -4,10 +4,11 @@ extends Node2D
 ## Umozliwia testowanie seedow, wymiarow (od 50x50 do 500x500 z asymetria),
 ## przelaczanie typow (Jaskinia, Las, Zamek), kamere swobodna, skoki i spacer graczem.
 
-const ProceduralLevelScript = preload("res://modules/quiz_rpg/scripts/maps/procedural_level.gd")
-const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
-const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
-const QuizTheme = preload("res://modules/quiz_rpg/scripts/ui/quiz_theme.gd")
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const ProceduralLevelScript = preload("../maps/procedural_level.gd")
+const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
+const CaveGeneratorScript = preload("../generation/cave_generator.gd")
+const QuizTheme = preload("../ui/quiz_theme.gd")
 @onready var camera: Camera2D = $Camera2D
 @onready var level_container: Node2D = $LevelContainer
 @onready var hud: CanvasLayer = $CanvasLayer
@@ -178,7 +179,7 @@ var _height_mask_sprite: Sprite2D = null
 
 # Mapa wysokości: pole szumu > próg na CAŁEJ mapie (też nad ścianami/voidem) jako półprzezroczyste
 # wypełnienie z gładkim konturem; na nim faktyczny płaskowyż (mocniej) i schody (żółte).
-const PlateauPassScript = preload("res://modules/quiz_rpg/scripts/generation/topology/plateau_pass.gd")
+const PlateauPassScript = preload("../generation/topology/plateau_pass.gd")
 const HEIGHT_MASK_PX := 4  # próbki na kratkę w każdą stronę (gładki kontur)
 const HEIGHT_FIELD_FILL := Color(0.25, 0.85, 1.0, 0.18)
 const HEIGHT_FIELD_EDGE := Color(0.35, 0.9, 1.0, 0.95)
@@ -942,7 +943,7 @@ func _toggle_player_mode() -> void:
 		btn_player.text = "🏃 Spacer Graczem (P)"
 		camera.zoom = Vector2(0.8, 0.8)
 	else:
-		var player_scene_path := "res://modules/quiz_rpg/scenes/player/player.tscn"
+		var player_scene_path := QuizRpgPaths.path("scenes/player/player.tscn")
 		if not ResourceLoader.exists(player_scene_path):
 			push_warning("Player scene not found")
 			return
@@ -1002,7 +1003,7 @@ func _set_exploring(on: bool) -> void:
 func _ensure_module_singletons(core: Node) -> void:
 	if _own_singletons != null:
 		return
-	var module := (load("res://modules/quiz_rpg/module_root.tscn") as PackedScene).instantiate()
+	var module := (load(QuizRpgPaths.path("module_root.tscn")) as PackedScene).instantiate()
 	_own_singletons = Node.new()
 	_own_singletons.name = "PreviewModuleSingletons"
 	add_child(_own_singletons)

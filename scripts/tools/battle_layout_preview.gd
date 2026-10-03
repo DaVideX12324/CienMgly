@@ -43,7 +43,7 @@ extends Control
 
 const SAVE_DELAY := 0.6          # s bez zmian po przeciągnięciu -> zapis pliku układu
 const BAND := 250.0              # dolny pasek UI walki (obszar bitwy = REF_AREA)
-const FolderBackground := preload("res://modules/quiz_rpg/scripts/quiz/background_generators/folder_battle_background.gd")
+const FolderBackground := preload("../quiz/background_generators/folder_battle_background.gd")
 const ZONE_LINE := Color(1.0, 0.35, 0.35, 0.95)
 const ZONE_TEXT := Color(1.0, 0.8, 0.8)
 ## Pasek HP wroga w walce: 12 px pod linią stóp (slot 8 px niżej + odstęp), 96 px szerokości; wysokość

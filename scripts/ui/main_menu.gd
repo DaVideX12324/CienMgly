@@ -2,6 +2,8 @@ extends CanvasLayer
 
 ## Main menu for res://modules/quiz_rpg/scenes/ui/main_menu.tscn.
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
 @onready var new_game_btn: Button = $Center/Panel/Margin/VBox/BtnNewGame
 @onready var load_game_btn: Button = $Center/Panel/Margin/VBox/BtnLoadGame
 @onready var stats_btn: Button = $Center/Panel/Margin/VBox/BtnStats
@@ -21,7 +23,7 @@ var _save_slots_list: VBoxContainer
 var _save_slots_back_btn: Button
 var _slot_mode: String = "load"
 var _options_menu: CanvasLayer = null
-const HOST_OPTIONS_MENU_SCENE := "res://scenes/ui/options_menu.tscn"
+static var HOST_OPTIONS_MENU_SCENE: String = QuizRpgPaths.host("res://scenes/ui/options_menu.tscn")
 const MAX_MENU_SAVE_SLOTS := 20
 
 

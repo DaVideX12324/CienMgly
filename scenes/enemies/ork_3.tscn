@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="PackedScene" path="enemy.tscn" id="1_base"]
-[ext_resource type="Script" path="../../scripts/enemies/ork_3.gd" id="2_script"]
-[ext_resource type="SpriteFrames" path="../../resources/enemies/enemy_ork_3.tres" id="3_frames"]
+[ext_resource type="PackedScene" uid="uid://enemy001" path="enemy.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://tgmwelr4qhmk" path="../../scripts/enemies/ork_3.gd" id="2_script"]
+[ext_resource type="SpriteFrames" uid="uid://dlmwqp26lfce2" path="../../resources/enemies/enemy_ork_3.tres" id="3_frames"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fix"]
 radius = 4.000

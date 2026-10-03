@@ -6,8 +6,10 @@ extends RefCounted
 ## w pliku obok grafiki (`<grafika>_layout.tres`, get_layout_key -> BattleBackgroundLayout).
 ## Klucz mapy wybiera battle_background.gd (_map_key).
 
-const ROOT_DIR := "res://modules/quiz_rpg/assets/textures/battle_backgrounds/"
-const SEARCH_DIRS: Array[String] = [ROOT_DIR, ROOT_DIR + "pixel_crawler/"]
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
+
+static var ROOT_DIR: String = QuizRpgPaths.path("assets/textures/battle_backgrounds/")
+static var SEARCH_DIRS: Array[String] = [ROOT_DIR, ROOT_DIR + "pixel_crawler/"]
 const IMAGE_EXTS: Array[String] = ["png", "jpg", "jpeg", "webp"]
 ## Cień nad dolnym paskiem UI walki (px, przy dolnej krawędzi obszaru walki) — też w podglądzie pól.
 const SHADOW_HEIGHT := 35.0

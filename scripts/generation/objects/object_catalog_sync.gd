@@ -17,8 +17,10 @@ extends RefCounted
 ## Istniejące wpisy (gęstości, reguły) zostają nietknięte; plik jest przepisywany w czytelnym układzie
 ## (grupa / obiekt w jednej linii).
 
-const SCENES_ROOT := "res://modules/quiz_rpg/scenes/objects"
-const CONFIG_DIR := "res://modules/quiz_rpg/resources/maps/config"
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
+
+static var SCENES_ROOT: String = QuizRpgPaths.path("scenes/objects")
+static var CONFIG_DIR: String = QuizRpgPaths.path("resources/maps/config")
 
 const TEMPLATES := {
 	"sprites": {"class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 3.0},
@@ -91,6 +93,7 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 			data["objects"] = []
 	var groups: Dictionary = data["groups"]
 	var objects: Array = data["objects"]
+	_map_scenes(objects, QuizRpgPaths.localize)  # JSON w formie hosta -> bieżący korzeń
 
 	var known := {}
 	var ids := {}
@@ -178,6 +181,7 @@ static func sync_biome(json_path: String, biome_dir: String, only: PackedStringA
 		if f == null:
 			report["errors"].append("Nie można zapisać '%s'." % json_path)
 		else:
+			_map_scenes(objects, QuizRpgPaths.canonical)
 			f.store_string(to_text(data))
 			f.close()
 			report["written"] = true
@@ -244,6 +248,15 @@ static func _unique_id(base: String, ids: Dictionary) -> String:
 	while ids.has("%s_%d" % [base, i]):
 		i += 1
 	return "%s_%d" % [base, i]
+
+
+## Przelicza ścieżki scen obiektów (pole "scene": ścieżka albo tablica) funkcją fn.
+static func _map_scenes(objects: Array, fn: Callable) -> void:
+	for o in objects:
+		if not (o is Dictionary) or not o.has("scene"):
+			continue
+		var sc = o["scene"]
+		o["scene"] = sc.map(func(s): return fn.call(String(s))) if sc is Array else fn.call(String(sc))
 
 
 static func _scenes_of(o: Dictionary) -> Array:

@@ -1,6 +1,6 @@
 [gd_resource type="Theme" format=3 uid="uid://cu4rmiph6kyp2"]
 
-[ext_resource type="FontFile" path="res://modules/quiz_rpg/resources/ui/jersey15_pixel.res" id="1_6kev7"]
+[ext_resource type="FontFile" uid="uid://yqj6pl2fr872" path="res://modules/quiz_rpg/resources/ui/jersey15_pixel.res" id="1_6kev7"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6kev7"]
 bg_color = Color(0.08, 0.09, 0.1, 0.95)

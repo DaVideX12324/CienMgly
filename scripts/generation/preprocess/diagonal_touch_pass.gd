@@ -1,5 +1,5 @@
 class_name DiagonalTouchPass
-extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
+extends "grid_pass.gd"
 
 ## Skośny styk podłóg przez litą ścianę (okno 3×3, 1 = podłoga): 100/000/001 -> 000/000/001 i
 ## 001/000/100 -> 000/000/100 — górny narożnik staje się ścianą. Ta sama reguła co krok 3

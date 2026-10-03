@@ -1,10 +1,12 @@
 extends Node2D
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
 signal set_spawn(spawn: Vector2)
 
-const INITIAL_LEVEL_PATH := "res://modules/quiz_rpg/scenes/maps/tutorial_area.tscn"
+static var INITIAL_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/tutorial_area.tscn")
 const DEFAULT_SPAWN_NAME := "Spawn"
-const LoadingScreenScene = preload("res://modules/quiz_rpg/scenes/ui/loading_screen.tscn")
+const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 ## Nazwa lokacji na ekranie ładowania (duży napis nad paskiem) wg nazwy pliku sceny mapy; brak = bez
 ## napisu (ProceduralLevel ma własną: location_name / typ poziomu).
 const LOCATION_NAMES := {
@@ -36,6 +38,7 @@ func change_level(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -
 
 
 func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -> void:
+	level_path = QuizRpgPaths.localize(level_path)  # ścieżki z eksportów scen / zapisów w formie hosta
 	if level_path == "":
 		level_path = INITIAL_LEVEL_PATH
 	if spawn_name == "":

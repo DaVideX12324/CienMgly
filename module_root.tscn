@@ -4,11 +4,11 @@
 [ext_resource type="Script" uid="uid://cqdfhhipt0mq" path="res://modules/quiz_rpg/autoloads/game_manager.gd" id="2_gw2bx"]
 [ext_resource type="Script" uid="uid://dw12dlix7uotd" path="res://modules/quiz_rpg/autoloads/difficulty_manager.gd" id="3_od5kb"]
 [ext_resource type="Script" uid="uid://ukwvwlmvx5yj" path="res://modules/quiz_rpg/autoloads/player_stats.gd" id="4_d2768"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/autoloads/inventory_service.gd" id="5_inventory"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/heroes/hero_bohater.tres" id="6_hero_bohater"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/autoloads/save_manager.gd" id="7_save_manager"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/autoloads/level_state_manager.gd" id="8_level_state"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/autoloads/loot_manager.gd" id="9_loot_manager"]
+[ext_resource type="Script" uid="uid://bqqvcuakclyo7" path="res://modules/quiz_rpg/autoloads/inventory_service.gd" id="5_inventory"]
+[ext_resource type="Resource" uid="uid://bfe351vv043xk" path="res://modules/quiz_rpg/resources/heroes/hero_bohater.tres" id="6_hero_bohater"]
+[ext_resource type="Script" uid="uid://xk4xqx0aeh55" path="res://modules/quiz_rpg/autoloads/save_manager.gd" id="7_save_manager"]
+[ext_resource type="Script" uid="uid://csc6u1r8iw4v6" path="res://modules/quiz_rpg/autoloads/level_state_manager.gd" id="8_level_state"]
+[ext_resource type="Script" uid="uid://dkxoniolqgvtb" path="res://modules/quiz_rpg/autoloads/loot_manager.gd" id="9_loot_manager"]
 
 [node name="QuizRPGModule" type="Node" unique_id=1501087792]
 script = ExtResource("1")

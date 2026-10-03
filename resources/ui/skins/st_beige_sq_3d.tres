@@ -1,7 +1,7 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_beige_sq_3d.png" id="1_0hfou"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/st/window_navy_sq_flat.png" id="2_jrve7"]
+[ext_resource type="Texture2D" uid="uid://ctsrvnpclb7gg" path="res://modules/quiz_rpg/resources/ui/skins/st/window_beige_sq_3d.png" id="1_0hfou"]
+[ext_resource type="Texture2D" uid="uid://cm4pvjvipy7yh" path="res://modules/quiz_rpg/resources/ui/skins/st/window_navy_sq_flat.png" id="2_jrve7"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b7mnd"]
 bg_color = Color(0.08, 0.09, 0.1, 0.95)

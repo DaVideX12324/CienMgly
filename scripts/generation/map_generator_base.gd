@@ -4,7 +4,7 @@ extends RefCounted
 ## Bazowa klasa generatora map w module Quiz RPG.
 ## Odpowiada za wspolne algorytmy siatki, szumy, sciezki A*, oraz budowanie wezlow mapy.
 
-const GenProgressScript = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgressScript = preload("core/gen_progress.gd")
 
 enum CellType {
 	VOID = 0,

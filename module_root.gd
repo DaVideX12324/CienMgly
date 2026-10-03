@@ -1,9 +1,11 @@
 extends Node
 
+const QuizRpgPaths = preload("scripts/quiz_rpg_paths.gd")
+
 signal exit_requested
 
-const START_SCENE := "res://modules/quiz_rpg/scenes/ui/main_menu.tscn"
-const QuizTheme = preload("res://modules/quiz_rpg/scripts/ui/quiz_theme.gd")
+static var START_SCENE: String = QuizRpgPaths.path("scenes/ui/main_menu.tscn")
+const QuizTheme = preload("scripts/ui/quiz_theme.gd")
 
 var _host_api = null
 var _manifest: Dictionary = {}

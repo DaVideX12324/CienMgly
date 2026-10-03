@@ -1,6 +1,8 @@
 extends RefCounted
 
-const LAYOUT_KEY := "res://modules/quiz_rpg/assets/textures/battle_backgrounds/world_map"  # -> world_map_layout.tres (BattleBackgroundLayout)
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
+
+static var LAYOUT_KEY: String = QuizRpgPaths.path("assets/textures/battle_backgrounds/world_map")  # -> world_map_layout.tres (BattleBackgroundLayout)
 
 const GRASS_A := Color(0.22, 0.45, 0.18)
 const GRASS_B := Color(0.25, 0.50, 0.20)

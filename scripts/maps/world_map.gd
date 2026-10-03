@@ -2,6 +2,8 @@ extends Node2D
 
 ## Mapa świata z programmer art — kodowane tło, ściany, dekoracje.
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
 # Wymiary mapy
 const MAP_W := 1200.0
 const MAP_H := 900.0
@@ -298,7 +300,7 @@ func _setup_party_followers() -> void:
 		var member: Dictionary = members[member_index]
 		var follower_scene: PackedScene = member.get("actor_scene") as PackedScene
 		if follower_scene == null:
-			follower_scene = load("res://modules/quiz_rpg/scenes/player/player.tscn") as PackedScene
+			follower_scene = load(QuizRpgPaths.path("scenes/player/player.tscn")) as PackedScene
 		if follower_scene == null:
 			continue
 		var follower_instance: Node = follower_scene.instantiate()

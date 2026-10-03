@@ -1,5 +1,5 @@
 class_name MixedRoomCarver
-extends "res://modules/quiz_rpg/scripts/generation/topology/room_carver.gd"
+extends "room_carver.gd"
 
 ## Kształt losowany per pokój spośród organicznego, prostokątnego i okrągłego
 ## (flaga room_shape = "mixed"; los z ctx.rng — powtarzalny dla seeda).

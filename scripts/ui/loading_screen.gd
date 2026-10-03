@@ -23,8 +23,9 @@ extends CanvasLayer
 ## ProceduralLevel.loading_screen_key albo biom z typu poziomu (cave, castle, forest).
 ## Prompty i zasady grafik: BACKGROUND_DIR/loading_screen_prompts.md.
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const FADE_TIME := 0.25
-const BACKGROUND_DIR := "res://modules/quiz_rpg/assets/textures/loading_screens/"
+static var BACKGROUND_DIR: String = QuizRpgPaths.path("assets/textures/loading_screens/")
 const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 ## Dolna część grafiki (ułamek wysokości), z której uśredniany jest kolor pasa.
 const BAND_SAMPLE := 0.02

@@ -1,11 +1,13 @@
 class_name DungeonGenerator
-extends "res://modules/quiz_rpg/scripts/generation/map_generator_base.gd"
+extends "map_generator_base.gd"
 
 ## Generator wnetrz / lochow / zamkow bazujacy na pokojach (BSP / Room Placement)
 ## i korytarzach ze scianami kolizyjnymi oraz drzwiami.
 
-const CASTLE_TILES_PATH := "res://assets/pixel_crawler/environments/castle/Assets/Tiles.png"
-const FALLBACK_TILES_PATH := "res://assets/textures/legacy_amonra/atlases/Dungeon tileset/Dungeon tileset.png"
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
+static var CASTLE_TILES_PATH: String = QuizRpgPaths.host("res://assets/pixel_crawler/environments/castle/Assets/Tiles.png")
+static var FALLBACK_TILES_PATH: String = QuizRpgPaths.host("res://assets/textures/legacy_amonra/atlases/Dungeon tileset/Dungeon tileset.png")
 
 
 static func get_default_palette() -> Dictionary:

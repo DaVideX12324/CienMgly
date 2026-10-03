@@ -7,6 +7,7 @@ extends RefCounted
 ## JSON NIE trzyma współrzędnych atlasu — te są w custom .tres (NamedTileSetDefinition).
 ## JSON wskazuje profil (.tres), aktywne zestawy, reguły zachowania i parametry generatora.
 
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 
 # Rozpoznawane klucze bloku "generation" (parametry topologii). seed/width/height
 # = 0 oznacza "auto" (bierz z UI/@export albo wbudowany default).
@@ -101,7 +102,7 @@ static func load_from_json_path(json_path: String) -> GeneratorBehaviourConfig:
 	cfg.raw = parsed
 	cfg.version = int(parsed.get("version", 1))
 
-	var profile_path := String(parsed.get("tile_profile", ""))
+	var profile_path := QuizRpgPaths.localize(String(parsed.get("tile_profile", "")))
 	if profile_path.is_empty():
 		cfg.warnings.append("JSON '%s' nie wskazuje 'tile_profile'." % json_path)
 	elif not ResourceLoader.exists(profile_path):

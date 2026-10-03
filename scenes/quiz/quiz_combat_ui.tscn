@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://beviygxa01iyy"]
 
 [ext_resource type="Script" uid="uid://bmndbqqcgecbu" path="res://modules/quiz_rpg/scripts/quiz/quiz_combat_controller.gd" id="1_combat"]
-[ext_resource type="Theme" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="1_u2rx0"]
+[ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="1_u2rx0"]
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
+[ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_dark"]
 bg_color = Color(0.02, 0.03, 0.05, 0.9)

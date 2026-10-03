@@ -3,6 +3,8 @@ extends StaticBody2D
 ## Drzwi/przejście blokowane quizem.
 ## Programmer art: rysowane kodem (zamknięte = solidne, otwarte = przeźroczyste).
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
 @export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export var required_correct: int = 3
@@ -21,7 +23,7 @@ var _anim_time: float = 0.0
 var _hint_alpha: float = 0.0
 var _gm: Node  # GameManager
 
-const PUZZLE_UI_SCENE = "res://modules/quiz_rpg/scenes/quiz/quiz_puzzle_ui.tscn"
+static var PUZZLE_UI_SCENE: String = QuizRpgPaths.path("scenes/quiz/quiz_puzzle_ui.tscn")
 
 
 func _ready() -> void:

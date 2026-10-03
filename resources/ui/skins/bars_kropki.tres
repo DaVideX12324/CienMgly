@@ -1,13 +1,13 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_orange_full.png" id="1_luw53"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_orange_empty.png" id="2_bhgbd"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_silver_full.png" id="3_iuq2u"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_silver_empty.png" id="4_nfpox"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_green_full.png" id="5_1qoax"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_green_empty.png" id="6_f53lo"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_yellow_full.png" id="7_epj0p"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_yellow_empty.png" id="8_fxp6c"]
+[ext_resource type="Texture2D" uid="uid://bydtuacb704d8" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_orange_full.png" id="1_luw53"]
+[ext_resource type="Texture2D" uid="uid://c6cl4vowwaurv" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_orange_empty.png" id="2_bhgbd"]
+[ext_resource type="Texture2D" uid="uid://bgajdfoinfpm3" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_silver_full.png" id="3_iuq2u"]
+[ext_resource type="Texture2D" uid="uid://m4bf2plajao6" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_silver_empty.png" id="4_nfpox"]
+[ext_resource type="Texture2D" uid="uid://b5ohkad5bfuy1" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_green_full.png" id="5_1qoax"]
+[ext_resource type="Texture2D" uid="uid://g2665k0x6tfr" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_green_empty.png" id="6_f53lo"]
+[ext_resource type="Texture2D" uid="uid://dw4qqqv7v6ce" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_yellow_full.png" id="7_epj0p"]
+[ext_resource type="Texture2D" uid="uid://551ltqp1mpbs" path="res://modules/quiz_rpg/resources/ui/skins/bars/kropki_yellow_empty.png" id="8_fxp6c"]
 
 [resource]
 QuizBarEnemy/constants/bar_cap_left = 6

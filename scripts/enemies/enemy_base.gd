@@ -4,7 +4,7 @@ class_name EnemyBase
 ## Bazowa klasa przeciwnika — patroluje, wykrywa gracza, inicjuje walke quizowa.
 ## Programmer art: rysowany kodem jesli brak sprite frames.
 
-const QuizRpgEnemyData = preload("res://modules/quiz_rpg/scripts/enemies/enemy_data.gd")
+const QuizRpgEnemyData = preload("enemy_data.gd")
 
 @export var enemy_data: QuizRpgEnemyData
 @export_group("Identity")
@@ -687,7 +687,7 @@ func start_combat(player: Node2D) -> void:
 		diff_range = _dm.get_difficulty_range(quiz_category)
 	var encounter_size_range: Vector2i = Vector2i(maxi(1, min_encounter_size), maxi(maxi(1, min_encounter_size), max_encounter_size))
 
-	var combat_canvas: CanvasLayer = preload("res://modules/quiz_rpg/scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
+	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
 	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range)
 	get_tree().current_scene.add_child(combat_canvas)

@@ -12,7 +12,7 @@ extends RefCounted
 ##    test podstawy / odstępów / zajętości, klastry, tryb free z odstępem w px (kubełki = kratki).
 ## 4. Weryfikacja osiągalności: teren odcięty przez przeszkody -> zdejmij przeszkody przy nim.
 
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgress = preload("../core/gen_progress.gd")
 
 const PORTAL_RING := 2
 const STAIR_RING := 1

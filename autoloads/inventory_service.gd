@@ -1,7 +1,8 @@
 extends Node
 
-const HOST_ITEMS_DIR := "res://modules/quiz_rpg/resources/items"
-const STANDALONE_ITEMS_DIR := "res://resources/items"
+const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
+
+static var ITEMS_DIR: String = QuizRpgPaths.path("resources/items")
 
 var _items_by_id: Dictionary = {}
 var _display_name_to_id: Dictionary = {}
@@ -161,13 +162,9 @@ func _build_use_message(item_data: QuizRpgItemData) -> String:
 func _load_item_database() -> void:
 	_items_by_id.clear()
 	_display_name_to_id.clear()
-	for dir_path: String in [HOST_ITEMS_DIR, STANDALONE_ITEMS_DIR]:
-		var dir: DirAccess = DirAccess.open(dir_path)
-		if dir == null:
-			continue
-		_load_item_directory(dir_path, dir)
-		if not _items_by_id.is_empty():
-			return
+	var dir: DirAccess = DirAccess.open(ITEMS_DIR)
+	if dir != null:
+		_load_item_directory(ITEMS_DIR, dir)
 
 
 func _load_item_directory(dir_path: String, dir: DirAccess) -> void:

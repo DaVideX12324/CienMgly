@@ -1,6 +1,6 @@
 extends Control
 
-const QuizOverlayScene := preload("res://modules/quiz_rpg/scenes/quiz/quiz_overlay_single.tscn")
+const QuizOverlayScene := preload("../../scenes/quiz/quiz_overlay_single.tscn")
 
 ## UI zagadki quizowej — drzwi/przejścia.
 ## Różni się od walki: nie ma HP wroga, jest progress bar "odblokowania".

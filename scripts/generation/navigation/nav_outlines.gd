@@ -13,7 +13,7 @@ extends RefCounted
 ## y w dół) — obrys ma pole ujemne (shoelace), dziura dodatnie. Styk dwóch kratek tylko rogiem:
 ## w wierzchołku skręt w lewo względem kierunku dojścia, więc pętle się nie sklejają.
 
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgress = preload("../core/gen_progress.gd")
 
 const CELL := 16.0
 ## Promień agenta = połowa szerokości kolizji wroga (prostokąt 14×8): ścieżka zostawia miejsce na ciało

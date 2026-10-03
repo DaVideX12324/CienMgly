@@ -1,5 +1,5 @@
 class_name OrganicCaveRoomCarver
-extends "res://modules/quiz_rpg/scripts/generation/topology/room_carver.gd"
+extends "room_carver.gd"
 
 
 func carve(ctx: GenerationContext, rect: Rect2i) -> void:
