@@ -10,6 +10,10 @@ signal device_progress_changed(count: int, total: int)
 
 var level_states: Dictionary = {}
 
+## Seed zapisu (per-save, decyzja usera 2026-10-03): losowany raz na nową grę; każda mapa generowana
+## liczy z niego własny seed (get_level_seed) — cały świat zapisu wynika z jednej liczby. 0 = jeszcze brak.
+var world_seed: int = 0
+
 # --- Postęp urządzenia arcymaga (fabuła) ---
 # GLOBALNY, per-save, MONOTONICZNY, nieodwracalny. NIE jest częścią level_states,
 # więc reroll mapy / clear_defeated_bosses go NIE ruszają. Klucz = stabilne story-id
@@ -26,7 +30,6 @@ func _ready() -> void:
 func get_level_state(level_path: String) -> Dictionary:
 	if not level_states.has(level_path):
 		level_states[level_path] = {
-			"map_seed": 0,                # ← seed mapy proceduralnej (0 = brak, wylosuj)
 			"defeated_bosses": [],        # ← pokonani bossowie (per-save, czyszczeni przy rerollu)
 			"dropped_items": [],
 			"opened_chests": [],
@@ -45,33 +48,40 @@ func get_level_state(level_path: String) -> Dictionary:
 
 
 ## ========================================
-## MAP SEED - trwały seed mapy proceduralnej per level_path (per-save)
+## SEED - jeden seed zapisu, z niego seedy map
 ## ========================================
 
-## Zwraca zapisany seed dla poziomu (0 = brak; generator wylosuje i zapisze).
-func get_map_seed(level_path: String) -> int:
-	return int(get_level_state(level_path).get("map_seed", 0))
+## Seed zapisu; brak (nowa gra / stary zapis) -> losowany i utrwalany.
+func get_world_seed() -> int:
+	if world_seed <= 0:
+		world_seed = int(randi() % 1000000) + 1
+		print("[LevelState] World seed: %d" % world_seed)
+	return world_seed
 
-## Zapisuje seed mapy dla poziomu (utrwala układ na kolejne wejścia).
-func set_map_seed(level_path: String, map_seed: int) -> void:
-	get_level_state(level_path)["map_seed"] = map_seed
-	print("[LevelState] Map seed set for %s: %d" % [level_path, map_seed])
 
-## Czyści CAŁY zapisany stan poziomu (skrzynie/beczki/ściany/boss/seed).
-## Następny get_level_state odtworzy świeży wpis. Używane przy rerollu mapy.
+## Seed mapy poziomu: z seeda zapisu i nazwy sceny (np. "cave" dla levels/cave.tscn) — przeniesienie
+## pliku sceny nie zmienia mapy. String.hash jest stały między uruchomieniami.
+func get_level_seed(level_path: String) -> int:
+	var name := level_path.get_file().get_basename()
+	return absi(("%d:%s" % [get_world_seed(), name]).hash()) % 1000000 + 1
+
+
+## Czyści CAŁY zapisany stan poziomu (skrzynie/beczki/ściany/boss).
+## Następny get_level_state odtworzy świeży wpis.
 func clear_level_state(level_path: String) -> void:
 	if level_states.has(level_path):
 		level_states.erase(level_path)
 		print("[LevelState] Cleared full state for: ", level_path)
 
-## Reroll mapy: czyści stan poziomu i przypisuje NOWY losowy seed. Zwraca seed.
-## Uwaga: stare id pozycyjne (skrzynie itd.) nie pasują do nowego układu, więc
-## czyścimy je celowo (decyzja projektowa: reroll = mapa od zera).
-func reroll_map_seed(level_path: String) -> int:
-	clear_level_state(level_path)
-	var new_seed := int(randi() % 1000000) + 1
-	set_map_seed(level_path, new_seed)
-	return new_seed
+
+## Reroll świata: NOWY seed zapisu (new_seed <= 0 = losowy) — zmienia wszystkie mapy naraz, więc czyści
+## stan wszystkich poziomów (stare id pozycyjne skrzyń / bossów nie pasują do nowego układu; reroll = mapy
+## od zera). Postęp urządzenia zostaje (osobny od level_states). Zwraca nowy seed zapisu.
+func reroll_world_seed(new_seed: int = 0) -> int:
+	level_states.clear()
+	world_seed = new_seed if new_seed > 0 else int(randi() % 1000000) + 1
+	print("[LevelState] World seed rerolled: %d" % world_seed)
+	return world_seed
 
 ## ========================================
 ## BOSSY - pokonanie per-save (NIE na stałe: znika przy rerollu mapy albo
@@ -342,6 +352,7 @@ func _migrate_level_paths() -> void:
 func serialize() -> Dictionary:
 	return {
 		"levels": level_states.duplicate(true),
+		"world_seed": world_seed,
 		"device_progress": _device_progress.duplicate(true),
 		"device_total_bosses": device_total_bosses,
 		"device_counting_enabled": device_counting_enabled,
@@ -350,12 +361,14 @@ func serialize() -> Dictionary:
 func deserialize(data: Dictionary) -> void:
 	if data.has("levels"):
 		level_states = (data.get("levels", {}) as Dictionary).duplicate(true)
+		world_seed = int(data.get("world_seed", 0))  # stary zapis bez seeda zapisu -> nowy przy pierwszej mapie
 		_device_progress = (data.get("device_progress", {}) as Dictionary).duplicate(true)
 		device_total_bosses = int(data.get("device_total_bosses", 0))
 		device_counting_enabled = bool(data.get("device_counting_enabled", true))
 	else:
 		# Stary format zapisu: cały dict to level_states.
 		level_states = data.duplicate(true)
+		world_seed = 0
 		_device_progress = {}
 		device_total_bosses = 0
 		device_counting_enabled = true
@@ -374,6 +387,7 @@ func print_state(level_path: String = "") -> void:
 ## Reset wszystkich stanów (nowa gra). Czyści też postęp urządzenia.
 func reset() -> void:
 	level_states.clear()
+	world_seed = 0
 	_device_progress.clear()
 	device_total_bosses = 0
 	device_counting_enabled = true
