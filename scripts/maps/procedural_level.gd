@@ -59,6 +59,14 @@ var _enemy_pool: Array = []
 ## Powrót przez wejście (enter_previous_level): poziom i spawn, w którym się pojawia (marker przy jego wyjściu).
 @export var previous_level_path: String = ""
 @export var previous_spawn_name: String = LevelPortal.FROM_NEXT_SPAWN
+@export_group("Przejścia")
+## Wyjście / wejście aktywowane klawiszem interakcji (E) zamiast wejścia w obszar — np. drabina w ściekach.
+@export var next_portal_use_key: bool = false
+@export var previous_portal_use_key: bool = false
+## Tekst podpowiedzi w trybie klawisza („” = „Przejdź”).
+@export var next_portal_prompt: String = ""
+@export var previous_portal_prompt: String = ""
+@export_group("")
 @export var spawn_entities_enabled: bool = true
 @export var setup_nav_enabled: bool = true
 @export var cave_max_rooms: int = 0 # 0 = obliczane automatycznie na podstawie rozmiaru mapy
@@ -526,9 +534,9 @@ func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMa
 ## (Spawn przy wejściu, FromNext przy wyjściu — MapGeneratorBase.arrival_cell), więc od razu nie wraca.
 func _connect_exit_trigger() -> void:
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D,
-		_change_level.bind(next_level_path, next_spawn_name))
+		_change_level.bind(next_level_path, next_spawn_name), next_portal_use_key, next_portal_prompt)
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D,
-		_change_level.bind(previous_level_path, previous_spawn_name))
+		_change_level.bind(previous_level_path, previous_spawn_name), previous_portal_use_key, previous_portal_prompt)
 
 
 func _change_level(level_path: String, spawn_name: String) -> void:
