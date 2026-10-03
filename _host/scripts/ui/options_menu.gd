@@ -492,17 +492,17 @@ func _populate_binds() -> void:
 				continue
 			var lbl_sec := Label.new()
 			lbl_sec.text = str(entry.get("label", ""))
-			lbl_sec.add_theme_font_size_override("font_size", _fs(14))
+			lbl_sec.add_theme_font_size_override("font_size", _fs(18))
 			lbl_sec.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
-			lbl_sec.set_meta(&"bind_size", 14)
+			lbl_sec.set_meta(&"bind_size", 18)
 			_binds_list.add_child(lbl_sec)
 			var actions: Array = entry.get("actions", []) if entry.get("actions", []) is Array else []
 			if actions.is_empty():
 				var lbl_keys := Label.new()
 				lbl_keys.text = "  " + str(entry.get("keys", "(brak)"))
-				lbl_keys.add_theme_font_size_override("font_size", _fs(13))
+				lbl_keys.add_theme_font_size_override("font_size", _fs(18))
 				lbl_keys.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6))
-				lbl_keys.set_meta(&"bind_size", 13)
+				lbl_keys.set_meta(&"bind_size", 18)
 				_binds_list.add_child(lbl_keys)
 				continue
 			for action in actions:
@@ -510,8 +510,8 @@ func _populate_binds() -> void:
 		var btn_reset := Button.new()
 		btn_reset.text = "Przywróć domyślne"
 		btn_reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		btn_reset.add_theme_font_size_override("font_size", _fs(13))
-		btn_reset.set_meta(&"bind_size", 13)
+		btn_reset.add_theme_font_size_override("font_size", _fs(18))
+		btn_reset.set_meta(&"bind_size", 18)
 		btn_reset.pressed.connect(_reset_binds.bind(module_id))
 		_binds_list.add_child(btn_reset)
 
@@ -522,25 +522,25 @@ func _on_bind_game_selected(index: int) -> void:
 	_populate_binds()
 
 
-## Wiersz akcji: nazwa + InputBinds.SLOTS pól z klawiszami.
+## Wiersz akcji: nazwa + InputBinds.SLOTS pól z klawiszami. Tekst w rozmiarze innych zakładek (18).
 func _bind_row(module_id: String, action: String) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	var lbl := Label.new()
 	lbl.text = "  " + _action_label(module_id, action)
-	lbl.custom_minimum_size = Vector2(UIScaleService.px(180), 0)
-	lbl.add_theme_font_size_override("font_size", _fs(13))
+	lbl.custom_minimum_size = Vector2(UIScaleService.px(220), 0)
+	lbl.add_theme_font_size_override("font_size", _fs(18))
 	lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
-	lbl.set_meta(&"bind_size", 13)
+	lbl.set_meta(&"bind_size", 18)
 	row.add_child(lbl)
 	var keys := InputBinds.get_keys(action)
 	for slot in InputBinds.SLOTS:
 		var btn := Button.new()
 		btn.text = InputBinds.key_name(keys[slot]) if slot < keys.size() else "—"
-		btn.custom_minimum_size = Vector2(UIScaleService.px(120), 0)
+		btn.custom_minimum_size = Vector2(UIScaleService.px(140), 0)
 		btn.clip_text = true  # stała szerokość pola także przy „Naciśnij…”
-		btn.add_theme_font_size_override("font_size", _fs(13))
-		btn.set_meta(&"bind_size", 13)
+		btn.add_theme_font_size_override("font_size", _fs(18))
+		btn.set_meta(&"bind_size", 18)
 		btn.pressed.connect(_start_capture.bind(module_id, action, slot, btn))
 		row.add_child(btn)
 	return row
