@@ -311,7 +311,9 @@ static func spawn_entities(
 		spawn_marker = Marker2D.new()
 		spawn_marker.name = "Spawn"
 		spawns_node.add_child(spawn_marker)
-	spawn_marker.position = Vector2(result.player_spawn.x * cell_size + cell_size * 0.5, result.player_spawn.y * cell_size + cell_size * 0.5)
+	# Przyjście z poprzedniego poziomu: obok wejścia, poza jego obszarem przejścia.
+	var spawn_cell := arrival_cell(result, result.entrance_pos) if result.entrance_pos != Vector2i.ZERO else result.player_spawn
+	spawn_marker.position = _cell_center(spawn_cell, cell_size)
 
 	# 2. Enemies
 	var enemies_node := target_node.get_node_or_null("Enemies")
@@ -389,7 +391,58 @@ static func spawn_entities(
 	_setup_portal_trigger(target_node, LevelPortal.NEXT_AREA, result.exit_pos, cell_size)
 	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size)
 	if result.exit_pos != Vector2i.ZERO:
-		LevelPortal.place_from_next_marker(target_node, _cell_center(result.exit_pos, cell_size))
+		LevelPortal.place_from_next_marker(target_node, _cell_center(arrival_cell(result, result.exit_pos), cell_size))
+
+
+## Odległość (w kratkach, w linii prostej) punktu pojawienia się od kratki przejścia — obszar ma 1,5 kratki.
+const ARRIVAL_DIST := 3
+
+
+## Kratka pojawienia się przy przejściu `portal`: BFS po podłodze (4-sąsiedzi) na tej samej wysokości
+## płaskowyżu, bez barier i obiektów z kolizją; najbliższa (po drodze) kratka co najmniej ARRIVAL_DIST kratek
+## w linii prostej od przejścia z wolnymi wszystkimi 8 sąsiadami, inaczej pierwsza tak daleka, inaczej
+## najdalsza osiągnięta (ślepy zaułek).
+static func arrival_cell(result: GenerationResult, portal: Vector2i, min_dist: int = ARRIVAL_DIST) -> Vector2i:
+	var solid: Dictionary = result.objects.solid_cells() if result.objects != null else {}
+	var pl = result.plateau
+	var has_plateau: bool = pl != null and not pl.is_empty()
+	var h0: int = pl.height_of(portal) if has_plateau else 0
+	var walkable := func(c: Vector2i) -> bool:
+		var t: int = int(result.grid.get(c, CellType.VOID))
+		if t != CellType.FLOOR and t != CellType.PATH and t != CellType.ENTRANCE and t != CellType.EXIT:
+			return false
+		if solid.has(c):
+			return false
+		return not has_plateau or (not pl.blocked.has(c) and pl.height_of(c) == h0)
+	var dist := {portal: 0}
+	var queue: Array[Vector2i] = [portal]
+	var head := 0
+	var far := portal
+	var first_far := Vector2i(-1, -1)
+	while head < queue.size():
+		var c: Vector2i = queue[head]
+		head += 1
+		var d: int = dist[c]
+		if d > int(dist[far]):
+			far = c
+		if Vector2(c - portal).length() >= min_dist:
+			var open := true
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					if not walkable.call(c + Vector2i(dx, dy)):
+						open = false
+			if open:
+				return c
+			if first_far.x < 0:
+				first_far = c
+			if d >= min_dist * 3:
+				continue
+		for step: Vector2i in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+			var n := c + step
+			if not dist.has(n) and walkable.call(n):
+				dist[n] = d + 1
+				queue.append(n)
+	return first_far if first_far.x >= 0 else far
 
 
 static func _cell_center(cell: Vector2i, cell_size: int) -> Vector2:
