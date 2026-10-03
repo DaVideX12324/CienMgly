@@ -86,6 +86,10 @@ var _prev_monitor := 0
 var _prev_scale: int = UIScaleService.ScaleMode.NORMAL
 var _prev_scale_user_picked := false
 var _prev_quizless_mode := false
+## Wybory monitora / rozdzielczości w chwili otwarcia (albo ostatniego zatwierdzenia) — „Zastosuj” porównuje
+## wybory w kontrolkach, nie przeliczone rozdzielczości (bieżącej może nie być na liście, np. pełny ekran).
+var _open_monitor_index := -1
+var _open_res_index := -1
 
 var _skins: Array = []          # [{id, name}] z aktywnego modułu (get_ui_skins)
 var _bar_styles: Array = []     # [{id, name}] z aktywnego modułu (get_ui_bar_styles), opcjonalnie
@@ -95,6 +99,8 @@ var _capture: Dictionary = {}
 var _syncing_skin := false
 
 var _countdown := 0.0
+## Treść okna przeniesiona do panelu modułu (embed_in) albo null (zwykłe okno).
+var _embedded_content: Control = null
 var _confirming := false
 
 
@@ -118,6 +124,7 @@ func _ready() -> void:
 	_bars_option.item_selected.connect(_on_bar_style_selected)
 	_slider_brightness.value_changed.connect(_on_brightness_changed)
 	_populate_binds()
+	_tabs.tab_changed.connect(func(_i: int) -> void: _sync_apply_button())
 	UIScaleService.scale_changed.connect(_on_scale_changed)
 	WindowService.resolution_changed.connect(func(_r: Vector2i) -> void: _on_scale_changed(UIScaleService.scale_factor))
 	if get_tree() and get_tree().root:
@@ -150,6 +157,37 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## Tryb wbudowany (np. prawy panel menu Esc / menu głównego Cienia Mgły): zakładki i „Zastosuj” trafiają do
+## kontenera modułu, bez tytułu, tła i „Zamknij” — wyjście jak z innych pozycji menu modułu (Esc -> closed).
+## Widoczność treści idzie za widocznością tej warstwy (open / close); okno potwierdzenia zmian ekranu zostaje
+## na tej warstwie, nad wszystkim. Prośba usera 2026-10-04.
+func embed_in(container: Control) -> void:
+	if _embedded_content != null:
+		return
+	var vbox := _tabs.get_parent() as Control
+	vbox.reparent(container, false)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_title_label.visible = false
+	var sep := vbox.get_node_or_null("Sep0") as Control
+	if sep:
+		sep.visible = false
+	_btn_close.visible = false
+	_panel.visible = false
+	var overlay := get_node_or_null("Overlay") as CanvasItem
+	if overlay:
+		overlay.visible = false
+	_embedded_content = vbox
+	vbox.visible = visible
+	visibility_changed.connect(func() -> void:
+		if is_instance_valid(_embedded_content):
+			_embedded_content.visible = visible)
+
+
+func is_embedded() -> bool:
+	return _embedded_content != null
+
+
 func open() -> void:
 	_prev_mode = WindowService.window_mode_idx
 	_prev_res = WindowService.resolution
@@ -168,6 +206,8 @@ func open() -> void:
 	_sync_scale()
 	_sync_quizless_mode()
 	_sync_audio_sliders()
+	_remember_display_selection()
+	_sync_apply_button()
 	_sync_skin_tab()
 	_populate_question_sets()
 	_populate_binds()  # aktywny moduł mógł się zmienić
@@ -264,8 +304,12 @@ func _sync_quizless_mode() -> void:
 	_quizless_mode.button_pressed = _sel_quizless_mode
 
 
+## „Gra bez quizów” to nie ustawienie ekranu — zapis od razu, bez zatwierdzania (decyzja usera 2026-10-04).
 func _on_quizless_toggled(enabled: bool) -> void:
 	_sel_quizless_mode = enabled
+	_prev_quizless_mode = enabled
+	if enabled != SettingsService.is_quizless_mode_enabled():
+		SettingsService.set_quizless_mode_enabled(enabled, true)
 
 
 func _update_res_note() -> void:
@@ -559,18 +603,33 @@ func _action_label(module_id: String, action: String) -> String:
 	return str(labels.get(action, action)) if labels is Dictionary else action
 
 
+## „Zastosuj” tylko na zakładce Ekran — pozostałe zakładki zapisują zmiany od razu.
+func _remember_display_selection() -> void:
+	_open_monitor_index = _monitor_option.selected
+	_open_res_index = _res_option.selected
+
+
+func _sync_apply_button() -> void:
+	_btn_apply.visible = _tabs.get_current_tab_control() == _tabs.get_node("Ekran")
+
+
+## Ustawienia ekranu (tryb okna, monitor, rozdzielczość, skalowanie) z potwierdzeniem i odliczaniem —
+## tylko gdy coś się zmieniło (decyzja usera 2026-10-04).
 func _on_apply() -> void:
 	_play_click()
 	var resolution_index := _res_option.selected
 	var resolution := WindowService.resolution
 	if resolution_index >= 0 and resolution_index < _resolutions.size():
 		resolution = _resolutions[resolution_index]
+	var display_changed := _sel_mode != _prev_mode or _monitor_option.selected != _open_monitor_index \
+		or _res_option.selected != _open_res_index or _sel_scale != _prev_scale
+	if not display_changed:
+		return
 	if _scale_manually_changed:
 		UIScaleService.set_mode(_sel_scale)
 	else:
 		if not _prev_scale_user_picked:
 			UIScaleService.reset_to_auto()
-	SettingsService.set_quizless_mode_enabled(_sel_quizless_mode, false)
 	SettingsService.apply_settings(_sel_mode, resolution, _monitor_option.selected)
 	_start_confirm()
 
@@ -582,11 +641,18 @@ func _start_confirm() -> void:
 	_lbl_countdown.text = "Przywrocenie za: %ds" % ceili(_countdown)
 
 
+## Zachowane ustawienia ekranu stają się nowym punktem odniesienia; okno zostaje otwarte.
 func _on_confirm() -> void:
 	_play_click()
 	_confirming = false
 	_confirm_popup.visible = false
-	hide()
+	_prev_mode = WindowService.window_mode_idx
+	_prev_res = WindowService.resolution
+	_prev_monitor = WindowService.monitor_idx
+	_prev_scale = UIScaleService.current_mode
+	_prev_scale_user_picked = UIScaleService.user_picked
+	_sel_scale = _prev_scale
+	_remember_display_selection()
 
 
 func _on_revert() -> void:
@@ -598,11 +664,9 @@ func _on_revert() -> void:
 		UIScaleService.set_mode(_prev_scale)
 	else:
 		UIScaleService.reset_to_auto()
-	SettingsService.set_quizless_mode_enabled(_prev_quizless_mode, false)
 	SettingsService.apply_settings(_prev_mode, _prev_res, _prev_monitor)
 	_sel_mode = _prev_mode
 	_sel_scale = _prev_scale
-	_sel_quizless_mode = _prev_quizless_mode
 	_sync_mode_buttons()
 	_monitor_option.selected = _prev_monitor
 	_populate_resolutions(_prev_monitor)
@@ -610,6 +674,7 @@ func _on_revert() -> void:
 	_sync_scale()
 	_sync_quizless_mode()
 	_sync_audio_sliders()
+	_remember_display_selection()
 
 
 func _on_scale_changed(_scale: float) -> void:
