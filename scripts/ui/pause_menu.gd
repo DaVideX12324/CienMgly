@@ -535,6 +535,11 @@ func _open_options_menu() -> void:
 	_mode = "options"
 	if opt_menu.has_signal("closed") and not opt_menu.closed.is_connected(_on_options_menu_closed):
 		opt_menu.closed.connect(_on_options_menu_closed)
+	# Opcje w prawym panelu, jak inne pozycje menu (zamiast osobnego okna) — prośba usera 2026-10-04.
+	if opt_menu.has_method("embed_in"):
+		opt_menu.call("embed_in", get_node("PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"))
+		_show_panel("options")
+		context_title_label.text = "Opcje"
 	if opt_menu.has_method("open"):
 		opt_menu.call("open")
 	else:
@@ -730,6 +735,10 @@ func _show_save_panel() -> void:
 
 
 func _show_panel(panel_name: String) -> void:
+	# Opcje wbudowane w prawy panel: inna pozycja menu chowa je bez sygnału closed.
+	if panel_name != "options" and _options_menu != null and is_instance_valid(_options_menu) \
+			and _options_menu.has_method("is_embedded") and _options_menu.call("is_embedded"):
+		_options_menu.visible = false
 	party_panel.visible = panel_name == "party"
 	items_panel.visible = panel_name == "items"
 	skills_panel.visible = panel_name == "skills"
