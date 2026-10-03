@@ -2,6 +2,11 @@ extends CanvasLayer
 
 ## DevMenu — Menu Deweloperskie / Debug Menu
 ## Dostępne pod F1, tyldą (~) lub przyciskiem w prawym górnym rogu ekranu.
+## Własny motyw z czcionką hosta (nie dziedziczy pikselowej czcionki modułu) i rozmiary tekstu / okna
+## skalowane skalą UI z opcji (UIScaleService), przeliczane po zmianie skali i rozmiaru okna.
+## Rozmiary bazowe przy skali 1x (zgłoszenie usera 2026-10-04: tekst był za mały i niespójny).
+const BASE_FONT_SIZE := 18
+const BASE_PANEL_SIZE := Vector2(880, 600)
 
 signal menu_visibility_changed(is_visible: bool)
 
@@ -27,6 +32,7 @@ var _lbl_info: Label
 var _lbl_stats_details: Label
 
 var _floating_toggle_btn: Button
+var _ui_theme: Theme
 
 
 func _get_service(service_name: String) -> Node:
@@ -41,9 +47,18 @@ func _get_service(service_name: String) -> Node:
 func _ready() -> void:
 	layer = 125
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_ui_theme = Theme.new()
+	var font_path := str(ProjectSettings.get_setting("gui/theme/custom_font", ""))
+	if not font_path.is_empty() and ResourceLoader.exists(font_path):
+		_ui_theme.default_font = load(font_path) as Font
 	_build_floating_button()
 	_build_menu_ui()
 	_refresh_controls_state()
+	var ui_scale := _get_service("UIScaleService")
+	if ui_scale and ui_scale.has_signal("scale_changed"):
+		ui_scale.scale_changed.connect(func(_s: float) -> void: _apply_scale())
+	get_viewport().size_changed.connect(_apply_scale)
+	_apply_scale()
 
 	var cheat_service := _get_service("CheatService")
 	if cheat_service:
@@ -117,12 +132,51 @@ func is_menu_open() -> bool:
 	return _modal_root != null and _modal_root.visible
 
 
+## Rozmiar w px przy bieżącej skali UI (bez usługi — bez skalowania).
+func _px(base: float) -> int:
+	var ui_scale := _get_service("UIScaleService")
+	return int(ui_scale.call("px", base)) if ui_scale else roundi(base)
+
+
+## Rozmiar tekstu `base` (przy skali 1x) — zapamiętany w meta, przeliczany w _apply_scale.
+func _font(control: Control, base: int) -> void:
+	control.set_meta(&"dev_font", base)
+	control.add_theme_font_size_override("font_size", _px(base))
+
+
+func _min_height(control: Control, base: int) -> void:
+	control.set_meta(&"dev_min_h", base)
+	control.custom_minimum_size = Vector2(0, _px(base))
+
+
+## Skala UI / rozmiar okna zmienione: tekst, wysokości przycisków i rozmiar okna.
+func _apply_scale() -> void:
+	if _ui_theme == null:
+		return
+	_ui_theme.default_font_size = _px(BASE_FONT_SIZE)
+	for root_node: Node in [_modal_root, _floating_toggle_btn]:
+		if root_node == null:
+			continue
+		for node in [root_node] + root_node.find_children("*", "Control", true, false):
+			if node.has_meta(&"dev_font"):
+				(node as Control).add_theme_font_size_override("font_size", _px(int(node.get_meta(&"dev_font"))))
+			if node.has_meta(&"dev_min_h"):
+				(node as Control).custom_minimum_size = Vector2(0, _px(int(node.get_meta(&"dev_min_h"))))
+			if node is OptionButton:
+				(node as OptionButton).get_popup().add_theme_font_size_override("font_size", _px(BASE_FONT_SIZE))
+	if _floating_toggle_btn:
+		_floating_toggle_btn.reset_size()
+		_floating_toggle_btn.offset_left = -_floating_toggle_btn.get_combined_minimum_size().x - 12
+	if is_menu_open():
+		_center_panel()
+
+
 func _center_panel() -> void:
 	if _main_panel == null:
 		return
 	var vp_size: Vector2 = get_viewport().get_visible_rect().size if get_viewport() else Vector2(1920, 1080)
-	var panel_w: float = minf(880.0, vp_size.x - 40.0)
-	var panel_h: float = minf(600.0, vp_size.y - 40.0)
+	var panel_w: float = minf(_px(BASE_PANEL_SIZE.x), vp_size.x - 40.0)
+	var panel_h: float = minf(_px(BASE_PANEL_SIZE.y), vp_size.y - 40.0)
 	_main_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_main_panel.offset_left = -panel_w * 0.5
 	_main_panel.offset_right = panel_w * 0.5
@@ -170,6 +224,8 @@ func _refresh_controls_state() -> void:
 
 func _build_floating_button() -> void:
 	_floating_toggle_btn = Button.new()
+	_floating_toggle_btn.theme = _ui_theme
+	_font(_floating_toggle_btn, 16)
 	_floating_toggle_btn.text = "🛠️ DEV"
 	_floating_toggle_btn.tooltip_text = "Menu Deweloperskie [F1 / ~]"
 	_floating_toggle_btn.focus_mode = Control.FOCUS_NONE
@@ -193,7 +249,7 @@ func _build_floating_button() -> void:
 	_floating_toggle_btn.offset_left = -78
 	_floating_toggle_btn.offset_right = -12
 	_floating_toggle_btn.offset_top = 10
-	_floating_toggle_btn.offset_bottom = 36
+	_floating_toggle_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_floating_toggle_btn.pressed.connect(toggle)
 
 	add_child(_floating_toggle_btn)
@@ -203,6 +259,7 @@ func _build_menu_ui() -> void:
 	# Główny kontener pełnoekranowy modala
 	_modal_root = Control.new()
 	_modal_root.name = "DevMenuModalRoot"
+	_modal_root.theme = _ui_theme
 	_modal_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_modal_root.visible = false
 	_modal_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -252,12 +309,12 @@ func _build_menu_ui() -> void:
 
 	var icon_lbl := Label.new()
 	icon_lbl.text = "🛠️"
-	icon_lbl.add_theme_font_size_override("font_size", 18)
+	_font(icon_lbl, 22)
 	header_hbox.add_child(icon_lbl)
 
 	var title_lbl := Label.new()
 	title_lbl.text = "MENU DEWELOPERSKIE (DEV MENU)"
-	title_lbl.add_theme_font_size_override("font_size", 17)
+	_font(title_lbl, 22)
 	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.35))
 	header_hbox.add_child(title_lbl)
 
@@ -268,7 +325,7 @@ func _build_menu_ui() -> void:
 	_lbl_fps.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_lbl_fps.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_lbl_fps.add_theme_color_override("font_color", Color(0.55, 0.85, 0.55))
-	_lbl_fps.add_theme_font_size_override("font_size", 13)
+	_font(_lbl_fps, 16)
 	header_hbox.add_child(_lbl_fps)
 
 	var recenter_btn := Button.new()
@@ -316,13 +373,13 @@ func _build_menu_ui() -> void:
 
 	_lbl_info = Label.new()
 	_lbl_info.text = "Ładowanie informacji o sesji..."
-	_lbl_info.add_theme_font_size_override("font_size", 12)
+	_font(_lbl_info, 15)
 	_lbl_info.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85))
 	footer_vbox.add_child(_lbl_info)
 
 	var shortcuts_hint := Label.new()
 	shortcuts_hint.text = "Skróty: [F1 / ~] Menu  |  [F9 / K] Instant Win  |  [F10 / O] Wrogowie  |  [F11 / P] Quizy  |  [ESC] Zamknij"
-	shortcuts_hint.add_theme_font_size_override("font_size", 11)
+	_font(shortcuts_hint, 14)
 	shortcuts_hint.add_theme_color_override("font_color", Color(0.45, 0.52, 0.65))
 	footer_vbox.add_child(shortcuts_hint)
 
@@ -415,7 +472,7 @@ func _build_tab_cheats() -> Control:
 	_btn_instant_win = Button.new()
 	_btn_instant_win.text = "🏆 Aktywuj Natychmiastowe Zwycięstwo"
 	_btn_instant_win.focus_mode = Control.FOCUS_NONE
-	_btn_instant_win.custom_minimum_size = Vector2(0, 36)
+	_min_height(_btn_instant_win, 36)
 	_btn_instant_win.pressed.connect(func():
 		var cheat_service := _get_service("CheatService")
 		if cheat_service and cheat_service.has_method("trigger_instant_win"):
@@ -539,7 +596,7 @@ func _build_tab_quizzes() -> Control:
 		"✅ Dostępny" if f1_ok else "❌ Brak",
 		"✅ Dostępny" if f2_ok else "❌ Brak"
 	]
-	lbl_files.add_theme_font_size_override("font_size", 13)
+	_font(lbl_files, 16)
 	lbl_files.add_theme_color_override("font_color", Color(0.8, 0.88, 0.95))
 	paths_content.add_child(lbl_files)
 	grid.add_child(paths_box)
@@ -586,7 +643,7 @@ func _build_tab_gameplay() -> Control:
 	var info_content: VBoxContainer = _get_card_content(info_card)
 	_lbl_stats_details = Label.new()
 	_lbl_stats_details.text = "Ładowanie..."
-	_lbl_stats_details.add_theme_font_size_override("font_size", 13)
+	_font(_lbl_stats_details, 16)
 	_lbl_stats_details.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
 	info_content.add_child(_lbl_stats_details)
 	vbox.add_child(info_card)
@@ -604,7 +661,7 @@ func _build_tab_gameplay() -> Control:
 	_btn_full_heal = Button.new()
 	_btn_full_heal.text = "❤️ Pełne Uleczenie (100% HP)"
 	_btn_full_heal.focus_mode = Control.FOCUS_NONE
-	_btn_full_heal.custom_minimum_size = Vector2(0, 36)
+	_min_height(_btn_full_heal, 36)
 	_btn_full_heal.pressed.connect(func():
 		var core_mgr = _get_service("CoreManager")
 		var ps = core_mgr.get_singleton("PlayerStats") if core_mgr else null
@@ -619,7 +676,7 @@ func _build_tab_gameplay() -> Control:
 	_btn_add_xp = Button.new()
 	_btn_add_xp.text = "⭐ Dodaj +100 EXP"
 	_btn_add_xp.focus_mode = Control.FOCUS_NONE
-	_btn_add_xp.custom_minimum_size = Vector2(0, 36)
+	_min_height(_btn_add_xp, 36)
 	_btn_add_xp.pressed.connect(func():
 		var core_mgr = _get_service("CoreManager")
 		var ps = core_mgr.get_singleton("PlayerStats") if core_mgr else null
@@ -634,7 +691,7 @@ func _build_tab_gameplay() -> Control:
 	_btn_add_streak = Button.new()
 	_btn_add_streak.text = "🔥 Seria Odpowiedzi (+10)"
 	_btn_add_streak.focus_mode = Control.FOCUS_NONE
-	_btn_add_streak.custom_minimum_size = Vector2(0, 36)
+	_min_height(_btn_add_streak, 36)
 	_btn_add_streak.pressed.connect(func():
 		var core_mgr = _get_service("CoreManager")
 		var ps = core_mgr.get_singleton("PlayerStats") if core_mgr else null
@@ -651,7 +708,7 @@ func _build_tab_gameplay() -> Control:
 	var btn_add_coins := Button.new()
 	btn_add_coins.text = "💰 Dodaj 100 Punktów"
 	btn_add_coins.focus_mode = Control.FOCUS_NONE
-	btn_add_coins.custom_minimum_size = Vector2(0, 36)
+	_min_height(btn_add_coins, 36)
 	btn_add_coins.pressed.connect(func():
 		var core_mgr = _get_service("CoreManager")
 		var ps = core_mgr.get_singleton("PlayerStats") if core_mgr else null
@@ -698,7 +755,7 @@ func _create_card_container(title: String, badge: String, description: String) -
 	var lbl_title := Label.new()
 	lbl_title.text = title
 	lbl_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_title.add_theme_font_size_override("font_size", 14)
+	_font(lbl_title, 18)
 	lbl_title.add_theme_color_override("font_color", Color(0.95, 0.96, 1.0))
 	header_row.add_child(lbl_title)
 
@@ -711,7 +768,7 @@ func _create_card_container(title: String, badge: String, description: String) -
 		var lbl_desc := Label.new()
 		lbl_desc.text = description
 		lbl_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl_desc.add_theme_font_size_override("font_size", 11)
+		_font(lbl_desc, 15)
 		lbl_desc.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8))
 		root_box.add_child(lbl_desc)
 
@@ -750,7 +807,7 @@ func _create_badge(text: String, color: Color) -> PanelContainer:
 
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 11)
+	_font(lbl, 14)
 	lbl.add_theme_color_override("font_color", color.lightened(0.3))
 	badge_panel.add_child(lbl)
 
