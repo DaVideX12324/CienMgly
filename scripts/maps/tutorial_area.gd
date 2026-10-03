@@ -4,6 +4,9 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 static var NEXT_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/levels/cave.tscn")
 const NEXT_SPAWN_NAME := "Spawn"
+## Marker w Spawns, przy którym gracz pojawia się po powrocie z jaskini (cave.tscn: previous_spawn_name),
+## odsunięty od obszaru wyjścia (ustawiany w edytorze).
+const FROM_CAVES_SPAWN := "Tutorial-Caves"
 const LevelPortal = preload("level_portal.gd")
 
 var _transitioning: bool = false
@@ -13,15 +16,16 @@ func _ready() -> void:
 	var next_level_area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
 	if next_level_area == null:
 		return
-	# Powrót z jaskini: gracz pojawia się w obszarze wyjścia (środek jego kształtu kolizji).
-	var shape := next_level_area.get_node_or_null("CollisionShape2D") as Node2D
-	LevelPortal.place_from_next_marker(self, to_local((shape if shape else next_level_area).global_position))
+	# Brak markera powrotu w scenie — awaryjnie w obszarze wyjścia (zadziała po jego opuszczeniu).
+	if get_node_or_null("Spawns/" + FROM_CAVES_SPAWN) == null:
+		var shape := next_level_area.get_node_or_null("CollisionShape2D") as Node2D
+		LevelPortal.place_marker(self, FROM_CAVES_SPAWN, to_local((shape if shape else next_level_area).global_position))
 	# Po add_child poziomu level_manager ustawia current_spawn_name — stąd podpięcie odroczone.
 	_connect_next_area.call_deferred(next_level_area)
 
 
 func _connect_next_area(area: Area2D) -> void:
-	LevelPortal.connect_area(area, LevelPortal.FROM_NEXT_SPAWN, _get_level_manager(), _on_enter_next_level)
+	LevelPortal.connect_area(area, _on_enter_next_level)
 
 
 func _on_enter_next_level() -> void:

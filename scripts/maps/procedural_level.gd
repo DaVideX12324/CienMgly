@@ -522,13 +522,12 @@ func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMa
 	return layer
 
 
-## Wyjście -> następny poziom, wejście -> poprzedni. Gracz, który pojawił się w obszarze (FromNext przy
-## wyjściu po powrocie, Spawn przy wejściu po przyjściu z poprzedniego), musi go najpierw opuścić (LevelPortal).
+## Wyjście -> następny poziom, wejście -> poprzedni. Gracz pojawia się przy markerach odsuniętych od obszarów
+## (Spawn przy wejściu, FromNext przy wyjściu — MapGeneratorBase.arrival_cell), więc od razu nie wraca.
 func _connect_exit_trigger() -> void:
-	var level_manager := _find_level_manager()
-	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D, LevelPortal.FROM_NEXT_SPAWN, level_manager,
+	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D,
 		_change_level.bind(next_level_path, next_spawn_name))
-	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D, "Spawn", level_manager,
+	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D,
 		_change_level.bind(previous_level_path, previous_spawn_name))
 
 

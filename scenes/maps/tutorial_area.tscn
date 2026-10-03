@@ -72,6 +72,9 @@ position = Vector2(304, 336)
 [node name="Spawn" type="Marker2D" parent="Spawns" unique_id=2095557650]
 position = Vector2(-276, 140)
 
+[node name="Tutorial-Caves" type="Marker2D" parent="Spawns" unique_id=1718617903]
+position = Vector2(920, -292)
+
 [node name="Destructibles" type="Node2D" parent="." unique_id=866287351]
 y_sort_enabled = true
 position = Vector2(304, 336)
