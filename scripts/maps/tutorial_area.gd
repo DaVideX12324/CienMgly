@@ -4,20 +4,28 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 static var NEXT_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/procedural_level.tscn")
 const NEXT_SPAWN_NAME := "Spawn"
+const LevelPortal = preload("level_portal.gd")
 
 var _transitioning: bool = false
 
 
 func _ready() -> void:
-	var next_level_area := get_node_or_null("enter_next_level")
-	if next_level_area is Area2D and not next_level_area.body_entered.is_connected(_on_enter_next_level_body_entered):
-		next_level_area.body_entered.connect(_on_enter_next_level_body_entered)
-
-
-func _on_enter_next_level_body_entered(body: Node2D) -> void:
-	if _transitioning:
+	var next_level_area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
+	if next_level_area == null:
 		return
-	if not (body.is_in_group("player") or body.name == "Player"):
+	# Powrót z jaskini: gracz pojawia się w obszarze wyjścia (środek jego kształtu kolizji).
+	var shape := next_level_area.get_node_or_null("CollisionShape2D") as Node2D
+	LevelPortal.place_from_next_marker(self, to_local((shape if shape else next_level_area).global_position))
+	# Po add_child poziomu level_manager ustawia current_spawn_name — stąd podpięcie odroczone.
+	_connect_next_area.call_deferred(next_level_area)
+
+
+func _connect_next_area(area: Area2D) -> void:
+	LevelPortal.connect_area(area, LevelPortal.FROM_NEXT_SPAWN, _get_level_manager(), _on_enter_next_level)
+
+
+func _on_enter_next_level() -> void:
+	if _transitioning:
 		return
 	var level_manager := _get_level_manager()
 	if level_manager == null or not level_manager.has_method("change_level"):

@@ -5,6 +5,7 @@ extends RefCounted
 ## Odpowiada za wspolne algorytmy siatki, szumy, sciezki A*, oraz budowanie wezlow mapy.
 
 const GenProgressScript = preload("core/gen_progress.gd")
+const LevelPortal = preload("../maps/level_portal.gd")
 
 enum CellType {
 	VOID = 0,
@@ -383,26 +384,34 @@ static func spawn_entities(
 				GenProgressScript.sub(float(made) / total)
 				await target_node.get_tree().process_frame
 
-	# 5. Wejscie / Wyjscie - trigger zony
-	_setup_exit_trigger(target_node, result.exit_pos, cell_size)
+	# 5. Wejscie / Wyjscie - trigger zony: wyjście -> następny poziom, wejście -> powrót do poprzedniego;
+	# przy wyjściu marker FromNext (tu trafia gracz wracający z następnego poziomu).
+	_setup_portal_trigger(target_node, LevelPortal.NEXT_AREA, result.exit_pos, cell_size)
+	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size)
+	if result.exit_pos != Vector2i.ZERO:
+		LevelPortal.place_from_next_marker(target_node, _cell_center(result.exit_pos, cell_size))
 
 
-static func _setup_exit_trigger(target_node: Node2D, exit_pos: Vector2i, cell_size: int) -> void:
-	if exit_pos == Vector2i.ZERO:
+static func _cell_center(cell: Vector2i, cell_size: int) -> Vector2:
+	return Vector2(cell.x * cell_size + cell_size * 0.5, cell.y * cell_size + cell_size * 0.5)
+
+
+static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: Vector2i, cell_size: int) -> void:
+	if cell == Vector2i.ZERO:
 		return
-	var exit_area := target_node.get_node_or_null("enter_next_level") as Area2D
-	if not exit_area:
-		exit_area = Area2D.new()
-		exit_area.name = "enter_next_level"
-		exit_area.collision_layer = 0
-		exit_area.collision_mask = 1
+	var area := target_node.get_node_or_null(area_name) as Area2D
+	if not area:
+		area = Area2D.new()
+		area.name = area_name
+		area.collision_layer = 0
+		area.collision_mask = 1
 		var col := CollisionShape2D.new()
 		var rect := RectangleShape2D.new()
 		rect.size = Vector2(cell_size * 1.5, cell_size * 1.5)
 		col.shape = rect
-		exit_area.add_child(col)
-		target_node.add_child(exit_area)
-	exit_area.position = Vector2(exit_pos.x * cell_size + cell_size * 0.5, exit_pos.y * cell_size + cell_size * 0.5)
+		area.add_child(col)
+		target_node.add_child(area)
+	area.position = _cell_center(cell, cell_size)
 
 
 # --- Automatyczne tworzenie NavigationRegion2D ---
