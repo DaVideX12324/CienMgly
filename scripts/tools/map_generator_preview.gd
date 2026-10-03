@@ -701,9 +701,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				_select_tile(clicked_tile)
 				get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_zoom_camera(1.15)
+			if not _mouse_over_hud():
+				_zoom_camera(1.15)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_zoom_camera(0.85)
+			if not _mouse_over_hud():
+				_zoom_camera(0.85)
 		elif event.button_index == MOUSE_BUTTON_RIGHT or event.button_index == MOUSE_BUTTON_MIDDLE:
 			if event.pressed:
 				_is_dragging = true
@@ -745,6 +747,13 @@ func _process(delta: float) -> void:
 	# Tekst nakładki jest rasteryzowany pod bieżący zoom — po każdej zmianie zoomu rysujemy go od nowa.
 	if is_instance_valid(_tile_overlay) and not is_equal_approx(camera.zoom.x, _overlay_drawn_zoom):
 		_tile_overlay.queue_redraw()
+
+
+## Kursor nad kontrolką HUD-u (panel eksploratora, inspektor kafelka…): kółko myszy nie zoomuje mapy, nawet
+## gdy kontrolka go nie przechwyci (np. panel bez czego przewijać) — zgłoszenie usera 2026-10-04.
+func _mouse_over_hud() -> bool:
+	var hovered := get_viewport().gui_get_hovered_control()
+	return hovered != null and hovered.is_visible_in_tree() and hud.is_ancestor_of(hovered)
 
 
 func _zoom_camera(factor: float) -> void:
