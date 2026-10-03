@@ -5,6 +5,7 @@ class_name ProceduralLevel
 ## W pelni kompatybilna z LevelManager i systemem zapisu.
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const LevelPortal = preload("level_portal.gd")
 const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
 const OverworldForestGeneratorScript = preload("../generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
@@ -55,6 +56,9 @@ var _enemy_pool: Array = []
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
 @export var next_spawn_name: String = "Spawn"
+## Powrót przez wejście (enter_previous_level): poziom i spawn, w którym się pojawia (marker przy jego wyjściu).
+@export var previous_level_path: String = ""
+@export var previous_spawn_name: String = LevelPortal.FROM_NEXT_SPAWN
 @export var spawn_entities_enabled: bool = true
 @export var setup_nav_enabled: bool = true
 @export var cave_max_rooms: int = 0 # 0 = obliczane automatycznie na podstawie rozmiaru mapy
@@ -522,24 +526,23 @@ func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMa
 	return layer
 
 
+## Wyjście -> następny poziom, wejście -> poprzedni. Gracz, który pojawił się w obszarze (FromNext przy
+## wyjściu po powrocie, Spawn przy wejściu po przyjściu z poprzedniego), musi go najpierw opuścić (LevelPortal).
 func _connect_exit_trigger() -> void:
-	var exit_area := get_node_or_null("enter_next_level") as Area2D
-	if exit_area and not exit_area.body_entered.is_connected(_on_exit_body_entered):
-		exit_area.body_entered.connect(_on_exit_body_entered)
+	var level_manager := _find_level_manager()
+	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D, LevelPortal.FROM_NEXT_SPAWN, level_manager,
+		_change_level.bind(next_level_path, next_spawn_name))
+	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D, "Spawn", level_manager,
+		_change_level.bind(previous_level_path, previous_spawn_name))
 
 
-func _on_exit_body_entered(body: Node2D) -> void:
-	if _transitioning:
+func _change_level(level_path: String, spawn_name: String) -> void:
+	if _transitioning or level_path.is_empty():
 		return
-	if not (body.is_in_group("player") or body.name == "Player"):
-		return
-	if next_level_path.is_empty():
-		return
-		
 	var level_manager := _find_level_manager()
 	if level_manager and level_manager.has_method("change_level"):
 		_transitioning = true
-		level_manager.call("change_level", next_level_path, next_spawn_name)
+		level_manager.call("change_level", level_path, spawn_name)
 
 
 func _find_level_manager() -> Node:

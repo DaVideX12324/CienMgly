@@ -7,6 +7,7 @@ y_sort_enabled = true
 script = ExtResource("1_proc")
 level_type = 2
 next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+previous_level_path = "res://modules/quiz_rpg/scenes/maps/tutorial_area.tscn"
 
 [node name="Floor" type="TileMapLayer" parent="." unique_id=1561698726 groups=["tilemap"]]
 z_index = -2
