@@ -3,6 +3,7 @@ extends "topology_generator.gd"
 
 const GenProgress = preload("../core/gen_progress.gd")
 const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
+const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -205,7 +206,8 @@ static func generate_layout(
 
 	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte; potem skośne styki podłóg przez
 	# ścianę (100/000/001), które podniesienie wypustki mogło odtworzyć po WallThicknessPass.
-	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new()])
+	# Na koniec ukośne ściany (skosy) o grubości 3 -> 4 (SlopeThicknessPass).
+	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
 
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
 	# żeby SpawnPlanner mógł zsunąć spawny z barier.

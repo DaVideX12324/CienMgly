@@ -116,14 +116,48 @@ static func slope_2h_steps(dy: int, opposite_y: int, y: int) -> bool:
 ## Płaska kolumna fasady (bez wyższego sąsiada) obok skosu: sąsiad z dokładnie jednej strony o 1 niżej
 ## i grubość 3–5 -> górny koniec skosu 2H (seed 119 160×160, (72, 56)). 1 = kafel skosu prawego (niżej
 ## z lewej, jak stopień EAST), -1 = lewego (niżej z prawej), 0 = nie (także szczyt: niżej z obu stron).
-static func slope_2h_end_side(depth: int, left_y: int, right_y: int, y: int) -> int:
+static func slope_2h_end_side(edges: Dictionary, pos: Vector2i, depth: int, left_y: int, right_y: int) -> int:
 	if not slope_2h_depth(depth):
 		return 0
-	var lower_left := left_y == y + 1
-	var lower_right := right_y == y + 1
+	var lower_left := left_y == pos.y + 1
+	var lower_right := right_y == pos.y + 1
 	if lower_left == lower_right:
 		return 0
+	if not slope_2h_run(edges, pos, -1 if lower_left else 1):
+		return 0
 	return 1 if lower_left else -1
+
+
+## Skos 2H dostaje cały ukośny ciąg kolumn schodzących po 1 rząd (down: +1 = stopy coraz niżej w prawo,
+## -1 = w lewo; każda kolumna to fasada / schodek 3H o grubości skosu 3–5), jeśli któraś z jego kolumn ma
+## 3 kratki nad stopą narożnik wewnętrzny w kierunku skosu: NORTH_WEST dla schodzącego w lewo, NORTH_EAST
+## dla schodzącego w prawo (decyzja usera 2026-10-03). Bez niego — narożnik / lico 3H: pojedyncze schodki
+## na poziomej fasadzie (seed 103107 160×160, (82–83, 113–114) i (89–90, 113–114)) i schody przerywane
+## płaskim odcinkiem. Klin seeda 119 160×160 (69–72, 56–59) zostaje skosem w całości.
+static func slope_2h_run(edges: Dictionary, pos: Vector2i, down: int) -> bool:
+	if _slope_corner_above(edges, pos, down):
+		return true
+	for dir: Vector2i in [Vector2i(-down, -1), Vector2i(down, 1)]:
+		var q := pos + dir
+		while _slope_run_member(edges, q):
+			if _slope_corner_above(edges, q, down):
+				return true
+			q += dir
+	return false
+
+
+## Narożnik wewnętrzny w kierunku skosu 3 kratki nad stopą `p`.
+static func _slope_corner_above(edges: Dictionary, p: Vector2i, down: int) -> bool:
+	var ic: EdgeContext = edges.get(p + Vector2i(0, -3))
+	return ic != null and ic.edge_kind == EdgeKind.Kind.INNER_CORNER \
+		and ic.orientation == (EdgeKind.Orientation.NORTH_WEST if down < 0 else EdgeKind.Orientation.NORTH_EAST)
+
+
+static func _slope_run_member(edges: Dictionary, p: Vector2i) -> bool:
+	var e: EdgeContext = edges.get(p)
+	return e != null and e.facade_height == 3 \
+		and (e.edge_kind == EdgeKind.Kind.FACADE or e.edge_kind == EdgeKind.Kind.STEP) \
+		and slope_2h_depth(e.solid_depth)
 
 
 static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictionary) -> bool:
@@ -144,14 +178,14 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 		var is_west: bool = foot.orientation == EdgeKind.Orientation.WEST
 		var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx - 1, fy, 4)
 		var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx + 1, fy, 4)
-		if slope_2h_steps(foot.step_dy, right_y if is_west else left_y, fy):
+		if slope_2h_steps(foot.step_dy, right_y if is_west else left_y, fy) and slope_2h_run(edges, foot.pos, 1 if is_west else -1):
 			return false # gładki narożnik 2H — nie liczy się jako mid fasady 3H.
 	if foot.edge_kind == EdgeKind.Kind.FACADE and slope_2h_depth(foot.solid_depth):
 		var fx2: int = foot.pos.x
 		var fy2: int = foot.pos.y
 		var ly := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx2 - 1, fy2, 4)
 		var ry := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx2 + 1, fy2, 4)
-		if slope_2h_end_side(foot.solid_depth, ly, ry, fy2) != 0:
+		if slope_2h_end_side(edges, foot.pos, foot.solid_depth, ly, ry) != 0:
 			return false # górny koniec skosu 2H — też bez poziomu MID.
 
 	return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
