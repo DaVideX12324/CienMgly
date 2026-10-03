@@ -16,6 +16,7 @@ var _cfg := ConfigFile.new()
 
 func _ready() -> void:
 	load_settings()
+	apply_input_binds()
 	UIScaleService.load_from_cfg(_cfg)
 	if not resolution_changed.is_connected(UIScaleService.on_resolution_changed):
 		resolution_changed.connect(UIScaleService.on_resolution_changed)
@@ -39,6 +40,13 @@ func load_settings() -> void:
 		WindowService.monitor_idx = _cfg.get_value(SEC_DISPLAY, "monitor_idx", 0)
 	WindowService.monitor_idx = clampi(WindowService.monitor_idx, 0, max(0, DisplayServer.get_screen_count() - 1))
 	settings_loaded.emit()
+
+
+## Zapisane klawisze akcji wszystkich modułów (sekcje module:<id>, klucz "binds") -> InputMap.
+func apply_input_binds() -> void:
+	for section in _cfg.get_sections():
+		if section.begins_with("module:"):
+			InputBinds.apply_module(self, section.substr(7))
 
 
 func save_settings() -> void:

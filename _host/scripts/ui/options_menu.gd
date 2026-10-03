@@ -90,6 +90,8 @@ var _prev_quizless_mode := false
 var _skins: Array = []          # [{id, name}] z aktywnego modułu (get_ui_skins)
 var _bar_styles: Array = []     # [{id, name}] z aktywnego modułu (get_ui_bar_styles), opcjonalnie
 var _skin_module_id := ""
+## Przechwytywanie klawisza w zakładce „Sterowanie”: {module, action, slot, button, text}; puste = nie.
+var _capture: Dictionary = {}
 var _syncing_skin := false
 
 var _countdown := 0.0
@@ -135,6 +137,10 @@ func _process(delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if not visible:
+		return
+	if not _capture.is_empty() and event is InputEventKey and event.pressed and not event.echo:
+		_capture_key(event as InputEventKey)
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("ui_cancel"):
 		if _confirming:
@@ -393,10 +399,13 @@ func _populate_question_sets() -> void:
 		_sets_list.add_child(cb)
 
 
-## Zakładka „Sterowanie”: sekcje z manifestów modułów (pole "controls": [{label, actions, keys}]).
-## W menu głównym — wszystkie moduły pod ich nazwami, w trakcie gry — tylko aktywny moduł. Klawisze
-## z mapy wejścia (aktualne przypisania); gdy akcji jeszcze nie ma (moduł nieuruchomiony) — opis "keys".
+## Zakładka „Sterowanie”: sekcje z manifestów modułów (pole "controls": [{label, actions, keys}], opcjonalnie
+## "action_labels": {akcja: nazwa}). W menu głównym — wszystkie moduły pod ich nazwami, w trakcie gry — tylko
+## aktywny moduł. Każda akcja ma InputBinds.SLOTS pola: klik -> „Naciśnij klawisz…” (Esc anuluje, Backspace
+## czyści pole). Klawisz zajęty przez inną akcję tego samego modułu przechodzi do nowej (decyzja usera
+## 2026-10-03). Sekcja bez akcji (sam opis "keys") — tylko tekst. Zapis: InputBinds.save_module.
 func _populate_binds() -> void:
+	_capture = {}
 	for child in _binds_list.get_children():
 		child.queue_free()
 	var core := get_node_or_null("/root/CoreManager")
@@ -413,13 +422,14 @@ func _populate_binds() -> void:
 		_lbl_info.text = "Ten tryb nie opisuje sterowania." if active_id != "" else "Brak opisu sterowania w modułach."
 		return
 	if active_id != "":
-		_lbl_info.text = "Sterowanie: %s" % str(manifests[0].get("name", active_id))
+		_lbl_info.text = "Sterowanie: %s — kliknij pole, by zmienić klawisz." % str(manifests[0].get("name", active_id))
 	else:
-		_lbl_info.text = "Sterowanie w poszczególnych grach:"
+		_lbl_info.text = "Sterowanie w poszczególnych grach — kliknij pole, by zmienić klawisz."
 	for m in manifests:
+		var module_id := str(m.get("id", ""))
 		if active_id == "":
 			var header := Label.new()
-			header.text = str(m.get("name", m.get("id", "")))
+			header.text = str(m.get("name", module_id))
 			header.add_theme_font_size_override("font_size", _fs(18))
 			header.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 			header.set_meta(&"bind_size", 18)
@@ -433,45 +443,121 @@ func _populate_binds() -> void:
 			lbl_sec.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
 			lbl_sec.set_meta(&"bind_size", 14)
 			_binds_list.add_child(lbl_sec)
-			var keys := _action_keys(entry.get("actions", []))
-			var text := ", ".join(keys) if not keys.is_empty() else str(entry.get("keys", "(brak)"))
-			var lbl_keys := Label.new()
-			lbl_keys.text = "  " + text
-			lbl_keys.add_theme_font_size_override("font_size", _fs(13))
-			lbl_keys.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6))
-			lbl_keys.set_meta(&"bind_size", 13)
-			_binds_list.add_child(lbl_keys)
-
-
-## Polskie / krótsze nazwy klawiszy (OS.get_keycode_string zwraca angielskie).
-func _key_name(name: String) -> String:
-	var names := {"Space": "Spacja", "Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Escape": "Esc",
-		"Backspace": "Backspace", "Kp Enter": "Num Enter", "Kp Add": "Num +", "Kp Subtract": "Num -",
-		"Kp Multiply": "Num *", "Kp Divide": "Num /", "Kp Period": "Num ,"}
-	if names.has(name):
-		return names[name]
-	if name.begins_with("Kp "):
-		return "Num " + name.substr(3)
-	return name
-
-
-## Nazwy klawiszy przypisanych do akcji (wszystkie klawisze każdej akcji, bez powtórzeń).
-func _action_keys(actions: Variant) -> PackedStringArray:
-	var out := PackedStringArray()
-	if not (actions is Array):
-		return out
-	for action in actions:
-		if not InputMap.has_action(str(action)):
-			continue
-		for event in InputMap.action_get_events(str(action)):
-			if not (event is InputEventKey):
+			var actions: Array = entry.get("actions", []) if entry.get("actions", []) is Array else []
+			if actions.is_empty():
+				var lbl_keys := Label.new()
+				lbl_keys.text = "  " + str(entry.get("keys", "(brak)"))
+				lbl_keys.add_theme_font_size_override("font_size", _fs(13))
+				lbl_keys.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6))
+				lbl_keys.set_meta(&"bind_size", 13)
+				_binds_list.add_child(lbl_keys)
 				continue
-			var k := event as InputEventKey
-			var code := k.keycode if k.keycode != KEY_NONE else k.physical_keycode
-			var name := _key_name(OS.get_keycode_string(code))
-			if name != "" and not out.has(name):
-				out.append(name)
+			for action in actions:
+				_binds_list.add_child(_bind_row(module_id, str(action)))
+		var btn_reset := Button.new()
+		btn_reset.text = "Przywróć domyślne"
+		btn_reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		btn_reset.add_theme_font_size_override("font_size", _fs(13))
+		btn_reset.set_meta(&"bind_size", 13)
+		btn_reset.pressed.connect(_reset_binds.bind(module_id))
+		_binds_list.add_child(btn_reset)
+
+
+## Wiersz akcji: nazwa + InputBinds.SLOTS pól z klawiszami.
+func _bind_row(module_id: String, action: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	var lbl := Label.new()
+	lbl.text = "  " + _action_label(module_id, action)
+	lbl.custom_minimum_size = Vector2(UIScaleService.px(180), 0)
+	lbl.add_theme_font_size_override("font_size", _fs(13))
+	lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+	lbl.set_meta(&"bind_size", 13)
+	row.add_child(lbl)
+	var keys := InputBinds.get_keys(action)
+	for slot in InputBinds.SLOTS:
+		var btn := Button.new()
+		btn.text = InputBinds.key_name(keys[slot]) if slot < keys.size() else "—"
+		btn.custom_minimum_size = Vector2(UIScaleService.px(120), 0)
+		btn.clip_text = true  # stała szerokość pola także przy „Naciśnij…”
+		btn.add_theme_font_size_override("font_size", _fs(13))
+		btn.set_meta(&"bind_size", 13)
+		btn.pressed.connect(_start_capture.bind(module_id, action, slot, btn))
+		row.add_child(btn)
+	return row
+
+
+func _start_capture(module_id: String, action: String, slot: int, btn: Button) -> void:
+	_play_click()
+	if not _capture.is_empty() and is_instance_valid(_capture.button):
+		(_capture.button as Button).text = _capture.text
+	_capture = {"module": module_id, "action": action, "slot": slot, "button": btn, "text": btn.text}
+	btn.text = "Naciśnij…"
+	_lbl_info.text = "„%s”: naciśnij klawisz (Esc — anuluj, Backspace — usuń klawisz z pola)." % _action_label(module_id, action)
+
+
+## Klawisz naciśnięty w trybie przechwytywania (z _input, przed obsługą Esc okna).
+func _capture_key(event: InputEventKey) -> void:
+	var module_id: String = _capture.module
+	var action: String = _capture.action
+	var slot: int = _capture.slot
+	_capture = {}
+	var code: int = event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode
+	if code == KEY_ESCAPE:
+		_populate_binds()
+		return
+	var keys := InputBinds.get_keys(action)
+	var moved_from := ""
+	if code == KEY_BACKSPACE:
+		if slot < keys.size():
+			keys.remove_at(slot)
+	else:
+		for other in _module_actions(module_id):
+			if other == action:
+				continue
+			var other_keys := InputBinds.get_keys(other)
+			if other_keys.has(code):
+				other_keys.erase(code)
+				InputBinds.set_keys(other, other_keys)
+				moved_from = _action_label(module_id, other)
+		var old_at_slot: int = keys[slot] if slot < keys.size() else KEY_NONE
+		keys.erase(code)
+		if old_at_slot != KEY_NONE and keys.has(old_at_slot):
+			keys[keys.find(old_at_slot)] = code
+		else:
+			keys.append(code)
+		keys = keys.slice(0, InputBinds.SLOTS)
+	InputBinds.set_keys(action, keys)
+	InputBinds.save_module(SettingsService, module_id, _module_actions(module_id))
+	_play_click()
+	_populate_binds()
+	if moved_from != "":
+		_lbl_info.text = "Klawisz %s zabrany akcji „%s”." % [InputBinds.key_name(code), moved_from]
+
+
+func _reset_binds(module_id: String) -> void:
+	_play_click()
+	InputBinds.reset_module(SettingsService, module_id, _module_actions(module_id))
+	_populate_binds()
+
+
+## Wszystkie akcje z sekcji sterowania modułu.
+func _module_actions(module_id: String) -> Array:
+	var out: Array = []
+	for entry in ModuleRegistry.get_by_id(module_id).get("controls", []):
+		var actions: Variant = (entry as Dictionary).get("actions", []) if entry is Dictionary else []
+		if actions is Array:
+			for action in actions:
+				if not out.has(str(action)):
+					out.append(str(action))
 	return out
+
+
+## Nazwa akcji z "action_labels" manifestu, inaczej jej id.
+func _action_label(module_id: String, action: String) -> String:
+	var labels: Variant = ModuleRegistry.get_by_id(module_id).get("action_labels", {})
+	return str(labels.get(action, action)) if labels is Dictionary else action
+
 
 func _on_apply() -> void:
 	_play_click()
@@ -560,9 +646,9 @@ func _on_scale_changed(_scale: float) -> void:
 		if child is CheckBox:
 			child.add_theme_font_size_override("font_size", main_size)
 	_lbl_info.custom_minimum_size = Vector2(UIScaleService.px(200), 0)
-	for child in _binds_list.get_children():
-		if child is Label:
-			child.add_theme_font_size_override("font_size", _fs(int(child.get_meta(&"bind_size", 14))))
+	for node in _binds_list.find_children("*", "Control", true, false):
+		if node.has_meta(&"bind_size"):
+			node.add_theme_font_size_override("font_size", _fs(int(node.get_meta(&"bind_size"))))
 	_btn_apply.add_theme_font_size_override("font_size", _fs(18))
 	_btn_close.add_theme_font_size_override("font_size", _fs(18))
 	_lbl_question.add_theme_font_size_override("font_size", _fs(18))

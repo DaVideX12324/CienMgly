@@ -40,6 +40,9 @@ func start_module(manifest: Dictionary, parent: Node) -> void:
 	if current_module.has_method("embedded_start"):
 		current_module.call("embedded_start", current_api, current_manifest)
 
+	# Zmienione klawisze modułu po jego starcie — moduł mógł dopisać własne domyślne (BitBomber).
+	InputBinds.apply_module(get_node_or_null("/root/SettingsService"), module_id)
+
 	module_started.emit(module_id)
 
 
