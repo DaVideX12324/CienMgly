@@ -21,10 +21,8 @@ func _ready() -> void:
 	if not resolution_changed.is_connected(UIScaleService.on_resolution_changed):
 		resolution_changed.connect(UIScaleService.on_resolution_changed)
 	_load_audio()
+	# Okno na zapisanym monitorze (wcześniej centrowanie pod kursorem nadpisywało wybór z opcji).
 	WindowService.apply_settings(WindowService.window_mode_idx, WindowService.resolution, WindowService.monitor_idx, false)
-	if DisplayServer.get_name() != "headless":
-		await get_tree().process_frame
-		WindowService.center_on_cursor_screen()
 
 
 func load_settings() -> void:
@@ -33,12 +31,12 @@ func load_settings() -> void:
 		_load_defaults()
 	else:
 		WindowService.window_mode_idx = _cfg.get_value(SEC_DISPLAY, "window_mode_idx", WindowService.MODE_FULLSCREEN)
-		var default_screen := DisplayServer.screen_get_size(0)
+		WindowService.monitor_idx = clampi(int(_cfg.get_value(SEC_DISPLAY, "monitor_idx", 0)), 0, maxi(0, DisplayServer.get_screen_count() - 1))
+		var default_screen := DisplayServer.screen_get_size(WindowService.monitor_idx)
 		var width: int = _cfg.get_value(SEC_DISPLAY, "resolution_x", default_screen.x)
 		var height: int = _cfg.get_value(SEC_DISPLAY, "resolution_y", default_screen.y)
 		WindowService.resolution = Vector2i(width, height)
-		WindowService.monitor_idx = _cfg.get_value(SEC_DISPLAY, "monitor_idx", 0)
-	WindowService.monitor_idx = clampi(WindowService.monitor_idx, 0, max(0, DisplayServer.get_screen_count() - 1))
+	WindowService.monitor_idx = clampi(WindowService.monitor_idx, 0, maxi(0, DisplayServer.get_screen_count() - 1))
 	settings_loaded.emit()
 
 
@@ -155,11 +153,11 @@ func set_bus_volume(bus_name: String, value: float, save_now: bool = true) -> vo
 		save_settings()
 
 
+## Pierwsze uruchomienie: pełny ekran w natywnej rozdzielczości monitora, na którym jest kursor.
 func _load_defaults() -> void:
-	var native := DisplayServer.screen_get_size(0)
-	WindowService.resolution = native
+	WindowService.monitor_idx = WindowService.get_screen_at_cursor()
+	WindowService.resolution = DisplayServer.screen_get_size(WindowService.monitor_idx)
 	WindowService.window_mode_idx = WindowService.MODE_FULLSCREEN
-	WindowService.monitor_idx = 0
 
 
 func _load_audio() -> void:
