@@ -1,6 +1,8 @@
 extends AnimatedSprite2D
 class_name Chest
 
+const InteractPromptScript = preload("../ui/interact_prompt.gd")
+
 @export var lock_id: String = "dungeon_1"
 @export var unique_id: String = ""
 @export var chest_item_id: String = "potion"
@@ -61,6 +63,7 @@ func unlock() -> void:
 		return
 
 	is_locked = false
+	InteractPromptScript.release(self)
 	play("open")
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
@@ -145,8 +148,16 @@ func _get_current_level_path() -> String:
 func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_in_interaction_range = true
+		if not opened:
+			InteractPromptScript.request(self, "Otwórz")
 
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_in_interaction_range = false
+		InteractPromptScript.release(self)
+
+
+## Podpowiedź nad skrzynią (InteractPrompt).
+func interaction_prompt_offset() -> Vector2:
+	return Vector2(0, -14)
