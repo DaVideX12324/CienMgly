@@ -11,7 +11,8 @@
     "move_down": "Dół",
     "move_left": "Lewo",
     "move_right": "Prawo",
-    "interact": "Interakcja"
+    "interact": "Interakcja",
+    "sprint": "Bieg / chód"
   },
   "controls": [
     {
@@ -21,6 +22,12 @@
         "move_down",
         "move_left",
         "move_right"
+      ]
+    },
+    {
+      "label": "Bieg / chód (odwraca domyślny ruch)",
+      "actions": [
+        "sprint"
       ]
     },
     {
@@ -52,6 +59,38 @@
     {
       "label": "Pauza i menu",
       "keys": "Esc"
+    }
+  ],
+  "control_options": [
+    {
+      "key": "move_default",
+      "label": "Domyślny ruch",
+      "default": "walk",
+      "options": [
+        {
+          "id": "walk",
+          "name": "Chód"
+        },
+        {
+          "id": "run",
+          "name": "Bieg"
+        }
+      ]
+    },
+    {
+      "key": "sprint_mode",
+      "label": "Klawisz biegu",
+      "default": "hold",
+      "options": [
+        {
+          "id": "hold",
+          "name": "Przytrzymanie"
+        },
+        {
+          "id": "toggle",
+          "name": "Przełączanie"
+        }
+      ]
     }
   ]
 }

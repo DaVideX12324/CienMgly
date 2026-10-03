@@ -5,7 +5,9 @@ extends CharacterBody2D
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
 
+## Prędkość chodu; bieg = speed * run_speed_mult.
 @export var speed: float = 200.0
+@export var run_speed_mult: float = 1.6
 @export var is_party_follower: bool = false
 @export var follow_spacing: float = 28.0
 @export var follow_stop_distance: float = 6.0
@@ -22,6 +24,17 @@ var _trail_points: Array[Vector2] = []
 var _body_color: Color = Color(0.2, 0.6, 1.0)
 var _outline_color: Color = Color(0.1, 0.3, 0.6)
 var _direction_color: Color = Color(1.0, 1.0, 0.3)
+
+## Bieg / chód (prośba usera 2026-10-04): opcje w zakładce „Sterowanie” (manifest control_options) —
+## domyślny ruch (chód / bieg) i klawisz „sprint” przytrzymywany albo przełączany. Klawisz zawsze odwraca
+## domyślny ruch: przy domyślnym biegu przytrzymanie daje chód.
+const MODULE_ID := "quiz_rpg"
+const SPRINT_ACTION := "sprint"
+const MOVE_DEFAULT_KEY := "move_default"
+const SPRINT_MODE_KEY := "sprint_mode"
+var _default_run := false
+var _sprint_toggle_mode := false
+var _sprint_toggled := false
 
 # Programmer art
 const BODY_SIZE := Vector2(16, 20)
@@ -50,6 +63,12 @@ func _ready() -> void:
 		if sprite:
 			sprite.visible = false
 	_connect_interaction_area()
+	_load_move_settings()
+	var settings := get_node_or_null("/root/SettingsService")
+	if settings and settings.has_signal("module_setting_changed"):
+		settings.module_setting_changed.connect(func(module_id: String, _key: String, _value: Variant) -> void:
+			if module_id == MODULE_ID:
+				_load_move_settings())
 	_record_trail_position()
 	if is_party_follower:
 		_setup_as_follower()
@@ -104,14 +123,15 @@ func _physics_process(delta: float) -> void:
 		input = _get_follow_input()
 	else:
 		input = _get_input()
-	velocity = input * speed * _get_speed_multiplier()
+	var run_mult := run_speed_mult if is_running() else 1.0
+	velocity = input * speed * run_mult * _get_speed_multiplier()
 
 	if input != Vector2.ZERO:
 		facing_direction = input.normalized()
 		_is_moving = true
 		if not _use_programmer_art:
-			_bob_time += delta * 10.0
-			_update_sprite_animation("walk")
+			_bob_time += delta * 10.0 * run_mult
+			_update_sprite_animation("walk", run_mult)
 	else:
 		_is_moving = false
 		if not _use_programmer_art:
@@ -179,6 +199,26 @@ func _input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("interact") and _gm and _gm.is_exploring():
 		_try_interact()
+	if _sprint_toggle_mode and event.is_action_pressed(SPRINT_ACTION) and not event.is_echo():
+		_sprint_toggled = not _sprint_toggled
+
+
+## Czy postać biegnie. Członek drużyny biegnie razem z liderem.
+func is_running() -> bool:
+	if is_party_follower:
+		return _follow_target != null and _follow_target.has_method("is_running") and _follow_target.call("is_running")
+	var alternate := _sprint_toggled if _sprint_toggle_mode \
+			else (InputMap.has_action(SPRINT_ACTION) and Input.is_action_pressed(SPRINT_ACTION))
+	return _default_run != alternate
+
+
+func _load_move_settings() -> void:
+	var settings := get_node_or_null("/root/SettingsService")
+	_default_run = settings != null and str(settings.get_module(MODULE_ID, MOVE_DEFAULT_KEY, "walk")) == "run"
+	var toggle := settings != null and str(settings.get_module(MODULE_ID, SPRINT_MODE_KEY, "hold")) == "toggle"
+	if toggle != _sprint_toggle_mode:
+		_sprint_toggled = false
+	_sprint_toggle_mode = toggle
 
 
 func _get_input() -> Vector2:
@@ -188,10 +228,11 @@ func _get_input() -> Vector2:
 	return input.normalized()
 
 
-func _update_sprite_animation(state: String) -> void:
+func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
 	var sprite = get_node_or_null("AnimatedSprite2D")
 	if not sprite:
 		return
+	sprite.speed_scale = anim_speed
 	var dir_name = _direction_name()
 	var anim_name = state + "_" + dir_name
 	if sprite.sprite_frames.has_animation(anim_name):
