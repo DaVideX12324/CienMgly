@@ -1,8 +1,8 @@
 [gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_dq4vg"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_1nmnx"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_4_chamber.jpg" id="3_1ex6p"]
+[ext_resource type="Script" uid="uid://b7oj2baq86vqb" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_dq4vg"]
+[ext_resource type="Script" uid="uid://mccxa5pvph1i" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_1nmnx"]
+[ext_resource type="Texture2D" uid="uid://bjqacspmnt8pg" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_4_chamber.jpg" id="3_1ex6p"]
 
 [sub_resource type="Resource" id="Resource_dq4vg"]
 script = ExtResource("1_dq4vg")

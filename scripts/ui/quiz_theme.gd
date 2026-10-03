@@ -16,11 +16,13 @@ extends RefCounted
 ## i zaznaczenia. Wybór w ustawieniach modułu (SettingsService: SETTING_SKIN / SETTING_BRIGHTNESS /
 ## SETTING_BAR_STYLE).
 
-const THEME_PATH := "res://modules/quiz_rpg/resources/ui/quiz_theme.tres"
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
+static var THEME_PATH: String = QuizRpgPaths.path("resources/ui/quiz_theme.tres")
 ## Czcionka pikselowa (FontFile z danymi Jersey 15, bez wygładzania — zapisane w zasobie, bo pliki
 ## .import nie są w repozytorium). Tworzy ją build_font() z pliku TTF_PATH.
-const FONT_PATH := "res://modules/quiz_rpg/resources/ui/jersey15_pixel.res"
-const TTF_PATH := "res://assets/fonts/Jersey15-Regular.ttf"
+static var FONT_PATH: String = QuizRpgPaths.path("resources/ui/jersey15_pixel.res")
+static var TTF_PATH: String = QuizRpgPaths.host("res://assets/fonts/Jersey15-Regular.ttf")
 ## Siatka pikseli Jersey 15: piksel litery = 1/27 em (współrzędne co 50 przy 1350 na em), więc równe
 ## piksele dają rozmiary 27 / 54 / 81… (przy 27 wielka litera ma 15 px). Zwykły tekst = 27.
 const PX := 27
@@ -46,7 +48,7 @@ const BRIGHTNESS_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM]
 const MODULE_ID := "quiz_rpg"
 const SETTING_SKIN := "ui_skin"
 const SETTING_BRIGHTNESS := "ui_brightness"
-const SKIN_DIR := "res://modules/quiz_rpg/resources/ui/skins/"
+static var SKIN_DIR: String = QuizRpgPaths.path("resources/ui/skins/")
 const DEFAULT_SKIN := "klasyczny"
 ## Dostępne motywy (kolejność w opcjach). Nowy motyw: plik SKIN_DIR + id + ".tres" i wpis tutaj.
 ## Motywy st_*: panele z assets/UI/UI Assets pack_v.1_st (pliki buduje tests/build_ui_skins.gd).

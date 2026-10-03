@@ -8,7 +8,7 @@ extends RefCounted
 ## chodliwego terenu, do którego nie da się dojść z wejścia, dostaje schody do osiągalnego terenu
 ## sąsiedniej wysokości (patrz _solve). Grid zostaje FLOOR — płaskowyż to nakładka.
 
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgress = preload("../core/gen_progress.gd")
 
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 const DIRS8: Array[Vector2i] = [

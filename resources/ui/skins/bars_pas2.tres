@@ -1,13 +1,13 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_orange_full.png" id="1_dshtr"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_orange_empty.png" id="2_u6don"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_cyan_full.png" id="3_48gwh"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_cyan_empty.png" id="4_8noni"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_green_full.png" id="5_ux52g"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_green_empty.png" id="6_ipwe2"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_full.png" id="7_v3tdh"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_empty.png" id="8_85y81"]
+[ext_resource type="Texture2D" uid="uid://s8fct1gpnr3r" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_orange_full.png" id="1_dshtr"]
+[ext_resource type="Texture2D" uid="uid://cnfccu3g2angs" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_orange_empty.png" id="2_u6don"]
+[ext_resource type="Texture2D" uid="uid://rqvj4dohk3qj" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_cyan_full.png" id="3_48gwh"]
+[ext_resource type="Texture2D" uid="uid://cwwh6np6ngf1e" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_cyan_empty.png" id="4_8noni"]
+[ext_resource type="Texture2D" uid="uid://chc4t7y7oyywc" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_green_full.png" id="5_ux52g"]
+[ext_resource type="Texture2D" uid="uid://cqtcx3enryhk3" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_green_empty.png" id="6_ipwe2"]
+[ext_resource type="Texture2D" uid="uid://biwatewui8282" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_full.png" id="7_v3tdh"]
+[ext_resource type="Texture2D" uid="uid://dbq46n1c31le4" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_empty.png" id="8_85y81"]
 
 [resource]
 QuizBarEnemy/constants/bar_center = 1

@@ -1,8 +1,10 @@
 extends CanvasLayer
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
 const ITEM_TAB_CATEGORIES: Array[String] = ["item", "hand", "part", "key"]
 const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
-const HOST_OPTIONS_MENU_SCENE: String = "res://scenes/ui/options_menu.tscn"
+static var HOST_OPTIONS_MENU_SCENE: String = QuizRpgPaths.host("res://scenes/ui/options_menu.tscn")
 
 @onready var pause_root: Control = $PauseRoot
 @onready var left_panel: PanelContainer = $PauseRoot/MainRow/LeftPanel

@@ -3,11 +3,11 @@ extends Control
 ## Tło walki wg klucza mapy (_map_key): najpierw grafiki z folderu mapy (FolderGenerator:
 ## battle_backgrounds/<klucz>/ albo battle_backgrounds/pixel_crawler/<klucz>/), gdy folderu z grafikami
 ## nie ma — tło rysowane w kodzie (GENERATORS, „default” na końcu). Nowa mapa = nowy folder, bez kodu.
-const FolderGenerator: Script = preload("res://modules/quiz_rpg/scripts/quiz/background_generators/folder_battle_background.gd")
+const FolderGenerator: Script = preload("background_generators/folder_battle_background.gd")
 
 const GENERATORS: Dictionary = {
-	"world_map": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/world_map_battle_background.gd"),
-	"default": preload("res://modules/quiz_rpg/scripts/quiz/background_generators/default_battle_background.gd"),
+	"world_map": preload("background_generators/world_map_battle_background.gd"),
+	"default": preload("background_generators/default_battle_background.gd"),
 }
 ## Klucz mapy -> folder teł walki, gdy mapa nie ma własnego (las generowany -> baśniowy las).
 const KEY_ALIASES: Dictionary = {

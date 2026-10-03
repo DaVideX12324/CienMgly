@@ -1,5 +1,7 @@
 extends Control
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
 signal combat_finished(player_won: bool)
 
 enum Phase { ACTION_SELECT, TARGET_SELECT, QUIZ, PLAYER_RESULT, ENEMY_TURN, COMBAT_END }
@@ -8,7 +10,8 @@ enum Action { ATTACK, DEFEND, HEAL, FLEE }
 ## (status wtedy po lewej), sam status wyśrodkowany (tura wroga, komunikaty).
 enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY }
 
-const QuizPanelController = preload("res://scripts/shared/quiz/quiz_panel_controller.gd")
+## Kontroler panelu pytań jest w hoście (w wersji samodzielnej kopia w _host/), więc load zamiast preload.
+static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
 
 const PARTY_SKILL_SP_MAX := 100
@@ -1803,7 +1806,7 @@ func _find_pause_menu_node() -> Node:
 func _open_pause_menu(start_in_exit_confirm: bool = false) -> void:
 	var pause_menu: Node = _find_pause_menu_node()
 	if pause_menu == null:
-		var pause_scene: PackedScene = load("res://modules/quiz_rpg/scenes/ui/pause_menu.tscn") as PackedScene
+		var pause_scene: PackedScene = load(QuizRpgPaths.path("scenes/ui/pause_menu.tscn")) as PackedScene
 		if pause_scene and get_tree() and get_tree().current_scene:
 			var new_pause: CanvasLayer = pause_scene.instantiate() as CanvasLayer
 			get_tree().current_scene.add_child(new_pause)

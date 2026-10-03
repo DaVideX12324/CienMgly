@@ -4,13 +4,14 @@ class_name ProceduralLevel
 ## Scena poziomu generowanego proceduralnie dla modulu Quiz RPG.
 ## W pelni kompatybilna z LevelManager i systemem zapisu.
 
-const MapGeneratorBaseScript = preload("res://modules/quiz_rpg/scripts/generation/map_generator_base.gd")
-const OverworldForestGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/overworld_forest_generator.gd")
-const DungeonGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/dungeon_generator.gd")
-const CaveGeneratorScript = preload("res://modules/quiz_rpg/scripts/generation/cave_generator.gd")
-const TileSetFieldScript = preload("res://modules/quiz_rpg/scripts/generation/core/tileset_field.gd")
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
-const LoadingScreenScene = preload("res://modules/quiz_rpg/scenes/ui/loading_screen.tscn")
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
+const OverworldForestGeneratorScript = preload("../generation/overworld_forest_generator.gd")
+const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
+const CaveGeneratorScript = preload("../generation/cave_generator.gd")
+const TileSetFieldScript = preload("../generation/core/tileset_field.gd")
+const GenProgress = preload("../generation/core/gen_progress.gd")
+const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
 signal generation_finished
@@ -181,24 +182,24 @@ func _ensure_default_resources() -> void:
 		var enemy_paths: Array = []  # element: ścieżka albo tablica ścieżek (warianty tieru)
 		if level_type == LevelType.CAVE_DUNGEON:
 			enemy_paths = [
-				"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_immature.tscn",
+				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_immature.tscn"),
 				[
-					"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_long.tscn",
-					"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_heavy.tscn",
+					QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
+					QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
 				],
-				"res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_old.tscn"
+				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_old.tscn")
 			]
 		elif level_type == LevelType.FOREST_OVERWORLD:
 			enemy_paths = [
-				"res://modules/quiz_rpg/scenes/enemies/slime_1.tscn",
-				"res://modules/quiz_rpg/scenes/enemies/plant_1.tscn",
-				"res://modules/quiz_rpg/scenes/enemies/warhog.tscn"
+				QuizRpgPaths.path("scenes/enemies/slime_1.tscn"),
+				QuizRpgPaths.path("scenes/enemies/plant_1.tscn"),
+				QuizRpgPaths.path("scenes/enemies/warhog.tscn")
 			]
 		else:
 			enemy_paths = [
-				"res://modules/quiz_rpg/scenes/enemies/bandit_1.tscn",
-				"res://modules/quiz_rpg/scenes/enemies/ork_1.tscn",
-				"res://modules/quiz_rpg/scenes/enemies/knowledge_guardian.tscn"
+				QuizRpgPaths.path("scenes/enemies/bandit_1.tscn"),
+				QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
+				QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
 			]
 		for entry in enemy_paths:
 			var variants: Array[PackedScene] = []
@@ -213,12 +214,12 @@ func _ensure_default_resources() -> void:
 				_enemy_pool.append(variants)
 
 	if chest_scene == null:
-		var cp := "res://modules/quiz_rpg/scenes/objects/closed_chest_tutorial.tscn"
+		var cp := QuizRpgPaths.path("scenes/objects/closed_chest_tutorial.tscn")
 		if ResourceLoader.exists(cp):
 			chest_scene = load(cp) as PackedScene
 
 	if door_scene == null and level_type == LevelType.DUNGEON_CASTLE:
-		var dp := "res://modules/quiz_rpg/scenes/objects/tutorial_area/door_horizontal.tscn"
+		var dp := QuizRpgPaths.path("scenes/objects/tutorial_area/door_horizontal.tscn")
 		if ResourceLoader.exists(dp):
 			door_scene = load(dp) as PackedScene
 
@@ -409,7 +410,7 @@ func _resolve_tileset(palette: Dictionary) -> TileSet:
 	var ts := custom_tileset
 	if ts == null:
 		if level_type == LevelType.CAVE_DUNGEON:
-			var cave_ts_path: String = palette.get("tileset_path", "res://modules/quiz_rpg/resources/maps/caves.tres")
+			var cave_ts_path: String = palette.get("tileset_path", QuizRpgPaths.path("resources/maps/caves.tres"))
 			if ResourceLoader.exists(cave_ts_path):
 				ts = load(cave_ts_path) as TileSet
 		if ts == null:

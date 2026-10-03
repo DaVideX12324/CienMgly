@@ -1,5 +1,5 @@
 class_name JunctionSmoothingPass
-extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
+extends "grid_pass.gd"
 
 func get_id() -> StringName:
 	return &"junction_smoothing"

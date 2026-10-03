@@ -4,6 +4,8 @@ extends Node
 ## Zarządza stanami gry RPG, scenami i zapisem.
 ## Dostępny przez: CoreManager.get_singleton("GameManager")
 
+const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
+
 enum GameState { MENU, EXPLORING, QUIZ_COMBAT, QUIZ_PUZZLE, PAUSED, CUTSCENE }
 
 signal state_changed(old_state: GameState, new_state: GameState)
@@ -20,8 +22,8 @@ const SAVE_DIR := "user://quiz_rpg_saves"
 const SLOT_CONFIG_PATH := "user://quiz_rpg_saves/slots.json"
 const DEFAULT_SAVE_SLOT_COUNT := 3
 const SAVE_PATH := "user://quiz_rpg_saves/slot_01.json"
-const GAME_SCENE_PATH := "res://modules/quiz_rpg/scenes/game.tscn"
-const LEGACY_WORLD_MAP_SCENE_PATH := "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+static var GAME_SCENE_PATH: String = QuizRpgPaths.path("scenes/game.tscn")
+static var LEGACY_WORLD_MAP_SCENE_PATH: String = QuizRpgPaths.path("scenes/maps/world_map.tscn")
 
 
 func _ready() -> void:
@@ -212,7 +214,7 @@ func new_game(slot_index: int = 0) -> void:
 
 func return_to_main_menu() -> void:
 	change_state(GameState.MENU)
-	transition_to_scene("res://modules/quiz_rpg/scenes/ui/main_menu.tscn")
+	transition_to_scene(QuizRpgPaths.path("scenes/ui/main_menu.tscn"))
 
 
 func log_debug(message: Variant, category: String = "GENERAL") -> void:
@@ -221,6 +223,7 @@ func log_debug(message: Variant, category: String = "GENERAL") -> void:
 
 
 func _normalize_scene_path(scene_path: String) -> String:
+	scene_path = QuizRpgPaths.localize(scene_path)
 	if scene_path == LEGACY_WORLD_MAP_SCENE_PATH:
 		return GAME_SCENE_PATH
 	return scene_path

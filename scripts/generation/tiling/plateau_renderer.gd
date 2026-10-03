@@ -1,7 +1,7 @@
 class_name PlateauRenderer
 extends RefCounted
 
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgress = preload("../core/gen_progress.gd")
 
 ## Renderuje płaskowyże istniejącym pipeline'em ścian w trybie płaskowyżu (fasady 2H, moduły IN).
 ## Region płaskowyżu P = maska M (podłoga) + krawędzie prawdziwych ścian patrzące na M (E_M):

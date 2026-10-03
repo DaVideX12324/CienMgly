@@ -1,16 +1,18 @@
 class_name CaveGenerator
-extends "res://modules/quiz_rpg/scripts/generation/map_generator_base.gd"
+extends "map_generator_base.gd"
 
 ## Generator jaskiń dla modułu Quiz RPG.
 ## Wykorzystuje kafelki z caves.tres, manualnie dopasowując kafelki ścian (autotiling skryptowy),
 ## narożników wewnętrznych i zewnętrznych, fasad wielokafelkowych oraz podłogi kamiennej z mchem.
 
-const CAVES_TILESET_PATH := "res://modules/quiz_rpg/resources/maps/caves.tres"
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+
+static var CAVES_TILESET_PATH: String = QuizRpgPaths.path("resources/maps/caves.tres")
 
 # =========================================================================
 # FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)
 # =========================================================================
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
+const GenProgress = preload("core/gen_progress.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -385,7 +387,7 @@ static func get_edge_detection_mask_image(result: GenerationResult) -> Image:
 			img.fill_rect(Rect2i(x * 16, y * 16, 16, 1), col_grid)
 			img.fill_rect(Rect2i(x * 16, y * 16, 1, 16), col_grid)
 
-	var tiles_tex = load("res://assets/pixel_crawler/environments/cave/Assets/Tiles.png") as Texture2D
+	var tiles_tex = load(QuizRpgPaths.host("res://assets/pixel_crawler/environments/cave/Assets/Tiles.png")) as Texture2D
 	if not tiles_tex:
 		return img
 

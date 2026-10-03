@@ -1,8 +1,8 @@
 class_name InteriorRoomLayoutGenerator
-extends "res://modules/quiz_rpg/scripts/generation/topology/topology_generator.gd"
+extends "topology_generator.gd"
 
-const GenProgress = preload("res://modules/quiz_rpg/scripts/generation/core/gen_progress.gd")
-const DiagonalTouchPassScript = preload("res://modules/quiz_rpg/scripts/generation/preprocess/diagonal_touch_pass.gd")
+const GenProgress = preload("../core/gen_progress.gd")
+const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(

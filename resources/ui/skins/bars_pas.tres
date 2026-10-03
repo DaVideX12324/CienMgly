@@ -1,13 +1,13 @@
 [gd_resource type="Theme" format=3]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_orange_full.png" id="1_8f58v"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_orange_empty.png" id="2_3yrkq"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_cyan_full.png" id="3_qcwtq"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_cyan_empty.png" id="4_812ls"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_green_full.png" id="5_5g74l"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_green_empty.png" id="6_myrnu"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_silver_full.png" id="7_vm0sp"]
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_silver_empty.png" id="8_fuub1"]
+[ext_resource type="Texture2D" uid="uid://crgboak581bh1" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_orange_full.png" id="1_8f58v"]
+[ext_resource type="Texture2D" uid="uid://6t1ekh24h5fa" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_orange_empty.png" id="2_3yrkq"]
+[ext_resource type="Texture2D" uid="uid://vkf4y64mxtva" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_cyan_full.png" id="3_qcwtq"]
+[ext_resource type="Texture2D" uid="uid://cy7qrdpxlnuor" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_cyan_empty.png" id="4_812ls"]
+[ext_resource type="Texture2D" uid="uid://dumej1hf35r6d" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_green_full.png" id="5_5g74l"]
+[ext_resource type="Texture2D" uid="uid://hr02j6j3i3m1" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_green_empty.png" id="6_myrnu"]
+[ext_resource type="Texture2D" uid="uid://cpptdv1jhum25" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_silver_full.png" id="7_vm0sp"]
+[ext_resource type="Texture2D" uid="uid://cwun47sr51653" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas_silver_empty.png" id="8_fuub1"]
 
 [resource]
 QuizBarEnemy/constants/bar_scale = 2

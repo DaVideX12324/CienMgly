@@ -1,5 +1,5 @@
 class_name RectRoomCarver
-extends "res://modules/quiz_rpg/scripts/generation/topology/room_carver.gd"
+extends "room_carver.gd"
 
 ## Pokój prostokątny: cały prostokąt podłogi (flaga room_shape = "rect").
 

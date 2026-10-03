@@ -1,5 +1,5 @@
 class_name OrganicCorridorCarver
-extends "res://modules/quiz_rpg/scripts/generation/topology/corridor_carver.gd"
+extends "corridor_carver.gd"
 
 func carve(ctx: GenerationContext, from: Vector2i, to: Vector2i, width: int) -> void:
 	var grid := ctx.grid

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ccxlfw2m7x5fu"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
+[ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="SkillsPanel" type="VBoxContainer" unique_id=67562435]

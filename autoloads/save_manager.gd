@@ -1,5 +1,7 @@
 extends Node
 
+const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
+
 signal save_completed(slot_index: int)
 signal load_completed(slot_index: int)
 signal save_failed(message: String)
@@ -10,9 +12,9 @@ const SAVE_DIR := "user://quiz_rpg_saves"
 const SLOT_CONFIG_PATH := "user://quiz_rpg_saves/slots.json"
 const DEFAULT_SAVE_SLOT_COUNT := 3
 const MAX_SAVE_SLOT_COUNT := 20
-const GAME_SCENE_PATH := "res://modules/quiz_rpg/scenes/game.tscn"
-const INITIAL_LEVEL_PATH := "res://modules/quiz_rpg/scenes/maps/tutorial_area.tscn"
-const LEGACY_WORLD_MAP_SCENE_PATH := "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+static var GAME_SCENE_PATH: String = QuizRpgPaths.path("scenes/game.tscn")
+static var INITIAL_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/tutorial_area.tscn")
+static var LEGACY_WORLD_MAP_SCENE_PATH: String = QuizRpgPaths.path("scenes/maps/world_map.tscn")
 
 var current_save_slot: int = -1
 var is_loading: bool = false
@@ -219,7 +221,7 @@ func _build_save_data(slot_index: int) -> Dictionary:
 		spawn_point = str(level_manager.get("current_spawn_name"))
 		if spawn_point == "":
 			spawn_point = "Spawn"
-	elif current_scene.begins_with("res://modules/quiz_rpg/scenes/maps/"):
+	elif current_scene.begins_with(QuizRpgPaths.path("scenes/maps/")):
 		current_level = _normalize_level_path(current_scene)
 		current_scene = GAME_SCENE_PATH
 	var player_stats_data: Dictionary = ps.get_save_data() if ps and ps.has_method("get_save_data") else {}
@@ -405,12 +407,14 @@ func _get_singleton(singleton_name: String) -> Node:
 
 
 func _normalize_scene_path(scene_path: String) -> String:
+	scene_path = QuizRpgPaths.localize(scene_path)
 	if scene_path == LEGACY_WORLD_MAP_SCENE_PATH:
 		return GAME_SCENE_PATH
 	return scene_path
 
 
 func _normalize_level_path(level_path: String) -> String:
+	level_path = QuizRpgPaths.localize(level_path)
 	if level_path == "" or level_path == GAME_SCENE_PATH:
 		return INITIAL_LEVEL_PATH
 	return level_path

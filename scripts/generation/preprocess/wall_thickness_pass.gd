@@ -1,5 +1,5 @@
 class_name WallThicknessPass
-extends "res://modules/quiz_rpg/scripts/generation/preprocess/grid_pass.gd"
+extends "grid_pass.gd"
 
 func get_id() -> StringName:
 	return &"wall_thickness"

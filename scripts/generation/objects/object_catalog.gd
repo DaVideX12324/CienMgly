@@ -14,6 +14,7 @@ extends RefCounted
 ## Grafika: "scene" (scena albo lista scen = warianty; statyczne są wypiekane — ObjectBake) albo
 ## "atlas" (+ "variants") z TileSetu poziomu.
 
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
@@ -49,6 +50,7 @@ static func _lock() -> void:
 ## Katalog z pliku (cache po ścieżce — generowanie w wątku roboczym woła to przy każdej mapie).
 ## Pusta ścieżka albo brak pliku -> pusty katalog z błędem.
 static func load_path(json_path: String) -> ObjectCatalog:
+	json_path = QuizRpgPaths.localize(json_path)
 	_lock()
 	var cached: ObjectCatalog = _cache.get(json_path)
 	_cache_mutex.unlock()
@@ -204,9 +206,9 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	var sc = m.get("scene", "")
 	if sc is Array:
 		for x in sc:
-			def.scenes.append(String(x))
+			def.scenes.append(QuizRpgPaths.localize(String(x)))
 	elif not String(sc).is_empty():
-		def.scenes.append(String(sc))
+		def.scenes.append(QuizRpgPaths.localize(String(sc)))
 	def.scene = def.scenes[0] if not def.scenes.is_empty() else ""
 	if def.klass != ObjectDef.Klass.INTERACTIVE:
 		for sp in def.scenes:
