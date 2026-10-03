@@ -101,6 +101,8 @@ var _capture: Dictionary = {}
 ## Gra wybrana w liście „Gra:” zakładki „Sterowanie” (menu główne); "" = pierwsza.
 var _binds_module_id := ""
 var _syncing_skin := false
+## Odroczony zapis ustawień (suwak jasności).
+var _save_timer: Timer
 
 var _countdown := 0.0
 ## Treść okna przeniesiona do panelu modułu (embed_in) albo null (zwykłe okno).
@@ -223,6 +225,11 @@ func open() -> void:
 
 func close() -> void:
 	_on_close()
+
+
+func _exit_tree() -> void:
+	if _save_timer and not _save_timer.is_stopped():
+		SettingsService.save_settings()
 
 
 func _play_click() -> void:
@@ -456,11 +463,19 @@ func _on_skin_selected(index: int) -> void:
 	SettingsService.set_module(_skin_module_id, SKIN_KEY, str(_skins[index].get("id", "")))
 
 
+## Suwak: zmiana od razu, zapis na dysk dopiero po chwili spokoju (zapis przy każdym ruchu suwaka ciął grę).
 func _on_brightness_changed(value: float) -> void:
 	_update_brightness_label()
 	if _syncing_skin or _skin_module_id == "":
 		return
-	SettingsService.set_module(_skin_module_id, BRIGHTNESS_KEY, value / 100.0)
+	SettingsService.set_module(_skin_module_id, BRIGHTNESS_KEY, value / 100.0, false)
+	if _save_timer == null:
+		_save_timer = Timer.new()
+		_save_timer.one_shot = true
+		_save_timer.wait_time = 0.4
+		_save_timer.timeout.connect(SettingsService.save_settings)
+		add_child(_save_timer)
+	_save_timer.start()
 
 
 func _update_brightness_label() -> void:
