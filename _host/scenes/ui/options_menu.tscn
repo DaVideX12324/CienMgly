@@ -302,6 +302,15 @@ text = "Sterowanie zalezy od aktywnego modulu."
 horizontal_alignment = 1
 autowrap_mode = 3
 
+[node name="LblBindGame" type="Label" parent="Panel/Margin/VBox/Tabs/Sterowanie"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "Gra:"
+
+[node name="BindGameOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Sterowanie"]
+layout_mode = 2
+
 [node name="Sep5" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Sterowanie"]
 layout_mode = 2
 
