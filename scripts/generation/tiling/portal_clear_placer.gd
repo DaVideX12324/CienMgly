@@ -21,7 +21,13 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	if table.is_empty():
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
 
+	var walls: Dictionary = placement_plan.get_placements(&"Walls")
 	for pos in portal_cells.keys():
+		# Dekoracja szczytu ściany (RIM_TIP — górna część rimu z korzeniami) wisi nad podłogą tuż nad rimem;
+		# nie zasłania portalu, więc zostaje (zgłoszenie usera 2026-10-03: portal ucinał TOP rimów z dekoracją).
+		var existing: TilePlacement = walls.get(pos)
+		if existing != null and existing.category == &"RIM_TIP":
+			continue
 		var placement := TilePlacement.new()
 		placement.pos = pos
 		placement.layer = &"Walls"
