@@ -52,8 +52,12 @@ func get_ui_bar_styles() -> Array[Dictionary]:
 	return QuizTheme.BAR_STYLES
 
 
-func _on_module_setting_changed(module_id: String, key: String, _value: Variant) -> void:
-	if module_id == QuizTheme.MODULE_ID and key in [QuizTheme.SETTING_SKIN, QuizTheme.SETTING_BRIGHTNESS, QuizTheme.SETTING_BAR_STYLE]:
+func _on_module_setting_changed(module_id: String, key: String, value: Variant) -> void:
+	if module_id != QuizTheme.MODULE_ID:
+		return
+	if key == QuizTheme.SETTING_BRIGHTNESS:
+		QuizTheme.set_brightness(float(value))  # bez przebudowy motywu (suwak)
+	elif key in [QuizTheme.SETTING_SKIN, QuizTheme.SETTING_BAR_STYLE]:
 		QuizTheme.apply_skin_from_settings()
 
 
