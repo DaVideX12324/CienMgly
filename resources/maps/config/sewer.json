@@ -26,6 +26,7 @@
     "secret_niche_spawn_chance": 0,
     "passage_niche_spawn_chance": 0,
     "force_theme": -1,
+    "entrance_mode": "center",
     "debug_log_edge_kinds": false
   },
   "tilesets": {
