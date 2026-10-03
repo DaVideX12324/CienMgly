@@ -17,6 +17,8 @@ const DEFAULT_FRAME := Vector2i(16, 39)
 var window_mode_idx := MODE_FULLSCREEN
 var resolution := Vector2i(1920, 1080)
 var monitor_idx := 0
+## Okno zmaksymalizowane przez użytkownika (tryb okienkowy) — przywracane przy starcie.
+var window_maximized := false
 ## Ramka zmierzona na oknie z dekoracjami (ZERO = jeszcze nie).
 var _frame := Vector2i.ZERO
 ## apply_settings w toku — zmiany rozmiaru okna to nie ręczna zmiana użytkownika.
@@ -54,26 +56,37 @@ func apply_settings(mode_idx: int, res: Vector2i, screen: int, save_now: bool = 
 	if DisplayServer.get_name() != "headless":
 		match window_mode_idx:
 			MODE_WINDOWED:
-				_leave_fullscreen()
-				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+				# Zmaksymalizowane zostaje, gdy rozmiar się nie zmienia (start, „Zastosuj” z tą samą pozycją);
+				# inny rozmiar z listy = zwykłe okno.
+				var keep_maximized := window_maximized and res == previous_resolution
+				_to_plain_window()
 				_disable_stretch()
-				_place_windowed(res)
+				if keep_maximized:
+					DisplayServer.window_set_current_screen(monitor_idx)
+					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MAXIMIZED)
+				else:
+					window_maximized = false
+					_place_windowed(res)
 			MODE_BORDERLESS:
-				_leave_fullscreen()
+				window_maximized = false
+				_to_plain_window()
+				_disable_stretch()
 				DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, true)
 				# Windows maksymalizuje okno, które po zdjęciu ramki wypełnia obszar roboczy — z powrotem do okna.
-				_leave_fullscreen()
-				_disable_stretch()
+				if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_MAXIMIZED:
+					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 				var screen_rect := _screen_rect(monitor_idx)
 				var clamped := res.clamp(MIN_WINDOW_SIZE, screen_rect.size)
 				DisplayServer.window_set_size(clamped)
 				DisplayServer.window_set_position(screen_rect.position + (screen_rect.size - clamped) / 2)
 			MODE_FULLSCREEN:
+				# Okno bez ramki na cały ekran Godot też zgłasza jako EXCLUSIVE_FULLSCREEN — stąd warunek flagi.
 				var already := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN \
-						and DisplayServer.window_get_current_screen() == monitor_idx
+						and DisplayServer.window_get_current_screen() == monitor_idx \
+						and not DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS)
+				window_maximized = false
 				if not already:
-					_leave_fullscreen()
-					DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+					_to_plain_window()
 					DisplayServer.window_set_current_screen(monitor_idx)
 					DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
 				_enable_stretch(res)
@@ -104,9 +117,11 @@ func _on_resize_settled() -> void:
 	if mode != DisplayServer.WINDOW_MODE_WINDOWED and mode != DisplayServer.WINDOW_MODE_MAXIMIZED:
 		return
 	var size := DisplayServer.window_get_size()
-	if size == resolution or size.x <= 0 or size.y <= 0:
+	var maximized := mode == DisplayServer.WINDOW_MODE_MAXIMIZED
+	if (size == resolution and maximized == window_maximized) or size.x <= 0 or size.y <= 0:
 		return
 	resolution = size
+	window_maximized = maximized
 	monitor_idx = DisplayServer.window_get_current_screen()
 	SettingsService.save_settings()
 	resolution_changed.emit(resolution)
@@ -141,7 +156,8 @@ func get_max_windowed_size(screen: int = -1) -> Vector2i:
 
 ## Ramka okna: zmierzona, a jeśli okno nie ma teraz ramki i jeszcze jej nie mierzono — typowa dla Windows.
 func get_frame_size() -> Vector2i:
-	if DisplayServer.get_name() != "headless" and DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED 			and not DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS):
+	if DisplayServer.get_name() != "headless" and DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED \
+			and not DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS):
 		var border := DisplayServer.window_get_size_with_decorations() - DisplayServer.window_get_size()
 		if border.x > 0 or border.y > 0:
 			_frame = border
@@ -202,6 +218,15 @@ func _place_windowed(res: Vector2i) -> void:
 func _set_outer_position(outer: Vector2i) -> void:
 	var frame := DisplayServer.window_get_position() - DisplayServer.window_get_position_with_decorations()
 	DisplayServer.window_set_position(outer + frame)
+
+
+## Zwykłe okno z ramką. Flaga „bez ramki” schodzi PIERWSZA: okno bez ramki na cały ekran Godot uznaje za
+## EXCLUSIVE_FULLSCREEN i od razu cofa zmianę na tryb okienkowy (zapisane „bez ramki” 2560x1440 blokowało
+## przejście do okna).
+func _to_plain_window() -> void:
+	if DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS):
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, false)
+	_leave_fullscreen()
 
 
 ## Pełny ekran / zmaksymalizowane -> zwykłe okno (bez zmiany, gdy już jest okno — bez mignięcia).

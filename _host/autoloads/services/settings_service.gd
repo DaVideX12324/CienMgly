@@ -36,6 +36,7 @@ func load_settings() -> void:
 		var width: int = _cfg.get_value(SEC_DISPLAY, "resolution_x", default_screen.x)
 		var height: int = _cfg.get_value(SEC_DISPLAY, "resolution_y", default_screen.y)
 		WindowService.resolution = Vector2i(width, height)
+		WindowService.window_maximized = bool(_cfg.get_value(SEC_DISPLAY, "window_maximized", false))
 	WindowService.monitor_idx = clampi(WindowService.monitor_idx, 0, maxi(0, DisplayServer.get_screen_count() - 1))
 	settings_loaded.emit()
 
@@ -52,6 +53,7 @@ func save_settings() -> void:
 	_cfg.set_value(SEC_DISPLAY, "resolution_x", WindowService.resolution.x)
 	_cfg.set_value(SEC_DISPLAY, "resolution_y", WindowService.resolution.y)
 	_cfg.set_value(SEC_DISPLAY, "monitor_idx", WindowService.monitor_idx)
+	_cfg.set_value(SEC_DISPLAY, "window_maximized", WindowService.window_maximized)
 	UIScaleService.save_to_cfg(_cfg)
 	_save_audio_to_cfg()
 	_cfg.save(CONFIG_PATH)

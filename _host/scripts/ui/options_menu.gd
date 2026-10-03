@@ -258,12 +258,18 @@ func _sync_mode_buttons() -> void:
 	_update_res_note()
 
 
+## Wybór = obecna rozdzielczość, a gdy jej nie ma na liście — najbliższa (nie pierwsza: „Zastosuj” po zmianie
+## czegoś innego ustawiłoby wtedy 640x480).
 func _sync_resolution() -> void:
+	var current := WindowService.resolution
+	var best := maxi(0, _resolutions.size() - 1)
+	var best_diff := INF
 	for index in range(_resolutions.size()):
-		if _resolutions[index] == WindowService.resolution:
-			_res_option.selected = index
-			return
-	_res_option.selected = 0
+		var diff := absf(float(_resolutions[index].x * _resolutions[index].y - current.x * current.y))
+		if diff < best_diff:
+			best_diff = diff
+			best = index
+	_res_option.selected = best
 
 
 func _sync_scale() -> void:
@@ -290,9 +296,11 @@ func _populate_resolutions(screen: int) -> void:
 	_res_option.clear()
 	var screen_size := DisplayServer.screen_get_size(screen)
 	var max_window := WindowService.get_max_windowed_size(screen)
-	# Okno z rozmiarem ustawionym ręcznie (przeciąganie) — jako pozycja „własny”, żeby wybór pokazywał prawdę.
+	# Obecny rozmiar okna ustawiony ręcznie (przeciąganie, maksymalizacja) — zawsze na liście, żeby wybór
+	# pokazywał prawdę (zmaksymalizowane jest większe niż „maks. okno” z ramką).
 	var own := WindowService.resolution
-	if _sel_mode == WindowService.MODE_WINDOWED and WindowService.window_mode_idx == WindowService.MODE_WINDOWED 			and screen == WindowService.monitor_idx and not _resolutions.has(own) 			and own.x <= max_window.x and own.y <= max_window.y:
+	if _sel_mode == WindowService.MODE_WINDOWED and WindowService.window_mode_idx == WindowService.MODE_WINDOWED \
+			and screen == WindowService.monitor_idx and not _resolutions.has(own):
 		_resolutions.append(own)
 		_resolutions.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.x * a.y < b.x * b.y or (a.x * a.y == b.x * b.y and a.x < b.x))
 	for resolution in _resolutions:
@@ -301,8 +309,9 @@ func _populate_resolutions(screen: int) -> void:
 			label += " (natywna)"
 		elif _sel_mode == WindowService.MODE_WINDOWED and resolution == max_window:
 			label += " (maks. okno)"
-		elif _sel_mode == WindowService.MODE_WINDOWED and resolution == own and own != max_window 				and not WindowService.get_available_resolutions(screen, _sel_mode).has(own):
-			label += " (własny)"
+		elif _sel_mode == WindowService.MODE_WINDOWED and resolution == own and own != max_window \
+				and not WindowService.get_available_resolutions(screen, _sel_mode).has(own):
+			label += " (zmaksymalizowane)" if WindowService.window_maximized else " (własny)"
 		_res_option.add_item(label)
 
 
