@@ -3,6 +3,8 @@ extends CharacterBody2D
 ## Gracz — ruch top-down 8-kierunkowy, interakcja.
 ## Programmer art: rysowany kodem jeśli brak AnimatedSprite2D/sprite frames.
 
+const InteractPromptScript = preload("../ui/interact_prompt.gd")
+
 @export var speed: float = 200.0
 @export var is_party_follower: bool = false
 @export var follow_spacing: float = 28.0
@@ -11,6 +13,8 @@ extends CharacterBody2D
 var facing_direction: Vector2 = Vector2.DOWN
 var can_move: bool = true
 var nearby_interactables: Array = []
+## Obiekt, dla którego gracz zgłosił podpowiedź interakcji (InteractPrompt).
+var _prompt_target: Node2D = null
 var _use_programmer_art: bool = true
 var _gm: Node  # GameManager
 var _follow_target: CharacterBody2D = null
@@ -49,6 +53,38 @@ func _ready() -> void:
 	_record_trail_position()
 	if is_party_follower:
 		_setup_as_follower()
+	else:
+		add_child(InteractPromptScript.new())
+
+
+## Podpowiedź „[klawisz] akcja” nad najbliższym obiektem z listy interakcji (bez wrogów — walka zaczyna się
+## przy kontakcie; skrzynie zgłaszają się same).
+func _process(_delta: float) -> void:
+	if is_party_follower:
+		return
+	var target := _prompt_candidate()
+	if target != _prompt_target:
+		if is_instance_valid(_prompt_target):
+			InteractPromptScript.release(_prompt_target)
+		_prompt_target = target
+	if target != null:
+		var text: String = target.call("interaction_prompt_text") if target.has_method("interaction_prompt_text") else "Interakcja"
+		InteractPromptScript.request(target, text)
+
+
+func _prompt_candidate() -> Node2D:
+	var best: Node2D = null
+	var best_d := INF
+	for candidate in nearby_interactables:
+		if not (candidate is Node2D) or not is_instance_valid(candidate) or not candidate.has_method("interact"):
+			continue
+		if candidate.is_in_group("enemies") or (candidate.has_method("can_interact") and not candidate.call("can_interact")):
+			continue
+		var d := global_position.distance_squared_to((candidate as Node2D).global_position)
+		if d < best_d:
+			best_d = d
+			best = candidate
+	return best
 
 
 func _physics_process(delta: float) -> void:

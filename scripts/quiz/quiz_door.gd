@@ -20,7 +20,6 @@ var _player_nearby: bool = false
 var _player_ref: Node2D = null
 var _use_programmer_art: bool = true
 var _anim_time: float = 0.0
-var _hint_alpha: float = 0.0
 var _gm: Node  # GameManager
 
 static var PUZZLE_UI_SCENE: String = QuizRpgPaths.path("scenes/quiz/quiz_puzzle_ui.tscn")
@@ -72,8 +71,6 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_anim_time += delta
-	var target_alpha = 1.0 if (_player_nearby and not unlocked) else 0.0
-	_hint_alpha = move_toward(_hint_alpha, target_alpha, delta * 4.0)
 	if _use_programmer_art:
 		queue_redraw()
 
@@ -105,11 +102,18 @@ func _draw() -> void:
 		draw_arc(Vector2(0, -3), 3.0, PI, TAU, 8, lock_color, 2.0)
 		draw_string(ThemeDB.fallback_font, Vector2(-3, 2), "🔒", HORIZONTAL_ALIGNMENT_CENTER, -1, 6, lock_color)
 
-	if _hint_alpha > 0.01:
-		var hint_color = Color(1, 1, 1, _hint_alpha)
-		var hint_text = "[E] " + door_name
-		var text_pos = Vector2(-door_width / 2, -hh - 14)
-		draw_string(ThemeDB.fallback_font, text_pos, hint_text, HORIZONTAL_ALIGNMENT_LEFT, int(door_width * 2), 11, hint_color)
+
+## Podpowiedź interakcji (InteractPrompt przez gracza): tylko przy zamkniętych drzwiach.
+func can_interact() -> bool:
+	return not unlocked
+
+
+func interaction_prompt_text() -> String:
+	return "Rozwiąż zagadkę"
+
+
+func interaction_prompt_offset() -> Vector2:
+	return Vector2(0, -door_height * 0.5 - 4.0)
 
 
 func interact(player: Node2D) -> void:
