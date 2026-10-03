@@ -1265,7 +1265,9 @@ func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
 		var underline: CanvasItem = _ensure_row_selection_underline(row)
 		var labels: Array = row.find_children("*", "Label", true, false)
 		var is_selected: bool = index == selected_index
-		var target_modulate: Color = Color.WHITE if is_selected else Color(0.65, 0.65, 0.7)
+		# Przygaszone tylko pozostałe wiersze podczas wybierania; bez wyboru (-1, np. podgląd drużyny) — pełne
+		# kolory (przygaszony jedyny wiersz wyglądał jak skutek suwaka jasności).
+		var target_modulate: Color = Color.WHITE if is_selected or selected_index < 0 else Color(0.65, 0.65, 0.7)
 		if bool(row.get_meta("disabled", false)):
 			target_modulate = Color(0.55, 0.55, 0.6)
 		for label_value: Variant in labels:
