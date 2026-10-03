@@ -24,9 +24,14 @@ static func _try_rim(ctx: GenerationContext, placement_plan: TilePlacementPlan, 
 static func _get_variant_noise(ctx: GenerationContext) -> FastNoiseLite:
 	if ctx.variant_noise != null:
 		return ctx.variant_noise
+	# Wariant A/B per kratka (decyzja usera 2026-10-03: inny wariant praktycznie co kratkę czy dwie): szum
+	# wartości z częstotliwością 1 bez fraktala = niezależna losowa wartość w każdej kratce (siatka szumu
+	# pokrywa się z siatką mapy), zamiast gładkich plam (dawniej simplex, frequency 0.45).
 	var n := FastNoiseLite.new()
 	n.seed = ctx.seed_value + 777
-	n.frequency = 0.45
+	n.noise_type = FastNoiseLite.TYPE_VALUE
+	n.fractal_type = FastNoiseLite.FRACTAL_NONE
+	n.frequency = 1.0
 	ctx.variant_noise = n
 	return n
 
