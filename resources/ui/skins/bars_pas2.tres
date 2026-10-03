@@ -10,23 +10,18 @@
 [ext_resource type="Texture2D" uid="uid://dbq46n1c31le4" path="res://modules/quiz_rpg/resources/ui/skins/bars/pas2_silver_empty.png" id="8_85y81"]
 
 [resource]
-QuizBarEnemy/constants/bar_center = 1
 QuizBarEnemy/constants/bar_scale = 2
 QuizBarEnemy/icons/bar_progress = ExtResource("1_dshtr")
 QuizBarEnemy/icons/bar_under = ExtResource("2_u6don")
-QuizBarLP/constants/bar_center = 1
 QuizBarLP/constants/bar_scale = 2
 QuizBarLP/icons/bar_progress = ExtResource("1_dshtr")
 QuizBarLP/icons/bar_under = ExtResource("2_u6don")
-QuizBarSP/constants/bar_center = 1
 QuizBarSP/constants/bar_scale = 2
 QuizBarSP/icons/bar_progress = ExtResource("3_48gwh")
 QuizBarSP/icons/bar_under = ExtResource("4_8noni")
-QuizBarTP/constants/bar_center = 1
 QuizBarTP/constants/bar_scale = 2
 QuizBarTP/icons/bar_progress = ExtResource("5_ux52g")
 QuizBarTP/icons/bar_under = ExtResource("6_ipwe2")
-QuizBarTimer/constants/bar_center = 1
 QuizBarTimer/constants/bar_scale = 2
 QuizBarTimer/icons/bar_progress = ExtResource("7_v3tdh")
 QuizBarTimer/icons/bar_under = ExtResource("8_85y81")
