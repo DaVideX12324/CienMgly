@@ -92,40 +92,25 @@ static func _is_any_wall_top(edges: Dictionary, p: Vector2i) -> bool:
 	return false
 
 
-## Reguła skosu 2H (WALL_2H_SLOPE zamiast narożnika / lica 3H), decyzja usera 2026-10-03:
-##   true  — narożnik wewnętrzny 3 kratki nad stopą w kierunku skosu, w tej kolumnie albo w jej ukośnym
-##           ciągu (slope_2h_run); bez warunków grubości i „schodka o 1”;
-##   false — DAWNA reguła (schodek o 1 + grubość 3–5), tylko do porównań.
-## Flaga GenerationFlags.slope_2h_corner_rule; ustawiana na początku analyze(), czytana przez StepPlacer
-## i FacadePhasePlanner w tym samym przebiegu generowania.
-static var slope_corner_rule := true
+## Reguła skosu 2H (WALL_2H_SLOPE zamiast narożnika / lica 3H), decyzja usera 2026-10-03: wyłącznie narożnik
+## wewnętrzny 3 kratki nad stopą w kierunku skosu, w tej kolumnie albo w jej ukośnym ciągu (slope_2h_run).
+## Dawna reguła (schodek o 1 + grubość 3–5) usunięta. Używana przez StepPlacer, FacadePhasePlanner
+## i _is_facade_mid.
 
-
-## Czy schodek 3H jest skosem 2H. west = wyższy sąsiad z lewej (stopień WEST, skos schodzi w prawo);
-## dy = różnica do wyższego sąsiada, opposite_y = stopa sąsiada po drugiej stronie albo -1 (dawna reguła).
-static func slope_2h_step(edges: Dictionary, foot: EdgeContext, dy: int, opposite_y: int, west: bool) -> bool:
-	if slope_corner_rule:
-		return slope_2h_run(edges, foot.pos, 1 if west else -1)
-	return (dy == 1 or opposite_y == foot.pos.y + 1) and _legacy_slope_depth(foot.solid_depth)
+## Czy schodek 3H jest skosem 2H. west = wyższy sąsiad z lewej (stopień WEST, skos schodzi w prawo).
+static func slope_2h_step(edges: Dictionary, foot: EdgeContext, west: bool) -> bool:
+	return slope_2h_run(edges, foot.pos, 1 if west else -1)
 
 
 ## Płaska kolumna fasady (bez wyższego sąsiada) z sąsiadem o 1 niżej z dokładnie jednej strony = górny koniec
 ## skosu 2H (seed 119 160×160, (72, 56)), jeśli spełnia regułę skosu. 1 = kafel skosu prawego (niżej z lewej,
 ## jak stopień EAST), -1 = lewego (niżej z prawej), 0 = nie (także szczyt: niżej z obu stron).
-static func slope_2h_end_side(edges: Dictionary, pos: Vector2i, depth: int, left_y: int, right_y: int) -> int:
+static func slope_2h_end_side(edges: Dictionary, pos: Vector2i, left_y: int, right_y: int) -> int:
 	var lower_left := left_y == pos.y + 1
 	var lower_right := right_y == pos.y + 1
-	if lower_left == lower_right:
-		return 0
-	var ok := slope_2h_run(edges, pos, -1 if lower_left else 1) if slope_corner_rule else _legacy_slope_depth(depth)
-	if not ok:
+	if lower_left == lower_right or not slope_2h_run(edges, pos, -1 if lower_left else 1):
 		return 0
 	return 1 if lower_left else -1
-
-
-## Dawna reguła (slope_corner_rule == false): grubość ściany 3–5.
-static func _legacy_slope_depth(depth: int) -> bool:
-	return depth >= 3 and depth <= 5
 
 
 ## Skos 2H dostaje cały ukośny ciąg kolumn schodzących po 1 rząd (down: +1 = stopy coraz niżej w prawo,
@@ -174,19 +159,14 @@ static func _is_facade_mid(edges: Dictionary, p: Vector2i, facade_cols: Dictiona
 	# renderuje jako gładki narożnik 2H (WALL_2H_SLOPE). Taki kafel NIE ma poziomu MID
 	# fasady 3H, więc nie może wymuszać ścian bocznych / narożników wewnętrznych obok.
 	if foot.edge_kind == EdgeKind.Kind.STEP:
-		var fx: int = foot.pos.x
-		var fy: int = foot.pos.y
-		var is_west: bool = foot.orientation == EdgeKind.Orientation.WEST
-		var left_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx - 1, fy, 4)
-		var right_y := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx + 1, fy, 4)
-		if slope_2h_step(edges, foot, foot.step_dy, right_y if is_west else left_y, is_west):
+		if slope_2h_step(edges, foot, foot.orientation == EdgeKind.Orientation.WEST):
 			return false # gładki narożnik 2H — nie liczy się jako mid fasady 3H.
 	if foot.edge_kind == EdgeKind.Kind.FACADE:
 		var fx2: int = foot.pos.x
 		var fy2: int = foot.pos.y
 		var ly := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx2 - 1, fy2, 4)
 		var ry := FacadeSegmentDetector.find_adjacent_facade_y(facade_cols, fx2 + 1, fy2, 4)
-		if slope_2h_end_side(edges, foot.pos, foot.solid_depth, ly, ry) != 0:
+		if slope_2h_end_side(edges, foot.pos, ly, ry) != 0:
 			return false # górny koniec skosu 2H — też bez poziomu MID.
 
 	return foot.edge_kind in [EdgeKind.Kind.FACADE, EdgeKind.Kind.STEP, EdgeKind.Kind.OUT_CORNER, EdgeKind.Kind.CONNECTOR]
@@ -293,7 +273,6 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	# zamiast 8 wywołań GridUtils.is_walkable na kratkę. Poza siatką = niechodliwe (jak wcześniej).
 	var walk_rect := scan.grow(1)
 	var walk := _walkable_bytes(grid, walk_rect)
-	slope_corner_rule = ctx.flags == null or ctx.flags.slope_2h_corner_rule
 	if not ctx.plateau_mode and ctx.force_2h_cells.is_empty() and ctx.flags != null and ctx.flags.small_pillar_2h_max_area > 0:
 		ctx.force_2h_cells = small_wall_islands(ctx, ctx.flags.small_pillar_2h_max_area, ctx.flags.small_pillar_2h_max_width,
 			ctx.flags.small_pillar_2h_max_height, walk, walk_rect)
