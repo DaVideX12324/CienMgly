@@ -2,6 +2,25 @@ class_name PortalGenerator
 extends RefCounted
 
 
+## Strefa portalu w środku pokoju, bez tunelu i wnęki (flaga entrance_mode = "center").
+## Kwadrat (2·PORTAL_RADIUS+1)² wokół środka pokoju zamieniony na podłogę. Ten sam format wyniku co
+## carve_portal_alcove; "edge" = -1 (wyjście może wtedy wybrać dowolną krawędź).
+const PORTAL_RADIUS := 2
+
+
+static func carve_portal_in_room(ctx: GenerationContext, room: Rect2i) -> Dictionary:
+	const MAP_BORDER := 2
+	var center := room.get_center()
+	var cells: Array[Vector2i] = []
+	for dy in range(-PORTAL_RADIUS, PORTAL_RADIUS + 1):
+		for dx in range(-PORTAL_RADIUS, PORTAL_RADIUS + 1):
+			var p := center + Vector2i(dx, dy)
+			if p.x >= MAP_BORDER and p.x < ctx.width - MAP_BORDER and p.y >= MAP_BORDER and p.y < ctx.height - MAP_BORDER:
+				ctx.grid[p] = CellType.FLOOR
+				cells.append(p)
+	return {"center": center, "edge": -1, "cells": cells}
+
+
 ## Wyrzeźbi dedykowany tunel portalowy z komory ku krawędzi mapy, zakończony niszą wejściową/wyjściową.
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge: int = -1) -> Dictionary:

@@ -6,6 +6,12 @@ var enable_meandering: bool = true
 var enable_variable_width: bool = true
 var enable_funnels: bool = true
 var enable_junction_smoothing: bool = true
+# Kształt pokoi: organic (owal z wybrzuszeniami, jak dotąd) | rect (prostokąty) | round (owale bez
+# wybrzuszeń) | mixed (losowo per pokój). RoomCarverFactory.
+var room_shape: String = "organic"
+# Wejście: edge (wnęka przy krawędzi mapy, jak dotąd) | center (w pokoju najbliżej środka mapy, bez
+# wnęki — np. zejście włazem w ściekach; wyjście nadal przy krawędzi, w najdalszym pokoju).
+var entrance_mode: String = "edge"
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true

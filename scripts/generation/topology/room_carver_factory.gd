@@ -2,9 +2,14 @@
 extends RefCounted
 
 
+## carver_id = flaga GenerationFlags.room_shape: organic (domyślnie) | rect | round | mixed.
 static func create(carver_id: StringName) -> RoomCarver:
 	match carver_id:
-		&"organic_cave":
-			return OrganicCaveRoomCarver.new()
-		_:
+		&"rect":
+			return RectRoomCarver.new()
+		&"round":
+			return RoundRoomCarver.new()
+		&"mixed":
+			return MixedRoomCarver.new()
+		_:  # organic, organic_cave, nieznane
 			return OrganicCaveRoomCarver.new()

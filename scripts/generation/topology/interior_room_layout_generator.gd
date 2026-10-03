@@ -38,7 +38,7 @@ static func generate_layout(
 	var attempts := 0
 	var border := 6
 	var max_attempts := maxi(300, max_rooms * 25)
-	var room_carver := OrganicCaveRoomCarver.new()
+	var room_carver := RoomCarverFactory.create(StringName(flags.room_shape))
 
 	while rooms.size() < max_rooms and attempts < max_attempts:
 		attempts += 1
@@ -138,8 +138,31 @@ static func generate_layout(
 	GenProgress.begin(&"portals")
 	var entrance_room_idx := 0
 	var exit_room_idx: int = rooms.size() - 1
+	var center_entrance := flags.entrance_mode == "center"
 	if not rooms.is_empty():
-		if rooms.size() >= 2:
+		if center_entrance:
+			# Wejście w pokoju najbliżej środka mapy (spośród pokoi o boku >= CENTER_ENTRANCE_MIN_SIDE, gdy
+			# są — mniejsze wyglądają jak kawałek korytarza), wyjście w pokoju najdalszym od niego.
+			const CENTER_ENTRANCE_MIN_SIDE := 10
+			var map_center := Vector2(width, height) * 0.5
+			var best := INF
+			for pass_i in range(2):
+				for i in range(rooms.size()):
+					if pass_i == 0 and mini(rooms[i].size.x, rooms[i].size.y) < CENTER_ENTRANCE_MIN_SIDE:
+						continue
+					var d := Vector2(rooms[i].get_center()).distance_squared_to(map_center)
+					if d < best:
+						best = d
+						entrance_room_idx = i
+				if best < INF:
+					break
+			var far := -1.0
+			for i in range(rooms.size()):
+				var d := Vector2(rooms[i].get_center()).distance_squared_to(Vector2(rooms[entrance_room_idx].get_center()))
+				if i != entrance_room_idx and d > far:
+					far = d
+					exit_room_idx = i
+		elif rooms.size() >= 2:
 			var max_dist := 0.0
 			for i in range(rooms.size()):
 				for j in range(i + 1, rooms.size()):
@@ -150,7 +173,8 @@ static func generate_layout(
 						exit_room_idx = j
 
 		var entrance_room := rooms[entrance_room_idx]
-		var entrance_data: Dictionary = PortalGenerator.carve_portal_alcove(ctx, entrance_room)
+		var entrance_data: Dictionary = PortalGenerator.carve_portal_in_room(ctx, entrance_room) if center_entrance \
+			else PortalGenerator.carve_portal_alcove(ctx, entrance_room)
 		ctx.entrance_pos = entrance_data["center"] as Vector2i
 		result.entrance_pos = ctx.entrance_pos
 		result.player_spawn = ctx.entrance_pos
