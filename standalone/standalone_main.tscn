@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bieijadp3q7ni"]
+
+[ext_resource type="Script" uid="uid://cmuo6uvpgslo2" path="res://modules/quiz_rpg/standalone/standalone_main.gd" id="1_main"]
+
+[node name="QuizRpgStandalone" type="Node"]
+script = ExtResource("1_main")
