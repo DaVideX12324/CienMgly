@@ -77,6 +77,8 @@ var last_exit_pos: Vector2i = Vector2i.ZERO
 var _hovered_tile: Vector2i = Vector2i(-9999, -9999)
 var _selected_tile: Vector2i = Vector2i(-9999, -9999)
 var _tile_overlay: Node2D = null
+## Zoom kamery, przy którym ostatnio rysowano nakładkę (tekst rasteryzowany pod zoom).
+var _overlay_drawn_zoom: float = 0.0
 
 # Drag kamery
 var _is_dragging: bool = false
@@ -740,6 +742,9 @@ func _process(delta: float) -> void:
 		_update_tile_inspector_ui()
 		if is_instance_valid(_tile_overlay):
 			_tile_overlay.queue_redraw()
+	# Tekst nakładki jest rasteryzowany pod bieżący zoom — po każdej zmianie zoomu rysujemy go od nowa.
+	if is_instance_valid(_tile_overlay) and not is_equal_approx(camera.zoom.x, _overlay_drawn_zoom):
+		_tile_overlay.queue_redraw()
 
 
 func _zoom_camera(factor: float) -> void:
@@ -1267,6 +1272,7 @@ func _on_tile_overlay_draw() -> void:
 
 	var font: Font = ThemeDB.fallback_font
 	var font_size: int = 11
+	_overlay_drawn_zoom = camera.zoom.x
 
 	# 1. Hover Box (Ramka podświetlająca kafelek pod myszką)
 	if _is_in_bounds(_hovered_tile):
@@ -1277,13 +1283,13 @@ func _on_tile_overlay_draw() -> void:
 		var show_tooltip: bool = check_cursor_tooltip.button_pressed if check_cursor_tooltip else true
 		if show_tooltip and font:
 			var txt := "(%d, %d)" % [_hovered_tile.x, _hovered_tile.y]
-			var txt_size := font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+			var txt_size := _overlay_text_size(font, txt, font_size)
 			var pad := Vector2(4, 2)
 			var txt_pos := Vector2(_hovered_tile.x * 16.0 + 18.0, _hovered_tile.y * 16.0 + 13.0)
 			var bg_rect := Rect2(txt_pos.x - pad.x, txt_pos.y - txt_size.y + pad.y - 1, txt_size.x + pad.x * 2, txt_size.y + pad.y * 2)
 			_tile_overlay.draw_rect(bg_rect, Color(0.05, 0.08, 0.12, 0.85), true)
 			_tile_overlay.draw_rect(bg_rect, Color(0.0, 0.8, 1.0, 0.6), false, 1.0)
-			_tile_overlay.draw_string(font, txt_pos, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.WHITE)
+			_overlay_string(font, txt_pos, txt, font_size, Color.WHITE)
 
 	# 2. Selected Box & Ruler Line (Zaznaczony kafelek i linia pomiaru odległości)
 	if _is_in_bounds(_selected_tile):
@@ -1300,10 +1306,30 @@ func _on_tile_overlay_draw() -> void:
 				var dist := Vector2(_selected_tile).distance_to(Vector2(_hovered_tile))
 				var dist_txt := "%.1f" % dist
 				var mid_pos := (p_sel + p_hov) / 2.0 + Vector2(0, -6)
-				var d_size := font.get_string_size(dist_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+				var d_size := _overlay_text_size(font, dist_txt, font_size)
 				var d_bg := Rect2(mid_pos.x - 3, mid_pos.y - d_size.y + 1, d_size.x + 6, d_size.y + 3)
 				_tile_overlay.draw_rect(d_bg, Color(0.1, 0.1, 0.05, 0.9), true)
-				_tile_overlay.draw_string(font, mid_pos, dist_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color(1.0, 0.9, 0.3))
+				_overlay_string(font, mid_pos, dist_txt, font_size, Color(1.0, 0.9, 0.3))
+
+
+## Tekst nakładki kafelków w rozdzielczości ekranu: rasteryzowany w font_size × zoom i rysowany przeskalowany
+## o 1/zoom — ten sam rozmiar na ekranie, ale ostry przy każdym przybliżeniu (11 px powiększone zoomem kamery
+## z filtrem nearest wychodziło kanciaste i nierówne).
+func _overlay_string(font: Font, pos: Vector2, txt: String, font_size: int, color: Color) -> void:
+	var z := _overlay_zoom()
+	_tile_overlay.draw_set_transform(pos, 0.0, Vector2.ONE / z)
+	_tile_overlay.draw_string(font, Vector2.ZERO, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(1, roundi(font_size * z)), color)
+	_tile_overlay.draw_set_transform(Vector2.ZERO)
+
+
+## Rozmiar tekstu nakładki w jednostkach świata (dla tła etykiety).
+func _overlay_text_size(font: Font, txt: String, font_size: int) -> Vector2:
+	var z := _overlay_zoom()
+	return font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(1, roundi(font_size * z))) / z
+
+
+func _overlay_zoom() -> float:
+	return maxf(_tile_overlay.get_global_transform_with_canvas().get_scale().x, 0.01)
 
 
 ## Skrzynie mapy: z SpawnPlanner (chest_spawns) i z generatora obiektów (INTERACTIVE "chest").
