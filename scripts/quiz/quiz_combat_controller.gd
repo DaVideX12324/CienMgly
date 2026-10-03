@@ -13,6 +13,11 @@ const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_displa
 
 const PARTY_SKILL_SP_MAX := 100
 const PARTY_TP_MAX := 100
+## TP z otrzymanych obrażeń: proporcjonalnie do utraconej części HP — tyle TP za utratę 100% HP
+## (utrata 50% HP -> 40 TP). Liczone z obrażeń bez redukcji przez obronę (obrona nie zmniejsza TP).
+const TP_PER_FULL_HP_LOST := 80.0
+## TP za atak — dużo mniej niż z obrażeń (docs/game_design.md, „Tech Pointy w walce”).
+const TP_PER_ATTACK := 5
 const SKILL_SP_COST := 20
 const ATTACK_HIT_CHANCE_CORRECT := 0.8
 const ATTACK_HIT_CHANCE_WRONG := 0.2
@@ -1131,6 +1136,7 @@ func _resolve_attack(correct: bool) -> void:
 	if target_index < 0:
 		return
 	_active_enemy_index = target_index
+	_gain_party_tp(_active_actor_index, TP_PER_ATTACK)
 	var target := _enemy_units[_active_enemy_index]
 	var target_name_str := str(target.get("name", enemy_name_str))
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
@@ -1245,6 +1251,7 @@ func _enemy_turn() -> void:
 		var raw_damage := int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8
 		var enemy_tier: int = int(enemy_unit.get("tier", _get_encounter_tier()))
 		var actual_damage: int
+		_gain_party_tp(0, _tp_from_damage(raw_damage, enemy_tier))
 		if defending and quiz_correct:
 			actual_damage = 0
 			var audio := get_node_or_null("/root/AudioService")
@@ -1258,7 +1265,6 @@ func _enemy_turn() -> void:
 			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier, 0.5)
 			if _ps:
 				_ps.take_damage(actual_damage)
-			_gain_party_tp(0, actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
 				if audio:
@@ -1278,7 +1284,6 @@ func _enemy_turn() -> void:
 			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier)
 			if _ps:
 				_ps.take_damage(actual_damage)
-			_gain_party_tp(0, actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
 				if audio:
@@ -2090,6 +2095,13 @@ func _get_player_attack_power() -> int:
 	if _ps and _ps.has_method("get_member_total_atk"):
 		return maxi(int(_ps.get_member_total_atk(0)), 1)
 	return player_base_damage
+
+
+## TP za cios wroga: część max HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
+func _tp_from_damage(raw_damage: int, enemy_tier: int) -> int:
+	var undefended := _calculate_player_damage_taken(raw_damage, enemy_tier)
+	var max_hp: int = maxi(_ps.max_hp, 1) if _ps else 100
+	return roundi(TP_PER_FULL_HP_LOST * float(undefended) / float(max_hp))
 
 
 func _calculate_player_damage_taken(raw_damage: int, enemy_tier: int, defending_multiplier: float = 1.0) -> int:
