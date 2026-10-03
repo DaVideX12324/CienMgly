@@ -4,23 +4,26 @@ extends CanvasLayer
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
-@onready var new_game_btn: Button = $Center/Panel/Margin/VBox/BtnNewGame
-@onready var load_game_btn: Button = $Center/Panel/Margin/VBox/BtnLoadGame
-@onready var stats_btn: Button = $Center/Panel/Margin/VBox/BtnStats
-@onready var options_btn: Button = $Center/Panel/Margin/VBox/BtnOptions
-@onready var quit_btn: Button = $Center/Panel/Margin/VBox/BtnQuit
-@onready var close_stats_btn: Button = $StatsPanel/StatsMargin/StatsVBox/BtnCloseStats
-@onready var title_label: Label = $Center/Panel/Margin/VBox/Title
-@onready var subtitle_label: Label = $Center/Panel/Margin/VBox/Subtitle
-@onready var stats_label: Label = $StatsPanel/StatsMargin/StatsVBox/StatsLabel
-@onready var stats_panel: PanelContainer = $StatsPanel
+## Układ jak menu Esc gry (prośba usera 2026-10-04): lista przycisków w lewym panelu, a „Wczytaj grę”,
+## „Statystyki” i „Opcje” otwierają treść w prawym panelu (ponowny klik albo Esc go zamyka).
+@onready var new_game_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnNewGame
+@onready var load_game_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnLoadGame
+@onready var stats_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnStats
+@onready var options_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnOptions
+@onready var quit_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnQuit
+@onready var title_label: Label = $MainRow/LeftPanel/Margin/VBox/Title
+@onready var subtitle_label: Label = $MainRow/LeftPanel/Margin/VBox/Subtitle
+@onready var right_panel: PanelContainer = $MainRow/RightPanel
+@onready var context_title: Label = $MainRow/RightPanel/Margin/RightVBox/ContextTitle
+@onready var context_body: MarginContainer = $MainRow/RightPanel/Margin/RightVBox/ContextBody
+@onready var stats_label: Label = $MainRow/RightPanel/Margin/RightVBox/ContextBody/StatsLabel
 @onready var background: ColorRect = $BG
 
 var _title_time := 0.0
-var _save_slots_panel: PanelContainer
-var _save_slots_title: Label
+var _save_slots_panel: VBoxContainer
 var _save_slots_list: VBoxContainer
-var _save_slots_back_btn: Button
+## Treść prawego panelu: "" (ukryty), "load", "stats", "options".
+var _context := ""
 var _slot_mode: String = "load"
 var _options_menu: CanvasLayer = null
 static var HOST_OPTIONS_MENU_SCENE: String = QuizRpgPaths.host("res://scenes/ui/options_menu.tscn")
@@ -33,7 +36,7 @@ func _ready() -> void:
 	_build_save_slots_panel()
 	_update_load_button()
 	_style_menu()
-	stats_panel.visible = false
+	_show_context("")
 	# Muzyka menu także po powrocie z gry („Zakończ grę” w menu Esc) — poziom zostawiał swoją.
 	var audio := get_node_or_null("/root/AudioService")
 	if audio and audio.has_method("play_music"):
@@ -57,9 +60,7 @@ func _connect_buttons() -> void:
 		options_btn.pressed.connect(_on_options)
 	if not quit_btn.pressed.is_connected(_on_quit):
 		quit_btn.pressed.connect(_on_quit)
-	if not close_stats_btn.pressed.is_connected(_on_close_stats):
-		close_stats_btn.pressed.connect(_on_close_stats)
-	for btn: Button in [new_game_btn, load_game_btn, stats_btn, options_btn, quit_btn, close_stats_btn]:
+	for btn: Button in [new_game_btn, load_game_btn, stats_btn, options_btn, quit_btn]:
 		_add_click_sfx(btn)
 	var save_manager := _get_module_singleton("SaveManager")
 	if save_manager and save_manager.has_signal("save_slots_changed"):
@@ -103,17 +104,23 @@ func _on_new_game() -> void:
 
 func _on_load_game() -> void:
 	_slot_mode = "load"
-	_show_save_slots("WCZYTAJ GRE")
+	_show_save_slots("Wczytaj grę")
 
 
 func _on_stats() -> void:
-	stats_panel.visible = not stats_panel.visible
-	if stats_panel.visible:
-		_populate_stats()
+	if _context == "stats":
+		_show_context("")
+		return
+	_populate_stats()
+	_show_context("stats")
+	context_title.text = "Statystyki"
 
 
-## Opcje hosta (ekran, dźwięk, motyw, sterowanie) — to samo okno co w menu Esc.
+## Opcje hosta (ekran, dźwięk, motyw, sterowanie) w prawym panelu — ta sama treść co w menu Esc.
 func _on_options() -> void:
+	if _context == "options":
+		_options_menu.call("close")
+		return
 	if _options_menu == null or not is_instance_valid(_options_menu):
 		if not ResourceLoader.exists(HOST_OPTIONS_MENU_SCENE):
 			push_warning("MainMenu: brak okna opcji %s" % HOST_OPTIONS_MENU_SCENE)
@@ -121,82 +128,79 @@ func _on_options() -> void:
 		_options_menu = (load(HOST_OPTIONS_MENU_SCENE) as PackedScene).instantiate() as CanvasLayer
 		_options_menu.layer = layer + 5
 		add_child(_options_menu)
-	stats_panel.visible = false
+		if _options_menu.has_method("embed_in"):
+			_options_menu.call("embed_in", context_body)
+		if _options_menu.has_signal("closed"):
+			_options_menu.connect("closed", func() -> void:
+				if _context == "options":
+					_show_context(""))
+	_show_context("options")
+	context_title.text = "Opcje"
 	if _options_menu.has_method("open"):
 		_options_menu.call("open")
 	else:
 		_options_menu.visible = true
 
 
-func _on_close_stats() -> void:
-	stats_panel.visible = false
+## Prawy panel: kind "" = ukryty; inaczej pokazana tylko ta treść (sloty / statystyki / opcje).
+func _show_context(kind: String) -> void:
+	_context = kind
+	right_panel.visible = kind != ""
+	stats_label.visible = kind == "stats"
+	if _save_slots_panel:
+		_save_slots_panel.visible = kind == "load"
+	if kind != "options" and _options_menu != null and is_instance_valid(_options_menu):
+		_options_menu.visible = false
+	if kind == "":
+		_update_load_button()
+
+
+## Esc zamyka prawy panel (opcje obsługują Esc same i zamykają panel sygnałem closed).
+func _unhandled_input(event: InputEvent) -> void:
+	if _context != "" and _context != "options" and event.is_action_pressed("ui_cancel"):
+		_play_click()
+		_show_context("")
+		get_viewport().set_input_as_handled()
 
 
 func _build_save_slots_panel() -> void:
 	if _save_slots_panel:
 		return
-
-	_save_slots_panel = PanelContainer.new()
-	_save_slots_panel.name = "SaveSlotsPanel"
+	_save_slots_panel = VBoxContainer.new()
+	_save_slots_panel.name = "SaveSlots"
 	_save_slots_panel.visible = false
-	_save_slots_panel.custom_minimum_size = Vector2(620, 640)
-	_save_slots_panel.theme_type_variation = "PanelContainer"
-	_save_slots_panel.add_theme_stylebox_override("panel", _make_panel_style(Color(0.07, 0.07, 0.11, 0.98), Color(0.35, 0.35, 0.48, 1.0)))
-	$Center.add_child(_save_slots_panel)
-
-	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_top", 18)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_bottom", 18)
-	_save_slots_panel.add_child(margin)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 12)
-	margin.add_child(vbox)
-
-	_save_slots_title = Label.new()
-	_save_slots_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_save_slots_title.add_theme_font_size_override("font_size", QuizTheme.snap(26))
-	_save_slots_title.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5, 1))
-	vbox.add_child(_save_slots_title)
+	_save_slots_panel.add_theme_constant_override("separation", 12)
+	context_body.add_child(_save_slots_panel)
 
 	var hint := Label.new()
-	hint.text = "Sloty dzialaja jak w Amon-Ra: wybierz zapis, pusty slot albo dodaj kolejny."
+	hint.text = "Wybierz zapis, pusty slot albo dodaj kolejny. Esc — wróć."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.add_theme_font_size_override("font_size", QuizTheme.snap(13))
 	hint.add_theme_color_override("font_color", Color(0.68, 0.68, 0.76, 1))
-	vbox.add_child(hint)
+	_save_slots_panel.add_child(hint)
 
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(580, 470)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(scroll)
+	_save_slots_panel.add_child(scroll)
 
 	_save_slots_list = VBoxContainer.new()
+	_save_slots_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_save_slots_list.add_theme_constant_override("separation", 10)
 	scroll.add_child(_save_slots_list)
 
-	_save_slots_back_btn = Button.new()
-	_save_slots_back_btn.text = "Powrot"
-	_save_slots_back_btn.custom_minimum_size = Vector2(180, 40)
-	_save_slots_back_btn.pressed.connect(_hide_save_slots)
-	_add_click_sfx(_save_slots_back_btn)
-	vbox.add_child(_save_slots_back_btn)
-
 
 func _show_save_slots(title: String) -> void:
-	_save_slots_title.text = title
-	$Center/Panel.visible = false
-	_save_slots_panel.visible = true
+	if _context == "load":
+		_show_context("")
+		return
+	context_title.text = title
+	_show_context("load")
 	_populate_save_slots()
 
 
 func _hide_save_slots() -> void:
-	_save_slots_panel.visible = false
-	$Center/Panel.visible = true
-	_update_load_button()
+	_show_context("")
 
 
 func _populate_save_slots() -> void:
