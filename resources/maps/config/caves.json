@@ -11,6 +11,8 @@
     "corridor_width": 3
   },
   "flags": {
+    "slope_2h_corner_rule": true,
+    "enable_slope_thickness": true,
     "enable_meandering": true,
     "enable_variable_width": true,
     "enable_funnels": true,
