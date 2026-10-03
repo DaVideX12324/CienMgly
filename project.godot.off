@@ -12,8 +12,8 @@ config_version=5
 
 [application]
 
-config/name="Quiz RPG"
-config/description="Edukacyjna gra RPG z quizami — moduł Artefaktu Wiedzy uruchomiony samodzielnie."
+config/name="Cień Mgły"
+config/description="Cień Mgły — edukacyjna gra RPG z quizami (moduł quiz_rpg Artefaktu Wiedzy uruchomiony samodzielnie)."
 run/main_scene="uid://bieijadp3q7ni"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://_host/icon.svg"

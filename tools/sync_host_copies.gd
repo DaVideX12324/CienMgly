@@ -22,8 +22,8 @@ const TEXT_EXTS := ["gd", "tscn", "tres", "json", "cfg", "gdshader", "import", "
 const MAX_DIR_FILES := 200
 ## Uruchomienie z repo modułu otwartego samodzielnie: główna scena i nazwa projektu.
 const STANDALONE_MAIN_SCENE := "res://modules/quiz_rpg/standalone/standalone_main.tscn"
-const STANDALONE_NAME := "Quiz RPG"
-const STANDALONE_DESCRIPTION := "Edukacyjna gra RPG z quizami — moduł Artefaktu Wiedzy uruchomiony samodzielnie."
+const STANDALONE_NAME := "Cień Mgły"
+const STANDALONE_DESCRIPTION := "Cień Mgły — edukacyjna gra RPG z quizami (moduł quiz_rpg Artefaktu Wiedzy uruchomiony samodzielnie)."
 
 var _quoted_re := RegEx.create_from_string("\"[*]?(res://[^\"]+|uid://[a-z0-9]+)\"|'(res://[^']+|uid://[a-z0-9]+)'")
 var _relative_re := RegEx.create_from_string("(?:preload|extends|load)\\s*\\(?\\s*\"((?!res://|uid://|user://)[^\"]+)\"|\\bpath=\"((?!res://|uid://)[^\"]+)\"")
