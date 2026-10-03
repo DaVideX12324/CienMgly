@@ -187,10 +187,12 @@ func _input(event: InputEvent) -> void:
 		return
 	if not _paused:
 		if _is_cancel(event) and _gm and _gm.is_exploring():
+			_play_click()
 			_toggle_pause()
 			get_viewport().set_input_as_handled()
 		return
 	if _handle_close_input(event):
+		_play_click()
 		get_viewport().set_input_as_handled()
 		return
 	if _mode == "confirm_exit":
@@ -198,9 +200,11 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	if _mode == "save_slots" and _handle_save_slots_input(event):
+		_play_click()
 		get_viewport().set_input_as_handled()
 		return
 	if _mode == "items_list" and _handle_item_tab_input(event):
+		_play_click()
 		get_viewport().set_input_as_handled()
 		return
 	if _is_nav_up(event):
@@ -221,8 +225,17 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if _is_accept(event):
+		_play_click()
 		_accept_current()
 		get_viewport().set_input_as_handled()
+
+
+## Dźwięk kliknięcia (zatwierdzenie, cofnięcie, zakładki, sloty, klik myszą) — jak w menu hosta.
+## AudioService działa też przy wstrzymanym drzewie (PROCESS_MODE_ALWAYS).
+func _play_click() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio and audio.has_method("play_sfx_by_name"):
+		audio.play_sfx_by_name("click")
 
 
 func _toggle_pause() -> void:
@@ -315,16 +328,19 @@ func _handle_confirm_input(event: InputEvent) -> bool:
 			if key_event.keycode == KEY_M or key_event.keycode == KEY_T:
 				_confirm_index = 0
 				_refresh_confirm_rows()
+				_play_click()
 				_confirm_exit_choice()
 				return true
 			if key_event.keycode == KEY_Q or key_event.keycode == KEY_W:
 				_confirm_index = 1
 				_refresh_confirm_rows()
+				_play_click()
 				_confirm_exit_choice()
 				return true
 			if key_event.keycode == KEY_N:
 				_confirm_index = 2
 				_refresh_confirm_rows()
+				_play_click()
 				_confirm_exit_choice()
 				return true
 	if _is_nav_up(event) or _is_nav_left(event):
@@ -338,6 +354,7 @@ func _handle_confirm_input(event: InputEvent) -> bool:
 		_refresh_confirm_rows()
 		return true
 	if _is_accept(event):
+		_play_click()
 		_confirm_exit_choice()
 		return true
 	return false
@@ -852,6 +869,7 @@ func _on_mouse_row_input(event: InputEvent, role: String, row: Control) -> void:
 	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
 	if mouse_event == null or not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
 		return
+	_play_click()
 	_on_mouse_row_hover(role, row)
 	match role:
 		"menu":

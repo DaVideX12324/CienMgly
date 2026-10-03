@@ -59,6 +59,8 @@ func _connect_buttons() -> void:
 		quit_btn.pressed.connect(_on_quit)
 	if not close_stats_btn.pressed.is_connected(_on_close_stats):
 		close_stats_btn.pressed.connect(_on_close_stats)
+	for btn: Button in [new_game_btn, load_game_btn, stats_btn, options_btn, quit_btn, close_stats_btn]:
+		_add_click_sfx(btn)
 	var save_manager := _get_module_singleton("SaveManager")
 	if save_manager and save_manager.has_signal("save_slots_changed"):
 		var slots_changed_callable := Callable(self, "_on_save_slots_changed")
@@ -73,6 +75,18 @@ func _update_load_button() -> void:
 
 func _style_menu() -> void:
 	title_label.pivot_offset = title_label.size / 2.0
+
+
+## Dźwięk kliknięcia przy naciśnięciu (myszą albo Enter / Spacją) — jak w menu głównym hosta.
+func _add_click_sfx(btn: Button) -> void:
+	if not btn.pressed.is_connected(_play_click):
+		btn.pressed.connect(_play_click)
+
+
+func _play_click() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio and audio.has_method("play_sfx_by_name"):
+		audio.play_sfx_by_name("click")
 
 
 func _on_new_game() -> void:
@@ -168,6 +182,7 @@ func _build_save_slots_panel() -> void:
 	_save_slots_back_btn.text = "Powrot"
 	_save_slots_back_btn.custom_minimum_size = Vector2(180, 40)
 	_save_slots_back_btn.pressed.connect(_hide_save_slots)
+	_add_click_sfx(_save_slots_back_btn)
 	vbox.add_child(_save_slots_back_btn)
 
 
@@ -206,6 +221,7 @@ func _populate_save_slots() -> void:
 		add_btn.text = "+ Dodaj slot"
 		add_btn.custom_minimum_size = Vector2(560, 42)
 		add_btn.pressed.connect(_on_add_slot_pressed)
+		_add_click_sfx(add_btn)
 		_save_slots_list.add_child(add_btn)
 
 
@@ -259,12 +275,14 @@ func _create_slot_row(slot_summary: Dictionary) -> Control:
 	action_btn.text = "Wczytaj"
 	action_btn.disabled = _slot_mode == "load" and not exists
 	action_btn.pressed.connect(func() -> void: _on_slot_action_pressed(slot_index))
+	_add_click_sfx(action_btn)
 	buttons.add_child(action_btn)
 
 	var delete_btn := Button.new()
 	delete_btn.text = "Usun"
 	delete_btn.disabled = not exists
 	delete_btn.pressed.connect(func() -> void: _on_delete_slot_pressed(slot_index))
+	_add_click_sfx(delete_btn)
 	buttons.add_child(delete_btn)
 
 	return panel
