@@ -17,7 +17,7 @@ const MODULE_DIR := "res://modules/quiz_rpg"
 const COPIES_DIR := "res://modules/quiz_rpg/_host"
 ## Foldery modułu pomijane przy szukaniu odwołań (narzędzia edytora i diagnostyki działają tylko w hoście).
 const SKIP_MODULE_DIRS := ["_host", "tests", "tools", ".godot"]
-const TEXT_EXTS := ["gd", "tscn", "tres", "json", "cfg", "gdshader", "import", "godot", "off", "txt", "md"]
+const TEXT_EXTS := ["gd", "tscn", "tres", "json", "cfg", "gdshader", "import", "godot", "off", "txt", "md", "uid"]
 ## Folder wskazany ścieżką (np. res://resources/quizzes) kopiujemy cały — o ile jest mały.
 const MAX_DIR_FILES := 200
 ## Uruchomienie z repo modułu otwartego samodzielnie: główna scena i nazwa projektu.
@@ -204,9 +204,10 @@ func _copy(p: String) -> void:
 		DirAccess.copy_absolute(ProjectSettings.globalize_path(p), ProjectSettings.globalize_path(dst))
 
 
+## Tekst zawsze z LF (repo modułu ma eol=lf; host na Windowsie bywa wypakowany z CRLF).
 func _store(p: String, text: String) -> void:
 	var f := FileAccess.open(p, FileAccess.WRITE)
-	f.store_string(text)
+	f.store_string(text.replace("\r\n", "\n"))
 	f.close()
 
 

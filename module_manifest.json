@@ -6,6 +6,13 @@
   "entry_scene": "module_root.tscn",
   "quiz_path": "res://resources/quizzes",
   "asset_path": "assets",
+  "action_labels": {
+    "move_up": "Góra",
+    "move_down": "Dół",
+    "move_left": "Lewo",
+    "move_right": "Prawo",
+    "interact": "Interakcja"
+  },
   "controls": [
     {
       "label": "Ruch postaci",
