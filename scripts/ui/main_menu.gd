@@ -4,19 +4,20 @@ extends CanvasLayer
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
-## Układ jak menu Esc gry (prośba usera 2026-10-04): lista przycisków w lewym panelu, a „Wczytaj grę”,
-## „Statystyki” i „Opcje” otwierają treść w prawym panelu (ponowny klik albo Esc go zamyka).
-@onready var new_game_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnNewGame
-@onready var load_game_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnLoadGame
-@onready var stats_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnStats
-@onready var options_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnOptions
-@onready var quit_btn: Button = $MainRow/LeftPanel/Margin/VBox/BtnQuit
-@onready var title_label: Label = $MainRow/LeftPanel/Margin/VBox/Title
-@onready var subtitle_label: Label = $MainRow/LeftPanel/Margin/VBox/Subtitle
-@onready var right_panel: PanelContainer = $MainRow/RightPanel
-@onready var context_title: Label = $MainRow/RightPanel/Margin/RightVBox/ContextTitle
-@onready var context_body: MarginContainer = $MainRow/RightPanel/Margin/RightVBox/ContextBody
-@onready var stats_label: Label = $MainRow/RightPanel/Margin/RightVBox/ContextBody/StatsLabel
+## Menu na środku; „Wczytaj grę”, „Statystyki” i „Opcje” otwierają osobny ekran na całe okno (menu znika,
+## Esc wraca) — jak w FNaFB („Load which file?”), prośba usera 2026-10-04.
+@onready var new_game_btn: Button = $Center/Panel/Margin/VBox/BtnNewGame
+@onready var load_game_btn: Button = $Center/Panel/Margin/VBox/BtnLoadGame
+@onready var stats_btn: Button = $Center/Panel/Margin/VBox/BtnStats
+@onready var options_btn: Button = $Center/Panel/Margin/VBox/BtnOptions
+@onready var quit_btn: Button = $Center/Panel/Margin/VBox/BtnQuit
+@onready var title_label: Label = $Center/Panel/Margin/VBox/Title
+@onready var subtitle_label: Label = $Center/Panel/Margin/VBox/Subtitle
+@onready var right_panel: PanelContainer = $ScreenPanel
+@onready var menu_center: CenterContainer = $Center
+@onready var context_title: Label = $ScreenPanel/Margin/RightVBox/ContextTitle
+@onready var context_body: MarginContainer = $ScreenPanel/Margin/RightVBox/ContextBody
+@onready var stats_label: Label = $ScreenPanel/Margin/RightVBox/ContextBody/StatsLabel
 @onready var background: ColorRect = $BG
 
 var _title_time := 0.0
@@ -116,7 +117,7 @@ func _on_stats() -> void:
 	context_title.text = "Statystyki"
 
 
-## Opcje hosta (ekran, dźwięk, motyw, sterowanie) w prawym panelu — ta sama treść co w menu Esc.
+## Opcje hosta (ekran, dźwięk, motyw, sterowanie) na ekranie treści — ta sama treść co w menu Esc.
 func _on_options() -> void:
 	if _context == "options":
 		_options_menu.call("close")
@@ -142,10 +143,11 @@ func _on_options() -> void:
 		_options_menu.visible = true
 
 
-## Prawy panel: kind "" = ukryty; inaczej pokazana tylko ta treść (sloty / statystyki / opcje).
+## Ekran treści: kind "" = menu; inaczej ekran na całe okno z tą treścią (sloty / statystyki / opcje).
 func _show_context(kind: String) -> void:
 	_context = kind
 	right_panel.visible = kind != ""
+	menu_center.visible = kind == ""
 	stats_label.visible = kind == "stats"
 	if _save_slots_panel:
 		_save_slots_panel.visible = kind == "load"
@@ -155,7 +157,7 @@ func _show_context(kind: String) -> void:
 		_update_load_button()
 
 
-## Esc zamyka prawy panel (opcje obsługują Esc same i zamykają panel sygnałem closed).
+## Esc wraca do menu (opcje obsługują Esc same i zamykają ekran sygnałem closed).
 func _unhandled_input(event: InputEvent) -> void:
 	if _context != "" and _context != "options" and event.is_action_pressed("ui_cancel"):
 		_play_click()

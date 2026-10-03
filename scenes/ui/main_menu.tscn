@@ -103,55 +103,49 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.06, 0.06, 0.1, 1)
 
-[node name="MainRow" type="HBoxContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=1572571532]
+texture_filter = 2
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 18
 
-[node name="LeftPanel" type="PanelContainer" parent="MainRow"]
-custom_minimum_size = Vector2(440, 0)
+[node name="Panel" type="PanelContainer" parent="Center" unique_id=1929729743]
 layout_mode = 2
-theme_type_variation = &"QuizWindow"
+theme_override_styles/panel = SubResource("StyleBoxFlat_main_panel")
 
-[node name="Margin" type="MarginContainer" parent="MainRow/LeftPanel"]
+[node name="Margin" type="MarginContainer" parent="Center/Panel" unique_id=744504487]
 layout_mode = 2
-theme_override_constants/margin_left = 24
+theme_override_constants/margin_left = 32
 theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
+theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="MainRow/LeftPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin" unique_id=1788516176]
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Title" type="Label" parent="MainRow/LeftPanel/Margin/VBox" unique_id=553056525]
+[node name="Title" type="Label" parent="Center/Panel/Margin/VBox" unique_id=553056525]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.5, 1)
 theme_override_font_sizes/font_size = 54
 text = "📖 Cień Mgły"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="MainRow/LeftPanel/Margin/VBox" unique_id=2011039917]
+[node name="Subtitle" type="Label" parent="Center/Panel/Margin/VBox" unique_id=2011039917]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.65, 0.65, 0.72, 1)
 theme_override_font_sizes/font_size = 27
 text = "Ucz sie, zdobywaj doswiadczenie!"
 horizontal_alignment = 1
 
-[node name="Sep1" type="HSeparator" parent="MainRow/LeftPanel/Margin/VBox" unique_id=1284879037]
+[node name="Sep1" type="HSeparator" parent="Center/Panel/Margin/VBox" unique_id=1284879037]
 layout_mode = 2
 
-[node name="BtnNewGame" type="Button" parent="MainRow/LeftPanel/Margin/VBox" unique_id=359661776]
+[node name="BtnNewGame" type="Button" parent="Center/Panel/Margin/VBox" unique_id=359661776]
 custom_minimum_size = Vector2(280, 42)
-size_flags_horizontal = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_accent")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_accent_hover")
@@ -162,9 +156,8 @@ theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.65, 0.65, 0.72, 1)
 text = "▶ Nowa gra"
 
-[node name="BtnLoadGame" type="Button" parent="MainRow/LeftPanel/Margin/VBox" unique_id=765951714]
+[node name="BtnLoadGame" type="Button" parent="Center/Panel/Margin/VBox" unique_id=765951714]
 custom_minimum_size = Vector2(280, 42)
-size_flags_horizontal = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
@@ -175,9 +168,8 @@ theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.65, 0.65, 0.72, 1)
 text = "📂 Wczytaj gre"
 
-[node name="BtnStats" type="Button" parent="MainRow/LeftPanel/Margin/VBox" unique_id=1054852286]
+[node name="BtnStats" type="Button" parent="Center/Panel/Margin/VBox" unique_id=1054852286]
 custom_minimum_size = Vector2(280, 36)
-size_flags_horizontal = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
@@ -188,9 +180,8 @@ theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.65, 0.65, 0.72, 1)
 text = "📊 Statystyki"
 
-[node name="BtnOptions" type="Button" parent="MainRow/LeftPanel/Margin/VBox" unique_id=854729631]
+[node name="BtnOptions" type="Button" parent="Center/Panel/Margin/VBox" unique_id=854729631]
 custom_minimum_size = Vector2(280, 36)
-size_flags_horizontal = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
@@ -201,12 +192,11 @@ theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_disabled_color = Color(0.65, 0.65, 0.72, 1)
 text = "⚙ Opcje"
 
-[node name="Sep2" type="HSeparator" parent="MainRow/LeftPanel/Margin/VBox" unique_id=545016424]
+[node name="Sep2" type="HSeparator" parent="Center/Panel/Margin/VBox" unique_id=545016424]
 layout_mode = 2
 
-[node name="BtnQuit" type="Button" parent="MainRow/LeftPanel/Margin/VBox" unique_id=163094946]
+[node name="BtnQuit" type="Button" parent="Center/Panel/Margin/VBox" unique_id=163094946]
 custom_minimum_size = Vector2(280, 36)
-size_flags_horizontal = 3
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
@@ -217,33 +207,40 @@ theme_override_colors/font_hover_color = Color(1, 0.55, 0.55, 1)
 theme_override_colors/font_disabled_color = Color(0.65, 0.65, 0.72, 1)
 text = "✕ Powrot do menu glownego"
 
-[node name="RightPanel" type="PanelContainer" parent="MainRow"]
+[node name="ScreenPanel" type="PanelContainer" parent="."]
 visible = false
-layout_mode = 2
-size_flags_horizontal = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_type_variation = &"QuizWindow"
 
-[node name="Margin" type="MarginContainer" parent="MainRow/RightPanel"]
+[node name="Margin" type="MarginContainer" parent="ScreenPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 18
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 18
 
-[node name="RightVBox" type="VBoxContainer" parent="MainRow/RightPanel/Margin"]
+[node name="RightVBox" type="VBoxContainer" parent="ScreenPanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ContextTitle" type="Label" parent="MainRow/RightPanel/Margin/RightVBox"]
+[node name="ContextTitle" type="Label" parent="ScreenPanel/Margin/RightVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.5, 1)
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 54
 
-[node name="ContextBody" type="MarginContainer" parent="MainRow/RightPanel/Margin/RightVBox"]
+[node name="ContextBody" type="MarginContainer" parent="ScreenPanel/Margin/RightVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="StatsLabel" type="Label" parent="MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=223965127]
+[node name="StatsLabel" type="Label" parent="ScreenPanel/Margin/RightVBox/ContextBody" unique_id=223965127]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 theme_override_font_sizes/font_size = 27
