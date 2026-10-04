@@ -69,7 +69,7 @@ static func generate_layout(
 
 	# P3. Korytarze jaskiniowe - MST + pętle
 	GenProgress.begin(&"corridors")
-	var corridor_carver := OrganicCorridorCarver.new()
+	var corridor_carver := CorridorCarverFactory.create(StringName(flags.corridor_shape), flags)
 	if rooms.size() >= 2:
 		var connected_indices: Array[int] = [0]
 		var unconnected_indices: Array[int] = []
