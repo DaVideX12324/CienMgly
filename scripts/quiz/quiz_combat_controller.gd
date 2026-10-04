@@ -46,6 +46,7 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
+@export var question_window_gap := 0.0                     ## pytanie „nad odpowiedziami” (opcje): odstęp od okna odpowiedzi
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -203,7 +204,12 @@ func _ready() -> void:
 	if settings and settings.has_signal("module_setting_changed"):
 		settings.module_setting_changed.connect(func(module_id: String, key: String, _v: Variant) -> void:
 			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_COMBAT_COMPACT:
-				_set_band_mode(_band_mode))
+				_set_band_mode(_band_mode)
+			elif module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_QUESTION_POSITION:
+				_apply_question_position())
+	if battle_window:
+		battle_window.resized.connect(_apply_question_position)
+	_apply_question_position.call_deferred()
 	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
 	if parent_canvas != null:
 		parent_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -2614,6 +2620,26 @@ func _clear_battle_log() -> void:
 
 ## Co klatkę: nowe komunikaty z result_label do logu; okno u góry widoczne w czasie quizu albo gdy
 ## log nie jest pusty (pytanie i czas tylko w czasie quizu).
+## Opcje -> Motyw: „Pytanie w walce” — okno pytania / czasu / logu u góry ekranu (jak w scenie) albo
+## przypięte do dołu, tuż nad oknem odpowiedzi (rośnie w górę; śledzi wysokość BattleWindow).
+func _apply_question_position() -> void:
+	if _top_window == null or battle_window == null:
+		return
+	if QuizTheme.question_position() == QuizTheme.QUESTION_BOTTOM:
+		_top_window.anchor_top = 1.0
+		_top_window.anchor_bottom = 1.0
+		_top_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		var bottom := -battle_window.size.y - question_window_gap
+		_top_window.offset_bottom = bottom
+		_top_window.offset_top = bottom  # wysokość z treści (minimalny rozmiar), w górę od dołu
+	else:
+		_top_window.anchor_top = 0.0
+		_top_window.anchor_bottom = 0.0
+		_top_window.grow_vertical = Control.GROW_DIRECTION_END
+		_top_window.offset_top = 0.0
+		_top_window.offset_bottom = 0.0
+
+
 func _update_top_window() -> void:
 	if _top_window == null:
 		return
