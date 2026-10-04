@@ -8,6 +8,7 @@ const GridRoomLayoutScript = preload("grid_room_layout.gd")
 const Wall3HPassScript = preload("../preprocess/wall_3h_pass.gd")
 const CanalPassScript = preload("canal_pass.gd")
 const WallTopAlignPassScript = preload("../preprocess/wall_top_align_pass.gd")
+const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -250,13 +251,16 @@ static func generate_layout(
 	if flags.enable_objects:
 		GenProgress.begin(&"terrain")
 		var catalog := ObjectCatalog.load_path(flags.objects_catalog)
-		if not catalog.defs.is_empty():
+		if not catalog.defs.is_empty() or not catalog.wall_defs.is_empty():
 			# Teren (błoto / trawa) liczony tu, bo obiekty go czytają; planer kafli użyje tych masek
 			# (ten sam seed — procedural_level planuje kafle z result.seed_used).
 			result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
 			GenProgress.end(&"terrain")
 			GenProgress.begin(&"objects")
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
+			# Dekoracje na licu ścian (lampy, kratki…) — bez zajętości podłogi, po obiektach podłogi.
+			if not catalog.wall_defs.is_empty():
+				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects)
 		GenProgress.end()  # terrain (pusty katalog) albo objects
 
 	# P12. Spawny wrogów i skrzyń

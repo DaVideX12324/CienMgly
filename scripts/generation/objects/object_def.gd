@@ -51,6 +51,13 @@ var keep_paths: bool = true           # z kolizją: nie na zarezerwowanych przej
 var priority: int = 0                 # większy = rozmieszczany wcześniej
 var flip_h: bool = false              # losowe odbicie (canvas item / scena)
 var order: int = 0                    # kolejność w pliku (remisy priorytetu)
+## Montaż: "" = na podłodze (ObjectPlanner); "facade" = na licu ściany widocznym z południa
+## (WallDecorPlanner) — kotwica = dolna kratka lica nad podłogą, bez kolizji i zajętości.
+var mount: StringName = &""
+
+
+func is_wall_mounted() -> bool:
+	return mount == &"facade"
 
 
 func is_solid() -> bool:

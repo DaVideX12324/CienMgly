@@ -19,7 +19,12 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
+	"mount",
 ]
+## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
+const MOUNTS := ["floor", "facade"]
+## Tagi kontekstu obiektów na licu (WallDecorPlanner): pod licem podłoga albo kanał.
+const WALL_TAGS := ["over_floor", "over_canal"]
 ## Tagi kontekstu rozpoznawane przez ObjectFeatures.
 const CONTEXT_TAGS := [
 	"wall_n", "wall_s", "wall_e", "wall_w", "wall_any", "corner", "open", "center",
@@ -33,7 +38,8 @@ const PLACEMENTS := {"grid": ObjectDef.Placement.GRID, "grid_jitter": ObjectDef.
 const COLLISIONS := {"none": ObjectDef.Collision.NONE, "tile": ObjectDef.Collision.TILE, "shape": ObjectDef.Collision.SHAPE, "scene": ObjectDef.Collision.SCENE}
 
 var path: String = ""
-var defs: Array[ObjectDef] = []
+var defs: Array[ObjectDef] = []        # obiekty na podłodze (ObjectPlanner)
+var wall_defs: Array[ObjectDef] = []   # obiekty na licu ściany (WallDecorPlanner)
 var errors: Array[String] = []
 
 # @tool + leniwy mutex: jak w ObjectBake (narzędzie edytora).
@@ -88,7 +94,7 @@ static func clear_cache() -> void:
 
 
 func get_def(def_id: StringName) -> ObjectDef:
-	for d in defs:
+	for d in defs + wall_defs:
 		if d.id == def_id:
 			return d
 	return null
@@ -130,7 +136,10 @@ func _parse(d: Dictionary) -> void:
 			errors.append("Obiekt '%s': powtórzone id." % def.id)
 			continue
 		seen[def.id] = true
-		defs.append(def)
+		if def.is_wall_mounted():
+			wall_defs.append(def)
+		else:
+			defs.append(def)
 	# Towarzysze muszą wskazywać obiekty z katalogu.
 	for od in defs:
 		var ok: Array[Dictionary] = []
@@ -140,8 +149,10 @@ func _parse(d: Dictionary) -> void:
 			else:
 				errors.append("Obiekt '%s': towarzysz '%s' nie istnieje w katalogu." % [od.id, c["id"]])
 		od.companions = ok
-	defs.sort_custom(func(a: ObjectDef, b: ObjectDef) -> bool:
-		return a.priority > b.priority or (a.priority == b.priority and a.order < b.order))
+	var by_priority := func(a: ObjectDef, b: ObjectDef) -> bool:
+		return a.priority > b.priority or (a.priority == b.priority and a.order < b.order)
+	defs.sort_custom(by_priority)
+	wall_defs.sort_custom(by_priority)
 
 
 func _build(m: Dictionary, order: int) -> ObjectDef:
@@ -267,19 +278,31 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		else:
 			errors.append("%s: shape to {\"rect\": [w, h]} albo {\"circle\": r} (+ \"offset\")." % tag)
 
+	var mount_s := String(m.get("mount", "floor"))
+	if not mount_s in MOUNTS:
+		errors.append("%s: mount musi być jednym z %s." % [tag, MOUNTS])
+		mount_s = "floor"
+	def.mount = &"facade" if mount_s == "facade" else &""
+	if def.is_wall_mounted():
+		if def.klass == ObjectDef.Klass.INTERACTIVE or def.scenes.is_empty():
+			errors.append("%s: mount 'facade' tylko dla DECAL/PROP ze sceną." % tag)
+			return null
+		def.collision = ObjectDef.Collision.NONE
+	var tags: Array = WALL_TAGS if def.is_wall_mounted() else CONTEXT_TAGS
+
 	for t in m.get("context", []):
-		if String(t) in CONTEXT_TAGS:
+		if String(t) in tags:
 			def.context.append(StringName(String(t)))
 		else:
-			errors.append("%s: nieznany tag kontekstu '%s' (znane: %s)." % [tag, t, CONTEXT_TAGS])
+			errors.append("%s: nieznany tag kontekstu '%s' (znane: %s)." % [tag, t, tags])
 	for t in m.get("avoid", []):
-		if String(t) in CONTEXT_TAGS:
+		if String(t) in tags:
 			def.avoid.append(StringName(String(t)))
 		else:
 			errors.append("%s: nieznany tag w avoid '%s'." % [tag, t])
 	for key in ["require", "prefer"]:
 		for t in m.get(key, []):
-			if String(t) in CONTEXT_TAGS:
+			if String(t) in tags:
 				(def.require if key == "require" else def.prefer).append(StringName(String(t)))
 			else:
 				errors.append("%s: nieznany tag w %s '%s'." % [tag, key, t])
