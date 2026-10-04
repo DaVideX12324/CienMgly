@@ -1,8 +1,10 @@
 extends "grid_pass.gd"
 
 ## Uzupełnianie ścian do 3H (flaga enforce_3h_walls): pionowy pas ściany niższy niż 3 kratki, z podłogą
-## nad nim i pod nim (lico 2H / 1H), dostaje brakujące kratki z podłogi nad sobą, a gdy tam nie ma
-## zwykłej podłogi (wejście / wyjście, brzeg mapy) — spod siebie. Dla tilesetów bez lica 2H (ścieki).
+## nad nim i pod nim (lico 2H / 1H), dostaje brakujące kratki z podłogi. Decyzja zapada dla całego odcinka
+## (sąsiednie kolumny z tym samym pasem ściany): w górę albo w dół — tam, gdzie nowe kratki licują się
+## ze ścianami po bokach odcinka (bez uskoku 1–2 kratek na krawędzi). Remis -> w górę. Tylko zwykła
+## podłoga (bez wejścia / wyjścia). Dla tilesetów bez lica 2H (ścieki).
 
 const MIN_HEIGHT := 3
 
@@ -13,7 +15,8 @@ func get_id() -> StringName:
 
 func apply(ctx: GenerationContext) -> int:
 	var grid := ctx.grid
-	var to_wall: Dictionary = {}
+	# Kolumny z za niskim pasem ściany: x -> [y0, y1] (pierwsza i ostatnia kratka ściany), per rząd startu.
+	var thin := {}  # Vector2i(x, y0) -> y1
 	for x in range(ctx.width):
 		var y := 0
 		while y < ctx.height:
@@ -23,29 +26,60 @@ func apply(ctx: GenerationContext) -> int:
 			var y0 := y
 			while y < ctx.height and int(grid.get(Vector2i(x, y), CellType.WALL)) == CellType.WALL:
 				y += 1
-			var run := y - y0  # ściana y0 .. y-1
-			if run >= MIN_HEIGHT or y0 == 0 or y >= ctx.height:
+			if y - y0 >= MIN_HEIGHT or y0 == 0 or y >= ctx.height:
 				continue
-			if not GridUtils.is_walkable(grid, Vector2i(x, y0 - 1)) or not GridUtils.is_walkable(grid, Vector2i(x, y)):
-				continue
-			var need := MIN_HEIGHT - run
-			# Najpierw w górę (pokój nad ścianą traci rząd), potem w dół — tylko zwykła podłoga.
-			var up := 0
-			while up < need and _plain_floor(grid, Vector2i(x, y0 - 1 - up)):
-				up += 1
-			var down := 0
-			while up + down < need and _plain_floor(grid, Vector2i(x, y + down)):
-				down += 1
-			if up + down < need:
-				continue
-			for i in up:
-				to_wall[Vector2i(x, y0 - 1 - i)] = true
-			for i in down:
-				to_wall[Vector2i(x, y + i)] = true
+			if GridUtils.is_walkable(grid, Vector2i(x, y0 - 1)) and GridUtils.is_walkable(grid, Vector2i(x, y)):
+				thin[Vector2i(x, y0)] = y - 1
+
+	var to_wall := {}
+	var done := {}
+	for key: Vector2i in thin:
+		if done.has(key):
+			continue
+		# Odcinek: sąsiednie kolumny z identycznym pasem (ten sam y0 i y1).
+		var y0 := key.y
+		var y1: int = thin[key]
+		var x0 := key.x
+		while thin.has(Vector2i(x0 - 1, y0)) and thin[Vector2i(x0 - 1, y0)] == y1:
+			x0 -= 1
+		var x1 := key.x
+		while thin.has(Vector2i(x1 + 1, y0)) and thin[Vector2i(x1 + 1, y0)] == y1:
+			x1 += 1
+		for x in range(x0, x1 + 1):
+			done[Vector2i(x, y0)] = true
+		var need := MIN_HEIGHT - (y1 - y0 + 1)
+		var up_ok := _can_fill(grid, x0, x1, y0 - need, y0 - 1)
+		var down_ok := _can_fill(grid, x0, x1, y1 + 1, y1 + need)
+		if not up_ok and not down_ok:
+			continue
+		var use_up := up_ok
+		if up_ok and down_ok:
+			use_up = _exposed_ends(grid, x0, x1, y0 - need, y0 - 1) <= _exposed_ends(grid, x0, x1, y1 + 1, y1 + need)
+		var ya := y0 - need if use_up else y1 + 1
+		var yb := y0 - 1 if use_up else y1 + need
+		for x in range(x0, x1 + 1):
+			for yy in range(ya, yb + 1):
+				to_wall[Vector2i(x, yy)] = true
 	for p in to_wall:
 		grid[p] = CellType.WALL
 	return to_wall.size()
 
 
-static func _plain_floor(grid: Dictionary, p: Vector2i) -> bool:
-	return int(grid.get(p, CellType.WALL)) == CellType.FLOOR
+## Czy prostokąt x0..x1 × ya..yb to w całości zwykła podłoga (można go zamurować).
+static func _can_fill(grid: Dictionary, x0: int, x1: int, ya: int, yb: int) -> bool:
+	for x in range(x0, x1 + 1):
+		for y in range(ya, yb + 1):
+			if int(grid.get(Vector2i(x, y), CellType.WALL)) != CellType.FLOOR:
+				return false
+	return true
+
+
+## Ile kratek obok nowego prostokąta (lewa i prawa krawędź) to podłoga — każda to uskok na krawędzi ściany.
+static func _exposed_ends(grid: Dictionary, x0: int, x1: int, ya: int, yb: int) -> int:
+	var n := 0
+	for y in range(ya, yb + 1):
+		if GridUtils.is_walkable(grid, Vector2i(x0 - 1, y)):
+			n += 1
+		if GridUtils.is_walkable(grid, Vector2i(x1 + 1, y)):
+			n += 1
+	return n

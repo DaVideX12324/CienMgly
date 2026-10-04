@@ -34,6 +34,7 @@ var entrance_mode: String = "edge"
 var enable_grid_cleanup: bool = true
 var enable_ledge_fix: bool = true       # ShortLedgeRaisePass: wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte
 var enforce_3h_walls: bool = false     # Wall3HPass: pionowe ściany < 3 kratek (lico 2H/1H) uzupełniane do 3H
+var align_wall_tops: bool = false      # WallTopAlignPass: uskoki 1–2 rzędów na górnej krawędzi ścian wyrównywane
 var enable_slope_thickness: bool = true # SlopeThicknessPass: ukośna ściana (skos) o grubości 3 -> 4
 # Małe wolnostojące PRZEKRZYWIONE wyspy ściany (pole <= max_area kratek, najwyżej max_width kolumn, żadna
 # kolumna wyższa niż max_height, nie przy brzegu mapy, góry i doły kolumn w różnych rzędach): lico zawsze 2H,
