@@ -46,6 +46,25 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 		covered.merge(result.objects.solid_cells())
 	if not covered.is_empty():
 		_nudge_off(ctx, result, covered)
+	_separate(ctx, result, covered)
+
+
+## Każdy wróg i każda skrzynia na własnej kratce. Dwa ciała w tym samym punkcie nie mają kierunku
+## rozsunięcia — fizyka wypycha je w jedną stronę (w górę) przez ściany aż do voidu. Duplikat idzie na
+## najbliższą wolną podłogę (bez dodatkowych losowań — spawny bez konfliktu zostają na miejscu).
+static func _separate(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, covered: Dictionary) -> void:
+	var taken := covered.duplicate()
+	var used := {}
+	for e in result.enemy_spawns:
+		if used.has(e["pos"]):
+			e["pos"] = _nearest_free(ctx, e["pos"], taken)
+		used[e["pos"]] = true
+		taken[e["pos"]] = true
+	for i in range(result.chest_spawns.size()):
+		if used.has(result.chest_spawns[i]):
+			result.chest_spawns[i] = _nearest_free(ctx, result.chest_spawns[i], taken)
+		used[result.chest_spawns[i]] = true
+		taken[result.chest_spawns[i]] = true
 
 
 ## Spawn na barierze płaskowyżu (rim, bok, lico, stopa) albo na przeszkodzie z generatora obiektów
