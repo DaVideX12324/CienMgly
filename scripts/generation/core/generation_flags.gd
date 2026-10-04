@@ -68,6 +68,13 @@ var terrain_grass_index: int = 2
 # Teren całej podłogi (>= 0): podłoga malowana autotilingiem terenu (brzegi przy ścianach z kafli terenu);
 # -1 = kafle roli FLOOR z profilu, jak dotąd.
 var floor_terrain: int = -1
+# Gdzie leży podłoga (FloorPlacer, teren podłogi): near = podłoga + 2 kratki pod ścianami (przezroczyste dolne
+# brzegi ścian jaskini, jak dotąd) | walkable = tylko kratki podłogi | all = cała mapa, też pod ścianami
+# (np. ukryte przejścia niszami).
+var floor_area: String = "near"
+# Brzegi terenu podłogi (floor_terrain) z maski prawdziwej podłogi zamiast z brzegu obszaru floor_area;
+# kratki poza podłogą (pod ścianami) dostają kafel środka. Dla ścian bez przezroczystości (ścieki).
+var floor_edges_by_walkable: bool = false
 
 # --- Płaskowyże (jeden poziom) — maska z szumu na podłodze; domyślnie WYŁĄCZONE (parytet) ---
 var enable_platforms: bool = false

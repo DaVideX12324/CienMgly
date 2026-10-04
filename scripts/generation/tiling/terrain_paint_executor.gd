@@ -19,7 +19,7 @@ static func execute(layers: Dictionary, plan: TerrainPaintPlan) -> void:
 			continue
 
 		if not batch.cells.is_empty():
-			TerrainAutotileSolver.paint(layer, batch.cells, batch.terrain_set, batch.terrain)
+			TerrainAutotileSolver.paint(layer, batch.cells, batch.terrain_set, batch.terrain, batch.mask_cells)
 
 
 ## Jak execute, ale porcjami po `chunk` kratek z klatką przerwy (ekran ładowania nie zamarza).
@@ -30,7 +30,7 @@ static func execute_chunked(layers: Dictionary, plan: TerrainPaintPlan, tree: Sc
 		var layer: TileMapLayer = layers.get(batch.layer)
 		if layer == null or batch.cells.is_empty():
 			continue
-		var prep := TerrainAutotileSolver.prepare(layer, batch.cells, batch.terrain_set, batch.terrain)
+		var prep := TerrainAutotileSolver.prepare(layer, batch.cells, batch.terrain_set, batch.terrain, batch.mask_cells)
 		if prep.is_empty():
 			continue
 		for from in range(0, batch.cells.size(), chunk):

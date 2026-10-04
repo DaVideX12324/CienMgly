@@ -9,10 +9,11 @@ class TerrainBatch:
 	var terrain: int = 0
 	var ignore_empty_terrains: bool = true
 	var order: int = 0             # kolejność wykonania batchy na tej samej warstwie
+	var mask_cells: Array[Vector2i] = []  # niepuste: bity sąsiedztwa z tego zbioru (np. prawdziwa podłoga)
 
 var batches: Array[TerrainBatch] = []
 
-func add_batch(layer_name: StringName, cells_arr: Array[Vector2i], t_set: int, t_idx: int, order_idx: int = 0, ignore_empty: bool = true) -> void:
+func add_batch(layer_name: StringName, cells_arr: Array[Vector2i], t_set: int, t_idx: int, order_idx: int = 0, ignore_empty: bool = true, mask_arr: Array[Vector2i] = []) -> void:
 	var b := TerrainBatch.new()
 	b.layer = layer_name
 	b.cells = cells_arr
@@ -20,4 +21,5 @@ func add_batch(layer_name: StringName, cells_arr: Array[Vector2i], t_set: int, t
 	b.terrain = t_idx
 	b.order = order_idx
 	b.ignore_empty_terrains = ignore_empty
+	b.mask_cells = mask_arr
 	batches.append(b)
