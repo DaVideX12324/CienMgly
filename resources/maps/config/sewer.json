@@ -37,7 +37,13 @@
     "corridor_diagonal_30_60": false,
     "room_layout": "random",
     "room_density": 0.6,
-    "corridor_corner_room_chance": 0.3
+    "corridor_corner_room_chance": 0.3,
+    "enforce_3h_walls": true,
+    "enable_4h_facades": true,
+    "floor_terrain": 0,
+    "terrain_mud_index": -1,
+    "terrain_grass_index": 3,
+    "facade_4h_chance": 0.35
   },
   "tilesets": {
     "default": "sewer",
