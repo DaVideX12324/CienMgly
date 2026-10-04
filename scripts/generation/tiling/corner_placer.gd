@@ -47,6 +47,19 @@ static func plan(
 			if edge == null or edge.edge_kind != EdgeKind.Kind.INNER_CORNER or edge.is_protected_solid:
 				continue
 
+			# Lico 4H: narożnik wewnętrzny idzie rząd wyżej — nad końcem lica (jego kratkę zajmuje góra modułu)
+			# albo obok lica, na wysokości jego górnego rzędu; zwolnioną kratkę obok lica dostaje ściana boczna.
+			var lift := ctx.facade_4h_tops.has(pos)
+			var side_role: int = TileModuleRole.Id.NONE
+			if not lift and edge.orientation in [EdgeKind.Orientation.SOUTH_WEST, EdgeKind.Orientation.SOUTH_EAST]:
+				var dx := 1 if edge.orientation == EdgeKind.Orientation.SOUTH_WEST else -1
+				if ctx.facade_4h_tops.has(pos + Vector2i(dx, -1)) and state.is_empty_or_rock(pos):
+					lift = true
+					side_role = TileModuleRole.Id.SIDE_WALL_EAST if dx == 1 else TileModuleRole.Id.SIDE_WALL_WEST
+			if lift:
+				if side_role != TileModuleRole.Id.NONE and _try_corner(ctx, placement_plan, pos, side_role, &"A", table, &""):
+					state.mark(pos, &"SIDE")
+				pos += Vector2i(0, -1)
 			if not state.is_empty_or_rock(pos):
 				continue
 

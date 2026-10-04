@@ -83,7 +83,9 @@ static func place(
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
-				if not _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT, vid, table, &"caves_roots" if step_use_roots else &""):
+				if FacadePlacer.wants_4h(ctx, pos, state, edges) and _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT_4H, vid, table, &"caves_roots" if step_use_roots else &""):
+					FacadePlacer.mark_4h(ctx, pos, state)
+				elif not _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT, vid, table, &"caves_roots" if step_use_roots else &""):
 					var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
 					var mid_t := CaveTileConstants.MOD_CRNR_NW_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_MID
 					var top_t := CaveTileConstants.MOD_CRNR_NW_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_TOP
@@ -113,7 +115,9 @@ static func place(
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
-				if not _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT, vid, table, &"caves_roots" if step_use_roots else &""):
+				if FacadePlacer.wants_4h(ctx, pos, state, edges) and _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT_4H, vid, table, &"caves_roots" if step_use_roots else &""):
+					FacadePlacer.mark_4h(ctx, pos, state)
+				elif not _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT, vid, table, &"caves_roots" if step_use_roots else &""):
 					var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE
 					var mid_t := CaveTileConstants.MOD_CRNR_NE_IN_MID if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_MID
 					var top_t := CaveTileConstants.MOD_CRNR_NE_IN_TOP if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_TOP

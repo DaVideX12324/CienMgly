@@ -260,12 +260,21 @@ static func _mask(cells: Array[Vector2i], portal_zone: Dictionary, noise_seed: i
 	return out
 
 
-## Plamy błota (Terrain 1 'Mud') na Floor i mchu / trawy (Terrain 2 'Grass') na FloorDecor.
+## Plamy błota (teren terrain_mud_index, domyślnie 1 'Mud') na Floor i mchu / trawy (terrain_grass_index,
+## domyślnie 2 'Grass') na FloorDecor; indeks < 0 = bez plam. Flaga floor_terrain >= 0: najpierw cała
+## podłoga malowana tym terenem (brzegi przy ścianach z kafli terenu zamiast roli FLOOR).
 ## Gotowe maski z ctx.terrain_masks, gdy policzone tym samym seedem; inaczej liczone tutaj.
 static func plan_masks(ctx: GenerationContext, terrain_plan: TerrainPaintPlan, terrain_cells: Array[Vector2i]) -> Dictionary:
 	var masks: Dictionary = ctx.terrain_masks
 	if masks.is_empty() or int(masks.get("seed", 0)) != ctx.seed_value:
 		masks = compute_masks(ctx, terrain_cells)
-	terrain_plan.add_batch(&"Floor", masks["mud"], 0, 1, 0, true)
-	terrain_plan.add_batch(&"FloorDecor", masks["grass"], 0, 2, 1, true)
+	var fl := ctx.flags
+	if fl != null and fl.floor_terrain >= 0:
+		terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true)
+	var mud_idx: int = fl.terrain_mud_index if fl != null else 1
+	var grass_idx: int = fl.terrain_grass_index if fl != null else 2
+	if mud_idx >= 0:
+		terrain_plan.add_batch(&"Floor", masks["mud"], 0, mud_idx, 0, true)
+	if grass_idx >= 0:
+		terrain_plan.add_batch(&"FloorDecor", masks["grass"], 0, grass_idx, 1, true)
 	return masks

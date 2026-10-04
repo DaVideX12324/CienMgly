@@ -33,6 +33,7 @@ var entrance_mode: String = "edge"
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
 var enable_ledge_fix: bool = true       # ShortLedgeRaisePass: wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte
+var enforce_3h_walls: bool = false     # Wall3HPass: pionowe ściany < 3 kratek (lico 2H/1H) uzupełniane do 3H
 var enable_slope_thickness: bool = true # SlopeThicknessPass: ukośna ściana (skos) o grubości 3 -> 4
 # Małe wolnostojące PRZEKRZYWIONE wyspy ściany (pole <= max_area kratek, najwyżej max_width kolumn, żadna
 # kolumna wyższa niż max_height, nie przy brzegu mapy, góry i doły kolumn w różnych rzędach): lico zawsze 2H,
@@ -48,12 +49,20 @@ var enable_decorative_niches: bool = true
 var enable_pillars: bool = true
 var enable_2h_facades: bool = true
 var enable_3h_facades: bool = true
+var enable_4h_facades: bool = false  # lico 4H (rola FACADE_4H) na wybranych odcinkach lica, zawsze na całej długości
+var facade_4h_chance: float = 0.35   # szansa odcinka lica (ze ścianą > 3 kratki na całej długości) na 4H
 var enable_floor_decorations: bool = true
 # Plamy terenu podłogi (szum > próg): MNIEJSZA częstotliwość = większe plamy, NIŻSZY próg = więcej.
 var terrain_mud_frequency: float = 0.035
 var terrain_mud_threshold: float = -0.02
 var terrain_grass_frequency: float = 0.13
 var terrain_grass_threshold: float = 0.10
+# Indeksy terenów (terrain_set 0 TileSetu): błoto na Floor, mech / trawa na FloorDecor; < 0 = bez plam.
+var terrain_mud_index: int = 1
+var terrain_grass_index: int = 2
+# Teren całej podłogi (>= 0): podłoga malowana autotilingiem terenu (brzegi przy ścianach z kafli terenu);
+# -1 = kafle roli FLOOR z profilu, jak dotąd.
+var floor_terrain: int = -1
 
 # --- Płaskowyże (jeden poziom) — maska z szumu na podłodze; domyślnie WYŁĄCZONE (parytet) ---
 var enable_platforms: bool = false
