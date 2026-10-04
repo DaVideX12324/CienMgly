@@ -6,6 +6,7 @@ const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
 const GridRoomLayoutScript = preload("grid_room_layout.gd")
 const Wall3HPassScript = preload("../preprocess/wall_3h_pass.gd")
+const WallTopAlignPassScript = preload("../preprocess/wall_top_align_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -142,9 +143,9 @@ static func generate_layout(
 		Remove1hWallsPass.new(),
 		WallThicknessPass.new()
 	])
-	# Tilesety bez lica 2H (ścieki): pionowe ściany niższe niż 3 kratki uzupełniane do 3H.
-	if flags.enforce_3h_walls:
-		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
+	# Tilesety bez lica 2H (ścieki): pionowe ściany niższe niż 3 kratki uzupełniane do 3H,
+	# potem wyrównanie uskoków 1–2 rzędów na górnej krawędzi ścian.
+	_run_wall_shape_passes(ctx, flags)
 
 	GenProgress.end(&"smoothing")
 
@@ -223,8 +224,7 @@ static func generate_layout(
 			StaircaseNormalizerPass.new()
 		], 4)
 
-	if flags.enforce_3h_walls:
-		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])  # portale / sprzątanie mogły odtworzyć ściany 2H
+	_run_wall_shape_passes(ctx, flags)  # portale / sprzątanie mogły odtworzyć ściany 2H i uskoki
 
 	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte; potem skośne styki podłóg przez
 	# ścianę (100/000/001), które podniesienie wypustki mogło odtworzyć po WallThicknessPass.
@@ -262,3 +262,13 @@ static func generate_layout(
 	result.portal_zone = ctx.portal_zone
 	result.preprocess_stats = ctx.preprocess_stats
 	return ctx
+
+
+## Ściany pod tilesety bez lica 2H (ścieki): uzupełnienie do 3H i wyrównanie górnej krawędzi (flagi).
+static func _run_wall_shape_passes(ctx: GenerationContext, flags: GenerationFlags) -> void:
+	if flags.enforce_3h_walls:
+		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
+	if flags.align_wall_tops:
+		GridPreprocessor.run(ctx, [WallTopAlignPassScript.new()])
+		if flags.enforce_3h_walls:
+			GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
