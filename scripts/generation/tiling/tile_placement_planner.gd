@@ -1,6 +1,8 @@
 class_name TilePlacementPlanner
 extends RefCounted
 
+const CanalPlacerScript = preload("canal_placer.gd")
+
 
 const GenProgress = preload("../core/gen_progress.gd")
 
@@ -29,6 +31,8 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	# płaskowyżu — baza podłogi pod nimi zostaje, bo rimy są półprzezroczyste)
 	var terrain_cells := terrain_cells(ctx, ground_cells)
 	TerrainMaskPlanner.plan_masks(ctx, terrain, terrain_cells)
+	# Kanały ścieków: kwas / lico (Floor), obrzeża i kładki (FloorDecor).
+	CanalPlacerScript.plan(ctx, tiles)
 	GenProgress.end(&"floor")
 
 	# 4. Fasady południowe (2H, 3H, łączniki, narożniki OUT, schodki, nisze i FAZA 2.5)
@@ -65,6 +69,12 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 
 ## Komórki terenu bez barier i schodów płaskowyżu. Bez płaskowyżu zwraca wejście bez zmian (parytet).
 static func terrain_cells(ctx: GenerationContext, cells: Array[Vector2i]) -> Array[Vector2i]:
+	if ctx.canals != null and not ctx.canals.is_empty():
+		var dry: Array[Vector2i] = []
+		for c in cells:
+			if not ctx.canals.water.has(c):
+				dry.append(c)
+		cells = dry
 	if ctx.plateau == null or ctx.plateau.is_empty():
 		return cells
 	var covered: Dictionary = ctx.plateau.blocked.duplicate()

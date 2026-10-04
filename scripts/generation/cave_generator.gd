@@ -318,6 +318,7 @@ static func plan_cave_tiles(
 	ctx.exit_pos = result.exit_pos
 	ctx.rooms = result.rooms
 	ctx.plateau = result.plateau
+	ctx.canals = result.canals
 	ctx.terrain_masks = result.terrain_masks
 
 	# Named TileSet System (opcjonalne). Gdy jest profil, ale nie ma pola przypisań,
@@ -340,6 +341,7 @@ static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	GenProgress.begin(&"paint")
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
 	TerrainPaintExecutor.execute(layers, plans.terrain)
+	TilePlacementExecutor.execute(layers.get(&"FloorDecor"), plans.tiles, &"FloorDecor")
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
 	TilePlacementExecutor.execute(layers.get(&"Platforms"), plans.tiles, &"Platforms")
 	GenProgress.end(&"paint")

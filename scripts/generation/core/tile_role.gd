@@ -83,6 +83,13 @@ enum Id {
 	OUTER_CORNER_NE_4H,
 	STEP_LEFT_4H,
 	STEP_RIGHT_4H,
+	# Kanały ścieków (CanalPlacer): kwas, lico brzegu, obrzeża na podłodze — wariant = układ sąsiedztwa;
+	# kładki pionowa / pozioma jako moduły na cały ślad.
+	CANAL_WATER,
+	CANAL_FACE,
+	CANAL_BANK,
+	BRIDGE_V,
+	BRIDGE_H,
 }
 
 

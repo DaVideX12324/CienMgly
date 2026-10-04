@@ -91,6 +91,16 @@ func _forbid(result) -> void:
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 		for c in pl.stair_cells():
 			_forbid_ring(c, STAIR_RING, false)
+	# Kanały: kwas nieprzechodni, kładki przechodnie, ale bez obiektów.
+	var canals = result.canals
+	if canals != null and not canals.is_empty():
+		for c in canals.blocked:
+			if f.in_bounds(c):
+				blocked[f.idx(c)] = 1
+				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
+		for c in canals.bridge_cells:
+			if f.in_bounds(c):
+				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 	for c in result.portal_zone:
 		_forbid_ring(c, PORTAL_RING, true)
 	_forbid_ring(result.player_spawn, SPAWN_RING, true)

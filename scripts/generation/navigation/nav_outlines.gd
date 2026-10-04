@@ -43,6 +43,11 @@ static func walkable_mask(result, with_obstacles: bool = false) -> PackedByteArr
 		for c in pl.blocked:
 			if c.x >= 0 and c.y >= 0 and c.x < w and c.y < h:
 				m[c.y * w + c.x] = 0
+	var canals = result.canals
+	if canals != null and not canals.is_empty():
+		for c in canals.blocked:
+			if c.x >= 0 and c.y >= 0 and c.x < w and c.y < h:
+				m[c.y * w + c.x] = 0
 	var objs = result.objects
 	if with_obstacles and objs != null:
 		for i in range(objs.occupancy.size()):

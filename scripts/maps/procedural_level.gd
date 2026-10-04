@@ -461,14 +461,14 @@ func _apply_job_async(job: GenJob) -> void:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
 		var tiles = job.plans.tiles
-		var order := [&"Floor", &"Walls", &"Platforms"]
+		var order := [&"Floor", &"FloorDecor", &"Walls", &"Platforms"]
 		var total := 0
 		for layer_name in order:
 			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
 		var done := 0
 		for layer_name in order:
-			if layer_name == &"Walls":
-				# Teren (błoto/trawa) między Floor a Walls — jak execute_cave_tiles.
+			if layer_name == &"FloorDecor":
+				# Teren (błoto/trawa) między Floor a FloorDecor / Walls — jak execute_cave_tiles.
 				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), PAINT_CHUNK)
 			var layer: TileMapLayer = layers.get(layer_name)
 			var cells: Dictionary = tiles.by_layer.get(layer_name, {})
