@@ -352,15 +352,23 @@ func get_desired_panel_width() -> float:
 	if quiz_panel == null:
 		return 0.0
 	var desired_width := 0.0
-	desired_width = maxf(desired_width, _measure_label_width(question_label))
+	# Pytanie i czas tylko, gdy stoją w panelu (moduł może je trzymać w osobnym oknie, np. logu walki).
+	if question_label and quiz_panel.is_ancestor_of(question_label):
+		desired_width = maxf(desired_width, _measure_label_width(question_label))
+	if timer_label and quiz_panel.is_ancestor_of(timer_label):
+		desired_width = maxf(desired_width, _measure_label_width(timer_label))
 	desired_width = maxf(desired_width, _measure_label_width(hint_label))
-	desired_width = maxf(desired_width, _measure_label_width(timer_label))
 	desired_width = maxf(desired_width, _measure_result_width())
 
 	if mc_box and mc_box.visible:
+		# Siatka (MC_Box.columns > 1): kolumny obok siebie — najszersza odpowiedź × kolumny + odstępy.
+		var cols := _mc_columns()
+		var widest := 0.0
 		for btn in mc_buttons:
 			if btn.visible:
-				desired_width = maxf(desired_width, _measure_button_width(btn))
+				widest = maxf(widest, _measure_button_width(btn))
+		var sep := float(mc_box.get_theme_constant("h_separation")) if cols > 1 else 0.0
+		desired_width = maxf(desired_width, widest * cols + sep * (cols - 1))
 	elif tf_box and tf_box.visible:
 		for btn in tf_buttons:
 			if btn.visible:
@@ -784,7 +792,10 @@ func _measure_button_width(button: Button) -> float:
 		return maxf(base_width, button.get_combined_minimum_size().x)
 	var font_size := button.get_theme_font_size("font_size")
 	var text_width := font.get_string_size(button.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	return maxf(base_width, text_width + 28.0)
+	# Zapas na marginesy stylu przycisku (np. linia zaznaczenia), co najmniej 28 px.
+	var style := button.get_theme_stylebox("normal")
+	var pad := maxf(28.0, style.get_minimum_size().x + 8.0) if style else 28.0
+	return maxf(base_width, text_width + pad)
 
 
 func _measure_flow_container_width(container: HFlowContainer) -> float:
