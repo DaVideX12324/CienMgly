@@ -47,7 +47,7 @@ static func plan(
 						# Górny koniec skosu 2H (sąsiad z jednej strony o 1 niżej) — kafel skosu zamiast lica 3H.
 						var slope_side := EdgeAnalyzer.slope_2h_end_side(edges, pos, left_y, right_y)
 						if slope_side != 0:
-							StepPlacer.place_slope(edge, state, placement_plan, ctx.priority_table, slope_side > 0, edges)
+							StepPlacer.place_slope(edge, state, placement_plan, ctx.priority_table, slope_side > 0, edges, ctx)
 							state.mark(pos, &"FACADE")
 							state.mark(pos + Vector2i(0, -1), &"FACADE")
 							continue
