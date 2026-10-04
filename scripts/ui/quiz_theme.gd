@@ -66,15 +66,15 @@ const SKINS: Array[Dictionary] = [
 const SETTING_BAR_STYLE := "ui_bar_style"
 ## UI walki tylko na szerokość treści (okna wyśrodkowane) zamiast na cały ekran.
 const SETTING_COMBAT_COMPACT := "ui_combat_compact"
-## Okno pytania (i logu) w walce: u góry ekranu albo tuż nad oknem odpowiedzi.
+## Pytanie i pasek czasu w walce: w oknie logu u góry albo w menu walki, tuż nad odpowiedziami.
 const SETTING_QUESTION_POSITION := "ui_question_position"
-const QUESTION_TOP := "top"
-const QUESTION_BOTTOM := "bottom"
+const QUESTION_IN_LOG := "log"
+const QUESTION_IN_MENU := "menu"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
-	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "top",
-		"choices": [{"id": "top", "name": "U góry ekranu"}, {"id": "bottom", "name": "Nad odpowiedziami"}]},
+	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "log",
+		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
 ]
 const DEFAULT_BAR_STYLE := "klasyczny"
 ## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
@@ -277,11 +277,11 @@ static func combat_ui_compact() -> bool:
 	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_COMPACT, false)) if settings else false
 
 
-## Położenie okna pytania w walce (QUESTION_TOP / QUESTION_BOTTOM).
+## Gdzie stoi pytanie w walce (QUESTION_IN_LOG / QUESTION_IN_MENU).
 static func question_position() -> String:
 	var settings := _settings_service()
-	var v := str(settings.call("get_module", MODULE_ID, SETTING_QUESTION_POSITION, QUESTION_TOP)) if settings else QUESTION_TOP
-	return v if v == QUESTION_BOTTOM else QUESTION_TOP
+	var v := str(settings.call("get_module", MODULE_ID, SETTING_QUESTION_POSITION, QUESTION_IN_LOG)) if settings else QUESTION_IN_LOG
+	return v if v == QUESTION_IN_MENU else QUESTION_IN_LOG
 
 
 static func bar_style() -> String:
