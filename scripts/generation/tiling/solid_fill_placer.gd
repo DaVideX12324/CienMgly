@@ -17,7 +17,12 @@ static func plan(
 	if table.is_empty():
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
 
-	# Krok A: Tło litej skały poza granicami logicznej siatki (-4..width+4, -4..height+4)
+	# Krok A: Tło litej skały poza granicami logicznej siatki (-4..width+4, -4..height+4).
+	# Kafel = wariant A roli SOLID_FILL zestawu domyślnego (w caves A = WALL_INSIDE), bez profilu stała.
+	var outside_t := CaveTileConstants.WALL_INSIDE
+	var outside_parts: Array = TileResolver.resolve_module_parts(ctx, Vector2i(-1, -1), TileModuleRole.Id.SOLID_FILL, [], -1, &"A")
+	if not outside_parts.is_empty():
+		outside_t = outside_parts[0].tile.atlas_coords
 	for y in range(-4, height + 4):
 		if y % 16 == 0:
 			GenProgress.sub_in(&"rock", 0.3 * (y + 4) / float(height + 8))
@@ -28,7 +33,7 @@ static func plan(
 				var p := TilePlacement.new()
 				p.pos = pos
 				p.layer = &"Walls"
-				p.atlas_coords = CaveTileConstants.WALL_INSIDE
+				p.atlas_coords = outside_t
 				p.category = &"SOLID_FILL"
 				PlacementPriority.assign(p, table)
 				placement_plan.queue(p)

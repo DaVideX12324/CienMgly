@@ -72,6 +72,9 @@ enum Id {
 	STAIR_EAST_1H,
 	STAIR_WEST_3H,
 	STAIR_WEST_1H,
+	# --- Korona lica 3H (kafel nad górą lica, rząd -3, gdy ściana głębsza niż 3). Opcjonalna:
+	# brak wpisu w profilu -> stała placera (caves).
+	FACADE_CROWN_3H,
 }
 
 

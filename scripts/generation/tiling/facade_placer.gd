@@ -144,10 +144,16 @@ static func place_3h_crown(
 	var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
 	var crown_free: bool = edge_crown == null or edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE
 	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
-		var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
-		if use_roots:
-			crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
-		_queue(plan, p_crown, crown_t, &"CORNER", ctx.priority_table, pos)
+		var parts := TileResolver.resolve_module_parts(ctx, p_crown, TileModuleRole.Id.FACADE_CROWN_3H, [], -1,
+			&"B" if is_b else &"A", &"caves_roots" if use_roots else &"")
+		if not parts.is_empty():
+			for rp in parts:
+				_queue_part(plan, p_crown + rp.offset, rp, &"CORNER", ctx.priority_table, pos)
+		else:
+			var crown_t := Vector2i(3, 4) if is_b else Vector2i(2, 4)
+			if use_roots:
+				crown_t = Vector2i(3, 13) if is_b else Vector2i(2, 13)
+			_queue(plan, p_crown, crown_t, &"CORNER", ctx.priority_table, pos)
 		state.mark(p_crown, &"CORNER")
 
 

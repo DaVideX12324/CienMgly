@@ -79,7 +79,7 @@ static func place(
 			# zostaje ścieżką legacy — nie mapuje
 			# się na moduł o stałej liczbie części. Reszta = narożnik 3H STEP_LEFT.
 			if EdgeAnalyzer.slope_2h_step(edges, edge, true):
-				place_slope(edge, state, plan, table, false, edges)
+				place_slope(edge, state, plan, table, false, edges, ctx)
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
@@ -109,7 +109,7 @@ static func place(
 		else:
 			var dy: int = y - right_y
 			if EdgeAnalyzer.slope_2h_step(edges, edge, false):
-				place_slope(edge, state, plan, table, true, edges)
+				place_slope(edge, state, plan, table, true, edges, ctx)
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
@@ -128,12 +128,38 @@ static func place(
 
 ## Gładki skos 2H (base, mid, top — top pomijany pod ścianą boczną) w kolumnie `edge.pos`.
 ## right: kafle skosu prawego (niżej z lewej). Stopień skosu i górny koniec skosu (fasada obok stopnia).
-static func place_slope(edge: EdgeContext, state: LegacyPlacementState, plan: TilePlacementPlan, table: Dictionary, right: bool, edges: Dictionary) -> void:
+## ctx: gdy zestaw ma moduł SLOPE_* z wariantami (base/mid/top), kafle z profilu; inaczej stałe caves
+## (caves trzyma SLOPE_* jako pojedynczy kafel legacy — ta ścieżka zostaje 1:1).
+static func place_slope(edge: EdgeContext, state: LegacyPlacementState, plan: TilePlacementPlan, table: Dictionary, right: bool, edges: Dictionary, ctx: GenerationContext = null) -> void:
 	var pos := edge.pos
-	_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
-	_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
 	var p_top := pos + Vector2i(0, -2)
 	var e_top: EdgeContext = edges.get(p_top)
-	if e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL:
+	var top_free: bool = e_top == null or e_top.edge_kind != EdgeKind.Kind.SIDE_WALL
+	var parts := _slope_module_parts(ctx, pos, right)
+	if not parts.is_empty():
+		for rp in parts:
+			var target: Vector2i = pos + rp.offset
+			if target == p_top and not top_free:
+				continue
+			_queue(plan, target, rp.tile.atlas_coords, &"FACADE", table, pos)
+		if top_free:
+			state.mark(p_top, &"FACADE")
+		return
+	_queue(plan, pos, CaveTileConstants.WALL_2H_SLOPE_RIGHT_BASE if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_BASE, &"FACADE", table, pos)
+	_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_SLOPE_RIGHT_MID if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_MID, &"FACADE", table, pos)
+	if top_free:
 		_queue(plan, p_top, CaveTileConstants.WALL_2H_SLOPE_RIGHT_TOP if right else CaveTileConstants.WALL_2H_SLOPE_LEFT_TOP, &"FACADE", table, pos)
 		state.mark(p_top, &"FACADE")
+
+
+## Części modułu skosu z profilu — tylko gdy wpis SLOPE_* zestawu ma warianty (moduł 3-częściowy).
+static func _slope_module_parts(ctx: GenerationContext, pos: Vector2i, right: bool) -> Array:
+	if ctx == null or not TileResolver.is_active(ctx):
+		return []
+	var tile_set: NamedTileSetDefinition = ctx.map_tile_profile.get_tileset(TileResolver.own_tileset_id(ctx, pos))
+	if tile_set == null:
+		return []
+	var entry := tile_set.get_entry(TileRole.Id.SLOPE_RIGHT if right else TileRole.Id.SLOPE_LEFT)
+	if entry == null or not entry.has_variants():
+		return []
+	return TileResolver.resolve_module_parts(ctx, pos, TileModuleRole.Id.SLOPE_RIGHT if right else TileModuleRole.Id.SLOPE_LEFT, [], -1, &"A")
