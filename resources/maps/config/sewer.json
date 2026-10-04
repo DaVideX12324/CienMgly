@@ -45,7 +45,9 @@
     "terrain_grass_index": 3,
     "facade_4h_chance": 0.35,
     "align_wall_tops": true,
-    "facade_base_on_wall": true
+    "facade_base_on_wall": true,
+    "floor_area": "all",
+    "floor_edges_by_walkable": true
   },
   "tilesets": {
     "default": "sewer",
