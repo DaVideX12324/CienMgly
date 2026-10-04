@@ -47,7 +47,10 @@
     "align_wall_tops": true,
     "facade_base_on_wall": true,
     "floor_area": "all",
-    "floor_edges_by_walkable": true
+    "floor_edges_by_walkable": true,
+    "canal_count": 3,
+    "canal_min_length": 12,
+    "canal_bridge_spacing": 24
   },
   "tilesets": {
     "default": "sewer",
