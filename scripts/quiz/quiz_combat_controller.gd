@@ -1531,10 +1531,21 @@ func _sync_enemy_displays() -> void:
 			var enemy_unit: Dictionary = _enemy_units[bar_index]
 			var hp_value: int = int(enemy_unit.get("hp", 0))
 			var hp_max: int = maxi(int(enemy_unit.get("max_hp", 1)), 1)
-			hp_bar.visible = true
 			hp_bar.min_value = 0.0
 			hp_bar.max_value = float(hp_max)
 			hp_bar.value = float(hp_value)
+			if hp_value > 0:
+				hp_bar.visible = true
+				hp_bar.modulate.a = 1.0
+				hp_bar.remove_meta(&"fading")
+			elif hp_bar.visible and not hp_bar.has_meta(&"fading"):
+				# Pokonany wróg: pasek gaśnie razem z animacją śmierci (zgłoszenie usera 2026-10-04 —
+				# zostawał pusty pasek).
+				hp_bar.set_meta(&"fading", true)
+				var fade := hp_bar.create_tween()
+				fade.tween_interval(0.2)
+				fade.tween_property(hp_bar, "modulate:a", 0.0, 0.4)
+				fade.finished.connect(func() -> void: hp_bar.visible = false)
 		else:
 			hp_bar.visible = false
 	if _enemy_displays.is_empty():
