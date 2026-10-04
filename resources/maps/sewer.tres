@@ -862,6 +862,24 @@ texture = ExtResource("1_mdpqv")
 14:13/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, -5, -8, -5, -5, -8, -5)
 13:12/0 = 0
 13:12/0/physics_layer_0/polygon_0/points = PackedVector2Array(5, 5, 8, 5, 8, 8, 5, 8)
+17:7/0 = 0
+18:7/0 = 0
+19:7/0 = 0
+20:7/0 = 0
+17:8/0 = 0
+18:8/0 = 0
+19:8/0 = 0
+20:8/0 = 0
+17:9/0 = 0
+18:9/0 = 0
+19:9/0 = 0
+20:9/0 = 0
+17:10/0 = 0
+18:10/0 = 0
+19:10/0 = 0
+20:10/0 = 0
+17:11/0 = 0
+18:11/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_props"]
 texture = ExtResource("2_props")
