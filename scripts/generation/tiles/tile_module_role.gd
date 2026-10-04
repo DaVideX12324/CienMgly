@@ -54,6 +54,7 @@ enum Id {
 	CANAL_BANK,
 	BRIDGE_V,
 	BRIDGE_H,
+	CANAL_BED,
 }
 
 ## Klucz, pod którym NamedTileSetDefinition przechowuje wpis danego modułu
@@ -106,6 +107,7 @@ static func to_storage_role(module_role: Id) -> int:
 		Id.CANAL_BANK: return TileRole.Id.CANAL_BANK
 		Id.BRIDGE_V: return TileRole.Id.BRIDGE_V
 		Id.BRIDGE_H: return TileRole.Id.BRIDGE_H
+		Id.CANAL_BED: return TileRole.Id.CANAL_BED
 		_: return TileRole.Id.NONE
 
 ## Ile części ma mieć poprawny moduł (0 = dowolnie). Do walidacji kształtu.

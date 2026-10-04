@@ -3,7 +3,8 @@ extends RefCounted
 ## Kafle kanałów ścieków (CanalLayout). Role z profilu, wariant = układ sąsiedztwa:
 ## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą: M, L / R przy podłodze,
 ##               DL / DR przy ścianie), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
-##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = kwas płynie pod mur).
+##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = kwas płynie pod mur);
+##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami.
 ## - FloorDecor: CANAL_BANK na podłodze przy kanale (strona kanału: N / S / E / W, rogi wypukłe NE / NW /
 ##               SE / SW, wklęsłe IN_* tylko po skosie, ciemne końce przy ścianie S_DL / S_DR / N_DL /
 ##               N_DR / E_DT / E_DB / W_DT / W_DB), kładki BRIDGE_V / BRIDGE_H (moduły na cały ślad).
@@ -22,7 +23,8 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 		if _is_face(ctx, water, p):
 			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, _face_variant(ctx, water, p), &"Floor", table)
 		else:
-			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_WATER, _water_variant(ctx, water, p), &"Floor", table)
+			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
+			_place(ctx, placement_plan, p, role, _water_variant(ctx, water, p), &"Floor", table)
 
 	# 2. Kładki (FloorDecor) — cały ślad, końce zastępują obrzeża brzegu.
 	for b in canals.bridges:
