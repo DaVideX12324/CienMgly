@@ -46,7 +46,6 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
-@export var question_window_gap := 0.0                     ## pytanie „nad odpowiedziami” (opcje): odstęp od okna odpowiedzi
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -207,8 +206,6 @@ func _ready() -> void:
 				_set_band_mode(_band_mode)
 			elif module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_QUESTION_POSITION:
 				_apply_question_position())
-	if battle_window:
-		battle_window.resized.connect(_apply_question_position)
 	_apply_question_position.call_deferred()
 	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
 	if parent_canvas != null:
@@ -2620,24 +2617,32 @@ func _clear_battle_log() -> void:
 
 ## Co klatkę: nowe komunikaty z result_label do logu; okno u góry widoczne w czasie quizu albo gdy
 ## log nie jest pusty (pytanie i czas tylko w czasie quizu).
-## Opcje -> Motyw: „Pytanie w walce” — okno pytania / czasu / logu u góry ekranu (jak w scenie) albo
-## przypięte do dołu, tuż nad oknem odpowiedzi (rośnie w górę; śledzi wysokość BattleWindow).
+## Opcje -> Motyw: „Pytanie w walce” — pytanie i pasek czasu w oknie logu u góry (jak w scenie) albo
+## w menu walki: w panelu quizu pod tytułem, tuż nad odpowiedziami (jak przed oknem logu).
 func _apply_question_position() -> void:
-	if _top_window == null or battle_window == null:
+	if _top_vbox == null or _timer_row == null or _quiz_panel_controller == null:
 		return
-	if QuizTheme.question_position() == QuizTheme.QUESTION_BOTTOM:
-		_top_window.anchor_top = 1.0
-		_top_window.anchor_bottom = 1.0
-		_top_window.grow_vertical = Control.GROW_DIRECTION_BEGIN
-		var bottom := -battle_window.size.y - question_window_gap
-		_top_window.offset_bottom = bottom
-		_top_window.offset_top = bottom  # wysokość z treści (minimalny rozmiar), w górę od dołu
+	var question: Label = _quiz_panel_controller.question_label
+	var panel: Control = _quiz_panel_controller.quiz_panel
+	if question == null or panel == null:
+		return
+	if QuizTheme.question_position() == QuizTheme.QUESTION_IN_MENU:
+		var title := panel.get_node_or_null("QuizTitle")
+		var at := title.get_index() + 1 if title != null else 0
+		if question.get_parent() != panel:
+			question.reparent(panel, false)
+		panel.move_child(question, at)
+		if _timer_row.get_parent() != panel:
+			_timer_row.reparent(panel, false)
+		panel.move_child(_timer_row, at + 1)
 	else:
-		_top_window.anchor_top = 0.0
-		_top_window.anchor_bottom = 0.0
-		_top_window.grow_vertical = Control.GROW_DIRECTION_END
-		_top_window.offset_top = 0.0
-		_top_window.offset_bottom = 0.0
+		if question.get_parent() != _top_vbox:
+			question.reparent(_top_vbox, false)
+		_top_vbox.move_child(question, 0)
+		if _timer_row.get_parent() != _top_vbox:
+			_timer_row.reparent(_top_vbox, false)
+		_top_vbox.move_child(_timer_row, 1)
+	_update_top_window()
 
 
 func _update_top_window() -> void:
@@ -2656,4 +2661,5 @@ func _update_top_window() -> void:
 	qpc.question_label.visible = quiz_on
 	_timer_row.visible = quiz_on
 	_log_label.visible = not _log_lines.is_empty()
-	_top_window.visible = quiz_on or not _log_lines.is_empty() or qpc.correct_answer_label.visible
+	var question_in_log: bool = qpc.question_label.get_parent() == _top_vbox  # opcja „Pytanie w walce”
+	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or qpc.correct_answer_label.visible
