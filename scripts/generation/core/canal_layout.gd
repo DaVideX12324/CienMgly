@@ -6,11 +6,13 @@ extends RefCounted
 ## bridges — kładki: {rect: Rect2i (cały ślad z brzegami), vertical: bool (kładka pionowa = przez kanał
 ##           poziomy)}.
 ## blocked — water bez kratek kładek: tu nie da się chodzić (nawigacja, spawny, obiekty tego unikają).
+## dry     — kratki water w pustym korycie (bez kwasu; kafle CANAL_BED zamiast CANAL_WATER).
 
 var water: Dictionary = {}
 var bridges: Array[Dictionary] = []
 var bridge_cells: Dictionary = {}
 var blocked: Dictionary = {}
+var dry: Dictionary = {}
 
 
 func is_empty() -> bool:

@@ -76,6 +76,7 @@ var floor_area: String = "near"
 var canal_count: int = 0
 var canal_min_length: int = 12
 var canal_bridge_spacing: int = 24   # kładki co tyle kratek wzdłuż kanału (+ dodatkowe dla spójności)
+var canal_dry_chance: float = 0.0    # szansa, że sieć kanałów (połączone kanały) to puste koryto zamiast kwasu
 # Brzegi terenu podłogi (floor_terrain) z maski prawdziwej podłogi zamiast z brzegu obszaru floor_area;
 # kratki poza podłogą (pod ścianami) dostają kafel środka. Dla ścian bez przezroczystości (ścieki).
 var floor_edges_by_walkable: bool = false

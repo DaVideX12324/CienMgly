@@ -90,6 +90,8 @@ enum Id {
 	CANAL_BANK,
 	BRIDGE_V,
 	BRIDGE_H,
+	# Puste koryto (kanał bez kwasu, flaga canal_dry_chance) — warianty jak CANAL_WATER.
+	CANAL_BED,
 }
 
 

@@ -56,6 +56,7 @@ static func run(ctx: GenerationContext, flags: GenerationFlags) -> CanalLayout:
 				layout.bridges.append(cands[rng.randi() % cands.size()])
 	layout.rebuild_blocked()
 	_ensure_connected(ctx, layout, segments, rng)
+	_mark_dry(layout, segments, flags.canal_dry_chance, rng)
 	return layout
 
 
@@ -225,6 +226,40 @@ static func _ensure_connected(ctx: GenerationContext, layout: CanalLayout, segme
 				break
 		if not removed:
 			return
+
+
+## Puste koryto: sieci kanałów (odcinki połączone skrzyżowaniem) z szansą `chance` bez kwasu — cała sieć
+## jednego rodzaju, żeby na skrzyżowaniu nie stykał się kwas z suchym dnem.
+static func _mark_dry(layout: CanalLayout, segments: Array[Dictionary], chance: float, rng: RandomNumberGenerator) -> void:
+	if chance <= 0.0 or segments.is_empty():
+		return
+	var cells: Array[Dictionary] = []
+	for seg in segments:
+		var d := {}
+		for p in _band_cells(seg):
+			d[p] = true
+		cells.append(d)
+	var group: Array[int] = []
+	for i in range(segments.size()):
+		group.append(i)
+	var find := func(i: int) -> int:
+		while group[i] != i:
+			i = group[i]
+		return i
+	for i in range(segments.size()):
+		for j in range(i + 1, segments.size()):
+			for p in cells[i]:
+				if cells[j].has(p):
+					group[find.call(j)] = find.call(i)
+					break
+	var dry_root := {}
+	for i in range(segments.size()):
+		var r: int = find.call(i)
+		if not dry_root.has(r):
+			dry_root[r] = rng.randf() < chance
+		if dry_root[r]:
+			for p in cells[i]:
+				layout.dry[p] = true
 
 
 ## Końce kładki (kratki brzegów po obu stronach kanału).
