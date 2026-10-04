@@ -14,6 +14,12 @@ const MIN_DIAGONAL_STEPS := 3
 
 var diagonal_45 := false
 var diagonal_30_60 := false
+## Pokój na zakręcie L (flaga corridor_corner_room_chance): szansa, bok losowany z corner_room_size
+## (min, max), kształt z room_carver. Wycięte pokoje trafiają do carved_rooms (generator dopisuje je do listy).
+var corner_room_chance := 0.0
+var corner_room_size := Vector2i(6, 15)
+var room_carver: RoomCarver = null
+var carved_rooms: Array[Rect2i] = []
 
 
 func carve(ctx: GenerationContext, from: Vector2i, to: Vector2i, width: int) -> void:
@@ -23,6 +29,22 @@ func carve(ctx: GenerationContext, from: Vector2i, to: Vector2i, width: int) -> 
 	var corner := Vector2i(to.x, from.y) if ctx.rng.randi() % 2 == 0 else Vector2i(from.x, to.y)
 	_carve_band(ctx, from, corner, w)
 	_carve_band(ctx, corner, to, w)
+	if corner_room_chance > 0.0 and room_carver != null and corner != from and corner != to 			and ctx.rng.randf() < corner_room_chance:
+		_carve_corner_room(ctx, corner)
+
+
+## Pokój wyśrodkowany na zakręcie L, w granicach mapy (margines jak przy zwykłych pokojach).
+func _carve_corner_room(ctx: GenerationContext, corner: Vector2i) -> void:
+	const BORDER := 6
+	var size := Vector2i(ctx.rng.randi_range(corner_room_size.x, corner_room_size.y),
+		ctx.rng.randi_range(corner_room_size.x, corner_room_size.y))
+	size = size.min(Vector2i(ctx.width, ctx.height) - Vector2i(2 * BORDER, 2 * BORDER))
+	if size.x < 3 or size.y < 3:
+		return
+	var pos := (corner - size / 2).clamp(Vector2i(BORDER, BORDER), Vector2i(ctx.width, ctx.height) - size - Vector2i(BORDER, BORDER))
+	var rect := Rect2i(pos, size)
+	room_carver.carve(ctx, rect)
+	carved_rooms.append(rect)
 
 
 ## Skos o losowym dopuszczalnym kącie + odcinek osiowy. false = żaden kąt nie pasuje.
