@@ -50,7 +50,9 @@
     "floor_edges_by_walkable": true,
     "canal_count": 3,
     "canal_min_length": 12,
-    "canal_bridge_spacing": 24
+    "canal_bridge_spacing": 24,
+    "enable_objects": true,
+    "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer.json"
   },
   "tilesets": {
     "default": "sewer",
