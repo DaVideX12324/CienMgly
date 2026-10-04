@@ -25,6 +25,8 @@ const DECAL_ITEMS := "DecalItems"
 ## albo niżej zawsze go przykrywa, a ściana nad nim nachodzi na niego jak na podłogę.
 const DECAL_SORT_LIFT := ObjectDef.CELL * 0.5
 const GROUP := &"generated_objects"
+## Obiekt na licu sortuje się prawie na dole kratki kotwicy (origin = jej środek).
+const WALL_SORT_DROP := ObjectDef.CELL * 0.5 - 1.0
 
 
 ## Czyści poprzednie obiekty i stawia nowe. `plan` == null -> tylko czyszczenie.
@@ -68,7 +70,11 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 		elif not def.bakes.is_empty():
 			var b := def.bakes[pl.variant]
 			if b.static_ok:
-				if def.klass == ObjectDef.Klass.DECAL:
+				if def.is_wall_mounted():
+					# Na licu: y-sort tuż nad górną krawędzią podłogi pod licem — nad kaflami lica,
+					# pod postacią stojącą przy ścianie.
+					_place_baked(objects, b, pl, runtime, -WALL_SORT_DROP)
+				elif def.klass == ObjectDef.Klass.DECAL:
 					_place_baked(decal_items, b, pl, runtime, DECAL_SORT_LIFT)
 				else:
 					_place_baked(objects, b, pl, runtime)
