@@ -11,6 +11,8 @@ static func repair(ctx: GenerationContext, corridor_width: int) -> void:
 	var width := ctx.width
 	var height := ctx.height
 	var carver := CorridorCarverFactory.create(StringName(ctx.flags.corridor_shape) if ctx.flags != null else &"organic", ctx.flags)
+	if "corner_room_chance" in carver:
+		carver.corner_room_chance = 0.0  # naprawa łączy tylko korytarzem, bez pokoi na zakrętach
 
 	var reachable := GridUtils.get_reachable_cells(grid, rooms[0].get_center(), width, height)
 	for room in rooms:

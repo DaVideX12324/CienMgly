@@ -22,6 +22,10 @@ var grid_loop_chance: float = 0.2      # szansa na korytarz-pętlę między sąs
 # Żadna = same L. Część korytarzy i tak zostaje L (losowo albo gdy skos byłby za krótki).
 var corridor_diagonal_45: bool = false
 var corridor_diagonal_30_60: bool = false
+# Szansa na pokój w miejscu zakrętu korytarza L (straight); 0 = nigdy. Kształt jak room_shape.
+var corridor_corner_room_chance: float = 0.0
+# Mnożnik automatycznej liczby pokoi (max_rooms = 0): 1 = 15 na 160×160, mniej = rzadziej rozstawione.
+var room_density: float = 1.0
 # Wejście: edge (wnęka przy krawędzi mapy, jak dotąd) | center (w pokoju najbliżej środka mapy, bez
 # wnęki — np. zejście włazem w ściekach; wyjście nadal przy krawędzi, w najdalszym pokoju).
 var entrance_mode: String = "edge"

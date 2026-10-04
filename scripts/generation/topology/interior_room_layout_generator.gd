@@ -80,6 +80,8 @@ static func generate_layout(
 		# P3. Korytarze jaskiniowe - MST + pętle
 		GenProgress.begin(&"corridors")
 		var corridor_carver := CorridorCarverFactory.create(StringName(flags.corridor_shape), flags)
+		if "corner_room_size" in corridor_carver:
+			corridor_carver.corner_room_size = Vector2i(min_room_size, max_room_size)
 		if rooms.size() >= 2:
 			var connected_indices: Array[int] = [0]
 			var unconnected_indices: Array[int] = []
@@ -123,6 +125,9 @@ static func generate_layout(
 						corridor_carver.carve(ctx, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width)
 						loops_added += 1
 
+		# Pokoje wycięte na zakrętach korytarzy L (corridor_corner_room_chance) — pełnoprawne pokoje (spawny).
+		if "carved_rooms" in corridor_carver:
+			rooms.append_array(corridor_carver.carved_rooms)
 		GenProgress.end(&"corridors")
 
 	# P4. Morfologiczne wygładzenie styków komór i korytarzy

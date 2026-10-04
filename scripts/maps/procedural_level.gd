@@ -392,8 +392,9 @@ func _prepare_job(seed_val: int) -> GenJob:
 			if rooms_count <= 0 and cfg != null:
 				rooms_count = cfg.gen_int("max_rooms", 0)
 			if rooms_count <= 0:
-				# Skalowanie: 60x60 -> 6, 160x160 -> 15, 250x250 -> ~37 (clamp 4..120)
-				rooms_count = int(clampf(round(15.0 * (float(gen_width * gen_height) / (160.0 * 160.0))), 4, 120))
+				# Skalowanie: 60x60 -> 6, 160x160 -> 15, 250x250 -> ~37 (clamp 4..120), razy room_density z JSON-a.
+				var density := float(cfg.flags().get("room_density", 1.0)) if cfg != null else 1.0
+				rooms_count = int(clampf(round(15.0 * density * (float(gen_width * gen_height) / (160.0 * 160.0))), 4, 120))
 			job.rooms_count = rooms_count
 			# Named TileSet System (opcjonalny). Profil i pole zestawów z wczytanego configu.
 			job.behaviour = _build_tile_behaviour(cfg, gen_width, gen_height)
