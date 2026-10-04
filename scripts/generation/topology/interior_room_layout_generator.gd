@@ -4,6 +4,7 @@ extends "topology_generator.gd"
 const GenProgress = preload("../core/gen_progress.gd")
 const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
+const GridRoomLayoutScript = preload("grid_room_layout.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -34,86 +35,95 @@ static func generate_layout(
 		for x in range(width):
 			ctx.grid[Vector2i(x, y)] = CellType.WALL
 
-	# P2. Generowanie komór jaskini (organiczne pokoje z bezpiecznym marginesem)
 	var rooms: Array[Rect2i] = []
-	var attempts := 0
-	var border := 6
-	var max_attempts := maxi(300, max_rooms * 25)
-	var room_carver := RoomCarverFactory.create(StringName(flags.room_shape))
+	if flags.room_layout == "grid":
+		# P2–P3 (siatka): pokoje w komórkach + korytarze między sąsiadami (GridRoomLayout).
+		rooms = GridRoomLayoutScript.carve(ctx, min_room_size, max_room_size, corridor_width, flags)
+		ctx.rooms = rooms
+		result.rooms = rooms
+		GenProgress.end(&"rooms")
+		GenProgress.begin(&"corridors")
+		GenProgress.end(&"corridors")
+	else:
+		# P2. Generowanie komór jaskini (organiczne pokoje z bezpiecznym marginesem)
+		var attempts := 0
+		var border := 6
+		var max_attempts := maxi(300, max_rooms * 25)
+		var room_carver := RoomCarverFactory.create(StringName(flags.room_shape))
 
-	while rooms.size() < max_rooms and attempts < max_attempts:
-		attempts += 1
-		var rw := rng.randi_range(min_room_size, max_room_size)
-		var rh := rng.randi_range(min_room_size, max_room_size)
-		var rx := rng.randi_range(border, width - rw - border)
-		var ry := rng.randi_range(border, height - rh - border)
-		var new_room := Rect2i(rx, ry, rw, rh)
+		while rooms.size() < max_rooms and attempts < max_attempts:
+			attempts += 1
+			var rw := rng.randi_range(min_room_size, max_room_size)
+			var rh := rng.randi_range(min_room_size, max_room_size)
+			var rx := rng.randi_range(border, width - rw - border)
+			var ry := rng.randi_range(border, height - rh - border)
+			var new_room := Rect2i(rx, ry, rw, rh)
 
-		var overlaps := false
-		var expanded := Rect2i(rx - 5, ry - 6, rw + 10, rh + 12)
-		for existing in rooms:
-			if expanded.intersects(existing):
-				overlaps = true
-				break
+			var overlaps := false
+			var expanded := Rect2i(rx - 5, ry - 6, rw + 10, rh + 12)
+			for existing in rooms:
+				if expanded.intersects(existing):
+					overlaps = true
+					break
 
-		if overlaps:
-			continue
+			if overlaps:
+				continue
 
-		rooms.append(new_room)
-		room_carver.carve(ctx, new_room)
+			rooms.append(new_room)
+			room_carver.carve(ctx, new_room)
 
-	ctx.rooms = rooms
-	result.rooms = rooms
+		ctx.rooms = rooms
+		result.rooms = rooms
 
-	GenProgress.end(&"rooms")
+		GenProgress.end(&"rooms")
 
-	# P3. Korytarze jaskiniowe - MST + pętle
-	GenProgress.begin(&"corridors")
-	var corridor_carver := CorridorCarverFactory.create(StringName(flags.corridor_shape), flags)
-	if rooms.size() >= 2:
-		var connected_indices: Array[int] = [0]
-		var unconnected_indices: Array[int] = []
-		for i in range(1, rooms.size()):
-			unconnected_indices.append(i)
+		# P3. Korytarze jaskiniowe - MST + pętle
+		GenProgress.begin(&"corridors")
+		var corridor_carver := CorridorCarverFactory.create(StringName(flags.corridor_shape), flags)
+		if rooms.size() >= 2:
+			var connected_indices: Array[int] = [0]
+			var unconnected_indices: Array[int] = []
+			for i in range(1, rooms.size()):
+				unconnected_indices.append(i)
 
-		while not unconnected_indices.is_empty():
-			var best_dist := INF
-			var best_conn := -1
-			var best_unconn := -1
-			var best_unconn_idx := -1
+			while not unconnected_indices.is_empty():
+				var best_dist := INF
+				var best_conn := -1
+				var best_unconn := -1
+				var best_unconn_idx := -1
 
-			for c_idx in connected_indices:
-				var c_center := rooms[c_idx].get_center()
-				for u_i in range(unconnected_indices.size()):
-					var u_idx := unconnected_indices[u_i]
-					var u_center := rooms[u_idx].get_center()
-					var dist := Vector2(c_center).distance_squared_to(Vector2(u_center))
-					if dist < best_dist:
-						best_dist = dist
-						best_conn = c_idx
-						best_unconn = u_idx
-						best_unconn_idx = u_i
+				for c_idx in connected_indices:
+					var c_center := rooms[c_idx].get_center()
+					for u_i in range(unconnected_indices.size()):
+						var u_idx := unconnected_indices[u_i]
+						var u_center := rooms[u_idx].get_center()
+						var dist := Vector2(c_center).distance_squared_to(Vector2(u_center))
+						if dist < best_dist:
+							best_dist = dist
+							best_conn = c_idx
+							best_unconn = u_idx
+							best_unconn_idx = u_i
 
-			if best_unconn_idx != -1:
-				corridor_carver.carve(ctx, rooms[best_conn].get_center(), rooms[best_unconn].get_center(), corridor_width)
-				connected_indices.append(best_unconn)
-				unconnected_indices.remove_at(best_unconn_idx)
+				if best_unconn_idx != -1:
+					corridor_carver.carve(ctx, rooms[best_conn].get_center(), rooms[best_unconn].get_center(), corridor_width)
+					connected_indices.append(best_unconn)
+					unconnected_indices.remove_at(best_unconn_idx)
 
-		# Dodatkowe korytarze pętlowe
-		var extra_loops := mini(3, floori(rooms.size() / 3.0))
-		var loop_attempts := 0
-		var loops_added := 0
-		while loops_added < extra_loops and loop_attempts < 25:
-			loop_attempts += 1
-			var idx_a := rng.randi() % rooms.size()
-			var idx_b := rng.randi() % rooms.size()
-			if idx_a != idx_b:
-				var d := Vector2(rooms[idx_a].get_center()).distance_to(Vector2(rooms[idx_b].get_center()))
-				if d < maxf(width, height) * 0.45:
-					corridor_carver.carve(ctx, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width)
-					loops_added += 1
+			# Dodatkowe korytarze pętlowe
+			var extra_loops := mini(3, floori(rooms.size() / 3.0))
+			var loop_attempts := 0
+			var loops_added := 0
+			while loops_added < extra_loops and loop_attempts < 25:
+				loop_attempts += 1
+				var idx_a := rng.randi() % rooms.size()
+				var idx_b := rng.randi() % rooms.size()
+				if idx_a != idx_b:
+					var d := Vector2(rooms[idx_a].get_center()).distance_to(Vector2(rooms[idx_b].get_center()))
+					if d < maxf(width, height) * 0.45:
+						corridor_carver.carve(ctx, rooms[idx_a].get_center(), rooms[idx_b].get_center(), corridor_width)
+						loops_added += 1
 
-	GenProgress.end(&"corridors")
+		GenProgress.end(&"corridors")
 
 	# P4. Morfologiczne wygładzenie styków komór i korytarzy
 	GenProgress.begin(&"smoothing")
