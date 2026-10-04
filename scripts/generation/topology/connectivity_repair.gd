@@ -10,7 +10,7 @@ static func repair(ctx: GenerationContext, corridor_width: int) -> void:
 	var grid := ctx.grid
 	var width := ctx.width
 	var height := ctx.height
-	var carver := OrganicCorridorCarver.new()
+	var carver := CorridorCarverFactory.create(StringName(ctx.flags.corridor_shape) if ctx.flags != null else &"organic", ctx.flags)
 
 	var reachable := GridUtils.get_reachable_cells(grid, rooms[0].get_center(), width, height)
 	for room in rooms:

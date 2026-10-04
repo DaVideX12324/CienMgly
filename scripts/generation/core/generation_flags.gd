@@ -9,6 +9,13 @@ var enable_junction_smoothing: bool = true
 # Kształt pokoi: organic (owal z wybrzuszeniami, jak dotąd) | rect (prostokąty) | round (owale bez
 # wybrzuszeń) | mixed (losowo per pokój). RoomCarverFactory.
 var room_shape: String = "organic"
+# Kształt korytarzy: organic (krzywe, opcjonalnie meandrujące — jak dotąd) | straight (L z dwóch
+# odcinków osiowych, stała szerokość — wnętrza o prostych ścianach, np. ścieki). CorridorCarverFactory.
+var corridor_shape: String = "organic"
+# Skosy korytarzy straight (regularne schodki): 45° = 1:1; 30°/60° ≈ 2:1 / 1:2 (26,6° / 63,4°).
+# Żadna = same L. Część korytarzy i tak zostaje L (losowo albo gdy skos byłby za krótki).
+var corridor_diagonal_45: bool = false
+var corridor_diagonal_30_60: bool = false
 # Wejście: edge (wnęka przy krawędzi mapy, jak dotąd) | center (w pokoju najbliżej środka mapy, bez
 # wnęki — np. zejście włazem w ściekach; wyjście nadal przy krawędzi, w najdalszym pokoju).
 var entrance_mode: String = "edge"
