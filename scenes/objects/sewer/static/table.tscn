@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://d2mktfbqspgvt" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(32, 80, 48, 29)
+filter_clip = true
+
+[node name="Table" type="StaticBody2D" unique_id=1383754437]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=943097981]
+texture = SubResource("AtlasTexture_0")
+centered = false
+offset = Vector2(-24, -22)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=435163717]
+polygon = PackedVector2Array(-21, -4, 21, -4, 22, -3, 22, 5, 21, 6, -21, 6, -22, 5, -22, -3)

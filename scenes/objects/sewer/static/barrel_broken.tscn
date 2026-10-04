@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://d2mktfbqspgvt" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(48, 44, 16, 20)
+filter_clip = true
+
+[node name="BarrelBroken" type="StaticBody2D" unique_id=1269871365]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1808824792]
+texture = SubResource("AtlasTexture_0")
+centered = false
+offset = Vector2(-8, -14)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1284671415]
+polygon = PackedVector2Array(-6, -3, 6, -3, 7, -2, 7, 5, 6, 6, -6, 6, -7, 5, -7, -2)

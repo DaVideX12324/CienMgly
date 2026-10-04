@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://d2mktfbqspgvt" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(129, 132, 14, 6)
+filter_clip = true
+
+[node name="CopperRubbleB" type="Node2D" unique_id=2066044967]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=278799789]
+texture = SubResource("AtlasTexture_0")
+centered = false
+offset = Vector2(-7, -2)
