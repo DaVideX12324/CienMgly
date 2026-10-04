@@ -270,7 +270,12 @@ static func plan_masks(ctx: GenerationContext, terrain_plan: TerrainPaintPlan, t
 		masks = compute_masks(ctx, terrain_cells)
 	var fl := ctx.flags
 	if fl != null and fl.floor_terrain >= 0:
-		terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true)
+		var edge_mask: Array[Vector2i] = []
+		if fl.floor_edges_by_walkable:
+			for p in terrain_cells:
+				if GridUtils.is_walkable(ctx.grid, p):
+					edge_mask.append(p)
+		terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true, edge_mask)
 	var mud_idx: int = fl.terrain_mud_index if fl != null else 1
 	var grass_idx: int = fl.terrain_grass_index if fl != null else 2
 	if mud_idx >= 0:

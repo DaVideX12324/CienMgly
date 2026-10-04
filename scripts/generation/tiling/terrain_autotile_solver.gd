@@ -74,14 +74,16 @@ static func _weighted_cost(a: int, b: int) -> int:
 ## Maluje teren na warstwie: dla każdej komórki liczy wzorzec (sąsiad w zbiorze = ten teren)
 ## i ustawia kafel o dokładnie pasujących bitach; potem o tych samych wierzchołkach (narożnik bez
 ## boków nie ma znaczenia); przy braku — najbliższy wg wagi (bok > narożnik).
-static func paint(layer: TileMapLayer, cells: Array, terrain_set: int, terrain: int) -> void:
-	var prep := prepare(layer, cells, terrain_set, terrain)
+## mask_cells (niepuste): bity sąsiedztwa liczone z tego zbioru zamiast z malowanych kratek; kratki spoza
+## niego dostają kafel środka (pełna maska) — np. podłoga pod nieprzezroczystymi ścianami.
+static func paint(layer: TileMapLayer, cells: Array, terrain_set: int, terrain: int, mask_cells: Array = []) -> void:
+	var prep := prepare(layer, cells, terrain_set, terrain, mask_cells)
 	if not prep.is_empty():
 		paint_range(layer, cells, prep, 0, cells.size())
 
 
 ## Tablice dobierania kafli + zbiór kratek terenu dla paint_range. Puste = nie ma czego malować.
-static func prepare(layer: TileMapLayer, cells: Array, terrain_set: int, terrain: int) -> Dictionary:
+static func prepare(layer: TileMapLayer, cells: Array, terrain_set: int, terrain: int, mask_cells: Array = []) -> Dictionary:
 	if cells.is_empty() or layer.tile_set == null:
 		return {}
 	var lut := _build_lookup(layer.tile_set, terrain_set, terrain)
@@ -90,7 +92,10 @@ static func prepare(layer: TileMapLayer, cells: Array, terrain_set: int, terrain
 	var cellset := {}
 	for c in cells:
 		cellset[c] = true
-	return {"lut": lut, "cellset": cellset}
+	var maskset := {}
+	for c in mask_cells:
+		maskset[c] = true
+	return {"lut": lut, "cellset": cellset, "maskset": maskset}
 
 
 ## Kratki cells[from..to) — kafel zależy tylko od pełnego zbioru kratek (prepare), więc malowanie
@@ -100,12 +105,17 @@ static func paint_range(layer: TileMapLayer, cells: Array, prep: Dictionary, fro
 	var all: Array = prep.lut[1]
 	var by_vertex: Dictionary = prep.lut[2]
 	var cellset: Dictionary = prep.cellset
+	var maskset: Dictionary = prep.get("maskset", {})
+	var from_set: Dictionary = maskset if not maskset.is_empty() else cellset
 	for idx in range(from, mini(to, cells.size())):
 		var c = cells[idx]
 		var mask := 0
-		for i in range(8):
-			if cellset.has(c + OFFS[i]):
-				mask |= (1 << i)
+		if not maskset.is_empty() and not maskset.has(c):
+			mask = 255  # poza maską (pod ścianą) — kafel środka
+		else:
+			for i in range(8):
+				if from_set.has(c + OFFS[i]):
+					mask |= (1 << i)
 
 		var pick
 		var vk := _vertex_key(mask)

@@ -6,6 +6,19 @@ extends RefCounted
 static func get_ground_cells(ctx: GenerationContext) -> Array[Vector2i]:
 	var near_floor: Dictionary = {}
 	var grid := ctx.grid
+	# Flaga floor_area: walkable = tylko podłoga, all = cała mapa, near (domyślnie) = podłoga + 2 kratki.
+	var area: String = ctx.flags.floor_area if ctx.flags != null else "near"
+	if area == "walkable" or area == "all":
+		var out: Array[Vector2i] = []
+		if area == "all":
+			for y in range(ctx.height):
+				for x in range(ctx.width):
+					out.append(Vector2i(x, y))
+		else:
+			for pos in grid.keys():
+				if GridUtils.is_walkable(grid, pos):
+					out.append(pos)
+		return out
 	for pos in grid.keys():
 		if GridUtils.is_walkable(grid, pos):
 			for dy in range(-2, 3):
