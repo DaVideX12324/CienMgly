@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/caves_map_tiles.tres",
+  "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/sewer_map_tiles.tres",
   "generation": {
     "seed": 0,
     "width": 0,
@@ -11,39 +11,44 @@
     "corridor_width": 5
   },
   "flags": {
-    "enable_slope_thickness": true,
+    "enable_slope_thickness": false,
     "enable_meandering": false,
     "enable_variable_width": false,
     "enable_funnels": false,
     "enable_junction_smoothing": true,
     "enable_grid_cleanup": true,
     "enable_terrain_smoothing": true,
-    "enable_decorative_niches": true,
+    "enable_decorative_niches": false,
     "enable_pillars": false,
-    "enable_2h_facades": true,
+    "enable_2h_facades": false,
     "enable_3h_facades": true,
-    "enable_floor_decorations": true,
+    "enable_floor_decorations": false,
     "niche_spawn_chance": 0,
     "secret_niche_spawn_chance": 0,
     "passage_niche_spawn_chance": 0,
-    "force_theme": -1,
+    "force_theme": 0,
     "entrance_mode": "center",
-    "debug_log_edge_kinds": false
+    "debug_log_edge_kinds": false,
+    "room_shape": "rect",
+    "terrain_mud_threshold": 2.0,
+    "terrain_grass_threshold": 2.0,
+    "corridor_shape": "straight",
+    "corridor_diagonal_45": false,
+    "corridor_diagonal_30_60": false
   },
   "tilesets": {
-    "default": "caves_rock",
+    "default": "sewer",
     "enabled": [
-      "caves_rock",
-      "caves_roots"
+      "sewer"
     ],
     "forbidden_contact_policy": "use_default",
     "missing_tileset_policy": "default"
   },
   "tiling": {
-    "connectors_enabled": true,
+    "connectors_enabled": false,
     "facades_enabled": true,
     "floor_enabled": true,
-    "slopes_enabled": true,
+    "slopes_enabled": false,
     "solid_fill_enabled": true
   },
   "debug": {
