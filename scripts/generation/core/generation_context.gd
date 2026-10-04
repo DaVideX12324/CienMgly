@@ -50,6 +50,8 @@ var grass_noise: FastNoiseLite
 
 # --- Diagnostyka ---
 var preprocess_stats: Dictionary = {}
+## Kanały ścieków (CanalLayout) albo null.
+var canals: RefCounted = null
 ## Górne kratki modułów lica 4H (Vector2i -> true) — narożnik wewnętrzny nad nimi idzie rząd wyżej.
 var facade_4h_tops: Dictionary = {}
 ## Stopy lica 4H (Vector2i -> true) — wybrane odcinki lica, liczone raz (FacadePlacer.wants_4h).

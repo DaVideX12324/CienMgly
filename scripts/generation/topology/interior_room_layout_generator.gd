@@ -6,6 +6,7 @@ const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
 const GridRoomLayoutScript = preload("grid_room_layout.gd")
 const Wall3HPassScript = preload("../preprocess/wall_3h_pass.gd")
+const CanalPassScript = preload("canal_pass.gd")
 const WallTopAlignPassScript = preload("../preprocess/wall_top_align_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
@@ -230,6 +231,11 @@ static func generate_layout(
 	# ścianę (100/000/001), które podniesienie wypustki mogło odtworzyć po WallThicknessPass.
 	# Na koniec ukośne ściany (skosy) o grubości 3 -> 4 (SlopeThicknessPass).
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
+
+	# P11a'. Kanały ścieków — nakładka na gotową podłogę (grid bez zmian), przed obiektami i spawnami.
+	if flags.canal_count > 0:
+		result.canals = CanalPassScript.run(ctx, flags)
+		ctx.canals = result.canals
 
 	# P11b. Płaskowyże — maska z szumu jako nakładka na podłogę, grid bez zmian. Przed spawnami,
 	# żeby SpawnPlanner mógł zsunąć spawny z barier.

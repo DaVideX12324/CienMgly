@@ -45,6 +45,7 @@ class GenerationResult:
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
 	var nav_polygons: Array[NavigationPolygon] = []  # siatka nawigacji z NavOutlines w kawałkach (puste = prostokąt mapy)
+	var canals: RefCounted = null  # CanalLayout — kanały ścieków jako nakładka (komórki zostają FLOOR)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
 
@@ -412,6 +413,8 @@ static func arrival_cell(result: GenerationResult, portal: Vector2i, min_dist: i
 		if t != CellType.FLOOR and t != CellType.PATH and t != CellType.ENTRANCE and t != CellType.EXIT:
 			return false
 		if solid.has(c):
+			return false
+		if result.canals != null and result.canals.blocked.has(c):
 			return false
 		return not has_plateau or (not pl.blocked.has(c) and pl.height_of(c) == h0)
 	var dist := {portal: 0}

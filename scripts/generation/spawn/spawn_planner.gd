@@ -44,6 +44,9 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 	if result.objects != null:
 		covered = covered.duplicate()
 		covered.merge(result.objects.solid_cells())
+	if result.canals != null and not result.canals.is_empty():
+		covered = covered.duplicate()
+		covered.merge(result.canals.blocked)
 	if not covered.is_empty():
 		_nudge_off(ctx, result, covered)
 	_separate(ctx, result, covered)

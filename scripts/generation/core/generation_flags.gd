@@ -72,6 +72,10 @@ var floor_terrain: int = -1
 # brzegi ścian jaskini, jak dotąd) | walkable = tylko kratki podłogi | all = cała mapa, też pod ścianami
 # (np. ukryte przejścia niszami).
 var floor_area: String = "near"
+# Kanały (ścieki, CanalPass): ile prostych kanałów spróbować wytyczyć (0 = brak) i ich minimalna długość.
+var canal_count: int = 0
+var canal_min_length: int = 12
+var canal_bridge_spacing: int = 24   # kładki co tyle kratek wzdłuż kanału (+ dodatkowe dla spójności)
 # Brzegi terenu podłogi (floor_terrain) z maski prawdziwej podłogi zamiast z brzegu obszaru floor_area;
 # kratki poza podłogą (pod ścianami) dostają kafel środka. Dla ścian bez przezroczystości (ścieki).
 var floor_edges_by_walkable: bool = false
