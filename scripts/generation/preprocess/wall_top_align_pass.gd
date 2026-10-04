@@ -76,7 +76,8 @@ func _choose(ctx: GenerationContext, hr: Vector2i, hy: int, lr: Vector2i, ly: in
 		for yy in range(hy, ly):
 			cut.append(Vector2i(cx, yy))
 		# pod nowym szczytem ściana musi mieć >= MIN_DEPTH kratek
-		for dd in range(MIN_DEPTH):
+		var min_depth := MIN_DEPTH + (1 if ctx.flags != null and ctx.flags.facade_base_on_wall else 0)
+		for dd in range(min_depth):
 			if GridUtils.is_walkable(grid, Vector2i(cx, ly + dd)):
 				cut_ok = false
 	var raise: Array[Vector2i] = []

@@ -47,17 +47,24 @@ static func plan(
 			if edge == null or edge.edge_kind != EdgeKind.Kind.INNER_CORNER or edge.is_protected_solid:
 				continue
 
-			# Lico 4H: narożnik wewnętrzny idzie rząd wyżej — nad końcem lica (jego kratkę zajmuje góra modułu)
-			# albo obok lica, na wysokości jego górnego rzędu; zwolnioną kratkę obok lica dostaje ściana boczna.
-			var lift := ctx.facade_4h_tops.has(pos)
+			# Narożnik wewnętrzny SW / SE stoi na wysokości góry lica: rząd wyżej przy licu 4H i rząd wyżej przy licu
+			# na kratkach ściany (facade_base_on_wall). Nad końcem lica zwolnione kratki zajmuje moduł; obok lica —
+			# ściana boczna.
+			var lift := 0
 			var side_role: int = TileModuleRole.Id.NONE
-			if not lift and edge.orientation in [EdgeKind.Orientation.SOUTH_WEST, EdgeKind.Orientation.SOUTH_EAST]:
+			if edge.orientation in [EdgeKind.Orientation.SOUTH_WEST, EdgeKind.Orientation.SOUTH_EAST]:
 				var dx := 1 if edge.orientation == EdgeKind.Orientation.SOUTH_WEST else -1
-				if ctx.facade_4h_tops.has(pos + Vector2i(dx, -1)) and state.is_empty_or_rock(pos):
-					lift = true
+				var off := FacadePlacer.facade_row_offset(ctx)
+				var above_end := state.has(pos + Vector2i(0, 1)) and state.get_category(pos + Vector2i(0, 1)) == &"FACADE"
+				if ctx.facade_4h_tops.has(pos) or ctx.facade_4h_tops.has(pos + Vector2i(dx, -1)):
+					lift = 1 + off
+				else:
+					lift = off
+				if lift > 0 and not above_end and not ctx.facade_4h_tops.has(pos) and state.is_empty_or_rock(pos):
 					side_role = TileModuleRole.Id.SIDE_WALL_EAST if dx == 1 else TileModuleRole.Id.SIDE_WALL_WEST
-			if lift:
-				if side_role != TileModuleRole.Id.NONE and _try_corner(ctx, placement_plan, pos, side_role, &"A", table, &""):
+			for _l in lift:
+				if side_role != TileModuleRole.Id.NONE and state.is_empty_or_rock(pos) \
+						and _try_corner(ctx, placement_plan, pos, side_role, &"A", table, &""):
 					state.mark(pos, &"SIDE")
 				pos += Vector2i(0, -1)
 			if not state.is_empty_or_rock(pos):
