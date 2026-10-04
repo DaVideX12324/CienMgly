@@ -46,6 +46,7 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
+@export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -1924,8 +1925,10 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 
 
 func _get_desired_battle_window_height(is_quiz: bool) -> float:
-	# Wysokość pasa jak w scenie (BattleWindow.offset_top), przeskalowana skalą UI; quiz — wyżej.
-	var h: float = _band_height + (quiz_band_extra_height if is_quiz else 0.0)
+	# Wysokość pasa jak w scenie (BattleWindow.offset_top), przeskalowana skalą UI; quiz — wyżej, poza
+	# siatką odpowiedzi (2 wiersze zamiast 4; gdy pytanie stoi w menu, okno i tak rośnie do treści).
+	var quiz_extra := quiz_band_extra_height if QuizTheme.answers_layout() != QuizTheme.ANSWERS_GRID else 0.0
+	var h: float = _band_height + (quiz_extra if is_quiz else 0.0)
 	return h * _get_ui_scale_factor()
 
 
@@ -2262,9 +2265,19 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 					_quiz_panel_controller.correct_answer_label.reparent(quiz_modal_vbox, false)
 		else:
 			# Bottom bar mode: hide party panel and action panel, show quiz panel across full width
+			# (opcja „UI walki tylko na szerokość treści”: okno quizu na szerokość pytania i odpowiedzi).
+			_apply_answers_layout()
+			# Marginesy okna komend (styl panelu + CommandMargin) — z minimalnych rozmiarów, niezależnie od układu.
+			var margins: float = command_panel_container.get_combined_minimum_size().x - command_vbox.get_combined_minimum_size().x if command_vbox else 0.0
 			party_panel_container.visible = false
-			command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			command_panel_container.custom_minimum_size = Vector2(0, 0)
+			if QuizTheme.combat_ui_compact() and _quiz_panel_controller:
+				var vp_w: float = get_viewport_rect().size.x
+				var w: float = _quiz_panel_controller.get_desired_panel_width() + maxf(margins, 0.0)
+				command_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				command_panel_container.custom_minimum_size = Vector2(clampf(w, vp_w * compact_quiz_min_width, vp_w * 0.95), 0)
+			else:
+				command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				command_panel_container.custom_minimum_size = Vector2(0, 0)
 			if action_panel:
 				action_panel.visible = false
 			if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
@@ -2643,6 +2656,14 @@ func _apply_question_position() -> void:
 			_timer_row.reparent(_top_vbox, false)
 		_top_vbox.move_child(_timer_row, 1)
 	_update_top_window()
+
+
+## Opcje -> Motyw: „Odpowiedzi w walce” — lista (1 kolumna) albo siatka 2 kolumny (MC_Box to GridContainer;
+## nawigacja klawiaturą w QuizPanelController obsługuje układ 2×2).
+func _apply_answers_layout() -> void:
+	if _quiz_panel_controller == null or not (_quiz_panel_controller.mc_box is GridContainer):
+		return
+	(_quiz_panel_controller.mc_box as GridContainer).columns = 2 if QuizTheme.answers_layout() == QuizTheme.ANSWERS_GRID else 1
 
 
 func _update_top_window() -> void:

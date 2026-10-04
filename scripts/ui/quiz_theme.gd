@@ -70,11 +70,17 @@ const SETTING_COMBAT_COMPACT := "ui_combat_compact"
 const SETTING_QUESTION_POSITION := "ui_question_position"
 const QUESTION_IN_LOG := "log"
 const QUESTION_IN_MENU := "menu"
+## Odpowiedzi wyboru w walce: lista (jedna kolumna) albo siatka 2 kolumny.
+const SETTING_ANSWERS_LAYOUT := "ui_answers_layout"
+const ANSWERS_LIST := "list"
+const ANSWERS_GRID := "grid"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
 	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "log",
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
+	{"key": "ui_answers_layout", "label": "Odpowiedzi w walce", "type": "choice", "default": "list",
+		"choices": [{"id": "list", "name": "Lista"}, {"id": "grid", "name": "Siatka (2 kolumny)"}]},
 ]
 const DEFAULT_BAR_STYLE := "klasyczny"
 ## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
@@ -282,6 +288,13 @@ static func question_position() -> String:
 	var settings := _settings_service()
 	var v := str(settings.call("get_module", MODULE_ID, SETTING_QUESTION_POSITION, QUESTION_IN_LOG)) if settings else QUESTION_IN_LOG
 	return v if v == QUESTION_IN_MENU else QUESTION_IN_LOG
+
+
+## Układ odpowiedzi wyboru w walce (ANSWERS_LIST / ANSWERS_GRID).
+static func answers_layout() -> String:
+	var settings := _settings_service()
+	var v := str(settings.call("get_module", MODULE_ID, SETTING_ANSWERS_LAYOUT, ANSWERS_LIST)) if settings else ANSWERS_LIST
+	return v if v == ANSWERS_GRID else ANSWERS_LIST
 
 
 static func bar_style() -> String:
