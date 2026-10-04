@@ -15,7 +15,7 @@
     "enable_meandering": false,
     "enable_variable_width": false,
     "enable_funnels": false,
-    "enable_junction_smoothing": true,
+    "enable_junction_smoothing": false,
     "enable_grid_cleanup": true,
     "enable_terrain_smoothing": true,
     "enable_decorative_niches": false,
