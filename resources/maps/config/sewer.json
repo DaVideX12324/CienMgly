@@ -29,13 +29,15 @@
     "force_theme": 0,
     "entrance_mode": "center",
     "debug_log_edge_kinds": false,
-    "room_shape": "rect",
+    "room_shape": "poly",
     "terrain_mud_threshold": 2.0,
     "terrain_grass_threshold": 2.0,
     "corridor_shape": "straight",
     "corridor_diagonal_45": false,
     "corridor_diagonal_30_60": false,
-    "room_layout": "random"
+    "room_layout": "random",
+    "room_density": 0.6,
+    "corridor_corner_room_chance": 0.3
   },
   "tilesets": {
     "default": "sewer",
