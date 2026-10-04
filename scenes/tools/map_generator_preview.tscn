@@ -223,6 +223,16 @@ text = "🏁 Koniec / Wyjście (2)"
 layout_mode = 2
 text = "🏃 Spacer Graczem (P)"
 
+[node name="HSeparatorLayers" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111101]
+layout_mode = 2
+
+[node name="LayersLabel" type="Label" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111102]
+layout_mode = 2
+text = "Warstwy i węzły poziomu:"
+
+[node name="LayersVBox" type="VBoxContainer" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111103]
+layout_mode = 2
+
 [node name="HSeparatorInspector" type="HSeparator" parent="CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer" unique_id=2083111001]
 layout_mode = 2
 

@@ -33,6 +33,9 @@ const QuizTheme = preload("../ui/quiz_theme.gd")
 @onready var spin_rooms: SpinBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxRooms/SpinRooms
 @onready var check_entities: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEntities
 @onready var check_nav: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckNav
+## Przełączniki widoczności dzieci wygenerowanego poziomu (warstwy kafli, obiekty, wrogowie, nawigacja…).
+@onready var layers_vbox: VBoxContainer = get_node_or_null("CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/LayersVBox")
+var _layer_visibility: Dictionary = {}  # nazwa węzła -> widoczny (zostaje między generacjami)
 @onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
 @onready var check_edge_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask
 var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_ensure_height_mask_check)
@@ -867,6 +870,7 @@ func _generate_current_map_impl() -> void:
 		await proc_level.generation_finished
 
 	var t_gen: int = Time.get_ticks_msec() - t_start
+	_rebuild_layer_toggles(proc_level)
 
 	var res: Variant = proc_level.get("last_result")
 	if res:
@@ -1360,3 +1364,29 @@ func _chest_cells(res) -> Array[Vector2i]:
 	if "objects" in res and res.objects != null:
 		out.append_array(res.objects.cells_with_scene("chest"))
 	return out
+
+
+## Panel „Warstwy i węzły poziomu”: przełącznik widoczności dla każdego widocznego dziecka poziomu
+## (TileMapLayer — warstwy kafli, Node2D — obiekty, wrogowie, spawny, nawigacja). Stan per nazwa zostaje
+## przy kolejnych generacjach.
+func _rebuild_layer_toggles(level: Node) -> void:
+	if layers_vbox == null or level == null:
+		return
+	for c in layers_vbox.get_children():
+		c.queue_free()
+	for child in level.get_children():
+		var item := child as CanvasItem
+		if item == null:
+			continue
+		var key := String(child.name)
+		if _layer_visibility.has(key):
+			item.visible = bool(_layer_visibility[key])
+		var cb := CheckBox.new()
+		var kind := "kafle" if child is TileMapLayer else child.get_class()
+		cb.text = "%s  (%s)" % [key, kind]
+		cb.button_pressed = item.visible
+		cb.toggled.connect(func(on: bool) -> void:
+			_layer_visibility[key] = on
+			if is_instance_valid(item):
+				item.visible = on)
+		layers_vbox.add_child(cb)
