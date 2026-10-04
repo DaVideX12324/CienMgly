@@ -414,15 +414,19 @@ func _sync_skin_tab() -> void:
 	_syncing_skin = false
 
 
-## Dodatkowe przełączniki wyglądu modułu (get_ui_options: [{key, label, type: "bool", default}]) —
-## zapis w ustawieniach modułu, zmiana od razu (module_setting_changed).
+## Dodatkowe opcje wyglądu modułu (get_ui_options: [{key, label, type: "bool" | "choice", default}],
+## "choice" z listą choices: [{id, name}]) — zapis w ustawieniach modułu, zmiana od razu (module_setting_changed).
 func _build_extra_options(module: Node) -> void:
 	for c in _extra_options.get_children():
 		c.queue_free()
 	if module == null or not module.has_method("get_ui_options"):
 		return
 	for opt in module.get_ui_options():
-		if str(opt.get("type", "bool")) != "bool":
+		var type := str(opt.get("type", "bool"))
+		if type == "choice":
+			_add_choice_option(opt)
+			continue
+		if type != "bool":
 			continue
 		var key := str(opt.get("key", ""))
 		var cb := CheckBox.new()
@@ -433,6 +437,33 @@ func _build_extra_options(module: Node) -> void:
 			_play_click()
 			SettingsService.set_module(_skin_module_id, key, on))
 		_extra_options.add_child(cb)
+
+
+## Opcja wyboru modułu ({key, label, type: "choice", choices: [{id, name}], default}): etykieta + lista.
+func _add_choice_option(opt: Dictionary) -> void:
+	var key := str(opt.get("key", ""))
+	var choices: Array = opt.get("choices", [])
+	if key == "" or choices.is_empty():
+		return
+	var lbl := Label.new()
+	lbl.text = str(opt.get("label", key)) + ":"
+	lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 1))
+	lbl.add_theme_font_size_override("font_size", _fs(18))
+	_extra_options.add_child(lbl)
+	var option := OptionButton.new()
+	var current := str(SettingsService.get_module(_skin_module_id, key, opt.get("default", "")))
+	for i in range(choices.size()):
+		option.add_item(str(choices[i].get("name", choices[i].get("id", "?"))))
+		if str(choices[i].get("id", "")) == current:
+			option.selected = i
+	if option.selected < 0:
+		option.selected = 0
+	option.add_theme_font_size_override("font_size", _fs(18))
+	_scale_popup_font(option, _fs(18))
+	option.item_selected.connect(func(index: int) -> void:
+		_play_click()
+		SettingsService.set_module(_skin_module_id, key, str(choices[index].get("id", ""))))
+	_extra_options.add_child(option)
 
 
 ## Lista [{id, name}] w przycisku; zaznaczona pozycja z ustawień modułu (`key`), domyślnie pierwsza.
