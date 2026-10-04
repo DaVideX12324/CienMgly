@@ -12,6 +12,12 @@ var room_shape: String = "organic"
 # Kształt korytarzy: organic (krzywe, opcjonalnie meandrujące — jak dotąd) | straight (L z dwóch
 # odcinków osiowych, stała szerokość — wnętrza o prostych ścianach, np. ścieki). CorridorCarverFactory.
 var corridor_shape: String = "organic"
+# Rozkład pokoi: random (losowe położenia, MST najbliższych — jak dotąd) | grid (kwadratowe komórki,
+# pokój albo skrzyżowanie w każdej, korytarze tylko między sąsiadami siatki). GridRoomLayout.
+var room_layout: String = "random"
+var grid_cell_size: int = 0            # bok komórki siatki; 0 = max_room_size + 8
+var grid_room_chance: float = 0.8      # szansa na pokój w komórce (reszta = skrzyżowanie korytarzy)
+var grid_loop_chance: float = 0.2      # szansa na korytarz-pętlę między sąsiadami spoza drzewa
 # Skosy korytarzy straight (regularne schodki): 45° = 1:1; 30°/60° ≈ 2:1 / 1:2 (26,6° / 63,4°).
 # Żadna = same L. Część korytarzy i tak zostaje L (losowo albo gdy skos byłby za krótki).
 var corridor_diagonal_45: bool = false
