@@ -50,6 +50,11 @@ var grass_noise: FastNoiseLite
 
 # --- Diagnostyka ---
 var preprocess_stats: Dictionary = {}
+## Górne kratki modułów lica 4H (Vector2i -> true) — narożnik wewnętrzny nad nimi idzie rząd wyżej.
+var facade_4h_tops: Dictionary = {}
+## Stopy lica 4H (Vector2i -> true) — wybrane odcinki lica, liczone raz (FacadePlacer.wants_4h).
+var facade_4h_bases: Dictionary = {}
+var facade_4h_planned := false
 var debug_pos: Vector2i = Vector2i.ZERO
 
 ## Efektywna wartość cechy: profil AND flagi runtime.

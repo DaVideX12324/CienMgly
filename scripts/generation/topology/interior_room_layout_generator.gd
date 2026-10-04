@@ -5,6 +5,7 @@ const GenProgress = preload("../core/gen_progress.gd")
 const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
 const GridRoomLayoutScript = preload("grid_room_layout.gd")
+const Wall3HPassScript = preload("../preprocess/wall_3h_pass.gd")
 
 ## Pełna orkiestracja P1–P12 zgodnie z tabelą w §12.4
 static func generate_layout(
@@ -141,6 +142,9 @@ static func generate_layout(
 		Remove1hWallsPass.new(),
 		WallThicknessPass.new()
 	])
+	# Tilesety bez lica 2H (ścieki): pionowe ściany niższe niż 3 kratki uzupełniane do 3H.
+	if flags.enforce_3h_walls:
+		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
 
 	GenProgress.end(&"smoothing")
 
@@ -218,6 +222,9 @@ static func generate_layout(
 			ThinBridgeCleanupPass.new(),
 			StaircaseNormalizerPass.new()
 		], 4)
+
+	if flags.enforce_3h_walls:
+		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])  # portale / sprzątanie mogły odtworzyć ściany 2H
 
 	# P11a. Wąskie wypustki 2H przy licu 3H+ -> 3H albo usunięte; potem skośne styki podłóg przez
 	# ścianę (100/000/001), które podniesienie wypustki mogło odtworzyć po WallThicknessPass.

@@ -64,6 +64,8 @@ static func place(
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_WEST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
+		elif FacadePlacer.wants_4h(ctx, pos, state) and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST_4H, &"A", table, &"caves_roots" if use_roots else &""):
+			FacadePlacer.mark_4h(ctx, pos, state)
 		else:
 			var vid: StringName = &"A"
 			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, vid, table, &"caves_roots" if use_roots else &""):
@@ -84,6 +86,8 @@ static func place(
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
+		elif FacadePlacer.wants_4h(ctx, pos, state) and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST_4H, &"A", table, &"caves_roots" if use_roots else &""):
+			FacadePlacer.mark_4h(ctx, pos, state)
 		else:
 			var vid: StringName = &"A"
 			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, vid, table, &"caves_roots" if use_roots else &""):

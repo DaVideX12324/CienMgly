@@ -126,6 +126,67 @@ static func place_2h(
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
 
 
+## Lico 4H w stopie `pos` (flaga enable_4h_facades): stopa należy do odcinka wybranego na 4H.
+static func wants_4h(ctx: GenerationContext, pos: Vector2i, _state: LegacyPlacementState = null, _edges: Dictionary = {}) -> bool:
+	if ctx.flags == null or not ctx.flags.enable_4h_facades:
+		return false
+	if not ctx.facade_4h_planned:
+		_plan_4h_segments(ctx)
+	return ctx.facade_4h_bases.has(pos)
+
+
+## Odcinki lica = ciągi sąsiednich kolumn ze stopą (podłoga, nad nią ściana) w tym samym rzędzie. Odcinek
+## nadaje się na 4H, gdy w każdej kolumnie ściana ma > 3 kratki (rzędy -1..-4 bez podłogi), a górna kratka
+## lica (rząd -3) nie ma podłogi obok; wybór stabilny z seeda (facade_4h_chance), cały odcinek naraz.
+static func _plan_4h_segments(ctx: GenerationContext) -> void:
+	ctx.facade_4h_planned = true
+	var grid := ctx.grid
+	for y in range(4, ctx.height):
+		var x := 0
+		while x < ctx.width:
+			if not _is_facade_base(grid, Vector2i(x, y)):
+				x += 1
+				continue
+			var x0 := x
+			var ok := true
+			while x < ctx.width and _is_facade_base(grid, Vector2i(x, y)):
+				var top := Vector2i(x, y - 3)
+				for dy in range(1, 5):
+					if GridUtils.is_walkable(grid, Vector2i(x, y - dy)):
+						ok = false
+				if GridUtils.is_walkable(grid, top + Vector2i(-1, 0)) or GridUtils.is_walkable(grid, top + Vector2i(1, 0)):
+					ok = false
+				x += 1
+			if not ok:
+				continue
+			var roll := float(hash([ctx.seed_value, y, x0, "facade_4h"]) & 0xFFFF) / 65536.0
+			if roll < ctx.flags.facade_4h_chance:
+				for cx in range(x0, x):
+					ctx.facade_4h_bases[Vector2i(cx, y)] = true
+
+
+static func _is_facade_base(grid: Dictionary, p: Vector2i) -> bool:
+	return GridUtils.is_walkable(grid, p) and not GridUtils.is_walkable(grid, p + Vector2i(0, -1))
+
+
+## Oznacza 4 kratki modułu 4H (stopa `pos`) i zapamiętuje górną dla narożnika wewnętrznego.
+static func mark_4h(ctx: GenerationContext, pos: Vector2i, state: LegacyPlacementState) -> void:
+	for dy in range(0, 4):
+		state.mark(pos + Vector2i(0, -dy), &"FACADE")
+	ctx.facade_4h_tops[pos + Vector2i(0, -3)] = true
+
+
+## Czy nad licem 3H w stopie `pos` jest miejsce na koronę (rząd -3): ściana głębsza niż 3 (nad koroną
+## nie ma podłogi), kratka wolna od innych krawędzi i jeszcze nie zajęta.
+static func _crown_allowed(ctx: GenerationContext, pos: Vector2i, state: LegacyPlacementState, edges: Dictionary) -> bool:
+	var grid := ctx.grid
+	var p_crown := pos + Vector2i(0, -3)
+	var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
+	var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
+	var crown_free: bool = edge_crown == null or edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE
+	return not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown)
+
+
 ## Stawia standardową prostą fasadę o wysokości 3 kratek (3H) z koroną.
 ## Korona lica 3H (kafel nad górą lica, rząd -3) — tylko gdy ściana jest głębsza niż 3 (nad koroną skała).
 ## Przy głębokości 3 rząd -3 to szczyt ściany — kładzie go RimPlacer.
@@ -137,13 +198,9 @@ static func place_3h_crown(
 	use_roots: bool,
 	edges: Dictionary = {}
 ) -> void:
-	var grid := ctx.grid
 	var is_b: bool = _get_variant_noise(ctx).get_noise_2d(float(pos.x), float(pos.y)) > 0.0
 	var p_crown := pos + Vector2i(0, -3)
-	var has_floor_above := GridUtils.is_walkable(grid, p_crown + Vector2i(0, -1))
-	var edge_crown: EdgeContext = edges.get(p_crown) if not edges.is_empty() else null
-	var crown_free: bool = edge_crown == null or edge_crown.edge_kind == EdgeKind.Kind.SOLID_FILL or edge_crown.edge_kind == EdgeKind.Kind.NONE
-	if not has_floor_above and not GridUtils.is_walkable(grid, p_crown) and crown_free and state.is_empty_or_rock(p_crown):
+	if _crown_allowed(ctx, pos, state, edges):
 		var parts := TileResolver.resolve_module_parts(ctx, p_crown, TileModuleRole.Id.FACADE_CROWN_3H, [], -1,
 			&"B" if is_b else &"A", &"caves_roots" if use_roots else &"")
 		if not parts.is_empty():
@@ -179,6 +236,12 @@ static func place_3h(
 		top_t = CaveTileConstants.ROOT_BOTTOM_TOP[1] if is_b else CaveTileConstants.ROOT_BOTTOM_TOP[0]
 		mid_t = CaveTileConstants.ROOT_BOTTOM_MID[1] if is_b else CaveTileConstants.ROOT_BOTTOM_MID[0]
 		base_t = CaveTileConstants.ROOT_BOTTOM_BASE[1] if is_b else CaveTileConstants.ROOT_BOTTOM_BASE[0]
+
+	# Lico 4H (enable_4h_facades + rola FACADE_4H w profilu): tam, gdzie 3H dostałoby koronę.
+	var variant_id4: StringName = &"B" if is_b else &"A"
+	if wants_4h(ctx, pos, state, edges) 			and _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_4H, variant_id4, table, &"caves_roots" if use_roots else &""):
+		mark_4h(ctx, pos, state)
+		return
 
 	place_3h_crown(ctx, pos, state, plan, use_roots, edges)
 

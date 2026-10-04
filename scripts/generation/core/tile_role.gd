@@ -75,6 +75,14 @@ enum Id {
 	# --- Korona lica 3H (kafel nad górą lica, rząd -3, gdy ściana głębsza niż 3). Opcjonalna:
 	# brak wpisu w profilu -> stała placera (caves).
 	FACADE_CROWN_3H,
+	# --- Lico 4H (moduł 4-częściowy: base (0,0), mid (0,-1), mid (0,-2), top (0,-3)). Opcjonalne:
+	# flaga enable_4h_facades + wpis w profilu; inaczej 3H z koroną.
+	FACADE_4H,
+	# Końce lica 4H (narożniki OUT i schodki, 4 części jak FACADE_4H).
+	OUTER_CORNER_NW_4H,
+	OUTER_CORNER_NE_4H,
+	STEP_LEFT_4H,
+	STEP_RIGHT_4H,
 }
 
 
