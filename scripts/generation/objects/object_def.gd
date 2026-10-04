@@ -25,6 +25,10 @@ var density: float = 0.0              # sztuk na 100 kratek-kandydatów
 var count_min: int = -1               # count: [min, max] — stała liczba zamiast gęstości (-1 = gęstość)
 var count_max: int = -1
 var atlas: Array[Vector2i] = []       # warianty grafiki (atlas coords w TileSecie poziomu)
+var source_id: int = 0                # źródło atlasu TileSetu ("source")
+## Moduł z kilku kafli ("tiles": [[dx, dy, x, y], …], dy <= 0): {off: Vector2i, coords: Vector2i}.
+## Jeden wariant; kafle kładzione wprost (bez odbicia).
+var tiles: Array[Dictionary] = []
 var size := Vector2i.ONE              # rozmiar sprite'a w kratkach (w × h), dół = wiersz kotwicy
 var footprint: Array[Vector2i] = []   # kratki podstawy względem kotwicy (y <= 0)
 var scene: String = ""                # pierwsza scena: INTERACTIVE — ścieżka res:// albo alias (np. "chest")
@@ -86,9 +90,9 @@ func base_point(cell: Vector2i) -> Vector2:
 
 ## Liczba wariantów grafiki (atlas albo sceny).
 func variant_count() -> int:
-	return maxi(atlas.size(), scenes.size())
+	return maxi(maxi(atlas.size(), scenes.size()), 1 if not tiles.is_empty() else 0)
 
 
 ## Czy obiekt rysowany jest kaflem (siatka + grafika z atlasu), a nie canvas itemem / sceną.
 func renders_as_tile() -> bool:
-	return klass != Klass.INTERACTIVE and placement == Placement.GRID and scenes.is_empty() and not atlas.is_empty()
+	return klass != Klass.INTERACTIVE and placement == Placement.GRID and scenes.is_empty() and (not atlas.is_empty() or not tiles.is_empty())

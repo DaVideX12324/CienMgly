@@ -84,8 +84,11 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 				_place_scene(objects, pl, b.path, scenes, scene_cache, runtime)
 		elif def.renders_as_tile():
 			_place_tile(level, tileset, pl, runtime)
-		elif source != null:
-			_place_item(objects, source, pl, runtime)
+		elif source != null and not def.atlas.is_empty():
+			if def.source_id != SOURCE_ID and tileset.has_source(def.source_id):
+				_place_item(objects, tileset.get_source(def.source_id) as TileSetAtlasSource, pl, runtime)
+			else:
+				_place_item(objects, source, pl, runtime)
 			if def.is_solid():
 				_add_shape(runtime, chunk_bodies, space, layer_bits, pl)
 		made += 1
@@ -133,9 +136,17 @@ static func _layer(level: Node2D, tileset: TileSet, layer_name: String) -> TileM
 
 static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, runtime: ObjectRuntime) -> void:
 	var def := pl.def
-	var layer := _layer(level, tileset, DECALS if def.klass == ObjectDef.Klass.DECAL else PROPS)
+	# Na licu zawsze Props (y-sort razem ze ścianami), na podłodze DECAL pod Decals.
+	var flat := def.klass == ObjectDef.Klass.DECAL and not def.is_wall_mounted()
+	var layer := _layer(level, tileset, DECALS if flat else PROPS)
+	if not def.tiles.is_empty():
+		# Moduł z kilku kafli (np. kratka 9-slice) — sortowanie / kolizja z danych kafli TileSetu.
+		for t in def.tiles:
+			layer.set_cell(pl.cell + (t["off"] as Vector2i), def.source_id, t["coords"])
+			runtime.counts["tiles"] += 1
+		return
 	var alt := TileSetAtlasSource.TRANSFORM_FLIP_H if pl.flip else 0
-	layer.set_cell(pl.cell, SOURCE_ID, def.atlas[pl.variant], alt)
+	layer.set_cell(pl.cell, def.source_id, def.atlas[pl.variant], alt)
 	runtime.counts["tiles"] += 1
 
 

@@ -19,7 +19,7 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount",
+	"mount", "source", "tiles",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade"]
@@ -204,6 +204,13 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		else:
 			for vi in range(maxi(int(variants), 1)):
 				def.atlas.append(base + Vector2i(vi * def.size.x, 0))
+	def.source_id = maxi(int(m.get("source", 0)), 0)
+	if m.has("tiles"):
+		for t in m["tiles"]:
+			if t is Array and t.size() == 4 and int(t[1]) <= 0:
+				def.tiles.append({"off": Vector2i(int(t[0]), int(t[1])), "coords": Vector2i(int(t[2]), int(t[3]))})
+			else:
+				errors.append("%s: tiles to lista [dx, dy, x, y] (dy <= 0, kotwica = lewy-dolny róg)." % tag)
 	if m.has("footprint"):
 		for f in m["footprint"]:
 			var fv := _vec(f, Vector2i.ZERO, tag, "footprint")
@@ -284,8 +291,8 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		mount_s = "floor"
 	def.mount = &"facade" if mount_s == "facade" else &""
 	if def.is_wall_mounted():
-		if def.klass == ObjectDef.Klass.INTERACTIVE or def.scenes.is_empty():
-			errors.append("%s: mount 'facade' tylko dla DECAL/PROP ze sceną." % tag)
+		if def.klass == ObjectDef.Klass.INTERACTIVE or (def.scenes.is_empty() and not def.renders_as_tile()):
+			errors.append("%s: mount 'facade' tylko dla DECAL/PROP ze sceną albo kaflem (placement grid)." % tag)
 			return null
 		def.collision = ObjectDef.Collision.NONE
 	var tags: Array = WALL_TAGS if def.is_wall_mounted() else CONTEXT_TAGS
@@ -361,8 +368,8 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		if def.scene.is_empty():
 			errors.append("%s: INTERACTIVE wymaga 'scene' (ścieżka res:// albo alias)." % tag)
 			return null
-	elif def.atlas.is_empty() and def.scenes.is_empty():
-		errors.append("%s: brak grafiki — 'scene' (scena .tscn) albo 'atlas' (kafel TileSetu poziomu)." % tag)
+	elif def.atlas.is_empty() and def.scenes.is_empty() and def.tiles.is_empty():
+		errors.append("%s: brak grafiki — 'scene' (scena .tscn), 'atlas' albo 'tiles' (kafle TileSetu poziomu)." % tag)
 		return null
 	return def
 
@@ -376,7 +383,7 @@ func _visual_rect(def: ObjectDef) -> void:
 			continue
 		var r := Rect2(b.visual.position - Vector2(0, ObjectDef.CELL * 0.5), b.visual.size)
 		vr = r if vr.size == Vector2.ZERO else vr.merge(r)
-	if vr.size == Vector2.ZERO and not def.atlas.is_empty():
+	if vr.size == Vector2.ZERO and (not def.atlas.is_empty() or not def.tiles.is_empty()):
 		var sz := Vector2(def.size) * ObjectDef.CELL
 		vr = Rect2(Vector2(-sz.x * 0.5, -sz.y), sz)
 	def.visual_rect = vr
