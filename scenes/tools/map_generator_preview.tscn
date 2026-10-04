@@ -17,8 +17,8 @@ y_sort_enabled = true
 custom_minimum_size = Vector2(340, 0)
 offset_left = 12.0
 offset_top = 12.0
-offset_right = 360.0
-offset_bottom = 680.0
+offset_right = 439.0
+offset_bottom = 976.0
 
 [node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Panel" unique_id=1266704046]
 layout_mode = 2
