@@ -15,6 +15,8 @@ func get_id() -> StringName:
 
 func apply(ctx: GenerationContext) -> int:
 	var grid := ctx.grid
+	# Lico na kratkach ściany (facade_base_on_wall): ściana min. kap + 3 rzędy lica.
+	var min_h := MIN_HEIGHT + (1 if ctx.flags != null and ctx.flags.facade_base_on_wall else 0)
 	# Kolumny z za niskim pasem ściany: x -> [y0, y1] (pierwsza i ostatnia kratka ściany), per rząd startu.
 	var thin := {}  # Vector2i(x, y0) -> y1
 	for x in range(ctx.width):
@@ -26,7 +28,7 @@ func apply(ctx: GenerationContext) -> int:
 			var y0 := y
 			while y < ctx.height and int(grid.get(Vector2i(x, y), CellType.WALL)) == CellType.WALL:
 				y += 1
-			if y - y0 >= MIN_HEIGHT or y0 == 0 or y >= ctx.height:
+			if y - y0 >= min_h or y0 == 0 or y >= ctx.height:
 				continue
 			if GridUtils.is_walkable(grid, Vector2i(x, y0 - 1)) and GridUtils.is_walkable(grid, Vector2i(x, y)):
 				thin[Vector2i(x, y0)] = y - 1
@@ -47,7 +49,7 @@ func apply(ctx: GenerationContext) -> int:
 			x1 += 1
 		for x in range(x0, x1 + 1):
 			done[Vector2i(x, y0)] = true
-		var need := MIN_HEIGHT - (y1 - y0 + 1)
+		var need := min_h - (y1 - y0 + 1)
 		var up_ok := _can_fill(grid, x0, x1, y0 - need, y0 - 1)
 		var down_ok := _can_fill(grid, x0, x1, y1 + 1, y1 + need)
 		if not up_ok and not down_ok:

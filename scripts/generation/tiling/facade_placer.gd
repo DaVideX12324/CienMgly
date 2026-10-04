@@ -126,6 +126,15 @@ static func place_2h(
 	state.mark(pos + Vector2i(0, -1), &"FACADE")
 
 
+## Flaga facade_base_on_wall: lico na kratkach ściany (przesunięte o rząd w górę) — 1, inaczej 0.
+static func facade_row_offset(ctx: GenerationContext) -> int:
+	return 1 if facade_on_wall(ctx) else 0
+
+
+static func facade_on_wall(ctx: GenerationContext) -> bool:
+	return ctx != null and ctx.flags != null and ctx.flags.facade_base_on_wall
+
+
 ## Lico 4H w stopie `pos` (flaga enable_4h_facades): stopa należy do odcinka wybranego na 4H.
 static func wants_4h(ctx: GenerationContext, pos: Vector2i, _state: LegacyPlacementState = null, _edges: Dictionary = {}) -> bool:
 	if ctx.flags == null or not ctx.flags.enable_4h_facades:
@@ -149,9 +158,10 @@ static func _plan_4h_segments(ctx: GenerationContext) -> void:
 				continue
 			var x0 := x
 			var ok := true
+			var off := facade_row_offset(ctx)
 			while x < ctx.width and _is_facade_base(grid, Vector2i(x, y)):
-				var top := Vector2i(x, y - 3)
-				for dy in range(1, 5):
+				var top := Vector2i(x, y - 3 - off)
+				for dy in range(1, 5 + off):
 					if GridUtils.is_walkable(grid, Vector2i(x, y - dy)):
 						ok = false
 				if GridUtils.is_walkable(grid, top + Vector2i(-1, 0)) or GridUtils.is_walkable(grid, top + Vector2i(1, 0)):
@@ -243,7 +253,8 @@ static func place_3h(
 		mark_4h(ctx, pos, state)
 		return
 
-	place_3h_crown(ctx, pos, state, plan, use_roots, edges)
+	if not facade_on_wall(ctx):
+		place_3h_crown(ctx, pos, state, plan, use_roots, edges)
 
 	# A′: motyw roots = wybór RODZINY (force caves_roots), wariant A/B niezależnie.
 	# Anchor = stopa; base @ (0,0), mid @ (0,-1), top @ (0,-2). Korona = osobny CORNER.
