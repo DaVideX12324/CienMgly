@@ -58,7 +58,11 @@ var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_
 @onready var tile_hud_label: RichTextLabel = $CanvasLayer/TileHUD/MarginContainer/TileHUDLabel
 
 # Stan
-var current_type: int = 2 # 2: CAVE_DUNGEON, 0: FOREST, 1: DUNGEON
+var current_type: int = 2 # 2: CAVE_DUNGEON, 0: FOREST, 1: DUNGEON, PREVIEW_SEWER: ścieki
+## Ścieki w podglądzie: generator jaskiń (CAVE_DUNGEON) z tilesetem sewer.tres — config/sewer.json
+## dobiera się sam jako companion-JSON tilesetu.
+const PREVIEW_SEWER := 3
+const SEWER_TILESET := "resources/maps/sewer.tres"
 var current_seed: int = 119
 var _gen_busy := false     # generowanie w toku (w tle, z ekranem ładowania)
 var _gen_pending := false  # prośba o nową mapę w trakcie — wykonana po zakończeniu bieżącej
@@ -490,6 +494,7 @@ func _setup_ui() -> void:
 	opt_type.add_item("🦇 Jaskinie (Caves)", 2)
 	opt_type.add_item("🌲 Las (Overworld)", 0)
 	opt_type.add_item("🏰 Zamek (Dungeon)", 1)
+	opt_type.add_item("🕳 Ścieki (Sewer)", PREVIEW_SEWER)
 	opt_type.select(0) # Jaskinie
 	opt_type.item_selected.connect(_on_type_selected)
 
@@ -691,6 +696,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F3:
 				opt_type.select(0) # Jaskinia
 				_on_type_selected(0)
+			KEY_F4:
+				opt_type.select(3) # Ścieki
+				_on_type_selected(3)
 
 	# Kliknięcie i Zoom
 	if event is InputEventMouseButton:
@@ -844,7 +852,10 @@ func _generate_current_map_impl() -> void:
 	var t_start := Time.get_ticks_msec()
 
 	var proc_level: Node2D = ProceduralLevelScript.new()
-	proc_level.set("level_type", current_type)
+	proc_level.set("level_type", 2 if current_type == PREVIEW_SEWER else current_type)
+	if current_type == PREVIEW_SEWER:
+		proc_level.set("custom_tileset", load(QuizRpgPaths.path(SEWER_TILESET)))
+		proc_level.set("location_name", "Ścieki")  # ekran ładowania (grafika jeszcze jaskiniowa)
 	proc_level.set("map_seed", current_seed)
 	proc_level.set("map_width", current_width)
 	proc_level.set("map_height", current_height)
@@ -862,7 +873,7 @@ func _generate_current_map_impl() -> void:
 		last_entrance_pos = res.entrance_pos if "entrance_pos" in res else res.player_spawn
 		last_exit_pos = res.exit_pos if "exit_pos" in res else Vector2i.ZERO
 
-		var type_names := {2: "🦇 Jaskinie (Caves)", 0: "🌲 Las (Overworld)", 1: "🏰 Zamek (Dungeon)"}
+		var type_names := {2: "🦇 Jaskinie (Caves)", 0: "🌲 Las (Overworld)", 1: "🏰 Zamek (Dungeon)", PREVIEW_SEWER: "🕳 Ścieki (Sewer)"}
 		var type_name: String = type_names.get(current_type, "Nieznany")
 
 		var rooms_count: int = 0
@@ -877,7 +888,7 @@ func _generate_current_map_impl() -> void:
 		var ratio: float = float(current_width) / float(maxi(1, current_height))
 
 		var extra_stats := ""
-		if current_type == 2:
+		if current_type == 2 or current_type == PREVIEW_SEWER:
 			# Statystyki jaskiniowe
 			var walls_layer := proc_level.find_child("Walls", true, false) as TileMapLayer
 			if walls_layer:
