@@ -44,7 +44,8 @@
     "terrain_mud_index": -1,
     "terrain_grass_index": 3,
     "facade_4h_chance": 0.35,
-    "align_wall_tops": true
+    "align_wall_tops": true,
+    "facade_base_on_wall": true
   },
   "tilesets": {
     "default": "sewer",
