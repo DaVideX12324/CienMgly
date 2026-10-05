@@ -67,106 +67,213 @@ static func pack_rooms_and_corridors(
 			for x in range(r.position.x, r.end.x):
 				floor_cells[Vector2i(x, y)] = true
 
-	# 2. Korytarze A* łączące pokoje z siecią liniową (chodnikiem lub kompleksem)
-	var add_crossing_bridges = func(path: Array[Vector2i]) -> void:
-		var wc: Array[Vector2i] = []
-		for p in path:
-			for dy in [-1, 0, 1]:
-				for dx in [-1, 0, 1]:
-					var cp := Vector2i(p.x + dx, p.y + dy)
-					if water.has(cp) and not wc.has(cp):
-						wc.append(cp)
-		if wc.is_empty():
-			return
-		for p in wc:
-			floor_cells[p] = true
-			bridge_cells[p] = true
-		var min_p: Vector2i = wc[0]
-		var max_p: Vector2i = wc[0]
-		for p in wc:
-			min_p.x = mini(min_p.x, p.x)
-			min_p.y = mini(min_p.y, p.y)
-			max_p.x = maxi(max_p.x, p.x)
-			max_p.y = maxi(max_p.y, p.y)
-		var b_rect := Rect2i(min_p, max_p - min_p + Vector2i(1, 1))
-		bridges.append({"rect": b_rect, "cells": wc, "vertical": true, "crossing": true})
-
-	var carve_path = func(path: Array[Vector2i]) -> void:
+	# 2. Korytarze łączące pokoje z siecią liniową bez rozcinania kanałów
+	var carve_corridor = func(path: Array[Vector2i]) -> void:
 		for p in path:
 			for dy in range(-1, 2):
 				for dx in range(-1, 2):
 					var cp := Vector2i(p.x + dx, p.y + dy)
 					if cp.x >= 1 and cp.x < width - 1 and cp.y >= 1 and cp.y < height - 1:
-						floor_cells[cp] = true
-		add_crossing_bridges.call(path)
+						# Korytarz nigdy nie niszczy koryta kanału
+						if not water.has(cp):
+							floor_cells[cp] = true
 
-	# Proste łączenie każdego pokoju do najbliższego punktu sieci
+	var find_dry_path = func(start: Vector2i, target: Vector2i) -> Array[Vector2i]:
+		var p1: Array[Vector2i] = []
+		var blocked1 := false
+		var sx := 1 if target.x >= start.x else -1
+		for x in range(start.x, target.x + sx, sx):
+			var pt := Vector2i(x, start.y)
+			if water.has(pt):
+				blocked1 = true
+				break
+			p1.append(pt)
+		if not blocked1:
+			var sy := 1 if target.y >= start.y else -1
+			for y in range(start.y, target.y + sy, sy):
+				var pt := Vector2i(target.x, y)
+				if water.has(pt):
+					blocked1 = true
+					break
+				p1.append(pt)
+		if not blocked1:
+			return p1
+
+		var p2: Array[Vector2i] = []
+		var blocked2 := false
+		var sy2 := 1 if target.y >= start.y else -1
+		for y in range(start.y, target.y + sy2, sy2):
+			var pt := Vector2i(start.x, y)
+			if water.has(pt):
+				blocked2 = true
+				break
+			p2.append(pt)
+		if not blocked2:
+			var sx2 := 1 if target.x >= start.x else -1
+			for x in range(start.x, target.x + sx2, sx2):
+				var pt := Vector2i(x, target.y)
+				if water.has(pt):
+					blocked2 = true
+					break
+				p2.append(pt)
+		if not blocked2:
+			return p2
+
+		return []
+
+	# Łączenie pokoi z siecią po ich stronie kanału
 	for r in rooms_r:
 		var rc := r.get_center()
-		var best_target := Vector2i(-1, -1)
-		var best_dist := INF
-
+		var candidates: Array[Vector2i] = []
 		for p in lanes:
-			var d := Vector2(rc).distance_squared_to(Vector2(p))
-			if d < best_dist:
-				best_dist = d
-				best_target = p
-
+			candidates.append(p)
 		for p in hallm:
-			var d := Vector2(rc).distance_squared_to(Vector2(p))
-			if d < best_dist:
-				best_dist = d
-				best_target = p
+			candidates.append(p)
 
-		if best_target != Vector2i(-1, -1):
-			# Korytarz L
-			var path: Array[Vector2i] = []
-			var cx := rc.x
-			var cy := rc.y
-			var tx := best_target.x
-			var ty := best_target.y
+		candidates.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			return Vector2(rc).distance_squared_to(Vector2(a)) < Vector2(rc).distance_squared_to(Vector2(b))
+		)
 
-			var step_x := 1 if tx >= cx else -1
-			for x in range(cx, tx + step_x, step_x):
-				path.append(Vector2i(x, cy))
-			var step_y := 1 if ty >= cy else -1
-			for y in range(cy, ty + step_y, step_y):
-				path.append(Vector2i(tx, y))
+		for cand_pos in candidates.slice(0, mini(15, candidates.size())):
+			var pth: Array[Vector2i] = find_dry_path.call(rc, cand_pos)
+			if not pth.is_empty():
+				carve_corridor.call(pth)
+				break
 
-			carve_path.call(path)
+	# 3. Kładki na odcinkach kanałów:
+	# - Nigdy na skrzyżowaniach ani zakrętach (margines min. 5 kratek od rogów, bufor wolny od odnóg)
+	# - Nigdy wzdłuż kanału: poziomy kanał -> pionowa kładka, pionowy kanał -> pozioma kładka
+	# - Kładki dłuższe: długość cw + 2 (z obu stron leżą na stałej podłodze FLOOR)
+	var placed_bridges: Array[Vector2i] = []
 
-	# 3. Kładki na odcinkach kanałów
 	for st in layout.segments:
 		var r: Rect2i = st["rect"]
-		var horiz: bool = st["axis"] == "h"
+		var horiz: bool = (st["axis"] == "h")
 		var cw: int = int(st.get("width", 4))
-		var span := (r.size.x if horiz else r.size.y) - 2 * cw
-		if span < 6:
+		var span: int = (r.size.x if horiz else r.size.y)
+		if span < 16:
 			continue
 
-		var n_bridges := maxi(1, span / (20 if horiz else 18))
-		for bi in range(n_bridges):
-			var bx: int = st.get("bridge_t", r.position.x + cw + (bi + 1) * span / (n_bridges + 1))
-			var b_cells: Array[Vector2i] = []
+		var min_t := (r.position.x if horiz else r.position.y) + 5
+		var max_t := (r.end.x if horiz else r.end.y) - 5 - 2
+		if min_t > max_t:
+			continue
 
-			var b_rect := Rect2i()
+		var candidate_ts: Array[int] = []
+		var step := maxi(1, (max_t - min_t) / 3)
+		for t in range(min_t, max_t + 1, maxi(3, step)):
+			candidate_ts.append(t)
+		candidate_ts.shuffle()
+
+		for bt in candidate_ts:
+			var too_close := false
+			for pb in placed_bridges:
+				if (horiz and absi(pb.x - bt) < 14) or (not horiz and absi(pb.y - bt) < 14):
+					too_close = true
+					break
+			if too_close:
+				continue
+
 			if horiz:
-				var x_pos := clampi(bx, r.position.x + 1, r.end.x - 2)
-				b_rect = Rect2i(x_pos, r.position.y - 1, 2, r.size.y + 2)
-				for y in range(r.position.y, r.end.y):
-					b_cells.append(Vector2i(x_pos, y))
-					b_cells.append(Vector2i(x_pos + 1, y))
-			else:
-				var y_pos := clampi(bx, r.position.y + 1, r.end.y - 2)
-				b_rect = Rect2i(r.position.x - 1, y_pos, r.size.x + 2, 2)
-				for x in range(r.position.x, r.end.x):
-					b_cells.append(Vector2i(x, y_pos))
-					b_cells.append(Vector2i(x, y_pos + 1))
+				# Kanał poziomy (W-E) -> Kładka PIONOWA (N-S), długość cw + 2
+				var bx := bt
+				var y0 := r.position.y
+				var y1 := r.end.y
 
-			if not b_cells.is_empty():
-				for p in b_cells:
-					bridge_cells[p] = true
-				bridges.append({"rect": b_rect, "cells": b_cells, "vertical": horiz, "crossing": false})
+				# 1. Otoczenie w korycie czyste od zakrętów i skrzyżowań
+				var clear_canal := true
+				for cx in range(bx - 3, bx + 5):
+					for cy in range(y0, y1):
+						if not layout.cells.has(Vector2i(cx, cy)):
+							clear_canal = false
+							break
+					if not clear_canal:
+						break
+					if layout.cells.has(Vector2i(cx, y0 - 1)) or layout.cells.has(Vector2i(cx, y1)):
+						clear_canal = false
+						break
+				if not clear_canal:
+					continue
+
+				# 2. Obie strony (N i S) muszą mieć podłogę z bezpieczną głębokością w głąb sali/chodnika
+				var n_ok := (floor_cells.has(Vector2i(bx, y0 - 1)) and floor_cells.has(Vector2i(bx + 1, y0 - 1)) and \
+					floor_cells.has(Vector2i(bx, y0 - 2)) and floor_cells.has(Vector2i(bx + 1, y0 - 2)))
+				var s_ok := (floor_cells.has(Vector2i(bx, y1)) and floor_cells.has(Vector2i(bx + 1, y1)) and \
+					floor_cells.has(Vector2i(bx, y1 + 1)) and floor_cells.has(Vector2i(bx + 1, y1 + 1)))
+				if not n_ok or not s_ok:
+					continue
+
+				# Rejestracja kładki pionowej (N-S)
+				var b_rect := Rect2i(bx, y0 - 1, 2, cw + 2)
+				var b_cells: Array[Vector2i] = []
+				for by in range(y0 - 1, y1 + 1):
+					var p1 := Vector2i(bx, by)
+					var p2 := Vector2i(bx + 1, by)
+					b_cells.append(p1)
+					b_cells.append(p2)
+					floor_cells[p1] = true
+					floor_cells[p2] = true
+					bridge_cells[p1] = true
+					bridge_cells[p2] = true
+
+				# Clearance na stałym lądzie
+				floor_cells[Vector2i(bx, y0 - 2)] = true
+				floor_cells[Vector2i(bx + 1, y0 - 2)] = true
+				floor_cells[Vector2i(bx, y1 + 1)] = true
+				floor_cells[Vector2i(bx + 1, y1 + 1)] = true
+
+				bridges.append({"rect": b_rect, "cells": b_cells, "vertical": true, "crossing": false})
+				placed_bridges.append(Vector2i(bx, y0))
+				break
+
+			else:
+				# Kanał pionowy (N-S) -> Kładka POZIOMA (W-E), długość cw + 2
+				var by := bt
+				var x0 := r.position.x
+				var x1 := r.end.x
+
+				var clear_canal := true
+				for cy in range(by - 3, by + 5):
+					for cx in range(x0, x1):
+						if not layout.cells.has(Vector2i(cx, cy)):
+							clear_canal = false
+							break
+					if not clear_canal:
+						break
+					if layout.cells.has(Vector2i(x0 - 1, cy)) or layout.cells.has(Vector2i(x1, cy)):
+						clear_canal = false
+						break
+				if not clear_canal:
+					continue
+
+				var w_ok := (floor_cells.has(Vector2i(x0 - 1, by)) and floor_cells.has(Vector2i(x0 - 1, by + 1)) and \
+					floor_cells.has(Vector2i(x0 - 2, by)) and floor_cells.has(Vector2i(x0 - 2, by + 1)))
+				var e_ok := (floor_cells.has(Vector2i(x1, by)) and floor_cells.has(Vector2i(x1, by + 1)) and \
+					floor_cells.has(Vector2i(x1 + 1, by)) and floor_cells.has(Vector2i(x1 + 1, by + 1)))
+				if not w_ok or not e_ok:
+					continue
+
+				# Rejestracja kładki poziomej (W-E)
+				var b_rect := Rect2i(x0 - 1, by, cw + 2, 2)
+				var b_cells: Array[Vector2i] = []
+				for bx in range(x0 - 1, x1 + 1):
+					var p1 := Vector2i(bx, by)
+					var p2 := Vector2i(bx, by + 1)
+					b_cells.append(p1)
+					b_cells.append(p2)
+					floor_cells[p1] = true
+					floor_cells[p2] = true
+					bridge_cells[p1] = true
+					bridge_cells[p2] = true
+
+				floor_cells[Vector2i(x0 - 2, by)] = true
+				floor_cells[Vector2i(x0 - 2, by + 1)] = true
+				floor_cells[Vector2i(x1 + 1, by)] = true
+				floor_cells[Vector2i(x1 + 1, by + 1)] = true
+
+				bridges.append({"rect": b_rect, "cells": b_cells, "vertical": false, "crossing": false})
+				placed_bridges.append(Vector2i(x0, by))
+				break
 
 	# 4. Zapis do gridu GenerationContext (woda i podłoga jako FLOOR, reszta WALL)
 	for y in range(height):

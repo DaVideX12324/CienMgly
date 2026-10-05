@@ -1648,9 +1648,14 @@ script = ExtResource("8_j2pwj")
 source_id = 1
 atlas_coords = Vector2i(9, 12)
 
-[sub_resource type="Resource" id="Resource_4v27v"]
+[sub_resource type="Resource" id="Resource_hbr3_0"]
 script = ExtResource("7_8i1gb")
 offset = Vector2i(3, 0)
+tile = SubResource("Resource_4fg3y")
+
+[sub_resource type="Resource" id="Resource_4v27v"]
+script = ExtResource("7_8i1gb")
+offset = Vector2i(4, 0)
 tile = SubResource("Resource_0g5gy")
 
 [sub_resource type="Resource" id="Resource_ujiic"]
@@ -1660,7 +1665,7 @@ atlas_coords = Vector2i(10, 12)
 
 [sub_resource type="Resource" id="Resource_5ms31"]
 script = ExtResource("7_8i1gb")
-offset = Vector2i(4, 0)
+offset = Vector2i(5, 0)
 tile = SubResource("Resource_ujiic")
 
 [sub_resource type="Resource" id="Resource_dcrap"]
@@ -1693,6 +1698,11 @@ script = ExtResource("7_8i1gb")
 offset = Vector2i(2, 1)
 tile = SubResource("Resource_x0jnk")
 
+[sub_resource type="Resource" id="Resource_hbr3_1"]
+script = ExtResource("7_8i1gb")
+offset = Vector2i(3, 1)
+tile = SubResource("Resource_x0jnk")
+
 [sub_resource type="Resource" id="Resource_j7lx4"]
 script = ExtResource("8_j2pwj")
 source_id = 1
@@ -1700,7 +1710,7 @@ atlas_coords = Vector2i(9, 13)
 
 [sub_resource type="Resource" id="Resource_h2una"]
 script = ExtResource("7_8i1gb")
-offset = Vector2i(3, 1)
+offset = Vector2i(4, 1)
 tile = SubResource("Resource_j7lx4")
 
 [sub_resource type="Resource" id="Resource_1q60j"]
@@ -1710,12 +1720,12 @@ atlas_coords = Vector2i(10, 13)
 
 [sub_resource type="Resource" id="Resource_7jso7"]
 script = ExtResource("7_8i1gb")
-offset = Vector2i(4, 1)
+offset = Vector2i(5, 1)
 tile = SubResource("Resource_1q60j")
 
 [sub_resource type="Resource" id="Resource_4a0q8"]
 script = ExtResource("6_fxc8i")
-parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_r4jv1"), SubResource("Resource_6sbnr"), SubResource("Resource_jqpsn"), SubResource("Resource_4v27v"), SubResource("Resource_5ms31"), SubResource("Resource_7o7xd"), SubResource("Resource_etsnq"), SubResource("Resource_ksi7j"), SubResource("Resource_h2una"), SubResource("Resource_7jso7")])
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_r4jv1"), SubResource("Resource_6sbnr"), SubResource("Resource_jqpsn"), SubResource("Resource_hbr3_0"), SubResource("Resource_4v27v"), SubResource("Resource_5ms31"), SubResource("Resource_7o7xd"), SubResource("Resource_etsnq"), SubResource("Resource_ksi7j"), SubResource("Resource_hbr3_1"), SubResource("Resource_h2una"), SubResource("Resource_7jso7")])
 
 [sub_resource type="Resource" id="Resource_58n0e"]
 script = ExtResource("5_ybd7s")

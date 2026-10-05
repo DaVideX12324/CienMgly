@@ -22,6 +22,10 @@ const WallTopAlignPassScript = preload("../preprocess/wall_top_align_pass.gd")
 const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
 const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
+const FacadeRhythmScript = preload("facade_rhythm.gd")
+const CanalDressingScript = preload("canal_dressing.gd")
+const VignettePlannerScript = preload("vignette_planner.gd")
+const GeometryCheckScript = preload("geometry_check.gd")
 
 
 static func generate_layout(
@@ -64,7 +68,7 @@ static func generate_layout(
 	var dry_chance: float = float(flags.canal_dry_chance) if flags != null else 0.4
 
 	# 1. Sieć liniowa (LinearNetworkGenerator)
-	LinearNetworkGeneratorScript.generate_network(width, height, ctx.rng, canal_layout, linear_w, linear_clear, lane_w)
+	LinearNetworkGeneratorScript.generate_network(width, height, ctx.rng, canal_layout, linear_w, linear_clear, lane_w, dry_chance)
 	GenProgress.end(&"rooms")
 
 	# 2. Strefowanie (StructuredZoning)
@@ -104,9 +108,31 @@ static func generate_layout(
 	_run_wall_shape_passes(ctx, flags)
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
 
+	# Przywrócenie podłogi na kładkach po pre-processingu ścian
+	for b in canal_layout.crossings:
+		for p in b.get("cells", []):
+			ctx.grid[p] = CellType.FLOOR
+
 	GenProgress.end(&"portals")
 
-	# 6. Płaskowyże (jeśli włączone)
+	# 4. Rytm lica (FacadeRhythm)
+	FacadeRhythmScript.apply_rhythm(ctx, result, reservations, flags)
+
+	# 5. Dressing kanałów i barierki (CanalDressing)
+	CanalDressingScript.apply_dressing(ctx, result, canal_layout, reservations, flags)
+
+	# 6. Winiety (VignettePlanner)
+	var default_vigs := VignettePlannerScript.get_default_vignettes()
+	for room in rooms:
+		var anchor := room.position + Vector2i(2, 2)
+		if VignettePlannerScript.try_place_vignette(ctx, result, reservations, anchor, default_vigs["stacked_crates"]):
+			break
+
+	# 7. Kontrola geometrii B (GeometryCheck)
+	var geo_report := GeometryCheckScript.verify_geometry(ctx, result, reservations)
+	result.set_meta("geometry_check", geo_report)
+
+	# 8. Płaskowyże (jeśli włączone)
 	if flags.enable_platforms:
 		GenProgress.begin(&"plateaus")
 		ctx.plateau = PlateauPass.run(ctx, flags)

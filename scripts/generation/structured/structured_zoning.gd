@@ -101,21 +101,7 @@ static func build_zoning(
 			complexes[cid] = {"segs": choice, "mask": {}, "pinch": null}
 			placed_any = true
 
-	# 2. Suche koryto (jeśli szansa spełniona)
-	if rng.randf() < canal_dry_chance and lines.size() > 1:
-		var non_trunk_lines: Array = []
-		for lid in lines:
-			if int(lid) != 0:
-				non_trunk_lines.append(lid)
-		if not non_trunk_lines.is_empty():
-			var dry_lid = non_trunk_lines[rng.randi() % non_trunk_lines.size()]
-			for st in lines[dry_lid]:
-				var r: Rect2i = st["rect"]
-				for y in range(r.position.y, r.end.y):
-					for x in range(r.position.x, r.end.x):
-						dry[Vector2i(x, y)] = true
-
-	# 3. Pasy ruchu (chodniki w tunelach)
+	# 2. Pasy ruchu (chodniki w tunelach)
 	for st in segs:
 		if st["kind"] == "tunnel":
 			var r: Rect2i = st["rect"]
