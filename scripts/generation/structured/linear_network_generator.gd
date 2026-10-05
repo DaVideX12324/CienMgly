@@ -29,18 +29,28 @@ static func generate_network(
 	var sewage_cells: Dictionary = {}
 	var dry_cells: Dictionary = {}
 
-	# 0. Heightmap i strefy wysokości ("Co jedną zmianę inne koryto")
-	var noise: FastNoiseLite = SeededNoise.create(hash([rng.seed, "canal_heightmap"]), 0.006)
+	# 0. Szum jak heightmap, ale tylko dwa poziomy: 0 (ścieki) i 1 (koryto puste)
+	var noise: FastNoiseLite = SeededNoise.create(hash([rng.seed, "canal_heightmap_2levels"]), 0.005)
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.fractal_type = FastNoiseLite.FRACTAL_FBM
 	noise.fractal_octaves = 2
 
-	var step := 0.30
-	var is_dry_zone = func(p: Vector2i) -> bool:
+	var threshold: float = 0.0
+	if canal_dry_chance <= 0.0:
+		threshold = 999.0
+	elif canal_dry_chance >= 1.0:
+		threshold = 0.0
+	else:
+		threshold = lerpf(0.4, -0.4, canal_dry_chance)
+
+	var get_zone_level = func(p: Vector2i) -> int:
 		if canal_dry_chance <= 0.0:
-			return false
+			return 0
 		var h: float = noise.get_noise_2d(float(p.x), float(p.y))
-		var lvl: int = floori(h / step)
-		return (absi(lvl) % 2 == 1)
+		return 1 if h >= threshold else 0
+
+	var is_dry_zone = func(p: Vector2i) -> bool:
+		return get_zone_level.call(p) == 1
 
 	# Pomocnicza funkcja prostokąta odcinka
 	var get_seg_rect = func(hx: int, hy: int, d: Vector2i, L: int) -> Array:
@@ -66,7 +76,8 @@ static func generate_network(
 	var is_zone_ok = func(r: Rect2i, for_dry: bool) -> bool:
 		if canal_dry_chance <= 0.0:
 			return not for_dry
-		var buf := 3
+		var target_lvl := 1 if for_dry else 0
+		var buf := 4
 		var check_rect := Rect2i(r.position.x - buf, r.position.y - buf, r.size.x + buf * 2, r.size.y + buf * 2)
 		var check_pts: Array[Vector2i] = [
 			check_rect.position,
@@ -75,8 +86,15 @@ static func generate_network(
 			Vector2i(check_rect.end.x - 1, check_rect.end.y - 1),
 			check_rect.get_center()
 		]
+		if check_rect.size.x > 16:
+			check_pts.append(Vector2i(check_rect.position.x + check_rect.size.x / 2, check_rect.position.y))
+			check_pts.append(Vector2i(check_rect.position.x + check_rect.size.x / 2, check_rect.end.y - 1))
+		if check_rect.size.y > 16:
+			check_pts.append(Vector2i(check_rect.position.x, check_rect.position.y + check_rect.size.y / 2))
+			check_pts.append(Vector2i(check_rect.end.x - 1, check_rect.position.y + check_rect.size.y / 2))
+
 		for p in check_pts:
-			if bool(is_dry_zone.call(p)) != for_dry:
+			if int(get_zone_level.call(p)) != target_lvl:
 				return false
 		return true
 
