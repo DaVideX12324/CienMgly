@@ -5,7 +5,7 @@ extends RefCounted
 ## Pass 5 w architekturze structured:
 ## - Wyznaczanie krawędzi pod barierki (rail_edges) na brzegach podłogi;
 ## - Przerwy przy kładkach i strefach prześwitu (bridge_clearance);
-## - Zawinięte końce i proste przęsła barierek (Props 6–9 x 4);
+## - Miedziane barierki ochronne na brzegach (Props 5, 6, 9 x 4);
 ## - Rezerwacja w StructuredReservations (blocks_movement: true);
 ## - Blokada ruchu i cięcie navmeshu (layout.blocked).
 
@@ -34,15 +34,10 @@ static func apply_dressing(
 		var r: Rect2i = seg["rect"]
 		var axis: String = seg.get("axis", "h")
 		if axis == "h":
-			# Północny brzeg (nad kanałem poziomy)
+			# Północny brzeg (nad kanałem poziomym)
 			_process_bank(ctx, layout, reservations, r.position.x, r.end.x - 1, r.position.y - 1, true, &"north", rail_runs)
 			# Południowy brzeg (pod kanałem poziomym)
 			_process_bank(ctx, layout, reservations, r.position.x, r.end.x - 1, r.end.y, true, &"south", rail_runs)
-		else:
-			# Zachodni brzeg (na lewo od kanału pionowego)
-			_process_bank(ctx, layout, reservations, r.position.y, r.end.y - 1, r.position.x - 1, false, &"west", rail_runs)
-			# Wschodni brzeg (na prawo od kanału pionowego)
-			_process_bank(ctx, layout, reservations, r.position.y, r.end.y - 1, r.end.x, false, &"east", rail_runs)
 
 	# 3. Zapis do layout.rail_edges i aktualizacja zablokowanych komórek
 	layout.rail_edges = rail_runs
@@ -170,37 +165,13 @@ static func _finalize_run(
 	})
 
 
-static func _pick_rail_tile(index: int, total: int, bank_side: StringName) -> Vector2i:
-	match bank_side:
-		&"north":
-			if index == 0:
-				return Vector2i(6, 12)  # lewy zawinięty koniec
-			elif index == total - 1:
-				return Vector2i(10, 12) # prawy zawinięty koniec
-			else:
-				return Vector2i(7 + (index % 3), 12) # przęsło poziome góra
-		&"south":
-			if index == 0:
-				return Vector2i(6, 13)  # lewy zawinięty koniec
-			elif index == total - 1:
-				return Vector2i(10, 13) # prawy zawinięty koniec
-			else:
-				return Vector2i(7 + (index % 3), 13) # przęsło poziome dół
-		&"west":
-			if index == 0:
-				return Vector2i(4, 9)   # górny zawinięty koniec
-			elif index == total - 1:
-				return Vector2i(4, 14)  # dolny zawinięty koniec
-			else:
-				return Vector2i(4, 10 + (index % 4)) # przęsło pionowe lewe
-		&"east":
-			if index == 0:
-				return Vector2i(5, 9)   # górny zawinięty koniec
-			elif index == total - 1:
-				return Vector2i(5, 14)  # dolny zawinięty koniec
-			else:
-				return Vector2i(5, 10 + (index % 4)) # przęsło pionowe prawe
-	return Vector2i(7, 12)
+static func _pick_rail_tile(index: int, total: int, _bank_side: StringName = &"") -> Vector2i:
+	if index == 0:
+		return Vector2i(5, 4)  # lewy słupek barierki
+	elif index == total - 1:
+		return Vector2i(9, 4)  # prawy słupek barierki
+	else:
+		return Vector2i(6, 4)  # przęsło poziome barierki
 
 
 ## Pass 5b: Czarne doły (pits) z krawędzią w suchym korycie
