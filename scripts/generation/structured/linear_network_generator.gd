@@ -8,6 +8,7 @@ extends RefCounted
 ## - Kontrola szerokości (żaden fragment nie może być szerszy niż canal_width, brak plam 5x5);
 ## - Kontrola minimalnego odstępu CLEAR między odnogami.
 
+const SeededNoise = preload("../core/seeded_noise.gd")
 const LinearFeatureLayout = preload("core/linear_feature_layout.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
@@ -27,6 +28,19 @@ static func generate_network(
 	var lines: Dictionary = layout.lines
 	var sewage_cells: Dictionary = {}
 	var dry_cells: Dictionary = {}
+
+	# 0. Heightmap i strefy wysokości ("Co jedną zmianę inne koryto")
+	var noise: FastNoiseLite = SeededNoise.create(hash([rng.seed, "canal_heightmap"]), 0.006)
+	noise.fractal_type = FastNoiseLite.FRACTAL_FBM
+	noise.fractal_octaves = 2
+
+	var step := 0.30
+	var is_dry_zone = func(p: Vector2i) -> bool:
+		if canal_dry_chance <= 0.0:
+			return false
+		var h: float = noise.get_noise_2d(float(p.x), float(p.y))
+		var lvl: int = floori(h / step)
+		return (absi(lvl) % 2 == 1)
 
 	# Pomocnicza funkcja prostokąta odcinka
 	var get_seg_rect = func(hx: int, hy: int, d: Vector2i, L: int) -> Array:
@@ -48,6 +62,23 @@ static func generate_network(
 
 	var is_inside = func(r: Rect2i, m: int) -> bool:
 		return r.position.x >= m and r.position.y >= m and r.end.x < width - m and r.end.y < height - m
+
+	var is_zone_ok = func(r: Rect2i, for_dry: bool) -> bool:
+		if canal_dry_chance <= 0.0:
+			return not for_dry
+		var buf := 3
+		var check_rect := Rect2i(r.position.x - buf, r.position.y - buf, r.size.x + buf * 2, r.size.y + buf * 2)
+		var check_pts: Array[Vector2i] = [
+			check_rect.position,
+			Vector2i(check_rect.end.x - 1, check_rect.position.y),
+			Vector2i(check_rect.position.x, check_rect.end.y - 1),
+			Vector2i(check_rect.end.x - 1, check_rect.end.y - 1),
+			check_rect.get_center()
+		]
+		for p in check_pts:
+			if bool(is_dry_zone.call(p)) != for_dry:
+				return false
+		return true
 
 	var is_too_wide = func(r: Rect2i, for_dry: bool) -> bool:
 		var check_cells: Dictionary = dry_cells if for_dry else sewage_cells
@@ -74,34 +105,37 @@ static func generate_network(
 	var is_clear_ok = func(r: Rect2i, hx: int, hy: int, for_dry: bool) -> bool:
 		var zone_rect := Rect2i(r.position.x - clear_dist, r.position.y - clear_dist, r.size.x + clear_dist * 2, r.size.y + clear_dist * 2)
 		if for_dry:
-			# Bezwzględny brak jakichkolwiek ścieków w buforze 16 kratek!
+			# Bezwzględny brak jakichkolwiek ścieków w buforze clear_dist kratek!
 			for p in sewage_cells:
 				if zone_rect.has_point(p):
 					return false
-			# Względem własnych komórek suchego koryta zachowujemy standardowy near_rect
 			var near_rect := Rect2i(hx - clear_dist - cw, hy - clear_dist - cw, (clear_dist + cw) * 2 + cw, (clear_dist + cw) * 2 + cw)
 			for p in dry_cells:
 				if zone_rect.has_point(p) and not near_rect.has_point(p):
 					return false
 			return true
 		else:
+			# Bezwzględny brak jakichkolwiek suchych komórek w buforze clear_dist kratek!
+			for p in dry_cells:
+				if zone_rect.has_point(p):
+					return false
 			var near_rect := Rect2i(hx - clear_dist - cw, hy - clear_dist - cw, (clear_dist + cw) * 2 + cw, (clear_dist + cw) * 2 + cw)
 			for p in sewage_cells:
 				if zone_rect.has_point(p) and not near_rect.has_point(p):
 					return false
 			return true
 
-	var walk = func(hx: int, hy: int, d: Vector2i, line_id: int, max_segs: int, turn_p: float, for_dry: bool = false) -> void:
+	var walk = func(hx: int, hy: int, d: Vector2i, line_id: int, max_segs: int, turn_p: float, for_dry: bool = false) -> int:
 		var idx := 0
 		for _step in range(max_segs):
 			var placed := false
-			var length_options := [rng.randi_range(16, 34), rng.randi_range(12, 20), 10]
+			var length_options := [rng.randi_range(16, 28), rng.randi_range(12, 18), 10]
 			for L in length_options:
 				var res: Array = get_seg_rect.call(hx, hy, d, L)
 				var r: Rect2i = res[0]
 				var nh: Vector2i = res[1]
 
-				if is_inside.call(r, margin + 1) and is_clear_ok.call(r, hx, hy, for_dry) and not is_too_wide.call(r, for_dry):
+				if is_inside.call(r, margin + 1) and is_zone_ok.call(r, for_dry) and is_clear_ok.call(r, hx, hy, for_dry) and not is_too_wide.call(r, for_dry):
 					var seg_info := {
 						"rect": r,
 						"axis": "h" if d.y == 0 else "v",
@@ -141,12 +175,12 @@ static func generate_network(
 				for nd in opts:
 					var res: Array = get_seg_rect.call(hx, hy, nd, 12)
 					var r: Rect2i = res[0]
-					if is_inside.call(r, margin + 1) and is_clear_ok.call(r, hx, hy, for_dry) and not is_too_wide.call(r, for_dry):
+					if is_inside.call(r, margin + 1) and is_zone_ok.call(r, for_dry) and is_clear_ok.call(r, hx, hy, for_dry) and not is_too_wide.call(r, for_dry):
 						d = nd
 						turned = true
 						break
 				if not turned:
-					return
+					return idx
 				continue
 
 			if rng.randf() < turn_p:
@@ -155,57 +189,67 @@ static func generate_network(
 					if nd.x * d.x + nd.y * d.y == 0:
 						turn_opts.append(nd)
 				d = turn_opts[rng.randi() % turn_opts.size()]
+		return idx
 
-	# 1. Pień od lewej krawędzi
-	var start_y := rng.randi_range(height / 3, 2 * height / 3)
-	walk.call(margin + 1, start_y, Vector2i(1, 0), 0, 10, 0.35)
+	# 1. Podział na siatkę sektorów i pnie magistral
+	var cols: int = clampi(int(ceil(float(width) / 85.0)), 1, 3)
+	var rows: int = clampi(int(ceil(float(height) / 85.0)), 1, 3)
+	var current_line := 0
+
+	for r_idx in range(rows):
+		for c_idx in range(cols):
+			var x0 := c_idx * width / cols + margin + 4
+			var x1 := (c_idx + 1) * width / cols - margin - 4
+			var y0 := r_idx * height / rows + margin + 4
+			var y1 := (r_idx + 1) * height / rows - margin - 4
+
+			var found_start := false
+			for _att in range(30):
+				var sx := rng.randi_range(x0 + 6, x1 - 6)
+				var sy := rng.randi_range(y0 + 6, y1 - 6)
+				var p_dry: bool = bool(is_dry_zone.call(Vector2i(sx, sy)))
+				var dirs_test: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+				dirs_test.shuffle()
+				for sd in dirs_test:
+					var test_res: Array = get_seg_rect.call(sx, sy, sd, 16)
+					var tr: Rect2i = test_res[0]
+					if is_inside.call(tr, margin + 1) and is_zone_ok.call(tr, p_dry) and is_clear_ok.call(tr, sx, sy, p_dry) and not is_too_wide.call(tr, p_dry):
+						var placed_segs: int = int(walk.call(sx, sy, sd, current_line, 8, 0.35, p_dry))
+						if placed_segs > 0:
+							current_line += 1
+							found_start = true
+							break
+				if found_start:
+					break
 
 	# 2. Odnogi
-	var n_branch := maxi(4, width * height / 2300)
-	var current_line := 1
+	var n_branch := maxi(6, width * height / 1800)
 	var attempts := 0
 	while current_line <= n_branch and attempts < 200 and not segs.is_empty():
 		attempts += 1
 		var p_seg: Dictionary = segs[rng.randi() % segs.size()]
 		var r: Rect2i = p_seg["rect"]
+		var for_dry: bool = p_seg["dry"]
 		var hx := 0
 		var hy := 0
 		var d := Vector2i.ZERO
 
 		if p_seg["axis"] == "h":
-			if r.size.x < 20:
+			if r.size.x < 16:
 				continue
-			hx = rng.randi_range(r.position.x + 8, r.end.x - 8 - cw)
+			hx = rng.randi_range(r.position.x + 4, r.end.x - 4 - cw)
 			hy = r.position.y
 			d = Vector2i(0, 1) if rng.randf() < 0.5 else Vector2i(0, -1)
 		else:
-			if r.size.y < 20:
+			if r.size.y < 16:
 				continue
-			hy = rng.randi_range(r.position.y + 8, r.end.y - 8 - cw)
+			hy = rng.randi_range(r.position.y + 4, r.end.y - 4 - cw)
 			hx = r.position.x
 			d = Vector2i(1, 0) if rng.randf() < 0.5 else Vector2i(-1, 0)
 
 		var before_count := segs.size()
-		walk.call(hx, hy, d, current_line, rng.randi_range(2, 5), 0.6)
+		walk.call(hx, hy, d, current_line, rng.randi_range(2, 5), 0.5, for_dry)
 		if segs.size() > before_count:
 			p_seg["junction"] = true
 			segs[before_count]["junction"] = true
 			current_line += 1
-
-	# 3. Osobna, całkowicie niezależna sieć pustego koryta (dry bed)
-	if canal_dry_chance > 0.0 and rng.randf() < canal_dry_chance:
-		var dry_line_id := 50
-		var dry_starts: Array[Array] = [
-			[rng.randi_range(width / 4, 3 * width / 4), margin + 1, Vector2i(0, 1)],
-			[rng.randi_range(width / 4, 3 * width / 4), height - margin - 1 - cw, Vector2i(0, -1)],
-			[width - margin - 1 - cw, rng.randi_range(height / 4, 3 * height / 4), Vector2i(-1, 0)]
-		]
-		dry_starts.shuffle()
-		for s_info in dry_starts:
-			var sx: int = s_info[0]
-			var sy: int = s_info[1]
-			var sd: Vector2i = s_info[2]
-			var before_dry := segs.size()
-			walk.call(sx, sy, sd, dry_line_id, rng.randi_range(3, 6), 0.35, true)
-			if segs.size() > before_dry:
-				break
