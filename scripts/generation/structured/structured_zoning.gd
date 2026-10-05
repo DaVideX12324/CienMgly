@@ -9,6 +9,7 @@ extends RefCounted
 
 const LinearFeatureLayout = preload("core/linear_feature_layout.gd")
 const StructuredReservations = preload("structured_reservations.gd")
+const MapGeneratorBaseScript = preload("../map_generator_base.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 
@@ -37,7 +38,7 @@ static func build_zoning(
 	var cplx_rects: Array[Rect2i] = []
 	var max_cplx := maxi(2, width * height / 5500)
 	var line_ids: Array = lines.keys()
-	line_ids.shuffle()
+	MapGeneratorBaseScript.shuffle_array(line_ids, rng)
 
 	var rect_gap = func(a: Rect2i, b: Rect2i) -> int:
 		var dx := maxi(0, maxi(a.position.x, b.position.x) - mini(a.end.x, b.end.x))
@@ -54,7 +55,7 @@ static func build_zoning(
 	var placed_any := true
 	while placed_any and complexes.size() < max_cplx:
 		placed_any = false
-		line_ids.shuffle()
+		MapGeneratorBaseScript.shuffle_array(line_ids, rng)
 		for lid in line_ids:
 			if complexes.size() >= max_cplx:
 				break
@@ -62,7 +63,7 @@ static func build_zoning(
 			var starts: Array[int] = []
 			for k in range(ln.size()):
 				starts.append(k)
-			starts.shuffle()
+			MapGeneratorBaseScript.shuffle_array(starts, rng)
 
 			var choice: Array = []
 			for k0 in starts:

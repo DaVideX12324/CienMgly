@@ -10,6 +10,7 @@ extends RefCounted
 
 const SeededNoise = preload("../core/seeded_noise.gd")
 const LinearFeatureLayout = preload("core/linear_feature_layout.gd")
+const MapGeneratorBaseScript = preload("../map_generator_base.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 
@@ -188,7 +189,7 @@ static func generate_network(
 				for nd in DIRS:
 					if nd.x * d.x + nd.y * d.y == 0:
 						opts.append(nd)
-				opts.shuffle()
+				MapGeneratorBaseScript.shuffle_array(opts, rng)
 				var turned := false
 				for nd in opts:
 					var res: Array = get_seg_rect.call(hx, hy, nd, 12)
@@ -227,7 +228,7 @@ static func generate_network(
 				var sy := rng.randi_range(y0 + 6, y1 - 6)
 				var p_dry: bool = bool(is_dry_zone.call(Vector2i(sx, sy)))
 				var dirs_test: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
-				dirs_test.shuffle()
+				MapGeneratorBaseScript.shuffle_array(dirs_test, rng)
 				for sd in dirs_test:
 					var test_res: Array = get_seg_rect.call(sx, sy, sd, 16)
 					var tr: Rect2i = test_res[0]
