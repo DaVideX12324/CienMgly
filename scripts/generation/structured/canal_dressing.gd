@@ -51,6 +51,9 @@ static func apply_dressing(
 			var p: Vector2i = cell_info["pos"]
 			layout.blocked[p] = true
 
+	# 4. Generowanie czarnych dołów (pits) w suchym korycie
+	_place_pits(ctx, layout)
+
 	return rail_runs
 
 
@@ -198,3 +201,178 @@ static func _pick_rail_tile(index: int, total: int, bank_side: StringName) -> Ve
 			else:
 				return Vector2i(5, 10 + (index % 4)) # przęsło pionowe prawe
 	return Vector2i(7, 12)
+
+
+## Pass 5b: Czarne doły (pits) z krawędzią w suchym korycie
+static func _place_pits(ctx: GenerationContext, layout: LinearFeatureLayout) -> void:
+	layout.pits.clear()
+	layout.pit_cells.clear()
+	if layout.dry.is_empty():
+		return
+
+	var rng := ctx.rng
+	for seg in layout.segments:
+		if not seg.get("dry", false):
+			continue
+		var r: Rect2i = seg["rect"]
+		var axis: String = seg.get("axis", "h")
+
+		if axis == "h":
+			_place_pits_horizontal(ctx, layout, r, rng)
+		else:
+			_place_pits_vertical(ctx, layout, r, rng)
+
+
+static func _place_pits_horizontal(ctx: GenerationContext, layout: LinearFeatureLayout, r: Rect2i, rng: RandomNumberGenerator) -> void:
+	var py_start := r.position.y + 1
+	var py_end := r.end.y - 1
+	if py_end < py_start:
+		return
+	var pit_h := py_end - py_start + 1
+
+	var safe_cols: Array[int] = []
+	var x_min := r.position.x + 2
+	var x_max := r.end.x - 3
+	for x in range(x_min, x_max + 1):
+		var ok := true
+		for y in range(py_start, py_end + 1):
+			if not layout.dry.has(Vector2i(x, y)):
+				ok = false
+				break
+		if not ok:
+			continue
+		for cx in range(x - 1, x + 2):
+			for cy in range(r.position.y, r.end.y + 1):
+				var p := Vector2i(cx, cy)
+				if layout.crossing_cells.has(p) or layout.bridge_clearance.has(p):
+					ok = false
+					break
+			if not ok:
+				break
+		if ok:
+			safe_cols.append(x)
+
+	if safe_cols.is_empty():
+		return
+
+	var runs: Array[Array] = []
+	var cur_run: Array[int] = []
+	for x in safe_cols:
+		if cur_run.is_empty() or x == cur_run[-1] + 1:
+			cur_run.append(x)
+		else:
+			if cur_run.size() >= 3:
+				runs.append(cur_run)
+			cur_run = [x]
+	if cur_run.size() >= 3:
+		runs.append(cur_run)
+
+	for run_x in runs:
+		var run_w: int = run_x.size()
+		var pit_count := 2 if run_w >= 14 else 1
+		var x_cursor: int = run_x[0]
+		var x_limit: int = run_x[-1]
+
+		for _i in range(pit_count):
+			var rem_w := x_limit - x_cursor + 1
+			if rem_w < 3:
+				break
+			var pw := clampi(rng.randi_range(3, 4), 2, rem_w)
+			var max_start := x_limit - pw + 1
+			var px := rng.randi_range(x_cursor, mini(x_cursor + 2, max_start))
+			var pit_rect := Rect2i(px, py_start, pw, pit_h)
+			layout.pits.append(pit_rect)
+
+			for cx in range(px, px + pw):
+				for cy in range(py_start, py_end + 1):
+					var cp := Vector2i(cx, cy)
+					if cy == py_start:
+						layout.pit_cells[cp] = &"TOP_B" if rng.randf() < 0.3 else &"TOP"
+					elif cy == py_end:
+						layout.pit_cells[cp] = &"BOTTOM"
+					else:
+						layout.pit_cells[cp] = &"VOID"
+
+			x_cursor = px + pw + 3
+
+
+static func _place_pits_vertical(ctx: GenerationContext, layout: LinearFeatureLayout, r: Rect2i, rng: RandomNumberGenerator) -> void:
+	var safe_rows: Array[int] = []
+	var y_min := r.position.y + 2
+	var y_max := r.end.y - 3
+
+	for y in range(y_min, y_max + 1):
+		var ok := true
+		for x in range(r.position.x + 1, r.end.x - 1):
+			if not layout.dry.has(Vector2i(x, y)):
+				ok = false
+				break
+		if not ok:
+			continue
+		for cy in range(y - 1, y + 2):
+			for cx in range(r.position.x, r.end.x):
+				var p := Vector2i(cx, cy)
+				if layout.crossing_cells.has(p) or layout.bridge_clearance.has(p):
+					ok = false
+					break
+			if not ok:
+				break
+		if ok:
+			safe_rows.append(y)
+
+	if safe_rows.is_empty():
+		return
+
+	var runs: Array[Array] = []
+	var cur_run: Array[int] = []
+	for y in safe_rows:
+		if cur_run.is_empty() or y == cur_run[-1] + 1:
+			cur_run.append(y)
+		else:
+			if cur_run.size() >= 3:
+				runs.append(cur_run)
+			cur_run = [y]
+	if cur_run.size() >= 3:
+		runs.append(cur_run)
+
+	for run_y in runs:
+		var run_h: int = run_y.size()
+		var pit_count := 2 if run_h >= 14 else 1
+		var y_cursor: int = run_y[0]
+		var y_limit: int = run_y[-1]
+
+		for _i in range(pit_count):
+			var rem_h := y_limit - y_cursor + 1
+			if rem_h < 3:
+				break
+			var ph := clampi(rng.randi_range(3, 4), 2, rem_h)
+			var max_start := y_limit - ph + 1
+			var py := rng.randi_range(y_cursor, mini(y_cursor + 2, max_start))
+
+			var pw := 2
+			var px := r.position.x + 1
+			if r.size.x >= 4 and rng.randf() < 0.35:
+				var full_ok := true
+				for ty in range(py, py + ph):
+					if not layout.dry.has(Vector2i(r.position.x, ty)) or not layout.dry.has(Vector2i(r.end.x - 1, ty)):
+						full_ok = false
+						break
+				if full_ok:
+					pw = r.size.x
+					px = r.position.x
+
+			var pit_rect := Rect2i(px, py, pw, ph)
+			layout.pits.append(pit_rect)
+
+			for cx in range(px, px + pw):
+				for cy in range(py, py + ph):
+					var cp := Vector2i(cx, cy)
+					if cy == py:
+						layout.pit_cells[cp] = &"TOP_B" if rng.randf() < 0.3 else &"TOP"
+					elif cy == py + ph - 1:
+						layout.pit_cells[cp] = &"BOTTOM"
+					else:
+						layout.pit_cells[cp] = &"VOID"
+
+			y_cursor = py + ph + 3
+

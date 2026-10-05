@@ -18,10 +18,13 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	var table := ctx.priority_table
 	var water: Dictionary = canals.water
 
-	# 1. Kanał: lico brzegu i kwas (warstwa Floor).
+	# 1. Kanał: lico brzegu, kwas, dno suche lub czarne doły (warstwa Floor).
 	for p: Vector2i in water:
 		if _is_face(ctx, water, p):
 			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, _face_variant(ctx, water, p), &"Floor", table)
+		elif canals.pit_cells != null and canals.pit_cells.has(p):
+			var pit_v: StringName = canals.pit_cells[p]
+			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, pit_v, &"Floor", table)
 		else:
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
 			_place(ctx, placement_plan, p, role, _water_variant(ctx, water, p), &"Floor", table)
@@ -53,6 +56,21 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 				var v := _bank_variant(ctx, water, q)
 				if v != &"":
 					_place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, v, &"FloorDecor", table)
+
+	# 4. Barierki ochronne na brzegach (Props z Props.png na warstwie Walls z y-sortem).
+	if canals.rail_edges != null and not canals.rail_edges.is_empty():
+		for run in canals.rail_edges:
+			for pl in run.get("placements", []):
+				var p: Vector2i = pl["pos"]
+				var tp := TilePlacement.new()
+				tp.pos = p
+				tp.layer = &"Walls"
+				tp.source_id = int(pl.get("source_id", 1))
+				tp.atlas_coords = pl["atlas_coords"]
+				tp.alternative_tile = 0
+				tp.category = &"CANAL"
+				PlacementPriority.assign(tp, table)
+				placement_plan.queue(tp)
 
 
 ## Górny rząd kanału pod podłogą/ścianą = lico brzegu (widok z południa).
@@ -137,6 +155,24 @@ static func _bank_variant(ctx: GenerationContext, water: Dictionary, q: Vector2i
 
 static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary) -> void:
 	var parts := TileResolver.resolve_module_parts(ctx, anchor, role, [], -1, variant)
+	if parts.is_empty() and role == TileModuleRole.Id.CANAL_PIT:
+		var coords := Vector2i(17, 10)
+		match variant:
+			&"TOP": coords = Vector2i(18, 10)
+			&"TOP_B": coords = Vector2i(19, 10)
+			&"BOTTOM": coords = Vector2i(18, 11)
+			&"VOID": coords = Vector2i(17, 10)
+		var tp := TilePlacement.new()
+		tp.pos = anchor
+		tp.layer = layer
+		tp.source_id = 0
+		tp.atlas_coords = coords
+		tp.alternative_tile = 0
+		tp.category = &"CANAL"
+		PlacementPriority.assign(tp, table)
+		plan.queue(tp)
+		return
+
 	for rp in parts:
 		var p := TilePlacement.new()
 		p.pos = anchor + rp.offset

@@ -64,7 +64,9 @@ func _can_claim_cell(p: Vector2i, new_klass: StringName, will_block: bool) -> bo
 	if will_block:
 		if blocks_movement.has(p):
 			return false
-		if old_klass == &"LANE" or old_klass == &"PORTAL" or old_klass == &"CLEARANCE":
+		if old_klass == &"PORTAL" or old_klass == &"CLEARANCE":
+			return false
+		if old_klass == &"LANE" and new_klass != &"RAIL":
 			return false
 
 	# Tabela legalnych nakładek według klas:
