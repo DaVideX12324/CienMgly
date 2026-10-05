@@ -55,10 +55,10 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					_place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, v, &"FloorDecor", table)
 
 
-## Górny rząd kanału pod podłogą = lico brzegu (widok z południa).
+## Górny rząd kanału pod podłogą/ścianą = lico brzegu (widok z południa).
 static func _is_face(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
 	var n := p + Vector2i(0, -1)
-	return not water.has(n) and GridUtils.is_walkable(ctx.grid, n)
+	return not water.has(n)
 
 
 static func _face_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> StringName:
