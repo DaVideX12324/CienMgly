@@ -108,8 +108,10 @@ static func _cell_qualifies_for_rail(
 ) -> bool:
 	if bank_side == &"south":
 		# Dla południowego brzegu barierka stoi na dolnej krawędzi kanału (r.end.y - 1),
-		# więc pod spodem na krawędzi podłogi (p.y + 1) musi być dostępna podłoga
+		# więc pod spodem na krawędzi podłogi (p.y + 1) musi być dostępna podłoga z rimem (nie woda kanału!).
 		var floor_p := p + Vector2i(0, 1)
+		if layout.cells.has(floor_p):
+			return false
 		if not GridUtils.is_walkable(ctx.grid, floor_p):
 			return false
 		if layout.crossing_cells.has(floor_p) or layout.bridge_clearance.has(floor_p):
@@ -119,8 +121,12 @@ static func _cell_qualifies_for_rail(
 			if owner.begins_with("portal"):
 				return false
 	else:
-		# Północny brzeg (p.y = r.position.y - 1) — sama kratka musi być podłogą w gridzie
+		# Północny brzeg (p.y = r.position.y - 1) — sama kratka musi być na podłodze z rimem (nie woda kanału!)
+		if layout.cells.has(p):
+			return false
 		if not GridUtils.is_walkable(ctx.grid, p):
+			return false
+		if not layout.cells.has(p + Vector2i(0, 1)):
 			return false
 
 	# Nie może być w kładce ani w strefie prześwitu wejścia na kładkę
