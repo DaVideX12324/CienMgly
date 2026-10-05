@@ -36,8 +36,8 @@ static func apply_dressing(
 		if axis == "h":
 			# Północny brzeg (nad kanałem poziomym)
 			_process_bank(ctx, layout, reservations, r.position.x, r.end.x - 1, r.position.y - 1, true, &"north", rail_runs)
-			# Południowy brzeg (pod kanałem poziomym)
-			_process_bank(ctx, layout, reservations, r.position.x, r.end.x - 1, r.end.y, true, &"south", rail_runs)
+			# Południowy brzeg (pod kanałem poziomym) — kratkę wyżej (r.end.y - 1) na dolnej krawędzi koryta
+			_process_bank(ctx, layout, reservations, r.position.x, r.end.x - 1, r.end.y - 1, true, &"south", rail_runs)
 
 	# 3. Zapis do layout.rail_edges i aktualizacja zablokowanych komórek
 	layout.rail_edges = rail_runs
@@ -87,7 +87,7 @@ static func _process_bank(
 	for t in range(t_start, t_end + 1):
 		var p := Vector2i(t, fixed_coord) if is_horizontal else Vector2i(fixed_coord, t)
 
-		var qualifies := _cell_qualifies_for_rail(ctx, layout, reservations, p)
+		var qualifies := _cell_qualifies_for_rail(ctx, layout, reservations, p, bank_side)
 		if qualifies:
 			current_run.append(p)
 		else:
@@ -103,11 +103,25 @@ static func _cell_qualifies_for_rail(
 	ctx: GenerationContext,
 	layout: LinearFeatureLayout,
 	reservations: StructuredReservations,
-	p: Vector2i
+	p: Vector2i,
+	bank_side: StringName
 ) -> bool:
-	# Kratka musi być podłogą w gridzie
-	if not GridUtils.is_walkable(ctx.grid, p):
-		return false
+	if bank_side == &"south":
+		# Dla południowego brzegu barierka stoi na dolnej krawędzi kanału (r.end.y - 1),
+		# więc pod spodem na krawędzi podłogi (p.y + 1) musi być dostępna podłoga
+		var floor_p := p + Vector2i(0, 1)
+		if not GridUtils.is_walkable(ctx.grid, floor_p):
+			return false
+		if layout.crossing_cells.has(floor_p) or layout.bridge_clearance.has(floor_p):
+			return false
+		if reservations.is_reserved(floor_p):
+			var owner := reservations.get_owner(floor_p)
+			if owner.begins_with("portal"):
+				return false
+	else:
+		# Północny brzeg (p.y = r.position.y - 1) — sama kratka musi być podłogą w gridzie
+		if not GridUtils.is_walkable(ctx.grid, p):
+			return false
 
 	# Nie może być w kładce ani w strefie prześwitu wejścia na kładkę
 	if layout.crossing_cells.has(p) or layout.bridge_clearance.has(p):
