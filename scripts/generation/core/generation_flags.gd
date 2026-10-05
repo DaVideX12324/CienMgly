@@ -29,6 +29,10 @@ var room_density: float = 1.0
 # Wejście: edge (wnęka przy krawędzi mapy, jak dotąd) | center (w pokoju najbliżej środka mapy, bez
 # wnęki — np. zejście włazem w ściekach; wyjście nadal przy krawędzi, w najdalszym pokoju).
 var entrance_mode: String = "edge"
+# Układ pomieszczeń: interior (pokoje organiczne / jaskiniowe) | structured (układ strukturalny / architektoniczny).
+var layout: String = "interior"
+## Opcje zaawansowane układu structured z sekcji "structured_layout" companion-JSON
+var structured_config: Dictionary = {}
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true

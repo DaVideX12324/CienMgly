@@ -3,14 +3,15 @@
   "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/sewer_map_tiles.tres",
   "generation": {
     "seed": 0,
-    "width": 0,
-    "height": 0,
+    "width": 200,
+    "height": 200,
     "min_room_size": 16,
     "max_room_size": 28,
     "max_rooms": 0,
     "corridor_width": 8
   },
   "flags": {
+    "layout": "structured",
     "enable_slope_thickness": false,
     "enable_meandering": false,
     "enable_variable_width": false,
@@ -55,6 +56,29 @@
     "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer.json",
     "canal_dry_chance": 0.4
   },
+  "structured_layout": {
+    "linear_feature_type": "canal",
+    "linear_width": 4,
+    "linear_clear_margin": 16,
+    "lane_width": 3,
+    "wall_thickness_h": 5,
+    "wall_thickness_v": 2,
+    "complex_count_ratio": 5500,
+    "complex_min_gap": 20,
+    "room_distance_min_h": 9,
+    "room_distance_min_v": 12,
+    "rooms_ratio": 2000,
+    "room_size_w": [10, 17],
+    "room_size_h": [9, 14],
+    "loop_chance": 0.35,
+    "corridor_room_chance": 0.5
+  },
+  "facade_rhythm": {
+    "pillar_spacing_options": [4, 5],
+    "patterns": ["A-A-A", "A-B-A", "A-B-B-A"],
+    "pillar_cap": true
+  },
+  "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
     "default": "sewer",
     "enabled": [
