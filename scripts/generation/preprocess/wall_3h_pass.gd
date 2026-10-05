@@ -50,8 +50,8 @@ func apply(ctx: GenerationContext) -> int:
 		for x in range(x0, x1 + 1):
 			done[Vector2i(x, y0)] = true
 		var need := min_h - (y1 - y0 + 1)
-		var up_ok := _can_fill(grid, x0, x1, y0 - need, y0 - 1)
-		var down_ok := _can_fill(grid, x0, x1, y1 + 1, y1 + need)
+		var up_ok := _can_fill(ctx, x0, x1, y0 - need, y0 - 1)
+		var down_ok := _can_fill(ctx, x0, x1, y1 + 1, y1 + need)
 		if not up_ok and not down_ok:
 			continue
 		var use_up := up_ok
@@ -68,10 +68,15 @@ func apply(ctx: GenerationContext) -> int:
 
 
 ## Czy prostokąt x0..x1 × ya..yb to w całości zwykła podłoga (można go zamurować).
-static func _can_fill(grid: Dictionary, x0: int, x1: int, ya: int, yb: int) -> bool:
+static func _can_fill(ctx: GenerationContext, x0: int, x1: int, ya: int, yb: int) -> bool:
+	var grid: Dictionary = ctx.grid
+	var canals = ctx.canals
 	for x in range(x0, x1 + 1):
 		for y in range(ya, yb + 1):
-			if int(grid.get(Vector2i(x, y), CellType.WALL)) != CellType.FLOOR:
+			var p := Vector2i(x, y)
+			if int(grid.get(p, CellType.WALL)) != CellType.FLOOR:
+				return false
+			if canals != null and canals.cells.has(p):
 				return false
 	return true
 

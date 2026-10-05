@@ -102,33 +102,34 @@ static func build_zoning(
 			complexes[cid] = {"segs": choice, "mask": {}, "pinch": null}
 			placed_any = true
 
-	# 2. Pasy ruchu (chodniki wzdłuż wszystkich koryt)
+	# 2. Pasy ruchu (chodniki w tunelach)
 	for st in segs:
-		var r: Rect2i = st["rect"]
-		if st["axis"] == "h":
-			# Chodnik na północ i południe
-			for y in range(r.position.y - lane_width, r.position.y):
-				for x in range(r.position.x, r.end.x):
-					var p := Vector2i(x, y)
-					if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-						lanes[p] = true
-			for y in range(r.end.y, r.end.y + lane_width):
-				for x in range(r.position.x, r.end.x):
-					var p := Vector2i(x, y)
-					if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-						lanes[p] = true
-		else:
-			# Chodnik na zachód i wschód
-			for y in range(r.position.y, r.end.y):
-				for x in range(r.position.x - lane_width, r.position.x):
-					var p := Vector2i(x, y)
-					if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-						lanes[p] = true
-			for y in range(r.position.y, r.end.y):
-				for x in range(r.end.x, r.end.x + lane_width):
-					var p := Vector2i(x, y)
-					if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-						lanes[p] = true
+		if st["kind"] == "tunnel":
+			var r: Rect2i = st["rect"]
+			if st["axis"] == "h":
+				# Chodnik na północ i południe
+				for y in range(r.position.y - lane_width, r.position.y):
+					for x in range(r.position.x, r.end.x):
+						var p := Vector2i(x, y)
+						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
+							lanes[p] = true
+				for y in range(r.end.y, r.end.y + lane_width):
+					for x in range(r.position.x, r.end.x):
+						var p := Vector2i(x, y)
+						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
+							lanes[p] = true
+			else:
+				# Chodnik na zachód i wschód
+				for y in range(r.position.y, r.end.y):
+					for x in range(r.position.x - lane_width, r.position.x):
+						var p := Vector2i(x, y)
+						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
+							lanes[p] = true
+				for y in range(r.position.y, r.end.y):
+					for x in range(r.end.x, r.end.x + lane_width):
+						var p := Vector2i(x, y)
+						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
+							lanes[p] = true
 
 	# 4. Budowanie wielokątów sal kompleksów wokół odcinków
 	var hallm: Dictionary = {}
@@ -174,24 +175,26 @@ static func build_zoning(
 			while t <= hi:
 				var t1 := mini(hi, t + rng.randi_range(4, 8) - 1)
 				for k in [0, 1]:
-					ext[k] = clampi(ext[k] + rng.randi_range(-3, 3), lane_width, ext_max)
+					ext[k] = clampi(ext[k] + rng.randi_range(-3, 3), 0, ext_max)
 
 				var want := [ext[0], ext[1]]
 				if pinch != null and pinch["seg"] == st:
 					var pk: int = pinch["k"]
 					if t1 >= pinch["p0"] and t <= pinch["p1"]:
-						want[pk] = lane_width
-						want[1 - pk] = maxi(want[1 - pk], lane_width + 2)
+						want[pk] = 0
+						want[1 - pk] = maxi(want[1 - pk], 2)
 					elif t1 >= pinch["p0"] - 8 and t <= pinch["p1"] + 8:
 						want[pk] = maxi(want[pk], (wall_h if horiz else wall_v) + 4)
-						want[1 - pk] = maxi(want[1 - pk], lane_width + 2)
+						want[1 - pk] = maxi(want[1 - pk], 2)
 
 				if t <= mid + 1 and t1 >= mid:
-					want[0] = maxi(want[0], lane_width)
-					want[1] = maxi(want[1], lane_width)
+					want[0] = maxi(want[0], 2)
+					want[1] = maxi(want[1], 2)
 
 				for k in [0, 1]:
-					var e: int = maxi(want[k], lane_width)
+					var e: int = want[k]
+					if e < 2:
+						continue
 					# Wypełnij pas
 					for coord in range(t, t1 + 1):
 						if horiz:
