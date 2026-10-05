@@ -71,11 +71,11 @@ static func _face_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i
 	return &"M"
 
 
-## Kwas sąsiada: kanał (nie lico) albo ściana (kanał wpływa pod mur).
+## Kwas sąsiada: kanał (nie lico). Ściana obok nie jest kwasem — koryto zachowuje prosty brzeg i ciągłość.
 static func _acid(ctx: GenerationContext, water: Dictionary, q: Vector2i) -> bool:
 	if water.has(q):
 		return not _is_face(ctx, water, q)
-	return not GridUtils.is_walkable(ctx.grid, q)
+	return false
 
 
 static func _water_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> StringName:

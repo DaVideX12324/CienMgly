@@ -7,6 +7,7 @@ extends RefCounted
 ## łączy się z wejściem; kanał, którego nie da się tak podpiąć, jest usuwany.
 
 const CanalLayoutScript = preload("../core/canal_layout.gd")
+const MapGeneratorBaseScript = preload("../map_generator_base.gd")
 
 const H_BAND := 4
 const V_BAND := 3
@@ -185,7 +186,7 @@ static func _ensure_connected(ctx: GenerationContext, layout: CanalLayout, segme
 		var added := false
 		for seg in segments:
 			var cands := _bridge_candidates(ctx, layout, seg)
-			cands.shuffle()
+			MapGeneratorBaseScript.shuffle_array(cands, rng)
 			for cand in cands:
 				var ends := _bridge_ends(cand)
 				var la: int = labels.get(ends[0], -1)

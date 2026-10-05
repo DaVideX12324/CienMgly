@@ -6,6 +6,7 @@ extends RefCounted
 
 const LinearFeatureLayout = preload("core/linear_feature_layout.gd")
 const StructuredReservations = preload("structured_reservations.gd")
+const MapGeneratorBaseScript = preload("../map_generator_base.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 
@@ -163,7 +164,7 @@ static func pack_rooms_and_corridors(
 		var step := maxi(1, (max_t - min_t) / 3)
 		for t in range(min_t, max_t + 1, maxi(3, step)):
 			candidate_ts.append(t)
-		candidate_ts.shuffle()
+		MapGeneratorBaseScript.shuffle_array(candidate_ts, rng)
 
 		for bt in candidate_ts:
 			var too_close := false
