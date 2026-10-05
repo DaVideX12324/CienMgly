@@ -62,7 +62,7 @@ func _can_claim_cell(p: Vector2i, new_klass: StringName, will_block: bool) -> bo
 
 	# Jeśli nowa rezerwacja ma blokować ruch, a pole już jest zablokowane lub jest przejściem
 	if will_block:
-		if blocks_movement.has(p):
+		if blocks_movement.has(p) and not (old_klass == &"LINEAR" and new_klass == &"RAIL"):
 			return false
 		if old_klass == &"PORTAL" or old_klass == &"CLEARANCE":
 			return false
@@ -85,9 +85,11 @@ func _can_claim_cell(p: Vector2i, new_klass: StringName, will_block: bool) -> bo
 			return !blocks_movement.has(p)
 
 		&"RAIL":
-			# Barierka może stanąć tylko na brzegu kanału, nie może blokować portalu ani kładki
+			# Barierka może stanąć na brzegu kanału lub krawędzi wody (LINEAR), nie może blokować portalu ani kładki
 			if old_klass == &"PORTAL" or old_klass == &"CLEARANCE" or old_klass == &"CROSSING":
 				return false
+			if old_klass == &"LINEAR":
+				return true
 			return !blocks_movement.has(p)
 
 		&"PORTAL":
