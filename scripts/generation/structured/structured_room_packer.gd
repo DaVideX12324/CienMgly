@@ -268,6 +268,8 @@ static func pack_rooms_and_corridors(
 	var placed_bridges: Array[Vector2i] = []
 
 	for st in layout.segments:
+		if st.get("kind", "") == "walled":
+			continue
 		var r: Rect2i = st["rect"]
 		var horiz: bool = (st["axis"] == "h")
 		var cw: int = int(st.get("width", 4))

@@ -97,6 +97,8 @@ static func resolve(ctx: GenerationContext, layout: LinearFeatureLayout) -> void
 		var min_total_dist := 999999
 
 		for st in layout.segments:
+			if st.get("kind", "") == "walled":
+				continue
 			var r: Rect2i = st["rect"]
 			var horiz: bool = (st["axis"] == "h")
 			var seg_cw: int = (r.size.y if horiz else r.size.x)

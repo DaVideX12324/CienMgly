@@ -110,15 +110,16 @@ static func find_corridor_path(
 	bias: Dictionary = {},
 	start_ok_rect: Rect2i = Rect2i(),
 	extra_forb: Dictionary = {},
-	max_len: int = 100
+	max_len: int = 100,
+	zone_skip: Dictionary = {}
 ) -> Array[Vector2i]:
 	if target_mask.is_empty():
 		return []
 
-	# 1. Obce komórki podłogi (nie należące do startu)
+	# 1. Obce komórki podłogi (nie należące do startu i nie będące wodą kanału)
 	var other_cells: Dictionary = {}
 	for p in floor_cells:
-		if not own_mask.has(p):
+		if not own_mask.has(p) and not water_cells.has(p):
 			other_cells[p] = true
 
 	var other_pfx := build_prefix_sum(width, height, other_cells)
@@ -235,21 +236,22 @@ static func find_corridor_path(
 					if not near_target:
 						continue
 
-				if extra_forb.has(n_pos):
+				if extra_forb.has(n_pos) and not target_mask.has(n_pos):
 					continue
 
 				if water_cells.has(n_pos) and jz_map.has(n_pos):
 					continue
 
-				# Reguła prostopadłego przekraczania kanałów
-				var zh: bool = zh_map.has(n_pos)
-				var zv: bool = zv_map.has(n_pos)
-				if zh and zv and water_cells.has(n_pos):
-					continue
-				if zh and d.x != 0 and water_cells.has(n_pos):
-					continue  # przez poziomy kanał tylko pionowo
-				if zv and d.y != 0 and water_cells.has(n_pos):
-					continue  # przez pionowy kanał tylko poziomo
+				# Reguła prostopadłego przekraczania kanałów (pomijana gdy w zone_skip)
+				if not zone_skip.has(n_pos):
+					var zh: bool = zh_map.has(n_pos)
+					var zv: bool = zv_map.has(n_pos)
+					if zh and zv and water_cells.has(n_pos):
+						continue
+					if zh and d.x != 0 and water_cells.has(n_pos):
+						continue  # przez poziomy kanał tylko pionowo
+					if zv and d.y != 0 and water_cells.has(n_pos):
+						continue  # przez pionowy kanał tylko poziomo
 
 			var turn_penalty: int = 4 if (dI >= 0 and dI != ni) else 0
 			var bias_val: int = int(bias.get(n_pos, 0))

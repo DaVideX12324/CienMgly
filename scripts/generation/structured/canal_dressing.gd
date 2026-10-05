@@ -31,6 +31,8 @@ static func apply_dressing(
 
 	# 2. Wyznaczenie odcinków kwalifikujących się pod barierki
 	for seg in layout.segments:
+		if seg.get("kind", "") == "walled":
+			continue
 		var r: Rect2i = seg["rect"]
 		var axis: String = seg.get("axis", "h")
 		if axis == "h":
