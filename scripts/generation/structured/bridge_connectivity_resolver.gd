@@ -92,48 +92,7 @@ static func resolve(ctx: GenerationContext, layout: LinearFeatureLayout) -> void
 				grid[p] = CellType.WALL
 			continue
 
-		# 2. Multi-Source BFS przez ląd omijający wodę
-		var bfs_queue: Array[Vector2i] = []
-		var came_from: Dictionary = {}
-		var bfs_visited: Dictionary = {}
-		for p in cut_c:
-			bfs_queue.append(p)
-			bfs_visited[p] = true
-
-		var head := 0
-		var found_target := Vector2i.ZERO
-		while head < bfs_queue.size():
-			var cur: Vector2i = bfs_queue[head]
-			head += 1
-
-			if main_c.has(cur):
-				found_target = cur
-				break
-
-			for d in dirs:
-				var n: Vector2i = cur + d
-				if n.x < 2 or n.y < 2 or n.x >= width - 2 or n.y >= height - 2:
-					continue
-				if water.has(n):
-					continue
-				if not bfs_visited.has(n):
-					bfs_visited[n] = true
-					came_from[n] = cur
-					bfs_queue.append(n)
-
-		if found_target != Vector2i.ZERO:
-			var curr: Vector2i = found_target
-			while came_from.has(curr):
-				for dy in range(-1, 2):
-					for dx in range(-1, 2):
-						var cp := curr + Vector2i(dx, dy)
-						if cp.x >= 2 and cp.x < width - 2 and cp.y >= 2 and cp.y < height - 2:
-							if not water.has(cp):
-								grid[cp] = CellType.FLOOR
-				curr = came_from[curr]
-			continue
-
-		# 3. Kładka przez kanał (dla odciętych wysp otoczonych kanałem)
+		# 2. Kładka przez kanał (dla odciętych wysp otoczonych kanałem - priorytet nad drążeniem w murach)
 		var best_bridge: Dictionary = {}
 		var min_total_dist := 999999
 
@@ -349,6 +308,48 @@ static func resolve(ctx: GenerationContext, layout: LinearFeatureLayout) -> void
 						grid[Vector2i(px, by)] = CellType.FLOOR
 						grid[Vector2i(px, by + 1)] = CellType.FLOOR
 				continue
+
+		# 3. Multi-Source BFS przez ląd omijający wodę (tylko w ostateczności, gdy nie można postawić kładki)
+		var bfs_queue: Array[Vector2i] = []
+		var came_from: Dictionary = {}
+		var bfs_visited: Dictionary = {}
+		for p in cut_c:
+			bfs_queue.append(p)
+			bfs_visited[p] = true
+
+		var head := 0
+		var found_target := Vector2i.ZERO
+		while head < bfs_queue.size():
+			var cur: Vector2i = bfs_queue[head]
+			head += 1
+
+			if main_c.has(cur):
+				found_target = cur
+				break
+
+			for d in dirs:
+				var n: Vector2i = cur + d
+				if n.x < 2 or n.y < 2 or n.x >= width - 2 or n.y >= height - 2:
+					continue
+				if water.has(n):
+					continue
+				if not bfs_visited.has(n):
+					bfs_visited[n] = true
+					came_from[n] = cur
+					bfs_queue.append(n)
+
+		if found_target != Vector2i.ZERO:
+			var curr: Vector2i = found_target
+			while came_from.has(curr):
+				for dy in range(-1, 2):
+					for dx in range(-1, 2):
+						var cp := curr + Vector2i(dx, dy)
+						if cp.x >= 2 and cp.x < width - 2 and cp.y >= 2 and cp.y < height - 2:
+							if not water.has(cp):
+								grid[cp] = CellType.FLOOR
+				curr = came_from[curr]
+			continue
+
 
 		# 4. Jeśli nie dało się połączyć ani BFS-em ani kładką, a fragment nie zawiera portalu
 		if not has_portal:

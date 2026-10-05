@@ -65,7 +65,10 @@ static func generate_layout(
 	var linear_clear: int = int(cfg_struct.get("linear_clear_margin", 16))
 	var lane_w: int = int(cfg_struct.get("lane_width", 3))
 	var wall_th_h: int = int(cfg_struct.get("wall_thickness_h", 5))
-	var wall_th_v: int = int(cfg_struct.get("wall_thickness_v", 2))
+	var default_wall_v := 4 if (flags != null and (flags.enforce_3h_walls or not flags.enable_2h_facades)) else 2
+	var wall_th_v: int = int(cfg_struct.get("wall_thickness_v", default_wall_v))
+	if (flags != null and (flags.enforce_3h_walls or not flags.enable_2h_facades)) and wall_th_v < 4:
+		wall_th_v = 4
 	var dry_chance: float = float(flags.canal_dry_chance) if flags != null else 0.4
 
 	# 1. Sieć liniowa (LinearNetworkGenerator)
@@ -116,6 +119,9 @@ static func generate_layout(
 	for b in canal_layout.crossings:
 		for p in b.get("cells", []):
 			ctx.grid[p] = CellType.FLOOR
+
+	# Sprzątanie ząbków 1w i ścian 1w przy kładkach (tylko operacje WALL -> FLOOR, bezpieczne dla spójności)
+	GridPreprocessor.run(ctx, [WallThicknessPass.new(), SpikeCleanupPass.new()])
 
 	GenProgress.end(&"portals")
 
