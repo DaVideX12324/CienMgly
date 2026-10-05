@@ -16,7 +16,7 @@ const GEN_KEYS := ["min_room_size", "max_room_size", "max_rooms", "corridor_widt
 const FLAG_BOOL_KEYS := ["floor_edges_by_walkable", "facade_base_on_wall", "align_wall_tops", "enforce_3h_walls", "enable_4h_facades", "corridor_diagonal_45", "corridor_diagonal_30_60", "enable_meandering", "enable_variable_width", "enable_funnels", "enable_junction_smoothing", "enable_grid_cleanup", "enable_terrain_smoothing", "enable_decorative_niches", "enable_pillars", "enable_2h_facades", "enable_3h_facades", "enable_floor_decorations", "debug_log_edge_kinds", "enable_platforms", "enable_objects", "enable_ledge_fix", "enable_slope_thickness"]
 const FLAG_FLOAT_KEYS := ["canal_dry_chance", "facade_4h_chance", "corridor_corner_room_chance", "room_density", "grid_room_chance", "grid_loop_chance", "niche_spawn_chance", "secret_niche_spawn_chance", "passage_niche_spawn_chance", "plateau_noise_frequency", "plateau_threshold", "plateau_level_step", "plateau_pit_threshold", "plateau_coverage", "plateau_high_coverage", "plateau_pit_coverage", "terrain_mud_frequency", "terrain_mud_threshold", "terrain_grass_frequency", "terrain_grass_threshold"]
 const FLAG_INT_KEYS := ["canal_count", "canal_min_length", "canal_bridge_spacing", "terrain_mud_index", "terrain_grass_index", "floor_terrain", "grid_cell_size", "force_theme", "plateau_noise_octaves", "plateau_min_area", "platform_max_stairs", "stair_max_width", "plateau_levels", "plateau_level_ring", "plateau_pit_levels", "plateau_smooth", "plateau_block", "small_pillar_2h_max_area", "small_pillar_2h_max_width", "small_pillar_2h_max_height"]
-const FLAG_STRING_KEYS := ["objects_catalog", "room_shape", "corridor_shape", "room_layout", "entrance_mode", "floor_area"]
+const FLAG_STRING_KEYS := ["objects_catalog", "room_shape", "corridor_shape", "room_layout", "entrance_mode", "floor_area", "layout"]
 
 ## Id puli MIXED do wypełnienia pola (JSON tilesets.mixed), lub "" gdy brak.
 func mixed_pool_id() -> StringName:
@@ -41,6 +41,8 @@ func tilesets() -> Dictionary: return raw.get("tilesets", {})
 func zones() -> Dictionary: return raw.get("zones", {})
 func tiling() -> Dictionary: return raw.get("tiling", {})
 func debug() -> Dictionary: return raw.get("debug", {})
+func structured_layout() -> Dictionary: return raw.get("structured_layout", {})
+func facade_rhythm() -> Dictionary: return raw.get("facade_rhythm", {})
 
 ## Etap tilingu (np. "connectors_enabled") — domyślnie true (włączony jak dotychczas).
 func is_tiling_enabled(key: String) -> bool:
@@ -66,6 +68,7 @@ func build_flags(base: GenerationFlags = null) -> GenerationFlags:
 		if fl.has(k): f.set(k, int(fl[k]))
 	for k in FLAG_STRING_KEYS:
 		if fl.has(k): f.set(k, String(fl[k]))
+	f.structured_config = structured_layout()
 	return f
 
 func default_tileset_id() -> StringName:

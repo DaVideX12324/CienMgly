@@ -13,6 +13,7 @@ static var CAVES_TILESET_PATH: String = QuizRpgPaths.path("resources/maps/caves.
 # FLAGI GENERACJI I KAFELKOWANIA (Wewnętrzna konfiguracja cech)
 # =========================================================================
 const GenProgress = preload("core/gen_progress.gd")
+const StructuredLayoutGeneratorScript = preload("structured/structured_layout_generator.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -204,11 +205,18 @@ static func generate(
 	result.width = width
 	result.height = height
 
-	InteriorRoomLayoutGenerator.generate_layout(
-		width, height, seed_val,
-		min_room_size, max_room_size, max_rooms,
-		corridor_width, flags, result
-	)
+	if flags.layout == "structured":
+		StructuredLayoutGeneratorScript.generate_layout(
+			width, height, seed_val,
+			min_room_size, max_room_size, max_rooms,
+			corridor_width, flags, result
+		)
+	else:
+		InteriorRoomLayoutGenerator.generate_layout(
+			width, height, seed_val,
+			min_room_size, max_room_size, max_rooms,
+			corridor_width, flags, result
+		)
 
 	return result
 
