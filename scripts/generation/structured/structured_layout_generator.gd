@@ -109,6 +109,9 @@ static func generate_layout(
 	_run_wall_shape_passes(ctx, flags)
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
 
+	# Gwarancja ciągłości koryt i braku ścian stykających się z brzegami
+	_ensure_canal_clearance(ctx, canal_layout, lane_w)
+
 	# Gwarancja przejścia do każdego fragmentu przez kładkę (Bridge Connectivity Resolver)
 	BridgeConnectivityResolverScript.resolve(ctx, canal_layout)
 
@@ -175,3 +178,52 @@ static func _run_wall_shape_passes(ctx: GenerationContext, flags: GenerationFlag
 		GridPreprocessor.run(ctx, [WallTopAlignPassScript.new()])
 		if flags.enforce_3h_walls:
 			GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
+
+
+## Gwarantuje, że koryta kanałów mają ciągłą strefę podłogi po bokach i nie stykają się ze ścianami.
+static func _ensure_canal_clearance(ctx: GenerationContext, canal_layout, lane_w: int = 2) -> void:
+	var width := ctx.width
+	var height := ctx.height
+	var grid: Dictionary = ctx.grid
+	var water: Dictionary = canal_layout.cells
+
+	# 1. Ciągły pas podłogi po obu stronach każdego segmentu kanału
+	for st in canal_layout.segments:
+		var r: Rect2i = st["rect"]
+		var horiz: bool = (st["axis"] == "h")
+		if horiz:
+			for x in range(r.position.x, r.end.x):
+				for dy in range(1, lane_w + 1):
+					var pn := Vector2i(x, r.position.y - dy)
+					var ps := Vector2i(x, r.end.y + dy - 1)
+					if pn.x >= 2 and pn.x < width - 2 and pn.y >= 2 and pn.y < height - 2:
+						if not water.has(pn):
+							grid[pn] = CellType.FLOOR
+					if ps.x >= 2 and ps.x < width - 2 and ps.y >= 2 and ps.y < height - 2:
+						if not water.has(ps):
+							grid[ps] = CellType.FLOOR
+		else:
+			for y in range(r.position.y, r.end.y):
+				for dx in range(1, lane_w + 1):
+					var pw := Vector2i(r.position.x - dx, y)
+					var pe := Vector2i(r.end.x + dx - 1, y)
+					if pw.x >= 2 and pw.x < width - 2 and pw.y >= 2 and pw.y < height - 2:
+						if not water.has(pw):
+							grid[pw] = CellType.FLOOR
+					if pe.x >= 2 and pe.x < width - 2 and pe.y >= 2 and pe.y < height - 2:
+						if not water.has(pe):
+							grid[pe] = CellType.FLOOR
+
+	# 2. Likwidacja wąskich szczelin ściany (<= 3 kratek) wciśniętych między sąsiednie kanały
+	for p in water:
+		for d in [Vector2i(1, 0), Vector2i(0, 1)]:
+			for dist in range(1, 5):
+				var check_p: Vector2i = p + d * dist
+				if water.has(check_p):
+					for mid_i in range(1, dist):
+						var mid_p: Vector2i = p + d * mid_i
+						if mid_p.x >= 2 and mid_p.x < width - 2 and mid_p.y >= 2 and mid_p.y < height - 2:
+							if not water.has(mid_p):
+								grid[mid_p] = CellType.FLOOR
+					break
+
