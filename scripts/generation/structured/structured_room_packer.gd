@@ -274,7 +274,6 @@ static func pack_rooms_and_corridors(
 				bridges.append({"rect": b_rect, "cells": b_cells, "vertical": false, "crossing": false})
 				placed_bridges.append(Vector2i(x0, by))
 				break
-
 	# 4. Zapis do gridu GenerationContext (woda i podłoga jako FLOOR, reszta WALL)
 	for y in range(height):
 		for x in range(width):
@@ -287,3 +286,4 @@ static func pack_rooms_and_corridors(
 	layout.rebuild_blocked()
 
 	return rooms_r
+
