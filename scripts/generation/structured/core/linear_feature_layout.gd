@@ -30,6 +30,10 @@ var bridge_clearance: Dictionary = {}  # Vector2i -> bool
 ## Puste koryto / sekcje suche (bez cieczy)
 var dry: Dictionary = {}  # Vector2i -> bool
 
+## Czarne doły (otchłanie) z krawędzią w suchym korycie
+var pits: Array[Rect2i] = []
+var pit_cells: Dictionary = {}  # Vector2i -> StringName (&"TOP", &"TOP_B", &"VOID", &"BOTTOM")
+
 ## Odcinki sieci liniowej
 var segments: Array[Dictionary] = []  # {rect: Rect2i, axis: String, line: int, idx: int, kind: String}
 var lines: Dictionary = {}  # line_id -> Array[Dictionary]

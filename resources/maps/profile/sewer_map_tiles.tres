@@ -1918,7 +1918,7 @@ variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_gc7d4"), SubReso
 
 [sub_resource type="Resource" id="Resource_laxhv"]
 script = ExtResource("8_j2pwj")
-atlas_coords = Vector2i(1, 4)
+atlas_coords = Vector2i(18, 10)
 
 [sub_resource type="Resource" id="Resource_xxlxg"]
 script = ExtResource("7_8i1gb")
@@ -1926,11 +1926,12 @@ tile = SubResource("Resource_laxhv")
 
 [sub_resource type="Resource" id="Resource_jtfpp"]
 script = ExtResource("6_fxc8i")
+variant_id = &"TOP"
 parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_xxlxg")])
 
 [sub_resource type="Resource" id="Resource_5218l"]
 script = ExtResource("8_j2pwj")
-atlas_coords = Vector2i(1, 4)
+atlas_coords = Vector2i(19, 10)
 
 [sub_resource type="Resource" id="Resource_nabnp"]
 script = ExtResource("7_8i1gb")
@@ -1938,95 +1939,151 @@ tile = SubResource("Resource_5218l")
 
 [sub_resource type="Resource" id="Resource_miadl"]
 script = ExtResource("6_fxc8i")
-variant_id = &"B"
+variant_id = &"TOP_B"
 parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_nabnp")])
 
 [sub_resource type="Resource" id="Resource_b1lcb"]
-script = ExtResource("5_ybd7s")
-role = 48
-variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_jtfpp"), SubResource("Resource_miadl")])
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(17, 10)
 
 [sub_resource type="Resource" id="Resource_x6ufk"]
-script = ExtResource("8_j2pwj")
-atlas_coords = Vector2i(0, 7)
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_b1lcb")
 
 [sub_resource type="Resource" id="Resource_epjmt"]
-script = ExtResource("7_8i1gb")
-offset = Vector2i(0, -1)
-tile = SubResource("Resource_x6ufk")
+script = ExtResource("6_fxc8i")
+variant_id = &"VOID"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_x6ufk")])
 
 [sub_resource type="Resource" id="Resource_7oa4c"]
 script = ExtResource("8_j2pwj")
-atlas_coords = Vector2i(0, 6)
+atlas_coords = Vector2i(18, 11)
 
 [sub_resource type="Resource" id="Resource_ryw3r"]
 script = ExtResource("7_8i1gb")
-offset = Vector2i(0, -2)
 tile = SubResource("Resource_7oa4c")
 
 [sub_resource type="Resource" id="Resource_7bsmh"]
+script = ExtResource("6_fxc8i")
+variant_id = &"BOTTOM"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_ryw3r")])
+
+[sub_resource type="Resource" id="Resource_e5c5i"]
+script = ExtResource("5_ybd7s")
+role = 60
+variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_jtfpp"), SubResource("Resource_miadl"), SubResource("Resource_epjmt"), SubResource("Resource_7bsmh")])
+
+[sub_resource type="Resource" id="Resource_h52hr"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(1, 4)
+
+[sub_resource type="Resource" id="Resource_32r3e"]
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_h52hr")
+
+[sub_resource type="Resource" id="Resource_b7k5d"]
+script = ExtResource("6_fxc8i")
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_32r3e")])
+
+[sub_resource type="Resource" id="Resource_xay6i"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(1, 4)
+
+[sub_resource type="Resource" id="Resource_lle62"]
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_xay6i")
+
+[sub_resource type="Resource" id="Resource_xwsbt"]
+script = ExtResource("6_fxc8i")
+variant_id = &"B"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_lle62")])
+
+[sub_resource type="Resource" id="Resource_c1q2a"]
+script = ExtResource("5_ybd7s")
+role = 48
+variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_b7k5d"), SubResource("Resource_xwsbt")])
+
+[sub_resource type="Resource" id="Resource_8116a"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(0, 7)
+
+[sub_resource type="Resource" id="Resource_dar7r"]
+script = ExtResource("7_8i1gb")
+offset = Vector2i(0, -1)
+tile = SubResource("Resource_8116a")
+
+[sub_resource type="Resource" id="Resource_tem73"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(0, 6)
+
+[sub_resource type="Resource" id="Resource_f8wv3"]
+script = ExtResource("7_8i1gb")
+offset = Vector2i(0, -2)
+tile = SubResource("Resource_tem73")
+
+[sub_resource type="Resource" id="Resource_kepob"]
 script = ExtResource("8_j2pwj")
 atlas_coords = Vector2i(0, 5)
 
-[sub_resource type="Resource" id="Resource_e5c5i"]
+[sub_resource type="Resource" id="Resource_547jr"]
 script = ExtResource("7_8i1gb")
 offset = Vector2i(0, -3)
-tile = SubResource("Resource_7bsmh")
+tile = SubResource("Resource_kepob")
 
-[sub_resource type="Resource" id="Resource_h52hr"]
+[sub_resource type="Resource" id="Resource_pfvwu"]
 script = ExtResource("6_fxc8i")
-parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_epjmt"), SubResource("Resource_ryw3r"), SubResource("Resource_e5c5i")])
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_dar7r"), SubResource("Resource_f8wv3"), SubResource("Resource_547jr")])
 
-[sub_resource type="Resource" id="Resource_32r3e"]
+[sub_resource type="Resource" id="Resource_y544e"]
 script = ExtResource("5_ybd7s")
 role = 26
-variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_h52hr")])
+variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_pfvwu")])
 
-[sub_resource type="Resource" id="Resource_b7k5d"]
+[sub_resource type="Resource" id="Resource_u4m07"]
 script = ExtResource("8_j2pwj")
 atlas_coords = Vector2i(2, 7)
 
-[sub_resource type="Resource" id="Resource_xay6i"]
+[sub_resource type="Resource" id="Resource_15bns"]
 script = ExtResource("7_8i1gb")
 offset = Vector2i(0, -1)
-tile = SubResource("Resource_b7k5d")
+tile = SubResource("Resource_u4m07")
 
-[sub_resource type="Resource" id="Resource_lle62"]
+[sub_resource type="Resource" id="Resource_sil4t"]
 script = ExtResource("8_j2pwj")
 atlas_coords = Vector2i(2, 6)
 
-[sub_resource type="Resource" id="Resource_xwsbt"]
+[sub_resource type="Resource" id="Resource_heukv"]
 script = ExtResource("7_8i1gb")
 offset = Vector2i(0, -2)
-tile = SubResource("Resource_lle62")
+tile = SubResource("Resource_sil4t")
 
-[sub_resource type="Resource" id="Resource_c1q2a"]
+[sub_resource type="Resource" id="Resource_nby7o"]
 script = ExtResource("8_j2pwj")
 atlas_coords = Vector2i(2, 5)
 
-[sub_resource type="Resource" id="Resource_8116a"]
+[sub_resource type="Resource" id="Resource_2cyqk"]
 script = ExtResource("7_8i1gb")
 offset = Vector2i(0, -3)
-tile = SubResource("Resource_c1q2a")
+tile = SubResource("Resource_nby7o")
 
-[sub_resource type="Resource" id="Resource_dar7r"]
+[sub_resource type="Resource" id="Resource_ki54y"]
 script = ExtResource("6_fxc8i")
-parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_xay6i"), SubResource("Resource_xwsbt"), SubResource("Resource_8116a")])
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_15bns"), SubResource("Resource_heukv"), SubResource("Resource_2cyqk")])
 
-[sub_resource type="Resource" id="Resource_tem73"]
+[sub_resource type="Resource" id="Resource_quk14"]
 script = ExtResource("5_ybd7s")
 role = 27
-variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_dar7r")])
+variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_ki54y")])
 
-[sub_resource type="Resource" id="Resource_f8wv3"]
+[sub_resource type="Resource" id="Resource_fbyrx"]
 script = ExtResource("4_orwte")
 id = &"sewer"
 display_name = "Sewer"
 description = "Ścieki: proste ściany z ceglanym licem 3H, kapy i boki bloków, rama pokoju."
 tile_set = ExtResource("9_4tt5c")
-tile_entries = Array[ExtResource("5_ybd7s")]([SubResource("Resource_blboe"), SubResource("Resource_8n7ua"), SubResource("Resource_pnl5w"), SubResource("Resource_b1bwe"), SubResource("Resource_nka0k"), SubResource("Resource_q0jyf"), SubResource("Resource_gh830"), SubResource("Resource_50del"), SubResource("Resource_bu60o"), SubResource("Resource_hr6ni"), SubResource("Resource_orcws"), SubResource("Resource_4tn0v"), SubResource("Resource_d5l2m"), SubResource("Resource_78goh"), SubResource("Resource_onfqr"), SubResource("Resource_mxqhr"), SubResource("Resource_cfx1d"), SubResource("Resource_u1l5s"), SubResource("Resource_3a4hb"), SubResource("Resource_7o02w"), SubResource("Resource_yufof"), SubResource("Resource_dq2xv"), SubResource("Resource_0mywp"), SubResource("Resource_x6snj"), SubResource("Resource_nbvmw"), SubResource("Resource_l60gy"), SubResource("Resource_2qrjc"), SubResource("Resource_r21lm"), SubResource("Resource_nibco"), SubResource("Resource_ydnkr"), SubResource("Resource_b1lcb"), SubResource("Resource_32r3e"), SubResource("Resource_tem73")])
+tile_entries = Array[ExtResource("5_ybd7s")]([SubResource("Resource_blboe"), SubResource("Resource_8n7ua"), SubResource("Resource_pnl5w"), SubResource("Resource_b1bwe"), SubResource("Resource_nka0k"), SubResource("Resource_q0jyf"), SubResource("Resource_gh830"), SubResource("Resource_50del"), SubResource("Resource_bu60o"), SubResource("Resource_hr6ni"), SubResource("Resource_orcws"), SubResource("Resource_4tn0v"), SubResource("Resource_d5l2m"), SubResource("Resource_78goh"), SubResource("Resource_onfqr"), SubResource("Resource_mxqhr"), SubResource("Resource_cfx1d"), SubResource("Resource_u1l5s"), SubResource("Resource_3a4hb"), SubResource("Resource_7o02w"), SubResource("Resource_yufof"), SubResource("Resource_dq2xv"), SubResource("Resource_0mywp"), SubResource("Resource_x6snj"), SubResource("Resource_nbvmw"), SubResource("Resource_l60gy"), SubResource("Resource_2qrjc"), SubResource("Resource_r21lm"), SubResource("Resource_nibco"), SubResource("Resource_ydnkr"), SubResource("Resource_e5c5i"), SubResource("Resource_c1q2a"), SubResource("Resource_y544e"), SubResource("Resource_quk14")])
 
 [resource]
 script = ExtResource("3_cmae4")
-tilesets = Array[ExtResource("4_orwte")]([SubResource("Resource_f8wv3")])
+tilesets = Array[ExtResource("4_orwte")]([SubResource("Resource_fbyrx")])
 default_tileset_id = &"sewer"
