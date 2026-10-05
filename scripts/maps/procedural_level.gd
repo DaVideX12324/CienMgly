@@ -429,16 +429,17 @@ func _resolve_tileset(palette: Dictionary) -> TileSet:
 	return ts
 
 
-## Warstwy poziomu. Jaskinie: przygotowane i wyczyszczone przez generator (FloorDecor/Platforms).
+## Warstwy poziomu. Jaskinie: przygotowane i wyczyszczone przez generator (FloorDecor/Platforms/Bridges).
 func _prepare_layers(job: GenJob) -> Dictionary:
 	var ts := _resolve_tileset(_palette())
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
 	var floor_decor := _get_or_create_layer("FloorDecor", -1, ts)
+	var bridges_layer := _get_or_create_layer("Bridges", -1, ts)
 	var walls_layer := _get_or_create_layer("Walls", 0, ts)
 	var platforms_layer := _get_or_create_layer("Platforms", -1, ts)  # płaskowyże: pod Walls i encjami
 	if level_type == LevelType.CAVE_DUNGEON:
-		return CaveGeneratorScript.prepare_cave_layers(floor_layer, walls_layer, job.result, floor_decor, platforms_layer)
-	return {&"Floor": floor_layer, &"FloorDecor": floor_decor, &"Walls": walls_layer, &"Platforms": platforms_layer}
+		return CaveGeneratorScript.prepare_cave_layers(floor_layer, walls_layer, job.result, floor_decor, platforms_layer, bridges_layer)
+	return {&"Floor": floor_layer, &"FloorDecor": floor_decor, &"Bridges": bridges_layer, &"Walls": walls_layer, &"Platforms": platforms_layer}
 
 
 ## Nakłada wynik generacji na scenę w jednej klatce.
@@ -461,7 +462,7 @@ func _apply_job_async(job: GenJob) -> void:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
 		var tiles = job.plans.tiles
-		var order := [&"Floor", &"FloorDecor", &"Walls", &"Platforms"]
+		var order := [&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Platforms"]
 		var total := 0
 		for layer_name in order:
 			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
@@ -490,6 +491,9 @@ func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
 	var floor_decor: TileMapLayer = layers.get(&"FloorDecor")
 	if floor_decor:
 		floor_decor.clear()
+	var bridges_layer: TileMapLayer = layers.get(&"Bridges")
+	if bridges_layer:
+		bridges_layer.clear()
 	(layers[&"Platforms"] as TileMapLayer).clear()
 	MapGeneratorBaseScript.apply_grid_to_layers(layers[&"Floor"], layers[&"Walls"], job.result, _palette(), job.rng)
 
