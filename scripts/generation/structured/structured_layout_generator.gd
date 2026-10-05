@@ -26,6 +26,7 @@ const FacadeRhythmScript = preload("facade_rhythm.gd")
 const CanalDressingScript = preload("canal_dressing.gd")
 const VignettePlannerScript = preload("vignette_planner.gd")
 const GeometryCheckScript = preload("geometry_check.gd")
+const BridgeConnectivityResolverScript = preload("bridge_connectivity_resolver.gd")
 
 
 static func generate_layout(
@@ -107,6 +108,9 @@ static func generate_layout(
 
 	_run_wall_shape_passes(ctx, flags)
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
+
+	# Gwarancja przejścia do każdego fragmentu przez kładkę (Bridge Connectivity Resolver)
+	BridgeConnectivityResolverScript.resolve(ctx, canal_layout)
 
 	# Przywrócenie podłogi na kładkach po pre-processingu ścian
 	for b in canal_layout.crossings:

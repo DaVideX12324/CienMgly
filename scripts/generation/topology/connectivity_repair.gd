@@ -3,6 +3,8 @@ extends RefCounted
 
 
 static func repair(ctx: GenerationContext, corridor_width: int) -> void:
+	if ctx.flags != null and ctx.flags.layout == "structured":
+		return
 	var rooms := ctx.rooms
 	if rooms.size() < 2:
 		return
