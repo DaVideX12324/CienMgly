@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+[ext_resource type="SpriteFrames" uid="uid://<invalid>" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/bat_fur.tres" id="2_frames"]
+[ext_resource type="Resource" uid="uid://<invalid>" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/bat_fur.tres" id="3_data"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
+radius = 4.0
+height = 14.0
+
+[node name="Enemy" instance=ExtResource("1_base")]
+enemy_data = ExtResource("3_data")
+
+[node name="AnimatedSprite2D" parent="." index="0"]
+position = Vector2(0.0, 4.0)
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+offset = Vector2(0.0, -42.0)
+
+[node name="CollisionShape2D" parent="." index="1"]
+position = Vector2(0.0, 4.0)
+rotation = 1.570796
+shape = SubResource("CapsuleShape2D_body")
