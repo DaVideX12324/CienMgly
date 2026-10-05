@@ -236,22 +236,24 @@ static func apply_cave_tiles(
 	map_tile_profile: MapTileProfile = null,
 	tileset_field: TileSetField = null,
 	generator_behaviour: Dictionary = {},
-	platforms_layer: TileMapLayer = null
+	platforms_layer: TileMapLayer = null,
+	bridges_layer: TileMapLayer = null
 ) -> void:
 	# Reset globalnego seeda dla operacji silnika (np. set_cells_terrain_connect)
 	seed(rng.seed)
 	var plans := plan_cave_tiles(result, rng, theme_override, flags, map_tile_profile, tileset_field, generator_behaviour)
-	execute_cave_tiles(prepare_cave_layers(floor_layer, walls_layer, result, floor_decor_layer, platforms_layer), plans)
+	execute_cave_tiles(prepare_cave_layers(floor_layer, walls_layer, result, floor_decor_layer, platforms_layer, bridges_layer), plans)
 
 
-## Przygotowuje warstwy (FloorDecor / Platforms jako rodzeństwo Floor, gdy brak) i czyści je.
-## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Walls", &"Platforms"}.
+## Przygotowuje warstwy (FloorDecor / Bridges / Platforms jako rodzeństwo Floor, gdy brak) i czyści je.
+## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Platforms"}.
 static func prepare_cave_layers(
 	floor_layer: TileMapLayer,
 	walls_layer: TileMapLayer,
 	result: GenerationResult,
 	floor_decor_layer: TileMapLayer = null,
-	platforms_layer: TileMapLayer = null
+	platforms_layer: TileMapLayer = null,
+	bridges_layer: TileMapLayer = null
 ) -> Dictionary:
 	if floor_decor_layer == null and floor_layer.get_parent():
 		floor_decor_layer = floor_layer.get_parent().get_node_or_null("FloorDecor") as TileMapLayer
@@ -262,6 +264,17 @@ static func prepare_cave_layers(
 			floor_decor_layer.z_index = -1
 			floor_decor_layer.y_sort_enabled = true
 			floor_layer.get_parent().add_child(floor_decor_layer)
+
+	# Warstwa Bridges (kładki kanałów): rodzeństwo "Bridges" na dedykowanej warstwie.
+	if bridges_layer == null and floor_layer.get_parent():
+		bridges_layer = floor_layer.get_parent().get_node_or_null("Bridges") as TileMapLayer
+		if not bridges_layer:
+			bridges_layer = TileMapLayer.new()
+			bridges_layer.name = "Bridges"
+			bridges_layer.tile_set = floor_layer.tile_set
+			bridges_layer.z_index = -1
+			bridges_layer.y_sort_enabled = true
+			floor_layer.get_parent().add_child(bridges_layer)
 
 	# Warstwa Platforms (płaskowyże): rodzeństwo "Platforms"; tworzona tylko, gdy są płaskowyże.
 	# z_index -1: pod Walls i encjami (nikt nie stoi pod/za płaskowyżem).
@@ -278,6 +291,8 @@ static func prepare_cave_layers(
 	floor_layer.clear()
 	if floor_decor_layer:
 		floor_decor_layer.clear()
+	if bridges_layer:
+		bridges_layer.clear()
 	walls_layer.clear()
 	if platforms_layer:
 		platforms_layer.clear()
@@ -285,6 +300,7 @@ static func prepare_cave_layers(
 	return {
 		&"Floor": floor_layer,
 		&"FloorDecor": floor_decor_layer,
+		&"Bridges": bridges_layer,
 		&"Walls": walls_layer,
 		&"Platforms": platforms_layer,
 	}
@@ -350,6 +366,7 @@ static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
 	TerrainPaintExecutor.execute(layers, plans.terrain)
 	TilePlacementExecutor.execute(layers.get(&"FloorDecor"), plans.tiles, &"FloorDecor")
+	TilePlacementExecutor.execute(layers.get(&"Bridges"), plans.tiles, &"Bridges")
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
 	TilePlacementExecutor.execute(layers.get(&"Platforms"), plans.tiles, &"Platforms")
 	GenProgress.end(&"paint")

@@ -26,7 +26,7 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
 			_place(ctx, placement_plan, p, role, _water_variant(ctx, water, p), &"Floor", table)
 
-	# 2. Kładki (FloorDecor) — cały ślad, końce zastępują obrzeża brzegu.
+	# 2. Kładki (Bridges) — cały ślad, na dedykowanej osobnej warstwie.
 	for b in canals.bridges:
 		var r: Rect2i = b.get("rect", Rect2i())
 		if r == Rect2i() and b.has("cells") and not b.cells.is_empty():
@@ -39,7 +39,7 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 				max_p.y = maxi(max_p.y, p.y)
 			r = Rect2i(min_p, max_p - min_p + Vector2i(1, 1))
 		var role: int = TileModuleRole.Id.BRIDGE_V if b.get("vertical", true) else TileModuleRole.Id.BRIDGE_H
-		_place(ctx, placement_plan, r.position, role, &"A", &"FloorDecor", table)
+		_place(ctx, placement_plan, r.position, role, &"A", &"Bridges", table)
 
 	# 3. Obrzeża na podłodze przy kanale (FloorDecor), poza śladem kładek.
 	var seen := {}
