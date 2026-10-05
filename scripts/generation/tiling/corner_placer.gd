@@ -12,8 +12,8 @@ static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coord
 	placement_plan.queue(p)
 
 
-## Ścieżka modułowa (1 kafel, kategoria CORNER, tie_breaker=0 jak legacy). true jeśli położono.
-static func _try_corner(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
+## Ścieżka modułowa (1 kafel, kategoria CORNER / SIDE_WALL, tie_breaker=0 jak legacy). true jeśli położono.
+static func _try_corner(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"", category: StringName = &"CORNER") -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id, force_id)
 	if parts.is_empty():
 		return false
@@ -24,7 +24,7 @@ static func _try_corner(ctx: GenerationContext, placement_plan: TilePlacementPla
 		p.source_id = rp.tile.source_id
 		p.atlas_coords = rp.tile.atlas_coords
 		p.alternative_tile = rp.tile.alternative_tile
-		p.category = &"CORNER"
+		p.category = category
 		PlacementPriority.assign(p, table)
 		placement_plan.queue(p)
 	return true
@@ -55,18 +55,23 @@ static func plan(
 			if edge.orientation in [EdgeKind.Orientation.SOUTH_WEST, EdgeKind.Orientation.SOUTH_EAST]:
 				var dx := 1 if edge.orientation == EdgeKind.Orientation.SOUTH_WEST else -1
 				var off := FacadePlacer.facade_row_offset(ctx)
-				var above_end := state.has(pos + Vector2i(0, 1)) and state.get_category(pos + Vector2i(0, 1)) == &"FACADE"
-				if ctx.facade_4h_tops.has(pos) or ctx.facade_4h_tops.has(pos + Vector2i(dx, -1)):
+				var beside_top: bool = EdgeAnalyzer._is_any_wall_top(edges, pos + Vector2i(dx, 0))
+				if beside_top:
+					lift = 0
+				elif ctx.facade_4h_tops.has(pos) or ctx.facade_4h_tops.has(pos + Vector2i(dx, -1)):
 					lift = 1 + off
 				else:
 					lift = off
-				if lift > 0 and not above_end and not ctx.facade_4h_tops.has(pos) and state.is_empty_or_rock(pos):
+				if lift > off and not ctx.facade_4h_tops.has(pos):
 					side_role = TileModuleRole.Id.SIDE_WALL_EAST if dx == 1 else TileModuleRole.Id.SIDE_WALL_WEST
 			for _l in lift:
-				if side_role != TileModuleRole.Id.NONE and state.is_empty_or_rock(pos) \
-						and _try_corner(ctx, placement_plan, pos, side_role, &"A", table, &""):
-					state.mark(pos, &"SIDE")
 				pos += Vector2i(0, -1)
+				if _l < lift - 1 and side_role != TileModuleRole.Id.NONE and state.is_empty_or_rock(pos):
+					if not _try_corner(ctx, placement_plan, pos, side_role, &"A", table, &"", &"SIDE_WALL"):
+						var dx := 1 if edge.orientation == EdgeKind.Orientation.SOUTH_WEST else -1
+						var side_t := CaveTileConstants.WALL_SIDE_WEST[0] if dx == 1 else CaveTileConstants.WALL_SIDE_EAST[0]
+						_queue(placement_plan, pos, side_t, &"SIDE_WALL", table)
+					state.mark(pos, &"SIDE")
 			if not state.is_empty_or_rock(pos):
 				continue
 
