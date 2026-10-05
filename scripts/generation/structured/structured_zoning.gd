@@ -3,12 +3,13 @@ extends RefCounted
 
 ## Strefowanie wokół sieci liniowej:
 ## - Kompleksy sal jako spójne wielokąty wzdłuż 2–4 odcinków jednej linii;
-## - Chodniki (lanes) wzdłuż odcinków tunelowych;
-## - Suche koryto (dry bed);
-## - Zwężenia i korytarze serwisowe za ścianą (service) z bramami i dźwigniami.
+## - Zróżnicowane odcinki kanałów: tunnel (obustronny), side (jednostronny), walled (obmurowany bez ścieżek);
+## - Zwężenia (pinch) w kompleksach i korytarze serwisowe za ścianą (service);
+## - Suche koryto (dry bed).
 
 const LinearFeatureLayout = preload("core/linear_feature_layout.gd")
 const StructuredReservations = preload("structured_reservations.gd")
+const StructuredPathfinder = preload("structured_pathfinder.gd")
 const MapGeneratorBaseScript = preload("../map_generator_base.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
@@ -22,7 +23,7 @@ static func build_zoning(
 	cw: int = 4,
 	lane_width: int = 3,
 	wall_h: int = 5,
-	wall_v: int = 2,
+	wall_v: int = 4,
 	canal_dry_chance: float = 0.4
 ) -> Dictionary:
 	var segs: Array[Dictionary] = layout.segments
@@ -102,31 +103,67 @@ static func build_zoning(
 			complexes[cid] = {"segs": choice, "mask": {}, "pinch": null}
 			placed_any = true
 
-	# 2. Pasy ruchu (chodniki w tunelach)
+	# 2. Klasyfikacja odcinków poza kompleksami (tunnel, side, walled)
 	for st in segs:
-		if st["kind"] == "tunnel":
-			var r: Rect2i = st["rect"]
-			if st["axis"] == "h":
-				# Chodnik na północ i południe
-				for y in range(r.position.y - lane_width, r.position.y):
+		if st["kind"] != "tunnel":
+			continue
+		if st.get("junction", false):
+			st["kind"] = "tunnel"
+			continue
+
+		var roll := rng.randf()
+		if roll < 0.35:
+			st["kind"] = "side"
+			st["side"] = rng.randi() % 2
+		elif roll < 0.48:
+			st["kind"] = "walled"
+		else:
+			st["kind"] = "tunnel"
+
+	# 3. Pasy ruchu (chodniki w tunelach oraz na odcinkach bocznych)
+	for st in segs:
+		var kind: String = st["kind"]
+		var r: Rect2i = st["rect"]
+		var horiz: bool = (st["axis"] == "h")
+		var w_lane := lane_width
+
+		if kind == "tunnel":
+			if horiz:
+				for y in range(r.position.y - w_lane, r.position.y):
 					for x in range(r.position.x, r.end.x):
 						var p := Vector2i(x, y)
 						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
 							lanes[p] = true
-				for y in range(r.end.y, r.end.y + lane_width):
+				for y in range(r.end.y, r.end.y + w_lane):
 					for x in range(r.position.x, r.end.x):
 						var p := Vector2i(x, y)
 						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
 							lanes[p] = true
 			else:
-				# Chodnik na zachód i wschód
 				for y in range(r.position.y, r.end.y):
-					for x in range(r.position.x - lane_width, r.position.x):
+					for x in range(r.position.x - w_lane, r.position.x):
 						var p := Vector2i(x, y)
 						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
 							lanes[p] = true
 				for y in range(r.position.y, r.end.y):
-					for x in range(r.end.x, r.end.x + lane_width):
+					for x in range(r.end.x, r.end.x + w_lane):
+						var p := Vector2i(x, y)
+						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
+							lanes[p] = true
+
+		elif kind == "side":
+			var side_idx: int = int(st.get("side", 0))
+			if horiz:
+				var y_range = range(r.position.y - w_lane, r.position.y) if side_idx == 0 else range(r.end.y, r.end.y + w_lane)
+				for y in y_range:
+					for x in range(r.position.x, r.end.x):
+						var p := Vector2i(x, y)
+						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
+							lanes[p] = true
+			else:
+				var x_range = range(r.position.x - w_lane, r.position.x) if side_idx == 0 else range(r.end.x, r.end.x + w_lane)
+				for y in range(r.position.y, r.end.y):
+					for x in x_range:
 						var p := Vector2i(x, y)
 						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
 							lanes[p] = true
@@ -221,6 +258,36 @@ static func build_zoning(
 			else:
 				hallm[p] = true
 		cx["mask"] = pm
+
+		# 5. Korytarz za ścianą przy zwężeniu kompleksu (carve_service)
+		if pinch != null:
+			var pst: Dictionary = pinch["seg"]
+			var p0: int = pinch["p0"]
+			var p1: int = pinch["p1"]
+			var horiz: bool = pst["axis"] == "h"
+
+			var own: Dictionary = {}
+			var tgt: Dictionary = {}
+			for p in pm:
+				var c_val: int = p.x if horiz else p.y
+				if c_val < p0 - 2:
+					own[p] = true
+				elif c_val > p1 + 2:
+					tgt[p] = true
+
+			if not own.is_empty() and not tgt.is_empty():
+				var own_keys: Array = own.keys()
+				var start_p: Vector2i = own_keys[rng.randi() % own_keys.size()]
+				var path := StructuredPathfinder.find_corridor_path(
+					start_p, tgt, own, hallm, water, width, height, wall_h, wall_v, segs
+				)
+				if not path.is_empty():
+					var carved := StructuredPathfinder.carve_corridor(
+						path, hallm, {}, water, layout, width, height, service, true
+					)
+					for cp in carved:
+						service[cp] = true
+						layout.service[cp] = true
 
 	# Rezerwacja pasów ruchu i wody w StructuredReservations
 	var water_cells_arr: Array[Vector2i] = []
