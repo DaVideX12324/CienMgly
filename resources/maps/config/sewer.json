@@ -62,7 +62,7 @@
     "linear_clear_margin": 16,
     "lane_width": 3,
     "wall_thickness_h": 5,
-    "wall_thickness_v": 2,
+    "wall_thickness_v": 4,
     "complex_count_ratio": 5500,
     "complex_min_gap": 20,
     "room_distance_min_h": 9,

@@ -355,8 +355,11 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			_check_niche_candidates(ctx, pos, x, y, facade_cols, edge, edges)
 
 			# 1. Sprawdzenie kontekstu 2H.
-			# 1. Sprawdzenie kontekstu 2H.
+			var force_2h: bool = ctx.plateau_mode or ctx.force_2h_cells.has(pos + Vector2i(0, -1))
+			var allow_2h: bool = ctx.plateau_mode or (ctx.flags == null or ctx.flags.enable_2h_facades) or force_2h
 			var check_2h_col := func(cx: int, fy: int) -> bool:
+				if not allow_2h:
+					return false
 				return GridUtils.is_walkable(grid, Vector2i(cx, fy)) \
 					and not GridUtils.is_walkable(grid, Vector2i(cx, fy - 1)) \
 					and not GridUtils.is_walkable(grid, Vector2i(cx, fy - 2)) \
@@ -368,9 +371,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var horiz_tol: int = 0 if ctx.plateau_mode else 1
 			var is_horizontal_facade: bool = FacadeSegmentDetector.has_same_y(facade_cols, x - 1, y, horiz_tol) \
 				and FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, horiz_tol)
-			# Wymuszone 2H: płaskowyż albo mała wolnostojąca wyspa ściany nad stopą.
-			var force_2h: bool = ctx.plateau_mode or ctx.force_2h_cells.has(pos + Vector2i(0, -1))
-			var is_2h: bool = is_horizontal_facade and (edge.solid_depth == 2 or force_2h)
+			var is_2h: bool = allow_2h and is_horizontal_facade and (edge.solid_depth == 2 or force_2h)
 
 			if is_2h:
 				edge.edge_kind = EdgeKind.Kind.FACADE
@@ -394,8 +395,8 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 				and not check_2h_col.call(x - 2, y) \
 				and not check_2h_col.call(x - 3, y)
 
-			# Tryb płaskowyżu / mała wyspa: wszystko jest 2H, łączników 2H<->3H nie ma.
-			if force_2h:
+			# Tryb płaskowyżu / mała wyspa / wyłączone 2H: łączników 2H<->3H nie ma.
+			if force_2h or not allow_2h:
 				pass
 			elif not self_is_2h and ((left_is_2h_any and right_has_room_for_3h) or (left_is_2h_any and not right_is_2h_any)):
 				edge.edge_kind = EdgeKind.Kind.CONNECTOR
@@ -421,7 +422,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			#
 			# X jest aktualną stopą fasady. Warunek wykorzystuje wyłącznie
 			# podłogę po boku oraz podłogę po przekątnej nad tym bokiem.
-			var is_2h_col: bool = (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or force_2h)
+			var is_2h_col: bool = allow_2h and (edge.solid_depth == 2 or GridUtils.is_walkable(grid, pos + Vector2i(0, -3)) or force_2h)
 			var opening_depth: int = 2 if is_2h_col else 3
 
 			# Sąsiednie lico wyklucza narożnik (-> schodek), gdy się z tym stykają. Lico 3H zajmuje stopę
