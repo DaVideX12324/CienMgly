@@ -73,12 +73,19 @@ var _shadow_height := 35.0
 @onready var quiz_modal_overlay: Control = get_node_or_null("QuizModalOverlay") as Control
 @onready var quiz_modal_vbox: VBoxContainer = get_node_or_null("QuizModalOverlay/ModalPanel/ModalMargin/ModalVBox") as VBoxContainer
 @onready var content_row: HBoxContainer  = $BattleWindow/WindowMargin/VBox/ContentRow
-@onready var command_panel_container: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel
-@onready var party_panel_container: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel
-@onready var command_vbox: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox
-@onready var action_panel: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel
-@onready var primary_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu
-@onready var action_menu: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu
+@onready var party_command_panel: PanelContainer = (get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel") if has_node("BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel") else get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel")) as PanelContainer
+@onready var command_panel_container: PanelContainer = party_command_panel
+@onready var party_panel_container: PanelContainer = (get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel") if has_node("BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel") else get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel")) as PanelContainer
+@onready var actor_command_panel: PanelContainer = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel") as PanelContainer
+
+@onready var command_vbox: VBoxContainer = (party_command_panel.get_node_or_null("CommandMargin/CommandVBox") if party_command_panel else null) as VBoxContainer
+@onready var action_panel: VBoxContainer = (command_vbox.get_node_or_null("ActionPanel") if command_vbox else null) as VBoxContainer
+@onready var primary_menu: VBoxContainer = (action_panel.get_node_or_null("PrimaryMenu") if action_panel else null) as VBoxContainer
+@onready var action_menu: VBoxContainer = (
+	actor_command_panel.get_node_or_null("ActorMargin/ActorVBox/ActorActionPanel/ActionMenu") if (actor_command_panel and actor_command_panel.has_node("ActorMargin/ActorVBox/ActorActionPanel/ActionMenu"))
+	else (actor_command_panel.get_node_or_null("ActorMargin/ActionMenu") if actor_command_panel
+	else (action_panel.get_node_or_null("ActionMenu") if action_panel else null))
+) as VBoxContainer
 @onready var result_label: Label = $TopWindow/VBox/ResultSink/ResultLabel  # źródło komunikatów logu
 @onready var player_hp_bar: ProgressBar = $Battlefield/FieldContent/PlayerSection/PlayerHPBar
 @onready var enemy_name_label: Label = $Battlefield/FieldContent/EnemySection/EnemyNameLabel
@@ -97,22 +104,22 @@ var _shadow_height := 35.0
 @onready var items_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/ListVBox
 @onready var turn_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/TurnLabel") as Label
 @onready var streak_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/StreakLabel") as Label
-@onready var target_panel: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel
-@onready var target_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetLabel
-@onready var target_list_vbox: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetListVBox
+@onready var target_panel: VBoxContainer = (party_panel_container.get_node_or_null("PartyMargin/TargetPanel") if party_panel_container else null) as VBoxContainer
+@onready var target_label: Label = (target_panel.get_node_or_null("TargetLabel") if target_panel else null) as Label
+@onready var target_list_vbox: VBoxContainer = (target_panel.get_node_or_null("TargetListVBox") if target_panel else null) as VBoxContainer
 @onready var party_rows : Array[HBoxContainer] = [
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2,
-		$BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3,
+		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow0") if party_panel_container else null) as HBoxContainer,
+		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow1") if party_panel_container else null) as HBoxContainer,
+		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow2") if party_panel_container else null) as HBoxContainer,
+		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow3") if party_panel_container else null) as HBoxContainer,
 	]
-@onready var engage_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/EngageBtn
-@onready var run_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/RunBtn
-@onready var exit_btn: Button = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu/ExitBtn") as Button
-@onready var atk_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/AtkBtn
-@onready var def_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/DefBtn
-@onready var skills_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/SkillsBtn
-@onready var items_btn: Button = $BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu/ItemsBtn
+@onready var engage_btn: Button = (primary_menu.get_node_or_null("EngageBtn") if primary_menu else null) as Button
+@onready var run_btn: Button = (primary_menu.get_node_or_null("RunBtn") if primary_menu else null) as Button
+@onready var exit_btn: Button = (primary_menu.get_node_or_null("ExitBtn") if primary_menu else null) as Button
+@onready var atk_btn: Button = (action_menu.get_node_or_null("AtkBtn") if action_menu else null) as Button
+@onready var def_btn: Button = (action_menu.get_node_or_null("DefBtn") if action_menu else null) as Button
+@onready var skills_btn: Button = (action_menu.get_node_or_null("SkillsBtn") if action_menu else null) as Button
+@onready var items_btn: Button = (action_menu.get_node_or_null("ItemsBtn") if action_menu else null) as Button
 
 var _enemy_units: Array[Dictionary] = []
 var _active_enemy_index := 0
@@ -151,7 +158,7 @@ var _dm: Node
 var _gm: Node
 var _quiz_panel_controller
 var _band_mode: Band = Band.PARTY_COMMAND
-@onready var _corner_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/CornerInfo") as Label
+@onready var _corner_label: Label = (party_panel_container.get_node_or_null("CornerInfo") if party_panel_container else null) as Label
 @onready var _top_window: PanelContainer = $TopWindow           # u góry: pytanie quizu + czas albo log bitwy
 @onready var _top_vbox: VBoxContainer = $TopWindow/VBox
 @onready var _timer_row: HBoxContainer = $TopWindow/VBox/TimerRow
@@ -521,7 +528,10 @@ func _open_skills_menu() -> void:
 	items_panel.visible = false
 	battle_menu_overlay.visible = true
 	battle_background.visible = false
-	action_panel.visible = false
+	if action_panel:
+		action_panel.visible = false
+	if actor_command_panel:
+		actor_command_panel.visible = false
 	_update_list_description()
 
 
@@ -542,7 +552,10 @@ func _open_items_menu() -> void:
 	skills_panel.visible = false
 	battle_menu_overlay.visible = true
 	battle_background.visible = false
-	action_panel.visible = false
+	if action_panel:
+		action_panel.visible = false
+	if actor_command_panel:
+		actor_command_panel.visible = false
 	_update_list_description()
 
 
@@ -554,7 +567,8 @@ func _close_list_menu() -> void:
 	items_panel.visible = false
 	battle_menu_overlay.visible = false
 	battle_background.visible = true
-	action_panel.visible = true
+	if action_panel:
+		action_panel.visible = true
 	_show_action_menu()
 	_highlight_action(0)
 
@@ -624,13 +638,19 @@ func _build_target_menu() -> void:
 
 
 func _show_target_panel() -> void:
-	action_panel.visible = false
+	if action_panel:
+		action_panel.visible = false
+	if actor_command_panel:
+		actor_command_panel.visible = false
 	_quiz_panel_controller.hide_quiz()
 	result_label.visible = false
 	for row in party_rows:
-		row.visible = false
-	target_panel.visible = true
-	target_label.text = "Wybierz cel"
+		if row:
+			row.visible = false
+	if target_panel:
+		target_panel.visible = true
+	if target_label:
+		target_label.text = "Wybierz cel"
 
 
 func _hide_target_panel() -> void:
@@ -750,7 +770,10 @@ func _begin_action_quiz() -> void:
 	if q.is_empty():
 		_resolve_action(true)
 		return
-	action_panel.visible = false
+	if action_panel:
+		action_panel.visible = false
+	if actor_command_panel:
+		actor_command_panel.visible = false
 	_show_question(q)
 
 
@@ -1236,7 +1259,10 @@ func _try_flee() -> void:
 		result_label.visible = true
 		result_label.text = "Nie udało się uciec!"
 		result_label.add_theme_color_override("font_color", Color.RED)
-		action_panel.visible = false
+		if action_panel:
+			action_panel.visible = false
+		if party_command_panel:
+			party_command_panel.visible = false
 		await get_tree().create_timer(1.0).timeout
 		_enemy_turn()
 
@@ -1329,7 +1355,12 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false, false)
 	_victory_skip = false
-	action_panel.visible = false
+	if action_panel:
+		action_panel.visible = false
+	if party_command_panel:
+		party_command_panel.visible = false
+	if actor_command_panel:
+		actor_command_panel.visible = false
 	result_label.visible = false
 	var audio := get_node_or_null("/root/AudioService")
 	var victory_log := _get_or_create_victory_log()
@@ -1410,10 +1441,14 @@ func _dodge_anim(sprite_control: Control) -> void:
 
 
 func _set_action_buttons_enabled(enabled: bool) -> void:
-	atk_btn.disabled = not enabled
-	def_btn.disabled = not enabled
-	skills_btn.disabled = not enabled
-	items_btn.disabled = not enabled
+	if atk_btn:
+		atk_btn.disabled = not enabled
+	if def_btn:
+		def_btn.disabled = not enabled
+	if skills_btn:
+		skills_btn.disabled = not enabled
+	if items_btn:
+		items_btn.disabled = not enabled
 
 
 func _setup_battlefield_visuals() -> void:
@@ -1959,7 +1994,7 @@ func _update_window_heights(is_quiz: bool = false) -> void:
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
 func _set_band_mode(mode: Band) -> void:
 	_band_mode = mode
-	if content_row == null or command_panel_container == null or party_panel_container == null:
+	if content_row == null or party_command_panel == null or party_panel_container == null:
 		return
 	if phase == Phase.QUIZ and not party_panel_container.visible:
 		return  # quiz zajmuje pas (_set_quiz_layout_active)
@@ -1973,21 +2008,25 @@ func _set_band_mode(mode: Band) -> void:
 	var party_min := Vector2(vp_w * compact_party_width, 0) if compact else Vector2.ZERO
 	match mode:
 		Band.PARTY_COMMAND:
-			command_panel_container.visible = true
-			content_row.move_child(command_panel_container, 0)
-			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
-			command_panel_container.custom_minimum_size = Vector2(vp_w * party_command_width, 0)
+			party_command_panel.visible = true
+			if actor_command_panel:
+				actor_command_panel.visible = false
+			party_command_panel.size_flags_horizontal = Control.SIZE_FILL
+			party_command_panel.custom_minimum_size = Vector2(vp_w * party_command_width, 0)
 			party_panel_container.size_flags_horizontal = party_flags
 			party_panel_container.custom_minimum_size = party_min
 		Band.ACTOR_COMMAND:
-			command_panel_container.visible = true
-			content_row.move_child(party_panel_container, 0)
-			command_panel_container.size_flags_horizontal = Control.SIZE_FILL
-			command_panel_container.custom_minimum_size = Vector2(vp_w * actor_command_width, 0)
+			party_command_panel.visible = false
+			if actor_command_panel:
+				actor_command_panel.visible = true
+				actor_command_panel.size_flags_horizontal = Control.SIZE_FILL
+				actor_command_panel.custom_minimum_size = Vector2(vp_w * actor_command_width, 0)
 			party_panel_container.size_flags_horizontal = party_flags
 			party_panel_container.custom_minimum_size = party_min
 		Band.STATUS_ONLY:
-			command_panel_container.visible = false
+			party_command_panel.visible = false
+			if actor_command_panel:
+				actor_command_panel.visible = false
 			party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 			party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
 
@@ -2253,14 +2292,16 @@ func _set_party_stat(row: HBoxContainer, stat_name: String, value: int, max_valu
 
 
 func _setup_party_layout() -> void:
-	if content_row and command_panel_container:
-		content_row.move_child(command_panel_container, 0)
+	if content_row and party_command_panel:
+		content_row.move_child(party_command_panel, 0)
 	if content_row and party_panel_container:
 		content_row.move_child(party_panel_container, 1)
+	if content_row and actor_command_panel:
+		content_row.move_child(actor_command_panel, 2)
 
 
 func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
-	if command_panel_container == null or party_panel_container == null:
+	if party_command_panel == null or party_panel_container == null:
 		return
 
 	var is_modal_mode := false
@@ -2279,20 +2320,23 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 				if _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != quiz_modal_vbox:
 					_quiz_panel_controller.correct_answer_label.reparent(quiz_modal_vbox, false)
 		else:
-			# Bottom bar mode: hide party panel and action panel, show quiz panel across full width
+			# Bottom bar mode: hide party panel and actor command panel, show quiz panel in party_command_panel
 			# (opcja „UI walki tylko na szerokość treści”: okno quizu na szerokość pytania i odpowiedzi).
 			_apply_answers_layout()
 			# Marginesy okna komend (styl panelu + CommandMargin) — z minimalnych rozmiarów, niezależnie od układu.
-			var margins: float = command_panel_container.get_combined_minimum_size().x - command_vbox.get_combined_minimum_size().x if command_vbox else 0.0
+			var margins: float = party_command_panel.get_combined_minimum_size().x - command_vbox.get_combined_minimum_size().x if command_vbox else 0.0
 			party_panel_container.visible = false
+			if actor_command_panel:
+				actor_command_panel.visible = false
+			party_command_panel.visible = true
 			if QuizTheme.combat_ui_compact() and _quiz_panel_controller:
 				var vp_w: float = get_viewport_rect().size.x
 				var w: float = _quiz_panel_controller.get_desired_panel_width() + maxf(margins, 0.0)
-				command_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-				command_panel_container.custom_minimum_size = Vector2(clampf(w, vp_w * compact_quiz_min_width, vp_w * 0.95), 0)
+				party_command_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				party_command_panel.custom_minimum_size = Vector2(clampf(w, vp_w * compact_quiz_min_width, vp_w * 0.95), 0)
 			else:
-				command_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				command_panel_container.custom_minimum_size = Vector2(0, 0)
+				party_command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				party_command_panel.custom_minimum_size = Vector2(0, 0)
 			if action_panel:
 				action_panel.visible = false
 			if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
@@ -2310,11 +2354,11 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 			if _quiz_panel_controller and _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != _top_home():
 				_quiz_panel_controller.correct_answer_label.reparent(_top_home(), false)
 
-		# Restore bottom bar layout: right panel stretches from left panel to the end
+		# Restore bottom bar layout
 		party_panel_container.visible = true
 		party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		command_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-		command_panel_container.custom_minimum_size = Vector2(260, 0)
+		party_command_panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		party_command_panel.custom_minimum_size = Vector2(260, 0)
 		if action_panel:
 			action_panel.visible = true
 		if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:

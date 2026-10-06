@@ -585,106 +585,74 @@ size_flags_vertical = 3
 theme_override_constants/separation = 0
 alignment = 1
 
-[node name="CommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=850453509]
+[node name="PartyCommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=850453509]
 custom_minimum_size = Vector2(288, 0)
 layout_mode = 2
 theme_type_variation = &"QuizWindow"
 
-[node name="CommandMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel" unique_id=2096468025]
+[node name="CommandMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel" unique_id=2096468025]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="CommandVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin" unique_id=346466550]
+[node name="CommandVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin" unique_id=346466550]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="ActionPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=197487872]
+[node name="ActionPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox" unique_id=197487872]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="ActionTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1990655470]
+[node name="ActionTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1990655470]
 visible = false
 layout_mode = 2
 text = "Komendy"
 
-[node name="PrimaryMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=692157191]
-visible = false
+[node name="PrimaryMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=692157191]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="EngageBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1501538786]
+[node name="EngageBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1501538786]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_type_variation = &"QuizMenuItem"
 text = "Walcz"
 alignment = 0
 
-[node name="RunBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698012]
+[node name="RunBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698012]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_type_variation = &"QuizMenuItem"
 text = "Ucieknij"
 alignment = 0
 
-[node name="ExitBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698013]
+[node name="ExitBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698013]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_type_variation = &"QuizMenuItem"
 text = "Wyjście"
 alignment = 0
 
-[node name="ActionMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1594848201]
-layout_mode = 2
-theme_override_constants/separation = 7
 
-[node name="AtkBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1229105933]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-theme_type_variation = &"QuizMenuItem"
-text = "Atak"
-alignment = 0
-
-[node name="SkillsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1148802861]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-theme_type_variation = &"QuizMenuItem"
-text = "Umiejętności"
-alignment = 0
-
-[node name="DefBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1087095694]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-theme_type_variation = &"QuizMenuItem"
-text = "Obrona"
-alignment = 0
-
-[node name="ItemsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1511743442]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-theme_type_variation = &"QuizMenuItem"
-text = "Przedmioty"
-alignment = 0
-
-[node name="QuizPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox" unique_id=631232541]
+[node name="QuizPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox" unique_id=631232541]
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 
-[node name="QuizTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1270601236]
+[node name="QuizTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1270601236]
 visible = false
 layout_mode = 2
 text = "Quiz"
 
-[node name="HintLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1410459933]
+[node name="HintLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1410459933]
 visible = false
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="MC_Box" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1793185763]
+[node name="MC_Box" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1793185763]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -692,7 +660,7 @@ size_flags_vertical = 3
 theme_override_constants/h_separation = 16
 theme_override_constants/v_separation = 0
 
-[node name="Btn0" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=371378339]
+[node name="Btn0" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=371378339]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -701,7 +669,7 @@ alignment = 0
 text_overrun_behavior = 3
 autowrap_mode = 3
 
-[node name="Btn1" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=396330636]
+[node name="Btn1" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=396330636]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -710,7 +678,7 @@ alignment = 0
 text_overrun_behavior = 3
 autowrap_mode = 3
 
-[node name="Btn2" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=103563379]
+[node name="Btn2" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=103563379]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -719,7 +687,7 @@ alignment = 0
 text_overrun_behavior = 3
 autowrap_mode = 3
 
-[node name="Btn3" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=405486461]
+[node name="Btn3" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/MC_Box" unique_id=405486461]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -728,13 +696,13 @@ alignment = 0
 text_overrun_behavior = 3
 autowrap_mode = 3
 
-[node name="TF_Box" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=210528019]
+[node name="TF_Box" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=210528019]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 24
 
-[node name="BtnTrue" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=899732370]
+[node name="BtnTrue" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=899732370]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -742,7 +710,7 @@ theme_type_variation = &"QuizMenuItem"
 alignment = 0
 text_overrun_behavior = 3
 
-[node name="BtnFalse" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=218378251]
+[node name="BtnFalse" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/TF_Box" unique_id=218378251]
 custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -750,148 +718,148 @@ theme_type_variation = &"QuizMenuItem"
 alignment = 0
 text_overrun_behavior = 3
 
-[node name="FillText_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=538701248]
+[node name="FillText_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=538701248]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="PatternHint" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=406056373]
+[node name="PatternHint" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=406056373]
 visible = false
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1299322072]
+[node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1299322072]
 layout_mode = 2
 placeholder_text = "Odpowiedź..."
 
-[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1371367524]
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1371367524]
 layout_mode = 2
 text = "Zatwierdź"
 flat = true
 
-[node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1736166103]
+[node name="FillTiles_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1736166103]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1502888160]
+[node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1502888160]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 8
 
-[node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=878326736]
+[node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=878326736]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 8
 
-[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1238327094]
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1238327094]
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Zatwierdź [Enter]"
 
-[node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1438959482]
+[node name="Matching_Box" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1438959482]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="MatchGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=1395954460]
+[node name="MatchGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=1395954460]
 layout_mode = 2
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 8
 columns = 2
 
-[node name="LeftCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=12532810]
+[node name="LeftCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=12532810]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="RightCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=1257703016]
+[node name="RightCol" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box/MatchGrid" unique_id=1257703016]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=544255924]
+[node name="Confirm" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=544255924]
 custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Zatwierdź [Enter]"
 
-[node name="CombatLogPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=427796143]
+[node name="PartyPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=427796143]
 custom_minimum_size = Vector2(380, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 4.25
 theme_type_variation = &"QuizWindow"
 
-[node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=568404965]
+[node name="PartyMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel" unique_id=568404965]
 layout_mode = 2
 theme_override_constants/margin_left = 6
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 6
 theme_override_constants/margin_bottom = 6
 
-[node name="TargetPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1100172619]
+[node name="TargetPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin" unique_id=1100172619]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TargetLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel" unique_id=398570461]
+[node name="TargetLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/TargetPanel" unique_id=398570461]
 layout_mode = 2
 text = "Wybierz cel"
 
-[node name="TargetListVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel" unique_id=1191194108]
+[node name="TargetListVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/TargetPanel" unique_id=1191194108]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 4
 
-[node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin" unique_id=1670251784]
+[node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin" unique_id=1670251784]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 2
 theme_override_constants/separation = -8
 
-[node name="PartyRow0" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=338588353]
+[node name="PartyRow0" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox" unique_id=338588353]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=820547815]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=820547815]
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 text = "Bohater"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1092062408]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1092062408]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=15336201]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=15336201]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=126655424]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=126655424]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col/Line" unique_id=1979947495]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col/Line" unique_id=1979947495]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "HP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col/Line" unique_id=301627451]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col/Line" unique_id=301627451]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "100"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=165655448]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=165655448]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -901,32 +869,32 @@ value = 100.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=2090064986]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=2090064986]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1377668286]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1377668286]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1455262068]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1455262068]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col/Line" unique_id=465912224]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col/Line" unique_id=465912224]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "SP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col/Line" unique_id=1804427118]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col/Line" unique_id=1804427118]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1760073518]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1760073518]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -935,32 +903,32 @@ theme_type_variation = &"QuizBarSP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1682715726]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1682715726]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=2142681038]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=2142681038]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=145039608]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=145039608]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col/Line" unique_id=685712313]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col/Line" unique_id=685712313]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "TP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col/Line" unique_id=1480859977]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col/Line" unique_id=1480859977]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=1720153271]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=1720153271]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -969,43 +937,43 @@ theme_type_variation = &"QuizBarTP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=1659099946]
+[node name="PartyRow1" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox" unique_id=1659099946]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=489189149]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=489189149]
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
 text = "Ally 2"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=509783440]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=509783440]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=290913717]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=290913717]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=537021004]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=537021004]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col/Line" unique_id=67081975]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col/Line" unique_id=67081975]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "HP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col/Line" unique_id=1577650980]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col/Line" unique_id=1577650980]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "100"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=1761014635]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=1761014635]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1015,32 +983,32 @@ value = 100.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=273789009]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=273789009]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=324353606]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=324353606]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=579299541]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=579299541]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col/Line" unique_id=1144297693]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col/Line" unique_id=1144297693]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "SP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col/Line" unique_id=755492476]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col/Line" unique_id=755492476]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=636456736]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=636456736]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1049,32 +1017,32 @@ theme_type_variation = &"QuizBarSP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=72093438]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=72093438]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1080513625]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1080513625]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=513504676]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=513504676]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col/Line" unique_id=793997531]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col/Line" unique_id=793997531]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "TP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col/Line" unique_id=166832373]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col/Line" unique_id=166832373]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=2103621860]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=2103621860]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1083,43 +1051,43 @@ theme_type_variation = &"QuizBarTP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=2091251807]
+[node name="PartyRow2" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox" unique_id=2091251807]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1040332721]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1040332721]
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
 text = "Ally 3"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=2028103206]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=2028103206]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=2038882003]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=2038882003]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=955911478]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=955911478]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col/Line" unique_id=1339346648]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col/Line" unique_id=1339346648]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "HP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col/Line" unique_id=1490372732]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col/Line" unique_id=1490372732]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "100"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=740423526]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=740423526]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1129,32 +1097,32 @@ value = 100.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=86861941]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=86861941]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1669083707]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1669083707]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=1567572391]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=1567572391]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col/Line" unique_id=407168714]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col/Line" unique_id=407168714]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "SP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col/Line" unique_id=400451179]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col/Line" unique_id=400451179]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=484989898]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=484989898]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1163,32 +1131,32 @@ theme_type_variation = &"QuizBarSP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1004025915]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1004025915]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=210591099]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=210591099]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1863529714]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1863529714]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col/Line" unique_id=1277400325]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col/Line" unique_id=1277400325]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "TP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col/Line" unique_id=762148005]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col/Line" unique_id=762148005]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1918702154]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1918702154]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1197,43 +1165,43 @@ theme_type_variation = &"QuizBarTP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox" unique_id=635091655]
+[node name="PartyRow3" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox" unique_id=635091655]
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1769485415]
+[node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1769485415]
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
 text = "Ally 4"
 
-[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1848860792]
+[node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1848860792]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1345203183]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1345203183]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=1349429555]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=1349429555]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col/Line" unique_id=2078240647]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col/Line" unique_id=2078240647]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "HP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col/Line" unique_id=1183802448]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col/Line" unique_id=1183802448]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "100"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=764813116]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=764813116]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1243,32 +1211,32 @@ value = 100.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=517307656]
+[node name="StatSP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=517307656]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=597400109]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=597400109]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1687535793]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1687535793]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col/Line" unique_id=1348792556]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col/Line" unique_id=1348792556]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "SP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col/Line" unique_id=178423301]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col/Line" unique_id=178423301]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1470212885]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1470212885]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1277,32 +1245,32 @@ theme_type_variation = &"QuizBarSP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=2049204596]
+[node name="StatTP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=2049204596]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=2026107407]
+[node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=2026107407]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=195375525]
+[node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=195375525]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col/Line" unique_id=729597569]
+[node name="Label" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col/Line" unique_id=729597569]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.7, 1, 1)
 text = "TP"
 
-[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col/Line" unique_id=6102806]
+[node name="ValueLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col/Line" unique_id=6102806]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
 horizontal_alignment = 2
 
-[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=994443156]
+[node name="Bar" type="ProgressBar" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=994443156]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1311,7 +1279,7 @@ theme_type_variation = &"QuizBarTP"
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="CornerInfo" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel" unique_id=574272104]
+[node name="CornerInfo" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel" unique_id=574272104]
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
@@ -1319,6 +1287,63 @@ theme_override_colors/font_color = Color(0.62, 0.64, 0.74, 1)
 text = "Tura 1  ·  seria 0  ·  +0%"
 horizontal_alignment = 2
 vertical_alignment = 2
+
+[node name="ActorCommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1588123456]
+custom_minimum_size = Vector2(288, 0)
+layout_mode = 2
+theme_type_variation = &"QuizWindow"
+
+[node name="ActorMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel" unique_id=1588123457]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="ActorVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin" unique_id=1588123458]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ActorActionPanel" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox" unique_id=1588123459]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ActionTitle" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox/ActorActionPanel" unique_id=1588123460]
+visible = false
+layout_mode = 2
+text = "Akcje"
+
+[node name="ActionMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox/ActorActionPanel" unique_id=1594848201]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="AtkBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox/ActorActionPanel/ActionMenu" unique_id=1229105933]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"QuizMenuItem"
+text = "Atak"
+alignment = 0
+
+[node name="SkillsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox/ActorActionPanel/ActionMenu" unique_id=1148802861]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"QuizMenuItem"
+text = "Umiejętności"
+alignment = 0
+
+[node name="DefBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox/ActorActionPanel/ActionMenu" unique_id=1087095694]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"QuizMenuItem"
+text = "Obrona"
+alignment = 0
+
+[node name="ItemsBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ActorCommandPanel/ActorMargin/ActorVBox/ActorActionPanel/ActionMenu" unique_id=1511743442]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"QuizMenuItem"
+text = "Przedmioty"
+alignment = 0
 
 [node name="MessageWindow" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=1394636847]
 visible = false
