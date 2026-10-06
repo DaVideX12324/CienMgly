@@ -347,17 +347,39 @@ static func _carve_service(
 	var horiz: bool = (st["axis"] == "h")
 	var k: int = int(st.get("side", 0))
 
-	# 1. Filtruj punkty startowe w Hall A na wybranej stronie k, oddalone od wody
+	# 1. Filtruj punkty startowe w Hall A i docelowe w Hall B
+	# Korytarz serwisowy biegnie po stronie k koryta st i musi łączyć się z salami bez przekraczania kanałów.
+	var prev_r: Rect2i = prev_seg.get("rect", Rect2i())
+	var prev_axis: String = prev_seg.get("axis", "h")
+	var next_r: Rect2i = next_seg.get("rect", Rect2i())
+	var next_axis: String = next_seg.get("axis", "h")
+
+	# Wybór dopuszczalnych punktów startowych w Hall A (own)
+	var prev_valid = func(p: Vector2i) -> bool:
+		var on_st := (p.y < r.position.y if k == 0 else p.y >= r.end.y) if horiz else (p.x < r.position.x if k == 0 else p.x >= r.end.x)
+		if not on_st:
+			return false
+		if prev_axis == st["axis"]:
+			if horiz:
+				return (p.y < prev_r.position.y if k == 0 else p.y >= prev_r.end.y)
+			else:
+				return (p.x < prev_r.position.x if k == 0 else p.x >= prev_r.end.x)
+		else:
+			if prev_axis == "v":
+				if r.end.x > prev_r.end.x:
+					return p.x >= prev_r.end.x
+				else:
+					return p.x < prev_r.position.x
+			else:
+				if r.end.y > prev_r.end.y:
+					return p.y >= prev_r.end.y
+				else:
+					return p.y < prev_r.position.y
+
 	var candidates: Array[Vector2i] = []
 	for p: Vector2i in own:
-		var on_side := false
-		if horiz:
-			on_side = (p.y < r.position.y if k == 0 else p.y >= r.end.y)
-		else:
-			on_side = (p.x < r.position.x if k == 0 else p.x >= r.end.x)
-		if not on_side:
+		if not prev_valid.call(p):
 			continue
-
 		var near_water := false
 		for dy in range(-1, 2):
 			for dx in range(-1, 2):
@@ -370,22 +392,90 @@ static func _carve_service(
 			candidates.append(p)
 
 	if candidates.is_empty():
+		for p: Vector2i in own:
+			var on_st := (p.y < r.position.y if k == 0 else p.y >= r.end.y) if horiz else (p.x < r.position.x if k == 0 else p.x >= r.end.x)
+			if not on_st:
+				continue
+			var near_water := false
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					if water.has(p + Vector2i(dx, dy)):
+						near_water = true
+						break
+				if near_water:
+					break
+			if not near_water:
+				candidates.append(p)
+
+	if candidates.is_empty():
 		return false
 
 	MapGeneratorBaseScript.shuffle_array(candidates, rng)
 
+	# Wybór dopuszczalnych punktów docelowych w Hall B (tgt)
+	var next_valid = func(p: Vector2i) -> bool:
+		if next_axis == st["axis"]:
+			if horiz:
+				return (p.y < next_r.position.y if k == 0 else p.y >= next_r.end.y)
+			else:
+				return (p.x < next_r.position.x if k == 0 else p.x >= next_r.end.x)
+		else:
+			if next_axis == "v":
+				# Hall B jest pionowa, st jest poziomy
+				if r.position.x < next_r.position.x:
+					return p.x >= next_r.end.x
+				else:
+					return p.x < next_r.position.x
+			else:
+				# Hall B jest pozioma, st jest pionowy
+				if r.position.y < next_r.position.y:
+					return p.y >= next_r.end.y
+				else:
+					return p.y < next_r.position.y
+
+	var filtered_tgt: Dictionary = {}
+	for p: Vector2i in tgt:
+		if not next_valid.call(p):
+			continue
+		var near_water := false
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				if water.has(p + Vector2i(dx, dy)):
+					near_water = true
+					break
+			if near_water:
+				break
+		if not near_water:
+			filtered_tgt[p] = true
+
+	if filtered_tgt.is_empty():
+		for p: Vector2i in tgt:
+			if not water.has(p):
+				filtered_tgt[p] = true
+
 	# 2. Przygotuj strefy ograniczeń: extra_forb, zone_skip, bias
+	# Koryto st i pas ściany oddzielającej są bezwzględnie zakazane dla korytarza serwisowego
 	var extra_forb: Dictionary = {}
-	var ef_rect := Rect2i(
-		r.position.x - (wall_h + 1),
-		r.position.y - (wall_v + 1),
-		r.size.x + 2 * (wall_h + 1),
-		r.size.y + 2 * (wall_v + 1)
-	)
+	var ef_rect: Rect2i
+	if horiz:
+		ef_rect = Rect2i(
+			r.position.x - 2,
+			r.position.y - (wall_v if k == 0 else 1),
+			r.size.x + 4,
+			r.size.y + (wall_v if k == 1 else 1)
+		)
+	else:
+		ef_rect = Rect2i(
+			r.position.x - (wall_h if k == 0 else 1),
+			r.position.y - 2,
+			r.size.x + (wall_h if k == 1 else 1),
+			r.size.y + 4
+		)
+
 	for ey in range(ef_rect.position.y, ef_rect.end.y):
 		for ex in range(ef_rect.position.x, ef_rect.end.x):
 			var ep := Vector2i(ex, ey)
-			if not own.has(ep) and not tgt.has(ep):
+			if water.has(ep) or (not own.has(ep) and not filtered_tgt.has(ep)):
 				extra_forb[ep] = true
 
 	var zone_skip: Dictionary = {}
@@ -398,7 +488,7 @@ static func _carve_service(
 	for zy in range(zs_rect.position.y, zs_rect.end.y):
 		for zx in range(zs_rect.position.x, zs_rect.end.x):
 			var zp := Vector2i(zx, zy)
-			if not water.has(zp) or r.has_point(zp):
+			if not water.has(zp):
 				zone_skip[zp] = true
 
 	# Bias: preferuj stronę k wokół kanału (koszt 0), kara za złą stronę (+50)
@@ -431,14 +521,14 @@ static func _carve_service(
 	for p in service:
 		floor_cells[p] = true
 
-	# 4. Próba znalezienia ścieżki z kilku losowych kandydatów
+	# 4. Próba znalezienia ścieżki z kilku losowych kandydatów (z forbid_water=true)
 	var path: Array[Vector2i] = []
 	var attempts := mini(5, candidates.size())
 	for i in range(attempts):
 		var start_p: Vector2i = candidates[i]
 		path = StructuredPathfinder.find_corridor_path(
-			start_p, tgt, own, floor_cells, water, width, height,
-			wall_h, wall_v, layout.segments, 3, bias, Rect2i(), extra_forb, 120, zone_skip
+			start_p, filtered_tgt, own, floor_cells, water, width, height,
+			wall_h, wall_v, layout.segments, 3, bias, Rect2i(), extra_forb, 120, zone_skip, true
 		)
 		if not path.is_empty():
 			break
