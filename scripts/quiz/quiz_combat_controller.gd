@@ -275,8 +275,20 @@ func _ready() -> void:
 	if battle_window:
 		_band_height = -battle_window.offset_top
 	if window_shadow:
-		_shadow_height = absf(window_shadow.offset_bottom - window_shadow.offset_top)
-		if _shadow_height <= 0.0:
+		window_shadow.anchor_left = 0.0
+		window_shadow.anchor_right = 1.0
+		window_shadow.anchor_top = 1.0
+		window_shadow.anchor_bottom = 1.0
+		window_shadow.offset_left = 0.0
+		window_shadow.offset_right = 0.0
+		window_shadow.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		window_shadow.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		var diff := absf(window_shadow.offset_bottom - window_shadow.offset_top)
+		if diff > 0.0 and diff <= 100.0:
+			_shadow_height = diff
+		elif window_shadow.custom_minimum_size.y > 0.0:
+			_shadow_height = window_shadow.custom_minimum_size.y
+		else:
 			_shadow_height = 35.0
 	_init_party_state()
 	_quiz_panel_controller = QuizPanelController.new()
