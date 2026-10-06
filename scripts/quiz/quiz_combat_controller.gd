@@ -95,8 +95,8 @@ var _shadow_height := 35.0
 @onready var items_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel
 @onready var items_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/DescriptionLabel
 @onready var items_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/ListVBox
-@onready var turn_label: Label = $BattleWindow/WindowMargin/VBox/TopRow/TurnLabel
-@onready var streak_label: Label = $BattleWindow/WindowMargin/VBox/TopRow/StreakLabel
+@onready var turn_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/TurnLabel") as Label
+@onready var streak_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/StreakLabel") as Label
 @onready var target_panel: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel
 @onready var target_label: Label = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetLabel
 @onready var target_list_vbox: VBoxContainer = $BattleWindow/WindowMargin/VBox/ContentRow/CombatLogPanel/PartyMargin/TargetPanel/TargetListVBox
@@ -474,9 +474,10 @@ func _start_player_turn() -> void:
 	_set_quiz_layout_active(false)
 	phase = Phase.ACTION_SELECT
 	_clear_battle_log()
-	turn_label.text = "Tura %d - Twój ruch" % turn_number
+	if turn_label:
+		turn_label.text = "Tura %d - Twój ruch" % turn_number
 	player_base_damage = _get_player_attack_power()
-	if _ps:
+	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	action_panel.visible = true
 	result_label.visible = false
@@ -1133,7 +1134,7 @@ func _resolve_action(correct: bool) -> void:
 	_update_hp_bars()
 	_refresh_enemy_header()
 	_refresh_stats_panel()
-	if _ps:
+	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	await get_tree().create_timer(1.5).timeout
 	if _all_enemies_defeated():
@@ -1252,7 +1253,8 @@ func _enemy_turn() -> void:
 		if int(enemy_unit.get("hp", 0)) <= 0:
 			continue
 		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
-		turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
+		if turn_label:
+			turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
 		_push_log("%s atakuje!" % enemy_label, Color.WHITE)
 		_active_enemy_index = enemy_index
 		_refresh_enemy_header()
