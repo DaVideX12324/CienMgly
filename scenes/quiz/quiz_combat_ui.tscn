@@ -16,8 +16,7 @@ border_color = Color(0.18, 0.22, 0.3, 0.95)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_hp_fill"]
 bg_color = Color(0.9, 0.3, 0.3, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6br0c"]
-bg_color = Color(0.02, 0.02, 0.05, 1)
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6br0c"]
 
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
 process_mode = 3
@@ -43,6 +42,15 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.42)
 
+[node name="Background" type="Control" parent="Root" unique_id=885207106]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_bg")
+
 [node name="Battlefield" type="Control" parent="Root" unique_id=1796037858]
 layout_mode = 1
 anchors_preset = 15
@@ -51,15 +59,6 @@ anchor_bottom = 1.0
 offset_bottom = -250.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="Background" type="Control" parent="Root/Battlefield" unique_id=885207106]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_bg")
 
 [node name="FieldContent" type="Control" parent="Root/Battlefield" unique_id=2101901598]
 layout_mode = 1
@@ -540,7 +539,7 @@ anchor_bottom = 1.0
 offset_top = -250.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_6br0c")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_6br0c")
 
 [node name="WindowMargin" type="MarginContainer" parent="Root/BattleWindow" unique_id=1827320336]
 layout_mode = 2
