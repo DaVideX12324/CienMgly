@@ -68,6 +68,8 @@ var player_base_damage := 20
 var turn_number := 0
 
 @onready var battle_window: PanelContainer = $BattleWindow
+@onready var window_shadow: Control = get_node_or_null("WindowShadow") as Control
+var _shadow_height := 35.0
 @onready var quiz_modal_overlay: Control = get_node_or_null("QuizModalOverlay") as Control
 @onready var quiz_modal_vbox: VBoxContainer = get_node_or_null("QuizModalOverlay/ModalPanel/ModalMargin/ModalVBox") as VBoxContainer
 @onready var content_row: HBoxContainer  = $BattleWindow/WindowMargin/VBox/ContentRow
@@ -265,6 +267,10 @@ func _ready() -> void:
 	_setup_party_layout()
 	if battle_window:
 		_band_height = -battle_window.offset_top
+	if window_shadow:
+		_shadow_height = absf(window_shadow.offset_bottom - window_shadow.offset_top)
+		if _shadow_height <= 0.0:
+			_shadow_height = 35.0
 	_init_party_state()
 	_quiz_panel_controller = QuizPanelController.new()
 	_quiz_panel_controller.text_size = QuizTheme.COMBAT_FONT_SIZE
@@ -1911,12 +1917,16 @@ func _ensure_enemy_field_layer() -> void:
 	if _enemy_field_layer:
 		return
 	var field_content := get_node_or_null("Battlefield/FieldContent") as Control
-	_enemy_field_layer = Control.new()
-	_enemy_field_layer.name = "EnemyFieldLayer"
-	_enemy_field_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	(field_content if field_content else self).add_child(_enemy_field_layer)
-	_enemy_field_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_enemy_field_layer.resized.connect(_apply_responsive_enemy_layout)
+	if field_content:
+		_enemy_field_layer = field_content.get_node_or_null("EnemyFieldLayer") as Control
+	if _enemy_field_layer == null:
+		_enemy_field_layer = Control.new()
+		_enemy_field_layer.name = "EnemyFieldLayer"
+		_enemy_field_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		(field_content if field_content else self).add_child(_enemy_field_layer)
+		_enemy_field_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if not _enemy_field_layer.resized.is_connected(_apply_responsive_enemy_layout):
+		_enemy_field_layer.resized.connect(_apply_responsive_enemy_layout)
 
 
 
@@ -1939,6 +1949,9 @@ func _update_window_heights(is_quiz: bool = false) -> void:
 	var battlefield := get_node_or_null("Battlefield") as Control
 	if battlefield:
 		battlefield.offset_bottom = -menu_h
+	if window_shadow:
+		window_shadow.offset_bottom = -menu_h
+		window_shadow.offset_top = -menu_h - _shadow_height
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).

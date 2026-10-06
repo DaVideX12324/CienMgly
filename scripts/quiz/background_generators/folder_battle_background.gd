@@ -76,14 +76,3 @@ func draw_background(canvas: Control, _context: Dictionary) -> void:
 			canvas.draw_texture_rect(_cached_texture, Rect2(Vector2.ZERO, canvas.size), false)
 	else:
 		canvas.draw_rect(Rect2(Vector2.ZERO, canvas.size), Color(0.12, 0.10, 0.15))
-
-	_draw_bottom_gradient(canvas)
-
-
-func _draw_bottom_gradient(canvas: Control) -> void:
-	var h: float = canvas.size.y
-	var w: float = canvas.size.x
-	var grad_height: float = minf(SHADOW_HEIGHT, h * 0.1)  # cień nad dolnym paskiem UI
-	var band_top: float = h * (830.0 / 1080.0) if h > 850.0 else h
-	var grad_y: float = band_top - grad_height
-	canvas.draw_rect(Rect2(0.0, grad_y, w, grad_height), SHADOW_COLOR)

@@ -18,6 +18,15 @@ bg_color = Color(0.9, 0.3, 0.3, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6br0c"]
 
+[sub_resource type="Gradient" id="Gradient_shadow"]
+colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.35)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shadow"]
+gradient = SubResource("Gradient_shadow")
+width = 4
+height = 64
+fill_to = Vector2(0, 1)
+
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
 process_mode = 3
 layer = 15
@@ -67,6 +76,15 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="EnemyFieldLayer" type="Control" parent="Root/Battlefield/FieldContent" unique_id=1849201948]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="BattleMenuOverlay" type="Control" parent="Root/Battlefield/FieldContent" unique_id=1173231907]
 visible = false
@@ -530,6 +548,20 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_player_hp_fill")
 value = 100.0
 show_percentage = false
 
+[node name="WindowShadow" type="TextureRect" parent="Root" unique_id=987123456]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -285.0
+offset_bottom = -250.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_shadow")
+expand_mode = 1
+
 [node name="BattleWindow" type="PanelContainer" parent="Root" unique_id=112675901]
 layout_mode = 1
 anchors_preset = 12
@@ -573,10 +605,11 @@ horizontal_alignment = 2
 [node name="ContentRow" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=91440854]
 layout_mode = 2
 size_flags_vertical = 3
+alignment = 1
 theme_override_constants/separation = 0
 
 [node name="CommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=850453509]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(288, 0)
 layout_mode = 2
 theme_type_variation = &"QuizWindow"
 
@@ -601,7 +634,6 @@ layout_mode = 2
 text = "Komendy"
 
 [node name="PrimaryMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=692157191]
-visible = false
 layout_mode = 2
 theme_override_constants/separation = 2
 
@@ -627,6 +659,7 @@ text = "Wyjście"
 alignment = 0
 
 [node name="ActionMenu" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel" unique_id=1594848201]
+visible = false
 layout_mode = 2
 
 [node name="AtkBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/CommandPanel/CommandMargin/CommandVBox/ActionPanel/ActionMenu" unique_id=1229105933]
