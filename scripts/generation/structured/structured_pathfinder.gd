@@ -13,10 +13,10 @@ const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), 
 
 
 class MinHeap:
-	var data: Array = []  # Array of [cost: int, x: int, y: int, dir_idx: int]
+	var data: Array = []  # Array of [prio: int, g_cost: int, x: int, y: int, dir_idx: int]
 
-	func push(cost: int, x: int, y: int, dir_idx: int) -> void:
-		var item: Array = [cost, x, y, dir_idx]
+	func push(prio: int, g_cost: int, x: int, y: int, dir_idx: int) -> void:
+		var item: Array = [prio, g_cost, x, y, dir_idx]
 		data.append(item)
 		var idx := data.size() - 1
 		while idx > 0:
@@ -111,7 +111,8 @@ static func find_corridor_path(
 	start_ok_rect: Rect2i = Rect2i(),
 	extra_forb: Dictionary = {},
 	max_len: int = 100,
-	zone_skip: Dictionary = {}
+	zone_skip: Dictionary = {},
+	forbid_water: bool = false
 ) -> Array[Vector2i]:
 	if target_mask.is_empty():
 		return []
@@ -146,8 +147,23 @@ static func find_corridor_path(
 		if zv_map.has(p):
 			jz_map[p] = true
 
+	var tgt_min_x := 999999
+	var tgt_min_y := 999999
+	var tgt_max_x := -1
+	var tgt_max_y := -1
+	for tp: Vector2i in target_mask:
+		tgt_min_x = mini(tgt_min_x, tp.x)
+		tgt_min_y = mini(tgt_min_y, tp.y)
+		tgt_max_x = maxi(tgt_max_x, tp.x)
+		tgt_max_y = maxi(tgt_max_y, tp.y)
+
+	var get_h = func(p: Vector2i) -> int:
+		var dx := maxi(0, maxi(tgt_min_x - p.x, p.x - tgt_max_x))
+		var dy := maxi(0, maxi(tgt_min_y - p.y, p.y - tgt_max_y))
+		return dx + dy
+
 	var heap := MinHeap.new()
-	heap.push(0, start.x, start.y, -1)
+	heap.push(get_h.call(start), 0, start.x, start.y, -1)
 
 	var best: Dictionary = {}  # int_key -> cost
 	var prev: Dictionary = {}  # int_key -> prev_int_key
@@ -160,10 +176,11 @@ static func find_corridor_path(
 	while not heap.is_empty() and iters < max_iterations:
 		iters += 1
 		var cur: Array = heap.pop()
-		var g: int = cur[0]
-		var x: int = cur[1]
-		var y: int = cur[2]
-		var dI: int = cur[3]
+		var prio: int = cur[0]
+		var g: int = cur[1]
+		var x: int = cur[2]
+		var y: int = cur[3]
+		var dI: int = cur[4]
 
 		var cur_pos := Vector2i(x, y)
 		var cur_key := (y * width + x) * 4 + (dI if dI >= 0 else 0)
@@ -180,6 +197,10 @@ static func find_corridor_path(
 				for l_step in range(1, wall_h + 6):
 					var test_p := cur_pos + d * l_step
 					if test_p.x < 0 or test_p.x >= width or test_p.y < 0 or test_p.y >= height:
+						break
+					if forbid_water and water_cells.has(test_p):
+						break
+					if extra_forb.has(test_p) and not target_mask.has(test_p):
 						break
 					if target_mask.has(test_p):
 						if l_step < best_l:
@@ -216,6 +237,9 @@ static func find_corridor_path(
 			var n_pos := Vector2i(nx, ny)
 
 			if nx < margin + 1 or nx >= width - margin - 1 or ny < margin + 1 or ny >= height - margin - 1:
+				continue
+
+			if forbid_water and water_cells.has(n_pos):
 				continue
 
 			var in_own: bool = own_mask.has(n_pos)
@@ -265,7 +289,7 @@ static func find_corridor_path(
 			if ng < int(best.get(n_key, 9999999)):
 				best[n_key] = ng
 				prev[n_key] = cur_key
-				heap.push(ng, nx, ny, ni)
+				heap.push(ng + get_h.call(n_pos), ng, nx, ny, ni)
 
 	return []
 
@@ -297,13 +321,15 @@ static func carve_corridor(
 							service[cp] = true
 							layout.service[cp] = true
 
-	# Kładki przecięć (crossing bridges) na wodzie
-	_add_crossing_bridges(path, floor_cells, water_cells, layout)
+	# Kładki przecięć (crossing bridges) na wodzie - korytarze serwisowe biegną za ścianą i nie stawiają kładek
+	if not is_service:
+		_add_crossing_bridges(path, floor_cells, water_cells, layout)
 
 	return carved_cells
 
 
 ## Dodaje przepisowe kładki w miejscach przecięcia ścieżki z kanałem.
+## Bezwzględny zakaz kładek na zakrętach, narożnikach i skrzyżowaniach oraz w obmurowanych korytach.
 static func _add_crossing_bridges(
 	path: Array[Vector2i],
 	floor_cells: Dictionary,
@@ -316,6 +342,8 @@ static func _add_crossing_bridges(
 
 		# Znajdź segment kanału zawierający p
 		for seg in layout.segments:
+			if seg.get("kind", "") == "walled":
+				continue
 			var r: Rect2i = seg.get("rect", Rect2i())
 			if not r.has_point(p):
 				continue
@@ -328,6 +356,10 @@ static func _add_crossing_bridges(
 				var bx := p.x
 				var y0 := r.position.y
 				var y1 := r.end.y
+
+				# Zakaz kładek na zakrętach, narożnikach i skrzyżowaniach (min. 4 kratki od końców)
+				if bx - r.position.x < 4 or r.end.x - (bx + 2) < 4:
+					continue
 
 				# Sprawdź czy kładka w tym miejscu już istnieje
 				var exists := false
@@ -369,6 +401,10 @@ static func _add_crossing_bridges(
 				var by := p.y
 				var x0 := r.position.x
 				var x1 := r.end.x
+
+				# Zakaz kładek na zakrętach, narożnikach i skrzyżowaniach (min. 4 kratki od końców)
+				if by - r.position.y < 4 or r.end.y - (by + 2) < 4:
+					continue
 
 				var exists := false
 				for cr in layout.crossings:
