@@ -170,13 +170,13 @@ func _draw() -> void:
 	var view := BattleBackgroundLayout.REF_SIZE
 	var area := BattleBackgroundLayout.REF_AREA
 	var l: BattleBackgroundLayout = layout if layout else BattleBackgroundLayout.new()
-	# Tło jak w grze: wypełnia obszar bitwy (skala „cover”, wyśrodkowane).
-	draw_rect(Rect2(Vector2.ZERO, area), Color(0.08, 0.07, 0.11))
+	# Tło jak w grze: wypełnia całe okno 16:9 (skala „cover”, wyśrodkowane).
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0.08, 0.07, 0.11))
 	if l.texture:
 		var ts := l.texture.get_size()
-		var k := maxf(area.x / ts.x, area.y / ts.y)
-		var origin := (area - ts * k) * 0.5
-		draw_texture_rect_region(l.texture, Rect2(Vector2.ZERO, area), Rect2(-origin / k, area / k))
+		var k := maxf(view.x / ts.x, view.y / ts.y)
+		var origin := (view - ts * k) * 0.5
+		draw_texture_rect_region(l.texture, Rect2(Vector2.ZERO, view), Rect2(-origin / k, view / k))
 	_draw_ui_zones(view, area)
 	var fl := l.active_fields()
 	# Obrys pól i linie rzędów.
@@ -240,7 +240,7 @@ func _draw_ui_zones(view: Vector2, area: Vector2) -> void:
 	draw_string(font, Vector2(view.x - 330.0, shadow.position.y + 25.0), "Cień nad UI (%d px)" % FolderBackground.SHADOW_HEIGHT,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 20, ZONE_TEXT)
 	var band := Rect2(0.0, area.y, view.x, BAND)
-	draw_rect(band, Color(0.02, 0.02, 0.05))
+	draw_rect(band, Color(0.02, 0.02, 0.05, 0.55))
 	draw_rect(band.grow(-2.0), ZONE_LINE, false, 3.0)
 	draw_string(font, band.position + Vector2(24.0, 44.0), "Dolny pasek UI walki (%d px) — tu nie stawiaj wrogów" % BAND,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 26, ZONE_TEXT)

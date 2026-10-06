@@ -84,5 +84,6 @@ func _draw_bottom_gradient(canvas: Control) -> void:
 	var h: float = canvas.size.y
 	var w: float = canvas.size.x
 	var grad_height: float = minf(SHADOW_HEIGHT, h * 0.1)  # cień nad dolnym paskiem UI
-	var grad_y: float = h - grad_height
+	var band_top: float = h * (830.0 / 1080.0) if h > 850.0 else h
+	var grad_y: float = band_top - grad_height
 	canvas.draw_rect(Rect2(0.0, grad_y, w, grad_height), SHADOW_COLOR)
