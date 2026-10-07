@@ -1,5 +1,27 @@
 # Prompty korekcyjne do istniejących teł walki (kadr 16:9 na cały ekran)
 
+## ⭐ Najpierw to (2026-10-07) — proste prompty edycji
+
+Długie prompty niżej (korekty 1–4) okazały się za ciężkie: generator ignorował „zoom out / scale down”,
+a przy płótnie zamykał scenę ścianami wokół starego obrazu (jak pomieszczenie) zamiast ją rozszerzać.
+Proste wersje w stylu sprawdzonych wzorców (`pixel_crawler_prompts.md`, „Zasady”):
+
+**A. Edycja samej grafiki (bez płótna)** — dołącz tylko tło do poprawy:
+```text
+Edit the attached 16-bit pixel art JRPG battle background: show the same place from further away, as if the camera stepped several metres backwards, first-person battle perspective. Keep the same style, colours, lighting and objects. The lower half of the new picture is a wide, flat, empty floor of the same ground that comes closer toward the viewer, and the scenery from the original picture now sits further back above it. 16:9 aspect ratio, retro pixel art, no characters, no monsters, no UI.
+```
+
+**B. Płótno (obraz pomniejszony u góry, reszta szara)** — gdy A nie oddala kadru:
+```text
+Fill the flat grey areas of the attached image by continuing the same scene outward, first-person battle perspective. The picture in the middle is only the far back part of a much bigger, wide open hall: the same floor spreads wider and comes closer toward the viewer all the way to the bottom edge, and the walls continue outward past the left and right edges of the image, so the space feels open and wide. Keep the existing picture exactly as it is. 16:9 aspect ratio, retro pixel art, matching colours and lighting, no characters, no monsters, no UI.
+```
+- W B nie opisuj ścian „przy krawędziach” ani „ramy” — generator dorysowuje wtedy ściany wokół starego
+  obrazu. Zdanie „the picture in the middle is only the far back part of a much bigger hall” każe mu
+  rozszerzać przestrzeń. Gdy szary obszar jest duży po bokach, szansa na zamknięcie rośnie — lepiej dać
+  szeroki obraz (mniej szarego po bokach, więcej na dole).
+
+---
+
 Obecne tła mają kadr pod stary obszar walki (1920×830 nad paskiem UI, „cover”): posadzka z wrogami leży
 na **~70–85% wysokości obrazu**, więc przy tle na cały ekran 16:9 przedni rząd wszedłby pod dolny pasek UI.
 Każdy prompt poniżej **edytuje istniejącą grafikę** (dołącz ją do promptu): oddala ją tak, żeby zajęła
