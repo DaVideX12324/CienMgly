@@ -261,9 +261,8 @@ func _drop_pinch(cx: Dictionary) -> void:
 
 # --- Przerwy chodnika tunelu ---
 
-## Strona chodnika urywa się (szerokość 0) i dalej wraca: obejście tunelem za ścianą (u-turn: z chodnika
-## przed przerwą w mur, wzdłuż kanału, z powrotem za przerwą; szansa lane_gap_bypass_chance) albo kładki
-## na drugą stronę na obu końcach przerwy.
+## Strona chodnika urywa się (szerokość 0) i dalej wraca: u-turn tunelem przez mur (szansa
+## lane_gap_bypass_chance) albo kładki na drugą stronę na obu końcach przerwy (też gdy u-turn się nie mieści).
 func _lane_gaps() -> void:
 	var chance := float(cfg.get("lane_gap_bypass_chance", 0.5))
 	var bypass := 0
@@ -288,56 +287,75 @@ func _lane_gaps() -> void:
 	stats["gap_unresolved"] = lost
 
 
+## U-turn: zwarty prostokątny tunel przez mur wokół przerwy — ramię prostopadłe z końca chodnika przed
+## przerwą, ramię równoległe za ścianą (min. ściana + 2 od kanału), ramię z powrotem do chodnika za przerwą.
+## Grubość ramion lane_gap_arm (3); ściana między ramionami = przerwa (min. wall_v + 1 przy kanale poziomym,
+## wall_h + 1 przy pionowym — tam to lico). Tylko w litym murze: obca podłoga (poza siecią kanałów
+## i chodników) najbliżej o ścianę + 1; kratki chodnika mogą leżeć pod ramionami.
 func _gap_bypass(s: Dictionary, g: Dictionary) -> bool:
 	var k: int = g.k
+	var g0: int = g.g0
+	var g1: int = g.g1
+	var arm := int(cfg.get("lane_gap_arm", 3))
 	var horiz: bool = s.axis == "h"
-	var own_c := PackedInt32Array()
-	var tgt_c := PackedInt32Array()
-	for c in s.lane_chunks:
-		if c.k != k or c.w < 2:
-			continue
-		var before: bool = c.t1 < g.g0 and c.t1 >= g.g0 - 14
-		var after: bool = c.t > g.g1 and c.t <= g.g1 + 14
-		if not before and not after:
-			continue
-		var r := StructuredZoning._side_rect(s, c.t, c.t1, k, c.w)
+	var inner: int = (st.wall_h if horiz else st.wall_v) + 2
+	if g1 - g0 + 1 < (st.wall_v if horiz else st.wall_h) + 1:
+		stats["u_short"] = stats.get("u_short", 0) + 1
+		return false
+	var a0 := g0 - arm
+	var a1 := g1 + arm
+	var lo: int = s.x0 if horiz else s.y0
+	var hi: int = s.x1 if horiz else s.y1
+	if a0 < lo or a1 > hi:
+		stats["u_ends"] = stats.get("u_ends", 0) + 1
+		return false
+	var cells := {}
+	for r in [StructuredZoning._side_rect(s, a0, g0 - 1, k, inner + arm),
+			StructuredZoning._side_rect(s, g1 + 1, a1, k, inner + arm)]:
 		for y in range(r[1], r[3] + 1):
 			for x in range(r[0], r[2] + 1):
-				if st.in_map(x, y) and st.lanes[y * st.w + x]:
-					(own_c if before else tgt_c).append(y * st.w + x)
-	if own_c.is_empty() or tgt_c.is_empty():
-		return false
-	var canal := Vector4i(s.x0, s.y0, s.x1, s.y1)
-	var wv: int = st.wall_v
-	var wh: int = st.wall_h
-	var pf := _pf()
-	pf.own = State.LocalSum.from_cells(own_c, st.w)
-	pf.own_sub = State.LocalSum.from_cells(_sub_cells(own_c), st.w)
-	pf.target = State.LocalSum.from_cells(tgt_c, st.w)
-	var tgt_m := st.new_mask()
-	for c in tgt_c:
-		tgt_m[c] = 1
-	pf.dt = st.distance_to(tgt_m)
-	pf.has_bias = true
-	pf.bias_rect = Vector4i(canal.x - 16, canal.y - 18, canal.z + 16, canal.w + 18)
-	pf.bias_side = k
-	pf.bias_horiz = horiz
-	pf.bias_canal = canal
-	pf.zone_skip_rect = Vector4i(canal.x - wv - 14, canal.y - wh - 14, canal.z + wv + 14, canal.w + wh + 14)
-	pf.zone_skip_canal = canal
-	# Wzdłuż przerwy korytarz trzyma się za ścianą (nie przy samym kanale).
-	if horiz:
-		pf.extra_rect = Vector4i(int(g.g0) - 1, canal.y - wh - 2, int(g.g1) + 1, canal.w + wh + 2)
-	else:
-		pf.extra_rect = Vector4i(canal.x - wv - 2, int(g.g0) - 1, canal.z + wv + 2, int(g.g1) + 1)
-	var start: int = own_c[rng.randi() % own_c.size()]
-	var path := pf.find(start % st.w, start / st.w)
-	# Krótki u-turn, nie pętla przez pół mapy: długość przerwy + dwa wyjścia przez mur + zapas.
-	var limit: int = int(g.g1) - int(g.g0) + 1 + 2 * (wh + 6) + 12
-	if path.is_empty() or _without(path, pf.own).size() > limit:
-		return false
-	corridors.append(_carve(_without(path, pf.own)))
+				cells[Vector2i(x, y)] = true
+	var far := StructuredZoning._side_rect(s, a0, a1, k, inner + arm)
+	var near := StructuredZoning._side_rect(s, a0, a1, k, inner)
+	for y in range(far[1], far[3] + 1):
+		for x in range(far[0], far[2] + 1):
+			if not (x >= near[0] and x <= near[2] and y >= near[1] and y <= near[3]):
+				cells[Vector2i(x, y)] = true
+	for c in cells:
+		if not st.inside(c.x, c.y, c.x, c.y):
+			stats["u_map"] = stats.get("u_map", 0) + 1
+			return false
+		var i: int = c.y * st.w + c.x
+		if st.lanes[i]:
+			continue
+		if st.floor_m[i]:
+			stats["u_floor"] = stats.get("u_floor", 0) + 1
+			return false
+		if _near_foreign(c.x, c.y, cells):
+			stats["u_near"] = stats.get("u_near", 0) + 1
+			return false
+	var out := PackedInt32Array()
+	for c in cells:
+		var i: int = c.y * st.w + c.x
+		if st.lanes[i]:
+			continue
+		st.add_floor(c.x, c.y)
+		st.corrm[i] = 1
+		out.append(i)
+	corridors.append(out)
 	return true
+
+
+## Obca podłoga (poza siecią kanałów i chodników oraz samym u-turnem) bliżej niż ściana + 1.
+func _near_foreign(x: int, y: int, own: Dictionary) -> bool:
+	var rx: int = st.wall_v + 1
+	var ry: int = st.wall_h + 1
+	for yy in range(maxi(0, y - ry), mini(st.h - 1, y + ry) + 1):
+		for xx in range(maxi(0, x - rx), mini(st.w - 1, x + rx) + 1):
+			var i: int = yy * st.w + xx
+			if st.floor_m[i] and not st.cross_any[i] and not own.has(Vector2i(xx, yy)):
+				return true
+	return false
 
 
 # --- R5: pokoje i korytarze ---
