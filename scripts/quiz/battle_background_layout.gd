@@ -105,7 +105,7 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 		var pref: String = str(prefs[e]).to_lower() if e < prefs.size() else ""
 		var free: Array[int] = []
 		for si in range(slots.size()):
-			if used[si] < fl[slots[si][0]].row_capacity:
+			if used[si] < fl[slots[si][0]].capacity(slots[si][1]):
 				free.append(si)
 		var pick := -1
 		if not free.is_empty():

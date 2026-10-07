@@ -255,12 +255,17 @@ func _row_counts(f: BattleField, fi: int) -> Array[int]:
 	out.resize(f.rows)
 	var total := field_counts[fi] if fi < field_counts.size() else -1
 	if total < 0:
-		out.fill(mini(preview_per_row, f.row_capacity))
+		for r in range(f.rows):
+			out[r] = mini(preview_per_row, f.capacity(r))
 		return out
 	out.fill(0)
-	total = mini(total, f.rows * f.row_capacity)
-	for e in range(total):  # po kolei do rzędów, od przedniego
-		out[e % f.rows] += 1
+	total = mini(total, f.total_capacity())
+	var r := 0
+	while total > 0:  # po kolei do rzędów od przedniego, pełne rzędy pomijane
+		if out[r] < f.capacity(r):
+			out[r] += 1
+			total -= 1
+		r = (r + 1) % f.rows
 	return out
 
 
