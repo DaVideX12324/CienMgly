@@ -1,7 +1,7 @@
 class_name StructuredZoning
 extends RefCounted
 
-## R2 / R3 — odcinki: tunel (chodnik po obu stronach) albo kompleks (sale przecinane kanałem, jeden wielokąt)
+## R2 / R3 — odcinki: tunel (chodniki o zmiennej szerokości, też 0 z jednej strony) albo kompleks (sale przecinane kanałem, jeden wielokąt)
 ## (plan: docs/plan_generator_sciekow.md, wzorzec proto_layout.py kroki 2–3).
 ## - kompleks = ciąg 1–4 kolejnych odcinków jednej linii (najpierw najdłuższy, ciąg 1 tylko na węźle),
 ##   min. odstęp między kompleksami complex_min_gap, liczba ≤ max(2, W·H / complex_count_ratio);
@@ -94,22 +94,63 @@ func _pick_complexes() -> void:
 			placed_any = true
 
 
-## Pasy chodnika odcinka tunelu (strona 0 = góra / lewo).
-func bands(s: Dictionary) -> Array:
-	var L: int = st.lane
-	if s.axis == "h":
-		return [[s.x0, s.y0 - L, s.x1, s.y0 - 1], [s.x0, s.y1 + 1, s.x1, s.y1 + L]]
-	return [[s.x0 - L, s.y0, s.x0 - 1, s.y1], [s.x1 + 1, s.y0, s.x1 + L, s.y1]]
-
-
+## Chodniki tuneli o zmiennej szerokości: odcinek dzielony na kawałki lane_chunk (6–12) wzdłuż kanału, każda
+## strona losuje szerokość z lane_width_options (0 = kanał przy ścianie; 1 odpada — za wąsko), z szansą
+## lane_keep_chance zostaje poprzednia. Zawsze ≥ 1 strona ≥ 2, ciągłość strony (chodnik nie przeskakuje kanału
+## bez kładki), przy końcach odcinka (zakręty, węzły) obie strony ≥ 2. Prostokąty chodnika w s.lane_rects.
 func _lanes() -> void:
+	var opts: Array = cfg.get("lane_width_options", [0, 2, 3, 3, 4])
+	var chunk: Array = cfg.get("lane_chunk", [6, 12])
+	var keep := float(cfg.get("lane_keep_chance", 0.5))
+	var end_zone: int = st.cw + 2
 	for s in st.segs:
-		if s.kind == "tunnel":
-			for b in bands(s):
-				st.fill(st.lanes, b[0], b[1], b[2], b[3])
+		s.lane_rects = []
+		if s.kind != "tunnel":
+			continue
+		var lo: int = s.x0 if s.axis == "h" else s.y0
+		var hi: int = s.x1 if s.axis == "h" else s.y1
+		var cur := [_pick_width(opts), _pick_width(opts)]
+		var prev_ok: Array = []
+		var t := lo
+		while t <= hi:
+			var t1 := mini(hi, t + rng.randi_range(int(chunk[0]), int(chunk[1])) - 1)
+			for k in [0, 1]:
+				if rng.randf() >= keep:
+					cur[k] = _pick_width(opts)
+			var got: Array = cur.duplicate()
+			if t < lo + end_zone or t1 > hi - end_zone:
+				got = [maxi(got[0], 2), maxi(got[1], 2)]
+			if not prev_ok.is_empty():
+				var any_prev := false
+				for k in prev_ok:
+					if got[k] >= 2:
+						any_prev = true
+				if not any_prev:
+					got[prev_ok[0]] = 2
+			if got[0] < 2 and got[1] < 2:
+				got[rng.randi() % 2] = 2
+			prev_ok = []
+			for k in [0, 1]:
+				if got[k] >= 2:
+					prev_ok.append(k)
+					var r := _side_rect(s, t, t1, k, got[k])
+					s.lane_rects.append(r)
+					st.fill(st.lanes, r[0], r[1], r[2], r[3])
+			cur = got
+			t = t1 + 1
 	for i in range(st.w * st.h):
 		if st.water[i]:
 			st.lanes[i] = 0
+	# Chodnik nie wychodzi poza ramkę mapy.
+	for y in range(st.h):
+		for x in range(st.w):
+			if not st.inside(x, y, x, y):
+				st.lanes[y * st.w + x] = 0
+
+
+func _pick_width(opts: Array) -> int:
+	var v := int(opts[rng.randi() % opts.size()])
+	return 0 if v < 2 else v
 
 
 ## Pas brzegu odcinka na odcinku osi [t0, t1], strona k, szerokość e od krawędzi wody.
@@ -270,9 +311,8 @@ func _cross_zones() -> void:
 		var m: PackedByteArray = st.cross_h if s.axis == "h" else st.cross_v
 		st.fill(m, s.x0, s.y0, s.x1, s.y1)
 		st.fill(wh_m if s.axis == "h" else wv_m, s.x0, s.y0, s.x1, s.y1)
-		if s.kind == "tunnel":
-			for b in bands(s):
-				st.fill(m, b[0], b[1], b[2], b[3])
+		for b in s.get("lane_rects", []):
+			st.fill(m, b[0], b[1], b[2], b[3])
 	st.cross_any = st.m_or(st.cross_h, st.cross_v)
 	st.zh = st.dilate(st.cross_h, st.wall_v + 2, st.wall_h + 2)
 	st.zv = st.dilate(st.cross_v, st.wall_v + 2, st.wall_h + 2)
