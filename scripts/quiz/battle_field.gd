@@ -21,10 +21,15 @@ extends Resource
 	set(v):
 		rows = v
 		emit_changed()
-## Ilu wrogów najwyżej w jednym rzędzie.
+## Ilu wrogów najwyżej w jednym rzędzie (rzędy bez wpisu w row_capacities).
 @export_range(1, 8) var row_capacity := 3:
 	set(v):
 		row_capacity = v
+		emit_changed()
+## Pojemność poszczególnych rzędów: wpis 0 = rząd przedni, 1 = następny… Brak wpisu albo 0 — row_capacity.
+@export var row_capacities := PackedInt32Array():
+	set(v):
+		row_capacities = v
 		emit_changed()
 ## Skala wrogów w rzędzie przednim (mnożnik skali walki).
 @export_range(0.3, 2.0, 0.01) var front_scale := 1.0:
@@ -53,6 +58,21 @@ static func sorted_quad(pts: PackedVector2Array) -> PackedVector2Array:
 	front.sort_custom(func(p: Vector2, q: Vector2) -> bool: return p.x < q.x)
 	back.sort_custom(func(p: Vector2, q: Vector2) -> bool: return p.x < q.x)
 	return PackedVector2Array([front[0], front[1], back[1], back[0]])
+
+
+## Ilu wrogów najwyżej w rzędzie 0..rows-1 (0 = przedni).
+func capacity(row: int) -> int:
+	if row >= 0 and row < row_capacities.size() and row_capacities[row] > 0:
+		return row_capacities[row]
+	return row_capacity
+
+
+## Ilu wrogów najwyżej na całym polu.
+func total_capacity() -> int:
+	var n := 0
+	for r in range(rows):
+		n += capacity(r)
+	return n
 
 
 ## Położenie rzędu 0..rows-1 (0 = przedni) między przednią (0.0) a tylną (1.0) krawędzią.
