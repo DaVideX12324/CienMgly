@@ -30,6 +30,14 @@ extends Resource
 				f.changed.connect(emit_changed)
 		emit_changed()
 
+## Szansa wylosowania rzędu względem rzędu tuż przed nim (rzędy ze wszystkich pól od najbliższego):
+## 0.4 przy 3 rzędach = szanse 1 : 0.4 : 0.16 (pojedynczy wróg: 64 % przód, 26 % środek, 10 % tył).
+## Pełne rzędy odpadają, więc przy większej liczbie wrogów zapełniają się kolejne. 1.0 = po równo.
+@export_range(0.05, 1.0, 0.01) var depth_chance := 0.4:
+	set(v):
+		depth_chance = v
+		emit_changed()
+
 const LAYOUT_SUFFIX := "_layout.tres"
 const REF_SIZE := Vector2(1920.0, 1080.0)
 const REF_AREA := Vector2(1920.0, 830.0)  # obszar bitwy przy pasku UI 250 px
@@ -88,7 +96,8 @@ class Spot:
 
 ## Przydział wrogów do miejsc (pole, rząd) z pojemnością rzędu; null = brak miejsca. `prefs[i]` =
 ## "front" / "back" / "" — przód = rząd z najniższą linią stóp (najbliżej), tył = z najwyższą; reszta
-## losowo wśród rzędów z wolnym miejscem. Kolejność w rzędzie = kolejność wrogów.
+## losowo wśród rzędów z wolnym miejscem, z szansą malejącą w głąb (depth_chance). Kolejność w rzędzie
+## = kolejność wrogów.
 func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 	var fl := active_fields()
 	var slots: Array = []  # [pole, rząd, linia stóp (px wzorcowe)]
@@ -114,7 +123,7 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 			elif pref == "back" or pref == "rear":
 				pick = free[free.size() - 1]
 			else:
-				pick = free[rng.randi() % free.size()]
+				pick = _weighted_pick(free, rng)
 			used[pick] += 1
 		picks.append(pick)
 	var out: Array = []
@@ -142,6 +151,19 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 		out[1].n = 2
 		out[1].k = 1 - side
 	return out
+
+
+## Rząd z wolnych (indeksy w liście rzędów od najbliższego): rząd i ma wagę depth_chance^i.
+func _weighted_pick(free: Array[int], rng: RandomNumberGenerator) -> int:
+	var total := 0.0
+	for si in free:
+		total += pow(depth_chance, si)
+	var x := rng.randf() * total
+	for si in free:
+		x -= pow(depth_chance, si)
+		if x < 0.0:
+			return si
+	return free[free.size() - 1]
 
 
 ## Linia stóp wroga na miejscu `spot`: równo na linii rzędu między lewym a prawym bokiem pola.
