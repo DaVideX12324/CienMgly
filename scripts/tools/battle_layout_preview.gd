@@ -36,8 +36,8 @@ extends Control
 	set(v):
 		field_counts = v
 		queue_redraw()
-## TYMCZASOWE: skala głębi (auto_depth_scale) — o ile mniejszy wróg na każde 100 px wyżej od punktu zero
-## (0.13 = rząd 200 px wyżej ma 74 % wielkości). Działa na wszystkie pola; po wyborze wartość zostanie
+## TYMCZASOWE: skala głębi (auto_depth_scale) — o ile mniejszy wróg na każde 100 px wyżej od przedniego
+## rzędu pola (0.13 = rząd 200 px wyżej ma 74 % wielkości przedniego). Działa na wszystkie pola; po wyborze wartość zostanie
 ## stałą w BattleField, a to pole zniknie.
 @export_range(0.0, 0.4, 0.005) var depth_shrink := 0.13:
 	set(v):
