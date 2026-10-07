@@ -5,7 +5,9 @@ extends Control
 ## 1. Przeciągnij plik `<grafika>_layout.tres` (obok grafiki tła) do „layout”.
 ## 2. Każde pole walki to czworobok „Field…” (Polygon2D, zwykle trapez): przednia krawędź (niżej) =
 ##    rząd przedni, tylna = rząd najdalszy. Zaznacz pole i przeciągaj narożniki (edycja wielokąta
-##    w edytorze 2D); kolejność punktów dowolna — pole zawsze ma 4 narożniki.
+##    w edytorze 2D); kolejność punktów dowolna. Punkty pośrednie na bokach (dodaj punkt na krawędzi
+##    w edytorze wielokąta, np. bok wzdłuż schodów) — rzędy kończą się na łamanym boku, na tej samej
+##    wysokości z lewej i z prawej; przednia / tylna krawędź = najniższa / najwyższa krawędź wielokąta.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
 ##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki nad kreską cienia
 ##    z miejscem na pasek HP (1920, 765 px ekranu); Position pola = jego prawy dolny róg względem tego
@@ -123,7 +125,7 @@ func _apply_quads() -> void:
 			# w inspektorze = ten narożnik względem fields_origin(), skalowanie uchwytem — wokół niego.
 			# Skala / obrót zawsze 1 / 0, narożniki względem zaczepienia (na ekranie = quad z pliku).
 			var q: PackedVector2Array = layout.fields[i].quad
-			var pivot: Vector2 = q[1] if q.size() == 4 else Vector2.ZERO
+			var pivot: Vector2 = q[1] if q.size() >= 4 else Vector2.ZERO
 			var local := PackedVector2Array()
 			for v in q:
 				local.append(v - pivot)
@@ -142,9 +144,9 @@ func _on_layout_changed() -> void:
 		_apply_quads()
 
 
-## Narożniki czworoboku w px wzorcowych (z przesunięciem węzła), posortowane; pusto, gdy nie 4 punkty.
+## Punkty pola w px wzorcowych (z przesunięciem węzła), w kolejności pola; pusto, gdy mniej niż 4.
 func _node_quad(p: Polygon2D) -> PackedVector2Array:
-	if p.polygon.size() != 4:
+	if p.polygon.size() < 4:
 		return PackedVector2Array()
 	var out := PackedVector2Array()
 	var parent_xf: Transform2D = (p.get_parent() as Node2D).transform if p.get_parent() is Node2D else Transform2D.IDENTITY
@@ -153,7 +155,7 @@ func _node_quad(p: Polygon2D) -> PackedVector2Array:
 		if not w.is_finite():
 			return PackedVector2Array()  # zły odczyt w trakcie edycji — pomiń klatkę
 		out.append(w.round())
-	return BattleField.sorted_quad(out)
+	return BattleField.normalized(out)
 
 
 ## Czworoboki -> plik: przeciąganie narożników, nowe pole (Ctrl+D), usunięte pole (Delete).
@@ -226,7 +228,7 @@ func _draw() -> void:
 	for fi in range(fl.size()):
 		var f: BattleField = fl[fi]
 		var col := COLORS[fi % COLORS.size()]
-		if f.quad.size() == 4:
+		if f.quad.size() >= 4:
 			var outline := f.quad.duplicate()
 			outline.append(f.quad[0])
 			draw_polyline(outline, col, 3.0)
