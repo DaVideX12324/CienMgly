@@ -723,7 +723,7 @@ func _segment_bridges() -> void:
 			var span: int = s.x1 - s.x0 - 2 * cw
 			if span < 6:
 				continue
-			var cnt := maxi(1, span / 20)
+			var cnt := maxi(1, span / int(cfg.get("bridge_every_h", 28)))
 			for i in range(cnt):
 				var t: int = s.bridge_t if (i == 0 and s.has("bridge_t")) else s.x0 + cw + (i + 1) * span / (cnt + 1) + rng.randi_range(-2, 2)
 				if _place_bridge(s, t, true):
@@ -732,7 +732,7 @@ func _segment_bridges() -> void:
 			var span: int = s.y1 - s.y0 - 2 * cw
 			if span < 6:
 				continue
-			var cnt := maxi(1, span / 18)
+			var cnt := maxi(1, span / int(cfg.get("bridge_every_v", 24)))
 			for i in range(cnt):
 				var t: int = s.bridge_t if (i == 0 and s.has("bridge_t")) else s.y0 + cw + (i + 1) * span / (cnt + 1) + rng.randi_range(-2, 2)
 				if _place_bridge(s, t, false):
@@ -753,7 +753,8 @@ func _bridge_cells(s: Dictionary, t: int, horiz: bool) -> Array[Vector2i]:
 	return out
 
 
-## Kładka przez odcinek: przesunięcie ±6 od t (exact — tylko t), poza strefą zakrętu, podłoga na obu końcach, odstęp ≥ 2.
+## Kładka przez odcinek: przesunięcie ±6 od t (exact — tylko t), poza strefą zakrętu, podłoga na obu końcach,
+## odstęp od innych kładek ≥ bridge_min_spacing (exact: 2).
 func _place_bridge(s: Dictionary, t: int, horiz: bool, exact := false) -> bool:
 	var lo: int = s.x0 if horiz else s.y0
 	var hi: int = s.x1 if horiz else s.y1
@@ -785,13 +786,20 @@ func _place_bridge(s: Dictionary, t: int, horiz: bool, exact := false) -> bool:
 				break
 		if not ok:
 			continue
+		# Odstęp od innych kładek: bridge_min_spacing (kładka u-turnu — exact — tylko 2).
+		var sp: int = 2 if exact else int(cfg.get("bridge_min_spacing", 10))
 		for c in cells:
-			for dy in range(-2, 3):
-				for dx in range(-2, 3):
+			if not ok:
+				break
+			for dy in range(-sp, sp + 1):
+				for dx in range(-sp, sp + 1):
 					if (dx == 0 and dy == 0) or not st.in_map(c.x + dx, c.y + dy):
 						continue
 					if st.bridge_m[(c.y + dy) * st.w + c.x + dx] and not cells.has(Vector2i(c.x + dx, c.y + dy)):
 						ok = false
+						break
+				if not ok:
+					break
 		if not ok:
 			continue
 		for c in cells:
