@@ -5,7 +5,8 @@ extends RefCounted
 ## (plan: docs/plan_generator_sciekow.md, wzorzec proto_layout.py kroki 2–3).
 ## - kompleks = ciąg 1–4 kolejnych odcinków jednej linii (najpierw najdłuższy, ciąg 1 tylko na węźle),
 ##   min. odstęp między kompleksami complex_min_gap, liczba ≤ max(2, W·H / complex_count_ratio);
-## - brzegi budowane kawałkami 4–8 wzdłuż kanału, szerokość = błądzenie losowe (±3, 0 albo 2–10),
+## - brzegi budowane kawałkami 4–8 wzdłuż kanału, szerokość = błądzenie losowe (±3, start complex_bank_start,
+##   0 albo 2–complex_bank_max),
 ##   dopasowane do miejsca (nie na obce kanały, ściana od sal innych kompleksów);
 ## - spójność: w kawałku ≥ 1 brzeg ≥ 2, ciągłość strony, w środku odcinka oba brzegi ≥ 2 (kładka);
 ## - zwężenie (R4): odcinek ≥ 18 (szansa 0,8), środek bez brzegu po stronie k, zatoki na wejścia korytarza;
@@ -13,7 +14,6 @@ extends RefCounted
 ## Na końcu strefy przecięć dla korytarzy (cross_h / cross_v, ZH / ZV, JZ_C) i licznik zakazu fcnt.
 
 const State = preload("core/structured_state.gd")
-const EXT_MAX := 10
 
 var st: State
 var rng: RandomNumberGenerator
@@ -152,7 +152,9 @@ func _build_halls() -> void:
 			var hi: int = s.x1 if s.axis == "h" else s.y1
 			pinch = {"seg": s, "k": rng.randi() % 2, "p0": lo + 6, "p1": hi - 6}
 		var pm := st.new_mask()
-		var ext := [rng.randi_range(3, 7), rng.randi_range(3, 7)]
+		var ext_max := int(cfg.get("complex_bank_max", 14))
+		var ext_start: Array = cfg.get("complex_bank_start", [5, 10])
+		var ext := [rng.randi_range(int(ext_start[0]), int(ext_start[1])), rng.randi_range(int(ext_start[0]), int(ext_start[1]))]
 		var prev_ok: Array = []
 		var have_prev := false
 		for s in run_:
@@ -168,7 +170,7 @@ func _build_halls() -> void:
 			while t <= hi:
 				var t1 := mini(hi, t + rng.randi_range(4, 8) - 1)
 				for k in [0, 1]:
-					ext[k] = maxi(0, mini(EXT_MAX, ext[k] + rng.randi_range(-3, 3)))
+					ext[k] = maxi(0, mini(ext_max, ext[k] + rng.randi_range(-3, 3)))
 				var want: Array = ext.duplicate()
 				var force := [false, false]
 				if is_pinch_seg:
