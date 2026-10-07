@@ -10,7 +10,8 @@ extends RefCounted
 ## - odstęp od innych kanałów ≥ clear poza złączem; kanał nigdy szerszy niż cw (kwadrat (cw+1)² wody = odrzut);
 ## - mokre / puste koryta rozdzielone szumem (strefa 0 = ścieki, 1 = puste): odcinek w całości w strefie
 ##   swojego typu, odnoga dziedziczy typ, w odstępie clear brak kratek drugiego typu; gdy pień nie
-##   pokrywa obu typów — dodatkowy pień w strefie brakującego typu.
+##   pokrywa obu typów — dodatkowy pień w strefie brakującego typu;
+## - dziury dalej niż fill_gap od kanałów: odnoga w ich stronę albo osobny kanał (_fill_gaps).
 
 const State = preload("core/structured_state.gd")
 const SeededNoise = preload("../core/seeded_noise.gd")
@@ -25,6 +26,8 @@ var threshold := 0.0
 var seg_len := [20, 40]          # długość odcinka (pierwsza próba)
 var trunk_segs := 14
 var branch_segs := [3, 7]
+var fill_gap := 34              # dziura dalej niż tyle kratek od kanału -> odnoga w jej stronę
+var target := Vector2i(-1, -1)  # cel skrętów wędrowca (wypełnianie dziur); -1 = skręt losowy
 
 
 static func run(state: State, seed_val: int, canal_dry_chance: float, cfg: Dictionary = {}) -> void:
@@ -36,6 +39,7 @@ static func run(state: State, seed_val: int, canal_dry_chance: float, cfg: Dicti
 	g.seg_len = cfg.get("segment_length", g.seg_len)
 	g.trunk_segs = int(cfg.get("trunk_segments", g.trunk_segs))
 	g.branch_segs = cfg.get("branch_segments", g.branch_segs)
+	g.fill_gap = int(cfg.get("fill_gap", g.fill_gap))
 	g.noise = SeededNoise.create(hash([seed_val, "canal_zones"]), float(cfg.get("zone_frequency", 0.003)))
 	g.noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	g.noise.fractal_type = FastNoiseLite.FRACTAL_FBM
@@ -175,7 +179,21 @@ func _walk(hx: int, hy: int, d: Vector2i, line: int, max_segs: int, turn_p: floa
 		if rng.randf() < turn_p:
 			var opts := _perp(d)
 			d = opts[rng.randi() % opts.size()]
+			if target.x >= 0 and rng.randf() < 0.8:
+				d = _toward(Vector2i(hx, hy), opts)
 	return idx
+
+
+## Kierunek z `opts` najbardziej w stronę celu wypełniania.
+func _toward(p: Vector2i, opts: Array[Vector2i]) -> Vector2i:
+	var best := opts[0]
+	var bd := -(1 << 30)
+	for o in opts:
+		var v := (target.x - p.x) * o.x + (target.y - p.y) * o.y
+		if v > bd:
+			bd = v
+			best = o
+	return best
 
 
 func _perp(d: Vector2i) -> Array[Vector2i]:
@@ -241,11 +259,80 @@ func _generate() -> void:
 			p.junction = true
 			st.segs[before].junction = true
 			line += 1
+	_fill_gaps(line)
 	st.lines.clear()
 	for s in st.segs:
 		if not st.lines.has(s.line):
 			st.lines[s.line] = []
 		st.lines[s.line].append(s)
+
+
+## Wypełnianie dziur: najdalsza od kanałów kratka (> fill_gap) -> odnoga w jej stronę z najbliższego odcinka
+## (skręty ku celowi), a gdy żadna nie dojdzie — osobny kanał w dziurze (typ strefy szumu). Do skutku albo
+## limitu prób; nie zagęszcza sieci tam, gdzie kanały już są.
+func _fill_gaps(line: int) -> void:
+	var m: int = st.margin + 8
+	var failed := {}
+	for _round in range(24):
+		var dt: PackedInt32Array = st.distance_to(st.water)
+		var best := -1
+		var bd := fill_gap
+		for y in range(m, st.h - m):
+			for x in range(m, st.w - m):
+				var i: int = y * st.w + x
+				if dt[i] > bd and not failed.has(Vector2i(x / 8, y / 8)):
+					bd = dt[i]
+					best = i
+		if best < 0:
+			break
+		var tp := Vector2i(best % st.w, best / st.w)
+		target = tp
+		var done := false
+		# Odnogi z najbliższych odcinków (prostopadle, w stronę celu).
+		var order: Array = st.segs.duplicate()
+		order.sort_custom(func(a, b) -> bool: return _seg_dist(a, tp) < _seg_dist(b, tp))
+		for p in order.slice(0, 6):
+			var hx := 0
+			var hy := 0
+			var d := Vector2i.ZERO
+			if p.axis == "h":
+				if p.x1 - p.x0 < 20:
+					continue
+				hx = clampi(tp.x - st.cw / 2, p.x0 + 8, p.x1 - 8 - st.cw)
+				hy = p.y0
+				d = Vector2i(0, 1) if tp.y > p.y1 else Vector2i(0, -1)
+			else:
+				if p.y1 - p.y0 < 20:
+					continue
+				hy = clampi(tp.y - st.cw / 2, p.y0 + 8, p.y1 - 8 - st.cw)
+				hx = p.x0
+				d = Vector2i(1, 0) if tp.x > p.x1 else Vector2i(-1, 0)
+			var before: int = st.segs.size()
+			_walk(hx, hy, d, line, rng.randi_range(int(branch_segs[0]), int(branch_segs[1])), 0.5, bool(p.dry))
+			if st.segs.size() > before:
+				p.junction = true
+				st.segs[before].junction = true
+				line += 1
+				done = true
+				break
+		# Osobny kanał w samej dziurze.
+		if not done:
+			var dirs: Array[Vector2i] = DIRS.duplicate()
+			_shuffle(dirs)
+			for d in dirs:
+				if _walk(tp.x, tp.y, d, line, trunk_segs / 2, 0.4, _zone_dry(tp.x, tp.y)) > 0:
+					line += 1
+					done = true
+					break
+		target = Vector2i(-1, -1)
+		if not done:
+			failed[Vector2i(tp.x / 8, tp.y / 8)] = true
+
+
+static func _seg_dist(s: Dictionary, p: Vector2i) -> int:
+	var dx := maxi(0, maxi(s.x0 - p.x, p.x - s.x1))
+	var dy := maxi(0, maxi(s.y0 - p.y, p.y - s.y1))
+	return dx + dy
 
 
 func _has_type(want_dry: bool) -> bool:
