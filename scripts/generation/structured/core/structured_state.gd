@@ -226,6 +226,21 @@ func add_floor(x: int, y: int) -> void:
 			fcnt[yy * w + xx] += 1
 
 
+## Cofnięcie kratki podłogi (aktualizuje fcnt).
+func remove_floor(x: int, y: int) -> void:
+	var i := y * w + x
+	if not floor_m[i]:
+		return
+	floor_m[i] = 0
+	if not fcnt_ready or cross_any[i]:
+		return
+	var rx := wall_v + 2
+	var ry := wall_h + 2
+	for yy in range(maxi(0, y - ry), mini(h - 1, y + ry) + 1):
+		for xx in range(maxi(0, x - rx), mini(w - 1, x + rx) + 1):
+			fcnt[yy * w + xx] -= 1
+
+
 ## Prostokąt podłogi (np. pokój) z aktualizacją fcnt.
 func add_floor_rect(x0: int, y0: int, x1: int, y1: int) -> void:
 	for y in range(maxi(0, y0), mini(h - 1, y1) + 1):

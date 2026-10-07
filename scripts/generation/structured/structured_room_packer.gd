@@ -261,38 +261,46 @@ func _drop_pinch(cx: Dictionary) -> void:
 
 # --- Przerwy chodnika tunelu ---
 
-## Strona chodnika urywa się (szerokość 0) i dalej wraca: u-turn tunelem przez mur (szansa
-## lane_gap_bypass_chance) albo kładki na drugą stronę na obu końcach przerwy (też gdy u-turn się nie mieści).
+## Strona chodnika urywa się (szerokość 0) na dłuższym odcinku, a druga strona ma chodnik. Przy początku
+## odcinka 0: u-turn (szansa lane_gap_bypass_chance) — tunel z końca chodnika przez mur, wzdłuż kanału za
+## ścianą i z powrotem do kanału dalej w odcinku 0, tam kładka na drugą stronę (gdzie jest ścieżka); albo
+## zwykła kładka przy końcu chodnika. Przy końcu odcinka 0 kładka z szansą 0,5 (chodnik i tak łączy się na
+## końcu odcinka kanału).
 func _lane_gaps() -> void:
 	var chance := float(cfg.get("lane_gap_bypass_chance", 0.5))
-	var bypass := 0
+	var uturn := 0
 	var bridged := 0
 	var lost := 0
 	for s in st.segs:
+		var horiz: bool = s.axis == "h"
 		for g in s.get("lane_gaps", []):
-			if rng.randf() < chance and _gap_bypass(s, g):
-				bypass += 1
-				continue
-			var horiz: bool = s.axis == "h"
-			var ok_a := _place_bridge(s, int(g.g0) - 2, horiz)
-			var ok_b := _place_bridge(s, int(g.g1) + 1, horiz)
-			if ok_a or ok_b:
+			var ok := false
+			var before: bool = g.get("before", true)
+			var after: bool = g.get("after", true)
+			if rng.randf() < chance:
+				var first := before if not after else (rng.randi() % 2 == 0 if before else false)
+				ok = (before and first and _gap_uturn(s, g, true)) or (after and _gap_uturn(s, g, false)) \
+					or (before and not first and _gap_uturn(s, g, true))
+			if ok:
+				uturn += 1
+			elif (before and (_place_bridge(s, int(g.g0) - 2, horiz) or _place_bridge(s, int(g.g0) - 10, horiz))) \
+					or (after and (_place_bridge(s, int(g.g1) + 1, horiz) or _place_bridge(s, int(g.g1) + 9, horiz))):
 				bridged += 1
-			if not (ok_a and ok_b) and _gap_bypass(s, g):
-				bypass += 1
-			elif not ok_a and not ok_b:
+			else:
 				lost += 1
-	stats["gap_bypass"] = bypass
+			if before and after and rng.randf() < 0.5:
+				_place_bridge(s, int(g.g1) + 1, horiz)
+	stats["gap_uturn"] = uturn
 	stats["gap_bridged"] = bridged
 	stats["gap_unresolved"] = lost
 
 
-## U-turn: zwarty prostokątny tunel przez mur wokół przerwy — ramię prostopadłe z końca chodnika przed
-## przerwą, ramię równoległe za ścianą (min. ściana + 2 od kanału), ramię z powrotem do chodnika za przerwą.
-## Grubość ramion lane_gap_arm (2–3), głębokość + lane_gap_depth_extra (0–3); ściana między ramionami = przerwa (min. wall_v + 1 przy kanale poziomym,
-## wall_h + 1 przy pionowym — tam to lico). Tylko w litym murze: obca podłoga (poza siecią kanałów
-## i chodników) najbliżej o ścianę + 1; kratki chodnika mogą leżeć pod ramionami.
-func _gap_bypass(s: Dictionary, g: Dictionary) -> bool:
+## U-turn z kładką: ramię prostopadłe z końca chodnika przy odcinku 0 (od początku albo — `from_start`
+## false — od końca odcinka), ramię równoległe za ścianą (min. ściana + 2 od kanału + lane_gap_depth_extra),
+## ramię z powrotem do kanału w środku odcinka 0 i kładka w miejscu tego ramienia na drugą stronę. Ściana
+## między ramionami ≥ wall_v + 1 (kanał poziomy) / wall_h + 1 (pionowy — lico). Tylko w litym murze (obca
+## podłoga poza siecią najbliżej o ścianę + 1); kładka musi wejść dokładnie przy ramieniu, inaczej cofnięty.
+func _gap_uturn(s: Dictionary, g: Dictionary, from_start := true) -> bool:
 	var k: int = g.k
 	var g0: int = g.g0
 	var g1: int = g.g1
@@ -301,24 +309,43 @@ func _gap_bypass(s: Dictionary, g: Dictionary) -> bool:
 	var arm := rng.randi_range(int(arm_r[0]), int(arm_r[1]))
 	var horiz: bool = s.axis == "h"
 	var inner: int = (st.wall_h if horiz else st.wall_v) + 2 + rng.randi_range(int(depth_r[0]), int(depth_r[1]))
-	if g1 - g0 + 1 < (st.wall_v if horiz else st.wall_h) + 1:
-		stats["u_short"] = stats.get("u_short", 0) + 1
-		return false
-	var a0 := g0 - arm
-	var a1 := g1 + arm
+	var wall_along: int = (st.wall_v if horiz else st.wall_h) + 1
 	var lo: int = s.x0 if horiz else s.y0
 	var hi: int = s.x1 if horiz else s.y1
-	if a0 < lo or a1 > hi:
-		stats["u_ends"] = stats.get("u_ends", 0) + 1
-		return false
+	var arm1: Vector2i     # zakres wzdłuż kanału (włącznie)
+	var arm2: Vector2i
+	var bridge_ts: Array = []
+	if from_start:
+		var e_min := g0 + wall_along + arm
+		var e_max := mini(g1 - 1, e_min + 8)
+		if e_max < e_min or g0 - arm < lo:
+			stats["u_short"] = stats.get("u_short", 0) + 1
+			return false
+		var e := rng.randi_range(e_min, e_max)
+		arm1 = Vector2i(g0 - arm, g0 - 1)
+		arm2 = Vector2i(e - arm + 1, e)
+		for t in range(e - 1, e - arm, -1):
+			bridge_ts.append(t)
+	else:
+		var e_max := g1 - wall_along - arm
+		var e_min := maxi(g0 + 1, e_max - 8)
+		if e_max < e_min or g1 + arm > hi:
+			stats["u_short"] = stats.get("u_short", 0) + 1
+			return false
+		var e := rng.randi_range(e_min, e_max)
+		arm1 = Vector2i(g1 + 1, g1 + arm)
+		arm2 = Vector2i(e, e + arm - 1)
+		for t in range(e, e + arm - 1):
+			bridge_ts.append(t)
+	var span := Vector2i(mini(arm1.x, arm2.x), maxi(arm1.y, arm2.y))
 	var cells := {}
-	for r in [StructuredZoning._side_rect(s, a0, g0 - 1, k, inner + arm),
-			StructuredZoning._side_rect(s, g1 + 1, a1, k, inner + arm)]:
+	for r in [StructuredZoning._side_rect(s, arm1.x, arm1.y, k, inner + arm),
+			StructuredZoning._side_rect(s, arm2.x, arm2.y, k, inner + arm)]:
 		for y in range(r[1], r[3] + 1):
 			for x in range(r[0], r[2] + 1):
 				cells[Vector2i(x, y)] = true
-	var far := StructuredZoning._side_rect(s, a0, a1, k, inner + arm)
-	var near := StructuredZoning._side_rect(s, a0, a1, k, inner)
+	var far := StructuredZoning._side_rect(s, span.x, span.y, k, inner + arm)
+	var near := StructuredZoning._side_rect(s, span.x, span.y, k, inner)
 	for y in range(far[1], far[3] + 1):
 		for x in range(far[0], far[2] + 1):
 			if not (x >= near[0] and x <= near[2] and y >= near[1] and y <= near[3]):
@@ -339,13 +366,20 @@ func _gap_bypass(s: Dictionary, g: Dictionary) -> bool:
 	var out := PackedInt32Array()
 	for c in cells:
 		var i: int = c.y * st.w + c.x
-		if st.lanes[i]:
+		if st.lanes[i] or st.floor_m[i]:
 			continue
 		st.add_floor(c.x, c.y)
 		st.corrm[i] = 1
 		out.append(i)
-	corridors.append(out)
-	return true
+	for t in bridge_ts:
+		if _place_bridge(s, t, horiz, true):
+			corridors.append(out)
+			return true
+	for i in out:
+		st.remove_floor(i % st.w, i / st.w)
+		st.corrm[i] = 0
+	stats["u_bridge"] = stats.get("u_bridge", 0) + 1
+	return false
 
 
 ## Obca podłoga (poza siecią kanałów i chodników oraz samym u-turnem) bliżej niż ściana + 1.
@@ -651,11 +685,11 @@ func _bridge_cells(s: Dictionary, t: int, horiz: bool) -> Array[Vector2i]:
 	return out
 
 
-## Kładka przez odcinek: przesunięcie ±6 od t, poza strefą zakrętu, podłoga na obu końcach, odstęp ≥ 2.
-func _place_bridge(s: Dictionary, t: int, horiz: bool) -> bool:
+## Kładka przez odcinek: przesunięcie ±6 od t (exact — tylko t), poza strefą zakrętu, podłoga na obu końcach, odstęp ≥ 2.
+func _place_bridge(s: Dictionary, t: int, horiz: bool, exact := false) -> bool:
 	var lo: int = s.x0 if horiz else s.y0
 	var hi: int = s.x1 if horiz else s.y1
-	for d in [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]:
+	for d in ([0] if exact else [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6]):
 		var tt: int = t + d
 		if tt < lo or tt + 1 > hi:
 			continue
