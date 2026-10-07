@@ -373,7 +373,8 @@ func _gap_uturn(s: Dictionary, g: Dictionary, from_start := true) -> bool:
 		out.append(i)
 	for t in bridge_ts:
 		if _place_bridge(s, t, horiz, true):
-			return true   # bez dopisania do `corridors` — do u-turnu nie doklejamy pokoików
+			corridors.append(out)
+			return true
 	for i in out:
 		st.remove_floor(i % st.w, i / st.w)
 		st.corrm[i] = 0
