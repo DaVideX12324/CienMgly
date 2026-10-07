@@ -348,7 +348,7 @@ func _gap_bracket(s: Dictionary, g: Dictionary) -> bool:
 		if st.floor_m[i]:
 			stats["br_floor"] = stats.get("br_floor", 0) + 1
 			return false
-		if _near_foreign(c.x, c.y, cells):
+		if _near_foreign(c.x, c.y, cells, s):
 			stats["br_near"] = stats.get("br_near", 0) + 1
 			return false
 	var out := PackedInt32Array()
@@ -428,7 +428,7 @@ func _gap_uturn(s: Dictionary, g: Dictionary, from_start := true) -> bool:
 		if st.floor_m[i]:
 			stats["u_floor"] = stats.get("u_floor", 0) + 1
 			return false
-		if _near_foreign(c.x, c.y, cells):
+		if _near_foreign(c.x, c.y, cells, s):
 			stats["u_near"] = stats.get("u_near", 0) + 1
 			return false
 	var out := PackedInt32Array()
@@ -450,15 +450,28 @@ func _gap_uturn(s: Dictionary, g: Dictionary, from_start := true) -> bool:
 	return false
 
 
-## Obca podłoga (poza siecią kanałów i chodników oraz samym u-turnem) bliżej niż ściana + 1.
-func _near_foreign(x: int, y: int, own: Dictionary) -> bool:
+## Obca podłoga bliżej niż ściana + 1: wszystko poza samym tunelem (`own`) oraz wodą i chodnikami własnego
+## odcinka kanału `s` (chodniki innych kanałów też są obce — inaczej ściana 1 kratki, którą zjadają przejścia
+## czyszczące, i ramię znika).
+func _near_foreign(x: int, y: int, own: Dictionary, s: Dictionary) -> bool:
 	var rx: int = st.wall_v + 1
 	var ry: int = st.wall_h + 1
 	for yy in range(maxi(0, y - ry), mini(st.h - 1, y + ry) + 1):
 		for xx in range(maxi(0, x - rx), mini(st.w - 1, x + rx) + 1):
 			var i: int = yy * st.w + xx
-			if st.floor_m[i] and not st.cross_any[i] and not own.has(Vector2i(xx, yy)):
-				return true
+			if not st.floor_m[i] or own.has(Vector2i(xx, yy)) or _in_seg(s, xx, yy):
+				continue
+			return true
+	return false
+
+
+## Kratka wody albo chodnika odcinka `s`.
+static func _in_seg(s: Dictionary, x: int, y: int) -> bool:
+	if x >= s.x0 and x <= s.x1 and y >= s.y0 and y <= s.y1:
+		return true
+	for r in s.get("lane_rects", []):
+		if x >= r[0] and x <= r[2] and y >= r[1] and y <= r[3]:
+			return true
 	return false
 
 
@@ -889,9 +902,9 @@ func _repair() -> void:
 		pf.dt = st.distance_to(tgt)
 		var path := pf.find(start % st.w, start / st.w)
 		if path.is_empty():
-			# Awaryjnie prosty L do najbliższej kratki głównej części.
-			var cx: int = ctr.x
-			var cy: int = ctr.y
+			# Awaryjnie prosty L z kratki kawałka do najbliższej kratki głównej części.
+			var cx: int = start % st.w
+			var cy: int = start / st.w
 			var bi := -1
 			var bd := 1 << 30
 			for i in range(st.w * st.h):

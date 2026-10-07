@@ -143,7 +143,9 @@ func find(sx: int, sy: int) -> PackedInt32Array:
 					continue
 				if st.jz_c[n]:
 					continue
-				if not _ring(n, nx, ny) and not _zone_skip(nx, ny):
+				# Pierścień celu NIE zwalnia z zasady przecięć (inaczej korytarz sunie wzdłuż chodnika kanału
+				# o kratkę od niego, a przejścia czyszczące zjadają go do 1 kratki).
+				if not _zone_skip(nx, ny):
 					var zh: int = st.zh[n]
 					var zv: int = st.zv[n]
 					if zh and zv:
