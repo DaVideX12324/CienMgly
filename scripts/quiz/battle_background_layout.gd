@@ -116,6 +116,15 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 		sp.n = used[picks[e]]
 		seen[picks[e]] += 1
 		out.append(sp)
+	# Gdy jest 2 wrogów jeden za drugim (różne rzędy / głębokości):
+	# Zamiast stawiać obu w centrum swoich rzędów (t=0.5), co sprawia, że przedni zasłania tylnego,
+	# rozsuwamy ich po przekątnej jak w układzie dla 4 wrogów (jeden z jednej, drugi z drugiej strony: n=2, k=0 i k=1).
+	if count == 2 and out.size() == 2 and out[0] != null and out[1] != null and picks[0] != picks[1]:
+		var side := rng.randi() % 2
+		out[0].n = 2
+		out[0].k = side
+		out[1].n = 2
+		out[1].k = 1 - side
 	return out
 
 
