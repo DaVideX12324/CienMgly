@@ -6,8 +6,9 @@ extends Control
 ## 2. Każde pole walki to czworobok „Field…” (Polygon2D, zwykle trapez): przednia krawędź (niżej) =
 ##    rząd przedni, tylna = rząd najdalszy. Zaznacz pole i przeciągaj narożniki (edycja wielokąta
 ##    w edytorze 2D); kolejność punktów dowolna. Punkty pośrednie na bokach (dodaj punkt na krawędzi
-##    w edytorze wielokąta, np. bok wzdłuż schodów) — rzędy kończą się na łamanym boku, na tej samej
-##    wysokości z lewej i z prawej; przednia / tylna krawędź = najniższa / najwyższa krawędź wielokąta.
+##    w edytorze wielokąta, np. bok wzdłuż schodów) — rzędy idą przez te punkty: rząd k łączy k-ty punkt
+##    lewego boku z k-tym prawego (3 rzędy przy jednym punkcie na boku = rząd środkowy na punktach);
+##    przednia / tylna krawędź = najniższa / najwyższa krawędź wielokąta.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
 ##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki nad kreską cienia
 ##    z miejscem na pasek HP (1920, 765 px ekranu); Position pola = jego prawy dolny róg względem tego
