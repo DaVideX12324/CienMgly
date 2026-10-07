@@ -91,10 +91,16 @@ func _apply_quads() -> void:
 	_syncing = true
 	for i in range(mini(_nodes.size(), layout.fields.size())):
 		if is_instance_valid(_nodes[i]):
-			# Narożniki z pliku w układzie węzła: przesunięcie / skala nadane uchwytami zostają, a pole na
-			# ekranie = dokładnie quad z pliku (wcześniej zerowana była tylko pozycja — przy zmianie
-			# parametru w inspektorze pole skakało i kurczyło się o skalę węzła).
-			_nodes[i].polygon = _nodes[i].transform.affine_inverse() * layout.fields[i].quad
+			# Punkt zaczepienia węzła = prawy dolny róg pola (prawy koniec przedniej krawędzi): Position
+			# w inspektorze = ten narożnik, skalowanie uchwytem — wokół niego. Skala / obrót zawsze 1 / 0,
+			# narożniki względem zaczepienia (pole na ekranie = dokładnie quad z pliku).
+			var q: PackedVector2Array = layout.fields[i].quad
+			var pivot: Vector2 = q[1] if q.size() == 4 else Vector2.ZERO
+			var local := PackedVector2Array()
+			for v in q:
+				local.append(v - pivot)
+			_nodes[i].transform = Transform2D(0.0, pivot)
+			_nodes[i].polygon = local
 	_syncing = false
 
 
@@ -165,8 +171,13 @@ func _process(delta: float) -> void:
 	_syncing = false
 	if not changed and _dirty_time > 0.0:
 		_dirty_time -= delta
-		if _dirty_time <= 0.0 and layout.resource_path != "":
-			ResourceSaver.save(layout, layout.resource_path)
+		if _dirty_time <= 0.0:
+			# po przeciąganiu / skalowaniu uchwytami: skala w narożnikach, zaczepienie znów w prawym dolnym rogu
+			_syncing = true
+			_apply_quads()
+			_syncing = false
+			if layout.resource_path != "":
+				ResourceSaver.save(layout, layout.resource_path)
 
 
 func _draw() -> void:
