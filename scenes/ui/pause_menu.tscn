@@ -97,7 +97,7 @@ theme_override_constants/separation = 14
 
 [node name="ContextTitleLabel" type="Label" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox" unique_id=3648772]
 layout_mode = 2
-theme_override_font_sizes/font_size = 27
+theme_override_font_sizes/font_size = 36
 text = "Druzyna"
 
 [node name="ContextBody" type="MarginContainer" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox" unique_id=453024316]
