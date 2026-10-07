@@ -7,6 +7,8 @@ extends Control
 ##    rząd przedni, tylna = rząd najdalszy. Zaznacz pole i przeciągaj narożniki (edycja wielokąta
 ##    w edytorze 2D); kolejność punktów dowolna — pole zawsze ma 4 narożniki.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
+##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki na kresce cienia
+##    (1920, 795 px ekranu); Position pola = jego prawy dolny róg względem tego punktu.
 ## 3. Rzędy, pojemność (też per rząd), skale wrogów: inspektor pliku układu → fields → pole.
 ## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa pola.
 ## Tło, dolny pasek, linie rzędów i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout —
@@ -57,15 +59,36 @@ func _ready() -> void:
 	_rebuild_nodes()
 
 
+## Punkt (0, 0) pól w edytorze: prawy dolny róg obszaru walki na kresce cienia nad paskiem UI.
+## Pozycja pola w inspektorze = jego prawy dolny róg względem tego punktu (w lewo / w górę = ujemne).
+static func fields_origin() -> Vector2:
+	var area := BattleBackgroundLayout.REF_AREA
+	return Vector2(area.x, area.y - FolderBackground.SHADOW_HEIGHT)
+
+
+## Kontener „Fields” w punkcie fields_origin() — rodzic czworoboków pól (tworzony, gdy go brak).
+func _holder() -> Node2D:
+	var h := get_node_or_null("Fields") as Node2D
+	if h == null:
+		h = Node2D.new()
+		h.name = "Fields"
+		add_child(h)
+		if Engine.is_editor_hint() and get_tree() and get_tree().edited_scene_root:
+			h.owner = get_tree().edited_scene_root
+	return h
+
+
 ## Czworoboki = pola z pliku (po wczytaniu pliku albo zmianie listy pól w inspektorze).
 func _rebuild_nodes() -> void:
 	queue_redraw()
 	if not is_inside_tree():
 		return
-	for c in get_children():
-		if str(c.name).begins_with("Field"):
-			remove_child(c)
-			c.queue_free()
+	var h := _holder()
+	for parent in [self, h]:
+		for c in parent.get_children():
+			if str(c.name).begins_with("Field") and c != h:
+				parent.remove_child(c)
+				c.queue_free()
 	_nodes.clear()
 	if layout == null:
 		return
@@ -78,7 +101,7 @@ func _make_node(i: int) -> Polygon2D:
 	var p := Polygon2D.new()
 	p.name = "Field%d" % (i + 1)
 	p.color = Color(COLORS[i % COLORS.size()], 0.18)
-	add_child(p)
+	_holder().add_child(p)
 	if Engine.is_editor_hint() and get_tree() and get_tree().edited_scene_root:
 		p.owner = get_tree().edited_scene_root
 	return p
@@ -89,17 +112,18 @@ func _apply_quads() -> void:
 	if layout == null:
 		return
 	_syncing = true
+	_holder().transform = Transform2D(0.0, fields_origin())
 	for i in range(mini(_nodes.size(), layout.fields.size())):
 		if is_instance_valid(_nodes[i]):
 			# Punkt zaczepienia węzła = prawy dolny róg pola (prawy koniec przedniej krawędzi): Position
-			# w inspektorze = ten narożnik, skalowanie uchwytem — wokół niego. Skala / obrót zawsze 1 / 0,
-			# narożniki względem zaczepienia (pole na ekranie = dokładnie quad z pliku).
+			# w inspektorze = ten narożnik względem fields_origin(), skalowanie uchwytem — wokół niego.
+			# Skala / obrót zawsze 1 / 0, narożniki względem zaczepienia (na ekranie = quad z pliku).
 			var q: PackedVector2Array = layout.fields[i].quad
 			var pivot: Vector2 = q[1] if q.size() == 4 else Vector2.ZERO
 			var local := PackedVector2Array()
 			for v in q:
 				local.append(v - pivot)
-			_nodes[i].transform = Transform2D(0.0, pivot)
+			_nodes[i].transform = Transform2D(0.0, pivot - fields_origin())
 			_nodes[i].polygon = local
 	_syncing = false
 
@@ -119,8 +143,9 @@ func _node_quad(p: Polygon2D) -> PackedVector2Array:
 	if p.polygon.size() != 4:
 		return PackedVector2Array()
 	var out := PackedVector2Array()
+	var parent_xf: Transform2D = (p.get_parent() as Node2D).transform if p.get_parent() is Node2D else Transform2D.IDENTITY
 	for v in p.polygon:
-		var w: Vector2 = p.transform * v
+		var w: Vector2 = parent_xf * (p.transform * v)
 		if not w.is_finite():
 			return PackedVector2Array()  # zły odczyt w trakcie edycji — pomiń klatkę
 		out.append(w.round())
@@ -142,11 +167,11 @@ func _process(delta: float) -> void:
 	var changed := false
 	var fields: Array[BattleField] = layout.fields.duplicate()
 	for i in range(_nodes.size() - 1, -1, -1):
-		if not is_instance_valid(_nodes[i]) or _nodes[i].get_parent() != self:
+		if not is_instance_valid(_nodes[i]) or _nodes[i].get_parent() != _holder():
 			_nodes.remove_at(i)
 			fields.remove_at(i)
 			changed = true
-	for c in get_children():
+	for c in _holder().get_children():
 		if c is Polygon2D and str(c.name).begins_with("Field") and not _nodes.has(c):
 			var src: BattleField = fields[fields.size() - 1] if not fields.is_empty() else BattleField.new()
 			var f := src.duplicate() as BattleField
