@@ -122,8 +122,10 @@ func _apply_quads() -> void:
 	_syncing = true
 	for i in range(mini(_nodes.size(), layout.fields.size())):
 		if is_instance_valid(_nodes[i]):
-			_nodes[i].position = Vector2.ZERO
-			_nodes[i].polygon = layout.fields[i].quad
+			# Narożniki z pliku w układzie węzła: przesunięcie / skala nadane uchwytami zostają, a pole na
+			# ekranie = dokładnie quad z pliku (wcześniej zerowana była tylko pozycja — przy zmianie
+			# parametru w inspektorze pole skakało i kurczyło się o skalę węzła).
+			_nodes[i].polygon = _nodes[i].transform.affine_inverse() * layout.fields[i].quad
 	_syncing = false
 
 
@@ -178,7 +180,9 @@ func _process(delta: float) -> void:
 			changed = true
 	for i in range(_nodes.size()):
 		var q := _node_quad(_nodes[i])
-		if not q.is_empty() and fields[i].quad != q:
+		if q.is_empty():
+			continue
+		if fields[i].quad != q:
 			fields[i].quad = q
 			changed = true
 	if changed:
