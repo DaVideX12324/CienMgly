@@ -36,8 +36,9 @@ extends Resource
 	set(v):
 		auto_depth_scale = v
 		emit_changed()
-## Skala wrogów w rzędzie najdalszym, gdy auto_depth_scale wyłączone (rzędy pośrednie — pomiędzy).
-@export_range(0.3, 2.0, 0.01) var back_scale := 0.82:
+## Wielkość wrogów w rzędzie najdalszym WZGLĘDEM przedniego, gdy auto_depth_scale wyłączone:
+## 0.82 = tylni mają 82 % wielkości przednich (rzędy pośrednie — pomiędzy); mnożone przez front_scale.
+@export_range(0.3, 1.5, 0.01) var back_scale := 0.82:
 	set(v):
 		back_scale = v
 		emit_changed()
@@ -71,4 +72,4 @@ func row_scale(row: int) -> float:
 		var front_w := quad[0].distance_to(quad[1])
 		var line := row_line(row)
 		return front_scale * (line[0].distance_to(line[1]) / front_w if front_w > 0.0 else 1.0)
-	return lerpf(front_scale, back_scale, t)
+	return front_scale * lerpf(1.0, back_scale, t)
