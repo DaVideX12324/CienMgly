@@ -51,7 +51,7 @@ static func generate_layout(
 	var cfg: Dictionary = flags.structured_config if flags != null else {}
 	var st := State.new()
 	st.setup(width, height, cfg)
-	LinearNetworkGeneratorScript.run(st, seed_used, float(flags.canal_dry_chance))
+	LinearNetworkGeneratorScript.run(st, seed_used, float(flags.canal_dry_chance), cfg)
 	GenProgress.end(&"rooms")
 
 	GenProgress.begin(&"corridors")

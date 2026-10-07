@@ -3,10 +3,10 @@ extends RefCounted
 
 ## R1 — sieć elementów liniowych (kanałów): wędrowcy ze skrętami + odnogi od dowolnego odcinka
 ## (plan: docs/plan_generator_sciekow.md, wzorzec proto_layout.py krok 1).
-## - odcinki proste 16–34 (krótsze 12–20 / 10, gdy dłuższy się nie mieści), po odcinku skręt (pień 0,35,
-##   odnogi 0,6); zablokowany — próba skrętu, inaczej koniec;
+## - odcinki proste segment_length (domyślnie 20–40; krótsze 12–20 / 10, gdy dłuższy się nie mieści), po
+##   odcinku skręt (pień 0,35, odnogi 0,6); zablokowany — próba skrętu, inaczej koniec;
 ## - pień od lewej krawędzi (środkowa 1/3 wysokości), odnogi z dowolnego odcinka (≥ 8 od jego końców,
-##   prostopadle), liczba ≈ max(4, W·H / 2300), 2–5 odcinków;
+##   prostopadle), liczba ≈ max(4, W·H / 2300), branch_segments odcinków (domyślnie 3–7), pień trunk_segments;
 ## - odstęp od innych kanałów ≥ clear poza złączem; kanał nigdy szerszy niż cw (kwadrat (cw+1)² wody = odrzut);
 ## - mokre / puste koryta rozdzielone szumem (strefa 0 = ścieki, 1 = puste): odcinek w całości w strefie
 ##   swojego typu, odnoga dziedziczy typ, w odstępie clear brak kratek drugiego typu; gdy pień nie
@@ -22,15 +22,21 @@ var rng: RandomNumberGenerator
 var noise: FastNoiseLite
 var dry_chance := 0.0
 var threshold := 0.0
+var seg_len := [20, 40]          # długość odcinka (pierwsza próba)
+var trunk_segs := 14
+var branch_segs := [3, 7]
 
 
-static func run(state: State, seed_val: int, canal_dry_chance: float) -> void:
+static func run(state: State, seed_val: int, canal_dry_chance: float, cfg: Dictionary = {}) -> void:
 	var g := LinearNetworkGenerator.new()
 	g.st = state
 	g.rng = RandomNumberGenerator.new()
 	g.rng.seed = hash([seed_val, "structured_network"])
 	g.dry_chance = canal_dry_chance
-	g.noise = SeededNoise.create(hash([seed_val, "canal_zones"]), 0.005)
+	g.seg_len = cfg.get("segment_length", g.seg_len)
+	g.trunk_segs = int(cfg.get("trunk_segments", g.trunk_segs))
+	g.branch_segs = cfg.get("branch_segments", g.branch_segs)
+	g.noise = SeededNoise.create(hash([seed_val, "canal_zones"]), float(cfg.get("zone_frequency", 0.003)))
 	g.noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	g.noise.fractal_type = FastNoiseLite.FRACTAL_FBM
 	g.noise.fractal_octaves = 2
@@ -139,7 +145,7 @@ func _walk(hx: int, hy: int, d: Vector2i, line: int, max_segs: int, turn_p: floa
 	var idx := 0
 	for _s in range(max_segs):
 		var placed := false
-		for L in [rng.randi_range(16, 34), rng.randi_range(12, 20), 10]:
+		for L in [rng.randi_range(int(seg_len[0]), int(seg_len[1])), rng.randi_range(12, 20), 10]:
 			var r := _seg_rect(hx, hy, d, L)
 			if _fits(r, hx, hy, is_dry):
 				var seg := {"x0": r[0], "y0": r[1], "x1": r[2], "y1": r[3], "axis": "h" if d.y == 0 else "v",
@@ -192,7 +198,7 @@ func _generate() -> void:
 	var m: int = st.margin
 	# Pień: od lewej krawędzi w prawo, skręca rzadko; typ = strefa w punkcie startu.
 	var sy := rng.randi_range(st.h / 3, 2 * st.h / 3)
-	_walk(m + 1, sy, Vector2i(1, 0), 0, 10, 0.35, _zone_dry(m + 1, sy))
+	_walk(m + 1, sy, Vector2i(1, 0), 0, trunk_segs, 0.35, _zone_dry(m + 1, sy))
 	var line := 1
 	# Drugi typ bez pnia (strefa szumu) — dodatkowy pień w strefie brakującego typu.
 	if dry_chance > 0.0 and dry_chance < 1.0:
@@ -205,7 +211,7 @@ func _generate() -> void:
 				if _zone_dry(x, y) != want_dry:
 					continue
 				var d := DIRS[rng.randi() % 4]
-				if _walk(x, y, d, line, 8, 0.35, want_dry) > 0:
+				if _walk(x, y, d, line, trunk_segs, 0.35, want_dry) > 0:
 					line += 1
 					break
 	# Odnogi od dowolnego odcinka (też odnóg), dziedziczą typ.
@@ -230,7 +236,7 @@ func _generate() -> void:
 			hx = p.x0
 			d = Vector2i(1, 0) if rng.randi() % 2 == 0 else Vector2i(-1, 0)
 		var before: int = st.segs.size()
-		_walk(hx, hy, d, line, rng.randi_range(2, 5), 0.6, bool(p.dry))
+		_walk(hx, hy, d, line, rng.randi_range(int(branch_segs[0]), int(branch_segs[1])), 0.6, bool(p.dry))
 		if st.segs.size() > before:
 			p.junction = true
 			st.segs[before].junction = true

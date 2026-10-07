@@ -267,6 +267,7 @@ func _rooms() -> void:
 	var rh_r: Array = cfg.get("room_size_h", [9, 14])
 	var dmin_h := int(cfg.get("room_distance_min_h", 9))
 	var dmin_v := int(cfg.get("room_distance_min_v", 12))
+	var dmax := int(cfg.get("room_distance_max", 30))   # najdalej od sieci (kanały, sale, korytarze serwisowe)
 	var fp: PackedInt32Array = st.prefix(st.floor_m)
 	var spine := st.new_mask()
 	for i in range(st.w * st.h):
@@ -293,7 +294,7 @@ func _rooms() -> void:
 				break
 		if clash:
 			continue
-		if st.box(sp, r.x - 30, r.y - 30, r.z + 30, r.w + 30) == 0:
+		if st.box(sp, r.x - dmax, r.y - dmax, r.z + dmax, r.w + dmax) == 0:
 			continue
 		placed.append(r)
 	for r in placed:
