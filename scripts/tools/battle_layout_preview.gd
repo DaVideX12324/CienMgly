@@ -7,8 +7,9 @@ extends Control
 ##    rząd przedni, tylna = rząd najdalszy. Zaznacz pole i przeciągaj narożniki (edycja wielokąta
 ##    w edytorze 2D); kolejność punktów dowolna — pole zawsze ma 4 narożniki.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
-##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki na kresce cienia
-##    (1920, 795 px ekranu); Position pola = jego prawy dolny róg względem tego punktu.
+##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki nad kreską cienia
+##    z miejscem na pasek HP (1920, 765 px ekranu); Position pola = jego prawy dolny róg względem tego
+##    punktu — y > 0 oznacza, że paski HP przedniego rzędu wejdą w cień.
 ## 3. Rzędy, pojemność (też per rząd), skale wrogów: inspektor pliku układu → fields → pole.
 ## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa pola.
 ## Tło, dolny pasek, linie rzędów i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout —
@@ -59,11 +60,14 @@ func _ready() -> void:
 	_rebuild_nodes()
 
 
-## Punkt (0, 0) pól w edytorze: prawy dolny róg obszaru walki na kresce cienia nad paskiem UI.
-## Pozycja pola w inspektorze = jego prawy dolny róg względem tego punktu (w lewo / w górę = ujemne).
+## Punkt (0, 0) pól w edytorze: prawy dolny róg obszaru walki, tak wysoko nad kreską cienia, żeby pasek HP
+## wroga stojącego na tej linii (12 px pod stopami, do 16 px wysoki) + 2 px zapasu kończył się nad cieniem
+## — y = 830 − 35 − 28 − 2 = 765 (przedni rząd obecnych układów). Pozycja pola w inspektorze = jego prawy
+## dolny róg względem tego punktu (w lewo / w górę = ujemne; dodatnie y = pasek HP wejdzie w cień).
+const HP_MARGIN := 2.0
 static func fields_origin() -> Vector2:
 	var area := BattleBackgroundLayout.REF_AREA
-	return Vector2(area.x, area.y - FolderBackground.SHADOW_HEIGHT)
+	return Vector2(area.x, area.y - FolderBackground.SHADOW_HEIGHT - HP_BAR_OFFSET - HP_BAR_SIZE.y - HP_MARGIN)
 
 
 ## Kontener „Fields” w punkcie fields_origin() — rodzic czworoboków pól (tworzony, gdy go brak).
