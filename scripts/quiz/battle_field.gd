@@ -40,7 +40,8 @@ extends Resource
 	set(v):
 		front_scale = v
 		emit_changed()
-## Skala głębi z kształtu: dalszy rząd tyle razy mniejszy, ile razy węższy od przedniej krawędzi.
+## Skala głębi z kształtu: dalszy rząd mniejszy w proporcji szerokości do przedniej krawędzi, złagodzonej
+## mnożnikiem depth_boost (front_scale × min(1, szerokość rzędu × depth_boost / szerokość przodu)).
 @export var auto_depth_scale := true:
 	set(v):
 		auto_depth_scale = v
@@ -145,10 +146,19 @@ func row_line(row: int) -> PackedVector2Array:
 	return PackedVector2Array([side_point(sd[0], t), side_point(sd[1], t)])
 
 
+## Złagodzenie skali głębi (auto_depth_scale): szerokość dalszego rzędu liczona × depth_boost, skala
+## rzędu najwyżej jak przedniego. TYMCZASOWO zmienne — ustawiane w podglądzie pól (depth_boost), po
+## wyborze wartości zostanie stałą.
+static var depth_boost := 1.2
+
+
 func row_scale(row: int) -> float:
 	var t := row_t(row)
 	if auto_depth_scale:
+		if row <= 0:
+			return front_scale
 		var front_w := quad[0].distance_to(quad[1])
 		var line := row_line(row)
-		return front_scale * (line[0].distance_to(line[1]) / front_w if front_w > 0.0 else 1.0)
+		var ratio := line[0].distance_to(line[1]) / front_w if front_w > 0.0 else 1.0
+		return front_scale * minf(1.0, ratio * depth_boost)
 	return front_scale * lerpf(1.0, back_scale, t)
