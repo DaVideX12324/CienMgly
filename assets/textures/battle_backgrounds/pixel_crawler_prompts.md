@@ -137,6 +137,12 @@ A 16-bit pixel art JRPG battle background of a castle great hall with a stone ba
 > (widok z góry → generator kopiuje perspektywę). Warianty 1–3 przepisane w tym stylu, z rekwizytami paczki
 > opisanymi słowami (pierwsza wersja miała kryształy i belki spoza paczki). **Nie dołączać żadnych obrazów.**
 > Gdy posadzka wychodzi za nisko: dopisz „The floor starts right at the middle of the image.”
+> **Wzorce (sprawdzone perspektywą, zapisane 2026-10-07):** `pixel_crawler_prompts_wzorzec_v1.md` (pierwsza wersja,
+> 1 prompt na biom) i `pixel_crawler_prompts_wzorzec_gemini.md` (wersja z Antigravity, 4 warianty × 11 biomów).
+> Budowa: jeden akapit ~80–100 słów — „A 16-bit pixel art JRPG battle background of X, first-person / eye-level /
+> low-angle battle perspective.” → „The lower half features <posadzka>.” → „In the background, <dekoracje>.” →
+> „16:9 aspect ratio, retro pixel art, …, no characters, no monsters, no UI.” Ich słabość: rekwizyty spoza
+> paczek (kryształy, belki, latarnie…) — poprawiać tylko opis rekwizytów, nie budowę.
 
 #### Wariant 1: Grzybowa Pieczara (Mushroom Hollow)
 *Bez załączników.*
