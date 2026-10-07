@@ -77,6 +77,7 @@
     "trunk_segments": 14,
     "branch_segments": [3, 7],
     "zone_frequency": 0.003,
+    "fill_gap": 34,
     "complex_bank_start": [5, 10],
     "complex_bank_max": 14,
     "room_distance_min_h": 6,
