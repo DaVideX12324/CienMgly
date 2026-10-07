@@ -156,6 +156,10 @@ func _node_quad(p: Polygon2D) -> PackedVector2Array:
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() or layout == null:
 		return
+	if layout.fields.has(null):
+		layout.fields = layout.fields  # setter zamienia pusty wpis („Add Element”) na nowe pole
+		_dirty_time = SAVE_DELAY
+		return
 	# Zmiany z węzłów idą tylko do pliku — blokada PRZED zapisem do pól, inaczej sygnał `changed` pola
 	# nadpisywał wielokąt w trakcie przeciągania narożnika (edytor wielokąta liczył na podmienionej
 	# tablicy -> NaN).
