@@ -23,8 +23,11 @@ i `pixel_crawler_prompts_wzorzec_gemini.md` (4 warianty × 11 biomów). Każdy p
    od wzorców (wzorce miały kryształy, belki, latarnie itp. spoza paczek).
 4. **Koniec:** „16:9 aspect ratio, retro pixel art, …, no characters, no monsters, no UI.”
 
-**Nie dołączaj mockupów ani arkuszy** (są widziane z góry — generator kopiuje wtedy perspektywę) i nie dopisuj
-procentów ani zakazów typu „not top-down” (same te słowa ciągną w stronę widoku z góry).
+**Mockup biomu możesz dołączyć** jako referencję kolorystyki i materiałów — z pierwszą wersją promptów tak było
+i perspektywa wychodziła dobrze (krótki prompt z perspektywą w 1. zdaniu wygrywa z mockupem). **Nie dołączaj
+arkuszy `Tiles.png` / `Props.png`** przy generowaniu od zera (z nimi wychodził widok z góry) i nie dopisuj
+procentów ani zakazów typu „not top-down” (same te słowa ciągną w stronę widoku z góry). Arkusz `Props.png`
+tylko przy edycji gotowego tła (dopasowanie wyglądu rekwizytów).
 Gdy posadzka wychodzi za nisko: dopisz na końcu „The floor starts right at the middle of the image.”
 
 **Warianty z platformami:** „Behind it, a wide raised … with a flat top and a straight front edge, reached
@@ -44,7 +47,7 @@ Edycja istniejących teł: `correction_prompts.md`.
 ---
 
 ### 1. Zamek (castle)
-- **Mockupy (tylko do wglądu):** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
+- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
 - **Z mockupów:** ciepły szarobeżowy kamień ścian z ciemniejszym gzymsem, posadzka **granatowo-indygo w romby**
   (nie szachownica), czerwone chodniki z cienkim złotym obszyciem, fioletowe proporce ze złotym brzegiem
   i szpicem, białe kamienne kinkiety ze świecami, terakotowe donice ze stożkowatymi krzewami, czerwone ławy,
@@ -81,7 +84,7 @@ A 16-bit pixel art JRPG battle background of a castle great hall with a stone ba
 ---
 
 ### 2. Jaskinia (cave) — jaskinie generowane
-- **Mockup (tylko do wglądu):** `assets/pixel_crawler/environments/cave/Social/MockUp_01.png` (te same kafle
+- **Mockup (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/cave/Social/MockUp_01.png` (te same kafle
   i obiekty co jaskinie w grze: `objects_caves.json`)
 - **Z mockupów:** brązowa ziemia z drobną ciemniejszą fakturą kamyków, plamy ciemnozielonego mchu,
   **fioletowe grzyby-parasole** o falbaniastych kapeluszach z bladoniebieskimi „soplami” i skręconych
@@ -90,7 +93,7 @@ A 16-bit pixel art JRPG battle background of a castle great hall with a stone ba
   stalagmity z pierścieniami**, skarpy z brązowej skały oplecione skręconymi korzeniami, wyciosane w ziemi
   schody, czarna pustka. **Bez kryształów, rusztowań i latarń** — tego nie ma w paczce.
 - **Folder:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/`
-- **Wycinek mapy (tylko do wglądu, do generatora nie dołączać):** `pixel_crawler/cave_reference/wycinek_mapy_grzyby.png`
+- **Wycinek mapy (do wglądu):** `pixel_crawler/cave_reference/wycinek_mapy_grzyby.png`
 
 #### Wariant 1: Grzybowa Pieczara (Mushroom Hollow)
 ```text
@@ -120,7 +123,7 @@ A 16-bit pixel art JRPG battle background of a cave with a high rock ledge, low 
 ---
 
 ### 3. Pustynia (desert)
-- **Mockupy (tylko do wglądu):** `assets/pixel_crawler/environments/desert/Social/MockUp-01-export.png`, `MockUp-02.png`, `MockUp-03.png`
+- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/desert/Social/MockUp-01-export.png`, `MockUp-02.png`, `MockUp-03.png`
 - **Z mockupów:** **nasycony pomarańczowy piasek** z plamami rdzawobrązowego żwiru, grzbiety czerwonobrązowej
   skały o pionowych, słupowych ścianach, płaskie ostańce, kopulaste głazy z ciemnymi otworami jaskiń, ogromne
   zakrzywione kły / żebra koloru kości słoniowej, zaokrąglone zielone kaktusy (kolumnowe i beczkowate), nagie
@@ -157,7 +160,7 @@ A 16-bit pixel art JRPG battle background of a red rock ledge in the desert, low
 ---
 
 ### 4. Baśniowy Las (fairy_forest) — też las generowany (`forest`)
-- **Mockupy (tylko do wglądu):** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_04.png`
+- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_04.png`
 - **Z mockupów:** głębokie ciemne zielenie, korony z warstwowych kęp liści: ciemnozielone, **turkusowo-niebieskie**
   i **liliowo-fioletowe**, rdzawopomarańczowe krzewy, grube skręcone brązowe pnie, **zaokrąglone szaroniebieskie
   kamienie runiczne z jednym świecącym turkusowym okiem**, turkusowa mgła przy ziemi, drobne białe kwiatki,
@@ -194,7 +197,7 @@ A 16-bit pixel art JRPG battle background of a forest terrace above a stream, lo
 ---
 
 ### 5. Kuźnia (forge)
-- **Mockupy (tylko do wglądu):** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
+- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
 - **Z mockupów:** posadzka z **przydymionych fioletowoszarych płyt** o skośnej fakturze, jaśniejsze szarobeżowe
   kamienne obrzeża, ściany z **ciemnoczerwonej cegły z cienkimi żarzącymi się pomarańczowymi szczelinami**,
   kamienne pilastry z rombowymi ozdobami o pomarańczowym rdzeniu, wąskie łukowe okna z pomarańczowymi kratami
@@ -232,7 +235,7 @@ A 16-bit pixel art JRPG battle background of a forge with a raised furnace platf
 ---
 
 ### 6. Ogród (garden)
-- **Mockup (tylko do wglądu):** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`
+- **Mockup (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`
 - **Z mockupów:** ścieżki z **sześciokątnych jasnoszaro-liliowych kostek**, ciemnozielony trawnik obrzeżony
   jaśniejszym żółtozielonym strzyżonym żywopłotem, kolumnowe ciemne cyprysy, **kwadratowe rabaty magenty**,
   kamienne urny z niebieskimi kwiatami na cokołach, niskie kamienne balustrady, drewniane ławki, ośmiokątna
@@ -269,7 +272,7 @@ A 16-bit pixel art JRPG battle background of a garden with a raised walk above a
 ---
 
 ### 7. Kryjówka (hideout)
-- **Mockup (tylko do wglądu):** `assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Social/MockUp_01.png`
+- **Mockup (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Social/MockUp_01.png`
 - **Z mockupów:** posadzka z **ciemnego szarozielonego bruku**, rama z ciemnych drewnianych słupów i belek,
   ściany z ciemnej omszałej kamiennej cegły, zieleń przy krawędziach i ciemny las wokół, wielkie **leżące
   beczki na wino z ciemnofioletowymi plamami**, świece na ścianach z pomarańczową poświatą, **podarte białawe
@@ -306,7 +309,7 @@ A 16-bit pixel art JRPG battle background of a half-collapsed hideout room, low-
 ---
 
 ### 8. Biblioteka (library)
-- **Mockup (tylko do wglądu):** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`
+- **Mockup (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`
 - **Z mockupów:** **ciepły terakotowo-pomarańczowy parkiet w jodełkę**, ciemna turkusowa szachownica w środkowej
   sali, długi turkusowy chodnik w złote romby, **turkusowe kolumny ze złotymi głowicami**, antresole z ciemnego
   drewna z tralkami i szerokie drewniane schody, wnęki regałów z małymi złotymi tabliczkami, drewniane biurka
@@ -343,7 +346,7 @@ A 16-bit pixel art JRPG battle background of a library with a raised reading dai
 ---
 
 ### 9. Kanały (sewer)
-- **Mockupy (tylko do wglądu):** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
 - **Z mockupów:** posadzka z **ciemnobrązowej cegły**, prawie czarne ściany z panelami ciemnozielonych kafli,
   łupkowe filary z małymi miedzianymi lampkami, **półokrągłe miedziane kraty odpływów**, okrągłe miedziane wyloty
   rur, miedziane barierki z rur, wysokie pionowe miedziane rury, duże prostokątne miedziane kratki w posadzce,
@@ -379,7 +382,7 @@ A 16-bit pixel art JRPG battle background of a sewer maintenance platform, low-a
 ---
 
 ### 10. Cmentarz (cemetery)
-- **Arkusze (tylko do wglądu, paczka nie ma mockupu):** `assets/pixel_crawler/environments/cemetery/Pixel Crawler - Cemetery/Environment/Props/Graves.png`, `Props.png`, `Tree.png`, `Structures/Roof.png`
+- **Arkusze (paczka nie ma mockupu — arkuszy nie dołączać):** `assets/pixel_crawler/environments/cemetery/Pixel Crawler - Cemetery/Environment/Props/Graves.png`, `Props.png`, `Tree.png`, `Structures/Roof.png`
 - **Z arkuszy:** szare kamienne nagrobki (zaokrąglone, prostokątne, z krzyżem), kamienne i żelazne krzyże
   (jeden czerwony), płyty grobowe i sarkofagi z czerwonymi wstawkami, małe kapliczki z daszkiem, ozdobne złote
   drzwi mauzoleum, drewniane trumny, łopata, kopczyki ziemi, oliwkowożółty suchy krzak, małe posągi (aniołek,
@@ -415,7 +418,7 @@ A 16-bit pixel art JRPG battle background of a graveyard chapel above a crypt, e
 ---
 
 ### 11. Karczma (tavern)
-- **Mockup (tylko do wglądu):** `assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/MockUps/Tavern.png`
+- **Mockup (referencja kolorów — można dołączyć):** `assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/MockUps/Tavern.png`
 - **Z mockupu:** drewniana podłoga z desek, **beżowe tynkowane ściany z ciemnymi drewnianymi belkami**, kuchnia
   z szarego kamienia (piec chlebowy z cegły, okap, blaty), żelazne żyrandole ze świecami, stojące pochodnie
   z czerwonym płomieniem, stoły z **czerwonymi i niebieskimi obrusami** i pieczystym, bar z butelkami, drewniane
@@ -452,7 +455,7 @@ A 16-bit pixel art JRPG battle background of a tavern hall with an upper landing
 
 ## 🛠️ Jak dodać tło do gry
 
-1. Wygeneruj obraz (**16:9**) promptem z tego pliku — **bez dołączonych obrazów**.
+1. Wygeneruj obraz (**16:9**) promptem z tego pliku; opcjonalnie dołącz mockup biomu (kolory), bez arkuszy.
 2. Zapisz go w folderze biomu: `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/<biom>/`
    (png / jpg / webp, nazwa dowolna). Mapa ręczna ma folder o nazwie pliku sceny:
    `battle_backgrounds/<nazwa_sceny>/` (np. `tutorial_area`).
