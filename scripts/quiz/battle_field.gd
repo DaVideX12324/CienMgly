@@ -40,8 +40,9 @@ extends Resource
 	set(v):
 		front_scale = v
 		emit_changed()
-## Skala głębi z wysokości: przedni rząd pola = front_scale, każdy dalszy — mniejszy o depth_shrink na
-## każde 100 px wyżej od przedniego rzędu (kształt / szerokość pola bez znaczenia).
+## Skala głębi z wysokości: przedni rząd pola = front_scale, każdy dalszy — mniejszy o DEPTH_SHRINK na
+## każde 100 px wyżej od przedniego rzędu (kształt / szerokość pola bez znaczenia). Gdy nie pasuje do
+## tła — wyłącz i ustaw back_scale ręcznie.
 @export var auto_depth_scale := true:
 	set(v):
 		auto_depth_scale = v
@@ -148,8 +149,7 @@ func row_line(row: int) -> PackedVector2Array:
 
 const DEPTH_MIN_SCALE := 0.2
 ## Skala głębi (auto_depth_scale): o ile mniejszy wróg na każde 100 px wyżej od przedniego rzędu pola.
-## TYMCZASOWO zmienne — ustawiane w podglądzie pól (depth_shrink), po wyborze wartości zostanie stałą.
-static var depth_shrink := 0.13
+const DEPTH_SHRINK := 0.11
 
 
 func row_scale(row: int) -> float:
@@ -158,5 +158,5 @@ func row_scale(row: int) -> float:
 		var line := row_line(row)
 		var front := row_line(0)
 		var rise := (front[0].y + front[1].y - line[0].y - line[1].y) * 0.5
-		return front_scale * maxf(DEPTH_MIN_SCALE, 1.0 - rise * 0.01 * depth_shrink)
+		return front_scale * maxf(DEPTH_MIN_SCALE, 1.0 - rise * 0.01 * DEPTH_SHRINK)
 	return front_scale * lerpf(1.0, back_scale, t)
