@@ -40,8 +40,8 @@ extends Resource
 	set(v):
 		front_scale = v
 		emit_changed()
-## Skala głębi z kształtu: dalszy rząd mniejszy w proporcji szerokości do przedniej krawędzi, złagodzonej
-## mnożnikiem depth_boost (front_scale × min(1, szerokość rzędu × depth_boost / szerokość przodu)).
+## Skala głębi z wysokości na ekranie (wspólna dla wszystkich pól — platforma w głębi też mniejsza): rząd
+## na linii zera (DEPTH_ZERO_Y) = front_scale, każde 100 px wyżej — mniejszy o depth_shrink.
 @export var auto_depth_scale := true:
 	set(v):
 		auto_depth_scale = v
@@ -146,19 +146,19 @@ func row_line(row: int) -> PackedVector2Array:
 	return PackedVector2Array([side_point(sd[0], t), side_point(sd[1], t)])
 
 
-## Złagodzenie skali głębi (auto_depth_scale): szerokość dalszego rzędu liczona × depth_boost, skala
-## rzędu najwyżej jak przedniego. TYMCZASOWO zmienne — ustawiane w podglądzie pól (depth_boost), po
-## wyborze wartości zostanie stałą.
-static var depth_boost := 1.2
+## Linia zera głębi (px wzorcowe): przedni rząd typowego pola — punkt (0, 0) pól w podglądzie (nad cieniem
+## z miejscem na pasek HP).
+const DEPTH_ZERO_Y := 765.0
+const DEPTH_MIN_SCALE := 0.2
+## Skala głębi (auto_depth_scale): o ile mniejszy wróg na każde 100 px wyżej od DEPTH_ZERO_Y.
+## TYMCZASOWO zmienne — ustawiane w podglądzie pól (depth_shrink), po wyborze wartości zostanie stałą.
+static var depth_shrink := 0.13
 
 
 func row_scale(row: int) -> float:
 	var t := row_t(row)
 	if auto_depth_scale:
-		if row <= 0:
-			return front_scale
-		var front_w := quad[0].distance_to(quad[1])
 		var line := row_line(row)
-		var ratio := line[0].distance_to(line[1]) / front_w if front_w > 0.0 else 1.0
-		return front_scale * minf(1.0, ratio * depth_boost)
+		var y := (line[0].y + line[1].y) * 0.5
+		return front_scale * maxf(DEPTH_MIN_SCALE, 1.0 - (DEPTH_ZERO_Y - y) * 0.01 * depth_shrink)
 	return front_scale * lerpf(1.0, back_scale, t)
