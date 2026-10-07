@@ -68,7 +68,7 @@ current_tab = 0
 
 [node name="Ekran" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 12
 metadata/_tab_index = 0
 
 [node name="ModeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ekran"]

@@ -588,6 +588,21 @@ func _setup_ui() -> void:
 				_tile_overlay.queue_redraw()
 		)
 
+	if get_viewport():
+		get_viewport().size_changed.connect(_on_preview_viewport_resized)
+	_on_preview_viewport_resized()
+
+
+func _on_preview_viewport_resized() -> void:
+	if not is_instance_valid(panel):
+		return
+	var vp_size: Vector2 = get_viewport().get_visible_rect().size if get_viewport() else Vector2(1920, 1080)
+	panel.custom_minimum_size = Vector2(380, 0)
+	panel.offset_left = 12.0
+	panel.offset_top = 12.0
+	panel.offset_right = 400.0
+	panel.offset_bottom = maxf(600.0, vp_size.y - 44.0)
+
 
 func _on_type_selected(index: int) -> void:
 	current_type = opt_type.get_item_id(index)
@@ -1035,6 +1050,9 @@ func _ensure_module_singletons(core: Node) -> void:
 	var module := (load(QuizRpgPaths.path("module_root.tscn")) as PackedScene).instantiate()
 	_own_singletons = Node.new()
 	_own_singletons.name = "PreviewModuleSingletons"
+	var proxy_script = load(QuizRpgPaths.path("scripts/tools/preview_module_proxy.gd"))
+	if proxy_script:
+		_own_singletons.set_script(proxy_script)
 	add_child(_own_singletons)
 	var names: Array[String] = ["GameManager", "SaveManager", "LootManager", "DifficultyManager", "PlayerStats", "InventoryService", "LevelStateManager"]
 	for singleton_name in names:
@@ -1044,6 +1062,8 @@ func _ensure_module_singletons(core: Node) -> void:
 			n.owner = null
 			_own_singletons.add_child(n)
 	module.free()
+	if core.has_method("activate_module") and core.get_active_module() == null:
+		core.activate_module("quiz_rpg", _own_singletons)
 	# Rejestracja po _ready wszystkich — jak w module_root._register_singletons.
 	for n in _own_singletons.get_children():
 		core.register_singleton(str(n.name), n)
@@ -1053,8 +1073,11 @@ func _exit_tree() -> void:
 	QuizTheme.restore()
 	_set_exploring(false)
 	var core := get_node_or_null("/root/CoreManager")
-	if _own_singletons and core and core.get_active_module_id() == "" 			and core.get_singleton("GameManager") == _own_singletons.get_node_or_null("GameManager"):
-		core.unregister_module_singletons()
+	if _own_singletons and core:
+		if core.get_active_module() == _own_singletons:
+			core.deactivate_module()
+		elif core.get_active_module_id() == "" and core.get_singleton("GameManager") == _own_singletons.get_node_or_null("GameManager"):
+			core.unregister_module_singletons()
 
 
 # =========================================================================

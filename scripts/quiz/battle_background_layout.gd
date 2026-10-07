@@ -15,15 +15,27 @@ extends Resource
 		texture = v
 		emit_changed()
 ## Pola walki (np. podłoga, platformy). Wrogowie stoją na dolnej krawędzi pola.
+## Pusty wpis (np. „Add Element” w inspektorze) zamienia się w nowe pole: kopię poprzedniego 120 px wyżej.
 @export var fields: Array[BattleField] = []:
 	set(v):
 		for f in fields:
 			if f and f.changed.is_connected(emit_changed):
 				f.changed.disconnect(emit_changed)
-		fields = v
+		var clean: Array[BattleField] = []
+		for f in v:
+			clean.append(f if f != null else _new_field_after(clean))
+		fields = clean
 		for f in fields:
 			if f and not f.changed.is_connected(emit_changed):
 				f.changed.connect(emit_changed)
+		emit_changed()
+
+## Szansa wylosowania rzędu względem rzędu tuż przed nim (rzędy ze wszystkich pól od najbliższego):
+## 0.4 przy 3 rzędach = szanse 1 : 0.4 : 0.16 (pojedynczy wróg: 64 % przód, 26 % środek, 10 % tył).
+## Pełne rzędy odpadają, więc przy większej liczbie wrogów zapełniają się kolejne. 1.0 = po równo.
+@export_range(0.05, 1.0, 0.01) var depth_chance := 0.4:
+	set(v):
+		depth_chance = v
 		emit_changed()
 
 const LAYOUT_SUFFIX := "_layout.tres"
@@ -38,9 +50,26 @@ static func path_for(texture_path: String) -> String:
 	return texture_path.get_basename() + LAYOUT_SUFFIX
 
 
+## Układ tła: `<grafika>_layout.tres`, a gdy go brak — `<grafika>.tres` (ta sama nazwa co grafika).
 static func load_for(texture_path: String) -> BattleBackgroundLayout:
-	var p := path_for(texture_path)
-	return load(p) as BattleBackgroundLayout if ResourceLoader.exists(p) else null
+	for p in [path_for(texture_path), texture_path.get_basename() + ".tres"]:
+		if ResourceLoader.exists(p):
+			var l := load(p) as BattleBackgroundLayout
+			if l != null:
+				return l
+	return null
+
+
+## Nowe pole w miejsce pustego wpisu: kopia ostatniego przesunięta 120 px w górę (albo pole domyślne).
+static func _new_field_after(prev: Array[BattleField]) -> BattleField:
+	if prev.is_empty():
+		return BattleField.new()
+	var f := prev[prev.size() - 1].duplicate() as BattleField
+	var q := PackedVector2Array()
+	for p in f.quad:
+		q.append(p + Vector2(0.0, -120.0))
+	f.quad = q
+	return f
 
 
 ## Pola, a gdy lista pusta — jedno pole domyślne (trapez, dwa rzędy na środku obszaru bitwy).
@@ -72,7 +101,8 @@ class Spot:
 
 ## Przydział wrogów do miejsc (pole, rząd) z pojemnością rzędu; null = brak miejsca. `prefs[i]` =
 ## "front" / "back" / "" — przód = rząd z najniższą linią stóp (najbliżej), tył = z najwyższą; reszta
-## losowo wśród rzędów z wolnym miejscem. Kolejność w rzędzie = kolejność wrogów.
+## losowo wśród rzędów z wolnym miejscem, z szansą malejącą w głąb (depth_chance). Kolejność w rzędzie
+## = kolejność wrogów.
 func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 	var fl := active_fields()
 	var slots: Array = []  # [pole, rząd, linia stóp (px wzorcowe)]
@@ -89,7 +119,7 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 		var pref: String = str(prefs[e]).to_lower() if e < prefs.size() else ""
 		var free: Array[int] = []
 		for si in range(slots.size()):
-			if used[si] < fl[slots[si][0]].row_capacity:
+			if used[si] < fl[slots[si][0]].capacity(slots[si][1]):
 				free.append(si)
 		var pick := -1
 		if not free.is_empty():
@@ -98,7 +128,7 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 			elif pref == "back" or pref == "rear":
 				pick = free[free.size() - 1]
 			else:
-				pick = free[rng.randi() % free.size()]
+				pick = _weighted_pick(free, rng)
 			used[pick] += 1
 		picks.append(pick)
 	var out: Array = []
@@ -116,7 +146,29 @@ func assign(count: int, prefs: Array, rng: RandomNumberGenerator) -> Array:
 		sp.n = used[picks[e]]
 		seen[picks[e]] += 1
 		out.append(sp)
+	# Gdy jest 2 wrogów jeden za drugim (różne rzędy / głębokości):
+	# Zamiast stawiać obu w centrum swoich rzędów (t=0.5), co sprawia, że przedni zasłania tylnego,
+	# rozsuwamy ich po przekątnej jak w układzie dla 4 wrogów (jeden z jednej, drugi z drugiej strony: n=2, k=0 i k=1).
+	if count == 2 and out.size() == 2 and out[0] != null and out[1] != null and picks[0] != picks[1]:
+		var side := rng.randi() % 2
+		out[0].n = 2
+		out[0].k = side
+		out[1].n = 2
+		out[1].k = 1 - side
 	return out
+
+
+## Rząd z wolnych (indeksy w liście rzędów od najbliższego): rząd i ma wagę depth_chance^i.
+func _weighted_pick(free: Array[int], rng: RandomNumberGenerator) -> int:
+	var total := 0.0
+	for si in free:
+		total += pow(depth_chance, si)
+	var x := rng.randf() * total
+	for si in free:
+		x -= pow(depth_chance, si)
+		if x < 0.0:
+			return si
+	return free[free.size() - 1]
 
 
 ## Linia stóp wroga na miejscu `spot`: równo na linii rzędu między lewym a prawym bokiem pola.
@@ -133,7 +185,19 @@ func spot_scale(spot: Spot) -> float:
 	return fl[clampi(spot.field, 0, fl.size() - 1)].row_scale(spot.row)
 
 
-## Skala wroga (przed skalą pola): mniejsza przy większej liczbie wrogów.
+## Zatłoczenie walki: najwięcej wrogów w jednym rzędzie (Spot.n). Wrogowie w różnych rzędach nie stoją
+## obok siebie, a dalsze rzędy zmniejsza już skala rzędu — więc skalę walki liczy się od najpełniejszego
+## rzędu, nie od łącznej liczby wrogów (3 wrogów w 3 rzędach = skala jak dla 1).
+static func crowd(spots: Array) -> int:
+	var n := 1
+	for sp in spots:
+		if sp != null:
+			n = maxi(n, sp.n)
+	return n
+
+
+## Skala wroga (przed skalą pola): mniejsza przy większej liczbie wrogów obok siebie (`active_count` =
+## crowd(), czyli najwięcej w jednym rzędzie).
 static func enemy_scale(active_count: int, viewport_size: Vector2) -> float:
 	var res := 1.0
 	if viewport_size.x > 0.0 and viewport_size.y > 0.0:

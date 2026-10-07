@@ -5,14 +5,21 @@ extends Control
 ## 1. Przeciągnij plik `<grafika>_layout.tres` (obok grafiki tła) do „layout”.
 ## 2. Każde pole walki to czworobok „Field…” (Polygon2D, zwykle trapez): przednia krawędź (niżej) =
 ##    rząd przedni, tylna = rząd najdalszy. Zaznacz pole i przeciągaj narożniki (edycja wielokąta
-##    w edytorze 2D); kolejność punktów dowolna — pole zawsze ma 4 narożniki.
+##    w edytorze 2D); kolejność punktów dowolna. Punkty pośrednie na bokach (dodaj punkt na krawędzi
+##    w edytorze wielokąta, np. bok wzdłuż schodów) — rzędy idą przez te punkty: rząd k łączy k-ty punkt
+##    lewego boku z k-tym prawego (3 rzędy przy jednym punkcie na boku = rząd środkowy na punktach);
+##    przednia / tylna krawędź = najniższa / najwyższa krawędź wielokąta.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
-## 3. Rzędy, pojemność rzędu, skale (auto z kształtu albo ręczne): inspektor pliku układu → fields → pole.
-## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa pola.
+##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki nad kreską cienia
+##    z miejscem na pasek HP (1920, 765 px ekranu); po otwarciu sceny Position pola = jego prawy dolny
+##    róg względem tego punktu — y > 0 oznacza, że paski HP przedniego rzędu wejdą w cień. W trakcie
+##    edycji węzeł nie jest przepisywany (kolejność punktów, zaczepienie), żeby działało cofanie (Ctrl+Z).
+## 3. Rzędy, pojemność (też per rząd), skale wrogów: inspektor pliku układu → fields → pole.
+## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana kształtu w inspektorze przesuwa pola.
 ## Tło, dolny pasek, linie rzędów i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout —
 ## jak w grze (1920×1080, dolny pasek UI 250 px).
-## Przykładowi wrogowie: grafiki z „enemy_sprites” po kolei; ilu na każdym polu — „field_counts”
-## (bez wpisu dla pola — „preview_per_row” w każdym rzędzie).
+## Przykładowi wrogowie: grafiki z „enemy_sprites” po kolei; domyślnie pełne rzędy (pojemność z pola),
+## konkretna liczba wrogów na polu — „field_counts”.
 
 ## Pola walki do edycji (plik obok grafiki tła).
 @export var layout: BattleBackgroundLayout:
@@ -23,13 +30,8 @@ extends Control
 		if layout:
 			layout.changed.connect(_on_layout_changed)
 		_rebuild_nodes()
-## Przykładowi wrogowie w każdym rzędzie pola bez wpisu w field_counts (najwyżej pojemność rzędu).
-@export_range(1, 8) var preview_per_row := 2:
-	set(v):
-		preview_per_row = v
-		queue_redraw()
-## Ilu wrogów na polu 1, 2, … (rozdzieleni po rzędach od przedniego, najwyżej rzędy × pojemność).
-## Pole bez wpisu albo z -1 — preview_per_row w każdym rzędzie; 0 — pole puste.
+## Ilu wrogów na polu 1, 2, … (rozdzieleni po rzędach od przedniego, najwyżej pojemność pola) — do
+## sprawdzenia konkretnej walki. Pole bez wpisu albo z -1 — pełne rzędy; 0 — pole puste.
 @export var field_counts := PackedInt32Array():
 	set(v):
 		field_counts = v
@@ -62,15 +64,39 @@ func _ready() -> void:
 	_rebuild_nodes()
 
 
+## Punkt (0, 0) pól w edytorze: prawy dolny róg obszaru walki, tak wysoko nad kreską cienia, żeby pasek HP
+## wroga stojącego na tej linii (12 px pod stopami, do 16 px wysoki) + 2 px zapasu kończył się nad cieniem
+## — y = 830 − 35 − 28 − 2 = 765 (przedni rząd obecnych układów). Pozycja pola w inspektorze = jego prawy
+## dolny róg względem tego punktu (w lewo / w górę = ujemne; dodatnie y = pasek HP wejdzie w cień).
+const HP_MARGIN := 2.0
+static func fields_origin() -> Vector2:
+	var area := BattleBackgroundLayout.REF_AREA
+	return Vector2(area.x, area.y - FolderBackground.SHADOW_HEIGHT - HP_BAR_OFFSET - HP_BAR_SIZE.y - HP_MARGIN)
+
+
+## Kontener „Fields” w punkcie fields_origin() — rodzic czworoboków pól (tworzony, gdy go brak).
+func _holder() -> Node2D:
+	var h := get_node_or_null("Fields") as Node2D
+	if h == null:
+		h = Node2D.new()
+		h.name = "Fields"
+		add_child(h)
+		if Engine.is_editor_hint() and get_tree() and get_tree().edited_scene_root:
+			h.owner = get_tree().edited_scene_root
+	return h
+
+
 ## Czworoboki = pola z pliku (po wczytaniu pliku albo zmianie listy pól w inspektorze).
 func _rebuild_nodes() -> void:
 	queue_redraw()
 	if not is_inside_tree():
 		return
-	for c in get_children():
-		if str(c.name).begins_with("Field"):
-			remove_child(c)
-			c.queue_free()
+	var h := _holder()
+	for parent in [self, h]:
+		for c in parent.get_children():
+			if str(c.name).begins_with("Field") and c != h:
+				parent.remove_child(c)
+				c.queue_free()
 	_nodes.clear()
 	if layout == null:
 		return
@@ -83,21 +109,35 @@ func _make_node(i: int) -> Polygon2D:
 	var p := Polygon2D.new()
 	p.name = "Field%d" % (i + 1)
 	p.color = Color(COLORS[i % COLORS.size()], 0.18)
-	add_child(p)
+	_holder().add_child(p)
 	if Engine.is_editor_hint() and get_tree() and get_tree().edited_scene_root:
 		p.owner = get_tree().edited_scene_root
 	return p
 
 
-## Plik -> czworoboki (bez przebudowy węzłów).
-func _apply_quads() -> void:
+## Plik -> czworoboki (bez przebudowy węzłów). `only_changed` — tylko węzły, których kształt różni się od
+## pliku (zmiana kształtu z inspektora); węzeł z tym samym kształtem zostaje nietknięty, bo przepisanie
+## punktów / pozycji poza historią edytora psuje cofanie (Ctrl+Z przywraca punkty przy nowej pozycji).
+func _apply_quads(only_changed := false) -> void:
 	if layout == null:
 		return
 	_syncing = true
+	if not only_changed:
+		_holder().transform = Transform2D(0.0, fields_origin())
 	for i in range(mini(_nodes.size(), layout.fields.size())):
 		if is_instance_valid(_nodes[i]):
-			_nodes[i].position = Vector2.ZERO
-			_nodes[i].polygon = layout.fields[i].quad
+			if only_changed and _node_quad(_nodes[i]) == layout.fields[i].quad:
+				continue
+			# Punkt zaczepienia węzła = prawy dolny róg pola (prawy koniec przedniej krawędzi): Position
+			# w inspektorze = ten narożnik względem fields_origin(), skalowanie uchwytem — wokół niego.
+			# Skala / obrót zawsze 1 / 0, narożniki względem zaczepienia (na ekranie = quad z pliku).
+			var q: PackedVector2Array = layout.fields[i].quad
+			var pivot: Vector2 = q[1] if q.size() >= 4 else Vector2.ZERO
+			var local := PackedVector2Array()
+			for v in q:
+				local.append(v - pivot)
+			_nodes[i].transform = Transform2D(0.0, pivot - fields_origin())
+			_nodes[i].polygon = local
 	_syncing = false
 
 
@@ -108,25 +148,30 @@ func _on_layout_changed() -> void:
 	if layout.fields.size() != _nodes.size():
 		_rebuild_nodes()
 	else:
-		_apply_quads()
+		_apply_quads(true)
 
 
-## Narożniki czworoboku w px wzorcowych (z przesunięciem węzła), posortowane; pusto, gdy nie 4 punkty.
+## Punkty pola w px wzorcowych (z przesunięciem węzła), w kolejności pola; pusto, gdy mniej niż 4.
 func _node_quad(p: Polygon2D) -> PackedVector2Array:
-	if p.polygon.size() != 4:
+	if p.polygon.size() < 4:
 		return PackedVector2Array()
 	var out := PackedVector2Array()
+	var parent_xf: Transform2D = (p.get_parent() as Node2D).transform if p.get_parent() is Node2D else Transform2D.IDENTITY
 	for v in p.polygon:
-		var w: Vector2 = p.transform * v
+		var w: Vector2 = parent_xf * (p.transform * v)
 		if not w.is_finite():
 			return PackedVector2Array()  # zły odczyt w trakcie edycji — pomiń klatkę
 		out.append(w.round())
-	return BattleField.sorted_quad(out)
+	return BattleField.normalized(out)
 
 
 ## Czworoboki -> plik: przeciąganie narożników, nowe pole (Ctrl+D), usunięte pole (Delete).
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint() or layout == null:
+		return
+	if layout.fields.has(null):
+		layout.fields = layout.fields  # setter zamienia pusty wpis („Add Element”) na nowe pole
+		_dirty_time = SAVE_DELAY
 		return
 	# Zmiany z węzłów idą tylko do pliku — blokada PRZED zapisem do pól, inaczej sygnał `changed` pola
 	# nadpisywał wielokąt w trakcie przeciągania narożnika (edytor wielokąta liczył na podmienionej
@@ -135,11 +180,11 @@ func _process(delta: float) -> void:
 	var changed := false
 	var fields: Array[BattleField] = layout.fields.duplicate()
 	for i in range(_nodes.size() - 1, -1, -1):
-		if not is_instance_valid(_nodes[i]) or _nodes[i].get_parent() != self:
+		if not is_instance_valid(_nodes[i]) or _nodes[i].get_parent() != _holder():
 			_nodes.remove_at(i)
 			fields.remove_at(i)
 			changed = true
-	for c in get_children():
+	for c in _holder().get_children():
 		if c is Polygon2D and str(c.name).begins_with("Field") and not _nodes.has(c):
 			var src: BattleField = fields[fields.size() - 1] if not fields.is_empty() else BattleField.new()
 			var f := src.duplicate() as BattleField
@@ -152,7 +197,9 @@ func _process(delta: float) -> void:
 			changed = true
 	for i in range(_nodes.size()):
 		var q := _node_quad(_nodes[i])
-		if not q.is_empty() and fields[i].quad != q:
+		if q.is_empty():
+			continue
+		if fields[i].quad != q:
 			fields[i].quad = q
 			changed = true
 	if changed:
@@ -162,28 +209,30 @@ func _process(delta: float) -> void:
 	_syncing = false
 	if not changed and _dirty_time > 0.0:
 		_dirty_time -= delta
-		if _dirty_time <= 0.0 and layout.resource_path != "":
-			ResourceSaver.save(layout, layout.resource_path)
+		if _dirty_time <= 0.0:
+			# węzeł bez zmian (kolejność punktów, zaczepienie, skala) — inaczej cofanie w edytorze przestawia pole
+			if layout.resource_path != "":
+				ResourceSaver.save(layout, layout.resource_path)
 
 
 func _draw() -> void:
 	var view := BattleBackgroundLayout.REF_SIZE
 	var area := BattleBackgroundLayout.REF_AREA
 	var l: BattleBackgroundLayout = layout if layout else BattleBackgroundLayout.new()
-	# Tło jak w grze: wypełnia obszar bitwy (skala „cover”, wyśrodkowane).
-	draw_rect(Rect2(Vector2.ZERO, area), Color(0.08, 0.07, 0.11))
+	# Tło jak w grze: wypełnia całe okno 16:9 (skala „cover”, wyśrodkowane).
+	draw_rect(Rect2(Vector2.ZERO, view), Color(0.08, 0.07, 0.11))
 	if l.texture:
 		var ts := l.texture.get_size()
-		var k := maxf(area.x / ts.x, area.y / ts.y)
-		var origin := (area - ts * k) * 0.5
-		draw_texture_rect_region(l.texture, Rect2(Vector2.ZERO, area), Rect2(-origin / k, area / k))
+		var k := maxf(view.x / ts.x, view.y / ts.y)
+		var origin := (view - ts * k) * 0.5
+		draw_texture_rect_region(l.texture, Rect2(Vector2.ZERO, view), Rect2(-origin / k, view / k))
 	_draw_ui_zones(view, area)
 	var fl := l.active_fields()
 	# Obrys pól i linie rzędów.
 	for fi in range(fl.size()):
 		var f: BattleField = fl[fi]
 		var col := COLORS[fi % COLORS.size()]
-		if f.quad.size() == 4:
+		if f.quad.size() >= 4:
 			var outline := f.quad.duplicate()
 			outline.append(f.quad[0])
 			draw_polyline(outline, col, 3.0)
@@ -210,7 +259,7 @@ func _draw() -> void:
 	order.sort_custom(func(a: int, b: int) -> bool: return feet[a].y < feet[b].y)
 	for i in order:
 		var sp: BattleBackgroundLayout.Spot = spots[i]
-		var sc := BattleBackgroundLayout.enemy_scale(spots.size(), view) * l.spot_scale(sp)
+		var sc := BattleBackgroundLayout.enemy_scale(BattleBackgroundLayout.crowd(spots), view) * l.spot_scale(sp)
 		var frames: SpriteFrames = enemy_sprites[i % enemy_sprites.size()] if not enemy_sprites.is_empty() else null
 		_draw_enemy(feet[i], sc, COLORS[sp.field % COLORS.size()], frames)
 
@@ -221,12 +270,17 @@ func _row_counts(f: BattleField, fi: int) -> Array[int]:
 	out.resize(f.rows)
 	var total := field_counts[fi] if fi < field_counts.size() else -1
 	if total < 0:
-		out.fill(mini(preview_per_row, f.row_capacity))
+		for r in range(f.rows):
+			out[r] = f.capacity(r)  # domyślnie pełne rzędy
 		return out
 	out.fill(0)
-	total = mini(total, f.rows * f.row_capacity)
-	for e in range(total):  # po kolei do rzędów, od przedniego
-		out[e % f.rows] += 1
+	total = mini(total, f.total_capacity())
+	var r := 0
+	while total > 0:  # po kolei do rzędów od przedniego, pełne rzędy pomijane
+		if out[r] < f.capacity(r):
+			out[r] += 1
+			total -= 1
+		r = (r + 1) % f.rows
 	return out
 
 
@@ -240,7 +294,7 @@ func _draw_ui_zones(view: Vector2, area: Vector2) -> void:
 	draw_string(font, Vector2(view.x - 330.0, shadow.position.y + 25.0), "Cień nad UI (%d px)" % FolderBackground.SHADOW_HEIGHT,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 20, ZONE_TEXT)
 	var band := Rect2(0.0, area.y, view.x, BAND)
-	draw_rect(band, Color(0.02, 0.02, 0.05))
+	draw_rect(band, Color(0.02, 0.02, 0.05, 0.55))
 	draw_rect(band.grow(-2.0), ZONE_LINE, false, 3.0)
 	draw_string(font, band.position + Vector2(24.0, 44.0), "Dolny pasek UI walki (%d px) — tu nie stawiaj wrogów" % BAND,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 26, ZONE_TEXT)
