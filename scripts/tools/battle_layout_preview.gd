@@ -7,13 +7,12 @@ extends Control
 ##    rząd przedni, tylna = rząd najdalszy. Zaznacz pole i przeciągaj narożniki (edycja wielokąta
 ##    w edytorze 2D); kolejność punktów dowolna — pole zawsze ma 4 narożniki.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
-## 3. Wielkość tylnego rzędu względem przedniego dla całego tła: „back_row_scale” w inspektorze tego węzła.
-##    Rzędy, pojemność rzędu, skale pojedynczego pola: inspektor pliku układu → fields → pole.
+## 3. Rzędy, pojemność (też per rząd), skale wrogów: inspektor pliku układu → fields → pole.
 ## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa pola.
 ## Tło, dolny pasek, linie rzędów i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout —
 ## jak w grze (1920×1080, dolny pasek UI 250 px).
-## Przykładowi wrogowie: grafiki z „enemy_sprites” po kolei; ilu na każdym polu — „field_counts”
-## (bez wpisu dla pola — „preview_per_row” w każdym rzędzie).
+## Przykładowi wrogowie: grafiki z „enemy_sprites” po kolei; domyślnie pełne rzędy (pojemność z pola),
+## konkretna liczba wrogów na polu — „field_counts”.
 
 ## Pola walki do edycji (plik obok grafiki tła).
 @export var layout: BattleBackgroundLayout:
@@ -23,28 +22,9 @@ extends Control
 		layout = v
 		if layout:
 			layout.changed.connect(_on_layout_changed)
-		_sync_back_row_scale()
 		_rebuild_nodes()
-## Wielkość wrogów w tylnym rzędzie względem przedniego (1.0 = tacy sami, 0.8 = o 20 % mniejsi) — ustawia
-## wszystkie pola tego tła (wyłącza skalę liczoną z kształtu pola). Jedno pole osobno (np. platforma):
-## inspektor pliku układu → fields → pole → back_scale. Pokazuje wartość pierwszego pola.
-@export_range(0.3, 1.2, 0.01) var back_row_scale := 0.82:
-	set(v):
-		back_row_scale = v
-		if layout == null or not is_node_ready() or _syncing_scale:
-			return
-		for f in layout.fields:
-			f.auto_depth_scale = false
-			f.back_scale = v
-		_dirty_time = SAVE_DELAY
-		queue_redraw()
-## Przykładowi wrogowie w każdym rzędzie pola bez wpisu w field_counts (najwyżej pojemność rzędu).
-@export_range(1, 8) var preview_per_row := 2:
-	set(v):
-		preview_per_row = v
-		queue_redraw()
-## Ilu wrogów na polu 1, 2, … (rozdzieleni po rzędach od przedniego, najwyżej rzędy × pojemność).
-## Pole bez wpisu albo z -1 — preview_per_row w każdym rzędzie; 0 — pole puste.
+## Ilu wrogów na polu 1, 2, … (rozdzieleni po rzędach od przedniego, najwyżej pojemność pola) — do
+## sprawdzenia konkretnej walki. Pole bez wpisu albo z -1 — pełne rzędy; 0 — pole puste.
 @export var field_counts := PackedInt32Array():
 	set(v):
 		field_counts = v
@@ -71,21 +51,10 @@ var _nodes: Array[Polygon2D] = []   # czworobok pola i (ta sama kolejność co l
 var _dirty_time := -1.0
 var _syncing := false
 var _bottom_cache := {}
-var _syncing_scale := false
 
 
 func _ready() -> void:
-	_sync_back_row_scale()
 	_rebuild_nodes()
-
-
-## Suwak back_row_scale pokazuje wartość z pliku (pierwsze pole), nie nadpisuje pliku przy wczytaniu sceny.
-func _sync_back_row_scale() -> void:
-	if layout == null or layout.fields.is_empty():
-		return
-	_syncing_scale = true
-	back_row_scale = layout.fields[0].back_scale
-	_syncing_scale = false
 
 
 ## Czworoboki = pola z pliku (po wczytaniu pliku albo zmianie listy pól w inspektorze).
@@ -256,7 +225,7 @@ func _row_counts(f: BattleField, fi: int) -> Array[int]:
 	var total := field_counts[fi] if fi < field_counts.size() else -1
 	if total < 0:
 		for r in range(f.rows):
-			out[r] = mini(preview_per_row, f.capacity(r))
+			out[r] = f.capacity(r)  # domyślnie pełne rzędy
 		return out
 	out.fill(0)
 	total = mini(total, f.total_capacity())
