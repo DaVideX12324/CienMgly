@@ -1,253 +1,280 @@
 class_name StructuredZoning
 extends RefCounted
 
-## Strefowanie wokół sieci liniowej:
-## - Kompleksy sal jako spójne wielokąty wzdłuż 2–4 odcinków jednej linii;
-## - Chodniki (lanes) wzdłuż odcinków tunelowych;
-## - Suche koryto (dry bed);
-## - Zwężenia i korytarze serwisowe za ścianą (service) z bramami i dźwigniami.
+## R2 / R3 — odcinki: tunel (chodnik po obu stronach) albo kompleks (sale przecinane kanałem, jeden wielokąt)
+## (plan: docs/plan_generator_sciekow.md, wzorzec proto_layout.py kroki 2–3).
+## - kompleks = ciąg 1–4 kolejnych odcinków jednej linii (najpierw najdłuższy, ciąg 1 tylko na węźle),
+##   min. odstęp między kompleksami complex_min_gap, liczba ≤ max(2, W·H / complex_count_ratio);
+## - brzegi budowane kawałkami 4–8 wzdłuż kanału, szerokość = błądzenie losowe (±3, 0 albo 2–10),
+##   dopasowane do miejsca (nie na obce kanały, ściana od sal innych kompleksów);
+## - spójność: w kawałku ≥ 1 brzeg ≥ 2, ciągłość strony, w środku odcinka oba brzegi ≥ 2 (kładka);
+## - zwężenie (R4): odcinek ≥ 18 (szansa 0,8), środek bez brzegu po stronie k, zatoki na wejścia korytarza;
+## - szczeliny 1 kratki między fragmentami wielokąta -> podłoga (min. ściana 2).
+## Na końcu strefy przecięć dla korytarzy (cross_h / cross_v, ZH / ZV, JZ_C) i licznik zakazu fcnt.
 
-const LinearFeatureLayout = preload("core/linear_feature_layout.gd")
-const StructuredReservations = preload("structured_reservations.gd")
-const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+const State = preload("core/structured_state.gd")
+const EXT_MAX := 10
+
+var st: State
+var rng: RandomNumberGenerator
+var cfg: Dictionary
 
 
-static func build_zoning(
-	width: int,
-	height: int,
-	rng: RandomNumberGenerator,
-	layout: LinearFeatureLayout,
-	reservations: StructuredReservations,
-	cw: int = 4,
-	lane_width: int = 3,
-	wall_h: int = 5,
-	wall_v: int = 2,
-	canal_dry_chance: float = 0.4
-) -> Dictionary:
-	var segs: Array[Dictionary] = layout.segments
-	var lines: Dictionary = layout.lines
-	var water: Dictionary = layout.cells
-	var complexes: Dictionary = layout.complexes
-	var lanes: Dictionary = layout.lanes
-	var service: Dictionary = layout.service
-	var dry: Dictionary = layout.dry
+static func run(state: State, seed_val: int, config: Dictionary) -> void:
+	var z := StructuredZoning.new()
+	z.st = state
+	z.cfg = config
+	z.rng = RandomNumberGenerator.new()
+	z.rng.seed = hash([seed_val, "structured_zoning"])
+	z._pick_complexes()
+	z._lanes()
+	z._build_halls()
+	z._cross_zones()
 
-	# 1. Wybór kompleksów sal (ciąg 2–4 odcinków wzdłuż jednej linii)
-	var min_cplx_gap := 20
-	var cplx_rects: Array[Rect2i] = []
-	var max_cplx := maxi(2, width * height / 5500)
-	var line_ids: Array = lines.keys()
-	line_ids.shuffle()
 
-	var rect_gap = func(a: Rect2i, b: Rect2i) -> int:
-		var dx := maxi(0, maxi(a.position.x, b.position.x) - mini(a.end.x, b.end.x))
-		var dy := maxi(0, maxi(a.position.y, b.position.y) - mini(a.end.y, b.end.y))
-		return maxi(dx, dy)
+func _shuffle(a: Array) -> void:
+	for i in range(a.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t = a[i]
+		a[i] = a[j]
+		a[j] = t
 
-	var far_from_complexes = func(check_rects: Array[Rect2i]) -> bool:
-		for r in check_rects:
-			for cr in cplx_rects:
-				if rect_gap.call(r, cr) < min_cplx_gap:
-					return false
-		return true
 
+static func _rect_gap(a: Dictionary, b: Dictionary) -> int:
+	var dx := maxi(0, maxi(a.x0, b.x0) - mini(a.x1, b.x1))
+	var dy := maxi(0, maxi(a.y0, b.y0) - mini(a.y1, b.y1))
+	return maxi(dx, dy)
+
+
+func _pick_complexes() -> void:
+	var gap := int(cfg.get("complex_min_gap", 20))
+	var max_cplx := maxi(2, st.w * st.h / int(cfg.get("complex_count_ratio", 5500)))
+	var placed_rects: Array[Dictionary] = []
+	var line_ids: Array = st.lines.keys()
 	var placed_any := true
-	while placed_any and complexes.size() < max_cplx:
+	while placed_any and st.complexes.size() < max_cplx:
 		placed_any = false
-		line_ids.shuffle()
+		_shuffle(line_ids)
 		for lid in line_ids:
-			if complexes.size() >= max_cplx:
+			if st.complexes.size() >= max_cplx:
 				break
-			var ln: Array = lines[lid]
-			var starts: Array[int] = []
-			for k in range(ln.size()):
-				starts.append(k)
-			starts.shuffle()
-
+			var ln: Array = st.lines[lid]
+			var starts: Array = range(ln.size())
+			_shuffle(starts)
 			var choice: Array = []
 			for k0 in starts:
 				for n in [4, 3, 2, 1]:
 					if k0 + n > ln.size():
 						continue
-					var run := ln.slice(k0, k0 + n)
-					var all_tunnel := true
-					for st in run:
-						if st["kind"] != "tunnel":
-							all_tunnel = false
-							break
-					if not all_tunnel:
+					var run_: Array = ln.slice(k0, k0 + n)
+					var ok := true
+					for s in run_:
+						if s.kind != "tunnel":
+							ok = false
+					if not ok or (n == 1 and not run_[0].junction):
 						continue
-					if n == 1 and not run[0].get("junction", false):
+					for s in run_:
+						for o in placed_rects:
+							if _rect_gap(s, o) < gap:
+								ok = false
+					if not ok:
 						continue
-
-					var run_rects: Array[Rect2i] = []
-					for st in run:
-						run_rects.append(st["rect"])
-
-					if far_from_complexes.call(run_rects):
-						choice = run
-						break
+					choice = run_
+					break
 				if not choice.is_empty():
 					break
-
 			if choice.is_empty():
 				continue
-
-			var cid := complexes.size()
-			for st in choice:
-				st["kind"] = "hall"
-				st["cid"] = cid
-				cplx_rects.append(st["rect"])
-			complexes[cid] = {"segs": choice, "mask": {}, "pinch": null}
+			var cid: int = st.complexes.size()
+			for s in choice:
+				s.kind = "hall"
+				s.cid = cid
+				placed_rects.append(s)
+			st.complexes[cid] = {"segs": choice}
 			placed_any = true
 
-	# 2. Suche koryto (jeśli szansa spełniona)
-	if rng.randf() < canal_dry_chance and lines.size() > 1:
-		var non_trunk_lines: Array = []
-		for lid in lines:
-			if int(lid) != 0:
-				non_trunk_lines.append(lid)
-		if not non_trunk_lines.is_empty():
-			var dry_lid = non_trunk_lines[rng.randi() % non_trunk_lines.size()]
-			for st in lines[dry_lid]:
-				var r: Rect2i = st["rect"]
-				for y in range(r.position.y, r.end.y):
-					for x in range(r.position.x, r.end.x):
-						dry[Vector2i(x, y)] = true
 
-	# 3. Pasy ruchu (chodniki w tunelach)
-	for st in segs:
-		if st["kind"] == "tunnel":
-			var r: Rect2i = st["rect"]
-			if st["axis"] == "h":
-				# Chodnik na północ i południe
-				for y in range(r.position.y - lane_width, r.position.y):
-					for x in range(r.position.x, r.end.x):
-						var p := Vector2i(x, y)
-						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-							lanes[p] = true
-				for y in range(r.end.y, r.end.y + lane_width):
-					for x in range(r.position.x, r.end.x):
-						var p := Vector2i(x, y)
-						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-							lanes[p] = true
-			else:
-				# Chodnik na zachód i wschód
-				for y in range(r.position.y, r.end.y):
-					for x in range(r.position.x - lane_width, r.position.x):
-						var p := Vector2i(x, y)
-						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-							lanes[p] = true
-				for y in range(r.position.y, r.end.y):
-					for x in range(r.end.x, r.end.x + lane_width):
-						var p := Vector2i(x, y)
-						if not water.has(p) and p.x >= 0 and p.x < width and p.y >= 0 and p.y < height:
-							lanes[p] = true
+## Pasy chodnika odcinka tunelu (strona 0 = góra / lewo).
+func bands(s: Dictionary) -> Array:
+	var L: int = st.lane
+	if s.axis == "h":
+		return [[s.x0, s.y0 - L, s.x1, s.y0 - 1], [s.x0, s.y1 + 1, s.x1, s.y1 + L]]
+	return [[s.x0 - L, s.y0, s.x0 - 1, s.y1], [s.x1 + 1, s.y0, s.x1 + L, s.y1]]
 
-	# 4. Budowanie wielokątów sal kompleksów wokół odcinków
-	var hallm: Dictionary = {}
-	var ext_max := 10
 
-	for cid in complexes:
-		var cx: Dictionary = complexes[cid]
-		var run: Array = cx["segs"]
-		var pm: Dictionary = {}
+func _lanes() -> void:
+	for s in st.segs:
+		if s.kind == "tunnel":
+			for b in bands(s):
+				st.fill(st.lanes, b[0], b[1], b[2], b[3])
+	for i in range(st.w * st.h):
+		if st.water[i]:
+			st.lanes[i] = 0
 
-		# Szukanie długiego odcinka na zwężenie (pinch)
+
+## Pas brzegu odcinka na odcinku osi [t0, t1], strona k, szerokość e od krawędzi wody.
+static func _side_rect(s: Dictionary, t0: int, t1: int, k: int, e: int) -> Array:
+	if s.axis == "h":
+		return [t0, s.y0 - e, t1, s.y0 - 1] if k == 0 else [t0, s.y1 + 1, t1, s.y1 + e]
+	return [s.x0 - e, t0, s.x0 - 1, t1] if k == 0 else [s.x1 + 1, t0, s.x1 + e, t1]
+
+
+func _build_halls() -> void:
+	var wv: int = st.wall_v
+	var wh: int = st.wall_h
+	var hall_any := st.new_mask()
+	for cid in st.complexes:
+		var cx: Dictionary = st.complexes[cid]
+		var run_: Array = cx.segs
+		# Kanały własne: odcinki kompleksu i stykające się z nimi (skręt / węzeł w sali nie jest obcy).
+		var own := st.new_mask()
+		for s in run_:
+			st.fill(own, s.x0, s.y0, s.x1, s.y1)
+			for o in st.segs:
+				if not (o.x1 < s.x0 - 1 or o.x0 > s.x1 + 1 or o.y1 < s.y0 - 1 or o.y0 > s.y1 + 1):
+					st.fill(own, o.x0, o.y0, o.x1, o.y1)
+		var other_water := st.m_andnot(st.water, own)
+		var other_hall := st.new_mask()
+		for i in range(st.w * st.h):
+			if hall_any[i] and st.hall_cid[i] != cid:
+				other_hall[i] = 1
+		var foreign := st.m_or(st.dilate(other_water, 3, 3), st.dilate(other_hall, wv + 1, wh + 1))
+
+		# Zwężenie z korytarzem za ścianą: odcinek ≥ 18, środek bez brzegu po stronie k.
+		var pinch := {}
 		var longs: Array = []
-		for st in run:
-			var r: Rect2i = st["rect"]
-			if maxi(r.size.x, r.size.y) >= 18:
-				longs.append(st)
-
-		var pinch = null
+		for s in run_:
+			if maxi(s.x1 - s.x0, s.y1 - s.y0) >= 18:
+				longs.append(s)
 		if not longs.is_empty() and rng.randf() < 0.8:
-			var pst: Dictionary = longs[rng.randi() % longs.size()]
-			var pr: Rect2i = pst["rect"]
-			var lo := pr.position.x if pst["axis"] == "h" else pr.position.y
-			var hi := pr.end.x - 1 if pst["axis"] == "h" else pr.end.y - 1
-			pinch = {
-				"seg": pst,
-				"k": rng.randi() % 2,
-				"p0": lo + 6,
-				"p1": hi - 6
-			}
-		cx["pinch"] = pinch
-
-		for st in run:
-			var r: Rect2i = st["rect"]
-			var horiz: bool = st["axis"] == "h"
-			var lo := r.position.x if horiz else r.position.y
-			var hi := r.end.x - 1 if horiz else r.end.y - 1
-
+			var s: Dictionary = longs[rng.randi() % longs.size()]
+			var lo: int = s.x0 if s.axis == "h" else s.y0
+			var hi: int = s.x1 if s.axis == "h" else s.y1
+			pinch = {"seg": s, "k": rng.randi() % 2, "p0": lo + 6, "p1": hi - 6}
+		var pm := st.new_mask()
+		var ext := [rng.randi_range(3, 7), rng.randi_range(3, 7)]
+		var prev_ok: Array = []
+		var have_prev := false
+		for s in run_:
+			var lo: int = s.x0 if s.axis == "h" else s.y0
+			var hi: int = s.x1 if s.axis == "h" else s.y1
+			var is_pinch_seg: bool = not pinch.is_empty() and is_same(pinch.seg, s)
+			# Miejsce kładki: środek odcinka (poza zwężeniem) — tam oba brzegi ≥ 2.
 			var mid := (lo + hi) / 2
-			st["bridge_t"] = mid
-
-			var ext := [rng.randi_range(3, 7), rng.randi_range(3, 7)]
+			if is_pinch_seg and mid + 3 >= pinch.p0 and mid - 3 <= pinch.p1:
+				mid = lo + st.cw + 3 if pinch.p0 - lo > hi - pinch.p1 else hi - st.cw - 4
+			s.bridge_t = mid
 			var t := lo
 			while t <= hi:
 				var t1 := mini(hi, t + rng.randi_range(4, 8) - 1)
 				for k in [0, 1]:
-					ext[k] = clampi(ext[k] + rng.randi_range(-3, 3), 0, ext_max)
-
-				var want := [ext[0], ext[1]]
-				if pinch != null and pinch["seg"] == st:
-					var pk: int = pinch["k"]
-					if t1 >= pinch["p0"] and t <= pinch["p1"]:
-						want[pk] = 0
-						want[1 - pk] = maxi(want[1 - pk], 2)
-					elif t1 >= pinch["p0"] - 8 and t <= pinch["p1"] + 8:
-						want[pk] = maxi(want[pk], (wall_h if horiz else wall_v) + 4)
-						want[1 - pk] = maxi(want[1 - pk], 2)
-
+					ext[k] = maxi(0, mini(EXT_MAX, ext[k] + rng.randi_range(-3, 3)))
+				var want: Array = ext.duplicate()
+				var force := [false, false]
+				if is_pinch_seg:
+					var k: int = pinch.k
+					if t1 >= pinch.p0 and t <= pinch.p1:
+						want[k] = 0
+						want[1 - k] = maxi(want[1 - k], 2)
+						force[1 - k] = true
+					elif t1 >= pinch.p0 - 8 and t <= pinch.p1 + 8:
+						want[k] = maxi(want[k], (wh if s.axis == "h" else wv) + 4)   # zatoka na wejście korytarza
+						want[1 - k] = maxi(want[1 - k], 2)
+						force[1 - k] = true                                            # brzeg ciągły przez zwężenie
 				if t <= mid + 1 and t1 >= mid:
-					want[0] = maxi(want[0], 2)
-					want[1] = maxi(want[1], 2)
-
+					want = [maxi(want[0], 2), maxi(want[1], 2)]
+					force = [true, true]
+				var got := [_fit(foreign, s, t, t1, 0, want[0]), _fit(foreign, s, t, t1, 1, want[1])]
+				# Ciągłość: brzeg po stronie, która była w poprzednim kawałku.
+				if have_prev and not prev_ok.is_empty():
+					var any_prev := false
+					for k in prev_ok:
+						if got[k] >= 2:
+							any_prev = true
+					if not any_prev:
+						force[prev_ok[0]] = true
+				if got[0] < 2 and got[1] < 2 and not force[0] and not force[1]:
+					force[1 if want[1] >= want[0] else 0] = true
 				for k in [0, 1]:
-					var e: int = want[k]
-					if e < 2:
-						continue
-					# Wypełnij pas
-					for coord in range(t, t1 + 1):
-						if horiz:
-							var y_start := r.position.y - e if k == 0 else r.end.y
-							var y_end := r.position.y if k == 0 else r.end.y + e
-							for py in range(y_start, y_end):
-								var p := Vector2i(coord, py)
-								if p.x >= 2 and p.x < width - 2 and p.y >= 2 and p.y < height - 2:
-									pm[p] = true
-						else:
-							var x_start := r.position.x - e if k == 0 else r.end.x
-							var x_end := r.position.x if k == 0 else r.end.x + e
-							for px in range(x_start, x_end):
-								var p := Vector2i(px, coord)
-								if p.x >= 2 and p.x < width - 2 and p.y >= 2 and p.y < height - 2:
-									pm[p] = true
-
+					if force[k] and got[k] < 2:
+						got[k] = 2
+				for k in [0, 1]:
+					if got[k] > 0:
+						var r := _side_rect(s, t, t1, k, got[k])
+						st.fill(pm, r[0], r[1], r[2], r[3])
+				prev_ok = []
+				for k in [0, 1]:
+					if got[k] >= 2:
+						prev_ok.append(k)
+				have_prev = true
 				t = t1 + 1
+		for i in range(st.w * st.h):
+			if st.water[i]:
+				pm[i] = 0
+		# Najcieńsza ściana między fragmentami wielokąta = 2 kratki: szczeliny 1 kratki -> podłoga.
+		for _it in range(2):
+			var add := PackedInt32Array()
+			for y in range(st.h):
+				for x in range(1, st.w - 1):
+					var i: int = y * st.w + x
+					if not pm[i] and not st.water[i] and pm[i - 1] and pm[i + 1]:
+						add.append(i)
+			for y in range(1, st.h - 1):
+				for x in range(st.w):
+					var i: int = y * st.w + x
+					if not pm[i] and not st.water[i] and pm[i - st.w] and pm[i + st.w]:
+						add.append(i)
+			for i in add:
+				pm[i] = 1
+		var cells := PackedInt32Array()
+		var bb := Vector4i(1 << 30, 1 << 30, -1, -1)
+		for i in range(st.w * st.h):
+			if pm[i]:
+				cells.append(i)
+				st.hallm[i] = 1
+				hall_any[i] = 1
+				st.hall_cid[i] = cid
+				var x: int = i % st.w
+				var y: int = i / st.w
+				bb = Vector4i(mini(bb.x, x), mini(bb.y, y), maxi(bb.z, x), maxi(bb.w, y))
+		cx.cells = cells
+		cx.pinch = pinch
+		cx.bbox = bb
+		if not cells.is_empty():
+			st.halls.append(bb)
+	for i in range(st.w * st.h):
+		if st.water[i] or st.lanes[i] or st.hallm[i]:
+			st.floor_m[i] = 1
 
-		# Usuń nakładanie wody
-		for p in pm.keys():
-			if water.has(p):
-				pm.erase(p)
-			else:
-				hallm[p] = true
-		cx["mask"] = pm
 
-	# Rezerwacja pasów ruchu i wody w StructuredReservations
-	var water_cells_arr: Array[Vector2i] = []
-	for p in water:
-		water_cells_arr.append(p)
-	reservations.claim(water_cells_arr, &"linear_water", &"LINEAR", {"blocks_movement": true})
+## Szerokość brzegu po stronie k: rośnie, póki pas nie wchodzi na obce (`foreign`) i mieści się w mapie;
+## brzeg 1 kratki to za mało na przejście (0).
+func _fit(foreign: PackedByteArray, s: Dictionary, t0: int, t1: int, k: int, want: int) -> int:
+	var e := 0
+	while e < want:
+		var r := _side_rect(s, t0, t1, k, e + 1)
+		if st.any_in(foreign, r[0], r[1], r[2], r[3]) or not st.inside(r[0], r[1], r[2], r[3]):
+			break
+		e += 1
+	return e if e >= 2 else 0
 
-	var lane_cells_arr: Array[Vector2i] = []
-	for p in lanes:
-		lane_cells_arr.append(p)
-	reservations.claim(lane_cells_arr, &"lanes", &"LANE", {"blocks_movement": false})
 
-	return {
-		"hallm": hallm,
-		"lanes": lanes,
-		"dry": dry
-	}
+func _cross_zones() -> void:
+	st.cross_h = st.new_mask()
+	st.cross_v = st.new_mask()
+	var wh_m := st.new_mask()
+	var wv_m := st.new_mask()
+	for s in st.segs:
+		var m: PackedByteArray = st.cross_h if s.axis == "h" else st.cross_v
+		st.fill(m, s.x0, s.y0, s.x1, s.y1)
+		st.fill(wh_m if s.axis == "h" else wv_m, s.x0, s.y0, s.x1, s.y1)
+		if s.kind == "tunnel":
+			for b in bands(s):
+				st.fill(m, b[0], b[1], b[2], b[3])
+	st.cross_any = st.m_or(st.cross_h, st.cross_v)
+	st.zh = st.dilate(st.cross_h, st.wall_v + 2, st.wall_h + 2)
+	st.zv = st.dilate(st.cross_v, st.wall_v + 2, st.wall_h + 2)
+	var corner := st.m_and(wh_m, wv_m)
+	st.jz = st.dilate(corner, st.cw, st.cw)
+	st.jz_c = st.dilate(st.m_and(st.jz, st.water), 1, 1)
+	st.build_fcnt()
