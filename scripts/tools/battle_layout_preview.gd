@@ -11,10 +11,11 @@ extends Control
 ##    przednia / tylna krawędź = najniższa / najwyższa krawędź wielokąta.
 ##    Nowe pole (np. platforma): zaznacz pole i Ctrl+D. Usunięcie pola: Delete.
 ##    Pola są pod węzłem „Fields” w punkcie (0, 0) = prawy dolny róg obszaru walki nad kreską cienia
-##    z miejscem na pasek HP (1920, 765 px ekranu); Position pola = jego prawy dolny róg względem tego
-##    punktu — y > 0 oznacza, że paski HP przedniego rzędu wejdą w cień.
+##    z miejscem na pasek HP (1920, 765 px ekranu); po otwarciu sceny Position pola = jego prawy dolny
+##    róg względem tego punktu — y > 0 oznacza, że paski HP przedniego rzędu wejdą w cień. W trakcie
+##    edycji węzeł nie jest przepisywany (kolejność punktów, zaczepienie), żeby działało cofanie (Ctrl+Z).
 ## 3. Rzędy, pojemność (też per rząd), skale wrogów: inspektor pliku układu → fields → pole.
-## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana w inspektorze przesuwa pola.
+## Zmiany trafiają do pliku układu (zapis po chwili bez ruchu); zmiana kształtu w inspektorze przesuwa pola.
 ## Tło, dolny pasek, linie rzędów i przykładowi wrogowie liczone funkcjami BattleBackgroundLayout —
 ## jak w grze (1920×1080, dolny pasek UI 250 px).
 ## Przykładowi wrogowie: grafiki z „enemy_sprites” po kolei; domyślnie pełne rzędy (pojemność z pola),
@@ -114,14 +115,19 @@ func _make_node(i: int) -> Polygon2D:
 	return p
 
 
-## Plik -> czworoboki (bez przebudowy węzłów).
-func _apply_quads() -> void:
+## Plik -> czworoboki (bez przebudowy węzłów). `only_changed` — tylko węzły, których kształt różni się od
+## pliku (zmiana kształtu z inspektora); węzeł z tym samym kształtem zostaje nietknięty, bo przepisanie
+## punktów / pozycji poza historią edytora psuje cofanie (Ctrl+Z przywraca punkty przy nowej pozycji).
+func _apply_quads(only_changed := false) -> void:
 	if layout == null:
 		return
 	_syncing = true
-	_holder().transform = Transform2D(0.0, fields_origin())
+	if not only_changed:
+		_holder().transform = Transform2D(0.0, fields_origin())
 	for i in range(mini(_nodes.size(), layout.fields.size())):
 		if is_instance_valid(_nodes[i]):
+			if only_changed and _node_quad(_nodes[i]) == layout.fields[i].quad:
+				continue
 			# Punkt zaczepienia węzła = prawy dolny róg pola (prawy koniec przedniej krawędzi): Position
 			# w inspektorze = ten narożnik względem fields_origin(), skalowanie uchwytem — wokół niego.
 			# Skala / obrót zawsze 1 / 0, narożniki względem zaczepienia (na ekranie = quad z pliku).
@@ -142,7 +148,7 @@ func _on_layout_changed() -> void:
 	if layout.fields.size() != _nodes.size():
 		_rebuild_nodes()
 	else:
-		_apply_quads()
+		_apply_quads(true)
 
 
 ## Punkty pola w px wzorcowych (z przesunięciem węzła), w kolejności pola; pusto, gdy mniej niż 4.
@@ -204,10 +210,7 @@ func _process(delta: float) -> void:
 	if not changed and _dirty_time > 0.0:
 		_dirty_time -= delta
 		if _dirty_time <= 0.0:
-			# po przeciąganiu / skalowaniu uchwytami: skala w narożnikach, zaczepienie znów w prawym dolnym rogu
-			_syncing = true
-			_apply_quads()
-			_syncing = false
+			# węzeł bez zmian (kolejność punktów, zaczepienie, skala) — inaczej cofanie w edytorze przestawia pole
 			if layout.resource_path != "":
 				ResourceSaver.save(layout, layout.resource_path)
 
