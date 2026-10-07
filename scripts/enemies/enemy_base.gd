@@ -690,7 +690,9 @@ func start_combat(player: Node2D) -> void:
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
 	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range)
-	get_tree().current_scene.add_child(combat_canvas)
+	var target_parent: Node = get_tree().current_scene if (get_tree() and get_tree().current_scene) else (get_tree().root if get_tree() else null)
+	if target_parent:
+		target_parent.add_child(combat_canvas)
 	get_tree().paused = true
 
 

@@ -863,13 +863,17 @@ func _on_scale_changed(_scale: float) -> void:
 	_btn_confirm.add_theme_font_size_override("font_size", _fs(18))
 	_btn_revert.add_theme_font_size_override("font_size", _fs(18))
 	var mode_font_size := _fs(15)
+	var btn_min_h := maxi(38, UIScaleService.px(38))
 	for button in _mode_btns:
 		button.add_theme_font_size_override("font_size", mode_font_size)
-		button.custom_minimum_size = UIScaleService.sz2(BASE_BTN_MODE_SIZE.x, BASE_BTN_MODE_SIZE.y)
-	_btn_apply.custom_minimum_size = UIScaleService.sz2(BASE_BTN_ACTION_SIZE.x, BASE_BTN_ACTION_SIZE.y)
-	_btn_close.custom_minimum_size = UIScaleService.sz2(BASE_BTN_ACTION_SIZE.x, BASE_BTN_ACTION_SIZE.y)
-	_btn_confirm.custom_minimum_size = UIScaleService.sz2(BASE_BTN_CONFIRM_SIZE.x, BASE_BTN_CONFIRM_SIZE.y)
-	_btn_revert.custom_minimum_size = UIScaleService.sz2(BASE_BTN_CONFIRM_SIZE.x, BASE_BTN_CONFIRM_SIZE.y)
+		button.custom_minimum_size = UIScaleService.sz2(BASE_BTN_MODE_SIZE.x, maxf(BASE_BTN_MODE_SIZE.y, float(btn_min_h)))
+	for opt in [_monitor_option, _res_option, _scale_option, _skin_option, _bars_option, _bind_game_option]:
+		if opt:
+			opt.custom_minimum_size = Vector2(opt.custom_minimum_size.x, float(btn_min_h))
+	_btn_apply.custom_minimum_size = UIScaleService.sz2(BASE_BTN_ACTION_SIZE.x, maxf(BASE_BTN_ACTION_SIZE.y, float(btn_min_h)))
+	_btn_close.custom_minimum_size = UIScaleService.sz2(BASE_BTN_ACTION_SIZE.x, maxf(BASE_BTN_ACTION_SIZE.y, float(btn_min_h)))
+	_btn_confirm.custom_minimum_size = UIScaleService.sz2(BASE_BTN_CONFIRM_SIZE.x, maxf(BASE_BTN_CONFIRM_SIZE.y, float(btn_min_h)))
+	_btn_revert.custom_minimum_size = UIScaleService.sz2(BASE_BTN_CONFIRM_SIZE.x, maxf(BASE_BTN_CONFIRM_SIZE.y, float(btn_min_h)))
 
 	var vp_size: Vector2 = get_viewport().get_visible_rect().size if get_viewport() else Vector2(1920, 1080)
 	if vp_size.x <= 0 or vp_size.y <= 0:
@@ -904,6 +908,9 @@ func _fs(base: int) -> int:
 	var module: Node = core.get_active_module() if core else null
 	if module and module.has_method("snap_font_size"):
 		return int(module.snap_font_size(size))
+	var def_theme := ThemeDB.get_default_theme()
+	if def_theme and def_theme.default_font_size == 27:
+		return 27 * maxi(1, roundi(size * 1.4 / 27))
 	return size
 
 
