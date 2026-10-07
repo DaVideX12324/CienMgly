@@ -289,16 +289,18 @@ func _lane_gaps() -> void:
 
 ## U-turn: zwarty prostokątny tunel przez mur wokół przerwy — ramię prostopadłe z końca chodnika przed
 ## przerwą, ramię równoległe za ścianą (min. ściana + 2 od kanału), ramię z powrotem do chodnika za przerwą.
-## Grubość ramion lane_gap_arm (3); ściana między ramionami = przerwa (min. wall_v + 1 przy kanale poziomym,
+## Grubość ramion lane_gap_arm (2–3), głębokość + lane_gap_depth_extra (0–3); ściana między ramionami = przerwa (min. wall_v + 1 przy kanale poziomym,
 ## wall_h + 1 przy pionowym — tam to lico). Tylko w litym murze: obca podłoga (poza siecią kanałów
 ## i chodników) najbliżej o ścianę + 1; kratki chodnika mogą leżeć pod ramionami.
 func _gap_bypass(s: Dictionary, g: Dictionary) -> bool:
 	var k: int = g.k
 	var g0: int = g.g0
 	var g1: int = g.g1
-	var arm := int(cfg.get("lane_gap_arm", 3))
+	var arm_r: Array = cfg.get("lane_gap_arm", [2, 3])
+	var depth_r: Array = cfg.get("lane_gap_depth_extra", [0, 3])
+	var arm := rng.randi_range(int(arm_r[0]), int(arm_r[1]))
 	var horiz: bool = s.axis == "h"
-	var inner: int = (st.wall_h if horiz else st.wall_v) + 2
+	var inner: int = (st.wall_h if horiz else st.wall_v) + 2 + rng.randi_range(int(depth_r[0]), int(depth_r[1]))
 	if g1 - g0 + 1 < (st.wall_v if horiz else st.wall_h) + 1:
 		stats["u_short"] = stats.get("u_short", 0) + 1
 		return false

@@ -65,6 +65,8 @@
     "lane_chunk": [5, 10],
     "lane_keep_chance": 0.35,
     "lane_gap_bypass_chance": 0.5,
+    "lane_gap_arm": [2, 3],
+    "lane_gap_depth_extra": [0, 3],
     "wall_thickness_h": 5,
     "wall_thickness_v": 2,
     "complex_count_ratio": 5500,
