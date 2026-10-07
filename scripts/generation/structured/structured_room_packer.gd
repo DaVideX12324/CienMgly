@@ -261,13 +261,15 @@ func _drop_pinch(cx: Dictionary) -> void:
 
 # --- Przerwy chodnika tunelu ---
 
-## Strona chodnika urywa się (szerokość 0) na dłuższym odcinku, a druga strona ma chodnik. Przy początku
-## odcinka 0: u-turn (szansa lane_gap_bypass_chance) — tunel z końca chodnika przez mur, wzdłuż kanału za
+## Strona chodnika urywa się (szerokość 0), a druga strona ma chodnik. Krótka przerwa (≤ lane_gap_bracket_max)
+## z chodnikiem po obu końcach: nawias wokół przerwy (powrót na tę samą stronę). Dłuższy odcinek 0: u-turn (szansa lane_gap_bypass_chance) — tunel z końca chodnika przez mur, wzdłuż kanału za
 ## ścianą i z powrotem do kanału dalej w odcinku 0, tam kładka na drugą stronę (gdzie jest ścieżka); albo
 ## zwykła kładka przy końcu chodnika. Przy końcu odcinka 0 kładka z szansą 0,5 (chodnik i tak łączy się na
 ## końcu odcinka kanału).
 func _lane_gaps() -> void:
 	var chance := float(cfg.get("lane_gap_bypass_chance", 0.5))
+	var bracket_max := int(cfg.get("lane_gap_bracket_max", 14))
+	var brackets := 0
 	var uturn := 0
 	var bridged := 0
 	var lost := 0
@@ -277,6 +279,10 @@ func _lane_gaps() -> void:
 			var ok := false
 			var before: bool = g.get("before", true)
 			var after: bool = g.get("after", true)
+			# Krótka przerwa z chodnikiem po obu końcach: nawias (tunel wokół przerwy, powrót na tę samą stronę).
+			if before and after and int(g.g1) - int(g.g0) + 1 <= bracket_max and rng.randf() < chance and _gap_bracket(s, g):
+				brackets += 1
+				continue
 			if rng.randf() < chance:
 				var first := before if not after else (rng.randi() % 2 == 0 if before else false)
 				ok = (before and first and _gap_uturn(s, g, true)) or (after and _gap_uturn(s, g, false)) \
@@ -290,9 +296,71 @@ func _lane_gaps() -> void:
 				lost += 1
 			if before and after and rng.randf() < 0.5:
 				_place_bridge(s, int(g.g1) + 1, horiz)
+	stats["gap_bracket"] = brackets
 	stats["gap_uturn"] = uturn
 	stats["gap_bridged"] = bridged
 	stats["gap_unresolved"] = lost
+
+
+## Nawias: zwarty prostokątny tunel przez mur wokół krótkiej przerwy — ramię prostopadłe z końca chodnika przed
+## przerwą, ramię równoległe za ścianą (min. ściana + 2 od kanału), ramię z powrotem do chodnika za przerwą.
+## Grubość ramion lane_gap_arm (2–3), głębokość + lane_gap_depth_extra (0–3); ściana między ramionami = przerwa (min. wall_v + 1 przy kanale poziomym,
+## wall_h + 1 przy pionowym — tam to lico). Tylko w litym murze: obca podłoga (poza siecią kanałów
+## i chodników) najbliżej o ścianę + 1; kratki chodnika mogą leżeć pod ramionami.
+func _gap_bracket(s: Dictionary, g: Dictionary) -> bool:
+	var k: int = g.k
+	var g0: int = g.g0
+	var g1: int = g.g1
+	var arm_r: Array = cfg.get("lane_gap_arm", [2, 3])
+	var depth_r: Array = cfg.get("lane_gap_depth_extra", [0, 3])
+	var arm := rng.randi_range(int(arm_r[0]), int(arm_r[1]))
+	var horiz: bool = s.axis == "h"
+	var inner: int = (st.wall_h if horiz else st.wall_v) + 2 + rng.randi_range(int(depth_r[0]), int(depth_r[1]))
+	if g1 - g0 + 1 < (st.wall_v if horiz else st.wall_h) + 1:
+		stats["br_short"] = stats.get("br_short", 0) + 1
+		return false
+	var a0 := g0 - arm
+	var a1 := g1 + arm
+	var lo: int = s.x0 if horiz else s.y0
+	var hi: int = s.x1 if horiz else s.y1
+	if a0 < lo or a1 > hi:
+		stats["br_ends"] = stats.get("br_ends", 0) + 1
+		return false
+	var cells := {}
+	for r in [StructuredZoning._side_rect(s, a0, g0 - 1, k, inner + arm),
+			StructuredZoning._side_rect(s, g1 + 1, a1, k, inner + arm)]:
+		for y in range(r[1], r[3] + 1):
+			for x in range(r[0], r[2] + 1):
+				cells[Vector2i(x, y)] = true
+	var far := StructuredZoning._side_rect(s, a0, a1, k, inner + arm)
+	var near := StructuredZoning._side_rect(s, a0, a1, k, inner)
+	for y in range(far[1], far[3] + 1):
+		for x in range(far[0], far[2] + 1):
+			if not (x >= near[0] and x <= near[2] and y >= near[1] and y <= near[3]):
+				cells[Vector2i(x, y)] = true
+	for c in cells:
+		if not st.inside(c.x, c.y, c.x, c.y):
+			stats["br_map"] = stats.get("br_map", 0) + 1
+			return false
+		var i: int = c.y * st.w + c.x
+		if st.lanes[i]:
+			continue
+		if st.floor_m[i]:
+			stats["br_floor"] = stats.get("br_floor", 0) + 1
+			return false
+		if _near_foreign(c.x, c.y, cells):
+			stats["br_near"] = stats.get("br_near", 0) + 1
+			return false
+	var out := PackedInt32Array()
+	for c in cells:
+		var i: int = c.y * st.w + c.x
+		if st.lanes[i]:
+			continue
+		st.add_floor(c.x, c.y)
+		st.corrm[i] = 1
+		out.append(i)
+	corridors.append(out)
+	return true
 
 
 ## U-turn z kładką: ramię prostopadłe z końca chodnika przy odcinku 0 (od początku albo — `from_start`
