@@ -1905,7 +1905,8 @@ func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
 	var spots: Array = []
 	for slot_data in _enemy_active_layout_slots:
 		spots.append(slot_data.get("spot", null))
-	var s: float = BattleBackgroundLayout.enemy_scale(BattleBackgroundLayout.crowd(spots), get_viewport_rect().size)
+	var layout: BattleBackgroundLayout = _battle_layout if _battle_layout else BattleBackgroundLayout.new()
+	var s: float = layout.battle_scale(spots, get_viewport_rect().size)
 	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size() and _battle_layout:
 		var spot = _enemy_active_layout_slots[slot_index].get("spot", null)
 		if spot != null:

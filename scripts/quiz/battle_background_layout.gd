@@ -38,10 +38,19 @@ extends Resource
 		depth_chance = v
 		emit_changed()
 
+## Ile odstępu między wrogami w rzędzie zajmuje wróg (szerokość nominalna, z marginesem grafiki) —
+## większe = więksi wrogowie, gdy w rzędzie stoi ich wielu. Pojedynczy wróg: najwyżej MAX_ENEMY_SCALE.
+@export_range(0.3, 2.0, 0.01) var enemy_fill := 0.85:
+	set(v):
+		enemy_fill = v
+		emit_changed()
+
 const LAYOUT_SUFFIX := "_layout.tres"
 const REF_SIZE := Vector2(1920.0, 1080.0)
 const REF_AREA := Vector2(1920.0, 830.0)  # obszar bitwy przy pasku UI 250 px
 const ENEMY_BASE_PX := 36.0               # szerokość grafiki wroga przed skalą
+const MAX_ENEMY_SCALE := 8.5              # skala walki najwyżej (1–2 wrogów w rzędzie)
+const MIN_ENEMY_SCALE := 3.0
 
 
 ## Plik układu dla grafiki tła (`variant_1.jpg` -> `variant_1_layout.tres`) albo dla tła rysowanego
@@ -185,30 +194,29 @@ func spot_scale(spot: Spot) -> float:
 	return fl[clampi(spot.field, 0, fl.size() - 1)].row_scale(spot.row)
 
 
-## Zatłoczenie walki: najwięcej wrogów w jednym rzędzie (Spot.n). Wrogowie w różnych rzędach nie stoją
-## obok siebie, a dalsze rzędy zmniejsza już skala rzędu — więc skalę walki liczy się od najpełniejszego
-## rzędu, nie od łącznej liczby wrogów (3 wrogów w 3 rzędach = skala jak dla 1).
-static func crowd(spots: Array) -> int:
-	var n := 1
+## Skala wrogów w walce (przed skalą rzędu), z miejsca w rzędach: w każdym zajętym rzędzie odstęp między
+## wrogami (szerokość rzędu / ilu w nim stoi) × enemy_fill mieści wroga o szerokości nominalnej
+## ENEMY_BASE_PX × skala × skala rzędu; skala walki = najmniejsza z rzędów, najwyżej MAX_ENEMY_SCALE.
+## Wrogowie w różnych rzędach nie stoją obok siebie, a dalsze rzędy zmniejsza już skala rzędu.
+func battle_scale(spots: Array, viewport_size: Vector2) -> float:
+	var fl := active_fields()
+	var base := MAX_ENEMY_SCALE
 	for sp in spots:
-		if sp != null:
-			n = maxi(n, sp.n)
-	return n
+		if sp == null:
+			continue
+		var f: BattleField = fl[clampi(sp.field, 0, fl.size() - 1)]
+		var line := f.row_line(sp.row)
+		var rs := f.row_scale(sp.row)
+		if rs <= 0.0:
+			continue
+		var spacing := line[0].distance_to(line[1]) / maxi(sp.n, 1)
+		base = minf(base, spacing * enemy_fill / (ENEMY_BASE_PX * rs))
+	return maxf(base, MIN_ENEMY_SCALE) * resolution_factor(viewport_size)
 
 
-## Skala wroga (przed skalą pola): mniejsza przy większej liczbie wrogów obok siebie (`active_count` =
-## crowd(), czyli najwięcej w jednym rzędzie).
-static func enemy_scale(active_count: int, viewport_size: Vector2) -> float:
+## Mnożnik skali wrogów od rozdzielczości (1 przy 1920×1080).
+static func resolution_factor(viewport_size: Vector2) -> float:
 	var res := 1.0
 	if viewport_size.x > 0.0 and viewport_size.y > 0.0:
 		res = clampf(minf(viewport_size.x / REF_SIZE.x, viewport_size.y / REF_SIZE.y), 0.65, 2.5)
-	var base := 5.2
-	if active_count <= 1:
-		base = 8.5
-	elif active_count == 2:
-		base = 7.2
-	elif active_count == 3:
-		base = 6.2
-	elif active_count == 4:
-		base = 5.6
-	return base * clampf(res, 0.7, 2.5)
+	return clampf(res, 0.7, 2.5)
