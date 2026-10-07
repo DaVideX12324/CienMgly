@@ -15,12 +15,16 @@ extends Resource
 		texture = v
 		emit_changed()
 ## Pola walki (np. podłoga, platformy). Wrogowie stoją na dolnej krawędzi pola.
+## Pusty wpis (np. „Add Element” w inspektorze) zamienia się w nowe pole: kopię poprzedniego 120 px wyżej.
 @export var fields: Array[BattleField] = []:
 	set(v):
 		for f in fields:
 			if f and f.changed.is_connected(emit_changed):
 				f.changed.disconnect(emit_changed)
-		fields = v
+		var clean: Array[BattleField] = []
+		for f in v:
+			clean.append(f if f != null else _new_field_after(clean))
+		fields = clean
 		for f in fields:
 			if f and not f.changed.is_connected(emit_changed):
 				f.changed.connect(emit_changed)
@@ -41,6 +45,18 @@ static func path_for(texture_path: String) -> String:
 static func load_for(texture_path: String) -> BattleBackgroundLayout:
 	var p := path_for(texture_path)
 	return load(p) as BattleBackgroundLayout if ResourceLoader.exists(p) else null
+
+
+## Nowe pole w miejsce pustego wpisu: kopia ostatniego przesunięta 120 px w górę (albo pole domyślne).
+static func _new_field_after(prev: Array[BattleField]) -> BattleField:
+	if prev.is_empty():
+		return BattleField.new()
+	var f := prev[prev.size() - 1].duplicate() as BattleField
+	var q := PackedVector2Array()
+	for p in f.quad:
+		q.append(p + Vector2(0.0, -120.0))
+	f.quad = q
+	return f
 
 
 ## Pola, a gdy lista pusta — jedno pole domyślne (trapez, dwa rzędy na środku obszaru bitwy).
