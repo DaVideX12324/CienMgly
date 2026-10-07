@@ -104,6 +104,7 @@ func _lanes() -> void:
 	var opts: Array = cfg.get("lane_width_options", [0, 2, 3])
 	var chunk: Array = cfg.get("lane_chunk", [5, 10])
 	var keep := float(cfg.get("lane_keep_chance", 0.35))
+	var zero_chunks: Array = cfg.get("lane_zero_chunks", [3, 5])   # odcinek bez chodnika: ile kawałków z rzędu
 	var end_zone: int = st.cw + 2
 	for s in st.segs:
 		s.lane_rects = []
@@ -113,17 +114,39 @@ func _lanes() -> void:
 			continue
 		var lo: int = s.x0 if s.axis == "h" else s.y0
 		var hi: int = s.x1 if s.axis == "h" else s.y1
-		var cur := [_pick_width(opts), _pick_width(opts)]
+		var cur := [maxi(_pick_width(opts), 2), maxi(_pick_width(opts), 2)]
+		var zero_left := [0, 0]
+		var in_run := [false, false]   # strona w odcinku 0 (może sięgać do końca odcinka kanału)
 		var prev_ok: Array = []
 		var t := lo
 		while t <= hi:
 			var t1 := mini(hi, t + rng.randi_range(int(chunk[0]), int(chunk[1])) - 1)
+			var in_end := t < lo + end_zone or t1 > hi - end_zone
 			for k in [0, 1]:
-				if rng.randf() >= keep:
+				if in_run[k]:
+					if zero_left[k] > 0:
+						zero_left[k] -= 1
+						cur[k] = 0
+					else:
+						in_run[k] = false
+						cur[k] = maxi(_pick_width(opts), 2)   # koniec odcinka 0 — chodnik wraca
+				elif rng.randf() >= keep:
 					cur[k] = _pick_width(opts)
+					if cur[k] == 0:
+						# Odcinek 0 nie zaczyna się przy końcu kanału ani gdy druga strona jest bez chodnika.
+						if in_end or in_run[1 - k] or cur[1 - k] == 0:
+							cur[k] = 2
+						else:
+							in_run[k] = true
+							zero_left[k] = rng.randi_range(int(zero_chunks[0]), int(zero_chunks[1])) - 1
 			var got: Array = cur.duplicate()
-			if t < lo + end_zone or t1 > hi - end_zone:
-				got = [maxi(got[0], 2), maxi(got[1], 2)]
+			for k in [0, 1]:
+				# Przez cały odcinek 0 druga strona ma chodnik (tam ląduje kładka); przy końcach odcinka kanału
+				# (zakręty, węzły) chodnik ma każda strona, która nie jest w odcinku 0.
+				if in_run[k]:
+					got[1 - k] = maxi(got[1 - k], 2)
+				elif in_end:
+					got[k] = maxi(got[k], 2)
 			if not prev_ok.is_empty():
 				var any_prev := false
 				for k in prev_ok:
@@ -138,25 +161,31 @@ func _lanes() -> void:
 				s.lane_chunks.append({"k": k, "t": t, "t1": t1, "w": got[k]})
 				if got[k] >= 2:
 					prev_ok.append(k)
+					in_run[k] = false
+					zero_left[k] = 0
 					var r := _side_rect(s, t, t1, k, got[k])
 					s.lane_rects.append(r)
 					st.fill(st.lanes, r[0], r[1], r[2], r[3])
 			cur = got
 			t = t1 + 1
-		# Przerwy: ciąg kawałków strony k o szerokości 0 między kawałkami z chodnikiem.
+		# Odcinki 0 strony k: {k, g0, g1, before (chodnik przed), after (chodnik za)}.
 		for k in [0, 1]:
 			var g0 := -1
 			var seen_lane := false
+			var last_t := lo
 			for c in s.lane_chunks:
 				if c.k != k:
 					continue
+				last_t = c.t1
 				if c.w >= 2:
-					if g0 >= 0 and seen_lane:
-						s.lane_gaps.append({"k": k, "g0": g0, "g1": c.t - 1})
+					if g0 >= 0:
+						s.lane_gaps.append({"k": k, "g0": g0, "g1": c.t - 1, "before": seen_lane, "after": true})
 					g0 = -1
 					seen_lane = true
 				elif g0 < 0:
 					g0 = c.t
+			if g0 >= 0:
+				s.lane_gaps.append({"k": k, "g0": g0, "g1": last_t, "before": seen_lane, "after": false})
 	for i in range(st.w * st.h):
 		if st.water[i]:
 			st.lanes[i] = 0
