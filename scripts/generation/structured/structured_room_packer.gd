@@ -32,6 +32,7 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	p.rng.seed = hash([seed_val, "structured_rooms"])
 	p.cross_p = state.prefix(state.cross_any)
 	p._service_corridors()
+	p._lane_gaps()
 	p._rooms()
 	p._room_links()
 	p._complex_loops()
@@ -256,6 +257,87 @@ func _drop_pinch(cx: Dictionary) -> void:
 	cells.append_array(add)
 	cx.cells = cells
 	cx.pinch = {}
+
+
+# --- Przerwy chodnika tunelu ---
+
+## Strona chodnika urywa się (szerokość 0) i dalej wraca: obejście tunelem za ścianą (u-turn: z chodnika
+## przed przerwą w mur, wzdłuż kanału, z powrotem za przerwą; szansa lane_gap_bypass_chance) albo kładki
+## na drugą stronę na obu końcach przerwy.
+func _lane_gaps() -> void:
+	var chance := float(cfg.get("lane_gap_bypass_chance", 0.5))
+	var bypass := 0
+	var bridged := 0
+	var lost := 0
+	for s in st.segs:
+		for g in s.get("lane_gaps", []):
+			if rng.randf() < chance and _gap_bypass(s, g):
+				bypass += 1
+				continue
+			var horiz: bool = s.axis == "h"
+			var ok_a := _place_bridge(s, int(g.g0) - 2, horiz)
+			var ok_b := _place_bridge(s, int(g.g1) + 1, horiz)
+			if ok_a or ok_b:
+				bridged += 1
+			if not (ok_a and ok_b) and _gap_bypass(s, g):
+				bypass += 1
+			elif not ok_a and not ok_b:
+				lost += 1
+	stats["gap_bypass"] = bypass
+	stats["gap_bridged"] = bridged
+	stats["gap_unresolved"] = lost
+
+
+func _gap_bypass(s: Dictionary, g: Dictionary) -> bool:
+	var k: int = g.k
+	var horiz: bool = s.axis == "h"
+	var own_c := PackedInt32Array()
+	var tgt_c := PackedInt32Array()
+	for c in s.lane_chunks:
+		if c.k != k or c.w < 2:
+			continue
+		var before: bool = c.t1 < g.g0 and c.t1 >= g.g0 - 14
+		var after: bool = c.t > g.g1 and c.t <= g.g1 + 14
+		if not before and not after:
+			continue
+		var r := StructuredZoning._side_rect(s, c.t, c.t1, k, c.w)
+		for y in range(r[1], r[3] + 1):
+			for x in range(r[0], r[2] + 1):
+				if st.in_map(x, y) and st.lanes[y * st.w + x]:
+					(own_c if before else tgt_c).append(y * st.w + x)
+	if own_c.is_empty() or tgt_c.is_empty():
+		return false
+	var canal := Vector4i(s.x0, s.y0, s.x1, s.y1)
+	var wv: int = st.wall_v
+	var wh: int = st.wall_h
+	var pf := _pf()
+	pf.own = State.LocalSum.from_cells(own_c, st.w)
+	pf.own_sub = State.LocalSum.from_cells(_sub_cells(own_c), st.w)
+	pf.target = State.LocalSum.from_cells(tgt_c, st.w)
+	var tgt_m := st.new_mask()
+	for c in tgt_c:
+		tgt_m[c] = 1
+	pf.dt = st.distance_to(tgt_m)
+	pf.has_bias = true
+	pf.bias_rect = Vector4i(canal.x - 16, canal.y - 18, canal.z + 16, canal.w + 18)
+	pf.bias_side = k
+	pf.bias_horiz = horiz
+	pf.bias_canal = canal
+	pf.zone_skip_rect = Vector4i(canal.x - wv - 14, canal.y - wh - 14, canal.z + wv + 14, canal.w + wh + 14)
+	pf.zone_skip_canal = canal
+	# Wzdłuż przerwy korytarz trzyma się za ścianą (nie przy samym kanale).
+	if horiz:
+		pf.extra_rect = Vector4i(int(g.g0) - 1, canal.y - wh - 2, int(g.g1) + 1, canal.w + wh + 2)
+	else:
+		pf.extra_rect = Vector4i(canal.x - wv - 2, int(g.g0) - 1, canal.z + wv + 2, int(g.g1) + 1)
+	var start: int = own_c[rng.randi() % own_c.size()]
+	var path := pf.find(start % st.w, start / st.w)
+	# Krótki u-turn, nie pętla przez pół mapy: długość przerwy + dwa wyjścia przez mur + zapas.
+	var limit: int = int(g.g1) - int(g.g0) + 1 + 2 * (wh + 6) + 12
+	if path.is_empty() or _without(path, pf.own).size() > limit:
+		return false
+	corridors.append(_carve(_without(path, pf.own)))
+	return true
 
 
 # --- R5: pokoje i korytarze ---
@@ -648,12 +730,14 @@ func _repair() -> void:
 		return
 	var fixed := 0
 	var lost := 0
-	for _it in range(20):
+	var walled := 0
+	var given_up := st.new_mask()
+	for _it in range(40):
 		var walk := _walkable()
 		var main := _component(walk, root)
 		var seed_c := -1
 		for i in range(st.w * st.h):
-			if walk[i] and not main[i]:
+			if walk[i] and not main[i] and not given_up[i]:
 				seed_c = i
 				break
 		if seed_c < 0:
@@ -701,12 +785,30 @@ func _repair() -> void:
 					through_corner = true
 					break
 			if through_corner:
-				lost += 1
-				break
+				var has_room := false
+				for c in piece_c:
+					if st.roomm[c]:
+						has_room = true
+						break
+				if has_room:
+					lost += 1
+					for c in piece_c:
+						given_up[c] = 1
+				else:
+					# Kawałek chodnika bez pokoju, nie do podpięcia — zamurowany (kanał zostaje przy ścianie).
+					for c in piece_c:
+						if not st.water[c]:
+							st.floor_m[c] = 0
+							st.lanes[c] = 0
+							st.corrm[c] = 0
+							st.hallm[c] = 0
+					walled += 1
+				continue
 		_carve(path)
 		fixed += 1
 	stats["repairs"] = fixed
 	stats["repair_failed"] = lost
+	stats["repair_walled"] = walled
 
 
 ## Dźwignie bram: wolna kratka pokoju / sali osiągalna z wejścia bez przechodzenia przez bramy,
