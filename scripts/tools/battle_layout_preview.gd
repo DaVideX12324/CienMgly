@@ -36,14 +36,6 @@ extends Control
 	set(v):
 		field_counts = v
 		queue_redraw()
-## TYMCZASOWE: skala głębi (auto_depth_scale) — o ile mniejszy wróg na każde 100 px wyżej od przedniego
-## rzędu pola (0.13 = rząd 200 px wyżej ma 74 % wielkości przedniego). Działa na wszystkie pola; po wyborze wartość zostanie
-## stałą w BattleField, a to pole zniknie.
-@export_range(0.0, 0.4, 0.005) var depth_shrink := 0.13:
-	set(v):
-		depth_shrink = v
-		BattleField.depth_shrink = v
-		queue_redraw()
 ## Grafiki wrogów do podglądu (klatka postoju jak w walce), rozdawane po kolei: pole 1 od przedniego
 ## rzędu od lewej, potem pole 2… Gdy lista krótsza niż liczba wrogów — od początku.
 @export var enemy_sprites: Array[SpriteFrames] = []:
@@ -69,7 +61,6 @@ var _bottom_cache := {}
 
 
 func _ready() -> void:
-	BattleField.depth_shrink = depth_shrink
 	_rebuild_nodes()
 
 
