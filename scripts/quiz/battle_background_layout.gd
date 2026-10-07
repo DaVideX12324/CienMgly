@@ -50,9 +50,14 @@ static func path_for(texture_path: String) -> String:
 	return texture_path.get_basename() + LAYOUT_SUFFIX
 
 
+## Układ tła: `<grafika>_layout.tres`, a gdy go brak — `<grafika>.tres` (ta sama nazwa co grafika).
 static func load_for(texture_path: String) -> BattleBackgroundLayout:
-	var p := path_for(texture_path)
-	return load(p) as BattleBackgroundLayout if ResourceLoader.exists(p) else null
+	for p in [path_for(texture_path), texture_path.get_basename() + ".tres"]:
+		if ResourceLoader.exists(p):
+			var l := load(p) as BattleBackgroundLayout
+			if l != null:
+				return l
+	return null
 
 
 ## Nowe pole w miejsce pustego wpisu: kopia ostatniego przesunięta 120 px w górę (albo pole domyślne).
@@ -180,7 +185,19 @@ func spot_scale(spot: Spot) -> float:
 	return fl[clampi(spot.field, 0, fl.size() - 1)].row_scale(spot.row)
 
 
-## Skala wroga (przed skalą pola): mniejsza przy większej liczbie wrogów.
+## Zatłoczenie walki: najwięcej wrogów w jednym rzędzie (Spot.n). Wrogowie w różnych rzędach nie stoją
+## obok siebie, a dalsze rzędy zmniejsza już skala rzędu — więc skalę walki liczy się od najpełniejszego
+## rzędu, nie od łącznej liczby wrogów (3 wrogów w 3 rzędach = skala jak dla 1).
+static func crowd(spots: Array) -> int:
+	var n := 1
+	for sp in spots:
+		if sp != null:
+			n = maxi(n, sp.n)
+	return n
+
+
+## Skala wroga (przed skalą pola): mniejsza przy większej liczbie wrogów obok siebie (`active_count` =
+## crowd(), czyli najwięcej w jednym rzędzie).
 static func enemy_scale(active_count: int, viewport_size: Vector2) -> float:
 	var res := 1.0
 	if viewport_size.x > 0.0 and viewport_size.y > 0.0:

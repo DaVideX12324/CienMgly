@@ -259,7 +259,7 @@ func _draw() -> void:
 	order.sort_custom(func(a: int, b: int) -> bool: return feet[a].y < feet[b].y)
 	for i in order:
 		var sp: BattleBackgroundLayout.Spot = spots[i]
-		var sc := BattleBackgroundLayout.enemy_scale(spots.size(), view) * l.spot_scale(sp)
+		var sc := BattleBackgroundLayout.enemy_scale(BattleBackgroundLayout.crowd(spots), view) * l.spot_scale(sp)
 		var frames: SpriteFrames = enemy_sprites[i % enemy_sprites.size()] if not enemy_sprites.is_empty() else null
 		_draw_enemy(feet[i], sc, COLORS[sp.field % COLORS.size()], frames)
 
