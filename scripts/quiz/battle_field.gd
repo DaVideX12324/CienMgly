@@ -5,8 +5,8 @@ extends Resource
 ## Jedno pole walki na tle (podłoga, platforma…): czworobok (zwykle trapez) albo wielokąt z punktami
 ## pośrednimi na bokach (np. bok idący wzdłuż schodów), na którym stoją wrogowie, w jednym albo kilku
 ## rzędach. Przednia krawędź (niżej na ekranie) = rząd przedni, tylna = rząd najdalszy, rzędy pośrednie
-## równo między nimi na wysokość (1 rząd — przednia krawędź); końce rzędu leżą na lewym i prawym boku
-## (łamanych przez punkty pośrednie), wrogowie równo na linii rzędu między nimi. Współrzędne w px obszaru bitwy przy 1920 px szerokości; dół
+## między nimi (1 rząd — przednia krawędź); końce rzędów idą po punktach boków — rząd k łączy k-ty punkt
+## lewego boku z k-tym prawego (rows = liczba punktów na boku), wrogowie równo na linii rzędu. Współrzędne w px obszaru bitwy przy 1920 px szerokości; dół
 ## obszaru bitwy = BattleBackgroundLayout.REF_AREA.y (nad dolnym paskiem UI).
 
 ## Narożniki pola (px). 4 punkty: kolejność dowolna — sortowane na przód-lewy, przód-prawy, tył-prawy,
@@ -109,30 +109,13 @@ func sides() -> Array[PackedVector2Array]:
 	return [left, right]
 
 
-## Punkt boku na głębokości t (0 = przód, 1 = tył): na wysokości lerp(przód, tył, t), a gdy bok płaski
-## (przód i tył na tej samej wysokości) — w części długości.
+## Punkt boku na głębokości t (0 = przód, 1 = tył) liczonej po punktach boku: rzędy idą od punktu do
+## punktu — przy 3 rzędach i jednym punkcie pośrednim na boku rząd środkowy leży dokładnie na nim.
+## Między punktami (więcej rzędów niż punktów) — liniowo po odcinku.
 static func side_point(side: PackedVector2Array, t: float) -> Vector2:
-	if side.size() == 2 or t <= 0.0 or t >= 1.0:
-		return side[0].lerp(side[side.size() - 1], clampf(t, 0.0, 1.0))
-	var a := side[0]
-	var b := side[side.size() - 1]
-	if absf(b.y - a.y) >= 1.0:
-		var y := lerpf(a.y, b.y, t)
-		for i in range(side.size() - 1):
-			var p := side[i]
-			var q := side[i + 1]
-			if (y - p.y) * (y - q.y) <= 0.0 and p.y != q.y:
-				return p.lerp(q, (y - p.y) / (q.y - p.y))
-	var total := 0.0
-	for i in range(side.size() - 1):
-		total += side[i].distance_to(side[i + 1])
-	var left := total * t
-	for i in range(side.size() - 1):
-		var d := side[i].distance_to(side[i + 1])
-		if left <= d and d > 0.0:
-			return side[i].lerp(side[i + 1], left / d)
-		left -= d
-	return b
+	var u := clampf(t, 0.0, 1.0) * float(side.size() - 1)
+	var i := mini(int(floor(u)), side.size() - 2)
+	return side[i].lerp(side[i + 1], u - float(i))
 
 
 ## Ilu wrogów najwyżej w rzędzie 0..rows-1 (0 = przedni).
