@@ -255,12 +255,11 @@ func _draw() -> void:
 	for sp in spots:
 		feet.append(l.foot(sp, area, view))
 	# Rysowanie od najdalszej linii stóp (wyżej na ekranie), żeby bliżsi zasłaniali dalszych.
-	var battle_sc := l.battle_scale(spots, view)
 	var order: Array = range(spots.size())
 	order.sort_custom(func(a: int, b: int) -> bool: return feet[a].y < feet[b].y)
 	for i in order:
 		var sp: BattleBackgroundLayout.Spot = spots[i]
-		var sc := battle_sc * l.spot_scale(sp)
+		var sc := BattleBackgroundLayout.enemy_scale(BattleBackgroundLayout.crowd(spots), view) * l.spot_scale(sp)
 		var frames: SpriteFrames = enemy_sprites[i % enemy_sprites.size()] if not enemy_sprites.is_empty() else null
 		_draw_enemy(feet[i], sc, COLORS[sp.field % COLORS.size()], frames)
 
