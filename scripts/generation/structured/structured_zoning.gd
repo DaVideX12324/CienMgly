@@ -97,14 +97,18 @@ func _pick_complexes() -> void:
 ## Chodniki tuneli o zmiennej szerokości: odcinek dzielony na kawałki lane_chunk (6–12) wzdłuż kanału, każda
 ## strona losuje szerokość z lane_width_options (0 = kanał przy ścianie; 1 odpada — za wąsko), z szansą
 ## lane_keep_chance zostaje poprzednia. Zawsze ≥ 1 strona ≥ 2, ciągłość strony (chodnik nie przeskakuje kanału
-## bez kładki), przy końcach odcinka (zakręty, węzły) obie strony ≥ 2. Prostokąty chodnika w s.lane_rects.
+## bez kładki), przy końcach odcinka (zakręty, węzły) obie strony ≥ 2. Prostokąty chodnika w s.lane_rects,
+## kawałki w s.lane_chunks ({k, t, t1, w}), przerwy strony (0 między chodnikami) w s.lane_gaps ({k, g0, g1})
+## — przejście w StructuredRoomPacker (kładka na drugą stronę albo obejście tunelem za ścianą).
 func _lanes() -> void:
-	var opts: Array = cfg.get("lane_width_options", [0, 2, 3, 3, 4])
-	var chunk: Array = cfg.get("lane_chunk", [6, 12])
-	var keep := float(cfg.get("lane_keep_chance", 0.5))
+	var opts: Array = cfg.get("lane_width_options", [0, 2, 3])
+	var chunk: Array = cfg.get("lane_chunk", [5, 10])
+	var keep := float(cfg.get("lane_keep_chance", 0.35))
 	var end_zone: int = st.cw + 2
 	for s in st.segs:
 		s.lane_rects = []
+		s.lane_chunks = []
+		s.lane_gaps = []
 		if s.kind != "tunnel":
 			continue
 		var lo: int = s.x0 if s.axis == "h" else s.y0
@@ -131,6 +135,7 @@ func _lanes() -> void:
 				got[rng.randi() % 2] = 2
 			prev_ok = []
 			for k in [0, 1]:
+				s.lane_chunks.append({"k": k, "t": t, "t1": t1, "w": got[k]})
 				if got[k] >= 2:
 					prev_ok.append(k)
 					var r := _side_rect(s, t, t1, k, got[k])
@@ -138,6 +143,20 @@ func _lanes() -> void:
 					st.fill(st.lanes, r[0], r[1], r[2], r[3])
 			cur = got
 			t = t1 + 1
+		# Przerwy: ciąg kawałków strony k o szerokości 0 między kawałkami z chodnikiem.
+		for k in [0, 1]:
+			var g0 := -1
+			var seen_lane := false
+			for c in s.lane_chunks:
+				if c.k != k:
+					continue
+				if c.w >= 2:
+					if g0 >= 0 and seen_lane:
+						s.lane_gaps.append({"k": k, "g0": g0, "g1": c.t - 1})
+					g0 = -1
+					seen_lane = true
+				elif g0 < 0:
+					g0 = c.t
 	for i in range(st.w * st.h):
 		if st.water[i]:
 			st.lanes[i] = 0
