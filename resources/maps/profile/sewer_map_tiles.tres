@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="MapTileProfile" format=3 uid="uid://clhh4e324film"]
+[gd_resource type="Resource" script_class="MapTileProfile" format=3]
 
-[ext_resource type="Script" uid="uid://modwatud5p70" path="res://modules/quiz_rpg/scripts/generation/tiles/mixed_pool.gd" id="1_3x37a"]
-[ext_resource type="Script" uid="uid://eie6c4j8lbuk" path="res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd" id="2_7vswx"]
-[ext_resource type="Script" uid="uid://bf84d34ne7sbi" path="res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd" id="3_hliu6"]
-[ext_resource type="Script" uid="uid://c181evs1vgggx" path="res://modules/quiz_rpg/scripts/generation/tiles/named_tileset_definition.gd" id="4_d1sga"]
-[ext_resource type="Script" uid="uid://c17xyqsvux21w" path="res://modules/quiz_rpg/scripts/generation/core/tile_role_entry.gd" id="5_2ye0h"]
-[ext_resource type="Script" uid="uid://hsdg466v38cc" path="res://modules/quiz_rpg/scripts/generation/core/tile_variant.gd" id="6_v0es5"]
-[ext_resource type="Script" uid="uid://deo5lulmsu7yc" path="res://modules/quiz_rpg/scripts/generation/core/tile_module_part.gd" id="7_f6wib"]
-[ext_resource type="Script" uid="uid://ca0qwnnslwbve" path="res://modules/quiz_rpg/scripts/generation/core/tile_ref.gd" id="8_ft8jg"]
-[ext_resource type="TileSet" uid="uid://ctx3guckjpr6a" path="res://modules/quiz_rpg/resources/maps/sewer.tres" id="9_1yd4b"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/mixed_pool.gd" id="1_3x37a"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd" id="2_7vswx"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd" id="3_hliu6"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/named_tileset_definition.gd" id="4_d1sga"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_role_entry.gd" id="5_2ye0h"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_variant.gd" id="6_v0es5"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_module_part.gd" id="7_f6wib"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_ref.gd" id="8_ft8jg"]
+[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/sewer.tres" id="9_1yd4b"]
 
 [sub_resource type="Resource" id="Resource_715dk"]
 script = ExtResource("2_7vswx")
@@ -3384,13 +3384,104 @@ tile = SubResource("Resource_8v2u1")
 variants = Array[ExtResource("6_v0es5")]([SubResource("Resource_cmae4"), SubResource("Resource_fxc8i"), SubResource("Resource_4tt5c"), SubResource("Resource_tbmhm"), SubResource("Resource_o8itw"), SubResource("Resource_3mxgv")])
 display_name = "Ściana szer. 1"
 
+[sub_resource type="Resource" id="Resource_a7ec2"]
+script = ExtResource("8_ft8jg")
+atlas_coords = Vector2i(12, 8)
+
+[sub_resource type="Resource" id="Resource_ytea1"]
+script = ExtResource("7_f6wib")
+tile = SubResource("Resource_a7ec2")
+layer = &"FloorDecor"
+
+[sub_resource type="Resource" id="Resource_b1bwe"]
+script = ExtResource("6_v0es5")
+variant_id = &"H_L"
+parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_ytea1")])
+
+[sub_resource type="Resource" id="Resource_26x6n"]
+script = ExtResource("8_ft8jg")
+atlas_coords = Vector2i(13, 8)
+
+[sub_resource type="Resource" id="Resource_f16vq"]
+script = ExtResource("7_f6wib")
+tile = SubResource("Resource_26x6n")
+layer = &"FloorDecor"
+
+[sub_resource type="Resource" id="Resource_7nenc"]
+script = ExtResource("6_v0es5")
+variant_id = &"H_M"
+parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_f16vq")])
+
+[sub_resource type="Resource" id="Resource_8dxl1"]
+script = ExtResource("8_ft8jg")
+atlas_coords = Vector2i(14, 8)
+
+[sub_resource type="Resource" id="Resource_i06em"]
+script = ExtResource("7_f6wib")
+tile = SubResource("Resource_8dxl1")
+layer = &"FloorDecor"
+
+[sub_resource type="Resource" id="Resource_7srji"]
+script = ExtResource("6_v0es5")
+variant_id = &"H_R"
+parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_i06em")])
+
+[sub_resource type="Resource" id="Resource_nka0k"]
+script = ExtResource("8_ft8jg")
+atlas_coords = Vector2i(15, 6)
+
+[sub_resource type="Resource" id="Resource_chhn2"]
+script = ExtResource("7_f6wib")
+tile = SubResource("Resource_nka0k")
+layer = &"FloorDecor"
+
+[sub_resource type="Resource" id="Resource_1aoao"]
+script = ExtResource("6_v0es5")
+variant_id = &"V_T"
+parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_chhn2")])
+
+[sub_resource type="Resource" id="Resource_e0xrs"]
+script = ExtResource("8_ft8jg")
+atlas_coords = Vector2i(15, 7)
+
+[sub_resource type="Resource" id="Resource_5tc12"]
+script = ExtResource("7_f6wib")
+tile = SubResource("Resource_e0xrs")
+layer = &"FloorDecor"
+
+[sub_resource type="Resource" id="Resource_iswum"]
+script = ExtResource("6_v0es5")
+variant_id = &"V_M"
+parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_5tc12")])
+
+[sub_resource type="Resource" id="Resource_t33g4"]
+script = ExtResource("8_ft8jg")
+atlas_coords = Vector2i(15, 8)
+
+[sub_resource type="Resource" id="Resource_q0jyf"]
+script = ExtResource("7_f6wib")
+tile = SubResource("Resource_t33g4")
+layer = &"FloorDecor"
+
+[sub_resource type="Resource" id="Resource_bgo56"]
+script = ExtResource("6_v0es5")
+variant_id = &"V_B"
+parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_q0jyf")])
+
+[sub_resource type="Resource" id="Resource_yai57"]
+script = ExtResource("5_2ye0h")
+role = 64
+tile = SubResource("Resource_a7ec2")
+variants = Array[ExtResource("6_v0es5")]([SubResource("Resource_b1bwe"), SubResource("Resource_7nenc"), SubResource("Resource_7srji"), SubResource("Resource_1aoao"), SubResource("Resource_iswum"), SubResource("Resource_bgo56")])
+display_name = "Krawężnik"
+
 [sub_resource type="Resource" id="Resource_ayp4x"]
 script = ExtResource("4_d1sga")
 id = &"sewer"
 display_name = "Sewer"
 description = "Ścieki: proste ściany z ceglanym licem 3H, kapy i boki bloków, rama pokoju."
 tile_set = ExtResource("9_1yd4b")
-tile_entries = Array[ExtResource("5_2ye0h")]([SubResource("Resource_av7dn"), SubResource("Resource_4kxxr"), SubResource("Resource_0su8t"), SubResource("Resource_em22p"), SubResource("Resource_mt1ck"), SubResource("Resource_tnh4g"), SubResource("Resource_mdmvb"), SubResource("Resource_7pn8r"), SubResource("Resource_wwvqi"), SubResource("Resource_0yy1t"), SubResource("Resource_cgdoc"), SubResource("Resource_4ume2"), SubResource("Resource_4iihm"), SubResource("Resource_ellug"), SubResource("Resource_crjr0"), SubResource("Resource_gnigg"), SubResource("Resource_dhwoa"), SubResource("Resource_nj5hi"), SubResource("Resource_orxl4"), SubResource("Resource_athtu"), SubResource("Resource_ex8iq"), SubResource("Resource_ion2n"), SubResource("Resource_blqur"), SubResource("Resource_7qyd3"), SubResource("Resource_oidwg"), SubResource("Resource_x5pul"), SubResource("Resource_b5qq8"), SubResource("Resource_eqsfn"), SubResource("Resource_5t0gt"), SubResource("Resource_qk1ku"), SubResource("Resource_p3fpu"), SubResource("Resource_p20rq"), SubResource("Resource_ecbxe"), SubResource("Resource_njtbf"), SubResource("Resource_662mg"), SubResource("Resource_7pocf")])
+tile_entries = Array[ExtResource("5_2ye0h")]([SubResource("Resource_av7dn"), SubResource("Resource_4kxxr"), SubResource("Resource_0su8t"), SubResource("Resource_em22p"), SubResource("Resource_mt1ck"), SubResource("Resource_tnh4g"), SubResource("Resource_mdmvb"), SubResource("Resource_7pn8r"), SubResource("Resource_wwvqi"), SubResource("Resource_0yy1t"), SubResource("Resource_cgdoc"), SubResource("Resource_4ume2"), SubResource("Resource_4iihm"), SubResource("Resource_ellug"), SubResource("Resource_crjr0"), SubResource("Resource_gnigg"), SubResource("Resource_dhwoa"), SubResource("Resource_nj5hi"), SubResource("Resource_orxl4"), SubResource("Resource_athtu"), SubResource("Resource_ex8iq"), SubResource("Resource_ion2n"), SubResource("Resource_blqur"), SubResource("Resource_7qyd3"), SubResource("Resource_oidwg"), SubResource("Resource_x5pul"), SubResource("Resource_b5qq8"), SubResource("Resource_eqsfn"), SubResource("Resource_5t0gt"), SubResource("Resource_qk1ku"), SubResource("Resource_p3fpu"), SubResource("Resource_p20rq"), SubResource("Resource_ecbxe"), SubResource("Resource_njtbf"), SubResource("Resource_662mg"), SubResource("Resource_7pocf"), SubResource("Resource_yai57")])
 
 [sub_resource type="Resource" id="Resource_bt1c3"]
 script = ExtResource("7_f6wib")
