@@ -1400,6 +1400,32 @@
         14,
         5
       ]
+    },
+    {
+      "id": "span_floor_holes",
+      "class": "DECAL",
+      "placement": "grid",
+      "size": [
+        2,
+        1
+      ],
+      "density": 0.4,
+      "span_floor": true,
+      "tiles": [
+        [
+          0,
+          0,
+          4,
+          15
+        ],
+        [
+          1,
+          0,
+          5,
+          15
+        ]
+      ],
+      "source": 1
     }
   ]
 }
