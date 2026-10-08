@@ -60,6 +60,8 @@ var stack: bool = false
 ## Zestaw (np. "dining", "storage") — duże obiekty z różnych zestawów trzymają odstęp (katalog: set_gap),
 ## więc przy stole stoją krzesła, a nie skrzynki. Pusto = bez zestawu (bez ograniczeń).
 var set_id: StringName = &""
+## Minimalna liczba wolnych kratek między obiektem (podstawa i rysunek) a wodą kanału; 0 = bez reguły.
+var canal_gap: int = 0
 const STACK_ALT := 1
 var order: int = 0                    # kolejność w pliku (remisy priorytetu)
 ## Montaż: "" = na podłodze (ObjectPlanner); "facade" = na licu ściany widocznym z południa
