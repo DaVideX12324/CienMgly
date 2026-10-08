@@ -52,8 +52,8 @@
     "canal_count": 3,
     "canal_min_length": 12,
     "canal_bridge_spacing": 24,
-    "enable_objects": false,
-    "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer.json",
+    "enable_objects": true,
+    "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer_v2.json",
     "canal_dry_chance": 0.4
   },
   "structured_layout": {

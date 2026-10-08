@@ -1,0 +1,806 @@
+{
+  "groups": {
+    "boxes": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "size": [
+        1,
+        2
+      ],
+      "collision": "tile",
+      "shape": {
+        "rect": [
+          14,
+          10
+        ],
+        "offset": [
+          0,
+          -6
+        ]
+      },
+      "density": 1.2,
+      "context": [
+        "wall_any"
+      ],
+      "prefer": [
+        "corner",
+        "niche"
+      ],
+      "flip_h": true,
+      "cluster": {
+        "size": [
+          1,
+          4
+        ],
+        "radius": 1
+      },
+      "priority": 380
+    },
+    "wrecks": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "collision": "tile",
+      "density": 0.25,
+      "spacing": 2,
+      "prefer": [
+        "wall_any",
+        "corner"
+      ],
+      "flip_h": true
+    },
+    "furniture": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "collision": "tile",
+      "require": [
+        "room"
+      ],
+      "context": [
+        "open"
+      ],
+      "priority": 420
+    },
+    "chairs": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "size": [
+        1,
+        2
+      ],
+      "collision": "tile",
+      "shape": {
+        "rect": [
+          12,
+          8
+        ],
+        "offset": [
+          0,
+          -6
+        ]
+      },
+      "density": 0
+    },
+    "grates": {
+      "class": "DECAL",
+      "placement": "grid",
+      "require": [
+        "room"
+      ],
+      "context": [
+        "open"
+      ],
+      "priority": 410
+    },
+    "clutter": {
+      "class": "DECAL",
+      "placement": "grid",
+      "source": 1,
+      "density": 3,
+      "flip_h": true,
+      "cluster": {
+        "size": [
+          2,
+          4
+        ],
+        "radius": 2
+      }
+    },
+    "bottles": {
+      "class": "DECAL",
+      "placement": "grid",
+      "source": 1,
+      "density": 1,
+      "context": [
+        "wall_any"
+      ],
+      "flip_h": true,
+      "cluster": {
+        "size": [
+          2,
+          4
+        ],
+        "radius": 1
+      }
+    },
+    "wall_lights": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "size": [
+        1,
+        2
+      ],
+      "mount": "facade",
+      "density": 9,
+      "spacing": 5
+    },
+    "wall_details": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "size": [
+        1,
+        2
+      ],
+      "mount": "facade",
+      "density": 3,
+      "spacing": 4
+    },
+    "wall_arches": {
+      "class": "PROP",
+      "placement": "grid",
+      "mount": "facade",
+      "density": 1.5,
+      "spacing": 6,
+      "priority": 300
+    },
+    "wall_pillars": {
+      "class": "PROP",
+      "placement": "grid",
+      "mount": "facade",
+      "rhythm": [
+        4,
+        5
+      ],
+      "priority": 900,
+      "layer": "WallDecor"
+    }
+  },
+  "objects": [
+    {
+      "id": "chest",
+      "class": "INTERACTIVE",
+      "placement": "grid",
+      "scene": "chest",
+      "per_room": 0.5,
+      "context": [
+        "wall_any"
+      ],
+      "prefer": [
+        "niche",
+        "dead_end",
+        "corner"
+      ],
+      "priority": 500
+    },
+    {
+      "id": "table",
+      "group": "furniture",
+      "size": [
+        3,
+        2
+      ],
+      "footprint": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "shape": {
+        "rect": [
+          44,
+          10
+        ],
+        "offset": [
+          0,
+          -7
+        ]
+      },
+      "per_room": 0.3,
+      "atlas": [
+        2,
+        5
+      ],
+      "companions": [
+        {
+          "id": "chairs",
+          "count": [
+            1,
+            3
+          ],
+          "radius": 1
+        }
+      ],
+      "source": 1
+    },
+    {
+      "id": "chairs",
+      "group": "chairs",
+      "atlas": [
+        2,
+        7
+      ],
+      "variants": [
+        [
+          2,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "crates",
+      "group": "boxes",
+      "atlas": [
+        46,
+        4
+      ],
+      "source": 5
+    },
+    {
+      "id": "barrels",
+      "group": "boxes",
+      "density": 0.9,
+      "cluster": {
+        "size": [
+          2,
+          5
+        ],
+        "radius": 1
+      },
+      "atlas": [
+        47,
+        4
+      ],
+      "source": 5
+    },
+    {
+      "id": "wrecks",
+      "group": "wrecks",
+      "size": [
+        1,
+        2
+      ],
+      "shape": {
+        "rect": [
+          14,
+          10
+        ],
+        "offset": [
+          0,
+          -6
+        ]
+      },
+      "atlas": [
+        46,
+        6
+      ],
+      "variants": [
+        [
+          46,
+          6
+        ],
+        [
+          47,
+          6
+        ]
+      ],
+      "source": 5
+    },
+    {
+      "id": "copper_blocks",
+      "group": "wrecks",
+      "shape": {
+        "rect": [
+          14,
+          10
+        ],
+        "offset": [
+          0,
+          -7
+        ]
+      },
+      "atlas": [
+        5,
+        13
+      ],
+      "variants": [
+        [
+          5,
+          13
+        ],
+        [
+          5,
+          14
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "floor_holes",
+      "class": "DECAL",
+      "placement": "grid",
+      "size": [
+        3,
+        1
+      ],
+      "density": 0.4,
+      "context": [
+        "open"
+      ],
+      "tiles": [
+        [
+          0,
+          0,
+          4,
+          15
+        ],
+        [
+          1,
+          0,
+          5,
+          15
+        ],
+        [
+          2,
+          0,
+          6,
+          15
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "debris_src5",
+      "group": "clutter",
+      "atlas": [
+        46,
+        8
+      ],
+      "variants": [
+        [
+          46,
+          8
+        ],
+        [
+          47,
+          8
+        ]
+      ],
+      "source": 5
+    },
+    {
+      "id": "debris",
+      "group": "clutter",
+      "atlas": [
+        4,
+        11
+      ],
+      "variants": [
+        [
+          4,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          12
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          4,
+          13
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "copper_rubble",
+      "group": "clutter",
+      "density": 1,
+      "atlas": [
+        8,
+        8
+      ],
+      "variants": [
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          8
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "bottles",
+      "group": "bottles",
+      "atlas": [
+        6,
+        9
+      ],
+      "variants": [
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          10,
+          11
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "cups",
+      "group": "bottles",
+      "density": 0.5,
+      "atlas": [
+        4,
+        0
+      ],
+      "variants": [
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          3
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "wall_lamps",
+      "group": "wall_lights",
+      "atlas": [
+        6,
+        0
+      ],
+      "variants": [
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "wall_round_grates",
+      "group": "wall_details",
+      "atlas": [
+        7,
+        2
+      ],
+      "source": 1
+    },
+    {
+      "id": "wall_switches",
+      "group": "wall_details",
+      "density": 0.6,
+      "atlas": [
+        0,
+        0
+      ],
+      "variants": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "source": 1
+    },
+    {
+      "id": "wall_arch_big",
+      "group": "wall_arches",
+      "size": [
+        4,
+        2
+      ],
+      "tiles": [
+        [
+          0,
+          -1,
+          12,
+          15
+        ],
+        [
+          1,
+          -1,
+          13,
+          15
+        ],
+        [
+          2,
+          -1,
+          14,
+          15
+        ],
+        [
+          3,
+          -1,
+          15,
+          15
+        ],
+        [
+          0,
+          0,
+          12,
+          16
+        ],
+        [
+          1,
+          0,
+          13,
+          16
+        ],
+        [
+          2,
+          0,
+          14,
+          16
+        ],
+        [
+          3,
+          0,
+          15,
+          16
+        ]
+      ],
+      "source": 0
+    },
+    {
+      "id": "wall_arch_small",
+      "group": "wall_arches",
+      "size": [
+        2,
+        1
+      ],
+      "density": 1,
+      "tiles": [
+        [
+          0,
+          0,
+          13,
+          15
+        ],
+        [
+          1,
+          0,
+          14,
+          15
+        ]
+      ],
+      "source": 0
+    },
+    {
+      "id": "wall_pillar",
+      "group": "wall_pillars",
+      "facade_h": 3,
+      "size": [
+        1,
+        5
+      ],
+      "tiles": [
+        [
+          0,
+          -3,
+          12,
+          3
+        ],
+        [
+          0,
+          -2,
+          12,
+          4
+        ],
+        [
+          0,
+          -1,
+          12,
+          5
+        ],
+        [
+          0,
+          0,
+          12,
+          6
+        ],
+        [
+          0,
+          1,
+          12,
+          7
+        ]
+      ],
+      "source": 0
+    },
+    {
+      "id": "wall_pillar_4h",
+      "group": "wall_pillars",
+      "facade_h": 4,
+      "size": [
+        1,
+        6
+      ],
+      "tiles": [
+        [
+          0,
+          -4,
+          12,
+          3
+        ],
+        [
+          0,
+          -3,
+          12,
+          4
+        ],
+        [
+          0,
+          -2,
+          12,
+          5
+        ],
+        [
+          0,
+          -1,
+          12,
+          5
+        ],
+        [
+          0,
+          0,
+          12,
+          6
+        ],
+        [
+          0,
+          1,
+          12,
+          7
+        ]
+      ],
+      "source": 0
+    }
+  ]
+}
