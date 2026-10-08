@@ -1,6 +1,6 @@
 extends RefCounted
 
-## Materiał lica (np. drewno zamiast kafli w ściekach v2). Ciąg lica = kotwice w jednym rzędzie bez przerwy.
+## Materiał lica (np. drewno zamiast kafli w ściekach). Ciąg lica = kotwice w jednym rzędzie bez przerwy.
 ## Materiał ciągu: w kompleksie / pokoju (ctx.canals.areas) jeden na cały obszar, żeby pomieszczenie miało jeden
 ## styl — zestaw z JSON `facade_material.tileset` z szansą `area_ratio`; w korytarzach i na chodnikach (i poza
 ## znanym obszarem) — wolny szum w środku ciągu (`frequency`, próg `threshold`). Ciąg cięty na filarach

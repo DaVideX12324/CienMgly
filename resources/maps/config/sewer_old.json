@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/sewer_v2_map_tiles.tres",
+  "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/sewer_old_map_tiles.tres",
   "generation": {
     "seed": 0,
     "width": 200,
@@ -53,7 +53,7 @@
     "canal_min_length": 12,
     "canal_bridge_spacing": 24,
     "enable_objects": true,
-    "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer_v2.json",
+    "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer_old.json",
     "canal_dry_chance": 0.4
   },
   "structured_layout": {
@@ -112,19 +112,11 @@
     "patterns": ["A-A-A", "A-B-A", "A-B-B-A"],
     "pillar_cap": true
   },
-  "facade_material": {
-    "tileset": "sewer_wood",
-    "area_ratio": 0.4,
-    "frequency": 0.03,
-    "threshold": 0.1,
-    "segment_flip_chance": 0.1
-  },
   "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
     "default": "sewer",
     "enabled": [
-      "sewer",
-      "sewer_wood"
+      "sewer"
     ],
     "forbidden_contact_policy": "use_default",
     "missing_tileset_policy": "default"

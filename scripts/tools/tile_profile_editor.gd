@@ -52,7 +52,7 @@ const COL_RECT := Color(1.0, 0.9, 0.3)
 		if d and d.tile_set != v:
 			d.tile_set = v
 			_touch()
-## Profil wzorcowy (opcjonalnie, np. sewer_map_tiles.tres przy przenoszeniu na nową paczkę): obok każdej roli
+## Profil wzorcowy (opcjonalnie, np. sewer_old_map_tiles.tres przy przenoszeniu na nową paczkę): obok każdej roli
 ## jej wygląd we wzorze (ta sama rola / wariant / przesunięcie / warstwa). Tylko podgląd — nie jest zmieniany.
 @export var wzor: MapTileProfile:
 	set(v):
