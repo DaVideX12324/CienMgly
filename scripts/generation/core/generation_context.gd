@@ -30,6 +30,9 @@ var plateau_mode: bool = false
 # Kratki ściany małych wolnostojących wysp (EdgeAnalyzer.small_wall_islands): fasada pod nimi zawsze 2H.
 # Liczone w EdgeAnalyzer.analyze, gdy puste (flaga small_pillar_2h_max_area).
 var force_2h_cells: Dictionary = {}
+## Podłoga, której przejścia kształtu ścian (Wall3HPass, WallTopAlignPass) nie zamurowują — np. przesmyki układu structured
+## (kanały, chodniki, korytarze), żeby nie odciąć części mapy. Pusta = bez ograniczeń (jaskinia).
+var protected_floor: Dictionary = {}
 # Kratki nisz-przejść (NichePlacer): kafle OUT obu kolumn i szczyt nad płytszą — przy wstawianiu
 # alternatywa NichePlacer.PASSAGE_ALT (inne kolizje), gdy TileSet ją ma.
 var passage_cells: Dictionary = {}

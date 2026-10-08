@@ -854,7 +854,29 @@ func _component(walk: PackedByteArray, start: int) -> PackedByteArray:
 	return seen
 
 
-## Kratka sieci (chodnik / sala) najbliżej środka mapy — korzeń spójności.
+## Kratka największej spójnej części chodliwej — korzeń spójności (kratka „najbliżej środka” potrafiła
+## leżeć w małym odciętym kawałku: naprawa zamurowywała wtedy resztę mapy).
+func _largest_component_cell() -> int:
+	var walk := _walkable()
+	var seen := st.new_mask()
+	var best := -1
+	var best_n := 0
+	for i in range(st.w * st.h):
+		if not walk[i] or seen[i]:
+			continue
+		var comp := _component(walk, i)
+		var n := 0
+		for j in range(comp.size()):
+			if comp[j]:
+				n += 1
+				seen[j] = 1
+		if n > best_n:
+			best_n = n
+			best = i
+	return best
+
+
+## Kratka sieci (chodnik / sala) najbliżej środka mapy.
 func center_cell() -> int:
 	var best := -1
 	var bd := 1 << 30
@@ -868,24 +890,39 @@ func center_cell() -> int:
 
 
 func _repair() -> void:
-	var root := center_cell()
+	var root := _largest_component_cell()
 	if root < 0:
 		return
 	var fixed := 0
 	var lost := 0
 	var walled := 0
+	var bridged := 0
 	var given_up := st.new_mask()
-	for _it in range(40):
+	for _it in range(200):
 		var walk := _walkable()
 		var main := _component(walk, root)
+		# Największy odcięty kawałek najpierw (te z pokojami nie czekają za drobnymi strzępami).
+		var seen := st.new_mask()
+		var piece := PackedByteArray()
+		var piece_n := 0
 		var seed_c := -1
 		for i in range(st.w * st.h):
-			if walk[i] and not main[i] and not given_up[i]:
-				seed_c = i
-				break
+			if walk[i] and not main[i] and not given_up[i] and not seen[i]:
+				var comp := _component(walk, i)
+				var n := 0
+				for k in range(comp.size()):
+					if comp[k]:
+						n += 1
+						seen[k] = 1
+				if n > piece_n:
+					piece_n = n
+					piece = comp
+					seed_c = i
 		if seed_c < 0:
 			break
-		var piece := _component(walk, seed_c)
+		if _bridge_connect(piece, main):
+			bridged += 1
+			continue
 		var piece_c := _mask_cells(piece)
 		var bb := Vector4i(1 << 30, 1 << 30, -1, -1)
 		for c in piece_c:
@@ -945,6 +982,9 @@ func _repair() -> void:
 							st.lanes[c] = 0
 							st.corrm[c] = 0
 							st.hallm[c] = 0
+						elif st.bridge_m[c]:
+							st.bridge_m[c] = 0   # kładka bez brzegów — znika razem z kawałkiem
+					_drop_dead_bridges()
 					walled += 1
 				continue
 		_carve(path)
@@ -952,6 +992,62 @@ func _repair() -> void:
 	stats["repairs"] = fixed
 	stats["repair_failed"] = lost
 	stats["repair_walled"] = walled
+	stats["repair_bridged"] = bridged
+
+
+## Kładki, z których zniknęła choć jedna kratka (zamurowany kawałek), wypadają z listy.
+func _drop_dead_bridges() -> void:
+	var keep: Array[Dictionary] = []
+	for b in st.bridges:
+		var alive := true
+		for c in b.cells:
+			if not st.bridge_m[c.y * st.w + c.x]:
+				alive = false
+				break
+		if alive:
+			keep.append(b)
+		else:
+			for c in b.cells:
+				st.bridge_m[c.y * st.w + c.x] = 0
+	st.bridges = keep
+
+
+## Kładka łącząca odcięty kawałek z główną częścią przez dzielący je kanał: odcinek, na którym jeden brzeg
+## leży w kawałku, a drugi w głównej części (pozycja środkowa z możliwych).
+func _bridge_connect(piece: PackedByteArray, main: PackedByteArray) -> bool:
+	for s in st.segs:
+		var horiz: bool = s.axis == "h"
+		var lo: int = (s.x0 if horiz else s.y0) + 1
+		var hi: int = (s.x1 if horiz else s.y1) - 2
+		var cands: Array[int] = []
+		for t in range(lo, hi + 1):
+			var ok := true
+			var in_piece := false
+			var in_main := false
+			for dt in [0, 1]:
+				var a: Vector2i = Vector2i(t + dt, s.y0 - 1) if horiz else Vector2i(s.x0 - 1, t + dt)
+				var b: Vector2i = Vector2i(t + dt, s.y1 + 1) if horiz else Vector2i(s.x1 + 1, t + dt)
+				if not st.in_map(a.x, a.y) or not st.in_map(b.x, b.y):
+					ok = false
+					break
+				var ia: int = a.y * st.w + a.x
+				var ib: int = b.y * st.w + b.x
+				if (piece[ia] and main[ib]) or (piece[ib] and main[ia]):
+					in_piece = true
+					in_main = true
+				else:
+					ok = false
+			if ok and in_piece and in_main:
+				cands.append(t)
+		if cands.is_empty():
+			continue
+		var order: Array = cands.duplicate()
+		var mid: int = cands[cands.size() / 2]
+		order.sort_custom(func(x, y) -> bool: return absi(x - mid) < absi(y - mid))
+		for t in order:
+			if _place_bridge(s, t, horiz, true):
+				return true
+	return false
 
 
 ## Dźwignie bram: wolna kratka pokoju / sali osiągalna z wejścia bez przechodzenia przez bramy,

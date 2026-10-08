@@ -107,7 +107,12 @@ static func generate_layout(
 	canals.gates = st.gates
 	canals.levers = st.levers
 
-	# Przejścia czyszczące — układ ma już być z nimi zgodny (R7: < 1 % zmienionych kratek).
+	# Przejścia czyszczące — układ ma już być z nimi zgodny (R7: < 1 % zmienionych kratek). Kanały, chodniki,
+	# korytarze i kładki chronione przed zamurowaniem (Wall3HPass potrafił zasypać przesmyk i odciąć część mapy).
+	for i in range(width * height):
+		if st.water[i] or st.lanes[i] or st.corrm[i] or st.service[i] or st.bridge_m[i]:
+			ctx.protected_floor[Vector2i(i % width, i / width)] = true
+	stats["lost_pre"] = _unreachable(ctx, canals)
 	var before := _grid_snapshot(ctx)
 	GridPreprocessor.run(ctx, [Remove1hWallsPass.new(), WallThicknessPass.new()])
 	_run_wall_shape_passes(ctx, flags)
@@ -119,8 +124,10 @@ static func generate_layout(
 		], 4)
 	_run_wall_shape_passes(ctx, flags)
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
+	stats["restored"] = _restore_cuts(ctx, canals, before)
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
+	stats["lost_post"] = _unreachable(ctx, canals)
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
 
@@ -175,19 +182,21 @@ static func _canal_layout(st: State):
 		for c in cells:
 			mn = Vector2i(mini(mn.x, c.x), mini(mn.y, c.y))
 			mx = Vector2i(maxi(mx.x, c.x), maxi(mx.y, c.y))
+		# Orientacja z kształtu: dłuższy wymiar = w poprzek kanału (kładka pionowa = przez kanał poziomy).
+		var vertical: bool = (mx.y - mn.y) >= (mx.x - mn.x)
 		var r: Rect2i
-		if b.vertical:      # przez kanał poziomy: 2 kolumny, od brzegu do brzegu
+		if vertical:
 			var x0: int = mn.x + (mx.x - mn.x + 1 - 2) / 2
 			r = Rect2i(x0, mn.y - 1, 2, mx.y - mn.y + 3)
 		else:
 			var y0: int = mn.y + (mx.y - mn.y + 1 - 2) / 2
 			r = Rect2i(mn.x - 1, y0, mx.x - mn.x + 3, 2)
+		# Przechodnie są wszystkie kratki kładki ze stanu generatora (spójność liczona na nich); `rect` to tylko
+		# moduł grafiki.
 		var under: Array[Vector2i] = []
-		for y in range(r.position.y, r.end.y):
-			for x in range(r.position.x, r.end.x):
-				if st.in_map(x, y) and st.water[y * w + x]:
-					under.append(Vector2i(x, y))
-		layout.bridges.append({"rect": r, "vertical": b.vertical, "cells": under, "crossing": b.get("crossing", false)})
+		for c in cells:
+			under.append(c)
+		layout.bridges.append({"rect": r, "vertical": vertical, "cells": under, "crossing": b.get("crossing", false)})
 	for cid in st.complexes:
 		var cells := {}
 		for c in st.complexes[cid].get("cells", PackedInt32Array()):
@@ -233,6 +242,73 @@ static func _pick_portal_rooms(st: State, rooms: Array[Rect2i]) -> Vector2i:
 			far = d
 			ex = c[0]
 	return Vector2i(cand[0][0], ex)
+
+
+## Bezpiecznik spójności po przejściach czyszczących: gdy coś jest nieosiągalne z wejścia, kratki zamurowane
+## przez przejścia (były podłogą) przy granicy nieosiągalnego obszaru wracają do podłogi; do skutku.
+## Zwraca liczbę przywróconych kratek.
+static func _restore_cuts(ctx: GenerationContext, canals, before: PackedByteArray) -> int:
+	var restored := 0
+	for _it in range(12):
+		var reach := _reach_set(ctx, canals)
+		var fix: Array[Vector2i] = []
+		for y in range(ctx.height):
+			for x in range(ctx.width):
+				var p := Vector2i(x, y)
+				if not GridUtils.is_walkable(ctx.grid, p) or canals.blocked.has(p) or reach.has(p):
+					continue
+				# p nieosiągalne: zamurowane przez przejścia kratki obok wracają
+				for dy in range(-2, 3):
+					for dx in range(-2, 3):
+						var q := p + Vector2i(dx, dy)
+						if q.x < 0 or q.y < 0 or q.x >= ctx.width or q.y >= ctx.height:
+							continue
+						if before[q.y * ctx.width + q.x] and not GridUtils.is_walkable(ctx.grid, q):
+							fix.append(q)
+		if fix.is_empty():
+			break
+		for q in fix:
+			if not GridUtils.is_walkable(ctx.grid, q):
+				ctx.grid[q] = CellType.FLOOR
+				restored += 1
+	return restored
+
+
+static func _reach_set(ctx: GenerationContext, canals) -> Dictionary:
+	var seen := {}
+	var q: Array[Vector2i] = [ctx.entrance_pos]
+	seen[ctx.entrance_pos] = true
+	while not q.is_empty():
+		var p: Vector2i = q.pop_back()
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = p + d
+			if seen.has(n) or not GridUtils.is_walkable(ctx.grid, n) or canals.blocked.has(n):
+				continue
+			seen[n] = true
+			q.append(n)
+	return seen
+
+
+## Liczba kratek chodliwych (podłoga bez wody poza kładkami) nieosiągalnych z wejścia.
+static func _unreachable(ctx: GenerationContext, canals) -> int:
+	var seen := {}
+	var q: Array[Vector2i] = [ctx.entrance_pos]
+	seen[ctx.entrance_pos] = true
+	while not q.is_empty():
+		var p: Vector2i = q.pop_back()
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = p + d
+			if seen.has(n) or not GridUtils.is_walkable(ctx.grid, n) or canals.blocked.has(n):
+				continue
+			seen[n] = true
+			q.append(n)
+	var lost := 0
+	for y in range(ctx.height):
+		for x in range(ctx.width):
+			var p := Vector2i(x, y)
+			if GridUtils.is_walkable(ctx.grid, p) and not canals.blocked.has(p) and not seen.has(p):
+				lost += 1
+	return lost
 
 
 static func _grid_snapshot(ctx: GenerationContext) -> PackedByteArray:
