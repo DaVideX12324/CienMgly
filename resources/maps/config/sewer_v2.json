@@ -112,11 +112,17 @@
     "patterns": ["A-A-A", "A-B-A", "A-B-B-A"],
     "pillar_cap": true
   },
+  "facade_material": {
+    "tileset": "sewer_wood",
+    "frequency": 0.08,
+    "threshold": 0.1
+  },
   "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
     "default": "sewer",
     "enabled": [
-      "sewer"
+      "sewer",
+      "sewer_wood"
     ],
     "forbidden_contact_policy": "use_default",
     "missing_tileset_policy": "default"
