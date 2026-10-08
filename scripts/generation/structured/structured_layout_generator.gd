@@ -21,6 +21,7 @@ const Wall3HPassScript = preload("../preprocess/wall_3h_pass.gd")
 const WallTopAlignPassScript = preload("../preprocess/wall_top_align_pass.gd")
 const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
+const WallProtrusionPassScript = preload("../preprocess/wall_protrusion_pass.gd")
 const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
 
 const PORTAL_MIN_FREE := 60
@@ -538,6 +539,8 @@ static func _drop_walled_canal_cells(ctx: GenerationContext, canals) -> void:
 
 
 static func _run_wall_shape_passes(ctx: GenerationContext, flags: GenerationFlags) -> void:
+	if not flags.enable_2h_facades:
+		GridPreprocessor.run(ctx, [WallProtrusionPassScript.new()])
 	if flags.enforce_3h_walls:
 		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
 	if flags.align_wall_tops:
