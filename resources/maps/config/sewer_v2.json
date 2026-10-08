@@ -114,8 +114,10 @@
   },
   "facade_material": {
     "tileset": "sewer_wood",
-    "frequency": 0.08,
-    "threshold": 0.1
+    "area_ratio": 0.4,
+    "frequency": 0.03,
+    "threshold": 0.1,
+    "segment_flip_chance": 0.1
   },
   "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
