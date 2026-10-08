@@ -63,7 +63,7 @@ static func plan(
 			if edge.orientation == EdgeKind.Orientation.EAST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
 				var var_idx: int = 1 if is_under_inner_corner else _side_variant(ctx, pos)
-				if not _try_side(ctx, placement_plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
+				if not _try_side(ctx, placement_plan, pos, TileModuleRole.Id.SIDE_WALL_EAST, _pick(ctx, pos, TileModuleRole.Id.SIDE_WALL_EAST, var_idx, is_under_inner_corner), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_WEST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_WEST[var_idx]
 					_queue(placement_plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
@@ -71,10 +71,18 @@ static func plan(
 			elif edge.orientation == EdgeKind.Orientation.WEST:
 				var use_roots_side: bool = ThemeResolver.resolve(ctx, pos + Vector2i(-1, 0), ThemeResolver.RefPoint.SELF) == &"roots"
 				var var_idx: int = 1 if is_under_inner_corner else _side_variant(ctx, pos)
-				if not _try_side(ctx, placement_plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _variant_id(var_idx), table, &"caves_roots" if use_roots_side else &""):
+				if not _try_side(ctx, placement_plan, pos, TileModuleRole.Id.SIDE_WALL_WEST, _pick(ctx, pos, TileModuleRole.Id.SIDE_WALL_WEST, var_idx, is_under_inner_corner), table, &"caves_roots" if use_roots_side else &""):
 					var side_t: Vector2i = CaveTileConstants.WALL_SIDE_EAST[var_idx] if not use_roots_side else CaveTileConstants.ROOT_WALL_SIDE_EAST[var_idx]
 					_queue(placement_plan, pos, side_t, &"SIDE_WALL", table)
 				state.mark(pos, &"SIDE")
+
+
+## Wariant A / B (var_idx) albo — gdy profil ma wariant C — co trzecia kratka z hasha pozycji C (bez zużycia
+## tile_rng: parytet z legacy / jaskiniami). Pod narożnikiem wewnętrznym zawsze B.
+static func _pick(ctx: GenerationContext, pos: Vector2i, role: int, var_idx: int, under_inner: bool) -> StringName:
+	if not under_inner and hash([ctx.seed_value, pos, "side_c"]) % 3 == 0 and FacadePlacer.has_variant(ctx, role, &"C"):
+		return &"C"
+	return _variant_id(var_idx)
 
 
 ## Wariant A/B ściany bocznej. Ściany: z ctx.tile_rng w kolejności skanu (parytet z legacy).
