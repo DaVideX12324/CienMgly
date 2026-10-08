@@ -43,6 +43,7 @@ var area_weights := {}             # katalog: szansa kratki dla dużych obiektó
 var set_gap := 0                   # katalog: odstęp dużych obiektów różnych zestawów
 var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indeks w set_ids + 1), 0 = brak
 var set_ids := {}                  # zestaw -> indeks
+var parent_center := Vector2(-1, -1)  # środek rodzica (kratki) przy stawianiu towarzyszy — facing_pref "parent"
 var canal_dist := PackedInt32Array()  # idx -> odległość (Chebyshev) od wody kanału; liczona, gdy jakiś obiekt ma canal_gap
 
 
@@ -409,6 +410,8 @@ func _place_one(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 ## próbuje leżeć NA rodzicu — w kratkach jego rysunku nad podstawą (blat stołu), inaczej obok.
 func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) -> void:
 	in_companions = true
+	# środek podstawy rodzica (kotwica = lewy-dolny róg)
+	parent_center = Vector2(c) + Vector2((maxi(def.size.x, 1) - 1) * 0.5, 0.0)
 	for comp in def.companions:
 		var cdef: ObjectDef = defs_by_id.get(comp["id"])
 		if cdef == null:
@@ -440,6 +443,7 @@ func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) 
 			if _try_place(cdef, cm, i, rng):
 				placed += 1
 	in_companions = false
+	parent_center = Vector2(-1, -1)
 
 
 ## Kratki rysunku obiektu nad jego podstawą (blat), w granicach mapy, na podłodze.
@@ -689,9 +693,12 @@ func _shape_cells(def: ObjectDef, pt: Vector2) -> PackedInt32Array:
 
 func _finish(pl: ObjectPlacement, marker: int, rng: RandomNumberGenerator) -> void:
 	var def := pl.def
-	if def.variant_count() > 1:
-		pl.variant = rng.randi_range(0, def.variant_count() - 1)
-	pl.flip = def.flip_h and rng.randf() < 0.5
+	if not def.facing.is_empty() and not def.facing_pref.is_empty():
+		_pick_facing(pl, rng)
+	else:
+		if def.variant_count() > 1:
+			pl.variant = rng.randi_range(0, def.variant_count() - 1)
+		pl.flip = def.flip_h and rng.randf() < 0.5
 	var bits := ObjectPlan.USED | (ObjectPlan.SOLID if def.is_solid() else 0)
 	for j in pl.cells:
 		plan.occupancy[j] |= bits
@@ -699,6 +706,72 @@ func _finish(pl: ObjectPlacement, marker: int, rng: RandomNumberGenerator) -> vo
 	plan.placements.append(pl)
 	if def.klass == ObjectDef.Klass.INTERACTIVE:
 		_reserve_access(pl)
+
+
+## Wariant + odbicie wg facing_pref: waga kombinacji = 1 + suma wag preferencji, których kierunek pasuje.
+func _pick_facing(pl: ObjectPlacement, rng: RandomNumberGenerator) -> void:
+	var def := pl.def
+	var want := {}  # kierunek -> waga
+	for key: StringName in def.facing_pref:
+		var w: float = def.facing_pref[key]
+		var dirs: Array[StringName] = []
+		match key:
+			&"parent":
+				if parent_center.x >= 0.0:
+					dirs = _dirs_toward(parent_center - Vector2(pl.cell))
+			&"wall", &"away_wall":
+				var d := _wall_dir(pl.cell)
+				if d != Vector2i.ZERO:
+					dirs = _dirs_toward(Vector2(d) if key == &"wall" else -Vector2(d))
+			_:
+				dirs = [key]
+		for dn in dirs:
+			want[dn] = float(want.get(dn, 0.0)) + w
+	var combos: Array = []  # [wariant, odbicie, waga]
+	var total := 0.0
+	for v in range(def.variant_count()):
+		for fl in ([false, true] if def.flip_h else [false]):
+			var fc: StringName = def.facing[v]
+			if fl and fc == &"E":
+				fc = &"W"
+			elif fl and fc == &"W":
+				fc = &"E"
+			var w := 1.0 + float(want.get(fc, 0.0))
+			combos.append([v, fl, w])
+			total += w
+	var r := rng.randf() * total
+	for cmb in combos:
+		r -= float(cmb[2])
+		if r <= 0.0:
+			pl.variant = cmb[0]
+			pl.flip = cmb[1]
+			return
+	pl.variant = combos[-1][0]
+	pl.flip = combos[-1][1]
+
+
+## Kierunki (N/S/E/W) wektora: dominująca oś, przy przekątnej — obie.
+static func _dirs_toward(v: Vector2) -> Array[StringName]:
+	var out: Array[StringName] = []
+	if v == Vector2.ZERO:
+		return out
+	var ax := absf(v.x)
+	var ay := absf(v.y)
+	if ax >= ay * 0.5 and ax > 0.0:
+		out.append(&"E" if v.x > 0.0 else &"W")
+	if ay >= ax * 0.5 and ay > 0.0:
+		out.append(&"S" if v.y > 0.0 else &"N")
+	return out
+
+
+## Kierunek do najbliższej ściany (sąsiad w odległości 1–2 kratek), ZERO gdy brak.
+func _wall_dir(c: Vector2i) -> Vector2i:
+	for dist in [1, 2]:
+		for d in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]:
+			var q: Vector2i = c + d * dist
+			if f.in_bounds(q) and f.walk[f.idx(q)] == 0:
+				return d
+	return Vector2i.ZERO
 
 
 ## Dojście do obiektu interaktywnego (skrzynia — często w niszy z jednym wejściem): najkrótsza droga
