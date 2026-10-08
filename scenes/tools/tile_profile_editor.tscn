@@ -1,19 +1,21 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://p3q4cw4sntue"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/tools/tile_profile_editor.gd" id="1_tpe"]
+[ext_resource type="Script" uid="uid://bdqak230micfp" path="res://modules/quiz_rpg/scripts/tools/tile_profile_editor.gd" id="1_tpe"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/maps/profile/sewer_v2_map_tiles.tres" id="2_prof"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/maps/profile/sewer_map_tiles.tres" id="3_wzor"]
 
-[node name="TileProfileEditor" type="Node2D"]
+[node name="TileProfileEditor" type="Node2D" unique_id=646753444]
 script = ExtResource("1_tpe")
 profile = ExtResource("2_prof")
 wzor = ExtResource("3_wzor")
 
-[node name="Wybor" type="Marker2D" parent="."]
+[node name="Wybor" type="Marker2D" parent="." unique_id=1837101961]
 gizmo_extents = 24.0
 
-[node name="Kafel" type="Marker2D" parent="."]
+[node name="Kafel" type="Marker2D" parent="." unique_id=567063840]
+position = Vector2(1172, 72)
 gizmo_extents = 24.0
 
-[node name="Koniec" type="Marker2D" parent="."]
+[node name="Koniec" type="Marker2D" parent="." unique_id=191001996]
+position = Vector2(1193, 92)
 gizmo_extents = 16.0
