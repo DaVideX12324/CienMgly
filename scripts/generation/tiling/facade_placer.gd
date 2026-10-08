@@ -136,8 +136,8 @@ static func facade_on_wall(ctx: GenerationContext) -> bool:
 
 
 ## Cień zagłębienia na kolumnie lica w stopie `pos`: sąsiedni mur wystaje dalej do przodu (w rzędzie
-## podłogi pod licem stoi ściana, nie kanał) -> &"SHADE_L" / &"SHADE_R" / &"SHADE_LR"; w kolumnie filara
-## (lico za filarem) zawsze &"SHADE_LR"; inaczej &"".
+## podłogi pod licem stoi ściana, nie kanał) albo w sąsiedniej kolumnie stoi filar -> &"SHADE_L" / &"SHADE_R" /
+## &"SHADE_LR"; w kolumnie filara (lico za filarem) zawsze &"SHADE_LR"; inaczej &"".
 ## Wariant z cieniem bierze się z profilu, gdy go ma (lico, narożniki: &"SHADE"); bez niego — zwykły.
 static func recess_shade(ctx: GenerationContext, pos: Vector2i) -> StringName:
 	# rząd podłogi pod licem: przy licu na murze kotwica modułu to już kratka podłogi (części -1..-n), w jaskiniach
@@ -147,8 +147,9 @@ static func recess_shade(ctx: GenerationContext, pos: Vector2i) -> StringName:
 	# lico bezpośrednio za filarem ma cień z obu stron (stopy filarów: ctx.pillar_feet)
 	if ctx.pillar_feet.has(pos):
 		return &"SHADE_LR"
-	var l := _protrudes(ctx, Vector2i(pos.x - 1, row), water)
-	var r := _protrudes(ctx, Vector2i(pos.x + 1, row), water)
+	# filar w sąsiedniej kolumnie też rzuca cień na lico obok
+	var l := _protrudes(ctx, Vector2i(pos.x - 1, row), water) or ctx.pillar_feet.has(pos + Vector2i(-1, 0))
+	var r := _protrudes(ctx, Vector2i(pos.x + 1, row), water) or ctx.pillar_feet.has(pos + Vector2i(1, 0))
 	if l and r:
 		return &"SHADE_LR"
 	if l:
