@@ -132,7 +132,7 @@ func find(sx: int, sy: int) -> PackedInt32Array:
 			var d := DIRS[ni]
 			var nx := x + d.x
 			var ny := y + d.y
-			if nx < M + 1 or ny < M + 1 or nx >= W - M - 1 or ny >= H - M - 1:
+			if nx < M + 1 or ny < M + 1 + st.top_extra or nx >= W - M - 1 or ny >= H - M - 1:
 				continue
 			var n := ny * W + nx
 			var n_own := own.has(nx, ny)

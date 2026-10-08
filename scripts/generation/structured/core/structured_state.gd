@@ -7,6 +7,7 @@ extends RefCounted
 var w := 0
 var h := 0
 var margin := 3        # M: ramka mapy bez podłogi
+var top_extra := 1     # górna ramka grubsza (lico na ścianie: kap + 3 rzędy nad podłogą)
 var cw := 4            # szerokość kanału
 var lane := 3          # chodnik tunelu
 var wall_h := 5        # ściana z podłogą nad i pod (lico 3H + grzbiet)
@@ -34,6 +35,7 @@ var halls: Array[Vector4i] = []      # bbox kompleksów (x0, y0, x1, y1)
 var rooms: Array[Vector4i] = []      # pokoje (x0, y0, x1, y1)
 ## Kładki: {cells: Array[Vector2i] (kratki wody pod kładką), vertical: bool (przez kanał poziomy), crossing}.
 var bridges: Array[Dictionary] = []
+var lane_chains: Array[Dictionary] = []   # odcinki zastępcze łańcuchów (chodniki, przerwy chodnika)
 var gates: Array = []                # [Vector2i × 3]
 var levers: Array[Vector2i] = []
 
@@ -59,6 +61,7 @@ func setup(width: int, height: int, cfg: Dictionary) -> void:
 	lane = int(cfg.get("lane_width", lane))
 	wall_h = int(cfg.get("wall_thickness_h", wall_h))
 	wall_v = int(cfg.get("wall_thickness_v", wall_v))
+	top_extra = int(cfg.get("frame_top_extra", top_extra))
 	floor_m = new_mask(); water = new_mask(); dry = new_mask(); lanes = new_mask(); service = new_mask()
 	hallm = new_mask(); roomm = new_mask(); corrm = new_mask(); bridge_m = new_mask()
 	hall_cid = PackedInt32Array()
@@ -102,7 +105,7 @@ func any_in(m: PackedByteArray, x0: int, y0: int, x1: int, y1: int) -> bool:
 
 func inside(x0: int, y0: int, x1: int, y1: int, mm := -1) -> bool:
 	var k := margin if mm < 0 else mm
-	return x0 >= k and y0 >= k and x1 < w - k and y1 < h - k
+	return x0 >= k and y0 >= k + top_extra and x1 < w - k and y1 < h - k
 
 
 ## Sumy prefiksowe maski: P[(y + 1) * (w + 1) + x + 1] = liczba kratek w [0..x] × [0..y].

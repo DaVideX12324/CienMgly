@@ -94,12 +94,16 @@ func _pick_complexes() -> void:
 			placed_any = true
 
 
-## Chodniki tuneli o zmiennej szerokości: odcinek dzielony na kawałki lane_chunk (6–12) wzdłuż kanału, każda
-## strona losuje szerokość z lane_width_options (0 = kanał przy ścianie; 1 odpada — za wąsko), z szansą
-## lane_keep_chance zostaje poprzednia. Zawsze ≥ 1 strona ≥ 2, ciągłość strony (chodnik nie przeskakuje kanału
-## bez kładki), przy końcach odcinka (zakręty, węzły) obie strony ≥ 2. Prostokąty chodnika w s.lane_rects,
-## kawałki w s.lane_chunks ({k, t, t1, w}), przerwy strony (0 między chodnikami) w s.lane_gaps ({k, g0, g1})
-## — przejście w StructuredRoomPacker (kładka na drugą stronę albo obejście tunelem za ścianą).
+## Chodniki tuneli o zmiennej szerokości: łańcuch odcinków (kolejne odcinki linii na jednej prostej) dzielony
+## na kawałki lane_chunk wzdłuż kanału, każda strona losuje szerokość z lane_width_options (0 = kanał przy
+## ścianie; 1 odpada — za wąsko), z szansą lane_keep_chance zostaje poprzednia. Zawsze ≥ 1 strona ≥ 2,
+## ciągłość strony (chodnik nie przeskakuje kanału bez kładki), przy przegubach (końce łańcucha, zakręty,
+## węzły) obie strony ≥ 2. Szerokość nie zmienia się o 1 (2 <-> 3 tylko przez odcinek 0) i nie ma krótkiego
+## ostatniego kawałka — inaczej ściana ma uskok / wypustkę o kratkę, której kafle ścieków (bez lica 2H) nie
+## mają. Łańcuch zamiast pojedynczego odcinka: odcinki nachodzą na siebie blokiem kanału, a osobne
+## losowanie dawało na styku chodnik 3 obok 2. Prostokąty chodnika w s.lane_rects, kawałki w s.lane_chunks
+## ({k, t, t1, w}) przycięte do odcinka; przerwy strony (0 między chodnikami) w st.lane_chains[i].lane_gaps
+## ({k, g0, g1, before, after}) — przejście w StructuredRoomPacker (nawias, u-turn z kładką albo kładka).
 func _lanes() -> void:
 	var opts: Array = cfg.get("lane_width_options", [0, 2, 3])
 	var chunk: Array = cfg.get("lane_chunk", [5, 10])
@@ -110,18 +114,27 @@ func _lanes() -> void:
 		s.lane_rects = []
 		s.lane_chunks = []
 		s.lane_gaps = []
-		if s.kind != "tunnel":
-			continue
-		var lo: int = s.x0 if s.axis == "h" else s.y0
-		var hi: int = s.x1 if s.axis == "h" else s.y1
+	st.lane_chains.clear()
+	for chain in _chains():
+		var vs := _chain_seg(chain)
+		var lo: int = vs.x0 if vs.axis == "h" else vs.y0
+		var hi: int = vs.x1 if vs.axis == "h" else vs.y1
+		var joints := _joints(vs, chain)
+		# Miejsce na chodnik do ramki mapy (stałe na prostym łańcuchu): < 2 — strona bez chodnika (kanał przy
+		# ścianie), 2 — najwyżej 2 (przycięcie ramką dawało chodnik szeroki na 1 i uskok ściany).
+		var room := [_lane_room(vs, 0), _lane_room(vs, 1)]
 		var cur := [maxi(_pick_width(opts), 2), maxi(_pick_width(opts), 2)]
 		var zero_left := [0, 0]
-		var in_run := [false, false]   # strona w odcinku 0 (może sięgać do końca odcinka kanału)
+		var in_run := [false, false]   # strona w odcinku 0 (może sięgać do końca łańcucha)
 		var prev_ok: Array = []
+		var prev_w: Array = []
 		var t := lo
 		while t <= hi:
 			var t1 := mini(hi, t + rng.randi_range(int(chunk[0]), int(chunk[1])) - 1)
-			var in_end := t < lo + end_zone or t1 > hi - end_zone
+			# Bez krótkiego ostatniego kawałka (1–4 kratki przy końcu = wcięcie / wypustka ściany).
+			if hi - t1 < int(chunk[0]):
+				t1 = hi
+			var in_end := _near_joint(t, t1, joints, end_zone)
 			for k in [0, 1]:
 				if in_run[k]:
 					if zero_left[k] > 0:
@@ -133,7 +146,7 @@ func _lanes() -> void:
 				elif rng.randf() >= keep:
 					cur[k] = _pick_width(opts)
 					if cur[k] == 0:
-						# Odcinek 0 nie zaczyna się przy końcu kanału ani gdy druga strona jest bez chodnika.
+						# Odcinek 0 nie zaczyna się przy przegubie ani gdy druga strona jest bez chodnika.
 						if in_end or in_run[1 - k] or cur[1 - k] == 0:
 							cur[k] = 2
 						else:
@@ -141,8 +154,8 @@ func _lanes() -> void:
 							zero_left[k] = rng.randi_range(int(zero_chunks[0]), int(zero_chunks[1])) - 1
 			var got: Array = cur.duplicate()
 			for k in [0, 1]:
-				# Przez cały odcinek 0 druga strona ma chodnik (tam ląduje kładka); przy końcach odcinka kanału
-				# (zakręty, węzły) chodnik ma każda strona, która nie jest w odcinku 0.
+				# Przez cały odcinek 0 druga strona ma chodnik (tam ląduje kładka); przy przegubach (zakręty,
+				# węzły, końce) chodnik ma każda strona, która nie jest w odcinku 0.
 				if in_run[k]:
 					got[1 - k] = maxi(got[1 - k], 2)
 				elif in_end:
@@ -156,15 +169,28 @@ func _lanes() -> void:
 					got[prev_ok[0]] = 2
 			if got[0] < 2 and got[1] < 2:
 				got[rng.randi() % 2] = 2
+			for k in [0, 1]:
+				if room[k] < 2:
+					got[k] = 0
+					if room[1 - k] >= 2:
+						got[1 - k] = maxi(got[1 - k], 2)
+				elif got[k] > room[k]:
+					got[k] = room[k]
+			# Bez zmiany szerokości o 1 (2 <-> 3): szerokość zmienia się tylko przez odcinek 0.
+			if not prev_w.is_empty():
+				for k in [0, 1]:
+					if got[k] >= 2 and prev_w[k] >= 2 and got[k] != prev_w[k]:
+						got[k] = prev_w[k]
+			prev_w = got.duplicate()
 			prev_ok = []
 			for k in [0, 1]:
-				s.lane_chunks.append({"k": k, "t": t, "t1": t1, "w": got[k]})
+				vs.lane_chunks.append({"k": k, "t": t, "t1": t1, "w": got[k]})
 				if got[k] >= 2:
 					prev_ok.append(k)
 					in_run[k] = false
 					zero_left[k] = 0
-					var r := _side_rect(s, t, t1, k, got[k])
-					s.lane_rects.append(r)
+					var r := _side_rect(vs, t, t1, k, got[k])
+					vs.lane_rects.append(r)
 					st.fill(st.lanes, r[0], r[1], r[2], r[3])
 			cur = got
 			t = t1 + 1
@@ -173,19 +199,33 @@ func _lanes() -> void:
 			var g0 := -1
 			var seen_lane := false
 			var last_t := lo
-			for c in s.lane_chunks:
+			for c in vs.lane_chunks:
 				if c.k != k:
 					continue
 				last_t = c.t1
 				if c.w >= 2:
 					if g0 >= 0:
-						s.lane_gaps.append({"k": k, "g0": g0, "g1": c.t - 1, "before": seen_lane, "after": true})
+						vs.lane_gaps.append({"k": k, "g0": g0, "g1": c.t - 1, "before": seen_lane, "after": true})
 					g0 = -1
 					seen_lane = true
 				elif g0 < 0:
 					g0 = c.t
 			if g0 >= 0:
-				s.lane_gaps.append({"k": k, "g0": g0, "g1": last_t, "before": seen_lane, "after": false})
+				vs.lane_gaps.append({"k": k, "g0": g0, "g1": last_t, "before": seen_lane, "after": false})
+		# Kawałki i prostokąty łańcucha przycięte do jego odcinków.
+		for si in chain:
+			var s: Dictionary = st.segs[si]
+			var s_lo: int = s.x0 if s.axis == "h" else s.y0
+			var s_hi: int = s.x1 if s.axis == "h" else s.y1
+			for c in vs.lane_chunks:
+				var ca: int = maxi(int(c.t), s_lo)
+				var cb: int = mini(int(c.t1), s_hi)
+				if ca > cb:
+					continue
+				s.lane_chunks.append({"k": c.k, "t": ca, "t1": cb, "w": c.w})
+				if int(c.w) >= 2:
+					s.lane_rects.append(_side_rect(s, ca, cb, c.k, c.w))
+		st.lane_chains.append(vs)
 	for i in range(st.w * st.h):
 		if st.water[i]:
 			st.lanes[i] = 0
@@ -195,6 +235,86 @@ func _lanes() -> void:
 		for x in range(st.w):
 			if not st.inside(x, y, x, y):
 				st.lanes[y * st.w + x] = 0
+
+
+## Łańcuchy odcinków (indeksy w st.segs): kolejne odcinki tej samej linii na jednej prostej — wędrowiec szedł
+## dalej bez skrętu. Odcinki inne niż tunel (sale kompleksów) przerywają łańcuch.
+func _chains() -> Array:
+	var out: Array = []
+	var cur: Array = []
+	for si in range(st.segs.size()):
+		var s: Dictionary = st.segs[si]
+		if s.kind != "tunnel":
+			if not cur.is_empty():
+				out.append(cur)
+				cur = []
+			continue
+		if not cur.is_empty():
+			var p: Dictionary = st.segs[cur[-1]]
+			var straight: bool = p.line == s.line and int(p.idx) + 1 == int(s.idx) and p.axis == s.axis
+			if straight:
+				if s.axis == "h":
+					straight = p.y0 == s.y0 and p.y1 == s.y1 and p.x1 >= s.x0 - 1 and s.x1 >= p.x0 - 1
+				else:
+					straight = p.x0 == s.x0 and p.x1 == s.x1 and p.y1 >= s.y0 - 1 and s.y1 >= p.y0 - 1
+			if not straight:
+				out.append(cur)
+				cur = []
+		cur.append(si)
+	if not cur.is_empty():
+		out.append(cur)
+	return out
+
+
+## Odcinek zastępczy łańcucha (prostokąt wszystkich jego odcinków) — dla chodników i przerw.
+func _chain_seg(chain: Array) -> Dictionary:
+	var f: Dictionary = st.segs[chain[0]]
+	var vs := {"x0": f.x0, "y0": f.y0, "x1": f.x1, "y1": f.y1, "axis": f.axis, "line": f.line, "dry": f.dry,
+		"kind": "tunnel", "cid": -1, "junction": false, "lane_rects": [], "lane_chunks": [], "lane_gaps": [], "segs": chain}
+	for si in chain:
+		var s: Dictionary = st.segs[si]
+		vs.x0 = mini(vs.x0, s.x0)
+		vs.y0 = mini(vs.y0, s.y0)
+		vs.x1 = maxi(vs.x1, s.x1)
+		vs.y1 = maxi(vs.y1, s.y1)
+	return vs
+
+
+## Przeguby łańcucha jako zakresy t: oba końce oraz styki z innymi odcinkami (zakręty, węzły, sale).
+func _joints(vs: Dictionary, chain: Array) -> Array:
+	var horiz: bool = vs.axis == "h"
+	var lo: int = vs.x0 if horiz else vs.y0
+	var hi: int = vs.x1 if horiz else vs.y1
+	var out: Array = [Vector2i(lo, lo), Vector2i(hi, hi)]
+	for oi in range(st.segs.size()):
+		if chain.has(oi):
+			continue
+		var o: Dictionary = st.segs[oi]
+		if o.x1 < vs.x0 - 1 or o.x0 > vs.x1 + 1 or o.y1 < vs.y0 - 1 or o.y0 > vs.y1 + 1:
+			continue
+		var a: int = maxi(lo, o.x0 if horiz else o.y0)
+		var b: int = mini(hi, o.x1 if horiz else o.y1)
+		out.append(Vector2i(mini(a, b), maxi(a, b)))
+	return out
+
+
+## Ile kratek (0–3) od brzegu kanału w stronę k mieści się w ramce mapy (środek łańcucha).
+func _lane_room(vs: Dictionary, k: int) -> int:
+	var n := 0
+	for e in range(1, 4):
+		var r := _side_rect(vs, (vs.x0 + vs.x1) / 2 if vs.axis == "h" else (vs.y0 + vs.y1) / 2,
+			(vs.x0 + vs.x1) / 2 if vs.axis == "h" else (vs.y0 + vs.y1) / 2, k, e)
+		if not st.inside(r[0], r[1], r[2], r[3]):
+			break
+		n = e
+	return n
+
+
+static func _near_joint(t0: int, t1: int, joints: Array, zone: int) -> bool:
+	for j: Vector2i in joints:
+		if t0 <= j.y + zone and t1 >= j.x - zone:
+			return true
+	return false
 
 
 ## Zewnętrzne rogi zakrętów i węzłów: w bloku wspólnym dwóch odcinków (nakładające się prostokąty wody),
