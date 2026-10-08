@@ -83,7 +83,10 @@ static func place(
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
-				if FacadePlacer.wants_4h(ctx, pos, state, edges) and _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT_4H, vid, table, &"caves_roots" if step_use_roots else &""):
+				if dy == 1 and FacadePlacer.wants_4h(ctx, pos, state, edges) and not FacadePlacer.wants_4h(ctx, Vector2i(pos.x - 1, left_y), state, edges) 						and _try(ctx, plan, pos, TileModuleRole.Id.CONNECTOR_4H, &"L", table):
+					FacadePlacer.mark_4h(ctx, pos, state)   # łącznik 3H (z lewej) -> 4H: wierzch muru równo, bez schodka
+					ctx.facade_4h_connectors[pos] = true
+				elif FacadePlacer.wants_4h(ctx, pos, state, edges) and _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT_4H, vid, table, &"caves_roots" if step_use_roots else &""):
 					FacadePlacer.mark_4h(ctx, pos, state)
 				elif not _try(ctx, plan, pos, TileModuleRole.Id.STEP_LEFT, vid, table, &"caves_roots" if step_use_roots else &""):
 					var base_t := CaveTileConstants.MOD_CRNR_NW_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_IN_BASE
@@ -115,7 +118,10 @@ static func place(
 			else:
 				var step_use_roots: bool = use_roots and (dy == 1)
 				var vid: StringName = &"A"
-				if FacadePlacer.wants_4h(ctx, pos, state, edges) and _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT_4H, vid, table, &"caves_roots" if step_use_roots else &""):
+				if dy == 1 and FacadePlacer.wants_4h(ctx, pos, state, edges) and not FacadePlacer.wants_4h(ctx, Vector2i(pos.x + 1, right_y), state, edges) 						and _try(ctx, plan, pos, TileModuleRole.Id.CONNECTOR_4H, &"R", table):
+					FacadePlacer.mark_4h(ctx, pos, state)   # łącznik 4H -> 3H (z prawej)
+					ctx.facade_4h_connectors[pos] = true
+				elif FacadePlacer.wants_4h(ctx, pos, state, edges) and _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT_4H, vid, table, &"caves_roots" if step_use_roots else &""):
 					FacadePlacer.mark_4h(ctx, pos, state)
 				elif not _try(ctx, plan, pos, TileModuleRole.Id.STEP_RIGHT, vid, table, &"caves_roots" if step_use_roots else &""):
 					var base_t := CaveTileConstants.MOD_CRNR_NE_IN_BASE if not step_use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_IN_BASE

@@ -98,6 +98,9 @@ enum Id {
 	# Barierki wzdłuż kanałów poziomych: L / R (koniec ze słupkiem), M (przęsło ze słupkiem), CL / CR (zagięty
 	# koniec przy kładce — lewy / prawy).
 	CANAL_RAIL,
+	# Łącznik lica 3H z licem 4H przy uskoku podłogi o 1 rząd (wierzch muru równo): kolumna 4H przy styku;
+	# warianty L (3H z lewej) / R (3H z prawej), 4 części jak FACADE_4H.
+	CONNECTOR_4H,
 }
 
 

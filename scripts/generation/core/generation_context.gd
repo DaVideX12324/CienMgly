@@ -57,6 +57,7 @@ var preprocess_stats: Dictionary = {}
 var canals: RefCounted = null
 ## Górne kratki modułów lica 4H (Vector2i -> true) — narożnik wewnętrzny nad nimi idzie rząd wyżej.
 var facade_4h_tops: Dictionary = {}
+var facade_4h_connectors: Dictionary = {}  # stopy łączników 3H↔4H (CONNECTOR_4H) — bez narożnika schodka nad nimi
 ## Stopy lica 4H (Vector2i -> true) — wybrane odcinki lica, liczone raz (FacadePlacer.wants_4h).
 var facade_4h_bases: Dictionary = {}
 var facade_4h_planned := false

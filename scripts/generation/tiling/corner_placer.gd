@@ -12,6 +12,18 @@ static func _queue(placement_plan: TilePlacementPlan, pos: Vector2i, atlas_coord
 	placement_plan.queue(p)
 
 
+## Narożnik wewnętrzny schodka przy łączniku 3H↔4H (krawędź w kolumnie łącznika albo obok, w wysokości lica —
+## przed podniesieniem o rząd / dwa nad lico).
+static func _over_connector(ctx: GenerationContext, pos: Vector2i) -> bool:
+	if ctx.facade_4h_connectors.is_empty():
+		return false
+	for dx in [-1, 0, 1]:
+		for dy in range(1, 8):
+			if ctx.facade_4h_connectors.has(pos + Vector2i(dx, dy)):
+				return true
+	return false
+
+
 ## Ścieżka modułowa (1 kafel, kategoria CORNER, tie_breaker=0 jak legacy). true jeśli położono.
 static func _try_corner(ctx: GenerationContext, placement_plan: TilePlacementPlan, pos: Vector2i, module_role: TileModuleRole.Id, variant_id: StringName, table: Dictionary, force_id: StringName = &"") -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, pos, module_role, [], -1, variant_id, force_id)
@@ -45,6 +57,9 @@ static func plan(
 			var pos := Vector2i(x, y)
 			var edge: EdgeContext = edges.get(pos)
 			if edge == null or edge.edge_kind != EdgeKind.Kind.INNER_CORNER or edge.is_protected_solid:
+				continue
+			# Nad łącznikiem 3H↔4H wierzch muru biegnie równo — narożnik schodka zbędny (sterczący rant).
+			if _over_connector(ctx, pos):
 				continue
 
 			# Narożnik wewnętrzny SW / SE stoi na wysokości góry lica: rząd wyżej przy licu 4H i rząd wyżej przy licu
