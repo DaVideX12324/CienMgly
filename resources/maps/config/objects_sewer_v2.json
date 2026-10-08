@@ -659,8 +659,36 @@
           0
         ],
         [
-          0,
+          1,
           0
+        ]
+      ],
+      "source": 1,
+      "size": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "wall_frames",
+      "group": "wall_details",
+      "density": 0.6,
+      "atlas": [
+        0,
+        2
+      ],
+      "variants": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          4
         ]
       ],
       "source": 1,
