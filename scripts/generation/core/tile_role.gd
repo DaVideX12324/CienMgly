@@ -104,6 +104,9 @@ enum Id {
 	# Ściana szerokości 1 (wolnostojący występ muru): TOP (zaokrąglony koniec grzbietu od północy), MID (grzbiet),
 	# BOTTOM (zaokrąglony koniec od południa = wierzch lica), FACE_TOP / FACE (lico), BASE (cokół).
 	WALL_1W,
+	# Krawężnik (stopień posadzki na progu korytarz -> pokój / kompleks): poziomy H_L / H_M / H_R (dolna połowa
+	# kratki od północy granicy), pionowy V_T / V_M / V_B (prawa krawędź kratki od zachodu granicy).
+	CURB,
 }
 
 
