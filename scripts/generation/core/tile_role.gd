@@ -95,6 +95,9 @@ enum Id {
 	# Doły w pustym korycie (czarna pustka): VOID, TOP / TOP_B (pierwszy rząd pod kamieniem — wiszące kołki),
 	# BOTTOM (ostatni rząd nad kamieniem — stojące kołki).
 	CANAL_PIT,
+	# Barierki wzdłuż kanałów poziomych: L / R (koniec ze słupkiem), M (przęsło ze słupkiem), CL / CR (zagięty
+	# koniec przy kładce — lewy / prawy).
+	CANAL_RAIL,
 }
 
 

@@ -85,6 +85,7 @@
     "canal_pit_chance": 0.5,
     "canal_pit_len": [3, 4],
     "canal_pit_every": 16,
+    "canal_rails": true,
     "complex_bank_start": [5, 10],
     "complex_bank_max": 14,
     "room_distance_min_h": 6,

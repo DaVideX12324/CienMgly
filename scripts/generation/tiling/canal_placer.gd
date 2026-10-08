@@ -13,6 +13,7 @@ extends RefCounted
 ##               bez obrzeża (też bez kolizji).
 ## - Bridges:    kładki BRIDGE_V / BRIDGE_H (moduły na cały ślad: kanał + kratka brzegu z obu stron) na
 ##               osobnej warstwie nad FloorDecor.
+## - Walls:      barierki CANAL_RAIL (canals.rail_cells: L, M, R, CL, CR) — y-sort razem z postaciami.
 ## Brak roli w profilu = kratka pominięta (kanały to dodatek ścieków, bez stałych legacy).
 
 
@@ -59,6 +60,10 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 				if bridge_ends.has(q):
 					v = StringName(String(v) + "_OPEN")
 				_place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, v, &"FloorDecor", table)
+
+	# 4. Barierki (Walls, y-sort z postaciami).
+	for p: Vector2i in canals.rail_cells:
+		_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, canals.rail_cells[p], &"Walls", table)
 
 
 ## Ślad modułu kładki: `rect` z nakładki albo prostokąt otaczający jej kratki.

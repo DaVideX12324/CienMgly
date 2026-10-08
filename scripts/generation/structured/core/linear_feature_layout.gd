@@ -35,6 +35,9 @@ var dry: Dictionary = {}  # Vector2i -> bool
 var pits: Array[Rect2i] = []
 var pit_cells: Dictionary = {}  # Vector2i -> StringName
 
+## Barierki: kratka -> wariant (L, M, R, CL, CR); tylko grafika (wejście do kanału blokuje obrzeże)
+var rail_cells: Dictionary = {}  # Vector2i -> StringName
+
 ## Odcinki sieci liniowej
 var segments: Array[Dictionary] = []  # {rect: Rect2i, axis: String, line: int, idx: int, kind: String}
 var lines: Dictionary = {}  # line_id -> Array[Dictionary]
