@@ -62,6 +62,13 @@ var stack: bool = false
 var set_id: StringName = &""
 ## Minimalna liczba wolnych kratek między obiektem (podstawa i rysunek) a wodą kanału; 0 = bez reguły.
 var canal_gap: int = 0
+## Kierunek, w którym zwrócony jest każdy wariant ("N" / "S" / "E" / "W", "" = bez kierunku); odbicie poziome
+## zamienia E <-> W. Pusto = warianty bez kierunków.
+var facing: Array[StringName] = []
+## Preferowane kierunki (waga dodawana do 1 przy losowaniu wariantu i odbicia): "parent" — przodem do rodzica
+## (towarzysz, np. krzesło do stołu), "wall" / "away_wall" — do najbliższej ściany / od niej, "N" / "S" / "E" /
+## "W" — stały kierunek. Inne kierunki zostają możliwe, tylko rzadsze.
+var facing_pref: Dictionary = {}  # StringName -> float
 const STACK_ALT := 1
 var order: int = 0                    # kolejność w pliku (remisy priorytetu)
 ## Montaż: "" = na podłodze (ObjectPlanner); "facade" = na licu ściany widocznym z południa
