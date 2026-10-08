@@ -35,6 +35,8 @@ var layout: String = "interior"
 var structured_config: Dictionary = {}
 ## Sekcja "facade_rhythm" companion-JSON (wzory ozdób przęseł: "patterns", np. ["A-A-A", "A-B-A"]).
 var facade_rhythm: Dictionary = {}
+## Sekcja "tiling" companion-JSON (np. "grating" — kratownice wybierane już w układzie, przed obiektami).
+var tiling_config: Dictionary = {}
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true

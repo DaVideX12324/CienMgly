@@ -8,6 +8,7 @@ const FORBID := 1     # ściana, bariera/stopa lica, schody (+1), portal (+2), s
 const RESERVED := 2   # zarezerwowane przejście — tylko obiekty bez kolizji
 const SOLID := 4      # zajęte przez obiekt z kolizją
 const USED := 8       # zajęte przez dowolny obiekt (jeden obiekt na kratkę)
+const NO_DECAL := 16  # bez drobnicy (DECAL) — np. kratownica w posadzce; większe obiekty mogą stać
 
 var width := 0
 var height := 0
