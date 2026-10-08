@@ -2,7 +2,7 @@ extends RefCounted
 
 ## Kafle kanałów ścieków (CanalLayout). Role z profilu, wariant = układ sąsiedztwa:
 ## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą i pod ścianą: M, L / R przy
-##               podłodze, DL / DR przy ścianie; część modułu z własną warstwą w profilu, np. rim (0,-1) na
+##               podłodze, DL / DR / DLR przy ścianie, środek M / M_B / M_C losowo; część modułu z własną warstwą w profilu, np. rim (0,-1) na
 ##               FloorDecor nad licem — wtedy profil nie ma obrzeży S* na tej kratce), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
 ##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = brzeg koryta);
 ##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami; doły w pustym korycie
@@ -26,10 +26,20 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	var table := ctx.priority_table
 	var water: Dictionary = canals.water
 
-	# 1. Kanał: lico brzegu i kwas (warstwa Floor).
+	# 1. Kanał: lico brzegu i kwas (warstwa Floor). Lico M losowane z M / M_B / M_C (te, które są w profilu);
+	# lico między dwiema ścianami — DLR (brak w profilu = DL).
 	for p: Vector2i in water:
 		if _is_face(ctx, water, p):
-			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, _face_variant(ctx, water, p), &"Floor", table)
+			var fv := _face_variant(ctx, water, p)
+			if fv == &"M":
+				var alt: StringName = [&"M", &"M_B", &"M_C"][hash([ctx.seed_value, p, "canal_face"]) % 3]
+				if alt != &"M" and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, alt, &"Floor", table):
+					continue
+			elif fv == &"DLR":
+				if _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table):
+					continue
+				fv = &"DL"
+			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table)
 		elif canals.pit_cells.has(p) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], &"Floor", table):
 			pass
 		else:
@@ -97,7 +107,9 @@ static func _face_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i
 	var wl := p + Vector2i(-1, 0)
 	var wr := p + Vector2i(1, 0)
 	if not water.has(wl):
-		return &"L" if GridUtils.is_walkable(ctx.grid, wl) else &"DL"
+		if GridUtils.is_walkable(ctx.grid, wl):
+			return &"L"
+		return &"DLR" if not water.has(wr) and not GridUtils.is_walkable(ctx.grid, wr) else &"DL"
 	if not water.has(wr):
 		return &"R" if GridUtils.is_walkable(ctx.grid, wr) else &"DR"
 	return &"M"
