@@ -2,7 +2,8 @@ extends RefCounted
 
 ## Kafle kanałów ścieków (CanalLayout). Role z profilu, wariant = układ sąsiedztwa:
 ## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą i pod ścianą: M, L / R przy
-##               podłodze, DL / DR przy ścianie), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
+##               podłodze, DL / DR przy ścianie; część modułu z własną warstwą w profilu, np. rim (0,-1) na
+##               FloorDecor nad licem — wtedy profil nie ma obrzeży S* na tej kratce), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
 ##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = brzeg koryta);
 ##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami; doły w pustym korycie
 ##               (canals.pit_cells) — CANAL_PIT: VOID, TOP / TOP_B, BOTTOM (brak roli = zwykłe dno).
@@ -166,7 +167,8 @@ static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vect
 	for rp in parts:
 		var p := TilePlacement.new()
 		p.pos = anchor + rp.offset
-		p.layer = layer
+		# warstwa części z profilu, gdy inna niż domyślna (np. rim lica kanału na FloorDecor nad licem na Floor)
+		p.layer = layer if rp.layer == &"" or rp.layer == &"Walls" else rp.layer
 		p.source_id = rp.tile.source_id
 		p.atlas_coords = rp.tile.atlas_coords
 		p.alternative_tile = rp.tile.alternative_tile
