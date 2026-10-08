@@ -35,7 +35,8 @@ var halls: Array[Vector4i] = []      # bbox kompleksów (x0, y0, x1, y1)
 var rooms: Array[Vector4i] = []      # pokoje (x0, y0, x1, y1)
 ## Kładki: {cells: Array[Vector2i] (kratki wody pod kładką), vertical: bool (przez kanał poziomy), crossing}.
 var bridges: Array[Dictionary] = []
-var lane_chains: Array[Dictionary] = []   # odcinki zastępcze łańcuchów (chodniki, przerwy chodnika)
+var lane_chains: Array[Dictionary] = []
+var water_axis := PackedByteArray()   # kratka wody: 1 = odcinek poziomy, 2 = pionowy, 3 = oba (blok węzła / zakrętu)   # odcinki zastępcze łańcuchów (chodniki, przerwy chodnika)
 var gates: Array = []                # [Vector2i × 3]
 var levers: Array[Vector2i] = []
 
@@ -194,6 +195,16 @@ func distance_to(m: PackedByteArray) -> PackedInt32Array:
 			if y < h - 1 and d[i + w] + 1 < v: v = d[i + w] + 1
 			d[i] = v
 	return d
+
+
+## Oś kanału na kratkach wody (z prostokątów odcinków) — ścieżki korytarzy przechodzą przez wodę tylko w poprzek.
+func build_water_axis() -> void:
+	water_axis = new_mask()
+	for s in segs:
+		var bit: int = 1 if s.axis == "h" else 2
+		for y in range(maxi(0, s.y0), mini(h - 1, s.y1) + 1):
+			for x in range(maxi(0, s.x0), mini(w - 1, s.x1) + 1):
+				water_axis[y * w + x] |= bit
 
 
 # --- Zakaz obcej podłogi (fcnt) ---

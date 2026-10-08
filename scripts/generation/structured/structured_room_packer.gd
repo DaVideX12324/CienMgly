@@ -32,6 +32,7 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	p.rng = RandomNumberGenerator.new()
 	p.rng.seed = hash([seed_val, "structured_rooms"])
 	p.cross_p = state.prefix(state.cross_any)
+	state.build_water_axis()
 	p._service_corridors()
 	p._lane_gaps()
 	p._rooms()
@@ -103,12 +104,26 @@ func _crossing_bridges(centers: PackedInt32Array) -> void:
 				wc[Vector2i(nx, ny)] = true
 	if wc.is_empty():
 		return
-	var cells: Array[Vector2i] = []
-	for p in wc:
-		cells.append(p)
-		st.bridge_m[p.y * st.w + p.x] = 1
-	cells.sort()
-	st.bridges.append({"cells": cells, "vertical": bool(st.cross_h[cells[0].y * st.w + cells[0].x]), "crossing": true})
+	# Osobna kładka na każde przejście (spójna grupa kratek) — korytarz przecinający dwa kanały dawał jedną
+	# „kładkę” z prostokątem modułu obejmującym oba przejścia (grafika w murze, przejścia bez kładki).
+	var left := wc.duplicate()
+	while not left.is_empty():
+		var start: Vector2i = left.keys()[0]
+		var cells: Array[Vector2i] = [start]
+		left.erase(start)
+		var head := 0
+		while head < cells.size():
+			var c: Vector2i = cells[head]
+			head += 1
+			for d in DIRS:
+				var n: Vector2i = c + d
+				if left.has(n):
+					left.erase(n)
+					cells.append(n)
+		for p in cells:
+			st.bridge_m[p.y * st.w + p.x] = 1
+		cells.sort()
+		st.bridges.append({"cells": cells, "vertical": bool(st.cross_h[cells[0].y * st.w + cells[0].x]), "crossing": true})
 
 
 ## Długość ciągu wody przez (x, y) wzdłuż osi `d` (do 9 kratek w każdą stronę).
@@ -510,15 +525,21 @@ func _rooms() -> void:
 	var sp: PackedInt32Array = st.prefix(spine)
 	var placed: Array[Vector4i] = []
 	var flush_chance := float(cfg.get("room_flush_chance", 0.5))
+	# Najwyżej taki udział pokoi dostawionych do sieci — reszta stoi osobno z łącznikiem (korytarzem); bez limitu
+	# dostawienie wypierało pokoje z korytarzami (przy równych chodnikach udaje się częściej niż wolny pokój).
+	# W ostatnich 40 % prób limit znika — dopełnienie do docelowej liczby pokoi, gdy wolne się nie mieszczą.
+	var flush_max := int(ceil(float(target) * float(cfg.get("room_flush_max_share", 0.5))))
+	var attempts := target * 40
 	var edges := _network_edges()
-	for _a in range(target * 40):
+	for _a in range(attempts):
 		if placed.size() >= target:
 			break
 		var rw := rng.randi_range(int(rw_r[0]), int(rw_r[1]))
 		var rh := rng.randi_range(int(rh_r[0]), int(rh_r[1]))
 		if st.w - M - rw <= M or st.h - M - rh <= M + 2:
 			break
-		if not edges.is_empty() and rng.randf() < flush_chance:
+		var flush_ok: bool = flush_rooms.size() < flush_max or _a >= attempts * 6 / 10
+		if not edges.is_empty() and flush_ok and rng.randf() < flush_chance:
 			var fr := _flush_room(edges[rng.randi() % edges.size()], rw, rh, placed, dmin_h, dmin_v)
 			if fr.z >= fr.x:
 				placed.append(fr)
