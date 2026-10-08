@@ -2301,6 +2301,7 @@ atlas_coords = Vector2i(5, 6)
 
 [sub_resource type="Resource" id="Resource_83tm7"]
 script = ExtResource("7_f6wib")
+offset = Vector2i(0, -1)
 tile = SubResource("Resource_c4obx")
 
 [sub_resource type="Resource" id="Resource_rdxqm"]
@@ -2310,7 +2311,6 @@ atlas_coords = Vector2i(5, 7)
 
 [sub_resource type="Resource" id="Resource_1c06b"]
 script = ExtResource("7_f6wib")
-offset = Vector2i(0, 1)
 tile = SubResource("Resource_rdxqm")
 
 [sub_resource type="Resource" id="Resource_dpcfw"]
@@ -2325,6 +2325,7 @@ atlas_coords = Vector2i(6, 6)
 
 [sub_resource type="Resource" id="Resource_47v1t"]
 script = ExtResource("7_f6wib")
+offset = Vector2i(0, -1)
 tile = SubResource("Resource_j3tch")
 
 [sub_resource type="Resource" id="Resource_r878e"]
@@ -2334,7 +2335,6 @@ atlas_coords = Vector2i(6, 7)
 
 [sub_resource type="Resource" id="Resource_nb8jm"]
 script = ExtResource("7_f6wib")
-offset = Vector2i(0, 1)
 tile = SubResource("Resource_r878e")
 
 [sub_resource type="Resource" id="Resource_281aw"]
@@ -2349,6 +2349,7 @@ atlas_coords = Vector2i(7, 6)
 
 [sub_resource type="Resource" id="Resource_cu702"]
 script = ExtResource("7_f6wib")
+offset = Vector2i(0, -1)
 tile = SubResource("Resource_4ehlu")
 
 [sub_resource type="Resource" id="Resource_dxfxa"]
@@ -2358,7 +2359,6 @@ atlas_coords = Vector2i(7, 7)
 
 [sub_resource type="Resource" id="Resource_2rbjr"]
 script = ExtResource("7_f6wib")
-offset = Vector2i(0, 1)
 tile = SubResource("Resource_dxfxa")
 
 [sub_resource type="Resource" id="Resource_s3iox"]
@@ -2373,6 +2373,7 @@ atlas_coords = Vector2i(8, 6)
 
 [sub_resource type="Resource" id="Resource_4ucnb"]
 script = ExtResource("7_f6wib")
+offset = Vector2i(0, -1)
 tile = SubResource("Resource_m2a0u")
 
 [sub_resource type="Resource" id="Resource_6148b"]
@@ -2387,6 +2388,7 @@ atlas_coords = Vector2i(9, 6)
 
 [sub_resource type="Resource" id="Resource_78lmw"]
 script = ExtResource("7_f6wib")
+offset = Vector2i(0, -1)
 tile = SubResource("Resource_ej4yl")
 
 [sub_resource type="Resource" id="Resource_8e4tj"]
@@ -2396,7 +2398,6 @@ atlas_coords = Vector2i(9, 7)
 
 [sub_resource type="Resource" id="Resource_2dt2k"]
 script = ExtResource("7_f6wib")
-offset = Vector2i(0, 1)
 tile = SubResource("Resource_8e4tj")
 
 [sub_resource type="Resource" id="Resource_2cw2a"]
