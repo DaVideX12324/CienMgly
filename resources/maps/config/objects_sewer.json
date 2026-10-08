@@ -1,4 +1,10 @@
 {
+  "area_weights": {
+    "room": 1.0,
+    "hall": 0.5,
+    "corridor": 0.15
+  },
+  "set_gap": 2,
   "groups": {
     "pillar_decor": {
       "class": "PROP",
@@ -43,7 +49,8 @@
         ],
         "radius": 1
       },
-      "priority": 380
+      "priority": 380,
+      "set": "storage"
     },
     "wrecks": {
       "class": "PROP",
@@ -56,7 +63,8 @@
         "wall_any",
         "corner"
       ],
-      "flip_h": true
+      "flip_h": true,
+      "set": "junk"
     },
     "furniture": {
       "class": "PROP",
@@ -69,7 +77,8 @@
       "context": [
         "open"
       ],
-      "priority": 420
+      "priority": 420,
+      "set": "dining"
     },
     "chairs": {
       "class": "PROP",
@@ -90,7 +99,8 @@
           -6
         ]
       },
-      "density": 0
+      "density": 0,
+      "set": "dining"
     },
     "grates": {
       "class": "DECAL",
@@ -178,7 +188,9 @@
         4,
         5
       ],
-      "rhythm_area_chance": {"room": 0.3},
+      "rhythm_area_chance": {
+        "room": 0.3
+      },
       "priority": 900,
       "layer": "WallDecor"
     },
@@ -190,7 +202,9 @@
         4,
         5
       ],
-      "rhythm_area_chance": {"room": 0.3},
+      "rhythm_area_chance": {
+        "room": 0.3
+      },
       "priority": 900,
       "layer": "WallDecor"
     },
@@ -211,8 +225,30 @@
       "id": "pillar_chain",
       "group": "pillar_decor",
       "density": 0.35,
-      "size": [1, 3],
-      "tiles": [[0, -1, 10, 0], [0, 0, 10, 1], [0, 1, 10, 2]]
+      "size": [
+        1,
+        3
+      ],
+      "tiles": [
+        [
+          0,
+          -1,
+          10,
+          0
+        ],
+        [
+          0,
+          0,
+          10,
+          1
+        ],
+        [
+          0,
+          1,
+          10,
+          2
+        ]
+      ]
     },
     {
       "id": "chest",
@@ -274,6 +310,24 @@
             3
           ],
           "radius": 1
+        },
+        {
+          "id": "misc_clutter",
+          "count": [
+            1,
+            3
+          ],
+          "radius": 1,
+          "on": 0.8
+        },
+        {
+          "id": "cups",
+          "count": [
+            0,
+            2
+          ],
+          "radius": 1,
+          "on": 0.8
         }
       ],
       "source": 1
@@ -949,22 +1003,13 @@
         0,
         6
       ],
-      "companions": [
-        {
-          "id": "chairs",
-          "count": [
-            1,
-            3
-          ],
-          "radius": 1
-        }
-      ],
-      "source": 1
+      "source": 1,
+      "set": "wardrobe"
     },
     {
       "id": "misc_clutter",
       "group": "bottles",
-      "density": 0.5,
+      "density": 0,
       "atlas": [
         5,
         0
@@ -1305,26 +1350,44 @@
     {
       "id": "free_pillar",
       "group": "free_pillars",
-      "size": [1, 5],
+      "size": [
+        1,
+        5
+      ],
       "density": 0.15,
       "source": 6,
-      "atlas": [12, 3]
+      "atlas": [
+        12,
+        3
+      ]
     },
     {
       "id": "free_pillar_damaged",
       "group": "free_pillars",
-      "size": [1, 4],
+      "size": [
+        1,
+        4
+      ],
       "density": 0.09,
       "source": 6,
-      "atlas": [13, 4]
+      "atlas": [
+        13,
+        4
+      ]
     },
     {
       "id": "free_pillar_ruined",
       "group": "free_pillars",
-      "size": [1, 3],
+      "size": [
+        1,
+        3
+      ],
       "density": 0.06,
       "source": 6,
-      "atlas": [14, 5]
+      "atlas": [
+        14,
+        5
+      ]
     }
   ]
 }
