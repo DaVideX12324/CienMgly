@@ -12,3 +12,6 @@ gizmo_extents = 24.0
 
 [node name="Kafel" type="Marker2D" parent="."]
 gizmo_extents = 24.0
+
+[node name="Koniec" type="Marker2D" parent="."]
+gizmo_extents = 16.0
