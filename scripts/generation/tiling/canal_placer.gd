@@ -7,7 +7,11 @@ extends RefCounted
 ##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami.
 ## - FloorDecor: CANAL_BANK na podłodze przy kanale (strona kanału: N / S / E / W, rogi wypukłe NE / NW /
 ##               SE / SW, wklęsłe IN_* tylko po skosie, ciemne końce przy ścianie S_DL / S_DR / N_DL /
-##               N_DR / E_DT / E_DB / W_DT / W_DB), kładki BRIDGE_V / BRIDGE_H (moduły na cały ślad).
+##               N_DR / E_DT / E_DB / W_DT / W_DB). Pod końcami kładek wariant <nazwa>_OPEN (ten sam
+##               rysunek, kafel alternatywny bez kolizji — przejście na kładkę); brak go w profilu = kratka
+##               bez obrzeża (też bez kolizji).
+## - Bridges:    kładki BRIDGE_V / BRIDGE_H (moduły na cały ślad: kanał + kratka brzegu z obu stron) na
+##               osobnej warstwie nad FloorDecor.
 ## Brak roli w profilu = kratka pominięta (kanały to dodatek ścieków, bez stałych legacy).
 
 
@@ -26,22 +30,18 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
 			_place(ctx, placement_plan, p, role, _water_variant(ctx, water, p), &"Floor", table)
 
-	# 2. Kładki (FloorDecor) — cały ślad, końce zastępują obrzeża brzegu.
+	# 2. Kładki (Bridges) — cały ślad; kratki brzegu pod końcami zapamiętane dla obrzeży bez kolizji.
+	var bridge_ends := {}
 	for b in canals.bridges:
-		var r: Rect2i = b.get("rect", Rect2i())
-		if r == Rect2i() and b.has("cells") and not b.cells.is_empty():
-			var min_p: Vector2i = b.cells[0]
-			var max_p: Vector2i = b.cells[0]
-			for p in b.cells:
-				min_p.x = mini(min_p.x, p.x)
-				min_p.y = mini(min_p.y, p.y)
-				max_p.x = maxi(max_p.x, p.x)
-				max_p.y = maxi(max_p.y, p.y)
-			r = Rect2i(min_p, max_p - min_p + Vector2i(1, 1))
+		var r := bridge_rect(b)
 		var role: int = TileModuleRole.Id.BRIDGE_V if b.get("vertical", true) else TileModuleRole.Id.BRIDGE_H
-		_place(ctx, placement_plan, r.position, role, &"A", &"FloorDecor", table)
+		_place(ctx, placement_plan, r.position, role, &"A", &"Bridges", table)
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				if not water.has(Vector2i(x, y)):
+					bridge_ends[Vector2i(x, y)] = true
 
-	# 3. Obrzeża na podłodze przy kanale (FloorDecor), poza śladem kładek.
+	# 3. Obrzeża na podłodze przy kanale (FloorDecor); pod końcami kładek wersja bez kolizji.
 	var seen := {}
 	for p: Vector2i in water:
 		for dy in range(-1, 2):
@@ -51,8 +51,26 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					continue
 				seen[q] = true
 				var v := _bank_variant(ctx, water, q)
-				if v != &"":
-					_place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, v, &"FloorDecor", table)
+				if v == &"":
+					continue
+				if bridge_ends.has(q):
+					v = StringName(String(v) + "_OPEN")
+				_place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, v, &"FloorDecor", table)
+
+
+## Ślad modułu kładki: `rect` z nakładki albo prostokąt otaczający jej kratki.
+static func bridge_rect(b: Dictionary) -> Rect2i:
+	var r: Rect2i = b.get("rect", Rect2i())
+	if r == Rect2i() and b.has("cells") and not b.cells.is_empty():
+		var min_p: Vector2i = b.cells[0]
+		var max_p: Vector2i = b.cells[0]
+		for p in b.cells:
+			min_p.x = mini(min_p.x, p.x)
+			min_p.y = mini(min_p.y, p.y)
+			max_p.x = maxi(max_p.x, p.x)
+			max_p.y = maxi(max_p.y, p.y)
+		r = Rect2i(min_p, max_p - min_p + Vector2i(1, 1))
+	return r
 
 
 ## Górny rząd kanału pod podłogą = lico brzegu (widok z południa).
