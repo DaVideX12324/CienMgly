@@ -257,7 +257,12 @@ static func placement_outlines(pl: ObjectPlacement, plan: ObjectPlan) -> Array[P
 	var def := pl.def
 	if not def.is_solid():
 		return out
-	if not def.bakes.is_empty() and def.bakes[pl.variant].static_ok:
+	if def.is_wall_mounted():
+		# obiekt na licu z kolizją kafla: kratki podłogi pod nim (pl.cells) — górna połowa (kolizja przy licu)
+		for j in pl.cells:
+			var c := Vector2(j % plan.width, j / plan.width) * CELL
+			out.append(PackedVector2Array([c, c + Vector2(CELL, 0), c + Vector2(CELL, CELL * 0.5), c + Vector2(0, CELL * 0.5)]))
+	elif not def.bakes.is_empty() and def.bakes[pl.variant].static_ok:
 		var b: ObjectBake = def.bakes[pl.variant]
 		var oxf := Transform2D(0.0, Vector2(-1.0 if pl.flip else 1.0, 1.0), 0.0, pl.origin())
 		for sh in b.shapes:

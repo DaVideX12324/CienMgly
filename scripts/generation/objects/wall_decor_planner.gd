@@ -176,6 +176,7 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				pl.def = _pick_weighted(cands, rng)
 				pl.cell = a
 				objects.placements.append(pl)
+				_claim_floor(_result, pl, objects)
 				wall_pillars.append(pl)
 				used[a] = true
 				placed += 1
@@ -235,6 +236,40 @@ static func _place_spans(walls: Array, defs: Array[ObjectDef], slots: Dictionary
 		for span: Vector2i in spans:
 			for k in range(span.y):
 				used[Vector2i(span.x + k, y)] = true
+
+
+## Obiekt na licu z kolizją kafla (def.collision TILE): kratki jego kafli leżące na podłodze (np. podstawa filara
+## pod licem) -> pl.cells, zajętość SOLID | USED; obiekt podłogowy, który już tam stał, zostaje zdjęty (poza skrzyniami).
+static func _claim_floor(result, pl: ObjectPlacement, objects: ObjectPlan) -> void:
+	if pl.def.collision != ObjectDef.Collision.TILE:
+		return
+	var w: int = objects.width
+	var claim := {}
+	for t in pl.def.tiles:
+		var c: Vector2i = pl.cell + (t["off"] as Vector2i)
+		if c.x >= 0 and c.y >= 0 and c.x < w and c.y < objects.height and GridUtils.is_walkable(result.grid, c):
+			claim[c.y * w + c.x] = true
+	if claim.is_empty():
+		return
+	var keep: Array[ObjectPlacement] = []
+	for other in objects.placements:
+		var hit := false
+		# skrzynie (INTERACTIVE) zostają — cel quizu ważniejszy niż pół kratki pod filarem
+		if other != pl and not other.def.is_wall_mounted() and other.def.klass != ObjectDef.Klass.INTERACTIVE:
+			for j in other.cells:
+				if claim.has(j):
+					hit = true
+					break
+		if hit:
+			for j in other.cells:
+				objects.occupancy[j] &= ~(ObjectPlan.SOLID | ObjectPlan.USED)
+			objects.stats[other.def.id] = maxi(objects.count(other.def.id) - 1, 0)
+		else:
+			keep.append(other)
+	objects.placements = keep
+	for j in claim:
+		pl.cells.append(j)
+		objects.occupancy[j] |= ObjectPlan.SOLID | ObjectPlan.USED
 
 
 ## Ozdoby filarów (def.on_pillar): na ścianie z szansą density wszystkie filary dostają jedną ozdobę (ta sama

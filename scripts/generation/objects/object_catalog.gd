@@ -298,7 +298,10 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		if def.klass == ObjectDef.Klass.INTERACTIVE or (def.scenes.is_empty() and not def.renders_as_tile()):
 			errors.append("%s: mount 'facade' / 'rim' tylko dla DECAL/PROP ze sceną albo kaflem (placement grid)." % tag)
 			return null
-		def.collision = ObjectDef.Collision.NONE
+		# Na licu bez kolizji, chyba że katalog poda "tile" — kafle obiektu z kolizją w TileSecie, które leżą na podłodze
+		# pod licem (np. podstawa filara), zajmują tę kratkę (WallDecorPlanner) i są przeszkodą nawigacji.
+		if not (m.has("collision") and def.collision == ObjectDef.Collision.TILE and def.renders_as_tile()):
+			def.collision = ObjectDef.Collision.NONE
 		for r in m.get("rhythm", []):
 			if int(r) >= 2:
 				def.rhythm.append(int(r))
