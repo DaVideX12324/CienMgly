@@ -13,6 +13,8 @@ extends RefCounted
 
 const GenProgress = preload("../core/gen_progress.gd")
 const State = preload("core/structured_state.gd")
+## Prześwit kładki (canals.bridge_clearance): tyle kratek za każdym końcem modułu kładki bez obiektów.
+const BRIDGE_CLEAR_ALONG := 2
 const LinearNetworkGeneratorScript = preload("linear_network_generator.gd")
 const StructuredZoningScript = preload("structured_zoning.gd")
 const StructuredRoomPackerScript = preload("structured_room_packer.gd")
@@ -211,6 +213,14 @@ static func _canal_layout(st: State):
 		for c in cells:
 			under.append(c)
 		layout.bridges.append({"rect": r, "vertical": vertical, "cells": under, "crossing": b.get("crossing", false)})
+		# prześwit: zejścia z kładki (BRIDGE_CLEAR_ALONG kratek za końcami, kratkę szerzej) bez obiektów
+		var g := Vector2i(1, BRIDGE_CLEAR_ALONG) if vertical else Vector2i(BRIDGE_CLEAR_ALONG, 1)
+		var cr := Rect2i(r.position - g, r.size + g * 2)
+		for y in range(cr.position.y, cr.end.y):
+			for x in range(cr.position.x, cr.end.x):
+				var c := Vector2i(x, y)
+				if st.in_map(x, y) and st.floor_m[y * w + x] and not st.water[y * w + x]:
+					layout.bridge_clearance[c] = true
 	for cid in st.complexes:
 		var cells := {}
 		for c in st.complexes[cid].get("cells", PackedInt32Array()):
