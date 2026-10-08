@@ -101,7 +101,8 @@
         ]
       },
       "density": 0,
-      "set": "dining"
+      "set": "dining",
+      "flip_h": true
     },
     "grates": {
       "class": "DECAL",
@@ -358,7 +359,15 @@
       "size": [
         1,
         2
-      ]
+      ],
+      "facing": [
+        "",
+        "S",
+        "W"
+      ],
+      "facing_pref": {
+        "parent": 6
+      }
     },
     {
       "id": "crates",
