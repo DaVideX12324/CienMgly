@@ -1,11 +1,11 @@
-[gd_resource type="TileSet" format=3]
+[gd_resource type="TileSet" format=3 uid="uid://ctx3guckjpr6a"]
 
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Tiles.png" id="0_tiles"]
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="1_props"]
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Water.png" id="2_water"]
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="3_dungeon"]
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Extras.png" id="5_tsymo"]
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png" id="6_neudi"]
+[ext_resource type="Texture2D" uid="uid://tdqw1w8fhcf8" path="res://assets/pixel_crawler/environments/sewer/Assets/Tiles.png" id="0_tiles"]
+[ext_resource type="Texture2D" uid="uid://c3pqxoktjd8m7" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="1_props"]
+[ext_resource type="Texture2D" uid="uid://bvye0ex6q8i7m" path="res://assets/pixel_crawler/environments/sewer/Assets/Water.png" id="2_water"]
+[ext_resource type="Texture2D" uid="uid://0ifyinyw4x6r" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="3_dungeon"]
+[ext_resource type="Texture2D" uid="uid://bfwocsscu2vmx" path="res://assets/pixel_crawler/environments/sewer/Assets/Extras.png" id="5_tsymo"]
+[ext_resource type="Texture2D" uid="uid://5hmnfgtobndb" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png" id="6_neudi"]
 
 [sub_resource type="TileSetAtlasSource" id="src_tiles"]
 texture = ExtResource("0_tiles")
@@ -36,6 +36,7 @@ texture = ExtResource("0_tiles")
 14:0/0 = 0
 14:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 15:0/0 = 0
+15:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, 0, 8, 0, 8, 8, -8, 8)
 16:0/0 = 0
 17:0/0 = 0
 18:0/0 = 0
@@ -71,6 +72,7 @@ texture = ExtResource("0_tiles")
 14:1/0 = 0
 14:1/0/y_sort_origin = 39
 15:1/0 = 0
+15:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 16:1/0 = 0
 17:1/0 = 0
 18:1/0 = 0
@@ -101,6 +103,7 @@ texture = ExtResource("0_tiles")
 14:2/0 = 0
 14:2/0/y_sort_origin = 23
 15:2/0 = 0
+15:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 16:2/0 = 0
 17:2/0 = 0
 18:2/0 = 0
@@ -126,6 +129,7 @@ texture = ExtResource("0_tiles")
 11:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 12:3/0 = 0
 15:3/0 = 0
+15:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-7, -8, 7, -8, 7, 8, -7, 8)
 16:3/0 = 0
 17:3/0 = 0
 18:3/0 = 0
@@ -149,6 +153,7 @@ texture = ExtResource("0_tiles")
 12:4/0 = 0
 13:4/0 = 0
 15:4/0 = 0
+15:4/0/physics_layer_0/polygon_0/points = PackedVector2Array(-7, -8, 7, -8, 7, 8, -7, 8)
 17:4/0 = 0
 1:5/0 = 0
 2:5/0 = 0
@@ -166,6 +171,7 @@ texture = ExtResource("0_tiles")
 13:5/0 = 0
 14:5/0 = 0
 15:5/0 = 0
+15:5/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
 17:5/0 = 0
 17:5/0/y_sort_origin = -8
 18:5/0 = 0
