@@ -377,7 +377,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 				cmin = int(cnt)
 				cmax = cmin
 			def.companions.append({"id": StringName(String(c["id"])), "min": maxi(cmin, 0), "max": maxi(cmax, 0),
-				"radius": clampi(int(c.get("radius", 2)), 1, 6), "on": clampf(float(c.get("on", 0.0)), 0.0, 1.0)})
+				"radius": clampi(int(c.get("radius", 2)), 1, 6), "on": clampf(float(c.get("on", 0.0)), 0.0, 1.0), "no_corners": bool(c.get("no_corners", false))})
 	else:
 		errors.append("%s: companions musi być listą." % tag)
 	def.keep_paths = bool(m.get("keep_paths", true))
