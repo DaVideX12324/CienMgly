@@ -944,23 +944,11 @@ func _place_bridge(s: Dictionary, t: int, horiz: bool, exact := false) -> bool:
 
 ## Zbędne kładki (decyzja usera: nie jedna obok drugiej): zwykła kładka (odcinek / przerwa chodnika — nie
 ## kładka przecięcia korytarza, u-turnu ani naprawy) bliżej niż bridge_min_spacing od innej kładki znika,
-## jeśli bez niej spójność chodliwej podłogi się nie zmienia. Kładki przecięć powstają po kładkach przerw
-## i nie sprawdzają odstępu — stąd pary.
+## jeśli bez niej oba brzegi dalej łączy inna droga (wtedy spójność całej podłogi się nie zmienia). Kładki
+## przecięć powstają po kładkach przerw i nie sprawdzają odstępu — stąd pary.
 func _drop_redundant_bridges() -> void:
 	var sp := int(cfg.get("bridge_min_spacing", 10))
 	var dropped := 0
-	# Korzeń: kratka podłogi (nie wody) w największej spójnej części.
-	var big := _largest_component_cell()
-	if big < 0:
-		return
-	var main := _component(_walkable(), big)
-	var root := -1
-	for i in range(st.w * st.h):
-		if main[i] and not st.water[i]:
-			root = i
-			break
-	if root < 0:
-		return
 	var changed := true
 	while changed:
 		changed = false
@@ -976,11 +964,9 @@ func _drop_redundant_bridges() -> void:
 		for c in cands:
 			var bi: int = c[1]
 			var cells: Array = st.bridges[bi].cells
-			var before := _count(_component(_walkable(), root))
 			for q in cells:
 				st.bridge_m[q.y * st.w + q.x] = 0
-			var after := _count(_component(_walkable(), root))
-			if after == before - cells.size():
+			if _banks_connected(cells):
 				st.bridges.remove_at(bi)
 				dropped += 1
 				changed = true
@@ -988,6 +974,57 @@ func _drop_redundant_bridges() -> void:
 			for q in cells:
 				st.bridge_m[q.y * st.w + q.x] = 1
 	stats["bridges_dropped"] = dropped
+
+
+## Czy brzegi kładki (podłoga przy jej kratkach, po obu stronach kanału) łączy droga bez niej — BFS z jednego
+## brzegu do pierwszej kratki drugiego (kładki kandydatki mają inną kładkę blisko, więc droga jest krótka).
+func _banks_connected(cells: Array) -> bool:
+	var horiz_canal := true   # kładka pionowa przez kanał poziomy: brzegi nad i pod nią
+	var mn: Vector2i = cells[0]
+	var mx: Vector2i = cells[0]
+	for q in cells:
+		mn = Vector2i(mini(mn.x, q.x), mini(mn.y, q.y))
+		mx = Vector2i(maxi(mx.x, q.x), maxi(mx.y, q.y))
+	horiz_canal = (mx.y - mn.y) >= (mx.x - mn.x)
+	var a: Array[int] = []
+	var b := {}
+	for q in cells:
+		var ends: Array = [q + Vector2i(0, -1), q + Vector2i(0, 1)] if horiz_canal else [q + Vector2i(-1, 0), q + Vector2i(1, 0)]
+		for e: Vector2i in ends:
+			if not st.in_map(e.x, e.y):
+				continue
+			var i: int = e.y * st.w + e.x
+			if not st.floor_m[i] or (st.water[i] and not st.bridge_m[i]):
+				continue
+			if (e.y < mn.y) if horiz_canal else (e.x < mn.x):
+				a.append(i)
+			else:
+				b[i] = true
+	if a.is_empty() or b.is_empty():
+		return true   # kładka bez brzegu z którejś strony nic nie łączy
+	var seen := {}
+	var q := a.duplicate()
+	for i in a:
+		seen[i] = true
+	var head := 0
+	while head < q.size():
+		var c: int = q[head]
+		head += 1
+		if b.has(c):
+			return true
+		var x: int = c % st.w
+		var y: int = c / st.w
+		for d in DIRS:
+			var nx: int = x + d.x
+			var ny: int = y + d.y
+			if not st.in_map(nx, ny):
+				continue
+			var n: int = ny * st.w + nx
+			if seen.has(n) or not st.floor_m[n] or (st.water[n] and not st.bridge_m[n]):
+				continue
+			seen[n] = true
+			q.append(n)
+	return false
 
 
 ## Najmniejszy odstęp (Czebyszew) między kratkami kładki `bi` a kratkami innych kładek.
