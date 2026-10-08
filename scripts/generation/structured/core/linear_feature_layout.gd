@@ -58,6 +58,11 @@ var areas: Dictionary = {}  # Vector2i -> StringName
 ## Kratki zostają podłogą w siatce (podłoga pod zaokrąglonym grzbietem), ruch blokuje `blocked`.
 var walls_1w: Dictionary = {}  # Vector2i -> StringName
 
+## Kratownice w posadzce (tiling.grating): kształty (Array[Array[Vector2i]]) i ich kratki (Vector2i -> true) —
+## wybrane w układzie, żeby planer obiektów trzymał z dala drobnicę; tiling maluje je terenem.
+var grating_shapes: Array = []
+var grating: Dictionary = {}
+
 
 func is_empty() -> bool:
 	return cells.is_empty()

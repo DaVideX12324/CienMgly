@@ -25,6 +25,7 @@ const DiagonalTouchPassScript = preload("../preprocess/diagonal_touch_pass.gd")
 const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd")
 const WallProtrusionPassScript = preload("../preprocess/wall_protrusion_pass.gd")
 const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
+const GratingPlannerScript = preload("../tiling/grating_planner.gd")
 
 const PORTAL_MIN_FREE := 60
 
@@ -135,6 +136,7 @@ static func generate_layout(
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
 	if flags.enable_1w_walls:
 		stats["walls_1w"] = _walls_1w(ctx, canals, seed_used, cfg)
+	stats["grating"] = GratingPlannerScript.select(ctx.grid, canals, ctx.portal_zone, seed_used, flags.tiling_config.get("grating", {}))
 	stats["lost_post"] = _unreachable(ctx, canals)
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
