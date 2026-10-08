@@ -411,8 +411,8 @@ func _place_one(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 ## sztuka obok nie staje po skosie od rodzica (poza jego obrysem w obu osiach) — tylko przy bokach.
 func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) -> void:
 	in_companions = true
-	# środek podstawy rodzica (kotwica = lewy-dolny róg)
-	parent_center = Vector2(c) + Vector2((maxi(def.size.x, 1) - 1) * 0.5, 0.0)
+	# środek rysunku rodzica (kotwica = lewy-dolny róg)
+	parent_center = Vector2(c) + Vector2((maxi(def.size.x, 1) - 1) * 0.5, -(maxi(def.size.y, 1) - 1) * 0.5)
 	for comp in def.companions:
 		var cdef: ObjectDef = defs_by_id.get(comp["id"])
 		if cdef == null:
