@@ -89,6 +89,9 @@ var floor_edges_by_walkable: bool = false
 
 # --- Płaskowyże (jeden poziom) — maska z szumu na podłodze; domyślnie WYŁĄCZONE (parytet) ---
 var enable_platforms: bool = false
+## Ściany szerokości 1 (wolnostojące występy muru: zaokrąglony grzbiet + lico szer. 1) w kompleksach i pokojach
+## układu structured; parametry wall_1w_* w "structured_layout". Kafle: rola WALL_1W profilu.
+var enable_1w_walls: bool = false
 var plateau_noise_frequency: float = 0.02   # wielkość plam: MNIEJSZA = większe płaskowyże (0.02 ≈ plamy ~50 kratek, map-wide)
 var plateau_threshold: float = 0.1         # próg szumu -1..1: NIŻSZY = więcej płaskowyżu (0.1 ≈ ~40% mapy)
 var plateau_noise_octaves: int = 3         # szczegółowość brzegów: mniej = gładsze, większe plamy

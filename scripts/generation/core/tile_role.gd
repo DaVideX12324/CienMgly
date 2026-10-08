@@ -101,6 +101,9 @@ enum Id {
 	# Łącznik lica 3H z licem 4H przy uskoku podłogi o 1 rząd (wierzch muru równo): kolumna 4H przy styku;
 	# warianty L (3H z lewej) / R (3H z prawej), 4 części jak FACADE_4H.
 	CONNECTOR_4H,
+	# Ściana szerokości 1 (wolnostojący występ muru): TOP (zaokrąglony koniec grzbietu od północy), MID (grzbiet),
+	# BOTTOM (zaokrąglony koniec od południa = wierzch lica), FACE_TOP / FACE (lico), BASE (cokół).
+	WALL_1W,
 }
 
 
