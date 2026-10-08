@@ -14,6 +14,7 @@ static var CAVES_TILESET_PATH: String = QuizRpgPaths.path("resources/maps/caves.
 # =========================================================================
 const GenProgress = preload("core/gen_progress.gd")
 const StructuredLayoutGeneratorScript = preload("structured/structured_layout_generator.gd")
+const FacadeMaterialPlannerScript = preload("tiling/facade_material_planner.gd")
 
 # --- Koordynaty kafelków w atlasie caves.tres (Tiles.png) ---
 
@@ -387,6 +388,8 @@ static func plan_cave_tiles(
 	ctx.generator_behaviour = generator_behaviour
 	if map_tile_profile != null and ctx.tileset_field == null:
 		ctx.tileset_field = TileSetField.new()
+	if map_tile_profile != null:
+		FacadeMaterialPlannerScript.apply(ctx)
 
 	GenProgress.begin(&"edges")
 	var analysis := EdgeAnalyzer.analyze(ctx)
