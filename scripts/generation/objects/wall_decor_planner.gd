@@ -45,10 +45,17 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 			rhythm_defs.append(def)
 		need_h = need_h or def.facade_h != 0
 	var bases_4h := _bases_4h(result, seed_v, flags) if need_h else {}
+	var walls: Array = []  # ściany z filarami: {y, spans: [Vector2i(x, szerokość)]}
 	if not rhythm_defs.is_empty():
-		_place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects, "wall_rhythm")
+		walls = _place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects, "wall_rhythm")
+	var span_defs: Array[ObjectDef] = []
 	for def in defs:
-		if not def.rhythm.is_empty():
+		if def.span and def.rhythm.is_empty():
+			span_defs.append(def)
+	if not walls.is_empty() and not span_defs.is_empty():
+		_place_spans(walls, span_defs, slots, used, bases_4h, on_wall, seed_v, flags, objects)
+	for def in defs:
+		if not def.rhythm.is_empty() or (def.span and not walls.is_empty()):
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash([seed_v, String(def.id), "wall"])
@@ -112,8 +119,10 @@ static func _height_ok(def: ObjectDef, a: Vector2i, w: int, bases_4h: Dictionary
 ## przęsła po `sp` kratek oddzielone filarem szerokim na 1, wyśrodkowane — filary nie na końcach lica, odcinek
 ## krótszy niż 2 przęsła bez filarów. Odcinek z licem 4H (FacadePlacer: ten sam seed i siatka co kafelkowanie)
 ## dostaje obiekt z facade_h 4, pozostałe — z facade_h 3 (0 = każdy). Przed resztą dekoracji (one omijają filary).
+## Zwraca ściany z kompletem filarów: [{y, spans: [Vector2i(x początku przęsła, szerokość)]}].
 static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
-		on_wall: bool, seed_v: int, objects: ObjectPlan, salt: String) -> void:
+		on_wall: bool, seed_v: int, objects: ObjectPlan, salt: String) -> Array:
+	var walls: Array = []
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed_v, salt])
 	var rows := {}
@@ -165,6 +174,83 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				placed += 1
 			if placed > 0:
 				objects.stats[def.id] = objects.count(def.id) + placed
+			if placed == spans - 1:
+				var sp_list: Array[Vector2i] = []
+				for k in range(spans):
+					sp_list.append(Vector2i(x0 + e + k * (sp + 1), sp))
+				walls.append({"y": y, "spans": sp_list})
+	return walls
+
+
+## Ozdoby przęseł (def.span): na każdej ścianie z filarami wzór z flags.facade_rhythm.patterns ("A-B-A"…),
+## litera przęsła = wzór[odległość od bliższego końca ściany % długość] — symetrycznie względem środka ściany.
+## Litery to różne obiekty wylosowane na ścianę (waga density); ozdoba wyśrodkowana w przęśle, gdy pasuje
+## (lico, wysokość). Przęsła ścian z filarami są potem zajęte — bez losowej drobnicy.
+static func _place_spans(walls: Array, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary,
+		bases_4h: Dictionary, on_wall: bool, seed_v: int, flags: GenerationFlags, objects: ObjectPlan) -> void:
+	var patterns: Array = flags.facade_rhythm.get("patterns", ["A-A-A", "A-B-A"]) if flags != null else ["A-A-A"]
+	if patterns.is_empty():
+		patterns = ["A-A-A"]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_v, "wall_spans"])
+	for wall in walls:
+		var y: int = wall.y
+		var spans: Array[Vector2i] = wall.spans
+		var tokens: PackedStringArray = String(patterns[rng.randi() % patterns.size()]).split("-")
+		var letters := {}  # litera -> ObjectDef
+		var n := spans.size()
+		for i in range(n):
+			var letter := tokens[mini(i, n - 1 - i) % tokens.size()]
+			var span: Vector2i = spans[i]
+			if not letters.has(letter):
+				letters[letter] = _pick_span_def(defs, span.y, letters.values(), rng)
+			var def: ObjectDef = letters[letter]
+			if def == null:
+				continue
+			var w := maxi(def.size.x, 1)
+			if w > span.y:
+				continue
+			var a := Vector2i(span.x + (span.y - w) / 2, y)
+			if not _fits(slots, a, w, def) or not _height_ok(def, a, w, bases_4h, on_wall):
+				continue
+			var free := true
+			for k in range(w):
+				free = free and not used.has(a + Vector2i(k, 0))
+			if not free:
+				continue
+			var pl := ObjectPlacement.new()
+			pl.def = def
+			pl.cell = a
+			pl.variant = rng.randi() % maxi(def.variant_count(), 1)
+			pl.flip = def.flip_h and rng.randi() % 2 == 0
+			objects.placements.append(pl)
+			objects.stats[def.id] = objects.count(def.id) + 1
+		for span: Vector2i in spans:
+			for k in range(span.y):
+				used[Vector2i(span.x + k, y)] = true
+
+
+## Obiekt przęsła mieszczący się w szerokości `width`, inny niż już wybrane na ścianie (gdy się da), wg density.
+static func _pick_span_def(defs: Array[ObjectDef], width: int, taken: Array, rng: RandomNumberGenerator) -> ObjectDef:
+	var cands: Array[ObjectDef] = []
+	for d in defs:
+		if maxi(d.size.x, 1) <= width and not taken.has(d):
+			cands.append(d)
+	if cands.is_empty():
+		for d in defs:
+			if maxi(d.size.x, 1) <= width:
+				cands.append(d)
+	if cands.is_empty():
+		return null
+	var total := 0.0
+	for d in cands:
+		total += maxf(d.density, 0.01)
+	var r := rng.randf() * total
+	for d in cands:
+		r -= maxf(d.density, 0.01)
+		if r <= 0.0:
+			return d
+	return cands[-1]
 
 
 ## Szansa filarów na odcinku x0..x1 (rząd y) wg rodzaju obszaru (canals.areas) — najczęstszy rodzaj kratek pod

@@ -19,7 +19,7 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "facade_h", "layer", "stack",
+	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "facade_h", "layer", "stack",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade", "rim"]
@@ -302,12 +302,13 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		for r in m.get("rhythm", []):
 			if int(r) >= 2:
 				def.rhythm.append(int(r))
+		def.span = bool(m.get("span", false))
 		var ac: Dictionary = m.get("rhythm_area_chance", {})
 		for k in ac:
 			def.rhythm_area_chance[StringName(k)] = float(ac[k])
 		def.facade_h = int(m.get("facade_h", 0))
-	elif m.has("rhythm") or m.has("facade_h") or m.has("rhythm_area_chance"):
-		errors.append("%s: rhythm / rhythm_area_chance / facade_h tylko dla mount 'facade' / 'rim'." % tag)
+	elif m.has("rhythm") or m.has("facade_h") or m.has("rhythm_area_chance") or m.has("span"):
+		errors.append("%s: rhythm / rhythm_area_chance / span / facade_h tylko dla mount 'facade' / 'rim'." % tag)
 	var tags: Array = WALL_TAGS if def.is_wall_mounted() else CONTEXT_TAGS
 
 	for t in m.get("context", []):

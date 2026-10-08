@@ -69,6 +69,7 @@ func build_flags(base: GenerationFlags = null) -> GenerationFlags:
 	for k in FLAG_STRING_KEYS:
 		if fl.has(k): f.set(k, String(fl[k]))
 	f.structured_config = structured_layout()
+	f.facade_rhythm = facade_rhythm()
 	return f
 
 func default_tileset_id() -> StringName:

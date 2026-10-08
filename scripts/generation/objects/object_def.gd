@@ -67,6 +67,9 @@ var rhythm: Array[int] = []
 ## Rytm: szansa filarów na odcinku wg rodzaju obszaru pod nim (canals.areas: "hall" / "room" / "corridor");
 ## brak rodzaju = 1.0 (zawsze).
 var rhythm_area_chance: Dictionary = {}  # StringName -> float
+## Na licu: ozdoba przęsła — na ścianach z filarami jedna na przęsło wg wzoru (facade_rhythm.patterns),
+## zamiast losowego rozrzutu.
+var span: bool = false
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
 ## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.
