@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcwfliv88wuvq"
-path="res://.godot/imported/variant_1.jpg-8f0a581058fadd9395a8158401821847.ctex"
+uid="uid://swdnsxhp3042"
+path="res://.godot/imported/variant (2)_old.jpg-30049cdd110d0775fbfb8f58798e15b1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/variant_1.jpg"
-dest_files=["res://.godot/imported/variant_1.jpg-8f0a581058fadd9395a8158401821847.ctex"]
+source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/variant (2)_old.jpg"
+dest_files=["res://.godot/imported/variant (2)_old.jpg-30049cdd110d0775fbfb8f58798e15b1.ctex"]
 
 [params]
 

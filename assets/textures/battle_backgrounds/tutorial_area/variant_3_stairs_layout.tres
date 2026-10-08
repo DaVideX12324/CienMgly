@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3]
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3 uid="uid://dt31oa5ee34w6"]
 
 [ext_resource type="Script" uid="uid://b7oj2baq86vqb" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_ngidx"]
 [ext_resource type="Script" uid="uid://mccxa5pvph1i" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_o8xfp"]
@@ -6,10 +6,10 @@
 
 [sub_resource type="Resource" id="Resource_ngidx"]
 script = ExtResource("1_ngidx")
-quad = PackedVector2Array(285.7, 765, 1634.3, 765, 1432.4, 632.5, 487.6, 632.5)
-rows = 2
+quad = PackedVector2Array(286, 765, 1634, 765, 1417, 638, 1075, 423, 845, 423, 519, 631)
+rows = 3
 row_capacity = 5
-auto_depth_scale = false
+row_capacities = PackedInt32Array(6, 3, 2)
 
 [resource]
 script = ExtResource("2_o8xfp")
