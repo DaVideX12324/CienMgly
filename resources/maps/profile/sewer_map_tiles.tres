@@ -1,14 +1,14 @@
-[gd_resource type="Resource" script_class="MapTileProfile" format=3]
+[gd_resource type="Resource" script_class="MapTileProfile" format=3 uid="uid://dj3tqa15mny6n"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/mixed_pool.gd" id="1_8v2u1"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd" id="2_hrmma"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd" id="3_cmae4"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/tiles/named_tileset_definition.gd" id="4_orwte"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_role_entry.gd" id="5_ybd7s"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_variant.gd" id="6_fxc8i"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_module_part.gd" id="7_8i1gb"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/generation/core/tile_ref.gd" id="8_j2pwj"]
-[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/sewer.tres" id="9_4tt5c"]
+[ext_resource type="Script" uid="uid://modwatud5p70" path="res://modules/quiz_rpg/scripts/generation/tiles/mixed_pool.gd" id="1_8v2u1"]
+[ext_resource type="Script" uid="uid://eie6c4j8lbuk" path="res://modules/quiz_rpg/scripts/generation/tiles/tileset_pair_rule.gd" id="2_hrmma"]
+[ext_resource type="Script" uid="uid://bf84d34ne7sbi" path="res://modules/quiz_rpg/scripts/generation/tiles/map_tile_profile.gd" id="3_cmae4"]
+[ext_resource type="Script" uid="uid://c181evs1vgggx" path="res://modules/quiz_rpg/scripts/generation/tiles/named_tileset_definition.gd" id="4_orwte"]
+[ext_resource type="Script" uid="uid://c17xyqsvux21w" path="res://modules/quiz_rpg/scripts/generation/core/tile_role_entry.gd" id="5_ybd7s"]
+[ext_resource type="Script" uid="uid://hsdg466v38cc" path="res://modules/quiz_rpg/scripts/generation/core/tile_variant.gd" id="6_fxc8i"]
+[ext_resource type="Script" uid="uid://deo5lulmsu7yc" path="res://modules/quiz_rpg/scripts/generation/core/tile_module_part.gd" id="7_8i1gb"]
+[ext_resource type="Script" uid="uid://ca0qwnnslwbve" path="res://modules/quiz_rpg/scripts/generation/core/tile_ref.gd" id="8_j2pwj"]
+[ext_resource type="TileSet" uid="uid://culxwh6fnryej" path="res://modules/quiz_rpg/resources/maps/sewer.tres" id="9_4tt5c"]
 
 [sub_resource type="Resource" id="Resource_tka60"]
 script = ExtResource("8_j2pwj")
@@ -1845,7 +1845,6 @@ atlas_coords = Vector2i(6, 12)
 
 [sub_resource type="Resource" id="Resource_r4jv1"]
 script = ExtResource("7_8i1gb")
-offset = Vector2i(0, 0)
 tile = SubResource("Resource_5gn6v")
 
 [sub_resource type="Resource" id="Resource_24slj"]
