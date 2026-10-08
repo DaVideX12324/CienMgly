@@ -55,6 +55,11 @@ static func place(
 ) -> void:
 	var pos := edge.pos
 	var table := ctx.priority_table
+	var force: StringName = &"caves_roots" if use_roots else &""
+	# narożnik w zagłębieniu: mur po drugiej stronie wystaje dalej do przodu -> wariant SHADE (gdy jest w profilu)
+	var shade := FacadePlacer.recess_shade(ctx, pos)
+	var shade_w: bool = shade == &"SHADE_R" or shade == &"SHADE_LR"
+	var shade_e: bool = shade == &"SHADE_L" or shade == &"SHADE_LR"
 
 	if w_open and not e_open:
 		if edge.facade_height == 2:
@@ -64,11 +69,11 @@ static func place(
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_WEST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
-		elif FacadePlacer.wants_4h(ctx, pos, state) and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST_4H, &"A", table, &"caves_roots" if use_roots else &""):
+		elif FacadePlacer.wants_4h(ctx, pos, state) and ((shade_w and FacadePlacer.has_variant(ctx, TileModuleRole.Id.OUT_CORNER_WEST_4H, &"SHADE") and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST_4H, &"SHADE", table, force)) 				or _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST_4H, &"A", table, force)):
 			FacadePlacer.mark_4h(ctx, pos, state)
 		else:
 			var vid: StringName = &"A"
-			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, vid, table, &"caves_roots" if use_roots else &""):
+			if not ((shade_w and FacadePlacer.has_variant(ctx, TileModuleRole.Id.OUT_CORNER_WEST, &"SHADE") and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, &"SHADE", table, force)) 					or _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_WEST, vid, table, force)):
 				var top_t := CaveTileConstants.MOD_CRNR_NW_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_TOP
 				var mid_t := CaveTileConstants.MOD_CRNR_NW_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_MID
 				var base_t := CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE
@@ -86,11 +91,11 @@ static func place(
 				_queue(plan, pos + Vector2i(0, -1), CaveTileConstants.WALL_2H_EAST_TOP, &"FACADE", table, pos)
 			state.mark(pos, &"FACADE")
 			state.mark(pos + Vector2i(0, -1), &"FACADE")
-		elif FacadePlacer.wants_4h(ctx, pos, state) and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST_4H, &"A", table, &"caves_roots" if use_roots else &""):
+		elif FacadePlacer.wants_4h(ctx, pos, state) and ((shade_e and FacadePlacer.has_variant(ctx, TileModuleRole.Id.OUT_CORNER_EAST_4H, &"SHADE") and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST_4H, &"SHADE", table, force)) 				or _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST_4H, &"A", table, force)):
 			FacadePlacer.mark_4h(ctx, pos, state)
 		else:
 			var vid: StringName = &"A"
-			if not _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, vid, table, &"caves_roots" if use_roots else &""):
+			if not ((shade_e and FacadePlacer.has_variant(ctx, TileModuleRole.Id.OUT_CORNER_EAST, &"SHADE") and _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, &"SHADE", table, force)) 					or _try_out(ctx, plan, pos, TileModuleRole.Id.OUT_CORNER_EAST, vid, table, force)):
 				var top_t := CaveTileConstants.MOD_CRNR_NE_OUT_TOP if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_TOP
 				var mid_t := CaveTileConstants.MOD_CRNR_NE_OUT_MID if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_MID
 				var base_t := CaveTileConstants.MOD_CRNR_NE_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NE_OUT_BASE
