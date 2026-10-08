@@ -57,6 +57,9 @@ var flip_h: bool = false              # losowe odbicie (canvas item / scena)
 ## Stos: obiekt z kafla, za którym (kratkę niżej) stoi inny obiekt ze stack — kafel alternatywny STACK_ALT
 ## (y-sort podniesiony o kratkę): rysuje się nad tym z przodu, podstawa nakrywa jego górę (skrzynia na skrzyni).
 var stack: bool = false
+## Zestaw (np. "dining", "storage") — duże obiekty z różnych zestawów trzymają odstęp (katalog: set_gap),
+## więc przy stole stoją krzesła, a nie skrzynki. Pusto = bez zestawu (bez ograniczeń).
+var set_id: StringName = &""
 const STACK_ALT := 1
 var order: int = 0                    # kolejność w pliku (remisy priorytetu)
 ## Montaż: "" = na podłodze (ObjectPlanner); "facade" = na licu ściany widocznym z południa
@@ -90,6 +93,17 @@ func is_rim_mounted() -> bool:
 
 func is_solid() -> bool:
 	return collision != Collision.NONE
+
+
+## Duży obiekt: z kolizją (PROP) i wielokratkowy (sprite / podstawa > 1 kratka) albo z kształtem kolizji na
+## >= 80 % kratki. Takie obiekty planer stawia głównie w pokojach (katalog: area_weights).
+func is_big() -> bool:
+	if not is_solid() or klass != Klass.PROP:
+		return false
+	if size.x * size.y > 1 or footprint.size() > 1:
+		return true
+	var area := shape_rect.x * shape_rect.y if shape_radius <= 0.0 else PI * shape_radius * shape_radius
+	return area >= 0.8 * CELL * CELL
 
 
 ## Obiekt większy niż jedna kratka — podstawa na kilku kratkach albo grafika szersza / wyższa niż
