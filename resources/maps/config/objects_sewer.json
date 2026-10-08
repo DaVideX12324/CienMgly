@@ -1,5 +1,13 @@
 {
   "groups": {
+    "pillar_decor": {
+      "class": "PROP",
+      "placement": "grid",
+      "source": 1,
+      "mount": "facade",
+      "on_pillar": true,
+      "layer": "PillarDecor"
+    },
     "boxes": {
       "class": "PROP",
       "placement": "grid",
@@ -198,6 +206,13 @@
     }
   },
   "objects": [
+    {
+      "id": "pillar_chain",
+      "group": "pillar_decor",
+      "density": 0.35,
+      "size": [1, 3],
+      "tiles": [[0, -1, 10, 0], [0, 0, 10, 1], [0, 1, 10, 2]]
+    },
     {
       "id": "chest",
       "class": "INTERACTIVE",
