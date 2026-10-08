@@ -135,6 +135,12 @@ func find(sx: int, sy: int) -> PackedInt32Array:
 			if nx < M + 1 or ny < M + 1 + st.top_extra or nx >= W - M - 1 or ny >= H - M - 1:
 				continue
 			var n := ny * W + nx
+			# Woda tylko w poprzek kanału (także w części własnej — kompleks obejmuje swój kanał; ścieżka wzdłuż
+			# wody dawała „kładkę przecięcia” długą na kilkadziesiąt kratek), przez blok węzła wcale.
+			if st.water[n] and not st.water_axis.is_empty():
+				var ax: int = st.water_axis[n]
+				if ax == 3 or (ax == 1 and d.x != 0) or (ax == 2 and d.y != 0):
+					continue
 			var n_own := own.has(nx, ny)
 			if not n_own:
 				if _forb(n, nx, ny) and not _in(start_ok, nx, ny):
