@@ -1,9 +1,10 @@
-[gd_resource type="TileSet" format=3 uid="uid://bww43d7m2ycsd"]
+[gd_resource type="TileSet" format=3]
 
-[ext_resource type="Texture2D" uid="uid://tdqw1w8fhcf8" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Tiles.png" id="0_tiles"]
-[ext_resource type="Texture2D" uid="uid://c3pqxoktjd8m7" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Props.png" id="1_props"]
-[ext_resource type="Texture2D" uid="uid://bvye0ex6q8i7m" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Water.png" id="2_water"]
-[ext_resource type="Texture2D" uid="uid://0ifyinyw4x6r" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="3_dungeon"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Tiles.png" id="0_tiles"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Props.png" id="1_props"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Water.png" id="2_water"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png" id="3_dungeon"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer_v2/Assets/Extras.png" id="5_tsymo"]
 
 [sub_resource type="TileSetAtlasSource" id="src_tiles"]
 texture = ExtResource("0_tiles")
@@ -1508,6 +1509,71 @@ texture = ExtResource("3_dungeon")
 7:21/0 = 0
 8:21/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_tsymo"]
+texture = ExtResource("5_tsymo")
+0:0/0 = 0
+0:0/0/terrain_set = 0
+0:0/0/terrain = 0
+0:0/0/terrains_peering_bit/right_side = 0
+0:0/0/terrains_peering_bit/left_side = 0
+1:0/0 = 0
+1:0/0/terrain_set = 0
+1:0/0/terrain = 0
+1:0/0/terrains_peering_bit/bottom_side = 0
+1:0/0/terrains_peering_bit/top_side = 0
+2:0/0 = 0
+2:0/0/terrain_set = 0
+2:0/0/terrain = 0
+2:0/0/terrains_peering_bit/right_side = 0
+2:0/0/terrains_peering_bit/bottom_side = 0
+2:0/0/terrains_peering_bit/bottom_left_corner = 0
+2:0/0/terrains_peering_bit/left_side = 0
+3:0/0 = 0
+3:0/0/terrain_set = 0
+3:0/0/terrain = 0
+3:0/0/terrains_peering_bit/right_side = 0
+3:0/0/terrains_peering_bit/bottom_right_corner = 0
+3:0/0/terrains_peering_bit/bottom_side = 0
+3:0/0/terrains_peering_bit/left_side = 0
+4:0/0 = 0
+4:0/0/terrain_set = 0
+4:0/0/terrain = 0
+4:0/0/terrains_peering_bit/right_side = 0
+4:0/0/terrains_peering_bit/left_side = 0
+4:0/0/terrains_peering_bit/top_left_corner = 0
+4:0/0/terrains_peering_bit/top_side = 0
+5:0/0 = 0
+5:0/0/terrain_set = 0
+5:0/0/terrain = 0
+5:0/0/terrains_peering_bit/right_side = 0
+5:0/0/terrains_peering_bit/left_side = 0
+5:0/0/terrains_peering_bit/top_side = 0
+5:0/0/terrains_peering_bit/top_right_corner = 0
+0:1/0 = 0
+0:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(5, 5, 8, 5, 8, 8, 5, 8)
+1:1/0 = 0
+1:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, 5, -5, 5, -5, 8, -8, 8)
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(5, -8, 8, -8, 8, -5, 5, -5)
+3:1/0 = 0
+3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, -5, -8, -5, -5, -8, -5)
+0:2/0 = 0
+0:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:2/0 = 0
+1:2/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:3/0 = 0
+0:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:3/0 = 0
+1:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:4/0 = 0
+0:4/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:4/0 = 0
+1:4/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+0:5/0 = 0
+0:5/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+1:5/0 = 0
+1:5/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
+
 [resource]
 physics_layer_0/collision_layer = 4
 physics_layer_0/collision_mask = 3
@@ -1528,3 +1594,4 @@ sources/0 = SubResource("src_tiles")
 sources/1 = SubResource("src_props")
 sources/2 = SubResource("src_water")
 sources/3 = SubResource("src_dungeon")
+sources/4 = SubResource("TileSetAtlasSource_tsymo")
