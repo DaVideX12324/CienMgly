@@ -13,7 +13,10 @@ extends Node2D
 ##    tylko przesunięcie znacznika i „Przypisz”.
 ## 4. Moduł z kilku kratek: zaznacz „modul” i przeciągnij znacznik „Koniec” na przeciwny róg prostokąta —
 ##    „Przypisz” nada każdej kratce przesunięcie = „przesuniecie” + (kratka − „kafel”).
-## Po lewej podgląd wszystkich ról złożonych z obecnych kafli; znacznik „Wybor” na części — skok do jej kafla.
+## Po lewej podgląd wszystkich ról złożonych z obecnych kafli (z „wzor” — obok wygląd we wzorze); znacznik
+## „Wybor” na części — skok do jej kafla. Atlasy = TileSet zestawu („tileset”).
+## Przeniesienie profilu na nową paczkę: „profile” = stary, „nowy_tileset” = nowy TileSet, „nowy_plik” = ścieżka
+## -> „Kopiuj obecny profil”; potem „wzor” = stary profil i przypisywanie kafli nowego atlasu.
 ## Na atlasie: kratki z przypisaniem podświetlone (z nazwą pierwszej roli), biała ramka — wybrany kafel,
 ## pomarańczowe — reszta modułu wybranego przypisania. Zmiany zapisują się same do pliku profilu.
 ## Bez cofania (Ctrl+Z) — w razie czego git.
@@ -39,6 +42,22 @@ const COL_RECT := Color(1.0, 0.9, 0.3)
 	set(v):
 		zestaw = v
 		_rebuild()
+## TileSet zestawu — z niego są atlasy po prawej (zmiana zapisuje się w profilu).
+@export var tileset: TileSet:
+	get:
+		var d := _def()
+		return d.tile_set if d else null
+	set(v):
+		var d := _def()
+		if d and d.tile_set != v:
+			d.tile_set = v
+			_touch()
+## Profil wzorcowy (opcjonalnie, np. sewer_map_tiles.tres przy przenoszeniu na nową paczkę): obok każdej roli
+## jej wygląd we wzorze (ta sama rola / wariant / przesunięcie / warstwa). Tylko podgląd — nie jest zmieniany.
+@export var wzor: MapTileProfile:
+	set(v):
+		wzor = v
+		_rebuild()
 
 @export_group("Nowy profil")
 ## TileSet nowego profilu (źródła atlasów).
@@ -46,6 +65,8 @@ const COL_RECT := Color(1.0, 0.9, 0.3)
 ## Ścieżka nowego pliku profilu, np. res://modules/quiz_rpg/resources/maps/profile/nowy_map_tiles.tres.
 @export_file("*.tres") var nowy_plik := ""
 @export_tool_button("Utwórz profil") var _b_create := _create_profile
+## Kopia edytowanego profilu do „nowy_plik” (z TileSetem „nowy_tileset”, jeśli ustawiony) — i dalej edycja kopii.
+@export_tool_button("Kopiuj obecny profil") var _b_copy := _copy_profile
 
 @export_group("Kafel atlasu")
 ## Źródło atlasu (source_id) wybranego kafla.
@@ -115,6 +136,8 @@ var _by_cell := {}                  # Vector3i(źródło, x, y) -> [indeksy czę
 var _cell_slots: Array = []         # części z kaflem wybranej kratki
 var _dirty := -1.0
 var _marker_last := {}
+var _wzor_tiles := {}               # [rola, wariant, przesunięcie, warstwa] -> TileRef we wzorze
+var _wzor_src := {}                 # source_id -> TileSetAtlasSource wzoru
 
 
 func _ready() -> void:
@@ -187,6 +210,23 @@ func _rebuild() -> void:
 				var nm := src.texture.resource_path.get_file().get_basename()
 				_sources.append({"id": sid, "src": src, "name": nm, "origin": Vector2(ATLAS_X, y)})
 				y += src.texture.get_size().y * AS + 90
+	_wzor_tiles.clear()
+	_wzor_src.clear()
+	var wd: NamedTileSetDefinition = wzor.tilesets[0] if wzor and not wzor.tilesets.is_empty() else null
+	if wd and wd.tile_set:
+		for i in wd.tile_set.get_source_count():
+			var sid := wd.tile_set.get_source_id(i)
+			if wd.tile_set.get_source(sid) is TileSetAtlasSource:
+				_wzor_src[sid] = wd.tile_set.get_source(sid)
+		for e: TileRoleEntry in wd.tile_entries:
+			if e == null:
+				continue
+			if e.variants.is_empty():
+				_wzor_tiles[[e.role, &"", Vector2i.ZERO, &""]] = e.tile
+			for v: TileVariant in e.variants:
+				for p: TileModulePart in v.parts:
+					if p:
+						_wzor_tiles[[e.role, v.variant_id, p.offset, p.layer]] = p.tile
 	for i in _slots.size():
 		var t: TileRef = _slots[i].holder.tile
 		if _valid(t):
@@ -217,13 +257,15 @@ func _layout() -> void:
 	var row_h := 0.0
 	for g in _groups:
 		var b := _bounds(g.slots)
-		var w: float = maxf(b.size.x * PS, font.get_string_size(g.title, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x) + 16
+		var mw: float = b.size.x * PS * (2 if not _wzor_tiles.is_empty() else 1) + (8 if not _wzor_tiles.is_empty() else 0)
+		var w: float = maxf(mw, font.get_string_size(g.title, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x) + 16
 		var h: float = 22 + b.size.y * PS + 10
 		if x > 0 and x + w > LIST_W:
 			x = 0
 			y += row_h + 8
 			row_h = 0
 		g.rect = Rect2(x, y, w, h)
+		g.wzor_dx = b.size.x * PS + 8
 		for si in g.slots:
 			var o := _offset(si) - b.position
 			_slot_rects[si] = Rect2(x + 8 + o.x * PS, y + 22 + o.y * PS, PS, PS)
@@ -246,6 +288,14 @@ func _bounds(slot_ids: Array) -> Rect2i:
 		mn = Vector2i(mini(mn.x, o.x), mini(mn.y, o.y))
 		mx = Vector2i(maxi(mx.x, o.x), maxi(mx.y, o.y))
 	return Rect2i(mn, mx - mn + Vector2i.ONE)
+
+
+func _wzor_tile(si: int) -> TileRef:
+	var s: Dictionary = _slots[si]
+	var e: TileRoleEntry = s.entry
+	if s.variant == null:
+		return _wzor_tiles.get([e.role, &"", Vector2i.ZERO, &""])
+	return _wzor_tiles.get([e.role, (s.variant as TileVariant).variant_id, _offset(si), (s.part as TileModulePart).layer])
 
 
 func _source(sid: int) -> Dictionary:
@@ -396,6 +446,23 @@ func _create_profile() -> void:
 	print("tile_profile_editor: utworzono %s" % nowy_plik)
 
 
+func _copy_profile() -> void:
+	if profile == null or nowy_plik == "":
+		push_warning("tile_profile_editor: ustaw „profile” i „nowy_plik” (ścieżka kopii).")
+		return
+	var p: MapTileProfile = profile.duplicate(true)
+	if nowy_tileset:
+		for d: NamedTileSetDefinition in p.tilesets:
+			d.tile_set = nowy_tileset
+	var err := ResourceSaver.save(p, nowy_plik)
+	if err != OK:
+		push_warning("tile_profile_editor: zapis %s nie powiódł się (%d)." % [nowy_plik, err])
+		return
+	p.take_over_path(nowy_plik)
+	profile = p
+	print("tile_profile_editor: kopia profilu w %s" % nowy_plik)
+
+
 func _save() -> void:
 	if profile == null:
 		return
@@ -437,6 +504,8 @@ func _validate_property(p: Dictionary) -> void:
 			p.hint_string = ",".join(items)
 		"przypisania":
 			p.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
+		"tileset":
+			p.usage = PROPERTY_USAGE_EDITOR
 
 
 func _slot_label(si: int) -> String:
@@ -604,6 +673,13 @@ func _draw() -> void:
 		for si in g.slots:
 			draw_rect(_slot_rects[si], Color(0.22, 0.22, 0.27))
 			_draw_ref(_slots[si].holder.tile, _slot_rects[si])
+			if not _wzor_tiles.is_empty():
+				var wr := Rect2(_slot_rects[si].position + Vector2(g.wzor_dx, 0), _slot_rects[si].size)
+				draw_rect(wr, Color(0.14, 0.14, 0.17))
+				var wt := _wzor_tile(si)
+				if _valid(wt) and _wzor_src.has(wt.source_id) and (_wzor_src[wt.source_id] as TileSetAtlasSource).has_tile(wt.atlas_coords):
+					var ws: TileSetAtlasSource = _wzor_src[wt.source_id]
+					draw_texture_rect_region(ws.texture, wr, ws.get_tile_texture_region(wt.atlas_coords), Color(1, 1, 1, 0.85))
 	if sel_slot >= 0:
 		draw_rect(_slot_rects[sel_slot].grow(2), COL_SEL, false, 3.0)
 	var module_cells := {}
