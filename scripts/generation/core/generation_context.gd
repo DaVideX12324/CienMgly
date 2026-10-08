@@ -55,7 +55,7 @@ var grass_noise: FastNoiseLite
 var preprocess_stats: Dictionary = {}
 ## Kanały ścieków (CanalLayout) albo null.
 var canals: RefCounted = null
-## Stopy lic z filarem (kratka podłogi pod licem w kolumnie filara; filary = obiekty lica w rytmie) — lico za filarem z cieniem LR.
+## Stopy lic z filarem (kratka podłogi pod licem w kolumnie filara; filary = obiekty lica w rytmie) — lico za filarem z cieniem LR, obok z cieniem od strony filara.
 var pillar_feet: Dictionary = {}
 ## Górne kratki modułów lica 4H (Vector2i -> true) — narożnik wewnętrzny nad nimi idzie rząd wyżej.
 var facade_4h_tops: Dictionary = {}
