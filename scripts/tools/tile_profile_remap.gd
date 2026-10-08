@@ -1,11 +1,15 @@
-extends Control
+@tool
+extends Node2D
 
-## Przypisywanie kafli profilu ścieków do nowej paczki (uruchamiać scenę F6 z edytora).
-## Lewo: kafle starego profilu (role / warianty) i obiektów — stary kafel, przypisany nowy, stan; nad grupą podgląd
-## całego modułu (stary | nowy). Prawo: atlas nowej paczki (Tiles / Water / Props) — klik przypisuje kratkę
-## zaznaczonemu kaflowi; kratki już użyte podświetlone. Zapis: sewer_v2_remap.json + nowy profil
-## sewer_v2_map_tiles.tres (kopia starego z podmienionymi kaflami, TileSet sewer_v2.tres).
-## Stany: auto (identyczny, wynik 0), ręcznie (przypisane tutaj), sugestia (najbliższy z tabeli — do zatwierdzenia).
+## Przypisywanie kafli profilu ścieków do nowej paczki — w edytorze (jak podgląd układu walki):
+## otwórz scenes/tools/tile_profile_remap.tscn, zaznacz korzeń sceny.
+## 1. Wybór kafla: „kafel” w inspektorze (lista: rola / wariant, stary kafel, stan) albo przeciągnij znacznik
+##    „Wybor” na kafel na liście (pod podglądem). „tylko_niezatwierdzone” skraca listę w inspektorze.
+## 2. Przypisanie: przeciągnij znacznik „Nowy” na kratkę atlasu po prawej (Tiles / Water / Props) albo wpisz
+##    „atlas” i „nowy_kafel” w inspektorze. Przyciski: zatwierdź sugestię, następny niezatwierdzony.
+## U góry podgląd zaznaczonego kafla i całego modułu (stary | nowy). Stany: auto (identyczny), ręcznie,
+## sugestia (najbliższy z tabeli — do sprawdzenia). Zmiany zapisują się same do sewer_v2_remap.json;
+## „Zapisz profil” generuje sewer_v2_map_tiles.tres (stary profil z podmienionymi kaflami, TileSet sewer_v2.tres).
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const OLD_PROFILE := "resources/maps/profile/sewer_map_tiles.tres"
@@ -17,48 +21,108 @@ const OLD_TEX := {"Tiles": "res://assets/pixel_crawler/environments/sewer/Assets
 const NEW_TEX := {"Tiles": "res://assets/pixel_crawler/environments/sewer_v2/Assets/Tiles.png",
 	"Water": "res://assets/pixel_crawler/environments/sewer_v2/Assets/Water.png",
 	"Props": "res://assets/pixel_crawler/environments/sewer_v2/Assets/Props.png"}
+const ATLASES: Array[String] = ["Tiles", "Water", "Props"]
 const NEW_SOURCE := {"Tiles": 0, "Props": 1, "Water": 2}
 const OLD_SOURCE_NAME := {0: "Tiles", 1: "Props"}
 const STATUS_COLOR := {"auto": Color(0.45, 0.85, 0.5), "ręcznie": Color(0.4, 0.75, 1.0), "sugestia": Color(0.95, 0.8, 0.35), "brak": Color(0.95, 0.4, 0.4)}
-const ZOOM := 3
+const SAVE_DELAY := 0.6
+const AS := 4                       # skala atlasów
+const ATLAS_X := 900.0
+const LIST_Y := 420.0               # początek listy kafli
+const LIST_COLS := 8
+const CELL := Vector2(100, 64)      # komórka listy: stary | nowy
 
-var remap: Dictionary = {}          # "Tiles:x,y" -> {label, atlas, coords, status}
-var groups: Array = []              # {title, parts: [{key, offset}]}
-var old_tex := {}
-var new_tex := {}
-var selected := ""
-var atlas_name := "Tiles"
-var only_open := false
+## Zaznaczony kafel starego profilu.
+@export var kafel := 0:
+	set(v):
+		kafel = clampi(v, 0, maxi(_entries.size() - 1, 0))
+		_sync_markers()
+		notify_property_list_changed()
+		queue_redraw()
+## Lista „kafel” w inspektorze tylko z niezatwierdzonymi (sugestia / brak) + zaznaczony.
+@export var tylko_niezatwierdzone := false:
+	set(v):
+		tylko_niezatwierdzone = v
+		notify_property_list_changed()
+## Atlas nowej paczki przypisany zaznaczonemu kaflowi.
+@export_enum("Tiles", "Water", "Props") var atlas := 0:
+	get:
+		return maxi(ATLASES.find(String(_cur().get("atlas", "Tiles"))), 0)
+	set(v):
+		_assign(ATLASES[v], _cur_coords())
+## Kratka w atlasie (kolumna, wiersz) przypisana zaznaczonemu kaflowi.
+@export var nowy_kafel := Vector2i.ZERO:
+	get:
+		return _cur_coords()
+	set(v):
+		_assign(ATLASES[atlas], v)
+## Stan zaznaczonego kafla (tylko do odczytu).
+@export var stan := "":
+	get:
+		var m := _cur()
+		return "%s — %s" % [m.get("status", "-"), m.get("label", "")]
+	set(v):
+		pass
+@export_tool_button("Zatwierdź sugestię") var _btn_accept := _accept
+@export_tool_button("Następny niezatwierdzony") var _btn_next := _next_open
+@export_tool_button("Zapisz profil sewer_v2_map_tiles.tres") var _btn_save := _save_profile
 
-var list_box: VBoxContainer
-var atlas_view: Control
-var info: Label
-var row_widgets := {}               # key -> {new_rect, status_label, panel}
-var group_previews: Array = []      # Control podglądów modułów (odświeżane)
+var _remap: Dictionary = {}         # "Tiles:x,y" -> {label, atlas, coords, status}
+var _groups: Array = []             # {title, parts: [{key, offset}]}
+var _entries: Array[String] = []    # klucze w kolejności listy (bez powtórzeń)
+var _old_tex := {}
+var _new_tex := {}
+var _dirty := -1.0
+var _marker_last := {}              # nazwa znacznika -> ostatnia pozycja (wykrywanie przeciągnięcia)
 
 
 func _ready() -> void:
 	for k in OLD_TEX:
-		old_tex[k] = load(OLD_TEX[k])
+		_old_tex[k] = load(OLD_TEX[k])
 	for k in NEW_TEX:
-		new_tex[k] = load(NEW_TEX[k])
+		_new_tex[k] = load(NEW_TEX[k])
 	_load_remap()
 	_load_groups()
-	_build_ui()
-	_rebuild_list()
+	kafel = kafel
+	queue_redraw()
+
+
+func _validate_property(p: Dictionary) -> void:
+	match p.name:
+		"kafel":
+			p.hint = PROPERTY_HINT_ENUM
+			var items: PackedStringArray = []
+			for i in _entries.size():
+				var m: Dictionary = _remap[_entries[i]]
+				if tylko_niezatwierdzone and m.status not in ["sugestia", "brak"] and i != kafel:
+					continue
+				var txt := "%s  %s  [%s]" % [m.get("label", ""), _entries[i], m.status]
+				items.append("%s:%d" % [txt.replace(":", " ").replace(",", ";"), i])
+			p.hint_string = ",".join(items)
+		"atlas", "nowy_kafel":
+			p.usage = PROPERTY_USAGE_EDITOR
+		"stan":
+			p.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
 
 
 func _load_remap() -> void:
 	var f := FileAccess.open(QuizRpgPaths.path(REMAP), FileAccess.READ)
-	remap = JSON.parse_string(f.get_as_text()) if f else {}
+	_remap = JSON.parse_string(f.get_as_text()) if f else {}
 
 
 func _key(src: int, c: Vector2i) -> String:
 	return "%s:%d,%d" % [OLD_SOURCE_NAME.get(src, "Tiles"), c.x, c.y]
 
 
+func _ensure(k: String, label: String) -> void:
+	if not _remap.has(k):
+		_remap[k] = {"label": label, "atlas": "", "coords": [0, 0], "status": "brak"}
+
+
 ## Grupy z profilu (rola / wariant -> części) i z mapowania (obiekty — pojedyncze kafle).
 func _load_groups() -> void:
+	_groups.clear()
+	_entries.clear()
 	var prof: MapTileProfile = load(QuizRpgPaths.path(OLD_PROFILE))
 	var covered := {}
 	for ts_def in prof.tilesets:
@@ -67,9 +131,8 @@ func _load_groups() -> void:
 			if e.tile != null and e.tile.is_valid():
 				var k0 := _key(e.tile.source_id, e.tile.atlas_coords)
 				covered[k0] = true
-				if not remap.has(k0):
-					remap[k0] = {"label": rname, "atlas": "", "coords": [0, 0], "status": "brak"}
-				groups.append({"title": "%s (kafel)" % rname, "parts": [{"key": k0, "offset": Vector2i.ZERO}]})
+				_ensure(k0, rname)
+				_groups.append({"title": rname, "parts": [{"key": k0, "offset": Vector2i.ZERO}]})
 			for v: TileVariant in e.variants:
 				var parts: Array = []
 				for p: TileModulePart in v.parts:
@@ -78,285 +141,165 @@ func _load_groups() -> void:
 					var k := _key(p.tile.source_id, p.tile.atlas_coords)
 					parts.append({"key": k, "offset": p.offset})
 					covered[k] = true
-					if not remap.has(k):
-						remap[k] = {"label": "%s/%s" % [rname, v.variant_id], "atlas": "", "coords": [0, 0], "status": "brak"}
+					_ensure(k, "%s/%s" % [rname, v.variant_id])
 				if not parts.is_empty():
-					groups.append({"title": "%s / %s" % [rname, v.variant_id], "parts": parts})
+					_groups.append({"title": "%s / %s" % [rname, v.variant_id], "parts": parts})
 	var objs := {}
-	for k in remap:
+	for k in _remap:
 		if covered.has(k):
 			continue
-		var lab: String = remap[k].get("label", k)
+		var lab: String = _remap[k].get("label", k)
 		if not objs.has(lab):
 			objs[lab] = []
 		(objs[lab] as Array).append({"key": k, "offset": Vector2i(objs[lab].size(), 0)})
 	for lab in objs:
-		groups.append({"title": lab, "parts": objs[lab]})
-
-
-func _build_ui() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var bg := ColorRect.new()
-	bg.color = Color(0.1, 0.1, 0.12)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-	var split := HSplitContainer.new()
-	split.set_anchors_preset(Control.PRESET_FULL_RECT)
-	split.split_offset = 560
-	add_child(split)
-	var left := VBoxContainer.new()
-	split.add_child(left)
-	var top := HBoxContainer.new()
-	left.add_child(top)
-	var cb := CheckBox.new()
-	cb.text = "tylko niezatwierdzone"
-	cb.toggled.connect(func(on: bool) -> void:
-		only_open = on
-		_rebuild_list())
-	top.add_child(cb)
-	for t in [["Zatwierdź sugestię", _accept], ["Następny niezatwierdzony", _next_open], ["Zapisz", _save]]:
-		var b := Button.new()
-		b.text = t[0]
-		b.pressed.connect(t[1])
-		top.add_child(b)
-	var sc := ScrollContainer.new()
-	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left.add_child(sc)
-	list_box = VBoxContainer.new()
-	list_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sc.add_child(list_box)
-
-	var right := VBoxContainer.new()
-	split.add_child(right)
-	var tabs := HBoxContainer.new()
-	right.add_child(tabs)
-	for n in NEW_TEX:
-		var b := Button.new()
-		b.text = n
-		b.toggle_mode = true
-		b.button_pressed = n == atlas_name
-		b.pressed.connect(func() -> void:
-			atlas_name = n
-			for c in tabs.get_children():
-				(c as Button).button_pressed = (c as Button).text == n
-			_refresh_atlas())
-		tabs.add_child(b)
-	info = Label.new()
-	info.text = "Zaznacz kafel po lewej, potem kliknij kratkę atlasu."
-	right.add_child(info)
-	var asc := ScrollContainer.new()
-	asc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	asc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.add_child(asc)
-	atlas_view = Control.new()
-	atlas_view.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	atlas_view.draw.connect(_draw_atlas)
-	atlas_view.gui_input.connect(_atlas_input)
-	asc.add_child(atlas_view)
-	_refresh_atlas()
-
-
-func _tile_tex(tex: Texture2D, c: Vector2i) -> AtlasTexture:
-	var a := AtlasTexture.new()
-	a.atlas = tex
-	a.region = Rect2(c.x * 16, c.y * 16, 16, 16)
-	return a
-
-
-func _old_tile(key: String) -> AtlasTexture:
-	var p := key.split(":")
-	var xy := p[1].split(",")
-	return _tile_tex(old_tex[p[0]], Vector2i(int(xy[0]), int(xy[1])))
-
-
-func _new_tile(key: String) -> AtlasTexture:
-	var m: Dictionary = remap.get(key, {})
-	if String(m.get("atlas", "")) == "":
-		return null
-	return _tile_tex(new_tex[m.atlas], Vector2i(int(m.coords[0]), int(m.coords[1])))
-
-
-func _rect(tex: Texture2D, size: int) -> TextureRect:
-	var r := TextureRect.new()
-	r.texture = tex
-	r.custom_minimum_size = Vector2(size, size)
-	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	return r
-
-
-func _rebuild_list() -> void:
-	for c in list_box.get_children():
-		c.queue_free()
-	row_widgets.clear()
-	group_previews.clear()
-	for g in groups:
-		var open := false
+		_groups.append({"title": lab, "parts": objs[lab]})
+	var seen := {}
+	for g in _groups:
 		for p in g.parts:
-			if remap[p.key].status in ["sugestia", "brak"]:
-				open = true
-		if only_open and not open:
-			continue
-		var head := HBoxContainer.new()
-		list_box.add_child(head)
-		var t := Label.new()
-		t.text = g.title
-		t.custom_minimum_size.x = 220
-		head.add_child(t)
-		var prev := Control.new()
-		prev.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		prev.set_meta("parts", g.parts)
-		prev.draw.connect(_draw_module.bind(prev))
-		head.add_child(prev)
-		group_previews.append(prev)
-		_size_module(prev)
-		for p in g.parts:
-			_add_row(p.key)
-		list_box.add_child(HSeparator.new())
+			if not seen.has(p.key):
+				seen[p.key] = true
+				_entries.append(p.key)
 
 
-func _add_row(key: String) -> void:
-	var row := HBoxContainer.new()
-	var panel := PanelContainer.new()
-	panel.add_child(row)
-	list_box.add_child(panel)
-	var b := Button.new()
-	b.text = "›"
-	b.pressed.connect(_select.bind(key))
-	row.add_child(b)
-	row.add_child(_rect(_old_tile(key), 48))
-	var arrow := Label.new()
-	arrow.text = " → "
-	row.add_child(arrow)
-	var nr := _rect(_new_tile(key), 48)
-	row.add_child(nr)
-	var st := Label.new()
-	row.add_child(st)
-	row_widgets[key] = {"new": nr, "status": st, "panel": panel}
-	_refresh_row(key)
+func _cur_key() -> String:
+	return _entries[kafel] if kafel < _entries.size() else ""
 
 
-func _refresh_row(key: String) -> void:
-	if not row_widgets.has(key):
+func _cur() -> Dictionary:
+	return _remap.get(_cur_key(), {})
+
+
+func _cur_coords() -> Vector2i:
+	var m := _cur()
+	return Vector2i(int(m.coords[0]), int(m.coords[1])) if m.has("coords") else Vector2i.ZERO
+
+
+func _assign(atlas_name: String, c: Vector2i) -> void:
+	var k := _cur_key()
+	if k == "" or not _new_tex.has(atlas_name):
 		return
-	var w: Dictionary = row_widgets[key]
-	var m: Dictionary = remap[key]
-	(w.new as TextureRect).texture = _new_tile(key)
-	var s: String = m.status
-	(w.status as Label).text = "  %s  →  %s  [%s]" % [key, ("%s (%d,%d)" % [m.atlas, m.coords[0], m.coords[1]]) if m.atlas != "" else "—", s]
-	(w.status as Label).add_theme_color_override("font_color", STATUS_COLOR.get(s, Color.WHITE))
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.25, 0.3, 0.45) if key == selected else Color(0, 0, 0, 0)
-	(w.panel as PanelContainer).add_theme_stylebox_override("panel", sb)
-
-
-func _select(key: String) -> void:
-	var prev := selected
-	selected = key
-	_refresh_row(prev)
-	_refresh_row(key)
-	var m: Dictionary = remap[key]
-	if m.atlas != "" and m.atlas != atlas_name:
-		atlas_name = m.atlas
-	info.text = "Zaznaczony: %s (%s) — kliknij kratkę atlasu %s." % [m.get("label", key), key, atlas_name]
-	_refresh_atlas()
+	var cells := Vector2i(_new_tex[atlas_name].get_size()) / 16
+	c = c.clamp(Vector2i.ZERO, cells - Vector2i.ONE)
+	var m: Dictionary = _remap[k]
+	if m.atlas == atlas_name and _cur_coords() == c and m.status != "brak":
+		return
+	m.atlas = atlas_name
+	m.coords = [c.x, c.y]
+	m.status = "ręcznie"
+	_dirty = SAVE_DELAY
+	_sync_markers()
+	notify_property_list_changed()
+	queue_redraw()
 
 
 func _accept() -> void:
-	if selected != "" and remap[selected].status == "sugestia":
-		remap[selected].status = "ręcznie"
-		_refresh_row(selected)
-		_refresh_previews()
+	var m := _cur()
+	if m.get("status", "") == "sugestia":
+		m.status = "ręcznie"
+		_dirty = SAVE_DELAY
+		_next_open()
 
 
 func _next_open() -> void:
-	for g in groups:
-		for p in g.parts:
-			if remap[p.key].status in ["sugestia", "brak"] and p.key != selected:
-				_select(p.key)
-				return
+	for d in range(1, _entries.size() + 1):
+		var i := (kafel + d) % _entries.size()
+		if _remap[_entries[i]].status in ["sugestia", "brak"]:
+			kafel = i
+			return
 
 
-func _refresh_atlas() -> void:
-	var tex: Texture2D = new_tex[atlas_name]
-	atlas_view.custom_minimum_size = tex.get_size() * ZOOM
-	atlas_view.queue_redraw()
+# --- geometria widoku ---
+
+func _atlas_origin(name: String) -> Vector2:
+	var y := 0.0
+	for a in ATLASES:
+		if a == name:
+			return Vector2(ATLAS_X, y + 30)
+		y += _new_tex[a].get_size().y * AS + 70
+	return Vector2(ATLAS_X, 0)
 
 
-func _draw_atlas() -> void:
-	var tex: Texture2D = new_tex[atlas_name]
-	atlas_view.draw_rect(Rect2(Vector2.ZERO, tex.get_size() * ZOOM), Color(0.18, 0.18, 0.22))
-	atlas_view.draw_texture_rect(tex, Rect2(Vector2.ZERO, tex.get_size() * ZOOM), false)
-	var cells := Vector2i(tex.get_size()) / 16
-	for x in range(cells.x + 1):
-		atlas_view.draw_line(Vector2(x * 16 * ZOOM, 0), Vector2(x * 16 * ZOOM, cells.y * 16 * ZOOM), Color(1, 0, 1, 0.35))
-	for y in range(cells.y + 1):
-		atlas_view.draw_line(Vector2(0, y * 16 * ZOOM), Vector2(cells.x * 16 * ZOOM, y * 16 * ZOOM), Color(1, 0, 1, 0.35))
-	for k in remap:
-		var m: Dictionary = remap[k]
-		if m.atlas != atlas_name:
-			continue
-		var r := Rect2(Vector2(m.coords[0], m.coords[1]) * 16 * ZOOM, Vector2.ONE * 16 * ZOOM)
-		var col: Color = STATUS_COLOR.get(m.status, Color.WHITE)
-		atlas_view.draw_rect(r, Color(col, 0.18))
-		if k == selected:
-			atlas_view.draw_rect(r, Color.WHITE, false, 3.0)
+func _list_pos(i: int) -> Vector2:
+	return Vector2((i % LIST_COLS) * CELL.x, LIST_Y + (i / LIST_COLS) * CELL.y)
 
 
-func _atlas_input(ev: InputEvent) -> void:
-	if not (ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT) or selected == "":
+## Kratka atlasu pod punktem: [nazwa, kratka] albo [] poza atlasami.
+func _atlas_at(p: Vector2) -> Array:
+	for a in ATLASES:
+		var o := _atlas_origin(a)
+		var r := Rect2(o, _new_tex[a].get_size() * AS)
+		if r.has_point(p):
+			return [a, Vector2i((p - o) / (16 * AS))]
+	return []
+
+
+func _list_at(p: Vector2) -> int:
+	if p.y < LIST_Y or p.x < 0 or p.x >= LIST_COLS * CELL.x:
+		return -1
+	var i := int((p.y - LIST_Y) / CELL.y) * LIST_COLS + int(p.x / CELL.x)
+	return i if i < _entries.size() else -1
+
+
+# --- znaczniki do przeciągania ---
+
+func _marker(n: String) -> Marker2D:
+	var m := get_node_or_null(n) as Marker2D
+	if m == null and Engine.is_editor_hint() and is_inside_tree():
+		m = Marker2D.new()
+		m.name = n
+		m.gizmo_extents = 24
+		add_child(m)
+		if get_tree().edited_scene_root:
+			m.owner = get_tree().edited_scene_root
+	return m
+
+
+func _place_marker(n: String, p: Vector2) -> void:
+	var m := _marker(n)
+	if m:
+		m.position = p
+		_marker_last[n] = p
+
+
+func _sync_markers() -> void:
+	if _entries.is_empty() or _new_tex.is_empty():
 		return
-	var c := Vector2i((ev as InputEventMouseButton).position / (16 * ZOOM))
-	remap[selected].atlas = atlas_name
-	remap[selected].coords = [c.x, c.y]
-	remap[selected].status = "ręcznie"
-	_refresh_row(selected)
-	_refresh_previews()
-	atlas_view.queue_redraw()
-	info.text = "%s -> %s (%d,%d)" % [selected, atlas_name, c.x, c.y]
+	_place_marker("Wybor", _list_pos(kafel) + CELL * 0.5)
+	var m := _cur()
+	if String(m.get("atlas", "")) != "":
+		_place_marker("Nowy", _atlas_origin(m.atlas) + (Vector2(_cur_coords()) + Vector2(0.5, 0.5)) * 16 * AS)
 
 
-## Podgląd modułu: stary | nowy, części ułożone wg offsetów.
-func _size_module(c: Control) -> void:
-	var r := _module_bounds(c.get_meta("parts"))
-	c.custom_minimum_size = Vector2((r.size.x * 2 + 1) * 16 * 2 + 8, r.size.y * 16 * 2)
+func _process(delta: float) -> void:
+	if not Engine.is_editor_hint() or _entries.is_empty():
+		return
+	var w := _marker("Wybor")
+	if w and w.position != _marker_last.get("Wybor", w.position):
+		_marker_last["Wybor"] = w.position
+		var i := _list_at(w.position)
+		if i >= 0 and i != kafel:
+			kafel = i
+	var n := _marker("Nowy")
+	if n and n.position != _marker_last.get("Nowy", n.position):
+		_marker_last["Nowy"] = n.position
+		var hit := _atlas_at(n.position)
+		if not hit.is_empty():
+			_assign(hit[0], hit[1])
+	if _dirty >= 0.0:
+		_dirty -= delta
+		if _dirty < 0.0:
+			_save_remap()
 
 
-func _module_bounds(parts: Array) -> Rect2i:
-	var mn := Vector2i(1 << 20, 1 << 20)
-	var mx := -mn
-	for p in parts:
-		var o: Vector2i = p.offset
-		mn = Vector2i(mini(mn.x, o.x), mini(mn.y, o.y))
-		mx = Vector2i(maxi(mx.x, o.x), maxi(mx.y, o.y))
-	return Rect2i(mn, mx - mn + Vector2i.ONE)
-
-
-func _draw_module(c: Control) -> void:
-	var parts: Array = c.get_meta("parts")
-	var r := _module_bounds(parts)
-	var s := 32
-	for side: int in 2:
-		var x0: int = side * ((r.size.x + 1) * s + 8)
-		c.draw_rect(Rect2(x0, 0, r.size.x * s, r.size.y * s), Color(0.2, 0.2, 0.25))
-		for p in parts:
-			var o: Vector2i = p.offset - r.position
-			var t: Texture2D = _old_tile(p.key) if side == 0 else _new_tile(p.key)
-			if t != null:
-				c.draw_texture_rect(t, Rect2(x0 + o.x * s, o.y * s, s, s), false)
-
-
-func _refresh_previews() -> void:
-	for p in group_previews:
-		if is_instance_valid(p):
-			p.queue_redraw()
-
-
-func _save() -> void:
+func _save_remap() -> void:
 	var f := FileAccess.open(QuizRpgPaths.path(REMAP), FileAccess.WRITE)
-	f.store_string(JSON.stringify(remap, " "))
-	f.close()
+	if f:
+		f.store_string(JSON.stringify(_remap, " "))
+
+
+func _save_profile() -> void:
+	_save_remap()
 	var prof: MapTileProfile = (load(QuizRpgPaths.path(OLD_PROFILE)) as MapTileProfile).duplicate(true)
 	var ts: TileSet = load(QuizRpgPaths.path(NEW_TILESET))
 	var missing := 0
@@ -372,7 +315,7 @@ func _save() -> void:
 						refs.append(p)
 			for holder in refs:
 				var t: TileRef = holder.tile
-				var m: Dictionary = remap.get(_key(t.source_id, t.atlas_coords), {})
+				var m: Dictionary = _remap.get(_key(t.source_id, t.atlas_coords), {})
 				if String(m.get("atlas", "")) == "":
 					missing += 1
 					continue
@@ -380,7 +323,112 @@ func _save() -> void:
 				holder.tile = TileRef.make(Vector2i(int(m.coords[0]), int(m.coords[1])), NEW_SOURCE[m.atlas], 0)
 	var err := ResourceSaver.save(prof, QuizRpgPaths.path(NEW_PROFILE))
 	var open := 0
-	for k in remap:
-		if remap[k].status in ["sugestia", "brak"]:
+	for k in _remap:
+		if _remap[k].status in ["sugestia", "brak"]:
 			open += 1
-	info.text = "Zapisano %s i profil %s (błąd %d). Niezatwierdzone: %d, bez przypisania: %d." % [REMAP, NEW_PROFILE, err, open, missing]
+	print("tile_profile_remap: zapisano %s (błąd %d); niezatwierdzone %d, bez przypisania %d" % [NEW_PROFILE, err, open, missing])
+
+
+# --- rysowanie ---
+
+func _draw_tile(key: String, new: bool, r: Rect2) -> void:
+	if new:
+		var m: Dictionary = _remap.get(key, {})
+		if String(m.get("atlas", "")) == "":
+			return
+		draw_texture_rect_region(_new_tex[m.atlas], r, Rect2(int(m.coords[0]) * 16, int(m.coords[1]) * 16, 16, 16))
+	else:
+		var p := key.split(":")
+		var xy := p[1].split(",")
+		draw_texture_rect_region(_old_tex[p[0]], r, Rect2(int(xy[0]) * 16, int(xy[1]) * 16, 16, 16))
+
+
+func _text(p: Vector2, s: String, size := 16, col := Color.WHITE) -> void:
+	draw_string(ThemeDB.fallback_font, p, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col)
+
+
+func _draw() -> void:
+	if _entries.is_empty() or _new_tex.is_empty():
+		return
+	var key := _cur_key()
+	var m := _cur()
+	var col: Color = STATUS_COLOR.get(m.get("status", ""), Color.WHITE)
+	draw_rect(Rect2(-20, -20, ATLAS_X - 20, LIST_Y - 10), Color(0.12, 0.12, 0.15))
+	_text(Vector2(0, 10), "%s   %s   [%s]" % [m.get("label", ""), key, m.get("status", "")], 22, col)
+	# zaznaczony kafel: stary -> nowy
+	draw_rect(Rect2(0, 30, 128, 128), Color(0.22, 0.22, 0.27))
+	_draw_tile(key, false, Rect2(0, 30, 128, 128))
+	_text(Vector2(140, 100), "→", 32)
+	draw_rect(Rect2(180, 30, 128, 128), Color(0.22, 0.22, 0.27))
+	_draw_tile(key, true, Rect2(180, 30, 128, 128))
+	_text(Vector2(0, 180), "stary", 14, Color(0.7, 0.7, 0.7))
+	_text(Vector2(180, 180), "nowy: %s (%d, %d)" % [m.get("atlas", "—"), _cur_coords().x, _cur_coords().y], 14, Color(0.7, 0.7, 0.7))
+	# moduły, w których kafel występuje: stary | nowy
+	var x := 340.0
+	for g in _groups:
+		var has := false
+		for p in g.parts:
+			if p.key == key:
+				has = true
+		if not has:
+			continue
+		var b := _module_bounds(g.parts)
+		var s := mini(64, int(200.0 / maxi(b.size.y, 1)))
+		var w := b.size.x * s
+		if x + w * 2 + 20 > ATLAS_X - 40:
+			break
+		_text(Vector2(x, 30), g.title, 13, Color(0.8, 0.8, 0.8))
+		for side in 2:
+			var x0: float = x + side * (w + 10)
+			draw_rect(Rect2(x0, 40, w, b.size.y * s), Color(0.22, 0.22, 0.27))
+			for p in g.parts:
+				var o: Vector2i = p.offset - b.position
+				var r := Rect2(x0 + o.x * s, 40 + o.y * s, s, s)
+				_draw_tile(p.key, side == 1, r)
+				if p.key == key:
+					draw_rect(r, col, false, 2.0)
+		x += w * 2 + 40
+	_text(Vector2(0, LIST_Y - 40), "Wszystkie kafle (stary | nowy) — przeciągnij znacznik „Wybor”, żeby zaznaczyć", 16, Color(0.8, 0.8, 0.8))
+	for i in _entries.size():
+		var p := _list_pos(i)
+		var mm: Dictionary = _remap[_entries[i]]
+		var c: Color = STATUS_COLOR.get(mm.status, Color.WHITE)
+		draw_rect(Rect2(p, CELL - Vector2(4, 4)), Color(c, 0.18) if i != kafel else Color(0.3, 0.38, 0.6))
+		_draw_tile(_entries[i], false, Rect2(p + Vector2(6, 8), Vector2(40, 40)))
+		_draw_tile(_entries[i], true, Rect2(p + Vector2(52, 8), Vector2(40, 40)))
+		draw_rect(Rect2(p, CELL - Vector2(4, 4)), c if i != kafel else Color.WHITE, false, 2.0 if i != kafel else 4.0)
+	# atlasy nowej paczki
+	for a in ATLASES:
+		var tex: Texture2D = _new_tex[a]
+		var o := _atlas_origin(a)
+		var sz := tex.get_size() * AS
+		_text(o + Vector2(0, -8), "%s (przeciągnij znacznik „Nowy” na kratkę)" % a, 22)
+		draw_rect(Rect2(o, sz), Color(0.18, 0.18, 0.22))
+		draw_texture_rect(tex, Rect2(o, sz), false)
+		var cells := Vector2i(tex.get_size()) / 16
+		for cx in range(cells.x + 1):
+			draw_line(o + Vector2(cx * 16 * AS, 0), o + Vector2(cx * 16 * AS, sz.y), Color(1, 0, 1, 0.3))
+		for cy in range(cells.y + 1):
+			draw_line(o + Vector2(0, cy * 16 * AS), o + Vector2(sz.x, cy * 16 * AS), Color(1, 0, 1, 0.3))
+		for cx in cells.x:
+			_text(o + Vector2(cx * 16 * AS + 2, sz.y + 14), str(cx), 12, Color(0.6, 0.6, 0.6))
+		for cy in cells.y:
+			_text(o + Vector2(-22, cy * 16 * AS + 14), str(cy), 12, Color(0.6, 0.6, 0.6))
+		for k in _remap:
+			var mm: Dictionary = _remap[k]
+			if mm.atlas != a:
+				continue
+			var r := Rect2(o + Vector2(int(mm.coords[0]), int(mm.coords[1])) * 16 * AS, Vector2.ONE * 16 * AS)
+			draw_rect(r, Color(STATUS_COLOR.get(mm.status, Color.WHITE), 0.2))
+			if k == key:
+				draw_rect(r, Color.WHITE, false, 4.0)
+
+
+func _module_bounds(parts: Array) -> Rect2i:
+	var mn := Vector2i(1 << 20, 1 << 20)
+	var mx := -mn
+	for p in parts:
+		var o: Vector2i = p.offset
+		mn = Vector2i(mini(mn.x, o.x), mini(mn.y, o.y))
+		mx = Vector2i(maxi(mx.x, o.x), maxi(mx.y, o.y))
+	return Rect2i(mn, mx - mn + Vector2i.ONE)
