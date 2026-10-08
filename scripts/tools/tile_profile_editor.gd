@@ -133,6 +133,36 @@ func _ready() -> void:
 	_rebuild()
 
 
+# Skrypty zasobów profilu (TileRef, TileRoleEntry…) nie są @tool — w edytorze to atrapy (placeholder):
+# pola działają, metody nie. Stąd własne odpowiedniki is_valid / is_erase / make / get_entry / name_of.
+static func _valid(t: TileRef) -> bool:
+	return t != null and t.source_id >= 0 and t.atlas_coords.x >= 0 and t.atlas_coords.y >= 0
+
+
+static func _erase(t: TileRef) -> bool:
+	return t != null and t.atlas_coords == Vector2i(-1, -1)
+
+
+static func _ref(c: Vector2i, sid: int, alt: int) -> TileRef:
+	var r := TileRef.new()
+	r.source_id = sid
+	r.atlas_coords = c
+	r.alternative_tile = alt
+	return r
+
+
+static func _entry(d: NamedTileSetDefinition, role: int) -> TileRoleEntry:
+	for e: TileRoleEntry in d.tile_entries:
+		if e != null and e.role == role:
+			return e
+	return null
+
+
+static func _role_name(role: int) -> String:
+	var keys := TileRole.Id.keys()
+	return keys[role] if role >= 0 and role < keys.size() else "UNKNOWN(%d)" % role
+
+
 func _def() -> NamedTileSetDefinition:
 	if profile == null or profile.tilesets.is_empty():
 		return null
@@ -150,7 +180,7 @@ func _rebuild() -> void:
 		for e: TileRoleEntry in d.tile_entries:
 			if e == null:
 				continue
-			var rname := TileRole.name_of(e.role)
+			var rname := _role_name(e.role)
 			if e.variants.is_empty():
 				_add_group(e, null, rname, [null])
 				continue
@@ -234,7 +264,7 @@ func _cur_tile() -> TileRef:
 
 func _cur_coords() -> Vector2i:
 	var t := _cur_tile()
-	return t.atlas_coords if t and t.is_valid() else Vector2i.ZERO
+	return t.atlas_coords if _valid(t) else Vector2i.ZERO
 
 
 func _source(sid: int) -> Dictionary:
@@ -270,14 +300,14 @@ func _set_tile(sid: int, c: Vector2i, alt: int) -> void:
 		_new_variant(s.entry, Vector2i.ZERO)
 		_rebuild()
 		s = _cur()
-	s.holder.tile = TileRef.make(c, sid, alt)
+	s.holder.tile = _ref(c, sid, alt)
 	_touch(false)
 
 
 func _set_erase() -> void:
 	var s := _cur()
 	if s and s.part:
-		s.part.tile = TileRef.make(Vector2i(-1, -1), zrodlo, 0)
+		s.part.tile = _ref(Vector2i(-1, -1), zrodlo, 0)
 		_touch(false)
 
 
@@ -359,7 +389,7 @@ func _add_role() -> void:
 	var d := _def()
 	if d == null or nowa_rola == TileRole.Id.NONE:
 		return
-	var e := d.get_entry(nowa_rola)
+	var e := _entry(d, nowa_rola)
 	if e == null:
 		e = TileRoleEntry.new()
 		e.role = nowa_rola
@@ -374,7 +404,7 @@ func _add_missing_roles() -> void:
 	if d == null:
 		return
 	for r in TileRole.Id.values():
-		if r != TileRole.Id.NONE and d.get_entry(r) == null:
+		if r != TileRole.Id.NONE and _entry(d, r) == null:
 			var e := TileRoleEntry.new()
 			e.role = r
 			_new_variant(e, Vector2i.ZERO)
@@ -463,7 +493,7 @@ func _slot_label(i: int) -> String:
 	var g: Dictionary = _groups[s.group]
 	var t: TileRef = s.holder.tile
 	var ts := "pusta"
-	if t and t.is_erase():
+	if _erase(t):
 		ts = "wymaż"
 	elif t:
 		ts = "%d %d;%d" % [t.source_id, t.atlas_coords.x, t.atlas_coords.y]
@@ -498,7 +528,7 @@ func _sync_markers() -> void:
 		return
 	_place_marker("Wybor", _slot_rects[miejsce].get_center())
 	var t := _cur_tile()
-	if t and t.is_valid():
+	if _valid(t):
 		var src := _source(t.source_id)
 		if not src.is_empty():
 			_place_marker("Kafel", src.origin + (Vector2(t.atlas_coords) + Vector2(0.5, 0.5)) * _cell_px(src))
@@ -559,7 +589,7 @@ func _draw_ref(t: TileRef, r: Rect2) -> void:
 	if t == null:
 		draw_rect(r.grow(-2), COL_EMPTY, false, 2.0)
 		return
-	if t.is_erase():
+	if _erase(t):
 		draw_rect(r, Color(0.3, 0.3, 0.3))
 		draw_line(r.position, r.end, Color(0.6, 0.6, 0.6), 2.0)
 		return
@@ -617,7 +647,7 @@ func _draw() -> void:
 	var used := {}
 	for s in _slots:
 		var t: TileRef = s.holder.tile
-		if t and t.is_valid():
+		if _valid(t):
 			used[Vector3i(t.source_id, t.atlas_coords.x, t.atlas_coords.y)] = true
 	var cur := _cur_tile()
 	for s in _sources:
@@ -640,5 +670,5 @@ func _draw() -> void:
 		for key in used:
 			if key.x == s.id:
 				draw_rect(Rect2(o + Vector2(key.y, key.z) * cp, cp), Color(COL_USED, 0.22))
-		if cur and cur.is_valid() and cur.source_id == s.id:
+		if _valid(cur) and cur.source_id == s.id:
 			draw_rect(Rect2(o + Vector2(cur.atlas_coords) * cp, cp), COL_SEL, false, 4.0)
