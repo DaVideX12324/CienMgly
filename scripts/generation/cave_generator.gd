@@ -371,7 +371,12 @@ static func plan_cave_tiles(
 	if result.objects != null:
 		for pl in result.objects.placements:
 			if pl.def.mount == &"facade" and not pl.def.rhythm.is_empty():
-				ctx.pillar_feet[pl.cell + (Vector2i(0, 1) if flags.facade_base_on_wall else Vector2i.ZERO)] = true
+				# wartość = najwyższy rząd filara względem stopy (cień lica tylko tam, gdzie filar sięga)
+				var foot: Vector2i = pl.cell + (Vector2i(0, 1) if flags.facade_base_on_wall else Vector2i.ZERO)
+				var top := 0
+				for t in pl.def.tiles:
+					top = mini(top, pl.cell.y + (t["off"] as Vector2i).y - foot.y)
+				ctx.pillar_feet[foot] = mini(int(ctx.pillar_feet.get(foot, 0)), top)
 	ctx.terrain_masks = result.terrain_masks
 
 	# Named TileSet System (opcjonalne). Gdy jest profil, ale nie ma pola przypisań,
