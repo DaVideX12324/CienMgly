@@ -157,7 +157,7 @@ static func generate_layout(
 			GenProgress.begin(&"objects")
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
 			if not catalog.wall_defs.is_empty():
-				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects)
+				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects, catalog.defs)
 		GenProgress.end()
 
 	GenProgress.begin(&"spawns")

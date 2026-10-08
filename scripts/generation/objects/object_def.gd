@@ -85,6 +85,9 @@ var span: bool = false
 ## Na licu: ozdoba filara (np. łańcuch z hakiem) — na filarach ściany (kotwica = kotwica filara), na ścianie
 ## z szansą density (0..1, cała ściana naraz); tylko filary sięgające najwyższego kafla ozdoby.
 var on_pillar: bool = false
+## Na podłodze: ozdoba posadzki w osi przęseł (np. rząd otworów) — WallDecorPlanner kładzie ją pod każdym
+## przęsłem ściany z filarami (z szansą density na ścianę), kratkę przed licem; ObjectPlanner jej nie losuje.
+var span_floor: bool = false
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
 ## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.

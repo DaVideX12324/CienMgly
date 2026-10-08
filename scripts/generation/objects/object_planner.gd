@@ -259,6 +259,8 @@ func _room_target(r: Rect2i, parent: PackedInt32Array) -> Vector2i:
 # --- 3. Rozmieszczanie -------------------------------------------------------------------
 
 func _place_def(def: ObjectDef, marker: int) -> void:
+	if def.span_floor:
+		return  # ozdoba posadzki w osi przęseł — stawia WallDecorPlanner
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed_value, String(def.id)])
 	var cands := _candidates(def)
