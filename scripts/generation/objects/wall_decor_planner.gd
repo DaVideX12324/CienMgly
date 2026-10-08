@@ -49,13 +49,18 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 	if not rhythm_defs.is_empty():
 		walls = _place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects, "wall_rhythm")
 	var span_defs: Array[ObjectDef] = []
+	var pillar_defs: Array[ObjectDef] = []
 	for def in defs:
 		if def.span and def.rhythm.is_empty():
 			span_defs.append(def)
+		if def.on_pillar and def.rhythm.is_empty():
+			pillar_defs.append(def)
+	if not walls.is_empty() and not pillar_defs.is_empty():
+		_place_on_pillars(walls, pillar_defs, seed_v, objects)
 	if not walls.is_empty() and not span_defs.is_empty():
 		_place_spans(walls, span_defs, slots, used, bases_4h, on_wall, seed_v, flags, objects)
 	for def in defs:
-		if not def.rhythm.is_empty() or (def.span and not walls.is_empty()):
+		if not def.rhythm.is_empty() or def.on_pillar or (def.span and not walls.is_empty()):
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash([seed_v, String(def.id), "wall"])
@@ -119,7 +124,7 @@ static func _height_ok(def: ObjectDef, a: Vector2i, w: int, bases_4h: Dictionary
 ## przęsła po `sp` kratek oddzielone filarem szerokim na 1, wyśrodkowane — filary nie na końcach lica, odcinek
 ## krótszy niż 2 przęsła bez filarów. Odcinek z licem 4H (FacadePlacer: ten sam seed i siatka co kafelkowanie)
 ## dostaje obiekt z facade_h 4, pozostałe — z facade_h 3 (0 = każdy). Przed resztą dekoracji (one omijają filary).
-## Zwraca ściany z kompletem filarów: [{y, spans: [Vector2i(x początku przęsła, szerokość)]}].
+## Zwraca ściany z kompletem filarów: [{y, spans: [Vector2i(x początku przęsła, szerokość)], pillars: [filary]}].
 static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
 		on_wall: bool, seed_v: int, objects: ObjectPlan, salt: String) -> Array:
 	var walls: Array = []
@@ -162,6 +167,7 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				continue
 			var e := (n - (spans * sp + spans - 1)) / 2
 			var placed := 0
+			var wall_pillars: Array[ObjectPlacement] = []
 			for k in range(spans - 1):
 				var a := Vector2i(x0 + e + sp + k * (sp + 1), y)
 				if not _fits(slots, a, 1, def) or used.has(a):
@@ -170,6 +176,7 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				pl.def = _pick_weighted(cands, rng)
 				pl.cell = a
 				objects.placements.append(pl)
+				wall_pillars.append(pl)
 				used[a] = true
 				placed += 1
 			if placed > 0:
@@ -178,7 +185,7 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				var sp_list: Array[Vector2i] = []
 				for k in range(spans):
 					sp_list.append(Vector2i(x0 + e + k * (sp + 1), sp))
-				walls.append({"y": y, "spans": sp_list})
+				walls.append({"y": y, "spans": sp_list, "pillars": wall_pillars})
 	return walls
 
 
@@ -228,6 +235,38 @@ static func _place_spans(walls: Array, defs: Array[ObjectDef], slots: Dictionary
 		for span: Vector2i in spans:
 			for k in range(span.y):
 				used[Vector2i(span.x + k, y)] = true
+
+
+## Ozdoby filarów (def.on_pillar): na ścianie z szansą density wszystkie filary dostają jedną ozdobę (ta sama
+## na całej ścianie), o ile filar sięga najwyższego kafla ozdoby (zniszczony — nie).
+static func _place_on_pillars(walls: Array, defs: Array[ObjectDef], seed_v: int, objects: ObjectPlan) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_v, "wall_pillar_decor"])
+	for wall in walls:
+		var pillars: Array[ObjectPlacement] = wall.pillars
+		var def: ObjectDef = defs[rng.randi() % defs.size()]
+		if pillars.is_empty() or rng.randf() >= def.density:
+			continue
+		var need := _top_off(def)
+		var placed := 0
+		for p in pillars:
+			if _top_off(p.def) > need:
+				continue
+			var pl := ObjectPlacement.new()
+			pl.def = def
+			pl.cell = p.cell
+			objects.placements.append(pl)
+			placed += 1
+		if placed > 0:
+			objects.stats[def.id] = objects.count(def.id) + placed
+
+
+## Najwyższy rząd kafli obiektu względem kotwicy (0 dla obiektów bez listy kafli).
+static func _top_off(def: ObjectDef) -> int:
+	var top := 0
+	for t in def.tiles:
+		top = mini(top, (t["off"] as Vector2i).y)
+	return top
 
 
 ## Obiekt przęsła mieszczący się w szerokości `width`, inny niż już wybrane na ścianie (gdy się da), wg density.
