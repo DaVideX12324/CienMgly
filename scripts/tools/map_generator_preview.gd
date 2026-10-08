@@ -1153,6 +1153,7 @@ func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
 		"floor_layer": "",
 		"decor_layer": "",
 		"bridges_layer": "",
+		"rails_layer": "",
 		"platforms_layer": "",
 		"dist_entrance": 0.0,
 		"dist_exit": 0.0,
@@ -1241,6 +1242,10 @@ func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
 		if bridge_l and bridge_l.get_cell_source_id(tile_pos) != -1:
 			var ac: Vector2i = bridge_l.get_cell_atlas_coords(tile_pos)
 			info.bridges_layer = "Atlas %d (%d, %d)" % [bridge_l.get_cell_source_id(tile_pos), ac.x, ac.y]
+		var rails_l := proc_level.find_child("Rails", true, false) as TileMapLayer
+		if rails_l and rails_l.get_cell_source_id(tile_pos) != -1:
+			var ac: Vector2i = rails_l.get_cell_atlas_coords(tile_pos)
+			info.rails_layer = "Atlas %d (%d, %d)" % [rails_l.get_cell_source_id(tile_pos), ac.x, ac.y]
 		var plat_l := proc_level.find_child("Platforms", true, false) as TileMapLayer
 		if plat_l and plat_l.get_cell_source_id(tile_pos) != -1:
 			var ac: Vector2i = plat_l.get_cell_atlas_coords(tile_pos)
@@ -1288,6 +1293,8 @@ func _update_tile_inspector_ui() -> void:
 			layers_text += "\n[b]Warstwa Dekoracji:[/b] %s" % active_info.decor_layer
 		if not active_info.bridges_layer.is_empty():
 			layers_text += "\n[b]Warstwa Kładek:[/b] %s" % active_info.bridges_layer
+		if not active_info.rails_layer.is_empty():
+			layers_text += "\n[b]Warstwa Barierek:[/b] %s" % active_info.rails_layer
 		if not active_info.platforms_layer.is_empty():
 			layers_text += "\n[b]Warstwa Platform:[/b] %s" % active_info.platforms_layer
 

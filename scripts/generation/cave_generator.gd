@@ -237,23 +237,25 @@ static func apply_cave_tiles(
 	tileset_field: TileSetField = null,
 	generator_behaviour: Dictionary = {},
 	platforms_layer: TileMapLayer = null,
-	bridges_layer: TileMapLayer = null
+	bridges_layer: TileMapLayer = null,
+	rails_layer: TileMapLayer = null
 ) -> void:
 	# Reset globalnego seeda dla operacji silnika (np. set_cells_terrain_connect)
 	seed(rng.seed)
 	var plans := plan_cave_tiles(result, rng, theme_override, flags, map_tile_profile, tileset_field, generator_behaviour)
-	execute_cave_tiles(prepare_cave_layers(floor_layer, walls_layer, result, floor_decor_layer, platforms_layer, bridges_layer), plans)
+	execute_cave_tiles(prepare_cave_layers(floor_layer, walls_layer, result, floor_decor_layer, platforms_layer, bridges_layer, rails_layer), plans)
 
 
-## Przygotowuje warstwy (FloorDecor / Platforms / Bridges jako rodzeństwo Floor, gdy brak) i czyści je.
-## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Platforms"}.
+## Przygotowuje warstwy (FloorDecor / Platforms / Bridges / Rails jako rodzeństwo Floor, gdy brak) i czyści je.
+## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Rails", &"Platforms"}.
 static func prepare_cave_layers(
 	floor_layer: TileMapLayer,
 	walls_layer: TileMapLayer,
 	result: GenerationResult,
 	floor_decor_layer: TileMapLayer = null,
 	platforms_layer: TileMapLayer = null,
-	bridges_layer: TileMapLayer = null
+	bridges_layer: TileMapLayer = null,
+	rails_layer: TileMapLayer = null
 ) -> Dictionary:
 	if floor_decor_layer == null and floor_layer.get_parent():
 		floor_decor_layer = floor_layer.get_parent().get_node_or_null("FloorDecor") as TileMapLayer
@@ -292,7 +294,25 @@ static func prepare_cave_layers(
 			if floor_decor_layer != null and floor_decor_layer.get_parent() == parent:
 				parent.move_child(bridges_layer, floor_decor_layer.get_index() + 1)
 
+	# Warstwa Rails (barierki kanałów): rodzeństwo "Rails" za Walls, ten sam y-sort / z_index — barierka sortuje
+	# się z postaciami jak ściana, a może stać w kratce lica muru (barierka przed fasadą). Tylko przy barierkach.
+	if rails_layer == null and floor_layer.get_parent():
+		rails_layer = floor_layer.get_parent().get_node_or_null("Rails") as TileMapLayer
+		if rails_layer == null and result.canals != null and not result.canals.rail_cells.is_empty():
+			rails_layer = TileMapLayer.new()
+			rails_layer.name = "Rails"
+			rails_layer.tile_set = floor_layer.tile_set
+			rails_layer.z_index = walls_layer.z_index
+			rails_layer.y_sort_enabled = walls_layer.y_sort_enabled
+			rails_layer.y_sort_origin = walls_layer.y_sort_origin
+			var rparent := floor_layer.get_parent()
+			rparent.add_child(rails_layer)
+			if walls_layer.get_parent() == rparent:
+				rparent.move_child(rails_layer, walls_layer.get_index() + 1)
+
 	floor_layer.clear()
+	if rails_layer:
+		rails_layer.clear()
 	if floor_decor_layer:
 		floor_decor_layer.clear()
 	if bridges_layer:
@@ -306,6 +326,7 @@ static func prepare_cave_layers(
 		&"FloorDecor": floor_decor_layer,
 		&"Bridges": bridges_layer,
 		&"Walls": walls_layer,
+		&"Rails": rails_layer,
 		&"Platforms": platforms_layer,
 	}
 
@@ -364,7 +385,7 @@ static func plan_cave_tiles(
 	return TilePlacementPlanner.plan(ctx, analysis)
 
 
-## Wykonuje plan na warstwach (główny wątek): Floor, teren, FloorDecor, Bridges, Walls, Platforms.
+## Wykonuje plan na warstwach (główny wątek): Floor, teren, FloorDecor, Bridges, Walls, Rails, Platforms.
 static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	GenProgress.begin(&"paint")
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
@@ -372,6 +393,7 @@ static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	TilePlacementExecutor.execute(layers.get(&"FloorDecor"), plans.tiles, &"FloorDecor")
 	TilePlacementExecutor.execute(layers.get(&"Bridges"), plans.tiles, &"Bridges")
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
+	TilePlacementExecutor.execute(layers.get(&"Rails"), plans.tiles, &"Rails")
 	TilePlacementExecutor.execute(layers.get(&"Platforms"), plans.tiles, &"Platforms")
 	GenProgress.end(&"paint")
 

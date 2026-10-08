@@ -293,7 +293,9 @@ static func _canal_pits(st: State, layout, seed_val: int, cfg: Dictionary) -> vo
 ## z szansą rail_run_chance, końce ciągu przycięte o 1–2 kratki (rail_trim_chance — barierka nie zawsze
 ## dochodzi do kładki), długi ciąg dzielony na kawałki rail_piece z przerwami rail_gap; kawałek ≥ 3 kratki.
 ## Końce: przy kładce zagięty (CL / CR) z szansą rail_bridge_curl_chance, przy murze bez przycięcia i bez
-## słupka (przęsło M — barierka idzie dalej za ścianę), inaczej słupek (L / R); w środku
+## słupka (przęsło M — barierka idzie dalej za ścianę); na brzegu północnym, gdy kanał biegnie dalej pod
+## murem, z szansą rail_wall_front_chance barierka wychodzi kratkę przed fasadę ze słupkiem (L / R w kratce
+## lica — warstwa Rails); inaczej słupek (L / R); w środku
 ## przęsło (M); urwanie: w kawałku ≥ rail_break_min z szansą rail_break_chance zagięte końce CR | CL w środku,
 ## tuż obok siebie albo z przerwą 1–2 kratek. Tylko grafika — wejście do kanału blokuje już obrzeże.
 ## Zwraca liczbę kratek barierek.
@@ -305,6 +307,7 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: in
 	var run_chance := float(cfg.get("rail_run_chance", 0.85))
 	var trim_chance := float(cfg.get("rail_trim_chance", 0.5))
 	var curl_chance := float(cfg.get("rail_bridge_curl_chance", 0.5))
+	var front_chance := float(cfg.get("rail_wall_front_chance", 0.5))
 	var piece_r: Array = cfg.get("rail_piece", [6, 18])
 	var gap_r: Array = cfg.get("rail_gap", [2, 5])
 	var w: int = st.w
@@ -367,6 +370,10 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: in
 					a = i
 				if wall_r:
 					e = j
+				# brzeg północny, kanał biegnie dalej pod murem (lico nad wodą): barierka losowo wychodzi
+				# kratkę przed fasadę ze słupkiem (warstwa Rails nad licem), inaczej chowa się za ścianą
+				var front_l: bool = wall_l and key.y == 0 and water.has(Vector2i(int(xs[i]) - 1, y + 1)) and rng.randf() < front_chance
+				var front_r: bool = wall_r and key.y == 0 and water.has(Vector2i(int(xs[j]) + 1, y + 1)) and rng.randf() < front_chance
 				var k0 := a
 				while e - k0 + 1 >= 3:
 					var k1 := mini(e, k0 + rng.randi_range(int(piece_r[0]), int(piece_r[1])) - 1)
@@ -374,6 +381,12 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: in
 						k1 = e   # bez krótkiej resztki
 					n += _rail_piece(layout, xs, k0, k1, y, key.y, near_bridge, rng, curl_chance, break_chance, break_min,
 						wall_l and k0 == i, wall_r and k1 == j)
+					if front_l and k0 == i:
+						layout.rail_cells[Vector2i(int(xs[i]) - 1, y)] = &"L"
+						n += 1
+					if front_r and k1 == j:
+						layout.rail_cells[Vector2i(int(xs[j]) + 1, y)] = &"R"
+						n += 1
 					k0 = k1 + 1 + rng.randi_range(int(gap_r[0]), int(gap_r[1]))
 			i = j + 1
 	return n
