@@ -3391,7 +3391,7 @@ atlas_coords = Vector2i(12, 8)
 [sub_resource type="Resource" id="Resource_ytea1"]
 script = ExtResource("7_f6wib")
 tile = SubResource("Resource_a7ec2")
-layer = &"FloorDecor"
+layer = &"Curbs"
 
 [sub_resource type="Resource" id="Resource_b1bwe"]
 script = ExtResource("6_v0es5")
@@ -3405,7 +3405,7 @@ atlas_coords = Vector2i(13, 8)
 [sub_resource type="Resource" id="Resource_f16vq"]
 script = ExtResource("7_f6wib")
 tile = SubResource("Resource_26x6n")
-layer = &"FloorDecor"
+layer = &"Curbs"
 
 [sub_resource type="Resource" id="Resource_7nenc"]
 script = ExtResource("6_v0es5")
@@ -3419,7 +3419,7 @@ atlas_coords = Vector2i(14, 8)
 [sub_resource type="Resource" id="Resource_i06em"]
 script = ExtResource("7_f6wib")
 tile = SubResource("Resource_8dxl1")
-layer = &"FloorDecor"
+layer = &"Curbs"
 
 [sub_resource type="Resource" id="Resource_7srji"]
 script = ExtResource("6_v0es5")
@@ -3433,7 +3433,7 @@ atlas_coords = Vector2i(15, 6)
 [sub_resource type="Resource" id="Resource_chhn2"]
 script = ExtResource("7_f6wib")
 tile = SubResource("Resource_nka0k")
-layer = &"FloorDecor"
+layer = &"Curbs"
 
 [sub_resource type="Resource" id="Resource_1aoao"]
 script = ExtResource("6_v0es5")
@@ -3447,7 +3447,7 @@ atlas_coords = Vector2i(15, 7)
 [sub_resource type="Resource" id="Resource_5tc12"]
 script = ExtResource("7_f6wib")
 tile = SubResource("Resource_e0xrs")
-layer = &"FloorDecor"
+layer = &"Curbs"
 
 [sub_resource type="Resource" id="Resource_iswum"]
 script = ExtResource("6_v0es5")
@@ -3461,7 +3461,7 @@ atlas_coords = Vector2i(15, 8)
 [sub_resource type="Resource" id="Resource_q0jyf"]
 script = ExtResource("7_f6wib")
 tile = SubResource("Resource_t33g4")
-layer = &"FloorDecor"
+layer = &"Curbs"
 
 [sub_resource type="Resource" id="Resource_bgo56"]
 script = ExtResource("6_v0es5")
