@@ -138,6 +138,7 @@
     "connectors_enabled": false,
     "facades_enabled": true,
     "facade_top_independent": true,
+    "canal_bed_terrain": 6,
     "floor_enabled": true,
     "slopes_enabled": false,
     "solid_fill_enabled": true
