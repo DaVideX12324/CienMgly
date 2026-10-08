@@ -1,9 +1,9 @@
 extends RefCounted
 
 ## Kafle kanałów ścieków (CanalLayout). Role z profilu, wariant = układ sąsiedztwa:
-## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą: M, L / R przy podłodze,
-##               DL / DR przy ścianie), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
-##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = kwas płynie pod mur);
+## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą i pod ścianą: M, L / R przy
+##               podłodze, DL / DR przy ścianie), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
+##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = brzeg koryta);
 ##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami.
 ## - FloorDecor: CANAL_BANK na podłodze przy kanale (strona kanału: N / S / E / W, rogi wypukłe NE / NW /
 ##               SE / SW, wklęsłe IN_* tylko po skosie, ciemne końce przy ścianie S_DL / S_DR / N_DL /
@@ -73,10 +73,10 @@ static func bridge_rect(b: Dictionary) -> Rect2i:
 	return r
 
 
-## Górny rząd kanału pod podłogą = lico brzegu (widok z południa).
-static func _is_face(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
-	var n := p + Vector2i(0, -1)
-	return not water.has(n) and GridUtils.is_walkable(ctx.grid, n)
+## Górny rząd kanału pod podłogą albo ścianą = lico brzegu (widok z południa); pod ścianą też — miedziane
+## zagłębienie biegnie ciągle wzdłuż kanału (wzór: sewer-gen-v2 951b847).
+static func _is_face(_ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
+	return not water.has(p + Vector2i(0, -1))
 
 
 static func _face_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> StringName:
@@ -89,11 +89,10 @@ static func _face_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i
 	return &"M"
 
 
-## Kwas sąsiada: kanał (nie lico) albo ściana (kanał wpływa pod mur).
+## Kwas sąsiada: kanał (nie lico). Ściana obok nie jest kwasem — koryto ma prosty brzeg także przy murze,
+## zamiast „wpływać” w fasadę bez krawędzi (wzór: sewer-gen-v2).
 static func _acid(ctx: GenerationContext, water: Dictionary, q: Vector2i) -> bool:
-	if water.has(q):
-		return not _is_face(ctx, water, q)
-	return not GridUtils.is_walkable(ctx.grid, q)
+	return water.has(q) and not _is_face(ctx, water, q)
 
 
 static func _water_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> StringName:
