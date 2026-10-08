@@ -73,6 +73,7 @@ static func generate_layout(
 		for x in range(width):
 			ctx.grid[Vector2i(x, y)] = CellType.FLOOR if st.floor_m[y * width + x] else CellType.WALL
 	var canals = _canal_layout(st)
+	_canal_pits(st, canals, seed_used, cfg)
 	result.canals = canals
 	ctx.canals = canals
 
@@ -206,6 +207,80 @@ static func _canal_layout(st: State):
 	layout.lines = st.lines
 	layout.rebuild_blocked()
 	return layout
+
+
+## Doły w pustym korycie (makieta Extended): na suchym odcinku tunelu z szansą canal_pit_chance po jednym dole
+## na każde canal_pit_every kratek długości. Dół: canal_pit_len (3–4) kratki wzdłuż kanału; w poprzek — przy
+## kanale poziomym 2 rzędy pod licem (kamień zostaje w ostatnim rzędzie), przy pionowym 2 środkowe kolumny.
+## Rzędy: TOP / TOP_B (pierwszy pod kamieniem), VOID, BOTTOM (ostatni nad kamieniem). Bez dołów przy kładkach
+## (± 2), w blokach zakrętów / węzłów i przy końcach odcinka; tylko kratki suchego koryta.
+static func _canal_pits(st: State, layout, seed_val: int, cfg: Dictionary) -> void:
+	var chance := float(cfg.get("canal_pit_chance", 0.5))
+	if chance <= 0.0:
+		return
+	var len_r: Array = cfg.get("canal_pit_len", [3, 4])
+	var every := int(cfg.get("canal_pit_every", 16))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_val, "canal_pits"])
+	var w: int = st.w
+	var axis_n := PackedByteArray()
+	axis_n.resize(w * st.h)
+	for s in st.segs:
+		var bit: int = 1 if s.axis == "h" else 2
+		for y in range(s.y0, s.y1 + 1):
+			for x in range(s.x0, s.x1 + 1):
+				axis_n[y * w + x] |= bit
+	for s in st.segs:
+		if s.kind != "tunnel" or not s.dry or rng.randf() >= chance:
+			continue
+		var horiz: bool = s.axis == "h"
+		var lo: int = (s.x0 if horiz else s.y0) + 2
+		var hi: int = (s.x1 if horiz else s.y1) - 2
+		var across: Array = [s.y0 + 1, s.y0 + 2] if horiz else [s.x0 + 1, s.x0 + 2]
+		var ok_t := func(t: int) -> bool:
+			for a in range(s.y0 if horiz else s.x0, (s.y1 if horiz else s.x1) + 1):
+				var c := Vector2i(t, a) if horiz else Vector2i(a, t)
+				if not layout.dry.has(c) or axis_n[c.y * w + c.x] == 3:
+					return false
+				for dd in range(-2, 3):
+					var b := c + (Vector2i(dd, 0) if horiz else Vector2i(0, dd))
+					if layout.bridge_cells.has(b):
+						return false
+			return true
+		var n := maxi(1, (hi - lo + 1) / every)
+		var t := lo
+		for _k in range(n):
+			var L := rng.randi_range(int(len_r[0]), int(len_r[1]))
+			# pierwsza pozycja od t (z losowym przesunięciem), gdzie mieści się cały dół
+			var start := -1
+			var t0 := t + rng.randi_range(0, maxi(0, every / 2))
+			for c0 in range(t0, hi - L + 2):
+				var fits := true
+				for tt in range(c0, c0 + L):
+					if not ok_t.call(tt):
+						fits = false
+						break
+				if fits:
+					start = c0
+					break
+			if start < 0:
+				break
+			var cells := {}
+			for tt in range(start, start + L):
+				for a in across:
+					cells[Vector2i(tt, a) if horiz else Vector2i(a, tt)] = true
+			var rect := Rect2i(Vector2i(start, across[0]), Vector2i(L, 2)) if horiz else Rect2i(Vector2i(across[0], start), Vector2i(2, L))
+			for c: Vector2i in cells:
+				var top: int = rect.position.y
+				var bot: int = rect.end.y - 1
+				var v: StringName = &"VOID"
+				if c.y == top:
+					v = &"TOP_B" if rng.randf() < 0.3 else &"TOP"
+				elif c.y == bot:
+					v = &"BOTTOM"
+				layout.pit_cells[c] = v
+			layout.pits.append(rect)
+			t = start + L + 3
 
 
 ## Pokoje portali (wzorzec: krok 8 prototypu): kandydaci z ≥ PORTAL_MIN_FREE wolnymi kratkami, wejście
