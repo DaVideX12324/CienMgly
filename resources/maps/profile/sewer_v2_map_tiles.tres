@@ -1291,8 +1291,7 @@ parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_eih70")])
 
 [sub_resource type="Resource" id="Resource_lo4gr"]
 script = ExtResource("8_ft8jg")
-source_id = 4
-atlas_coords = Vector2i(0, 1)
+atlas_coords = Vector2i(24, 8)
 
 [sub_resource type="Resource" id="Resource_thth2"]
 script = ExtResource("7_f6wib")
@@ -1305,8 +1304,7 @@ parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_thth2")])
 
 [sub_resource type="Resource" id="Resource_ulgi0"]
 script = ExtResource("8_ft8jg")
-source_id = 4
-atlas_coords = Vector2i(1, 1)
+atlas_coords = Vector2i(22, 8)
 
 [sub_resource type="Resource" id="Resource_cirsr"]
 script = ExtResource("7_f6wib")
@@ -1319,8 +1317,7 @@ parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_cirsr")])
 
 [sub_resource type="Resource" id="Resource_41aaf"]
 script = ExtResource("8_ft8jg")
-source_id = 4
-atlas_coords = Vector2i(2, 1)
+atlas_coords = Vector2i(24, 6)
 
 [sub_resource type="Resource" id="Resource_o360v"]
 script = ExtResource("7_f6wib")
@@ -1333,8 +1330,7 @@ parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_o360v")])
 
 [sub_resource type="Resource" id="Resource_gr7np"]
 script = ExtResource("8_ft8jg")
-source_id = 4
-atlas_coords = Vector2i(3, 1)
+atlas_coords = Vector2i(22, 6)
 
 [sub_resource type="Resource" id="Resource_mqhtu"]
 script = ExtResource("7_f6wib")
