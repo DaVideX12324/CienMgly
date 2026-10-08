@@ -4,7 +4,8 @@ extends RefCounted
 ## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą i pod ścianą: M, L / R przy
 ##               podłodze, DL / DR przy ścianie), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
 ##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = brzeg koryta);
-##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami.
+##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami; doły w pustym korycie
+##               (canals.pit_cells) — CANAL_PIT: VOID, TOP / TOP_B, BOTTOM (brak roli = zwykłe dno).
 ## - FloorDecor: CANAL_BANK na podłodze przy kanale (strona kanału: N / S / E / W, rogi wypukłe NE / NW /
 ##               SE / SW, wklęsłe IN_* tylko po skosie, ciemne końce przy ścianie S_DL / S_DR / N_DL /
 ##               N_DR / E_DT / E_DB / W_DT / W_DB). Pod końcami kładek wariant <nazwa>_OPEN (ten sam
@@ -26,6 +27,8 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	for p: Vector2i in water:
 		if _is_face(ctx, water, p):
 			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, _face_variant(ctx, water, p), &"Floor", table)
+		elif canals.pit_cells.has(p) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], &"Floor", table):
+			pass
 		else:
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
 			_place(ctx, placement_plan, p, role, _water_variant(ctx, water, p), &"Floor", table)
@@ -152,7 +155,8 @@ static func _bank_variant(ctx: GenerationContext, water: Dictionary, q: Vector2i
 	return &""
 
 
-static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary) -> void:
+## Kafle modułu roli `role` (wariant `variant`) od kotwicy; false, gdy profil nie ma tej roli / wariantu.
+static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary) -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, anchor, role, [], -1, variant)
 	for rp in parts:
 		var p := TilePlacement.new()
@@ -164,3 +168,4 @@ static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vect
 		p.category = &"CANAL"
 		PlacementPriority.assign(p, table)
 		plan.queue(p)
+	return not parts.is_empty()

@@ -2233,13 +2233,70 @@ script = ExtResource("5_ybd7s")
 role = 27
 variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_lle62")])
 
+[sub_resource type="Resource" id="Resource_pit_t_top"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(18, 10)
+
+[sub_resource type="Resource" id="Resource_pit_p_top"]
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_pit_t_top")
+
+[sub_resource type="Resource" id="Resource_pit_v_top"]
+script = ExtResource("6_fxc8i")
+variant_id = &"TOP"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_pit_p_top")])
+
+[sub_resource type="Resource" id="Resource_pit_t_top_b"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(19, 10)
+
+[sub_resource type="Resource" id="Resource_pit_p_top_b"]
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_pit_t_top_b")
+
+[sub_resource type="Resource" id="Resource_pit_v_top_b"]
+script = ExtResource("6_fxc8i")
+variant_id = &"TOP_B"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_pit_p_top_b")])
+
+[sub_resource type="Resource" id="Resource_pit_t_void"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(17, 10)
+
+[sub_resource type="Resource" id="Resource_pit_p_void"]
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_pit_t_void")
+
+[sub_resource type="Resource" id="Resource_pit_v_void"]
+script = ExtResource("6_fxc8i")
+variant_id = &"VOID"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_pit_p_void")])
+
+[sub_resource type="Resource" id="Resource_pit_t_bottom"]
+script = ExtResource("8_j2pwj")
+atlas_coords = Vector2i(18, 11)
+
+[sub_resource type="Resource" id="Resource_pit_p_bottom"]
+script = ExtResource("7_8i1gb")
+tile = SubResource("Resource_pit_t_bottom")
+
+[sub_resource type="Resource" id="Resource_pit_v_bottom"]
+script = ExtResource("6_fxc8i")
+variant_id = &"BOTTOM"
+parts = Array[ExtResource("7_8i1gb")]([SubResource("Resource_pit_p_bottom")])
+
+[sub_resource type="Resource" id="Resource_pit_entry"]
+script = ExtResource("5_ybd7s")
+role = 60
+variants = Array[ExtResource("6_fxc8i")]([SubResource("Resource_pit_v_top"), SubResource("Resource_pit_v_top_b"), SubResource("Resource_pit_v_void"), SubResource("Resource_pit_v_bottom")])
+
 [sub_resource type="Resource" id="Resource_c1q2a"]
 script = ExtResource("4_orwte")
 id = &"sewer"
 display_name = "Sewer"
 description = "Ścieki: proste ściany z ceglanym licem 3H, kapy i boki bloków, rama pokoju."
 tile_set = ExtResource("9_4tt5c")
-tile_entries = Array[ExtResource("5_ybd7s")]([SubResource("Resource_blboe"), SubResource("Resource_8n7ua"), SubResource("Resource_pnl5w"), SubResource("Resource_b1bwe"), SubResource("Resource_nka0k"), SubResource("Resource_q0jyf"), SubResource("Resource_gh830"), SubResource("Resource_50del"), SubResource("Resource_bu60o"), SubResource("Resource_hr6ni"), SubResource("Resource_orcws"), SubResource("Resource_4tn0v"), SubResource("Resource_d5l2m"), SubResource("Resource_78goh"), SubResource("Resource_onfqr"), SubResource("Resource_mxqhr"), SubResource("Resource_cfx1d"), SubResource("Resource_u1l5s"), SubResource("Resource_3a4hb"), SubResource("Resource_7o02w"), SubResource("Resource_yufof"), SubResource("Resource_dq2xv"), SubResource("Resource_0mywp"), SubResource("Resource_x6snj"), SubResource("Resource_nbvmw"), SubResource("Resource_l60gy"), SubResource("Resource_2qrjc"), SubResource("Resource_r21lm"), SubResource("Resource_58n0e"), SubResource("Resource_kjkw4"), SubResource("Resource_jtfpp"), SubResource("Resource_ryw3r"), SubResource("Resource_xwsbt")])
+tile_entries = Array[ExtResource("5_ybd7s")]([SubResource("Resource_blboe"), SubResource("Resource_8n7ua"), SubResource("Resource_pnl5w"), SubResource("Resource_b1bwe"), SubResource("Resource_nka0k"), SubResource("Resource_q0jyf"), SubResource("Resource_gh830"), SubResource("Resource_50del"), SubResource("Resource_bu60o"), SubResource("Resource_hr6ni"), SubResource("Resource_orcws"), SubResource("Resource_4tn0v"), SubResource("Resource_d5l2m"), SubResource("Resource_78goh"), SubResource("Resource_onfqr"), SubResource("Resource_mxqhr"), SubResource("Resource_cfx1d"), SubResource("Resource_u1l5s"), SubResource("Resource_3a4hb"), SubResource("Resource_7o02w"), SubResource("Resource_yufof"), SubResource("Resource_dq2xv"), SubResource("Resource_0mywp"), SubResource("Resource_x6snj"), SubResource("Resource_nbvmw"), SubResource("Resource_l60gy"), SubResource("Resource_2qrjc"), SubResource("Resource_r21lm"), SubResource("Resource_58n0e"), SubResource("Resource_kjkw4"), SubResource("Resource_jtfpp"), SubResource("Resource_ryw3r"), SubResource("Resource_xwsbt"), SubResource("Resource_pit_entry")])
 
 [resource]
 script = ExtResource("3_cmae4")

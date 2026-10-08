@@ -92,6 +92,9 @@ enum Id {
 	BRIDGE_H,
 	# Puste koryto (kanał bez kwasu, flaga canal_dry_chance) — warianty jak CANAL_WATER.
 	CANAL_BED,
+	# Doły w pustym korycie (czarna pustka): VOID, TOP / TOP_B (pierwszy rząd pod kamieniem — wiszące kołki),
+	# BOTTOM (ostatni rząd nad kamieniem — stojące kołki).
+	CANAL_PIT,
 }
 
 
