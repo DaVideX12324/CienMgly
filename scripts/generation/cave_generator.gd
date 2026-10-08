@@ -368,6 +368,10 @@ static func plan_cave_tiles(
 	ctx.rooms = result.rooms
 	ctx.plateau = result.plateau
 	ctx.canals = result.canals
+	if result.objects != null:
+		for pl in result.objects.placements:
+			if pl.def.mount == &"facade" and not pl.def.rhythm.is_empty():
+				ctx.pillar_feet[pl.cell + (Vector2i(0, 1) if flags.facade_base_on_wall else Vector2i.ZERO)] = true
 	ctx.terrain_masks = result.terrain_masks
 
 	# Named TileSet System (opcjonalne). Gdy jest profil, ale nie ma pola przypisań,

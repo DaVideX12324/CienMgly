@@ -23,6 +23,19 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 	if defs.is_empty():
 		return objects
 	var on_wall: bool = flags != null and flags.facade_base_on_wall
+	# obiekty na rimie północnym (np. filary od tyłu): osobne miejsca i rytm, przed licem
+	var rim_defs: Array[ObjectDef] = []
+	var face_defs: Array[ObjectDef] = []
+	for def in defs:
+		if def.is_rim_mounted():
+			rim_defs.append(def)
+		else:
+			face_defs.append(def)
+	if not rim_defs.is_empty():
+		_place_rhythm(result, rim_defs, _rim_slots(result), {}, {}, on_wall, seed_v, objects, "rim_rhythm")
+	defs = face_defs
+	if defs.is_empty():
+		return objects
 	var slots := _face_slots(result, on_wall)  # Vector2i kotwicy -> tag ("over_floor" / "over_canal")
 	var used := {}                              # kratki rzędu kotwic zajęte przez dekoracje
 	var rhythm_defs: Array[ObjectDef] = []
@@ -33,7 +46,7 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 		need_h = need_h or def.facade_h != 0
 	var bases_4h := _bases_4h(result, seed_v, flags) if need_h else {}
 	if not rhythm_defs.is_empty():
-		_place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects)
+		_place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects, "wall_rhythm")
 	for def in defs:
 		if not def.rhythm.is_empty():
 			continue
@@ -100,9 +113,9 @@ static func _height_ok(def: ObjectDef, a: Vector2i, w: int, bases_4h: Dictionary
 ## krótszy niż 2 przęsła bez filarów. Odcinek z licem 4H (FacadePlacer: ten sam seed i siatka co kafelkowanie)
 ## dostaje obiekt z facade_h 4, pozostałe — z facade_h 3 (0 = każdy). Przed resztą dekoracji (one omijają filary).
 static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
-		on_wall: bool, seed_v: int, objects: ObjectPlan) -> void:
+		on_wall: bool, seed_v: int, objects: ObjectPlan, salt: String) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([seed_v, "wall_rhythm"])
+	rng.seed = hash([seed_v, salt])
 	var rows := {}
 	for a: Vector2i in slots:
 		if not rows.has(a.y):
@@ -123,13 +136,14 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 			i = j + 1
 			var base := Vector2i(x0, y + 1) if on_wall else Vector2i(x0, y)
 			var h := 4 if bases_4h.has(base) else 3
-			var def: ObjectDef = null
+			# stany filara (pełny / zniszczony…) = kilka obiektów tej wysokości, losowanych wagą density
+			var cands: Array[ObjectDef] = []
 			for d in defs:
 				if d.facade_h == 0 or d.facade_h == h:
-					def = d
-					break
-			if def == null:
+					cands.append(d)
+			if cands.is_empty():
 				continue
+			var def: ObjectDef = cands[0]
 			var sp: int = def.rhythm[rng.randi() % def.rhythm.size()]
 			var n := x1 - x0 + 1
 			var spans := (n + 1) / (sp + 1)
@@ -142,7 +156,7 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				if not _fits(slots, a, 1, def) or used.has(a):
 					continue
 				var pl := ObjectPlacement.new()
-				pl.def = def
+				pl.def = _pick_weighted(cands, rng)
 				pl.cell = a
 				objects.placements.append(pl)
 				used[a] = true
@@ -179,6 +193,45 @@ static func _face_slots(result, on_wall: bool) -> Dictionary:
 				continue
 			var anchor := Vector2i(x, y) if on_wall else below
 			out[anchor] = &"over_canal" if water.has(below) else &"over_floor"
+	return out
+
+
+## Obiekt z kandydatów wg wagi density (jeden kandydat — bez losowania: parytet katalogów z jednym filarem).
+static func _pick_weighted(cands: Array[ObjectDef], rng: RandomNumberGenerator) -> ObjectDef:
+	if cands.size() == 1:
+		return cands[0]
+	var total := 0.0
+	for d in cands:
+		total += maxf(d.density, 0.01)
+	var r := rng.randf() * total
+	for d in cands:
+		r -= maxf(d.density, 0.01)
+		if r <= 0.0:
+			return d
+	return cands[-1]
+
+
+## Miejsca na rimie północnym: kratka muru z podłogą na północ, mur pod nią (krawędź masy ściany widziana
+## z góry, nie lico); z dala od portali i płaskowyżów.
+static func _rim_slots(result) -> Dictionary:
+	var grid: Dictionary = result.grid
+	var water: Dictionary = result.canals.water if result.canals != null else {}
+	var pl_blocked: Dictionary = result.plateau.blocked if result.plateau != null else {}
+	var near_portal := {}
+	for p: Vector2i in result.portal_zone:
+		for dy in range(-PORTAL_MARGIN, PORTAL_MARGIN + 1):
+			for dx in range(-PORTAL_MARGIN, PORTAL_MARGIN + 1):
+				near_portal[p + Vector2i(dx, dy)] = true
+	var out := {}
+	for y in range(1, result.height - 1):
+		for x in range(result.width):
+			var c := Vector2i(x, y)
+			var up := c + Vector2i(0, -1)
+			if GridUtils.is_walkable(grid, c) or not grid.has(c) or water.has(up) or not GridUtils.is_walkable(grid, up):
+				continue
+			if GridUtils.is_walkable(grid, c + Vector2i(0, 1)) or near_portal.has(up) or pl_blocked.has(up):
+				continue
+			out[c] = &"over_floor"
 	return out
 
 
