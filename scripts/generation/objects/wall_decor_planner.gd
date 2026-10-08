@@ -144,6 +144,8 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 			if cands.is_empty():
 				continue
 			var def: ObjectDef = cands[0]
+			if not def.rhythm_area_chance.is_empty() and not _area_allows(_result, def, x0, x1, y, seed_v, salt):
+				continue
 			var sp: int = def.rhythm[rng.randi() % def.rhythm.size()]
 			var n := x1 - x0 + 1
 			var spans := (n + 1) / (sp + 1)
@@ -163,6 +165,32 @@ static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, us
 				placed += 1
 			if placed > 0:
 				objects.stats[def.id] = objects.count(def.id) + placed
+
+
+## Szansa filarów na odcinku x0..x1 (rząd y) wg rodzaju obszaru (canals.areas) — najczęstszy rodzaj kratek pod
+## odcinkiem i w nim; losowanie hashem odcinka (bez RNG rytmu: kolejność losowań bez zmian).
+static func _area_allows(result, def: ObjectDef, x0: int, x1: int, y: int, seed_v: int, salt: String) -> bool:
+	var areas: Dictionary = result.canals.areas if result.canals != null and "areas" in result.canals else {}
+	if areas.is_empty():
+		return true
+	var count := {}
+	var best: StringName = &""
+	var best_n := 0
+	for x in range(x0, x1 + 1):
+		for dy in [1, 0]:
+			var key: StringName = areas.get(Vector2i(x, y + dy), &"")
+			if key == &"":
+				continue
+			var kind := StringName(String(key).get_slice(":", 0))
+			count[kind] = int(count.get(kind, 0)) + 1
+			if int(count[kind]) > best_n:
+				best = kind
+				best_n = count[kind]
+			break
+	if not def.rhythm_area_chance.has(best):
+		return true
+	var u := float(hash([seed_v, x0, y, salt, "area"]) & 0xFFFF) / 65536.0
+	return u < float(def.rhythm_area_chance[best])
 
 
 ## Kolumny z licem: kratka ściany z podłogą na S i ścianą >= MIN_FACE_H w górę. Poza strefą portali
