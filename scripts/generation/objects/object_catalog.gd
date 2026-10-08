@@ -209,10 +209,12 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	if m.has("tiles"):
 		for t in m["tiles"]:
 			# dy <= 1: kotwica = lewy-dolny róg; 1 = kafel na podłodze pod licem (podstawa filara obiektu na licu)
-			if t is Array and t.size() == 4 and int(t[1]) <= 1:
-				def.tiles.append({"off": Vector2i(int(t[0]), int(t[1])), "coords": Vector2i(int(t[2]), int(t[3]))})
+			# opcjonalny 5. element: kafel alternatywny (np. podstawa filara wolnostojącego z kolizją)
+			if t is Array and (t.size() == 4 or t.size() == 5) and int(t[1]) <= 1:
+				def.tiles.append({"off": Vector2i(int(t[0]), int(t[1])), "coords": Vector2i(int(t[2]), int(t[3])),
+					"alt": int(t[4]) if t.size() == 5 else 0})
 			else:
-				errors.append("%s: tiles to lista [dx, dy, x, y] (dy <= 1, kotwica = lewy-dolny róg)." % tag)
+				errors.append("%s: tiles to lista [dx, dy, x, y (, alt)] (dy <= 1, kotwica = lewy-dolny róg)." % tag)
 	if m.has("footprint"):
 		for f in m["footprint"]:
 			var fv := _vec(f, Vector2i.ZERO, tag, "footprint")
