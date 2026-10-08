@@ -1,29 +1,33 @@
 @tool
 extends Node2D
 
-## Edytor przypisań kafli profilu (MapTileProfile .tres) — w edytorze, jak podgląd układu walki:
+## Edytor profilu kafli (MapTileProfile .tres) od strony atlasu — w edytorze, jak podgląd układu walki:
 ## otwórz scenes/tools/tile_profile_editor.tscn, zaznacz korzeń sceny.
 ## 1. Profil: przeciągnij plik profilu do „profile” albo utwórz nowy (grupa „Nowy profil”: TileSet + ścieżka
 ##    pliku -> „Utwórz profil”). Profil z kilkoma zestawami — „zestaw”.
-## 2. Widok: po lewej wszystkie role (rola / wariant), każda narysowana obecnymi kaflami w układzie części;
-##    czerwona kratka = część bez kafla, szara kreskowana = „wymaż”. Po prawej atlasy TileSetu zestawu
-##    (kratki użyte w profilu podświetlone, wybrana — biała ramka).
-## 3. Wybór części: „miejsce” w inspektorze albo przeciągnij znacznik „Wybor” na część na liście.
-## 4. Przypisanie: przeciągnij znacznik „Kafel” na kratkę atlasu albo pola „zrodlo” / „kafel” / „alternatywa”.
-##    Warstwa i przesunięcie części, waga wariantu — też w inspektorze.
-## 5. Struktura: dodaj / usuń część, wariant, rolę (grupa „Role”; „Dodaj brakujące role” wstawia wszystkie
-##    role enuma, których profil nie ma — z jedną pustą częścią).
-## Zmiany zapisują się same do pliku profilu (po chwili bez zmian). Bez cofania (Ctrl+Z) — w razie czego git.
+## 2. Kafel: przeciągnij znacznik „Kafel” na kratkę atlasu (po prawej) albo ustaw „zrodlo” / „kafel”.
+##    „przypisania” pokazuje, czym ten kafel już jest (rola / wariant / przesunięcie / warstwa).
+## 3. Przypisanie (grupa „Przypisanie”): rola, wariant, przesunięcie części w module, warstwa, alternatywa ->
+##    „Przypisz”. Wybór istniejącego przypisania z listy „przypisanie” wypełnia pola; „Przypisz” wtedy je
+##    zmienia, „Usuń przypisanie” usuwa. Pola zostają po zmianie kafla — kolejne kafle tej samej roli to
+##    tylko przesunięcie znacznika i „Przypisz”.
+## 4. Moduł z kilku kratek: zaznacz „modul” i przeciągnij znacznik „Koniec” na przeciwny róg prostokąta —
+##    „Przypisz” nada każdej kratce przesunięcie = „przesuniecie” + (kratka − „kafel”).
+## Po lewej podgląd wszystkich ról złożonych z obecnych kafli; znacznik „Wybor” na części — skok do jej kafla.
+## Na atlasie: kratki z przypisaniem podświetlone (z nazwą pierwszej roli), biała ramka — wybrany kafel,
+## pomarańczowe — reszta modułu wybranego przypisania. Zmiany zapisują się same do pliku profilu.
+## Bez cofania (Ctrl+Z) — w razie czego git.
 
 const SAVE_DELAY := 0.6
 const AS := 4                       # skala atlasów
-const LIST_W := 1100.0              # szerokość kolumny ról
-const LIST_Y := 330.0               # początek listy ról (nad nią podgląd zaznaczonego)
+const LIST_W := 1000.0              # szerokość kolumny ról
 const PS := 32                      # bok kratki części na liście
-const ATLAS_X := LIST_W + 120.0
+const ATLAS_X := LIST_W + 140.0
 const COL_EMPTY := Color(0.9, 0.3, 0.3)
 const COL_SEL := Color(1, 1, 1)
 const COL_USED := Color(0.35, 0.7, 1.0)
+const COL_MODULE := Color(1.0, 0.6, 0.2)
+const COL_RECT := Color(1.0, 0.9, 0.3)
 
 ## Edytowany profil (plik .tres).
 @export var profile: MapTileProfile:
@@ -43,88 +47,72 @@ const COL_USED := Color(0.35, 0.7, 1.0)
 @export_file("*.tres") var nowy_plik := ""
 @export_tool_button("Utwórz profil") var _b_create := _create_profile
 
-@export_group("Część")
-## Zaznaczona część (rola / wariant / przesunięcie / warstwa / kafel).
-@export var miejsce := 0:
+@export_group("Kafel atlasu")
+## Źródło atlasu (source_id) wybranego kafla.
+@export var zrodlo := 0:
 	set(v):
-		miejsce = clampi(v, 0, maxi(_slots.size() - 1, 0))
+		zrodlo = v
+		_on_cell_changed()
+## Wybrany kafel atlasu (kolumna, wiersz).
+@export var kafel := Vector2i.ZERO:
+	set(v):
+		kafel = v
+		_on_cell_changed()
+## Przypisanie prostokąta kratek jako modułu (od „kafel” do „koniec”).
+@export var modul := false:
+	set(v):
+		modul = v
+		_sync_markers()
+		queue_redraw()
+## Przeciwny róg prostokąta modułu.
+@export var koniec := Vector2i.ZERO:
+	set(v):
+		koniec = v
+		_sync_markers()
+		queue_redraw()
+## Czym wybrany kafel już jest (tylko do odczytu).
+@export_multiline var przypisania := "":
+	get:
+		var lines: PackedStringArray = []
+		for si in _cell_slots:
+			lines.append(_slot_label(si))
+		return "\n".join(lines) if not lines.is_empty() else "(nic)"
+	set(v):
+		pass
+
+@export_group("Przypisanie")
+## Istniejące przypisanie wybranego kafla do zmiany / usunięcia albo „nowe”.
+@export var przypisanie := 0:
+	set(v):
+		przypisanie = clampi(v, 0, _cell_slots.size())
+		if przypisanie > 0:
+			_fill_form(_cell_slots[przypisanie - 1])
 		_sync_markers()
 		notify_property_list_changed()
 		queue_redraw()
-## Lista „miejsce” tylko z częściami bez kafla (+ zaznaczona).
-@export var tylko_puste := false:
-	set(v):
-		tylko_puste = v
-		notify_property_list_changed()
-## Źródło atlasu (source_id) kafla zaznaczonej części.
-@export var zrodlo := 0:
-	get:
-		var t := _cur_tile()
-		return t.source_id if t else (_sources[0].id if not _sources.is_empty() else 0)
-	set(v):
-		_set_tile(v, _cur_coords(), 0)
-## Kratka atlasu (kolumna, wiersz) kafla zaznaczonej części.
-@export var kafel := Vector2i.ZERO:
-	get:
-		return _cur_coords()
-	set(v):
-		_set_tile(zrodlo, v, alternatywa)
+## Rola kafla.
+@export var rola: TileRole.Id = TileRole.Id.NONE
+## Wariant roli (A, B, …) — moduły jednej roli w kilku wersjach.
+@export var wariant := &"A"
+## Położenie kafla w module względem kotwicy (np. lico 3H: (0,-2), (0,-1), (0,0)).
+@export var przesuniecie := Vector2i.ZERO
+## Warstwa docelowa (Walls, Floor, FloorDecor, Props…).
+@export var warstwa := &"Walls"
 ## Alternatywa kafla (np. wersja bez kolizji).
-@export var alternatywa := 0:
-	get:
-		var t := _cur_tile()
-		return t.alternative_tile if t else 0
-	set(v):
-		_set_tile(zrodlo, _cur_coords(), v)
-## Warstwa docelowa części (Walls, Floor, FloorDecor…).
-@export var warstwa := &"Walls":
-	get:
-		var p := _cur_part()
-		return p.layer if p else &""
-	set(v):
-		var p := _cur_part()
-		if p and p.layer != v:
-			p.layer = v
-			_touch(false)
-## Przesunięcie części względem kotwicy modułu.
-@export var przesuniecie := Vector2i.ZERO:
-	get:
-		var p := _cur_part()
-		return p.offset if p else Vector2i.ZERO
-	set(v):
-		var p := _cur_part()
-		if p and p.offset != v:
-			p.offset = v
-			_touch(true)
+@export var alternatywa := 0
 ## Waga losowania wariantu.
-@export var waga := 1.0:
-	get:
-		var s := _cur()
-		return (s.variant as TileVariant).weight if s and s.variant else 1.0
-	set(v):
-		var s := _cur()
-		if s and s.variant and (s.variant as TileVariant).weight != v:
-			(s.variant as TileVariant).weight = v
-			_touch(false)
-@export_tool_button("Następna pusta") var _b_next := _next_empty
-@export_tool_button("Ustaw: wymaż kratkę") var _b_erase := _set_erase
-@export_tool_button("Wyczyść kafel") var _b_clear := _clear_tile
-@export_tool_button("Dodaj część (pod spodem)") var _b_add_part := _add_part
-@export_tool_button("Usuń część") var _b_del_part := _del_part
-@export_tool_button("Dodaj wariant") var _b_add_var := _add_variant
-@export_tool_button("Usuń wariant") var _b_del_var := _del_variant
-
-@export_group("Role")
-## Rola do dodania przyciskiem „Dodaj rolę”.
-@export var nowa_rola: TileRole.Id = TileRole.Id.NONE
-@export_tool_button("Dodaj rolę") var _b_add_role := _add_role
-@export_tool_button("Dodaj brakujące role") var _b_add_missing := _add_missing_roles
-@export_tool_button("Usuń rolę zaznaczonej części") var _b_del_role := _del_role
+@export var waga := 1.0
+@export_tool_button("Przypisz") var _b_assign := _assign
+@export_tool_button("Usuń przypisanie") var _b_remove := _remove_selected
+@export_tool_button("Usuń cały wariant") var _b_del_var := _del_variant
+@export_tool_button("Usuń całą rolę") var _b_del_role := _del_role
 
 var _slots: Array = []              # {entry, variant, part, holder, group}
 var _groups: Array = []             # {entry, variant, title, slots: [indeksy], rect}
 var _slot_rects: Array[Rect2] = []
 var _sources: Array = []            # {id, src: TileSetAtlasSource, name, origin}
+var _by_cell := {}                  # Vector3i(źródło, x, y) -> [indeksy części]
+var _cell_slots: Array = []         # części z kaflem wybranej kratki
 var _dirty := -1.0
 var _marker_last := {}
 
@@ -175,6 +163,7 @@ func _rebuild() -> void:
 	_slots.clear()
 	_groups.clear()
 	_sources.clear()
+	_by_cell.clear()
 	var d := _def()
 	if d:
 		for e: TileRoleEntry in d.tile_entries:
@@ -182,12 +171,14 @@ func _rebuild() -> void:
 				continue
 			var rname := _role_name(e.role)
 			if e.variants.is_empty():
-				_add_group(e, null, rname, [null])
+				if _valid(e.tile):
+					_add_group(e, null, "%s (kafel)" % rname, [null])
 				continue
 			for v: TileVariant in e.variants:
-				_add_group(e, v, "%s / %s" % [rname, v.variant_id], v.parts if not v.parts.is_empty() else [null])
+				if not v.parts.is_empty():
+					_add_group(e, v, "%s / %s" % [rname, v.variant_id], v.parts)
 		if d.tile_set:
-			var y := 30.0
+			var y := 40.0
 			for i in d.tile_set.get_source_count():
 				var sid := d.tile_set.get_source_id(i)
 				var src := d.tile_set.get_source(sid) as TileSetAtlasSource
@@ -195,27 +186,34 @@ func _rebuild() -> void:
 					continue
 				var nm := src.texture.resource_path.get_file().get_basename()
 				_sources.append({"id": sid, "src": src, "name": nm, "origin": Vector2(ATLAS_X, y)})
-				y += src.texture.get_size().y * AS + 80
+				y += src.texture.get_size().y * AS + 90
+	for i in _slots.size():
+		var t: TileRef = _slots[i].holder.tile
+		if _valid(t):
+			var k := Vector3i(t.source_id, t.atlas_coords.x, t.atlas_coords.y)
+			if not _by_cell.has(k):
+				_by_cell[k] = []
+			(_by_cell[k] as Array).append(i)
 	_layout()
-	miejsce = miejsce
-	notify_property_list_changed()
-	queue_redraw()
+	_on_cell_changed()
 
 
 func _add_group(e: TileRoleEntry, v: TileVariant, title: String, parts: Array) -> void:
 	var g := {"entry": e, "variant": v, "title": title, "slots": []}
 	for p in parts:
+		if p == null and v != null:
+			continue
 		(g.slots as Array).append(_slots.size())
 		_slots.append({"entry": e, "variant": v, "part": p, "holder": p if p else e, "group": _groups.size()})
 	_groups.append(g)
 
 
-## Rozmieszczenie ról na liście (przepływ wierszami) -> prostokąty części.
+## Lista ról (przepływ wierszami pod nagłówkiem) -> prostokąty części.
 func _layout() -> void:
 	_slot_rects.resize(_slots.size())
 	var font := ThemeDB.fallback_font
 	var x := 0.0
-	var y := LIST_Y
+	var y := 40.0
 	var row_h := 0.0
 	for g in _groups:
 		var b := _bounds(g.slots)
@@ -239,6 +237,8 @@ func _offset(si: int) -> Vector2i:
 
 
 func _bounds(slot_ids: Array) -> Rect2i:
+	if slot_ids.is_empty():
+		return Rect2i(0, 0, 1, 1)
 	var mn := Vector2i(1 << 20, 1 << 20)
 	var mx := -mn
 	for si in slot_ids:
@@ -248,25 +248,6 @@ func _bounds(slot_ids: Array) -> Rect2i:
 	return Rect2i(mn, mx - mn + Vector2i.ONE)
 
 
-func _cur() -> Dictionary:
-	return _slots[miejsce] if miejsce < _slots.size() else {}
-
-
-func _cur_part() -> TileModulePart:
-	var s := _cur()
-	return s.part if s else null
-
-
-func _cur_tile() -> TileRef:
-	var s := _cur()
-	return s.holder.tile if s else null
-
-
-func _cur_coords() -> Vector2i:
-	var t := _cur_tile()
-	return t.atlas_coords if _valid(t) else Vector2i.ZERO
-
-
 func _source(sid: int) -> Dictionary:
 	for s in _sources:
 		if s.id == sid:
@@ -274,151 +255,124 @@ func _source(sid: int) -> Dictionary:
 	return {}
 
 
-## Zmiana zapisu: struktura (przebudowa listy) albo tylko wartości.
-func _touch(structure: bool) -> void:
+func _on_cell_changed() -> void:
+	_cell_slots = _by_cell.get(Vector3i(zrodlo, kafel.x, kafel.y), []).duplicate()
+	przypisanie = 1 if not _cell_slots.is_empty() else 0
+
+
+func _fill_form(si: int) -> void:
+	var s: Dictionary = _slots[si]
+	rola = (s.entry as TileRoleEntry).role
+	wariant = (s.variant as TileVariant).variant_id if s.variant else &"A"
+	przesuniecie = _offset(si)
+	warstwa = (s.part as TileModulePart).layer if s.part else &"Walls"
+	alternatywa = (s.holder.tile as TileRef).alternative_tile if s.holder.tile else 0
+	waga = (s.variant as TileVariant).weight if s.variant else 1.0
+
+
+func _touch() -> void:
 	_dirty = SAVE_DELAY
-	if structure:
-		_rebuild()
+	_rebuild()
+
+
+# --- zmiany profilu ---
+
+## Część roli / wariantu o danym przesunięciu i warstwie: istniejąca dostaje kafel, inaczej nowa.
+func _put(role: int, vid: StringName, off: Vector2i, layer: StringName, t: TileRef) -> void:
+	var d := _def()
+	var e := _entry(d, role)
+	if e == null:
+		e = TileRoleEntry.new()
+		e.role = role
+		d.tile_entries.append(e)
+	var v: TileVariant = null
+	for vv: TileVariant in e.variants:
+		if vv.variant_id == vid:
+			v = vv
+	if v == null:
+		v = TileVariant.new()
+		v.variant_id = vid
+		e.variants.append(v)
+	v.weight = waga
+	for p: TileModulePart in v.parts:
+		if p.offset == off and p.layer == layer:
+			p.tile = t
+			return
+	var np := TileModulePart.new()
+	np.offset = off
+	np.layer = layer
+	np.tile = t
+	v.parts.append(np)
+
+
+func _remove_slot(si: int) -> void:
+	var s: Dictionary = _slots[si]
+	var e: TileRoleEntry = s.entry
+	if s.part == null:
+		e.tile = null
 	else:
-		_sync_markers()
-		notify_property_list_changed()
-		queue_redraw()
+		var v: TileVariant = s.variant
+		v.parts.erase(s.part)
+		if v.parts.is_empty():
+			e.variants.erase(v)
+	if e.variants.is_empty() and not _valid(e.tile):
+		_def().tile_entries.erase(e)
 
 
-func _set_tile(sid: int, c: Vector2i, alt: int) -> void:
-	var s := _cur()
-	if s.is_empty():
+func _assign() -> void:
+	if _def() == null or rola == TileRole.Id.NONE:
+		push_warning("tile_profile_editor: wybierz rolę.")
 		return
-	var src := _source(sid)
-	if not src.is_empty():
-		c = c.clamp(Vector2i.ZERO, (src.src as TileSetAtlasSource).get_atlas_grid_size() - Vector2i.ONE)
-	var t: TileRef = s.holder.tile
-	if t and t.source_id == sid and t.atlas_coords == c and t.alternative_tile == alt:
-		return
-	if s.part == null and s.variant == null and (s.entry as TileRoleEntry).tile == null:
-		# rola bez wariantów i bez kafla: nowy model — wariant A z jedną częścią
-		_new_variant(s.entry, Vector2i.ZERO)
-		_rebuild()
-		s = _cur()
-	s.holder.tile = _ref(c, sid, alt)
-	_touch(false)
+	if przypisanie > 0:
+		_remove_slot(_cell_slots[przypisanie - 1])
+	var cells: Array[Vector2i] = [kafel]
+	if modul:
+		cells.clear()
+		var a := Vector2i(mini(kafel.x, koniec.x), mini(kafel.y, koniec.y))
+		var b := Vector2i(maxi(kafel.x, koniec.x), maxi(kafel.y, koniec.y))
+		for y in range(a.y, b.y + 1):
+			for x in range(a.x, b.x + 1):
+				cells.append(Vector2i(x, y))
+	var src := _source(zrodlo)
+	for c in cells:
+		if not src.is_empty() and not (src.src as TileSetAtlasSource).has_tile(c):
+			continue
+		_put(rola, wariant, przesuniecie + (c - kafel), warstwa, _ref(c, zrodlo, alternatywa))
+	# przebudowa listy wypełnia formularz pierwszym przypisaniem kratki — zapamiętaj nowe i wskaż je potem
+	var want := [rola, wariant, przesuniecie, warstwa]
+	_touch()
+	for i in _cell_slots.size():
+		var s: Dictionary = _slots[_cell_slots[i]]
+		if s.variant and [(s.entry as TileRoleEntry).role, (s.variant as TileVariant).variant_id, _offset(_cell_slots[i]),
+				(s.part as TileModulePart).layer] == want:
+			przypisanie = i + 1
 
 
-func _set_erase() -> void:
-	var s := _cur()
-	if s and s.part:
-		s.part.tile = _ref(Vector2i(-1, -1), zrodlo, 0)
-		_touch(false)
-
-
-func _clear_tile() -> void:
-	var s := _cur()
-	if s:
-		s.holder.tile = null
-		_touch(false)
-
-
-func _next_empty() -> void:
-	for d in range(1, _slots.size() + 1):
-		var i := (miejsce + d) % _slots.size()
-		var t: TileRef = _slots[i].holder.tile
-		if t == null:
-			miejsce = i
-			return
-
-
-func _new_variant(e: TileRoleEntry, off: Vector2i) -> TileVariant:
-	var v := TileVariant.new()
-	v.variant_id = StringName(String.chr(65 + e.variants.size())) if e.variants.size() < 26 else StringName("V%d" % e.variants.size())
-	var p := TileModulePart.new()
-	p.offset = off
-	v.parts.append(p)
-	e.variants.append(v)
-	return v
-
-
-func _select_where(part: TileModulePart, e: TileRoleEntry) -> void:
-	for i in _slots.size():
-		if (part and _slots[i].part == part) or (part == null and _slots[i].entry == e):
-			miejsce = i
-			return
-
-
-func _add_part() -> void:
-	var s := _cur()
-	if s.is_empty() or s.variant == null:
-		return
-	var v: TileVariant = s.variant
-	var b := _bounds(_groups[s.group].slots)
-	var p := TileModulePart.new()
-	p.offset = Vector2i(b.position.x, b.end.y)
-	p.layer = s.part.layer if s.part else &"Walls"
-	v.parts.append(p)
-	_touch(true)
-	_select_where(p, null)
-
-
-func _del_part() -> void:
-	var s := _cur()
-	if s.is_empty() or s.part == null or (s.variant as TileVariant).parts.size() <= 1:
-		return
-	(s.variant as TileVariant).parts.erase(s.part)
-	_touch(true)
-	miejsce = maxi(miejsce - 1, 0)
-
-
-func _add_variant() -> void:
-	var s := _cur()
-	if s.is_empty():
-		return
-	var v := _new_variant(s.entry, Vector2i.ZERO)
-	_touch(true)
-	_select_where(v.parts[0], null)
+func _remove_selected() -> void:
+	if przypisanie > 0:
+		_remove_slot(_cell_slots[przypisanie - 1])
+		_touch()
 
 
 func _del_variant() -> void:
-	var s := _cur()
-	if s.is_empty() or s.variant == null:
+	if przypisanie <= 0:
 		return
-	(s.entry as TileRoleEntry).variants.erase(s.variant)
-	_touch(true)
-	miejsce = maxi(miejsce - 1, 0)
-
-
-func _add_role() -> void:
-	var d := _def()
-	if d == null or nowa_rola == TileRole.Id.NONE:
-		return
-	var e := _entry(d, nowa_rola)
-	if e == null:
-		e = TileRoleEntry.new()
-		e.role = nowa_rola
-		_new_variant(e, Vector2i.ZERO)
-		d.tile_entries.append(e)
-		_touch(true)
-	_select_where(null, e)
-
-
-func _add_missing_roles() -> void:
-	var d := _def()
-	if d == null:
-		return
-	for r in TileRole.Id.values():
-		if r != TileRole.Id.NONE and _entry(d, r) == null:
-			var e := TileRoleEntry.new()
-			e.role = r
-			_new_variant(e, Vector2i.ZERO)
-			d.tile_entries.append(e)
-	_touch(true)
+	var s: Dictionary = _slots[_cell_slots[przypisanie - 1]]
+	var e: TileRoleEntry = s.entry
+	if s.variant:
+		e.variants.erase(s.variant)
+	else:
+		e.tile = null
+	if e.variants.is_empty() and not _valid(e.tile):
+		_def().tile_entries.erase(e)
+	_touch()
 
 
 func _del_role() -> void:
-	var s := _cur()
-	var d := _def()
-	if s.is_empty() or d == null:
+	if przypisanie <= 0:
 		return
-	d.tile_entries.erase(s.entry)
-	_touch(true)
+	_def().tile_entries.erase(_slots[_cell_slots[przypisanie - 1]].entry)
+	_touch()
 
 
 func _create_profile() -> void:
@@ -461,15 +415,13 @@ func _save() -> void:
 
 func _validate_property(p: Dictionary) -> void:
 	match p.name:
-		"miejsce":
+		"przypisanie":
 			p.hint = PROPERTY_HINT_ENUM
-			var items: PackedStringArray = []
-			for i in _slots.size():
-				var t: TileRef = _slots[i].holder.tile
-				if tylko_puste and t != null and i != miejsce:
-					continue
-				items.append("%s:%d" % [_slot_label(i).replace(":", " ").replace(",", ";"), i])
+			var items: PackedStringArray = ["nowe:0"]
+			for i in _cell_slots.size():
+				items.append("%s:%d" % [_slot_label(_cell_slots[i]).replace(":", " ").replace(",", ";"), i + 1])
 			p.hint_string = ",".join(items)
+			p.usage = PROPERTY_USAGE_EDITOR
 		"zestaw":
 			p.hint = PROPERTY_HINT_ENUM
 			var items: PackedStringArray = []
@@ -483,23 +435,18 @@ func _validate_property(p: Dictionary) -> void:
 			for s in _sources:
 				items.append("%s (%d):%d" % [s.name, s.id, s.id])
 			p.hint_string = ",".join(items)
-			p.usage = PROPERTY_USAGE_EDITOR
-		"kafel", "alternatywa", "warstwa", "przesuniecie", "waga":
-			p.usage = PROPERTY_USAGE_EDITOR
+		"przypisania":
+			p.usage = PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_READ_ONLY
 
 
-func _slot_label(i: int) -> String:
-	var s: Dictionary = _slots[i]
+func _slot_label(si: int) -> String:
+	var s: Dictionary = _slots[si]
 	var g: Dictionary = _groups[s.group]
 	var t: TileRef = s.holder.tile
-	var ts := "pusta"
-	if _erase(t):
-		ts = "wymaż"
-	elif t:
-		ts = "%d %d;%d" % [t.source_id, t.atlas_coords.x, t.atlas_coords.y]
-	var o := _offset(i)
+	var o := _offset(si)
 	var layer := String((s.part as TileModulePart).layer) if s.part else "-"
-	return "%s  (%d;%d) %s  [%s]" % [g.title, o.x, o.y, layer, ts]
+	var alt := " alt %d" % t.alternative_tile if t and t.alternative_tile != 0 else ""
+	return "%s  (%d, %d)  %s%s" % [g.title, o.x, o.y, layer, alt]
 
 
 # --- znaczniki ---
@@ -523,19 +470,27 @@ func _place_marker(n: String, p: Vector2) -> void:
 		_marker_last[n] = p
 
 
-func _sync_markers() -> void:
-	if _slots.is_empty() or miejsce >= _slot_rects.size():
-		return
-	_place_marker("Wybor", _slot_rects[miejsce].get_center())
-	var t := _cur_tile()
-	if _valid(t):
-		var src := _source(t.source_id)
-		if not src.is_empty():
-			_place_marker("Kafel", src.origin + (Vector2(t.atlas_coords) + Vector2(0.5, 0.5)) * _cell_px(src))
-
-
 func _cell_px(src: Dictionary) -> Vector2:
 	return Vector2((src.src as TileSetAtlasSource).texture_region_size) * AS
+
+
+func _cell_center(sid: int, c: Vector2i) -> Vector2:
+	var src := _source(sid)
+	if src.is_empty():
+		return Vector2.ZERO
+	return src.origin + (Vector2(c) + Vector2(0.5, 0.5)) * _cell_px(src)
+
+
+func _sync_markers() -> void:
+	if _sources.is_empty():
+		return
+	_place_marker("Kafel", _cell_center(zrodlo, kafel))
+	var src := _source(zrodlo)
+	if not src.is_empty():
+		var end := koniec if modul else kafel
+		_place_marker("Koniec", _cell_center(zrodlo, end) + _cell_px(src) * 0.3)
+	if przypisanie > 0 and przypisanie - 1 < _cell_slots.size():
+		_place_marker("Wybor", _slot_rects[_cell_slots[przypisanie - 1]].get_center())
 
 
 ## Kratka atlasu pod punktem: [source_id, kratka] albo [].
@@ -556,23 +511,44 @@ func _slot_at(pt: Vector2) -> int:
 	return -1
 
 
+func _moved(n: String) -> Node2D:
+	var m := get_node_or_null(n) as Node2D
+	if m == null:
+		return null
+	if not _marker_last.has(n):
+		_marker_last[n] = m.position
+		return null
+	if m.position == _marker_last[n]:
+		return null
+	_marker_last[n] = m.position
+	return m
+
+
 func _process(delta: float) -> void:
 	if not Engine.is_editor_hint():
 		return
-	var w := get_node_or_null("Wybor") as Node2D
-	if w and _marker_last.has("Wybor") and w.position != _marker_last["Wybor"]:
-		_marker_last["Wybor"] = w.position
-		var i := _slot_at(w.position)
-		if i >= 0 and i != miejsce:
-			miejsce = i
-	var k := get_node_or_null("Kafel") as Node2D
-	if k and k.position != _marker_last.get("Kafel", k.position):
-		_marker_last["Kafel"] = k.position
+	var k := _moved("Kafel")
+	if k:
 		var hit := _atlas_at(k.position)
-		if not hit.is_empty():
-			_set_tile(hit[0], hit[1], 0)
-	elif k and not _marker_last.has("Kafel"):
-		_marker_last["Kafel"] = k.position
+		if not hit.is_empty() and (hit[0] != zrodlo or hit[1] != kafel):
+			zrodlo = hit[0]
+			kafel = hit[1]
+			notify_property_list_changed()
+	var e := _moved("Koniec")
+	if e:
+		var hit := _atlas_at(e.position)
+		if not hit.is_empty() and hit[0] == zrodlo and hit[1] != kafel:
+			koniec = hit[1]
+			modul = true
+			notify_property_list_changed()
+	var w := _moved("Wybor")
+	if w:
+		var si := _slot_at(w.position)
+		if si >= 0:
+			var t: TileRef = _slots[si].holder.tile
+			zrodlo = t.source_id
+			kafel = t.atlas_coords
+			przypisanie = _cell_slots.find(si) + 1
 	if _dirty >= 0.0:
 		_dirty -= delta
 		if _dirty < 0.0:
@@ -609,54 +585,41 @@ func _draw() -> void:
 		return
 	var d := _def()
 	if d == null:
-		_text(Vector2(0, 0), "Profil bez zestawów — utwórz nowy profil albo dodaj NamedTileSetDefinition.", 22)
+		_text(Vector2(0, 0), "Profil bez zestawów — utwórz nowy profil.", 22)
 		return
-	var empty := 0
-	for s in _slots:
-		if s.holder.tile == null:
-			empty += 1
-	_text(Vector2(0, -10), "%s — zestaw %s, TileSet %s   |   części: %d, puste: %d" % [profile.resource_path.get_file(), d.id,
-		d.tile_set.resource_path.get_file() if d.tile_set else "BRAK", _slots.size(), empty], 18)
-	# podgląd zaznaczonej roli / wariantu (duży)
-	draw_rect(Rect2(-10, 5, LIST_W + 10, LIST_Y - 20), Color(0.12, 0.12, 0.15))
-	if not _slots.is_empty():
-		var s := _cur()
-		var g: Dictionary = _groups[s.group]
-		_text(Vector2(0, 30), _slot_label(miejsce), 18, Color.WHITE)
-		var b := _bounds(g.slots)
-		var big := mini(96, int((LIST_Y - 70) / maxi(b.size.y, 1)))
-		for si in g.slots:
-			var o := _offset(si) - b.position
-			var r := Rect2(Vector2(0, 45) + Vector2(o) * big, Vector2(big, big))
-			draw_rect(r, Color(0.22, 0.22, 0.27))
-			_draw_ref(_slots[si].holder.tile, r)
-			if si == miejsce:
-				draw_rect(r, COL_SEL, false, 3.0)
-	# lista ról
-	for g in _groups:
+	var missing := 0
+	for r in TileRole.Id.values():
+		if r != TileRole.Id.NONE and _entry(d, r) == null:
+			missing += 1
+	_text(Vector2(0, 0), "%s — zestaw %s, TileSet %s   |   ról: %d, bez kafli: %d" % [profile.resource_path.get_file(), d.id,
+		d.tile_set.resource_path.get_file() if d.tile_set else "BRAK", d.tile_entries.size(), missing], 18, Color.WHITE)
+	var sel_slot: int = _cell_slots[przypisanie - 1] if przypisanie > 0 and przypisanie - 1 < _cell_slots.size() else -1
+	var sel_group: int = _slots[sel_slot].group if sel_slot >= 0 else -1
+	# lista ról (podgląd złożonych modułów)
+	for gi in _groups.size():
+		var g: Dictionary = _groups[gi]
 		var r: Rect2 = g.rect
-		var sel: bool = not _slots.is_empty() and _cur().group == _groups.find(g)
-		draw_rect(r, Color(0.3, 0.36, 0.55) if sel else Color(0.16, 0.16, 0.2))
+		draw_rect(r, Color(0.3, 0.36, 0.55) if gi == sel_group else Color(0.16, 0.16, 0.2))
 		_text(r.position + Vector2(6, 15), g.title, 13)
 		for si in g.slots:
 			draw_rect(_slot_rects[si], Color(0.22, 0.22, 0.27))
 			_draw_ref(_slots[si].holder.tile, _slot_rects[si])
-	if miejsce < _slot_rects.size():
-		draw_rect(_slot_rects[miejsce].grow(2), COL_SEL, false, 3.0)
+	if sel_slot >= 0:
+		draw_rect(_slot_rects[sel_slot].grow(2), COL_SEL, false, 3.0)
+	var module_cells := {}
+	if sel_group >= 0:
+		for si in _groups[sel_group].slots:
+			var t: TileRef = _slots[si].holder.tile
+			if _valid(t):
+				module_cells[Vector3i(t.source_id, t.atlas_coords.x, t.atlas_coords.y)] = true
 	# atlasy
-	var used := {}
-	for s in _slots:
-		var t: TileRef = s.holder.tile
-		if _valid(t):
-			used[Vector3i(t.source_id, t.atlas_coords.x, t.atlas_coords.y)] = true
-	var cur := _cur_tile()
 	for s in _sources:
 		var a: TileSetAtlasSource = s.src
 		var o: Vector2 = s.origin
 		var cp := _cell_px(s)
 		var grid := a.get_atlas_grid_size()
 		var sz := Vector2(grid) * cp
-		_text(o + Vector2(0, -10), "%s (źródło %d) — przeciągnij znacznik „Kafel” na kratkę" % [s.name, s.id], 20, Color.WHITE)
+		_text(o + Vector2(0, -12), "%s (źródło %d) — znacznik „Kafel” na kratkę; „Koniec” = prostokąt modułu" % [s.name, s.id], 20, Color.WHITE)
 		draw_rect(Rect2(o, sz), Color(0.18, 0.18, 0.22))
 		draw_texture_rect(a.texture, Rect2(o, a.texture.get_size() * AS), false)
 		for cx in range(grid.x + 1):
@@ -667,8 +630,20 @@ func _draw() -> void:
 			_text(o + Vector2(cx * cp.x + 2, sz.y + 14), str(cx), 12, Color(0.6, 0.6, 0.6))
 		for cy in grid.y:
 			_text(o + Vector2(-24, cy * cp.y + 16), str(cy), 12, Color(0.6, 0.6, 0.6))
-		for key in used:
-			if key.x == s.id:
-				draw_rect(Rect2(o + Vector2(key.y, key.z) * cp, cp), Color(COL_USED, 0.22))
-		if _valid(cur) and cur.source_id == s.id:
-			draw_rect(Rect2(o + Vector2(cur.atlas_coords) * cp, cp), COL_SEL, false, 4.0)
+		for key in _by_cell:
+			if key.x != s.id:
+				continue
+			var r := Rect2(o + Vector2(key.y, key.z) * cp, cp)
+			draw_rect(r, Color(COL_USED, 0.25))
+			var first: Dictionary = _slots[_by_cell[key][0]]
+			var nm := _role_name((first.entry as TileRoleEntry).role)
+			var more: int = _by_cell[key].size() - 1
+			_text(r.position + Vector2(2, cp.y - 4), nm.substr(0, 9) + ("+%d" % more if more > 0 else ""), 9, Color(1, 1, 1, 0.9))
+			if module_cells.has(key):
+				draw_rect(r, COL_MODULE, false, 3.0)
+		if s.id == zrodlo:
+			if modul:
+				var a0 := Vector2i(mini(kafel.x, koniec.x), mini(kafel.y, koniec.y))
+				var a1 := Vector2i(maxi(kafel.x, koniec.x), maxi(kafel.y, koniec.y))
+				draw_rect(Rect2(o + Vector2(a0) * cp, Vector2(a1 - a0 + Vector2i.ONE) * cp), COL_RECT, false, 3.0)
+			draw_rect(Rect2(o + Vector2(kafel) * cp, cp), COL_SEL, false, 4.0)
