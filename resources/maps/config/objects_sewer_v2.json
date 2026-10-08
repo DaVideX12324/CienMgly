@@ -273,7 +273,8 @@
       "size": [
         1,
         2
-      ]
+      ],
+      "stack": true
     },
     {
       "id": "barrels",
@@ -294,7 +295,8 @@
       "size": [
         1,
         2
-      ]
+      ],
+      "stack": true
     },
     {
       "id": "wrecks",
