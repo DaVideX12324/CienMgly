@@ -227,14 +227,15 @@ func _carve_service(cx: Dictionary) -> bool:
 	for c in path:
 		var x: int = c % st.w
 		var y: int = c / st.w
+		if cxm[c]:
+			continue   # środek w sali — poszerzenie dawało pas szeroki na 1 wzdłuż jej krawędzi (wypustka ściany)
 		for dy in [-1, 0, 1]:
 			for dx in [-1, 0, 1]:
 				var i: int = (y + dy) * st.w + x + dx
 				if not cxm[i] and not st.water[i]:
 					st.add_floor(x + dx, y + dy)
 					st.service[i] = 1
-		if not cxm[c]:
-			outside.append(c)
+		outside.append(c)
 	_crossing_bridges(outside)
 	# Brama: 3 kratki w poprzek korytarza przy pierwszej kratce poza częścią startową.
 	var own_m := pf.own
@@ -290,7 +291,7 @@ func _lane_gaps() -> void:
 	var uturn := 0
 	var bridged := 0
 	var lost := 0
-	for s in st.segs:
+	for s in st.lane_chains:
 		var horiz: bool = s.axis == "h"
 		for g in s.get("lane_gaps", []):
 			var ok := false
