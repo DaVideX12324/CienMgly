@@ -2,10 +2,12 @@
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/tools/tile_profile_editor.gd" id="1_tpe"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/maps/profile/sewer_v2_map_tiles.tres" id="2_prof"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/maps/profile/sewer_map_tiles.tres" id="3_wzor"]
 
 [node name="TileProfileEditor" type="Node2D"]
 script = ExtResource("1_tpe")
 profile = ExtResource("2_prof")
+wzor = ExtResource("3_wzor")
 
 [node name="Wybor" type="Marker2D" parent="."]
 gizmo_extents = 24.0
