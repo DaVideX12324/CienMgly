@@ -71,7 +71,12 @@ var layer_name: StringName = &""
 
 
 func is_wall_mounted() -> bool:
-	return mount == &"facade"
+	return mount == &"facade" or mount == &"rim"
+
+
+## Na krawędzi ściany od strony podłogi na północ (rim północny), np. filar widziany od tyłu.
+func is_rim_mounted() -> bool:
+	return mount == &"rim"
 
 
 func is_solid() -> bool:
