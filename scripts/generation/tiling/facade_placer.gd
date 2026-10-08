@@ -167,6 +167,8 @@ static func _pillar_reaches(ctx: GenerationContext, foot: Vector2i, part_dy: int
 
 ## Lico (moduł `module_role`, wariant `variant_id`) z cieniem wybieranym osobno dla każdej części: część bierze
 ## kafel z tym samym przesunięciem z wariantu cienia danego rzędu (recess_shade), gdy profil go ma.
+## Z `tiling.facade_top_independent` (companion-JSON) najwyższa część (top lica) bez cienia bierze kafel z wariantu
+## A albo B losowanego osobno (hash pozycji) — szew grzbietu nie powtarza kolumn lica.
 static func _try_shaded_module(
 	ctx: GenerationContext,
 	plan: TilePlacementPlan,
@@ -180,6 +182,16 @@ static func _try_shaded_module(
 	if parts.is_empty():
 		return false
 	var shaded := {}  # wariant cienia -> {przesunięcie: część}
+	var top_part = null  # część topu z wariantu wylosowanego osobno (null = jak lico)
+	if (variant_id == &"A" or variant_id == &"B") and bool(ctx.generator_behaviour.get("tiling", {}).get("facade_top_independent", false)):
+		var top_vid: StringName = &"B" if hash([ctx.seed_value, anchor, "facade_top"]) % 2 == 1 else &"A"
+		if top_vid != variant_id:
+			var top_y := 0
+			for rp in parts:
+				top_y = mini(top_y, rp.offset.y)
+			for tp in TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, top_vid, force_id):
+				if tp.offset.y == top_y:
+					top_part = tp
 	for rp in parts:
 		var use = rp
 		var shade := recess_shade(ctx, anchor, rp.offset.y)
@@ -190,6 +202,8 @@ static func _try_shaded_module(
 					by_off[sp.offset] = sp
 				shaded[shade] = by_off
 			use = shaded[shade].get(rp.offset, rp)
+		elif top_part != null and rp.offset == top_part.offset:
+			use = top_part
 		_queue_part(plan, anchor + use.offset, use, &"FACADE", table, Vector2i.ZERO, false)
 	return true
 
