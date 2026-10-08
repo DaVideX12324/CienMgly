@@ -286,10 +286,10 @@ static func _canal_pits(st: State, layout, seed_val: int, cfg: Dictionary) -> vo
 
 
 ## Barierki (makiety autora) wzdłuż kanałów poziomych: na północnym brzegu na kratce podłogi nad licem, na
-## południowym na ostatnim rzędzie koryta (podłoga tuż pod nim; wzór: sewer-gen-v2 fbe9c09). Przerwa przy
-## kładkach (± 1 kratka), w blokach zakrętów / węzłów (v2 92f59bc: bez barierki „w powietrzu”), przy portalach
+## południowym na ostatnim rzędzie koryta (podłoga tuż pod nim; wzór: sewer-gen-v2 fbe9c09). Przerwa na
+## śladzie kładki, w blokach zakrętów / węzłów (v2 92f59bc: bez barierki „w powietrzu”), przy portalach
 ## i dźwigniach. Brzeg nie musi mieć barierki na całej długości (decyzje usera): ciąg brzegu dostaje barierkę
-## z szansą rail_run_chance, końce ciągu przycięte o 0–3 kratki (rail_trim_chance — barierka nie zawsze
+## z szansą rail_run_chance, końce ciągu przycięte o 1–2 kratki (rail_trim_chance — barierka nie zawsze
 ## dochodzi do kładki), długi ciąg dzielony na kawałki rail_piece z przerwami rail_gap; kawałek ≥ 3 kratki.
 ## Końce: przy kładce zagięty (CL / CR) z szansą rail_bridge_curl_chance, inaczej słupek (L / R); w środku
 ## przęsło (M); urwanie: w kawałku ≥ rail_break_min z szansą rail_break_chance zagięte końce CR | CL w środku,
@@ -310,11 +310,11 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: in
 	if axis.is_empty():
 		st.build_water_axis()
 		axis = st.water_axis
-	var near_bridge := {}
+	var near_bridge := {}   # ślad modułu kładki — barierka może dochodzić tuż do desek (jak w makiecie)
 	for b in layout.bridges:
 		var r: Rect2i = b.get("rect", Rect2i())
-		for y in range(r.position.y - 1, r.end.y + 1):
-			for x in range(r.position.x - 1, r.end.x + 1):
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
 				near_bridge[Vector2i(x, y)] = true
 	var banned := {}
 	for p in ctx.portal_zone:
@@ -356,8 +356,8 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: in
 				j += 1
 			if j - i + 1 >= 3 and rng.randf() < run_chance:
 				var y: int = key.x
-				var a := i + (rng.randi_range(1, 3) if rng.randf() < trim_chance else 0)
-				var e := j - (rng.randi_range(1, 3) if rng.randf() < trim_chance else 0)
+				var a := i + (rng.randi_range(1, 2) if rng.randf() < trim_chance else 0)
+				var e := j - (rng.randi_range(1, 2) if rng.randf() < trim_chance else 0)
 				var k0 := a
 				while e - k0 + 1 >= 3:
 					var k1 := mini(e, k0 + rng.randi_range(int(piece_r[0]), int(piece_r[1])) - 1)
