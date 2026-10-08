@@ -170,6 +170,7 @@
       "priority": 300
     },
     "wall_pillars": {
+      "collision": "tile",
       "class": "PROP",
       "placement": "grid",
       "mount": "facade",
