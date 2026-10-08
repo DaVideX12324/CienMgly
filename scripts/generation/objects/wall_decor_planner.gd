@@ -26,11 +26,14 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 	var slots := _face_slots(result, on_wall)  # Vector2i kotwicy -> tag ("over_floor" / "over_canal")
 	var used := {}                              # kratki rzędu kotwic zajęte przez dekoracje
 	var rhythm_defs: Array[ObjectDef] = []
+	var need_h := false
 	for def in defs:
 		if not def.rhythm.is_empty():
 			rhythm_defs.append(def)
+		need_h = need_h or def.facade_h != 0
+	var bases_4h := _bases_4h(result, seed_v, flags) if need_h else {}
 	if not rhythm_defs.is_empty():
-		_place_rhythm(result, rhythm_defs, slots, used, seed_v, flags, on_wall, objects)
+		_place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects)
 	for def in defs:
 		if not def.rhythm.is_empty():
 			continue
@@ -39,7 +42,7 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 		var w := maxi(def.size.x, 1)
 		var cands: Array[Vector2i] = []
 		for a: Vector2i in slots:
-			if _fits(slots, a, w, def):
+			if _fits(slots, a, w, def) and _height_ok(def, a, w, bases_4h, on_wall):
 				cands.append(a)
 		cands.sort()  # słownik ma kolejność wstawiania, ale sort = niezależność od niej
 		var target := _target(def, cands.size(), rng)
@@ -67,22 +70,37 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 	return objects
 
 
+## Stopy lica 4H (FacadePlacer: ten sam seed i siatka co kafelkowanie); {} bez flagi enable_4h_facades.
+static func _bases_4h(result, seed_v: int, flags: GenerationFlags) -> Dictionary:
+	if flags == null or not flags.enable_4h_facades:
+		return {}
+	var c := GenerationContext.new()
+	c.grid = result.grid
+	c.width = result.width
+	c.height = result.height
+	c.flags = flags
+	c.seed_value = seed_v
+	FacadePlacer._plan_4h_segments(c)
+	return c.facade_4h_bases
+
+
+## Obiekt z facade_h (3 / 4) tylko na licu tej wysokości we wszystkich swoich kolumnach; 0 = każde lico.
+static func _height_ok(def: ObjectDef, a: Vector2i, w: int, bases_4h: Dictionary, on_wall: bool) -> bool:
+	if def.facade_h == 0:
+		return true
+	for k in range(w):
+		var base := a + Vector2i(k, 1 if on_wall else 0)
+		if (4 if bases_4h.has(base) else 3) != def.facade_h:
+			return false
+	return true
+
+
 ## Filary w rytmie (def.rhythm — odstępy do wyboru): na każdym odcinku lica (ciąg kotwic w jednym rzędzie)
 ## przęsła po `sp` kratek oddzielone filarem szerokim na 1, wyśrodkowane — filary nie na końcach lica, odcinek
 ## krótszy niż 2 przęsła bez filarów. Odcinek z licem 4H (FacadePlacer: ten sam seed i siatka co kafelkowanie)
 ## dostaje obiekt z facade_h 4, pozostałe — z facade_h 3 (0 = każdy). Przed resztą dekoracji (one omijają filary).
-static func _place_rhythm(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, seed_v: int,
-		flags: GenerationFlags, on_wall: bool, objects: ObjectPlan) -> void:
-	var bases_4h := {}
-	if flags != null and flags.enable_4h_facades:
-		var c := GenerationContext.new()
-		c.grid = result.grid
-		c.width = result.width
-		c.height = result.height
-		c.flags = flags
-		c.seed_value = seed_v
-		FacadePlacer._plan_4h_segments(c)
-		bases_4h = c.facade_4h_bases
+static func _place_rhythm(_result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
+		on_wall: bool, seed_v: int, objects: ObjectPlan) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed_v, "wall_rhythm"])
 	var rows := {}
