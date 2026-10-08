@@ -7,7 +7,8 @@ extends RefCounted
 ##               FloorDecor nad licem — wtedy profil nie ma obrzeży S* na tej kratce), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
 ##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = brzeg koryta);
 ##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami; doły w pustym korycie
-##               (canals.pit_cells) — CANAL_PIT: VOID, TOP / TOP_B, BOTTOM (brak roli = zwykłe dno).
+##               (canals.pit_cells) — CANAL_PIT: VOID, TOP / TOP_B, BOTTOM (brak roli = zwykłe dno). Pod kładką
+##               wariant <nazwa>_OPEN (kafle bez kolizji), gdy jest w profilu.
 ## - FloorDecor: CANAL_BANK na podłodze przy kanale (strona kanału: N / S / E / W, rogi wypukłe NE / NW /
 ##               SE / SW, wklęsłe IN_* tylko po skosie, ciemne końce przy ścianie S_DL / S_DR / N_DL /
 ##               N_DR / E_DT / E_DB / W_DT / W_DB; brak w profilu = wariant bez końca, np. N_DL -> N), wersje
@@ -30,16 +31,20 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	# 1. Kanał: lico brzegu i kwas (warstwa Floor). Wariant lica wg sąsiedztwa (lista od najlepszego —
 	# brak w profilu = następny), wersje _B / _C wariantu losowane z hasha kratki (te, które są w profilu).
 	var alts := {}
+	# Pod kładką najpierw wariant <v>_OPEN (kafle bez kolizji — przejście po kładce), gdy jest w profilu.
 	for p: Vector2i in water:
+		var under: bool = canals.bridge_cells.has(p)
 		if _is_face(ctx, water, p):
 			for fv in _face_variants(ctx, water, p):
+				if under and _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, StringName(String(fv) + "_OPEN"), &"Floor", table, alts):
+					break
 				if _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table, alts):
 					break
-		elif canals.pit_cells.has(p) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], &"Floor", table):
+		elif canals.pit_cells.has(p) and _place_open(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], under, table):
 			pass
 		else:
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
-			_place(ctx, placement_plan, p, role, _water_variant(ctx, water, p), &"Floor", table)
+			_place_open(ctx, placement_plan, p, role, _water_variant(ctx, water, p), under, table)
 
 	# 2. Kładki (Bridges) — cały ślad; kratki brzegu pod końcami zapamiętane dla obrzeży bez kolizji.
 	var bridge_ends := {}
@@ -64,13 +69,16 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 				var v := _bank_variant(ctx, water, q)
 				if v == &"":
 					continue
-				# kolejność: <v>_OPEN pod końcem kładki, <v>, wariant bez ciemnego końca (N_DL -> N)
+				# kolejność: <v>, wariant bez ciemnego końca (N_DL -> N); pod końcem kładki najpierw ich wersje _OPEN
 				var tries: Array[StringName] = [v]
-				if bridge_ends.has(q):
-					tries.push_front(StringName(String(v) + "_OPEN"))
 				var cut := String(v).find("_D")
 				if cut > 0:
 					tries.append(StringName(String(v).substr(0, cut)))
+				if bridge_ends.has(q):
+					var opens: Array[StringName] = []
+					for t0 in tries:
+						opens.append(StringName(String(t0) + "_OPEN"))
+					tries = opens + tries
 				for t in tries:
 					if _place_alt(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, t, &"FloorDecor", table, alts):
 						break
@@ -124,6 +132,14 @@ static func _face_variants(ctx: GenerationContext, water: Dictionary, p: Vector2
 	if water.has(p + Vector2i(1, -1)):
 		return [&"OUT_NE", &"M"]
 	return [&"M"]
+
+
+## Kratka kanału na warstwie Floor: pod kładką najpierw <variant>_OPEN, potem zwykły.
+static func _place_open(ctx: GenerationContext, plan: TilePlacementPlan, p: Vector2i, role: int, variant: StringName,
+		under_bridge: bool, table: Dictionary) -> bool:
+	if under_bridge and _place(ctx, plan, p, role, StringName(String(variant) + "_OPEN"), &"Floor", table):
+		return true
+	return _place(ctx, plan, p, role, variant, &"Floor", table)
 
 
 ## Wariant `base` albo jego wersja _B / _C / _D (losowo z hasha kratki spośród obecnych w profilu).
