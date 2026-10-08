@@ -429,8 +429,8 @@ func _resolve_tileset(palette: Dictionary) -> TileSet:
 	return ts
 
 
-## Warstwy poziomu. Jaskinie: przygotowane i wyczyszczone przez generator (FloorDecor/Bridges/Platforms;
-## Bridges tylko na mapach z kładkami — tworzy ją prepare_cave_layers).
+## Warstwy poziomu. Jaskinie: przygotowane i wyczyszczone przez generator (FloorDecor/Bridges/Rails/Platforms;
+## Bridges / Rails tylko na mapach z kładkami / barierkami — tworzy je prepare_cave_layers).
 func _prepare_layers(job: GenJob) -> Dictionary:
 	var ts := _resolve_tileset(_palette())
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
@@ -440,9 +440,12 @@ func _prepare_layers(job: GenJob) -> Dictionary:
 	var bridges_layer := get_node_or_null("Bridges") as TileMapLayer
 	if bridges_layer != null:
 		bridges_layer.tile_set = ts
+	var rails_layer := get_node_or_null("Rails") as TileMapLayer
+	if rails_layer != null:
+		rails_layer.tile_set = ts
 	if level_type == LevelType.CAVE_DUNGEON:
-		return CaveGeneratorScript.prepare_cave_layers(floor_layer, walls_layer, job.result, floor_decor, platforms_layer, bridges_layer)
-	return {&"Floor": floor_layer, &"FloorDecor": floor_decor, &"Bridges": bridges_layer, &"Walls": walls_layer, &"Platforms": platforms_layer}
+		return CaveGeneratorScript.prepare_cave_layers(floor_layer, walls_layer, job.result, floor_decor, platforms_layer, bridges_layer, rails_layer)
+	return {&"Floor": floor_layer, &"FloorDecor": floor_decor, &"Bridges": bridges_layer, &"Walls": walls_layer, &"Rails": rails_layer, &"Platforms": platforms_layer}
 
 
 ## Nakłada wynik generacji na scenę w jednej klatce.
@@ -465,7 +468,7 @@ func _apply_job_async(job: GenJob) -> void:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
 		var tiles = job.plans.tiles
-		var order := [&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Platforms"]
+		var order := [&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Rails", &"Platforms"]
 		var total := 0
 		for layer_name in order:
 			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
@@ -497,6 +500,9 @@ func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
 	var bridges_layer: TileMapLayer = layers.get(&"Bridges")
 	if bridges_layer:
 		bridges_layer.clear()
+	var rails_layer: TileMapLayer = layers.get(&"Rails")
+	if rails_layer:
+		rails_layer.clear()
 	(layers[&"Platforms"] as TileMapLayer).clear()
 	MapGeneratorBaseScript.apply_grid_to_layers(layers[&"Floor"], layers[&"Walls"], job.result, _palette(), job.rng)
 

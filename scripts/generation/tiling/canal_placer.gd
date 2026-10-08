@@ -15,7 +15,7 @@ extends RefCounted
 ##               bez kolizji — przejście na kładkę); brak go w profilu = zwykły wariant (obrzeża bez kolizji).
 ## - Bridges:    kładki BRIDGE_V / BRIDGE_H (moduły na cały ślad: kanał + kratka brzegu z obu stron) na
 ##               osobnej warstwie nad FloorDecor.
-## - Walls:      barierki CANAL_RAIL (canals.rail_cells: L, M, R, CL, CR; na brzegu północnym <v>_N, gdy jest
+## - Rails:      barierki CANAL_RAIL (canals.rail_cells: L, M, R, CL, CR; na brzegu północnym <v>_N, gdy jest
 ##               w profilu) — y-sort razem z postaciami.
 ## Brak roli w profilu = kratka pominięta (kanały to dodatek ścieków, bez stałych legacy).
 
@@ -75,13 +75,13 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					if _place_alt(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, t, &"FloorDecor", table, alts):
 						break
 
-	# 4. Barierki (Walls, y-sort z postaciami). Brzeg północny (woda pod kratką barierki): wariant <v>_N, gdy
+	# 4. Barierki (Rails — y-sort z postaciami jak Walls; kratka może mieć też lico muru). Brzeg północny (woda pod kratką barierki): wariant <v>_N, gdy
 	# profil go ma (inny rysunek — barierka niżej, przy licu), inaczej zwykły.
 	for p: Vector2i in canals.rail_cells:
 		var rv: StringName = canals.rail_cells[p]
-		if water.has(p + Vector2i(0, 1)) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, StringName(String(rv) + "_N"), &"Walls", table):
+		if water.has(p + Vector2i(0, 1)) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, StringName(String(rv) + "_N"), &"Rails", table):
 			continue
-		_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, rv, &"Walls", table)
+		_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, rv, &"Rails", table)
 
 
 ## Ślad modułu kładki: `rect` z nakładki albo prostokąt otaczający jej kratki.
