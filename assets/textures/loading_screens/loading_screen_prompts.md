@@ -123,7 +123,7 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 4. Sewer (sewer)
-- **Mockupy autora:** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`
 - **Wspólne z mockupów:** jaskrawozielony toksyczny szlam, ciemna cegła z zielonymi kaflami przy ścianach, miedziane barierki i rury, łukowe kraty odpływów, żelazne kratki w posadzce, kamienne filary z lampkami, drewniane kładki z desek.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/sewer/`
 

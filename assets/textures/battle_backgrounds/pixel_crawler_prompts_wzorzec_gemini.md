@@ -263,7 +263,7 @@ A 16-bit pixel art JRPG battle background of an astronomer scholar's observatory
 ---
 
 ### 9. Miejskie Kanały (Sewer)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`, `Assets/Props.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`, `Assets/Props.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/sewer/`
 
 #### Wariant 1: Główny Kanał Toksycznego Szlamu (Toxic Sludge Canal & Walkway)
