@@ -132,6 +132,7 @@
   "tiling": {
     "connectors_enabled": false,
     "facades_enabled": true,
+    "facade_top_independent": true,
     "floor_enabled": true,
     "slopes_enabled": false,
     "solid_fill_enabled": true
