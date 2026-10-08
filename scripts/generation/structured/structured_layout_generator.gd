@@ -292,7 +292,8 @@ static func _canal_pits(st: State, layout, seed_val: int, cfg: Dictionary) -> vo
 ## i dźwigniach. Brzeg nie musi mieć barierki na całej długości (decyzje usera): ciąg brzegu dostaje barierkę
 ## z szansą rail_run_chance, końce ciągu przycięte o 1–2 kratki (rail_trim_chance — barierka nie zawsze
 ## dochodzi do kładki), długi ciąg dzielony na kawałki rail_piece z przerwami rail_gap; kawałek ≥ 3 kratki.
-## Końce: przy kładce zagięty (CL / CR) z szansą rail_bridge_curl_chance, inaczej słupek (L / R); w środku
+## Końce: przy kładce zagięty (CL / CR) z szansą rail_bridge_curl_chance, przy murze bez przycięcia i bez
+## słupka (przęsło M — barierka idzie dalej za ścianę), inaczej słupek (L / R); w środku
 ## przęsło (M); urwanie: w kawałku ≥ rail_break_min z szansą rail_break_chance zagięte końce CR | CL w środku,
 ## tuż obok siebie albo z przerwą 1–2 kratek. Tylko grafika — wejście do kanału blokuje już obrzeże.
 ## Zwraca liczbę kratek barierek.
@@ -359,20 +360,36 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: in
 				var y: int = key.x
 				var a := i + (rng.randi_range(1, 2) if rng.randf() < trim_chance else 0)
 				var e := j - (rng.randi_range(1, 2) if rng.randf() < trim_chance else 0)
+				# koniec przy murze: barierka bez przycięcia i bez słupka — idzie dalej za ścianę
+				var wall_l := _rail_wall(ctx, water, Vector2i(int(xs[i]) - 1, y), key.y)
+				var wall_r := _rail_wall(ctx, water, Vector2i(int(xs[j]) + 1, y), key.y)
+				if wall_l:
+					a = i
+				if wall_r:
+					e = j
 				var k0 := a
 				while e - k0 + 1 >= 3:
 					var k1 := mini(e, k0 + rng.randi_range(int(piece_r[0]), int(piece_r[1])) - 1)
 					if e - k1 < 3:
 						k1 = e   # bez krótkiej resztki
-					n += _rail_piece(layout, xs, k0, k1, y, key.y, near_bridge, rng, curl_chance, break_chance, break_min)
+					n += _rail_piece(layout, xs, k0, k1, y, key.y, near_bridge, rng, curl_chance, break_chance, break_min,
+						wall_l and k0 == i, wall_r and k1 == j)
 					k0 = k1 + 1 + rng.randi_range(int(gap_r[0]), int(gap_r[1]))
 			i = j + 1
 	return n
 
 
+## Kratka za końcem ciągu barierki to mur (północ: kratka w rzędzie barierki; południe: podłoga pod nią).
+static func _rail_wall(ctx: GenerationContext, water: Dictionary, c: Vector2i, side: int) -> bool:
+	var q := c + Vector2i(0, side)
+	return ctx.grid.has(q) and not water.has(q) and not GridUtils.is_walkable(ctx.grid, q)
+
+
 ## Jeden kawałek barierki xs[k0..k1] w rzędzie y (strona: 0 północ, 1 południe); zwraca liczbę kratek.
+## open_l / open_r: koniec przy murze — przęsło M zamiast słupka (barierka chowa się za ścianą).
 static func _rail_piece(layout, xs: Array, k0: int, k1: int, y: int, side: int, near_bridge: Dictionary,
-		rng: RandomNumberGenerator, curl_chance: float, break_chance: float, break_min: int) -> int:
+		rng: RandomNumberGenerator, curl_chance: float, break_chance: float, break_min: int,
+		open_l := false, open_r := false) -> int:
 	# urwanie: [b0 = CR] przerwa (0–2) [b1 = CL], każda część ≥ 3 kratki
 	var b0 := -1
 	var b1 := -1
@@ -388,9 +405,9 @@ static func _rail_piece(layout, xs: Array, k0: int, k1: int, y: int, side: int, 
 			continue
 		var x: int = xs[k]
 		var v: StringName = &"M"
-		if k == k0:
+		if k == k0 and not open_l:
 			v = &"CL" if left_curl else &"L"
-		elif k == k1:
+		elif k == k1 and not open_r:
 			v = &"CR" if right_curl else &"R"
 		elif k == b0:
 			v = &"CR"
