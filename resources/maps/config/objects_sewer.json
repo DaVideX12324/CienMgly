@@ -78,7 +78,8 @@
         "open"
       ],
       "priority": 420,
-      "set": "dining"
+      "set": "dining",
+      "canal_gap": 2
     },
     "chairs": {
       "class": "PROP",
