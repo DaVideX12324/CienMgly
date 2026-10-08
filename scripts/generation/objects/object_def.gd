@@ -54,6 +54,10 @@ var companions: Array[Dictionary] = [] # {id: StringName, min, max, radius} — 
 var keep_paths: bool = true           # z kolizją: nie na zarezerwowanych przejściach
 var priority: int = 0                 # większy = rozmieszczany wcześniej
 var flip_h: bool = false              # losowe odbicie (canvas item / scena)
+## Stos: obiekt z kafla, za którym (kratkę niżej) stoi inny obiekt ze stack — kafel alternatywny STACK_ALT
+## (y-sort podniesiony o kratkę): rysuje się nad tym z przodu, podstawa nakrywa jego górę (skrzynia na skrzyni).
+var stack: bool = false
+const STACK_ALT := 1
 var order: int = 0                    # kolejność w pliku (remisy priorytetu)
 ## Montaż: "" = na podłodze (ObjectPlanner); "facade" = na licu ściany widocznym z południa
 ## (WallDecorPlanner) — kotwica = dolna kratka lica nad podłogą, bez kolizji i zajętości.
