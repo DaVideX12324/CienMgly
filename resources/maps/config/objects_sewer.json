@@ -382,7 +382,8 @@
         1,
         2
       ],
-      "stack": true
+      "stack": true,
+      "canal_gap": 1
     },
     {
       "id": "barrels",
