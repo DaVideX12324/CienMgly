@@ -10,7 +10,7 @@
     "wall_lights": {"class": "PROP", "placement": "grid", "source": 1, "size": [1, 2], "mount": "facade", "density": 9, "spacing": 5},
     "wall_details": {"class": "PROP", "placement": "grid", "source": 1, "size": [1, 2], "mount": "facade", "density": 3, "spacing": 4},
     "wall_arches": {"class": "PROP", "placement": "grid", "mount": "facade", "density": 1.5, "spacing": 6, "priority": 300},
-    "wall_pillars": {"class": "PROP", "placement": "grid", "mount": "facade", "rhythm": [4, 5], "priority": 900}
+    "wall_pillars": {"class": "PROP", "placement": "grid", "mount": "facade", "rhythm": [4, 5], "priority": 900, "layer": "WallDecor"}
   },
   "objects": [
     {"id": "chest", "class": "INTERACTIVE", "placement": "grid", "scene": "chest", "per_room": 0.5, "context": ["wall_any"], "prefer": ["niche", "dead_end", "corner"], "priority": 500},
@@ -34,7 +34,7 @@
     {"id": "wall_switches", "group": "wall_details", "density": 0.6, "atlas": [0, 0], "variants": [[0, 0], [1, 0]]},
     {"id": "wall_arch_big", "group": "wall_arches", "size": [4, 2], "tiles": [[0, -1, 9, 12], [1, -1, 10, 12], [2, -1, 11, 12], [3, -1, 12, 12], [0, 0, 9, 13], [1, 0, 10, 13], [2, 0, 11, 13], [3, 0, 12, 13]]},
     {"id": "wall_arch_small", "group": "wall_arches", "size": [2, 1], "density": 1, "tiles": [[0, 0, 9, 11], [1, 0, 10, 11]]},
-    {"id": "wall_pillar", "group": "wall_pillars", "facade_h": 3, "size": [1, 3], "tiles": [[0, -2, 7, 3], [0, -1, 7, 4], [0, 0, 7, 6]]},
-    {"id": "wall_pillar_4h", "group": "wall_pillars", "facade_h": 4, "size": [1, 4], "tiles": [[0, -3, 7, 3], [0, -2, 7, 4], [0, -1, 7, 5], [0, 0, 7, 6]]}
+    {"id": "wall_pillar", "group": "wall_pillars", "facade_h": 3, "size": [1, 5], "tiles": [[0, -3, 7, 3], [0, -2, 7, 4], [0, -1, 7, 4], [0, 0, 7, 5], [0, 1, 7, 6]]},
+    {"id": "wall_pillar_4h", "group": "wall_pillars", "facade_h": 4, "size": [1, 6], "tiles": [[0, -4, 7, 3], [0, -3, 7, 4], [0, -2, 7, 4], [0, -1, 7, 4], [0, 0, 7, 5], [0, 1, 7, 6]]}
   ]
 }
