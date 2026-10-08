@@ -87,6 +87,8 @@ func _choose(ctx: GenerationContext, hr: Vector2i, hy: int, lr: Vector2i, ly: in
 			var p := Vector2i(cx, yy)
 			if int(grid.get(p, CellType.WALL)) != CellType.FLOOR:
 				raise_ok = false
+			elif not ctx.protected_floor.is_empty() and ctx.protected_floor.has(p):
+				raise_ok = false   # chroniony przesmyk (układ structured) — nie zamurowujemy
 			raise.append(p)
 	if cut_ok and (not raise_ok or cut.size() <= raise.size()):
 		return {"cells": cut, "type": CellType.FLOOR}
