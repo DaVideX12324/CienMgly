@@ -189,11 +189,59 @@ func _lanes() -> void:
 	for i in range(st.w * st.h):
 		if st.water[i]:
 			st.lanes[i] = 0
+	_lane_corners()
 	# Chodnik nie wychodzi poza ramkę mapy.
 	for y in range(st.h):
 		for x in range(st.w):
 			if not st.inside(x, y, x, y):
 				st.lanes[y * st.w + x] = 0
+
+
+## Zewnętrzne rogi zakrętów i węzłów: w bloku wspólnym dwóch odcinków (nakładające się prostokąty wody),
+## przy każdym z 4 narożników bloku — gdy chodnik dochodzi i z boku pionowego, i z poziomego — kwadrat po
+## przekątnej (szerokości obu chodników) też jest chodnikiem. Bez tego chodniki stykają się tylko rogiem
+## (ruch 4-kierunkowy — brak przejścia, trzeba obchodzić).
+func _lane_corners() -> void:
+	for i in range(st.segs.size()):
+		var a: Dictionary = st.segs[i]
+		for j in range(i + 1, st.segs.size()):
+			var b: Dictionary = st.segs[j]
+			var bx0 := maxi(a.x0, b.x0)
+			var by0 := maxi(a.y0, b.y0)
+			var bx1 := mini(a.x1, b.x1)
+			var by1 := mini(a.y1, b.y1)
+			if bx0 > bx1 or by0 > by1:
+				continue
+			for sx in [-1, 1]:
+				for sy in [-1, 1]:
+					var cx: int = bx1 if sx > 0 else bx0
+					var cy: int = by1 if sy > 0 else by0
+					var wx := _lane_run(cx, cy, sx, 0)   # chodnik w bok od narożnika bloku
+					var wy := _lane_run(cx, cy, 0, sy)   # chodnik w górę / dół
+					if wx == 0 or wy == 0:
+						continue
+					var r := [mini(cx + sx, cx + sx * wx), mini(cy + sy, cy + sy * wy), maxi(cx + sx, cx + sx * wx), maxi(cy + sy, cy + sy * wy)]
+					var add := false
+					for y in range(r[1], r[3] + 1):
+						for x in range(r[0], r[2] + 1):
+							if st.inside(x, y, x, y) and not st.water[y * st.w + x] and not st.lanes[y * st.w + x]:
+								st.lanes[y * st.w + x] = 1
+								add = true
+					if add:
+						a.lane_rects.append(r)
+
+
+## Ile kratek chodnika (1–4) leży od (x, y) w kierunku (dx, dy), poza samym (x, y) — tylko gdy (x, y) to woda,
+## a chodnik zaczyna się tuż za nią.
+func _lane_run(x: int, y: int, dx: int, dy: int) -> int:
+	var n := 0
+	for k in range(1, 5):
+		var px := x + dx * k
+		var py := y + dy * k
+		if not st.in_map(px, py) or not st.lanes[py * st.w + px]:
+			break
+		n += 1
+	return n
 
 
 func _pick_width(opts: Array) -> int:
