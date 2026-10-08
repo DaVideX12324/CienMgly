@@ -43,6 +43,7 @@ var area_weights := {}             # katalog: szansa kratki dla dużych obiektó
 var set_gap := 0                   # katalog: odstęp dużych obiektów różnych zestawów
 var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indeks w set_ids + 1), 0 = brak
 var set_ids := {}                  # zestaw -> indeks
+var canal_dist := PackedInt32Array()  # idx -> odległość (Chebyshev) od wody kanału; liczona, gdy jakiś obiekt ma canal_gap
 
 
 ## Plan obiektów dla wyniku generacji. `features` można podać, gdy są już policzone.
@@ -72,6 +73,11 @@ func _run(result, catalog: ObjectCatalog) -> void:
 		return
 	area_weights = catalog.area_weights
 	set_gap = catalog.set_gap
+	var max_gap := 0
+	for d in catalog.defs:
+		max_gap = maxi(max_gap, d.canal_gap)
+	if max_gap > 0 and result.canals != null and not result.canals.is_empty():
+		_canal_distance(result.canals, max_gap + 1)
 	if result.canals != null and "areas" in result.canals:
 		for c: Vector2i in result.canals.areas:
 			if f.in_bounds(c):
@@ -472,6 +478,8 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator,
 		return false
 	if not _set_ok(def, cells):
 		return false
+	if not _canal_ok(def, anchor):
+		return false
 	var pl := ObjectPlacement.new()
 	pl.def = def
 	pl.cell = anchor
@@ -487,6 +495,43 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator,
 				var q := anchor + Vector2i(dx, dy)
 				if f.in_bounds(q):
 					stamp[f.idx(q)] = marker
+	return true
+
+
+## Odległość od wody kanału (BFS Chebysheva do `limit`); dalej = limit.
+func _canal_distance(canals, limit: int) -> void:
+	var n := f.width * f.height
+	canal_dist.resize(n)
+	canal_dist.fill(limit)
+	var frontier: Array[int] = []
+	for c in canals.water:
+		if f.in_bounds(c) and not canals.crossing_cells.has(c):
+			canal_dist[f.idx(c)] = 0
+			frontier.append(f.idx(c))
+	var dist := 0
+	while not frontier.is_empty() and dist < limit:
+		dist += 1
+		var nxt: Array[int] = []
+		for i in frontier:
+			var c := f.cell(i)
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					var q := c + Vector2i(dx, dy)
+					if f.in_bounds(q) and canal_dist[f.idx(q)] > dist:
+						canal_dist[f.idx(q)] = dist
+						nxt.append(f.idx(q))
+		frontier = nxt
+
+
+## canal_gap: kratki podstawy i rysunku (size) co najmniej canal_gap wolnych kratek od wody (odległość > gap).
+func _canal_ok(def: ObjectDef, anchor: Vector2i) -> bool:
+	if def.canal_gap <= 0 or canal_dist.is_empty():
+		return true
+	for dy in range(-(maxi(def.size.y, 1) - 1), 1):
+		for dx in range(maxi(def.size.x, 1)):
+			var q := anchor + Vector2i(dx, dy)
+			if f.in_bounds(q) and canal_dist[f.idx(q)] <= def.canal_gap:
+				return false
 	return true
 
 
