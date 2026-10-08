@@ -21,6 +21,8 @@ const RUNTIME_NAME := "ObjectRuntime"
 const DECALS := "Decals"
 const PROPS := "Props"
 const DECAL_ITEMS := "DecalItems"
+## Warstwy kafli obiektów z własnym "layer" w katalogu (czyszczone przy regeneracji jak Decals / Props).
+const EXTRA_LAYERS := ["WallDecor"]
 ## DECAL sortuje się po GÓRNEJ krawędzi kratki (origin = jej środek), więc postać stojąca na nim
 ## albo niżej zawsze go przykrywa, a ściana nad nim nachodzi na niego jak na podłogę.
 const DECAL_SORT_LIFT := ObjectDef.CELL * 0.5
@@ -40,7 +42,7 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 		runtime.name = RUNTIME_NAME
 		level.add_child(runtime)
 	runtime.clear()
-	for layer_name in [DECALS, PROPS]:
+	for layer_name in [DECALS, PROPS] + EXTRA_LAYERS:
 		var old := level.get_node_or_null(layer_name) as TileMapLayer
 		if old != null:
 			old.clear()
@@ -138,7 +140,7 @@ static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, ru
 	var def := pl.def
 	# Na licu zawsze Props (y-sort razem ze ścianami), na podłodze DECAL pod Decals.
 	var flat := def.klass == ObjectDef.Klass.DECAL and not def.is_wall_mounted()
-	var layer := _layer(level, tileset, DECALS if flat else PROPS)
+	var layer := _layer(level, tileset, String(def.layer_name) if def.layer_name != &"" else (DECALS if flat else PROPS))
 	if not def.tiles.is_empty():
 		# Moduł z kilku kafli (np. kratka 9-slice) — sortowanie / kolizja z danych kafli TileSetu.
 		for t in def.tiles:

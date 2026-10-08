@@ -19,7 +19,7 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles", "rhythm", "facade_h",
+	"mount", "source", "tiles", "rhythm", "facade_h", "layer",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade"]
@@ -205,12 +205,14 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			for vi in range(maxi(int(variants), 1)):
 				def.atlas.append(base + Vector2i(vi * def.size.x, 0))
 	def.source_id = maxi(int(m.get("source", 0)), 0)
+	def.layer_name = StringName(String(m.get("layer", "")))
 	if m.has("tiles"):
 		for t in m["tiles"]:
-			if t is Array and t.size() == 4 and int(t[1]) <= 0:
+			# dy <= 1: kotwica = lewy-dolny róg; 1 = kafel na podłodze pod licem (podstawa filara obiektu na licu)
+			if t is Array and t.size() == 4 and int(t[1]) <= 1:
 				def.tiles.append({"off": Vector2i(int(t[0]), int(t[1])), "coords": Vector2i(int(t[2]), int(t[3]))})
 			else:
-				errors.append("%s: tiles to lista [dx, dy, x, y] (dy <= 0, kotwica = lewy-dolny róg)." % tag)
+				errors.append("%s: tiles to lista [dx, dy, x, y] (dy <= 1, kotwica = lewy-dolny róg)." % tag)
 	if m.has("footprint"):
 		for f in m["footprint"]:
 			var fv := _vec(f, Vector2i.ZERO, tag, "footprint")

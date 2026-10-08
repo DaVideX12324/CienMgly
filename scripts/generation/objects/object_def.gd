@@ -62,6 +62,8 @@ var mount: StringName = &""
 var rhythm: Array[int] = []
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
+## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.
+var layer_name: StringName = &""
 
 
 func is_wall_mounted() -> bool:
