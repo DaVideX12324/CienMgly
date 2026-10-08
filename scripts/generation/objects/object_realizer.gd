@@ -22,7 +22,7 @@ const DECALS := "Decals"
 const PROPS := "Props"
 const DECAL_ITEMS := "DecalItems"
 ## Warstwy kafli obiektów z własnym "layer" w katalogu (czyszczone przy regeneracji jak Decals / Props).
-const EXTRA_LAYERS := ["WallDecor"]
+const EXTRA_LAYERS := ["WallDecor", "PillarDecor"]
 ## DECAL sortuje się po GÓRNEJ krawędzi kratki (origin = jej środek), więc postać stojąca na nim
 ## albo niżej zawsze go przykrywa, a ściana nad nim nachodzi na niego jak na podłogę.
 const DECAL_SORT_LIFT := ObjectDef.CELL * 0.5
