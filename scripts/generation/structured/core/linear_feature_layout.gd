@@ -54,6 +54,10 @@ var service: Dictionary = {}  # Vector2i -> bool
 ## Liczony przed przejściami czyszczącymi — kratki dodane później nie mają wpisu.
 var areas: Dictionary = {}  # Vector2i -> StringName
 
+## Ściany szerokości 1 (flaga enable_1w_walls): kratka -> wariant roli WALL_1W (TOP / MID / BOTTOM / FACE_TOP / BASE).
+## Kratki zostają podłogą w siatce (podłoga pod zaokrąglonym grzbietem), ruch blokuje `blocked`.
+var walls_1w: Dictionary = {}  # Vector2i -> StringName
+
 
 func is_empty() -> bool:
 	return cells.is_empty()
@@ -91,3 +95,5 @@ func rebuild_blocked() -> void:
 	for p in cells:
 		if not crossing_cells.has(p):
 			blocked[p] = true
+	for p in walls_1w:
+		blocked[p] = true

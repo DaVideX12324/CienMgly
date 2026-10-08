@@ -133,6 +133,8 @@ static func generate_layout(
 	_drop_walled_canal_cells(ctx, canals)
 	if bool(cfg.get("canal_rails", true)):
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
+	if flags.enable_1w_walls:
+		stats["walls_1w"] = _walls_1w(ctx, canals, seed_used, cfg)
 	stats["lost_post"] = _unreachable(ctx, canals)
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
@@ -572,6 +574,70 @@ static func _grid_diff(ctx: GenerationContext, before: PackedByteArray) -> int:
 			if before[y * ctx.width + x] != (1 if GridUtils.is_walkable(ctx.grid, Vector2i(x, y)) else 0):
 				n += 1
 	return n
+
+
+## Ściany szerokości 1 (flaga enable_1w_walls): wolnostojące występy muru długości wall_1w_len (kratki z północy
+## na południe: TOP, [MID…], BOTTOM, FACE_TOP, BASE — lico 3H jak na makiecie autora), w kompleksach i pokojach (canals.areas), z wolnym
+## pierścieniem wall_1w_margin kratek podłogi dookoła (bez wody, chodników, korytarzy serwisowych, kładek i ich
+## prześwitu, barierek, portali) i odstępem wall_1w_spacing od innych. Liczba: wall_1w_per_1000 na 1000 kratek
+## kompleksów / pokoi. Siatka bez zmian (podłoga pod grzbietem), ruch blokuje canals.blocked.
+static func _walls_1w(ctx: GenerationContext, canals, seed_val: int, cfg: Dictionary) -> int:
+	var len_r: Array = cfg.get("wall_1w_len", [4, 5])
+	var margin := int(cfg.get("wall_1w_margin", 2))
+	var spacing := int(cfg.get("wall_1w_spacing", 4))
+	var per_1000 := float(cfg.get("wall_1w_per_1000", 3.0))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_val, "walls_1w"])
+	var bad := {}
+	for d in [canals.water, canals.lanes, canals.service, canals.crossing_cells, canals.bridge_clearance, canals.rail_cells, ctx.portal_zone]:
+		bad.merge(d)
+	var cands: Array[Vector2i] = []
+	for p: Vector2i in canals.areas:
+		var a := String(canals.areas[p])
+		if (a.begins_with("hall:") or a.begins_with("room:")) and GridUtils.is_walkable(ctx.grid, p) and not bad.has(p):
+			cands.append(p)
+	cands.sort()
+	var target := int(cands.size() * per_1000 / 1000.0)
+	for i in range(cands.size() - 1, 0, -1):
+		var j := rng.randi() % (i + 1)
+		var tmp := cands[i]
+		cands[i] = cands[j]
+		cands[j] = tmp
+	var placed: Array[Rect2i] = []
+	for top in cands:
+		if placed.size() >= target:
+			break
+		var n := int(len_r[0]) + rng.randi() % maxi(int(len_r[-1]) - int(len_r[0]) + 1, 1)
+		var body := Rect2i(top, Vector2i(1, n))
+		var ring := body.grow(margin)
+		var ok := true
+		for q in placed:
+			if q.grow(spacing).intersects(body):
+				ok = false
+				break
+		for y in range(ring.position.y, ring.end.y):
+			for x in range(ring.position.x, ring.end.x):
+				var c := Vector2i(x, y)
+				if not ok:
+					break
+				if not GridUtils.is_walkable(ctx.grid, c) or bad.has(c) or canals.blocked.has(c) or not canals.areas.has(c):
+					ok = false
+		if not ok:
+			continue
+		placed.append(body)
+		for k in range(n):
+			var v: StringName = &"MID"
+			if k == 0:
+				v = &"TOP"
+			elif k == n - 3:
+				v = &"BOTTOM"
+			elif k == n - 2:
+				v = &"FACE_TOP"
+			elif k == n - 1:
+				v = &"BASE"
+			canals.walls_1w[top + Vector2i(0, k)] = v
+			canals.blocked[top + Vector2i(0, k)] = true
+	return placed.size()
 
 
 ## Kratki kanału zamurowane przez przejścia czyszczące wypadają z nakładki (woda tylko na podłodze).

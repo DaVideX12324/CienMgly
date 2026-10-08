@@ -2,6 +2,7 @@ class_name TilePlacementPlanner
 extends RefCounted
 
 const CanalPlacerScript = preload("canal_placer.gd")
+const Wall1WPlacerScript = preload("wall_1w_placer.gd")
 
 
 const GenProgress = preload("../core/gen_progress.gd")
@@ -50,6 +51,8 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 
 	# 7. Diagonalne narożniki wewnętrzne (NW i NE)
 	CornerPlacer.plan(ctx, analysis.edges, state, tiles)
+	# 7b. Ściany szerokości 1 (wolnostojące występy muru na podłodze)
+	Wall1WPlacerScript.plan(ctx, tiles)
 
 	# 8. Czyszczenie kafelków ścian na strefach portali
 	PortalClearPlacer.plan(ctx, tiles)
