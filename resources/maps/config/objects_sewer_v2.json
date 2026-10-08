@@ -166,6 +166,7 @@
         4,
         5
       ],
+      "rhythm_area_chance": {"room": 0.3},
       "priority": 900,
       "layer": "WallDecor"
     },
@@ -177,6 +178,7 @@
         4,
         5
       ],
+      "rhythm_area_chance": {"room": 0.3},
       "priority": 900,
       "layer": "WallDecor"
     },
