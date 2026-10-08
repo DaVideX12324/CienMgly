@@ -40,6 +40,7 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	p._attached_rooms()
 	p._segment_bridges()
 	p._repair()
+	p._drop_redundant_bridges()
 	return p.stats
 
 
@@ -84,7 +85,9 @@ func _mask_cells(m: PackedByteArray) -> PackedInt32Array:
 
 # --- Kładki przecięć i rzeźbienie ---
 
-## Kładka tam, gdzie środek korytarza jest na wodzie: kratki wody w 3 × 3 wokół takich środków.
+## Kładka tam, gdzie środek korytarza jest na wodzie: 2 kratki szerokości jak moduł kładki (środek korytarza
+## i kratka obok — w prawo przez kanał poziomy, w dół przez pionowy); korytarz 3 kratki zwęża się na kładce,
+## trzecia kratka zostaje wodą (grafika, kolizja i przechodniość tych samych kratek).
 func _crossing_bridges(centers: PackedInt32Array) -> void:
 	var wc := {}
 	for c in centers:
@@ -92,12 +95,12 @@ func _crossing_bridges(centers: PackedInt32Array) -> void:
 			continue
 		var x: int = c % st.w
 		var y: int = c / st.w
-		for dy in [-1, 0, 1]:
-			for dx in [-1, 0, 1]:
-				var nx: int = x + dx
-				var ny: int = y + dy
-				if st.in_map(nx, ny) and st.water[ny * st.w + nx]:
-					wc[Vector2i(nx, ny)] = true
+		var side := Vector2i(1, 0) if _water_run(x, y, Vector2i(1, 0)) > _water_run(x, y, Vector2i(0, 1)) else Vector2i(0, 1)
+		for d in [Vector2i.ZERO, side]:
+			var nx: int = x + d.x
+			var ny: int = y + d.y
+			if st.in_map(nx, ny) and st.water[ny * st.w + nx]:
+				wc[Vector2i(nx, ny)] = true
 	if wc.is_empty():
 		return
 	var cells: Array[Vector2i] = []
@@ -106,6 +109,19 @@ func _crossing_bridges(centers: PackedInt32Array) -> void:
 		st.bridge_m[p.y * st.w + p.x] = 1
 	cells.sort()
 	st.bridges.append({"cells": cells, "vertical": bool(st.cross_h[cells[0].y * st.w + cells[0].x]), "crossing": true})
+
+
+## Długość ciągu wody przez (x, y) wzdłuż osi `d` (do 9 kratek w każdą stronę).
+func _water_run(x: int, y: int, d: Vector2i) -> int:
+	var n := 1
+	for sgn in [1, -1]:
+		for k in range(1, 10):
+			var nx: int = x + d.x * k * sgn
+			var ny: int = y + d.y * k * sgn
+			if not st.in_map(nx, ny) or not st.water[ny * st.w + nx]:
+				break
+			n += 1
+	return n
 
 
 ## Korytarz 3 kratki wzdłuż środków (bez wody i korytarza serwisowego); kładki na przecięciach.
@@ -899,9 +915,78 @@ func _place_bridge(s: Dictionary, t: int, horiz: bool, exact := false) -> bool:
 			continue
 		for c in cells:
 			st.bridge_m[c.y * st.w + c.x] = 1
-		st.bridges.append({"cells": cells, "vertical": horiz, "crossing": false})
+		st.bridges.append({"cells": cells, "vertical": horiz, "crossing": false, "exact": exact})
 		return true
 	return false
+
+
+## Zbędne kładki (decyzja usera: nie jedna obok drugiej): zwykła kładka (odcinek / przerwa chodnika — nie
+## kładka przecięcia korytarza, u-turnu ani naprawy) bliżej niż bridge_min_spacing od innej kładki znika,
+## jeśli bez niej spójność chodliwej podłogi się nie zmienia. Kładki przecięć powstają po kładkach przerw
+## i nie sprawdzają odstępu — stąd pary.
+func _drop_redundant_bridges() -> void:
+	var sp := int(cfg.get("bridge_min_spacing", 10))
+	var dropped := 0
+	# Korzeń: kratka podłogi (nie wody) w największej spójnej części.
+	var big := _largest_component_cell()
+	if big < 0:
+		return
+	var main := _component(_walkable(), big)
+	var root := -1
+	for i in range(st.w * st.h):
+		if main[i] and not st.water[i]:
+			root = i
+			break
+	if root < 0:
+		return
+	var changed := true
+	while changed:
+		changed = false
+		var cands: Array = []
+		for bi in range(st.bridges.size()):
+			var b: Dictionary = st.bridges[bi]
+			if b.get("crossing", false) or b.get("exact", false):
+				continue
+			var near := _bridge_gap(bi)
+			if near < sp:
+				cands.append([near, bi])
+		cands.sort()
+		for c in cands:
+			var bi: int = c[1]
+			var cells: Array = st.bridges[bi].cells
+			var before := _count(_component(_walkable(), root))
+			for q in cells:
+				st.bridge_m[q.y * st.w + q.x] = 0
+			var after := _count(_component(_walkable(), root))
+			if after == before - cells.size():
+				st.bridges.remove_at(bi)
+				dropped += 1
+				changed = true
+				break
+			for q in cells:
+				st.bridge_m[q.y * st.w + q.x] = 1
+	stats["bridges_dropped"] = dropped
+
+
+## Najmniejszy odstęp (Czebyszew) między kratkami kładki `bi` a kratkami innych kładek.
+func _bridge_gap(bi: int) -> int:
+	var best := 1 << 30
+	var mine: Array = st.bridges[bi].cells
+	for bj in range(st.bridges.size()):
+		if bj == bi:
+			continue
+		for a in mine:
+			for b in st.bridges[bj].cells:
+				best = mini(best, maxi(absi(a.x - b.x), absi(a.y - b.y)))
+	return best
+
+
+func _count(m: PackedByteArray) -> int:
+	var n := 0
+	for i in range(m.size()):
+		if m[i]:
+			n += 1
+	return n
 
 
 # --- R7: spójność ---
