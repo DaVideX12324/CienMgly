@@ -148,7 +148,7 @@ static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, ru
 	if not def.tiles.is_empty():
 		# Moduł z kilku kafli (np. kratka 9-slice) — sortowanie / kolizja z danych kafli TileSetu.
 		for t in def.tiles:
-			layer.set_cell(pl.cell + (t["off"] as Vector2i), def.source_id, t["coords"])
+			layer.set_cell(pl.cell + (t["off"] as Vector2i), def.source_id, t["coords"], int(t.get("alt", 0)))
 			runtime.counts["tiles"] += 1
 		return
 	var alt := TileSetAtlasSource.TRANSFORM_FLIP_H if pl.flip else 0

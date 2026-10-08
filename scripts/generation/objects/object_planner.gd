@@ -30,6 +30,7 @@ var f: ObjectFeatures
 var plan: ObjectPlan
 var seed_value := 0
 var blocked := PackedByteArray()   # bariery płaskowyżu (ruch)
+var visual_block := {}             # kratki, których grafika dużego obiektu nie może zasłaniać poza ścianą (kanał)
 var owner := PackedInt32Array()    # indeks defa + 1, który zajął kratkę (USED)
 var stamp := PackedInt32Array()    # odstęp `spacing`: indeks defa + 1 w promieniu kotwicy
 var reach0 := PackedByteArray()    # osiągalne z wejścia przed obiektami
@@ -104,6 +105,9 @@ func _forbid(result) -> void:
 		for c in canals.rail_cells:
 			if f.in_bounds(c):
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
+			visual_block[c] = true
+		for c in canals.water:
+			visual_block[c] = true
 	for c in result.portal_zone:
 		_forbid_ring(c, PORTAL_RING, true)
 	_forbid_ring(result.player_spawn, SPAWN_RING, true)
@@ -456,7 +460,8 @@ func _shape_on_reserved(def: ObjectDef, pt: Vector2) -> bool:
 	return false
 
 
-## Czy grafika dużego obiektu (większego niż kratka) w punkcie `pt` zakrywa ścianę albo wystaje poza mapę.
+## Czy grafika dużego obiektu (większego niż kratka) w punkcie `pt` zakrywa ścianę, kanał (woda, kładka,
+## barierka) albo wystaje poza mapę.
 ## Przy losowym odbiciu sprawdzane są obie strony.
 func _visual_on_wall(def: ObjectDef, pt: Vector2) -> bool:
 	if not def.is_large() or def.visual_rect.size == Vector2.ZERO:
@@ -469,7 +474,7 @@ func _visual_on_wall(def: ObjectDef, pt: Vector2) -> bool:
 	for y in range(floori(r.position.y / cs), floori((r.end.y - 0.001) / cs) + 1):
 		for x in range(floori(r.position.x / cs), floori((r.end.x - 0.001) / cs) + 1):
 			var q := Vector2i(x, y)
-			if not f.in_bounds(q) or f.walk[f.idx(q)] == 0:
+			if not f.in_bounds(q) or f.walk[f.idx(q)] == 0 or visual_block.has(q):
 				return true
 	return false
 
