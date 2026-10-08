@@ -295,8 +295,8 @@ static func prepare_cave_layers(
 			if floor_decor_layer != null and floor_decor_layer.get_parent() == parent:
 				parent.move_child(bridges_layer, floor_decor_layer.get_index() + 1)
 
-	# Warstwa Curbs (krawężniki): rodzeństwo "Curbs" zaraz nad FloorDecor — krawężnik dochodzi do brzegu kanału
-	# nad kaflem obrzeża (ta sama kratka). z_index -1: pod Walls i encjami. Tylko na mapach z kanałami (structured).
+	# Warstwa Curbs (krawężniki): rodzeństwo "Curbs" zaraz POD FloorDecor — miedziany rant brzegu kanału
+	# przykrywa koniec krawężnika (decyzja usera). z_index -1: pod Walls i encjami. Tylko na mapach z kanałami.
 	var curbs_layer: TileMapLayer = null
 	if floor_layer.get_parent():
 		curbs_layer = floor_layer.get_parent().get_node_or_null("Curbs") as TileMapLayer
@@ -308,7 +308,7 @@ static func prepare_cave_layers(
 			var cparent := floor_layer.get_parent()
 			cparent.add_child(curbs_layer)
 			if floor_decor_layer != null and floor_decor_layer.get_parent() == cparent:
-				cparent.move_child(curbs_layer, floor_decor_layer.get_index() + 1)
+				cparent.move_child(curbs_layer, floor_decor_layer.get_index())
 		if curbs_layer != null:
 			curbs_layer.tile_set = floor_layer.tile_set
 
