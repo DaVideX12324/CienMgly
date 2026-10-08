@@ -33,6 +33,8 @@ var entrance_mode: String = "edge"
 var layout: String = "interior"
 ## Opcje zaawansowane układu structured z sekcji "structured_layout" companion-JSON
 var structured_config: Dictionary = {}
+## Sekcja "facade_rhythm" companion-JSON (wzory ozdób przęseł: "patterns", np. ["A-A-A", "A-B-A"]).
+var facade_rhythm: Dictionary = {}
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
