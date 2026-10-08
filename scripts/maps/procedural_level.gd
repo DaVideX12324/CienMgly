@@ -468,7 +468,7 @@ func _apply_job_async(job: GenJob) -> void:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
 		var tiles = job.plans.tiles
-		var order := [&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Rails", &"Platforms"]
+		var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms"]
 		var total := 0
 		for layer_name in order:
 			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
@@ -503,6 +503,9 @@ func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
 	var rails_layer: TileMapLayer = layers.get(&"Rails")
 	if rails_layer:
 		rails_layer.clear()
+	var curbs := get_node_or_null("Curbs") as TileMapLayer
+	if curbs:
+		curbs.clear()
 	(layers[&"Platforms"] as TileMapLayer).clear()
 	MapGeneratorBaseScript.apply_grid_to_layers(layers[&"Floor"], layers[&"Walls"], job.result, _palette(), job.rng)
 

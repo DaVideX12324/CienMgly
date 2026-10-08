@@ -248,7 +248,7 @@ static func apply_cave_tiles(
 
 
 ## Przygotowuje warstwy (FloorDecor / Platforms / Bridges / Rails jako rodzeństwo Floor, gdy brak) i czyści je.
-## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Bridges", &"Walls", &"Rails", &"Platforms"}.
+## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms"}.
 static func prepare_cave_layers(
 	floor_layer: TileMapLayer,
 	walls_layer: TileMapLayer,
@@ -295,6 +295,23 @@ static func prepare_cave_layers(
 			if floor_decor_layer != null and floor_decor_layer.get_parent() == parent:
 				parent.move_child(bridges_layer, floor_decor_layer.get_index() + 1)
 
+	# Warstwa Curbs (krawężniki): rodzeństwo "Curbs" zaraz nad FloorDecor — krawężnik dochodzi do brzegu kanału
+	# nad kaflem obrzeża (ta sama kratka). z_index -1: pod Walls i encjami. Tylko na mapach z kanałami (structured).
+	var curbs_layer: TileMapLayer = null
+	if floor_layer.get_parent():
+		curbs_layer = floor_layer.get_parent().get_node_or_null("Curbs") as TileMapLayer
+		if curbs_layer == null and result.canals != null and not result.canals.is_empty():
+			curbs_layer = TileMapLayer.new()
+			curbs_layer.name = "Curbs"
+			curbs_layer.z_index = -1
+			curbs_layer.y_sort_enabled = true
+			var cparent := floor_layer.get_parent()
+			cparent.add_child(curbs_layer)
+			if floor_decor_layer != null and floor_decor_layer.get_parent() == cparent:
+				cparent.move_child(curbs_layer, floor_decor_layer.get_index() + 1)
+		if curbs_layer != null:
+			curbs_layer.tile_set = floor_layer.tile_set
+
 	# Warstwa Rails (barierki kanałów): rodzeństwo "Rails" za Walls, ten sam y-sort / z_index — barierka sortuje
 	# się z postaciami jak ściana, a może stać w kratce lica muru (barierka przed fasadą). Tylko przy barierkach.
 	if rails_layer == null and floor_layer.get_parent():
@@ -318,6 +335,8 @@ static func prepare_cave_layers(
 		floor_decor_layer.clear()
 	if bridges_layer:
 		bridges_layer.clear()
+	if curbs_layer:
+		curbs_layer.clear()
 	walls_layer.clear()
 	if platforms_layer:
 		platforms_layer.clear()
@@ -325,6 +344,7 @@ static func prepare_cave_layers(
 	return {
 		&"Floor": floor_layer,
 		&"FloorDecor": floor_decor_layer,
+		&"Curbs": curbs_layer,
 		&"Bridges": bridges_layer,
 		&"Walls": walls_layer,
 		&"Rails": rails_layer,
@@ -403,6 +423,7 @@ static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
 	TerrainPaintExecutor.execute(layers, plans.terrain)
 	TilePlacementExecutor.execute(layers.get(&"FloorDecor"), plans.tiles, &"FloorDecor")
+	TilePlacementExecutor.execute(layers.get(&"Curbs"), plans.tiles, &"Curbs")
 	TilePlacementExecutor.execute(layers.get(&"Bridges"), plans.tiles, &"Bridges")
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
 	TilePlacementExecutor.execute(layers.get(&"Rails"), plans.tiles, &"Rails")
