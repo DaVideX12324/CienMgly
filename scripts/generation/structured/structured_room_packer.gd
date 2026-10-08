@@ -33,15 +33,14 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	p.rng.seed = hash([seed_val, "structured_rooms"])
 	p.cross_p = state.prefix(state.cross_any)
 	state.build_water_axis()
-	p._service_corridors()
-	p._lane_gaps()
-	p._rooms()
-	p._room_links()
-	p._complex_loops()
-	p._attached_rooms()
-	p._segment_bridges()
-	p._repair()
-	p._drop_redundant_bridges()
+	# Czasy kroków (ms) w stats["t"] — diagnostyka wydajności (preprocess_stats["structured"]).
+	var times := {}
+	for step in [&"_service_corridors", &"_lane_gaps", &"_rooms", &"_room_links", &"_complex_loops",
+			&"_attached_rooms", &"_segment_bridges", &"_repair", &"_drop_redundant_bridges"]:
+		var t0 := Time.get_ticks_usec()
+		p.call(step)
+		times[String(step).trim_prefix("_")] = (Time.get_ticks_usec() - t0) / 1000
+	p.stats["t"] = times
 	return p.stats
 
 
