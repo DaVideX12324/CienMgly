@@ -139,6 +139,7 @@
       "spacing": 5
     },
     "wall_details": {
+      "span": true,
       "class": "PROP",
       "placement": "grid",
       "source": 1,
@@ -151,6 +152,7 @@
       "spacing": 4
     },
     "wall_arches": {
+      "span": true,
       "class": "PROP",
       "placement": "grid",
       "mount": "facade",
