@@ -140,6 +140,7 @@
     "facade_top_independent": true,
     "canal_bed_terrain": 6,
     "curbs_enabled": true,
+    "grating": {"terrain": 5, "per_1000": 1.5, "sizes": [[2, 2], [3, 2], [4, 3], [6, 3]], "margin": 1, "spacing": 4},
     "floor_enabled": true,
     "slopes_enabled": false,
     "solid_fill_enabled": true
