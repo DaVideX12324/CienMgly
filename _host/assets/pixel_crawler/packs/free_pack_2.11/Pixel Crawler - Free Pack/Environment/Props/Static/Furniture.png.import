@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://tdqw1w8fhcf8"
-path="res://.godot/imported/Tiles.png-30b4dd5a3ee26f184aae01cc36d9b134.ctex"
+uid="uid://5hmnfgtobndb"
+path="res://.godot/imported/Furniture.png-16e97fb173f3c1b99aba63491d3e3d93.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://_host/assets/pixel_crawler/environments/sewer/Assets/Tiles.png"
-dest_files=["res://.godot/imported/Tiles.png-30b4dd5a3ee26f184aae01cc36d9b134.ctex"]
+source_file="res://_host/assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png"
+dest_files=["res://.godot/imported/Furniture.png-16e97fb173f3c1b99aba63491d3e3d93.ctex"]
 
 [params]
 

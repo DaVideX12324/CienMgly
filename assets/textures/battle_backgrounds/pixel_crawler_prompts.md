@@ -346,7 +346,7 @@ A 16-bit pixel art JRPG battle background of a library with a raised reading dai
 ---
 
 ### 9. Kanały (sewer)
-- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Mockupy (referencja kolorów — można dołączyć):** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`
 - **Z mockupów:** posadzka z **ciemnobrązowej cegły**, prawie czarne ściany z panelami ciemnozielonych kafli,
   łupkowe filary z małymi miedzianymi lampkami, **półokrągłe miedziane kraty odpływów**, okrągłe miedziane wyloty
   rur, miedziane barierki z rur, wysokie pionowe miedziane rury, duże prostokątne miedziane kratki w posadzce,

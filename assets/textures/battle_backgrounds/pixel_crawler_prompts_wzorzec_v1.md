@@ -110,7 +110,7 @@ A 16-bit pixel art JRPG battle background of an ancient arcane grand library, lo
 ---
 
 ### 9. Miejskie Kanały (Sewer)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer/Social/MockUp-01.png`, `MockUp-02.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/sewer/`
 
 #### Prompt (EN):
