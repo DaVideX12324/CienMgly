@@ -449,12 +449,18 @@ func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) 
 	parent_center = Vector2(-1, -1)
 
 
-## Kratka `q` po skosie od obrysu obiektu (kotwica `anchor` = lewy-dolny róg, rozmiar size): poza nim w obu osiach.
+## Kratka `q` po skosie od podstawy obiektu (footprint względem kotwicy `anchor`): poza nią w obu osiach — np.
+## obok tylnej części blatu stołu to już narożnik.
 static func _corner_of(def: ObjectDef, anchor: Vector2i, q: Vector2i) -> bool:
 	var x0 := anchor.x
-	var x1 := anchor.x + maxi(def.size.x, 1) - 1
-	var y0 := anchor.y - maxi(def.size.y, 1) + 1
+	var x1 := anchor.x
+	var y0 := anchor.y
 	var y1 := anchor.y
+	for fp in def.footprint:
+		x0 = mini(x0, anchor.x + fp.x)
+		x1 = maxi(x1, anchor.x + fp.x)
+		y0 = mini(y0, anchor.y + fp.y)
+		y1 = maxi(y1, anchor.y + fp.y)
 	return (q.x < x0 or q.x > x1) and (q.y < y0 or q.y > y1)
 
 
