@@ -129,7 +129,7 @@ static func generate_layout(
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
 	if bool(cfg.get("canal_rails", true)):
-		stats["rails"] = _canal_rails(st, canals, ctx)
+		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
 	stats["lost_post"] = _unreachable(ctx, canals)
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
@@ -288,9 +288,23 @@ static func _canal_pits(st: State, layout, seed_val: int, cfg: Dictionary) -> vo
 ## Barierki (makiety autora) wzdłuż kanałów poziomych: na północnym brzegu na kratce podłogi nad licem, na
 ## południowym na ostatnim rzędzie koryta (podłoga tuż pod nim; wzór: sewer-gen-v2 fbe9c09). Przerwa przy
 ## kładkach (± 1 kratka), w blokach zakrętów / węzłów (v2 92f59bc: bez barierki „w powietrzu”), przy portalach
-## i dźwigniach; odcinki ≥ 2 kratki. Końce: przy kładce zagięty (CL / CR), inaczej słupek (L / R), w środku
-## przęsło (M). Tylko grafika — wejście do kanału blokuje już obrzeże. Zwraca liczbę kratek barierek.
-static func _canal_rails(st: State, layout, ctx: GenerationContext) -> int:
+## i dźwigniach. Brzeg nie musi mieć barierki na całej długości (decyzje usera): ciąg brzegu dostaje barierkę
+## z szansą rail_run_chance, końce ciągu przycięte o 0–3 kratki (rail_trim_chance — barierka nie zawsze
+## dochodzi do kładki), długi ciąg dzielony na kawałki rail_piece z przerwami rail_gap; kawałek ≥ 3 kratki.
+## Końce: przy kładce zagięty (CL / CR) z szansą rail_bridge_curl_chance, inaczej słupek (L / R); w środku
+## przęsło (M); urwanie: w kawałku ≥ rail_break_min z szansą rail_break_chance zagięte końce CR | CL w środku,
+## tuż obok siebie albo z przerwą 1–2 kratek. Tylko grafika — wejście do kanału blokuje już obrzeże.
+## Zwraca liczbę kratek barierek.
+static func _canal_rails(st: State, layout, ctx: GenerationContext, seed_val: int, cfg: Dictionary) -> int:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_val, "canal_rails"])
+	var break_chance := float(cfg.get("rail_break_chance", 0.35))
+	var break_min := int(cfg.get("rail_break_min", 8))
+	var run_chance := float(cfg.get("rail_run_chance", 0.85))
+	var trim_chance := float(cfg.get("rail_trim_chance", 0.5))
+	var curl_chance := float(cfg.get("rail_bridge_curl_chance", 0.5))
+	var piece_r: Array = cfg.get("rail_piece", [6, 18])
+	var gap_r: Array = cfg.get("rail_gap", [2, 5])
 	var w: int = st.w
 	var axis := st.water_axis
 	if axis.is_empty():
@@ -330,7 +344,9 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext) -> int:
 			runs[key] = []
 		(runs[key] as Array).append(cell.x)
 	var n := 0
-	for key: Vector2i in runs:
+	var keys: Array = runs.keys()
+	keys.sort()   # kolejność losowań niezależna od kolejności słownika
+	for key: Vector2i in keys:
 		var xs: Array = runs[key]
 		xs.sort()
 		var i := 0
@@ -338,20 +354,51 @@ static func _canal_rails(st: State, layout, ctx: GenerationContext) -> int:
 			var j := i
 			while j + 1 < xs.size() and int(xs[j + 1]) == int(xs[j]) + 1:
 				j += 1
-			if j > i:
+			if j - i + 1 >= 3 and rng.randf() < run_chance:
 				var y: int = key.x
-				for k in range(i, j + 1):
-					var x: int = xs[k]
-					var v: StringName = &"M"
-					if k == i:
-						v = &"CL" if near_bridge.has(Vector2i(x - 1, y)) else &"L"
-					elif k == j:
-						v = &"CR" if near_bridge.has(Vector2i(x + 1, y)) else &"R"
-					layout.rail_cells[Vector2i(x, y)] = v
-					n += 1
-				layout.rail_edges.append({"cells": range(int(xs[i]), int(xs[j]) + 1).map(func(x): return Vector2i(x, key.x)),
-					"dir": Vector2i(0, 1) if key.y == 0 else Vector2i(0, -1), "side": key.y})
+				var a := i + (rng.randi_range(1, 3) if rng.randf() < trim_chance else 0)
+				var e := j - (rng.randi_range(1, 3) if rng.randf() < trim_chance else 0)
+				var k0 := a
+				while e - k0 + 1 >= 3:
+					var k1 := mini(e, k0 + rng.randi_range(int(piece_r[0]), int(piece_r[1])) - 1)
+					if e - k1 < 3:
+						k1 = e   # bez krótkiej resztki
+					n += _rail_piece(layout, xs, k0, k1, y, key.y, near_bridge, rng, curl_chance, break_chance, break_min)
+					k0 = k1 + 1 + rng.randi_range(int(gap_r[0]), int(gap_r[1]))
 			i = j + 1
+	return n
+
+
+## Jeden kawałek barierki xs[k0..k1] w rzędzie y (strona: 0 północ, 1 południe); zwraca liczbę kratek.
+static func _rail_piece(layout, xs: Array, k0: int, k1: int, y: int, side: int, near_bridge: Dictionary,
+		rng: RandomNumberGenerator, curl_chance: float, break_chance: float, break_min: int) -> int:
+	# urwanie: [b0 = CR] przerwa (0–2) [b1 = CL], każda część ≥ 3 kratki
+	var b0 := -1
+	var b1 := -1
+	if k1 - k0 + 1 >= break_min and rng.randf() < break_chance:
+		var gap := rng.randi_range(0, 2)
+		b0 = rng.randi_range(k0 + 2, k1 - 3 - gap)
+		b1 = b0 + gap + 1
+	var left_curl: bool = near_bridge.has(Vector2i(int(xs[k0]) - 1, y)) and rng.randf() < curl_chance
+	var right_curl: bool = near_bridge.has(Vector2i(int(xs[k1]) + 1, y)) and rng.randf() < curl_chance
+	var n := 0
+	for k in range(k0, k1 + 1):
+		if b0 >= 0 and k > b0 and k < b1:
+			continue
+		var x: int = xs[k]
+		var v: StringName = &"M"
+		if k == k0:
+			v = &"CL" if left_curl else &"L"
+		elif k == k1:
+			v = &"CR" if right_curl else &"R"
+		elif k == b0:
+			v = &"CR"
+		elif k == b1:
+			v = &"CL"
+		layout.rail_cells[Vector2i(x, y)] = v
+		n += 1
+	layout.rail_edges.append({"cells": range(int(xs[k0]), int(xs[k1]) + 1).map(func(px): return Vector2i(px, y)),
+		"dir": Vector2i(0, 1) if side == 0 else Vector2i(0, -1), "side": side})
 	return n
 
 
