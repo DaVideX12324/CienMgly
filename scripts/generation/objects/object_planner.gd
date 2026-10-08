@@ -407,7 +407,8 @@ func _place_one(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 
 ## Towarzysze wokół kotwicy `c` (Chebyshev <= radius): każdy wg WŁASNYCH reguł (teren, kontekst,
 ## zajętość, odstępy), liczba z [min, max]. RNG rodzica — deterministycznie. Z "on" (szansa): sztuka najpierw
-## próbuje leżeć NA rodzicu — w kratkach jego rysunku nad podstawą (blat stołu), inaczej obok.
+## próbuje leżeć NA rodzicu — w kratkach jego rysunku nad podstawą (blat stołu), inaczej obok. Z "no_corners"
+## sztuka obok nie staje po skosie od rodzica (poza jego obrysem w obu osiach) — tylko przy bokach.
 func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) -> void:
 	in_companions = true
 	# środek podstawy rodzica (kotwica = lewy-dolny róg)
@@ -437,6 +438,8 @@ func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) 
 			var q := c + Vector2i(rng.randi_range(-r, r), rng.randi_range(-r, r))
 			if not f.in_bounds(q):
 				continue
+			if comp.get("no_corners", false) and _corner_of(def, c, q):
+				continue
 			var i := f.idx(q)
 			if plan.occupancy[i] & ObjectPlan.FORBID or not f.rules_ok(i, cdef):
 				continue
@@ -444,6 +447,15 @@ func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) 
 				placed += 1
 	in_companions = false
 	parent_center = Vector2(-1, -1)
+
+
+## Kratka `q` po skosie od obrysu obiektu (kotwica `anchor` = lewy-dolny róg, rozmiar size): poza nim w obu osiach.
+static func _corner_of(def: ObjectDef, anchor: Vector2i, q: Vector2i) -> bool:
+	var x0 := anchor.x
+	var x1 := anchor.x + maxi(def.size.x, 1) - 1
+	var y0 := anchor.y - maxi(def.size.y, 1) + 1
+	var y1 := anchor.y
+	return (q.x < x0 or q.x > x1) and (q.y < y0 or q.y > y1)
 
 
 ## Kratki rysunku obiektu nad jego podstawą (blat), w granicach mapy, na podłodze.
