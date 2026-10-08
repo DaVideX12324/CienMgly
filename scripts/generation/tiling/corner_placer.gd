@@ -77,6 +77,10 @@ static func plan(
 					lift = off
 				if lift > 0 and not above_end and not ctx.facade_4h_tops.has(pos) and state.is_empty_or_rock(pos):
 					side_role = TileModuleRole.Id.SIDE_WALL_EAST if dx == 1 else TileModuleRole.Id.SIDE_WALL_WEST
+				elif lift > off and not ctx.facade_4h_tops.has(pos):
+					# Obok wyższego lica 4H (narożnik podniesiony nad koniec niższego lica): odsłonięty bok wyższego lica
+					# nad wierzchem niższego dostaje ścianę boczną — kratki zajęte przez lico pętla i tak pomija.
+					side_role = TileModuleRole.Id.SIDE_WALL_EAST if dx == 1 else TileModuleRole.Id.SIDE_WALL_WEST
 			for _l in lift:
 				if side_role != TileModuleRole.Id.NONE and state.is_empty_or_rock(pos) \
 						and _try_corner(ctx, placement_plan, pos, side_role, &"A", table, &""):
