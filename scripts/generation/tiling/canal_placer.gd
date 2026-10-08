@@ -2,16 +2,17 @@ extends RefCounted
 
 ## Kafle kanałów ścieków (CanalLayout). Role z profilu, wariant = układ sąsiedztwa:
 ## - Floor:      CANAL_FACE (lico brzegu w górnym rzędzie kanału pod podłogą i pod ścianą: M, L / R przy
-##               podłodze, DL / DR / DLR przy ścianie, środek M / M_B / M_C losowo; część modułu z własną warstwą w profilu, np. rim (0,-1) na
+##               podłodze, DL / DR / DLR przy ścianie, narożnik zewnętrzny OUT_NW / OUT_NE, środek M; wersje
+##               _B / _C losowo; część modułu z własną warstwą w profilu, np. rim (0,-1) na
 ##               FloorDecor nad licem — wtedy profil nie ma obrzeży S* na tej kratce), CANAL_WATER (kwas, 9-slice: C, N, S, E, W, NE, NW, SE, SW
 ##               + narożniki wewnętrzne IN_NE / IN_NW / IN_SE / IN_SW; ściana obok = brzeg koryta);
 ##               puste koryto (canals.dry) — CANAL_BED z tymi samymi wariantami; doły w pustym korycie
 ##               (canals.pit_cells) — CANAL_PIT: VOID, TOP / TOP_B, BOTTOM (brak roli = zwykłe dno).
 ## - FloorDecor: CANAL_BANK na podłodze przy kanale (strona kanału: N / S / E / W, rogi wypukłe NE / NW /
 ##               SE / SW, wklęsłe IN_* tylko po skosie, ciemne końce przy ścianie S_DL / S_DR / N_DL /
-##               N_DR / E_DT / E_DB / W_DT / W_DB). Pod końcami kładek wariant <nazwa>_OPEN (ten sam
-##               rysunek, kafel alternatywny bez kolizji — przejście na kładkę); brak go w profilu = kratka
-##               bez obrzeża (też bez kolizji).
+##               N_DR / E_DT / E_DB / W_DT / W_DB; brak w profilu = wariant bez końca, np. N_DL -> N), wersje
+##               _B / _C losowo. Pod końcami kładek wariant <nazwa>_OPEN (ten sam rysunek, kafel alternatywny
+##               bez kolizji — przejście na kładkę); brak go w profilu = zwykły wariant (obrzeża bez kolizji).
 ## - Bridges:    kładki BRIDGE_V / BRIDGE_H (moduły na cały ślad: kanał + kratka brzegu z obu stron) na
 ##               osobnej warstwie nad FloorDecor.
 ## - Walls:      barierki CANAL_RAIL (canals.rail_cells: L, M, R, CL, CR; na brzegu północnym <v>_N, gdy jest
@@ -26,20 +27,14 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	var table := ctx.priority_table
 	var water: Dictionary = canals.water
 
-	# 1. Kanał: lico brzegu i kwas (warstwa Floor). Lico M losowane z M / M_B / M_C (te, które są w profilu);
-	# lico między dwiema ścianami — DLR (brak w profilu = DL).
+	# 1. Kanał: lico brzegu i kwas (warstwa Floor). Wariant lica wg sąsiedztwa (lista od najlepszego —
+	# brak w profilu = następny), wersje _B / _C wariantu losowane z hasha kratki (te, które są w profilu).
+	var alts := {}
 	for p: Vector2i in water:
 		if _is_face(ctx, water, p):
-			var fv := _face_variant(ctx, water, p)
-			if fv == &"M":
-				var alt: StringName = [&"M", &"M_B", &"M_C"][hash([ctx.seed_value, p, "canal_face"]) % 3]
-				if alt != &"M" and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, alt, &"Floor", table):
-					continue
-			elif fv == &"DLR":
-				if _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table):
-					continue
-				fv = &"DL"
-			_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table)
+			for fv in _face_variants(ctx, water, p):
+				if _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table, alts):
+					break
 		elif canals.pit_cells.has(p) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], &"Floor", table):
 			pass
 		else:
@@ -69,9 +64,16 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 				var v := _bank_variant(ctx, water, q)
 				if v == &"":
 					continue
+				# kolejność: <v>_OPEN pod końcem kładki, <v>, wariant bez ciemnego końca (N_DL -> N)
+				var tries: Array[StringName] = [v]
 				if bridge_ends.has(q):
-					v = StringName(String(v) + "_OPEN")
-				_place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, v, &"FloorDecor", table)
+					tries.push_front(StringName(String(v) + "_OPEN"))
+				var cut := String(v).find("_D")
+				if cut > 0:
+					tries.append(StringName(String(v).substr(0, cut)))
+				for t in tries:
+					if _place_alt(ctx, placement_plan, q, TileModuleRole.Id.CANAL_BANK, t, &"FloorDecor", table, alts):
+						break
 
 	# 4. Barierki (Walls, y-sort z postaciami). Brzeg północny (woda pod kratką barierki): wariant <v>_N, gdy
 	# profil go ma (inny rysunek — barierka niżej, przy licu), inaczej zwykły.
@@ -103,16 +105,48 @@ static func _is_face(_ctx: GenerationContext, water: Dictionary, p: Vector2i) ->
 	return not water.has(p + Vector2i(0, -1))
 
 
-static func _face_variant(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> StringName:
+## Warianty lica od najlepszego: koniec przy podłodze L / R, przy murze DL / DR / DLR (z obu stron),
+## narożnik zewnętrzny OUT_NW / OUT_NE (podłoga nad licem kończy się — woda z boku i po skosie u góry),
+## środek M. Placer bierze pierwszy, który jest w profilu.
+static func _face_variants(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> Array[StringName]:
 	var wl := p + Vector2i(-1, 0)
 	var wr := p + Vector2i(1, 0)
 	if not water.has(wl):
 		if GridUtils.is_walkable(ctx.grid, wl):
-			return &"L"
-		return &"DLR" if not water.has(wr) and not GridUtils.is_walkable(ctx.grid, wr) else &"DL"
+			return [&"L"]
+		if not water.has(wr) and not GridUtils.is_walkable(ctx.grid, wr):
+			return [&"DLR", &"DL"]
+		return [&"DL"]
 	if not water.has(wr):
-		return &"R" if GridUtils.is_walkable(ctx.grid, wr) else &"DR"
-	return &"M"
+		return [&"R"] if GridUtils.is_walkable(ctx.grid, wr) else [&"DR"]
+	if water.has(p + Vector2i(-1, -1)):
+		return [&"OUT_NW", &"M"]
+	if water.has(p + Vector2i(1, -1)):
+		return [&"OUT_NE", &"M"]
+	return [&"M"]
+
+
+## Wariant `base` albo jego wersja _B / _C / _D (losowo z hasha kratki spośród obecnych w profilu).
+## `alts` — pamięć podręczna listy wersji na (rola, wariant).
+static func _place_alt(ctx: GenerationContext, plan: TilePlacementPlan, p: Vector2i, role: int, base: StringName,
+		layer: StringName, table: Dictionary, alts: Dictionary) -> bool:
+	var key := [role, base]
+	if not alts.has(key):
+		var found: Array[StringName] = []
+		var entry: TileRoleEntry = null
+		var ts := ctx.map_tile_profile.get_default_tileset() if ctx.map_tile_profile else null
+		if ts:
+			entry = ts.get_entry(TileModuleRole.to_storage_role(role))
+		for suffix in ["", "_B", "_C", "_D"]:
+			var id := StringName(String(base) + suffix)
+			if entry != null and entry.variants.any(func(v: TileVariant) -> bool: return v != null and v.variant_id == id):
+				found.append(id)
+		alts[key] = found
+	var ids: Array = alts[key]
+	if ids.is_empty():
+		return _place(ctx, plan, p, role, base, layer, table)
+	var pick: StringName = ids[hash([ctx.seed_value, p, base]) % ids.size()] if ids.size() > 1 else ids[0]
+	return _place(ctx, plan, p, role, pick, layer, table)
 
 
 ## Kwas sąsiada: kanał (nie lico). Ściana obok nie jest kwasem — koryto ma prosty brzeg także przy murze,
