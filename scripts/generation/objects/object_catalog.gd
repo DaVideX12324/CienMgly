@@ -19,7 +19,7 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles", "rhythm", "facade_h", "layer",
+	"mount", "source", "tiles", "rhythm", "facade_h", "layer", "stack",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade"]
@@ -363,6 +363,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 		errors.append("%s: companions musi być listą." % tag)
 	def.keep_paths = bool(m.get("keep_paths", true))
 	def.flip_h = bool(m.get("flip_h", false))
+	def.stack = bool(m.get("stack", false))
 
 	var default_priority := 100
 	match def.klass:

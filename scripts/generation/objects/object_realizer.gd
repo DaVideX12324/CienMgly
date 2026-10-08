@@ -65,6 +65,10 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 	var made := 0
 	var budget_us := budget_ms * 1000
 	var slice_start := Time.get_ticks_usec()
+	var stack_cells := {}   # kratki obiektów ze stack (skrzynia na skrzyni)
+	for pl in plan.placements:
+		if pl.def.stack:
+			stack_cells[pl.cell] = true
 	for pl in plan.placements:
 		var def := pl.def
 		if def.klass == ObjectDef.Klass.INTERACTIVE:
@@ -85,7 +89,7 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 			else:
 				_place_scene(objects, pl, b.path, scenes, scene_cache, runtime)
 		elif def.renders_as_tile():
-			_place_tile(level, tileset, pl, runtime)
+			_place_tile(level, tileset, pl, runtime, def.stack and stack_cells.has(pl.cell + Vector2i(0, 1)))
 		elif source != null and not def.atlas.is_empty():
 			if def.source_id != SOURCE_ID and tileset.has_source(def.source_id):
 				_place_item(objects, tileset.get_source(def.source_id) as TileSetAtlasSource, pl, runtime)
@@ -136,7 +140,7 @@ static func _layer(level: Node2D, tileset: TileSet, layer_name: String) -> TileM
 	return layer
 
 
-static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, runtime: ObjectRuntime) -> void:
+static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, runtime: ObjectRuntime, on_stack := false) -> void:
 	var def := pl.def
 	# Na licu zawsze Props (y-sort razem ze ścianami), na podłodze DECAL pod Decals.
 	var flat := def.klass == ObjectDef.Klass.DECAL and not def.is_wall_mounted()
@@ -148,7 +152,12 @@ static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, ru
 			runtime.counts["tiles"] += 1
 		return
 	var alt := TileSetAtlasSource.TRANSFORM_FLIP_H if pl.flip else 0
-	layer.set_cell(pl.cell, def.source_id, def.atlas[pl.variant], alt)
+	var coords: Vector2i = def.atlas[pl.variant]
+	if on_stack:
+		var src := tileset.get_source(def.source_id) as TileSetAtlasSource
+		if src != null and src.has_alternative_tile(coords, ObjectDef.STACK_ALT):
+			alt |= ObjectDef.STACK_ALT
+	layer.set_cell(pl.cell, def.source_id, coords, alt)
 	runtime.counts["tiles"] += 1
 
 
