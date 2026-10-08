@@ -86,6 +86,7 @@
     "room_distance_min_h": 6,
     "room_distance_min_v": 9,
     "room_distance_max": 20,
+    "room_flush_chance": 0.5,
     "rooms_ratio": 2000,
     "room_size_w": [10, 17],
     "room_size_h": [9, 14],

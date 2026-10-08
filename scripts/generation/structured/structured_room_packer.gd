@@ -20,6 +20,7 @@ var st: State
 var rng: RandomNumberGenerator
 var cfg: Dictionary
 var corridors: Array[PackedInt32Array] = []
+var flush_rooms := {}   # Vector4i -> true: pokoje dostawione do chodnika / sali (bez łącznika)
 var cross_p := PackedInt32Array()
 var stats := {}
 
@@ -491,6 +492,8 @@ func _rooms() -> void:
 		spine[i] = st.water[i] | st.lanes[i] | st.hallm[i] | st.service[i]
 	var sp: PackedInt32Array = st.prefix(spine)
 	var placed: Array[Vector4i] = []
+	var flush_chance := float(cfg.get("room_flush_chance", 0.5))
+	var edges := _network_edges()
 	for _a in range(target * 40):
 		if placed.size() >= target:
 			break
@@ -498,6 +501,12 @@ func _rooms() -> void:
 		var rh := rng.randi_range(int(rh_r[0]), int(rh_r[1]))
 		if st.w - M - rw <= M or st.h - M - rh <= M + 2:
 			break
+		if not edges.is_empty() and rng.randf() < flush_chance:
+			var fr := _flush_room(edges[rng.randi() % edges.size()], rw, rh, placed, dmin_h, dmin_v)
+			if fr.z >= fr.x:
+				placed.append(fr)
+				flush_rooms[fr] = true
+			continue
 		var x0 := rng.randi_range(M, st.w - M - rw)
 		var y0 := rng.randi_range(M + 2, st.h - M - rh)
 		var r := Vector4i(x0, y0, x0 + rw - 1, y0 + rh - 1)
@@ -519,6 +528,77 @@ func _rooms() -> void:
 		st.fill(st.roomm, r.x, r.y, r.z, r.w)
 		st.add_floor_rect(r.x, r.y, r.z, r.w)
 	stats["rooms"] = placed.size()
+	stats["rooms_flush"] = flush_rooms.size()
+
+
+## Krawędzie sieci pod pokoje dostawione: (kratka chodnika / sali, kierunek w mur).
+func _network_edges() -> Array:
+	var out: Array = []
+	for i in range(st.w * st.h):
+		if st.water[i] or not (st.lanes[i] or st.hallm[i]):
+			continue
+		var x: int = i % st.w
+		var y: int = i / st.w
+		for d in DIRS:
+			var nx: int = x + d.x
+			var ny: int = y + d.y
+			if st.in_map(nx, ny) and not st.floor_m[ny * st.w + nx]:
+				out.append([Vector2i(x, y), d])
+	return out
+
+
+## Pokój dostawiony do krawędzi sieci (decyzja usera: pokój nie musi być za korytarzem): pierwszy rząd tuż
+## za chodnikiem / salą, ≥ 3 kratki styku; z pozostałych stron ściana jak dla zwykłej podłogi (podłoga
+## w oknie ściany tylko po stronie sieci). Zwraca prostokąt albo pusty (z > x nie spełnione).
+func _flush_room(edge: Array, rw: int, rh: int, placed: Array[Vector4i], dmin_h: int, dmin_v: int) -> Vector4i:
+	var c: Vector2i = edge[0]
+	var d: Vector2i = edge[1]
+	var r: Vector4i
+	if d == Vector2i(0, -1):
+		var x0: int = c.x - rng.randi_range(1, rw - 2)
+		r = Vector4i(x0, c.y - rh, x0 + rw - 1, c.y - 1)
+	elif d == Vector2i(0, 1):
+		var x0: int = c.x - rng.randi_range(1, rw - 2)
+		r = Vector4i(x0, c.y + 1, x0 + rw - 1, c.y + rh)
+	elif d == Vector2i(-1, 0):
+		var y0: int = c.y - rng.randi_range(1, rh - 2)
+		r = Vector4i(c.x - rw, y0, c.x - 1, y0 + rh - 1)
+	else:
+		var y0: int = c.y - rng.randi_range(1, rh - 2)
+		r = Vector4i(c.x + 1, y0, c.x + rw, y0 + rh - 1)
+	var bad := Vector4i(0, 0, -1, -1)
+	if not st.inside(r.x, r.y, r.z, r.w):
+		return bad
+	# Odstęp od innych pokoi jak dla wolnostojących.
+	var g := Vector4i(r.x - dmin_h, r.y - dmin_v, r.z + dmin_h, r.w + dmin_v)
+	for o in placed:
+		if not (o.z < g.x or o.x > g.z or o.w < g.y or o.y > g.w):
+			return bad
+	# Podłoga w oknie ściany wolno tylko po stronie sieci (za płaszczyzną styku); sam pokój — lity mur.
+	var rx: int = st.wall_v + 1
+	var ry: int = st.wall_h + 1
+	var contact := 0
+	for y in range(r.y - ry, r.w + ry + 1):
+		for x in range(r.x - rx, r.z + rx + 1):
+			if not st.in_map(x, y):
+				continue
+			var i: int = y * st.w + x
+			if not st.floor_m[i]:
+				continue
+			var inr: bool = x >= r.x and x <= r.z and y >= r.y and y <= r.w
+			if inr:
+				return bad
+			var dot: int = (x - c.x) * d.x + (y - c.y) * d.y
+			if dot > 0:
+				return bad
+			if dot == 0 and (st.lanes[i] or st.hallm[i]) and not st.water[i]:
+				# styk: kratka sieci tuż przy pierwszym rzędzie pokoju
+				var along_ok: bool = (x >= r.x and x <= r.z) if d.x == 0 else (y >= r.y and y <= r.w)
+				if along_ok:
+					contact += 1
+	if contact < 3:
+		return bad
+	return r
 
 
 func _room_links() -> void:
@@ -530,6 +610,8 @@ func _room_links() -> void:
 	var linked := 0
 	var free_rooms: Array[Vector4i] = st.rooms.duplicate()
 	for r in free_rooms:
+		if flush_rooms.has(r):
+			continue   # dostawiony do sieci — bez łącznika
 		var own_c := _rect_cells(r)
 		var pf := _pf()
 		pf.own = State.LocalSum.from_cells(own_c, st.w)
