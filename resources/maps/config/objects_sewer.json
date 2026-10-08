@@ -127,6 +127,7 @@
       }
     },
     "wall_lights": {
+      "span": true,
       "class": "PROP",
       "placement": "grid",
       "source": 1,
