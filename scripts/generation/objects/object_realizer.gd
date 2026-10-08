@@ -89,7 +89,7 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 			else:
 				_place_scene(objects, pl, b.path, scenes, scene_cache, runtime)
 		elif def.renders_as_tile():
-			_place_tile(level, tileset, pl, runtime, def.stack and stack_cells.has(pl.cell + Vector2i(0, 1)))
+			_place_tile(level, tileset, pl, runtime, pl.on_top or (def.stack and stack_cells.has(pl.cell + Vector2i(0, 1))))
 		elif source != null and not def.atlas.is_empty():
 			if def.source_id != SOURCE_ID and tileset.has_source(def.source_id):
 				_place_item(objects, tileset.get_source(def.source_id) as TileSetAtlasSource, pl, runtime)

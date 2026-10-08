@@ -38,6 +38,11 @@ var free_pts := {}                 # free: marker defa -> {kubełek (bok >= spac
 var defs_by_id := {}               # id -> ObjectDef (towarzysze)
 var markers := {}                  # id -> marker (indeks defa + 1)
 var in_companions := false         # towarzysze nie dostawiają własnych towarzyszy
+var area_kind := {}                # idx kratki -> rodzaj obszaru ("room" / "hall" / "corridor") z canals.areas
+var area_weights := {}             # katalog: szansa kratki dla dużych obiektów wg rodzaju obszaru
+var set_gap := 0                   # katalog: odstęp dużych obiektów różnych zestawów
+var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indeks w set_ids + 1), 0 = brak
+var set_ids := {}                  # zestaw -> indeks
 
 
 ## Plan obiektów dla wyniku generacji. `features` można podać, gdy są już policzone.
@@ -60,10 +65,18 @@ func _run(result, catalog: ObjectCatalog) -> void:
 	blocked.resize(n)
 	owner.resize(n)
 	stamp.resize(n)
+	set_of.resize(n)
 	_forbid(result)
 	_reserve_paths(result)
 	if catalog == null:
 		return
+	area_weights = catalog.area_weights
+	set_gap = catalog.set_gap
+	if result.canals != null and "areas" in result.canals:
+		for c: Vector2i in result.canals.areas:
+			if f.in_bounds(c):
+				var a := String(result.canals.areas[c])
+				area_kind[f.idx(c)] = StringName(a.get_slice(":", 0))
 	for di in range(catalog.defs.size()):
 		if catalog.defs[di].klass == ObjectDef.Klass.INTERACTIVE:
 			plan.interactive_scenes[catalog.defs[di].scene] = true
@@ -108,6 +121,11 @@ func _forbid(result) -> void:
 		for c in canals.bridge_clearance:
 			if f.in_bounds(c):
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
+		# kratownice w posadzce — bez drobnicy
+		if "grating" in canals:
+			for c in canals.grating:
+				if f.in_bounds(c):
+					plan.occupancy[f.idx(c)] |= ObjectPlan.NO_DECAL
 	for c in result.portal_zone:
 		_forbid_ring(c, PORTAL_RING, true)
 	_forbid_ring(result.player_spawn, SPAWN_RING, true)
@@ -285,6 +303,8 @@ func _pick(def: ObjectDef, marker: int, cands: PackedInt32Array, rng: RandomNumb
 		cands[j] = cands[k - 1]
 		cands[k - 1] = i
 		k -= 1
+		if not area_weights.is_empty() and def.is_big() and rng.randf() >= float(area_weights.get(area_kind.get(i, &""), 1.0)):
+			continue
 		if def.cluster_min > 0:
 			placed += _place_cluster(def, marker, i, rng, target - placed)
 		elif _place_one(def, marker, i, rng):
@@ -379,7 +399,8 @@ func _place_one(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 
 
 ## Towarzysze wokół kotwicy `c` (Chebyshev <= radius): każdy wg WŁASNYCH reguł (teren, kontekst,
-## zajętość, odstępy), liczba z [min, max]. RNG rodzica — deterministycznie.
+## zajętość, odstępy), liczba z [min, max]. RNG rodzica — deterministycznie. Z "on" (szansa): sztuka najpierw
+## próbuje leżeć NA rodzicu — w kratkach jego rysunku nad podstawą (blat stołu), inaczej obok.
 func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) -> void:
 	in_companions = true
 	for comp in def.companions:
@@ -390,6 +411,17 @@ func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) 
 		var n := rng.randi_range(int(comp["min"]), int(comp["max"]))
 		var r := int(comp["radius"])
 		var placed := 0
+		var on := float(comp.get("on", 0.0))
+		if on > 0.0:
+			var top := _surface_cells(def, c)
+			for _k in range(n):
+				if top.is_empty() or rng.randf() >= on:
+					continue
+				var t := rng.randi_range(0, top.size() - 1)
+				var tc: Vector2i = top[t]
+				top.remove_at(t)
+				if _try_place(cdef, cm, f.idx(tc), rng, true):
+					placed += 1
 		var tries := n * 5
 		while placed < n and tries > 0:
 			tries -= 1
@@ -404,7 +436,18 @@ func _place_companions(def: ObjectDef, c: Vector2i, rng: RandomNumberGenerator) 
 	in_companions = false
 
 
-func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) -> bool:
+## Kratki rysunku obiektu nad jego podstawą (blat), w granicach mapy, na podłodze.
+func _surface_cells(def: ObjectDef, anchor: Vector2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for dy in range(1, def.size.y):
+		for dx in range(def.size.x):
+			var q := anchor + Vector2i(dx, -dy)
+			if f.in_bounds(q) and not def.footprint.has(Vector2i(dx, -dy)) and f.walk[f.idx(q)] != 0:
+				out.append(q)
+	return out
+
+
+func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator, on_top := false) -> bool:
 	if def.placement == ObjectDef.Placement.FREE:
 		return _try_free(def, marker, i, rng)
 	if def.spacing > 1 and stamp[i] == marker:
@@ -427,12 +470,16 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 		return false
 	if _visual_on_wall(def, def.base_point(anchor) + offset):
 		return false
+	if not _set_ok(def, cells):
+		return false
 	var pl := ObjectPlacement.new()
 	pl.def = def
 	pl.cell = anchor
 	pl.cells = cells
 	pl.offset = offset
+	pl.on_top = on_top
 	_finish(pl, marker, rng)
+	_mark_set(def, cells)
 	if def.spacing > 1:
 		var s := def.spacing - 1
 		for dy in range(-s, s + 1):
@@ -441,6 +488,34 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator)
 				if f.in_bounds(q):
 					stamp[f.idx(q)] = marker
 	return true
+
+
+## Duży obiekt z zestawem: w promieniu set_gap od jego kratek nie ma dużego obiektu z innego zestawu.
+func _set_ok(def: ObjectDef, cells: PackedInt32Array) -> bool:
+	if set_gap <= 0 or def.set_id == &"" or not def.is_big():
+		return true
+	var mine := int(set_ids.get(def.set_id, -1)) + 1
+	for j in cells:
+		var c := f.cell(j)
+		for dy in range(-set_gap, set_gap + 1):
+			for dx in range(-set_gap, set_gap + 1):
+				var q := c + Vector2i(dx, dy)
+				if not f.in_bounds(q):
+					continue
+				var s := set_of[f.idx(q)]
+				if s != 0 and s != mine:
+					return false
+	return true
+
+
+func _mark_set(def: ObjectDef, cells: PackedInt32Array) -> void:
+	if set_gap <= 0 or def.set_id == &"" or not def.is_big():
+		return
+	if not set_ids.has(def.set_id):
+		set_ids[def.set_id] = set_ids.size()
+	var mine := int(set_ids[def.set_id]) + 1
+	for j in cells:
+		set_of[j] = mine
 
 
 ## Czy kształt kolizji obiektu w punkcie `pt` zachodzi (choćby częściowo) na zarezerwowane przejście.
@@ -483,6 +558,8 @@ func _cell_free(def: ObjectDef, j: int) -> bool:
 	var o := plan.occupancy[j]
 	if o & (ObjectPlan.FORBID | ObjectPlan.USED):
 		return false
+	if o & ObjectPlan.NO_DECAL and def.klass == ObjectDef.Klass.DECAL:
+		return false
 	return not (def.is_solid() and def.keep_paths and o & ObjectPlan.RESERVED)
 
 
@@ -491,7 +568,7 @@ func _cell_free(def: ObjectDef, j: int) -> bool:
 ## środek leży w kształcie (≈ pokrycie ≥ połowy), co najmniej kratkę punktu.
 func _try_free(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator) -> bool:
 	var o := plan.occupancy[i]
-	if o & ObjectPlan.FORBID:
+	if o & ObjectPlan.FORBID or (o & ObjectPlan.NO_DECAL and def.klass == ObjectDef.Klass.DECAL):
 		return false
 	if o & ObjectPlan.USED and (owner[i] != marker or def.is_solid()):
 		return false

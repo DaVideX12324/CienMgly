@@ -19,7 +19,7 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "facade_h", "layer", "stack",
+	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "facade_h", "layer", "stack", "set",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade", "rim"]
@@ -41,6 +41,11 @@ var path: String = ""
 var defs: Array[ObjectDef] = []        # obiekty na podłodze (ObjectPlanner)
 var wall_defs: Array[ObjectDef] = []   # obiekty na licu ściany (WallDecorPlanner)
 var errors: Array[String] = []
+## Duże obiekty (ObjectDef.is_big): szansa przyjęcia kratki-kandydata wg rodzaju obszaru ("room" / "hall" /
+## "corridor"; brak = 1.0) — liczba sztuk bez zmian, więcej w pokojach. JSON: "area_weights".
+var area_weights: Dictionary = {}
+## Odstęp (kratki, Chebyshev) między dużymi obiektami różnych zestawów (ObjectDef.set_id). JSON: "set_gap".
+var set_gap: int = 0
 
 # @tool + leniwy mutex: jak w ObjectBake (narzędzie edytora).
 static var _cache: Dictionary = {}
@@ -101,6 +106,10 @@ func get_def(def_id: StringName) -> ObjectDef:
 
 
 func _parse(d: Dictionary) -> void:
+	var aw: Dictionary = d.get("area_weights", {}) if d.get("area_weights", {}) is Dictionary else {}
+	for k in aw:
+		area_weights[StringName(k)] = float(aw[k])
+	set_gap = int(d.get("set_gap", 0))
 	var groups: Dictionary = d.get("groups", {}) if d.get("groups", {}) is Dictionary else {}
 	for g in groups:
 		if not (groups[g] is Dictionary):
@@ -356,7 +365,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	if comps is Array:
 		for c in comps:
 			if not (c is Dictionary) or String(c.get("id", "")).is_empty():
-				errors.append("%s: companions to lista {\"id\": obiekt, \"count\": [a, b], \"radius\": r}." % tag)
+				errors.append("%s: companions to lista {\"id\": obiekt, \"count\": [a, b], \"radius\": r, \"on\": szansa na obiekcie}." % tag)
 				continue
 			var cmin := 1
 			var cmax := 1
@@ -368,12 +377,13 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 				cmin = int(cnt)
 				cmax = cmin
 			def.companions.append({"id": StringName(String(c["id"])), "min": maxi(cmin, 0), "max": maxi(cmax, 0),
-				"radius": clampi(int(c.get("radius", 2)), 1, 6)})
+				"radius": clampi(int(c.get("radius", 2)), 1, 6), "on": clampf(float(c.get("on", 0.0)), 0.0, 1.0)})
 	else:
 		errors.append("%s: companions musi być listą." % tag)
 	def.keep_paths = bool(m.get("keep_paths", true))
 	def.flip_h = bool(m.get("flip_h", false))
 	def.stack = bool(m.get("stack", false))
+	def.set_id = StringName(String(m.get("set", "")))
 
 	var default_priority := 100
 	match def.klass:
