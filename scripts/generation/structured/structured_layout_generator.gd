@@ -128,6 +128,8 @@ static func generate_layout(
 	stats["restored"] = _restore_cuts(ctx, canals, before)
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
+	if bool(cfg.get("canal_rails", true)):
+		stats["rails"] = _canal_rails(st, canals, ctx)
 	stats["lost_post"] = _unreachable(ctx, canals)
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
@@ -281,6 +283,76 @@ static func _canal_pits(st: State, layout, seed_val: int, cfg: Dictionary) -> vo
 				layout.pit_cells[c] = v
 			layout.pits.append(rect)
 			t = start + L + 3
+
+
+## Barierki (makiety autora) wzdłuż kanałów poziomych: na północnym brzegu na kratce podłogi nad licem, na
+## południowym na ostatnim rzędzie koryta (podłoga tuż pod nim; wzór: sewer-gen-v2 fbe9c09). Przerwa przy
+## kładkach (± 1 kratka), w blokach zakrętów / węzłów (v2 92f59bc: bez barierki „w powietrzu”), przy portalach
+## i dźwigniach; odcinki ≥ 2 kratki. Końce: przy kładce zagięty (CL / CR), inaczej słupek (L / R), w środku
+## przęsło (M). Tylko grafika — wejście do kanału blokuje już obrzeże. Zwraca liczbę kratek barierek.
+static func _canal_rails(st: State, layout, ctx: GenerationContext) -> int:
+	var w: int = st.w
+	var axis := st.water_axis
+	if axis.is_empty():
+		st.build_water_axis()
+		axis = st.water_axis
+	var near_bridge := {}
+	for b in layout.bridges:
+		var r: Rect2i = b.get("rect", Rect2i())
+		for y in range(r.position.y - 1, r.end.y + 1):
+			for x in range(r.position.x - 1, r.end.x + 1):
+				near_bridge[Vector2i(x, y)] = true
+	var banned := {}
+	for p in ctx.portal_zone:
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				banned[p + Vector2i(dx, dy)] = true
+	for l in st.levers:
+		banned[l] = true
+	var water: Dictionary = layout.water
+	var runs := {}   # Vector3i(y, strona, 0) -> Array[int] x
+	for p: Vector2i in water:
+		if axis[p.y * w + p.x] != 1 or layout.bridge_cells.has(p):
+			continue
+		var up := p + Vector2i(0, -1)
+		var down := p + Vector2i(0, 1)
+		var cell := Vector2i(-1, -1)
+		var side := 0
+		if not water.has(up) and GridUtils.is_walkable(ctx.grid, up) and GridUtils.is_walkable(ctx.grid, up + Vector2i(0, -1)):
+			cell = up        # północ: kratka brzegu nad licem (podłoga, za nią dalej podłoga)
+		elif not water.has(down) and GridUtils.is_walkable(ctx.grid, down):
+			cell = p         # południe: ostatni rząd koryta
+			side = 1
+		if cell.x < 0 or near_bridge.has(cell) or banned.has(cell) or banned.has(down):
+			continue
+		var key := Vector2i(cell.y, side)
+		if not runs.has(key):
+			runs[key] = []
+		(runs[key] as Array).append(cell.x)
+	var n := 0
+	for key: Vector2i in runs:
+		var xs: Array = runs[key]
+		xs.sort()
+		var i := 0
+		while i < xs.size():
+			var j := i
+			while j + 1 < xs.size() and int(xs[j + 1]) == int(xs[j]) + 1:
+				j += 1
+			if j > i:
+				var y: int = key.x
+				for k in range(i, j + 1):
+					var x: int = xs[k]
+					var v: StringName = &"M"
+					if k == i:
+						v = &"CL" if near_bridge.has(Vector2i(x - 1, y)) else &"L"
+					elif k == j:
+						v = &"CR" if near_bridge.has(Vector2i(x + 1, y)) else &"R"
+					layout.rail_cells[Vector2i(x, y)] = v
+					n += 1
+				layout.rail_edges.append({"cells": range(int(xs[i]), int(xs[j]) + 1).map(func(x): return Vector2i(x, key.x)),
+					"dir": Vector2i(0, 1) if key.y == 0 else Vector2i(0, -1), "side": key.y})
+			i = j + 1
+	return n
 
 
 ## Pokoje portali (wzorzec: krok 8 prototypu): kandydaci z ≥ PORTAL_MIN_FREE wolnymi kratkami, wejście

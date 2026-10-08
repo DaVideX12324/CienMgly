@@ -101,6 +101,9 @@ func _forbid(result) -> void:
 		for c in canals.bridge_cells:
 			if f.in_bounds(c):
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
+		for c in canals.rail_cells:
+			if f.in_bounds(c):
+				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 	for c in result.portal_zone:
 		_forbid_ring(c, PORTAL_RING, true)
 	_forbid_ring(result.player_spawn, SPAWN_RING, true)

@@ -1038,6 +1038,16 @@ texture = ExtResource("2_props")
 1:0/0 = 0
 1:0/0/texture_origin = Vector2i(0, 13)
 1:0/0/y_sort_origin = 7
+5:4/0 = 0
+5:4/0/y_sort_origin = 7
+6:4/0 = 0
+6:4/0/y_sort_origin = 7
+7:4/0 = 0
+7:4/0/y_sort_origin = 7
+8:4/0 = 0
+8:4/0/y_sort_origin = 7
+9:4/0 = 0
+9:4/0/y_sort_origin = 7
 
 [resource]
 physics_layer_0/collision_layer = 4
