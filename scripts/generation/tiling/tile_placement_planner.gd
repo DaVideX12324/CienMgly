@@ -3,6 +3,7 @@ extends RefCounted
 
 const CanalPlacerScript = preload("canal_placer.gd")
 const Wall1WPlacerScript = preload("wall_1w_placer.gd")
+const CurbPlacerScript = preload("curb_placer.gd")
 
 
 const GenProgress = preload("../core/gen_progress.gd")
@@ -34,6 +35,8 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	TerrainMaskPlanner.plan_masks(ctx, terrain, terrain_cells)
 	# Kanały ścieków: kwas / lico (Floor), obrzeża i kładki (FloorDecor).
 	CanalPlacerScript.plan(ctx, tiles)
+	# Krawężniki na progach korytarz -> pokój / kompleks (FloorDecor)
+	CurbPlacerScript.plan(ctx, tiles)
 	if CanalPlacerScript.bed_terrain(ctx) >= 0:
 		var bed: Dictionary = CanalPlacerScript.bed_terrain_cells(ctx)
 		terrain.add_batch(&"Floor", bed.cells, 0, CanalPlacerScript.bed_terrain(ctx), 1, true, bed.mask)
