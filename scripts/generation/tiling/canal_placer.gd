@@ -42,6 +42,8 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					break
 		elif canals.pit_cells.has(p) and _place_open(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], under, table):
 			pass
+		elif canals.dry.has(p) and bed_terrain(ctx) >= 0:
+			pass  # puste koryto terenem (TilePlacementPlanner -> bed_terrain_cells)
 		else:
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
 			_place_open(ctx, placement_plan, p, role, _water_variant(ctx, water, p), under, table)
@@ -90,6 +92,28 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 		if water.has(p + Vector2i(0, 1)) and _place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, StringName(String(rv) + "_N"), &"Rails", table):
 			continue
 		_place(ctx, placement_plan, p, TileModuleRole.Id.CANAL_RAIL, rv, &"Rails", table)
+
+
+## Teren pustego koryta (tiling.canal_bed_terrain w companion-JSON, id terenu w terrain_set 0); -1 = kafle CANAL_BED.
+static func bed_terrain(ctx: GenerationContext) -> int:
+	return int(ctx.generator_behaviour.get("tiling", {}).get("canal_bed_terrain", -1))
+
+
+## Kratki pustego koryta do pomalowania terenem: suche, bez lica brzegu i dołów. Maska sąsiedztwa = całe puste
+## koryto (lico i doły też), żeby krawędzie terenu wypadały tylko na brzegu koryta.
+static func bed_terrain_cells(ctx: GenerationContext) -> Dictionary:
+	var canals = ctx.canals
+	var paint: Array[Vector2i] = []
+	var mask: Array[Vector2i] = []
+	if canals == null or canals.is_empty():
+		return {"cells": paint, "mask": mask}
+	for p: Vector2i in canals.dry:
+		mask.append(p)
+		if not _is_face(ctx, canals.water, p) and not canals.pit_cells.has(p):
+			paint.append(p)
+	paint.sort()
+	mask.sort()
+	return {"cells": paint, "mask": mask}
 
 
 ## Ślad modułu kładki: `rect` z nakładki albo prostokąt otaczający jej kratki.

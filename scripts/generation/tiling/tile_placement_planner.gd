@@ -34,6 +34,9 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	TerrainMaskPlanner.plan_masks(ctx, terrain, terrain_cells)
 	# Kanały ścieków: kwas / lico (Floor), obrzeża i kładki (FloorDecor).
 	CanalPlacerScript.plan(ctx, tiles)
+	if CanalPlacerScript.bed_terrain(ctx) >= 0:
+		var bed: Dictionary = CanalPlacerScript.bed_terrain_cells(ctx)
+		terrain.add_batch(&"Floor", bed.cells, 0, CanalPlacerScript.bed_terrain(ctx), 1, true, bed.mask)
 	GenProgress.end(&"floor")
 
 	# 4. Fasady południowe (2H, 3H, łączniki, narożniki OUT, schodki, nisze i FAZA 2.5)
