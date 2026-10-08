@@ -1,12 +1,16 @@
 extends RefCounted
 
-## Materiał lica (np. drewno zamiast kafli w ściekach v2): odcinki lica w jednym rzędzie, cięte na filarach
-## (ctx.pillar_feet), dostają zestaw z JSON `facade_material.tileset`, gdy osobny szum w środku odcinka
-## przekracza `threshold`. Wynik = pole zestawów (ctx.tileset_field) w kotwicach lica — placery lica, narożników,
-## schodków i łączników biorą wtedy kafle z tego zestawu (role, których nie ma, spadają do domyślnego).
-## Kolumna filara należy do odcinka po lewej.
+## Materiał lica (np. drewno zamiast kafli w ściekach v2). Ciąg lica = kotwice w jednym rzędzie bez przerwy.
+## Materiał ciągu: w kompleksie / pokoju (ctx.canals.areas) jeden na cały obszar, żeby pomieszczenie miało jeden
+## styl — zestaw z JSON `facade_material.tileset` z szansą `area_ratio`; w korytarzach i na chodnikach (i poza
+## znanym obszarem) — wolny szum w środku ciągu (`frequency`, próg `threshold`). Ciąg cięty na filarach
+## (ctx.pillar_feet; kolumna filara należy do odcinka po lewej) — odcinek odwraca materiał z szansą
+## `segment_flip_chance`.
+## Wynik = pole zestawów (ctx.tileset_field) w kotwicach lica — placery lica, narożników, schodków i łączników
+## biorą kafle z tego zestawu (role, których w nim nie ma, spadają do domyślnego).
 ##
-## JSON: "facade_material": {"tileset": "sewer_wood", "frequency": 0.08, "threshold": 0.1}
+## JSON: "facade_material": {"tileset": "sewer_wood", "area_ratio": 0.4, "frequency": 0.03, "threshold": 0.1,
+##        "segment_flip_chance": 0.1}
 
 static func apply(ctx: GenerationContext) -> void:
 	var cfg: Dictionary = ctx.generator_behaviour.get("facade_material", {})
@@ -15,9 +19,18 @@ static func apply(ctx: GenerationContext) -> void:
 		return
 	var noise := FastNoiseLite.new()
 	noise.seed = hash([ctx.seed_value, "facade_material"])
-	noise.frequency = float(cfg.get("frequency", 0.08))
-	var threshold := float(cfg.get("threshold", 0.1))
+	noise.frequency = float(cfg.get("frequency", 0.03))
+	var opts := {
+		"seed": ctx.seed_value,
+		"noise": noise,
+		"threshold": float(cfg.get("threshold", 0.1)),
+		"area_ratio": float(cfg.get("area_ratio", 0.4)),
+		"flip": float(cfg.get("segment_flip_chance", 0.1)),
+		"areas": ctx.canals.areas if ctx.canals != null and "areas" in ctx.canals else {},
+		"set_id": set_id,
+	}
 	var on_wall := FacadePlacer.facade_on_wall(ctx)
+	opts["floor_dy"] = 0 if on_wall else 1
 	var water: Dictionary = ctx.canals.water if ctx.canals != null else {}
 
 	# kotwice lica: podłoga pod murem (lico na murze) albo stopa muru nad podłogą (jaskinie)
@@ -41,27 +54,57 @@ static func apply(ctx: GenerationContext) -> void:
 	for y: int in rows:
 		var xs: Array = rows[y]
 		xs.sort()
-		var seg: Array[int] = []
+		var run: Array[int] = []
 		for i in xs.size():
 			var x: int = xs[i]
-			if not seg.is_empty() and x != seg[-1] + 1:
-				any = _close(field, seg, y, noise, threshold, set_id) or any
-				seg = []
-			seg.append(x)
-			if ctx.pillar_feet.has(Vector2i(x, y)):
-				any = _close(field, seg, y, noise, threshold, set_id) or any
-				seg = []
-		any = _close(field, seg, y, noise, threshold, set_id) or any
+			if not run.is_empty() and x != run[-1] + 1:
+				any = _apply_run(field, run, y, ctx.pillar_feet, opts) or any
+				run = []
+			run.append(x)
+		any = _apply_run(field, run, y, ctx.pillar_feet, opts) or any
 	if any:
 		ctx.tileset_field = field
 
 
-static func _close(field: TileSetField, seg: Array[int], y: int, noise: FastNoiseLite, threshold: float, set_id: StringName) -> bool:
-	if seg.is_empty():
+## Ciąg lica w rzędzie: materiał wybierany raz na cały ciąg (obszar albo szum w jego środku), potem cięty na
+## filarach — każdy odcinek może odwrócić materiał z szansą `segment_flip_chance`.
+static func _apply_run(field: TileSetField, run: Array[int], y: int, pillar_feet: Dictionary, opts: Dictionary) -> bool:
+	if run.is_empty():
 		return false
-	var mid := (seg[0] + seg[-1]) * 0.5
-	if noise.get_noise_2d(mid, float(y)) <= threshold:
-		return false
-	for x in seg:
-		field.set_tileset_id(Vector2i(x, y), set_id)
-	return true
+	var wood := _is_wood(run, y, opts)
+	var any := false
+	var seg: Array[int] = []
+	for x in run:
+		seg.append(x)
+		if pillar_feet.has(Vector2i(x, y)) or x == run[-1]:
+			var w := wood
+			if _unit(hash([opts.seed, seg[0], y, "facade_material_flip"])) < float(opts.flip):
+				w = not w
+			if w:
+				for sx in seg:
+					field.set_tileset_id(Vector2i(sx, y), opts.set_id)
+				any = true
+			seg = []
+	return any
+
+
+static func _is_wood(run: Array[int], y: int, opts: Dictionary) -> bool:
+	# obszar ciągu = najczęstszy obszar kratek podłogi pod nim
+	var areas: Dictionary = opts.areas
+	var count := {}
+	var best: StringName = &""
+	var best_n := 0
+	for x in run:
+		var key: StringName = areas.get(Vector2i(x, y + int(opts.floor_dy)), &"")
+		count[key] = int(count.get(key, 0)) + 1
+		if int(count[key]) > best_n:
+			best = key
+			best_n = count[key]
+	if best != &"" and best != &"corridor":
+		return _unit(hash([opts.seed, String(best), "facade_material_area"])) < float(opts.area_ratio)
+	var mid := (run[0] + run[-1]) * 0.5
+	return (opts.noise as FastNoiseLite).get_noise_2d(mid, float(y)) > float(opts.threshold)
+
+
+static func _unit(h: int) -> float:
+	return float(h & 0xFFFF) / 65536.0
