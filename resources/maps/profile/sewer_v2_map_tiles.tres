@@ -1252,7 +1252,7 @@ parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_1kjwh"), SubResourc
 
 [sub_resource type="Resource" id="Resource_0th3u"]
 script = ExtResource("8_ft8jg")
-atlas_coords = Vector2i(22, 9)
+atlas_coords = Vector2i(17, 10)
 
 [sub_resource type="Resource" id="Resource_5i245"]
 script = ExtResource("7_f6wib")
@@ -1262,7 +1262,7 @@ layer = &"FloorDecor"
 
 [sub_resource type="Resource" id="Resource_2iig7"]
 script = ExtResource("8_ft8jg")
-atlas_coords = Vector2i(22, 10)
+atlas_coords = Vector2i(17, 11)
 
 [sub_resource type="Resource" id="Resource_xwkxo"]
 script = ExtResource("7_f6wib")
@@ -1275,7 +1275,7 @@ parts = Array[ExtResource("7_f6wib")]([SubResource("Resource_5i245"), SubResourc
 
 [sub_resource type="Resource" id="Resource_oq4dn"]
 script = ExtResource("8_ft8jg")
-atlas_coords = Vector2i(24, 9)
+atlas_coords = Vector2i(18, 10)
 
 [sub_resource type="Resource" id="Resource_8e0mc"]
 script = ExtResource("7_f6wib")
@@ -1285,7 +1285,7 @@ layer = &"FloorDecor"
 
 [sub_resource type="Resource" id="Resource_7kf3m"]
 script = ExtResource("8_ft8jg")
-atlas_coords = Vector2i(24, 10)
+atlas_coords = Vector2i(18, 11)
 
 [sub_resource type="Resource" id="Resource_sumkf"]
 script = ExtResource("7_f6wib")
