@@ -25,7 +25,15 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 	var on_wall: bool = flags != null and flags.facade_base_on_wall
 	var slots := _face_slots(result, on_wall)  # Vector2i kotwicy -> tag ("over_floor" / "over_canal")
 	var used := {}                              # kratki rzędu kotwic zajęte przez dekoracje
+	var rhythm_defs: Array[ObjectDef] = []
 	for def in defs:
+		if not def.rhythm.is_empty():
+			rhythm_defs.append(def)
+	if not rhythm_defs.is_empty():
+		_place_rhythm(result, rhythm_defs, slots, used, seed_v, flags, on_wall, objects)
+	for def in defs:
+		if not def.rhythm.is_empty():
+			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash([seed_v, String(def.id), "wall"])
 		var w := maxi(def.size.x, 1)
@@ -57,6 +65,72 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 			objects.stats[def.id] = objects.count(def.id) + placed
 	objects.time_usec += Time.get_ticks_usec() - t0
 	return objects
+
+
+## Filary w rytmie (def.rhythm — odstępy do wyboru): na każdym odcinku lica (ciąg kotwic w jednym rzędzie)
+## przęsła po `sp` kratek oddzielone filarem szerokim na 1, wyśrodkowane — filary nie na końcach lica, odcinek
+## krótszy niż 2 przęsła bez filarów. Odcinek z licem 4H (FacadePlacer: ten sam seed i siatka co kafelkowanie)
+## dostaje obiekt z facade_h 4, pozostałe — z facade_h 3 (0 = każdy). Przed resztą dekoracji (one omijają filary).
+static func _place_rhythm(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, seed_v: int,
+		flags: GenerationFlags, on_wall: bool, objects: ObjectPlan) -> void:
+	var bases_4h := {}
+	if flags != null and flags.enable_4h_facades:
+		var c := GenerationContext.new()
+		c.grid = result.grid
+		c.width = result.width
+		c.height = result.height
+		c.flags = flags
+		c.seed_value = seed_v
+		FacadePlacer._plan_4h_segments(c)
+		bases_4h = c.facade_4h_bases
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_v, "wall_rhythm"])
+	var rows := {}
+	for a: Vector2i in slots:
+		if not rows.has(a.y):
+			rows[a.y] = []
+		(rows[a.y] as Array).append(a.x)
+	var ys: Array = rows.keys()
+	ys.sort()
+	for y: int in ys:
+		var xs: Array = rows[y]
+		xs.sort()
+		var i := 0
+		while i < xs.size():
+			var j := i
+			while j + 1 < xs.size() and int(xs[j + 1]) == int(xs[j]) + 1:
+				j += 1
+			var x0: int = xs[i]
+			var x1: int = xs[j]
+			i = j + 1
+			var base := Vector2i(x0, y + 1) if on_wall else Vector2i(x0, y)
+			var h := 4 if bases_4h.has(base) else 3
+			var def: ObjectDef = null
+			for d in defs:
+				if d.facade_h == 0 or d.facade_h == h:
+					def = d
+					break
+			if def == null:
+				continue
+			var sp: int = def.rhythm[rng.randi() % def.rhythm.size()]
+			var n := x1 - x0 + 1
+			var spans := (n + 1) / (sp + 1)
+			if spans < 2:
+				continue
+			var e := (n - (spans * sp + spans - 1)) / 2
+			var placed := 0
+			for k in range(spans - 1):
+				var a := Vector2i(x0 + e + sp + k * (sp + 1), y)
+				if not _fits(slots, a, 1, def) or used.has(a):
+					continue
+				var pl := ObjectPlacement.new()
+				pl.def = def
+				pl.cell = a
+				objects.placements.append(pl)
+				used[a] = true
+				placed += 1
+			if placed > 0:
+				objects.stats[def.id] = objects.count(def.id) + placed
 
 
 ## Kolumny z licem: kratka ściany z podłogą na S i ścianą >= MIN_FACE_H w górę. Poza strefą portali

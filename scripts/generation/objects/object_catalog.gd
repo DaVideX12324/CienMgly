@@ -19,7 +19,7 @@ const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles",
+	"mount", "source", "tiles", "rhythm", "facade_h",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade"]
@@ -295,6 +295,12 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			errors.append("%s: mount 'facade' tylko dla DECAL/PROP ze sceną albo kaflem (placement grid)." % tag)
 			return null
 		def.collision = ObjectDef.Collision.NONE
+		for r in m.get("rhythm", []):
+			if int(r) >= 2:
+				def.rhythm.append(int(r))
+		def.facade_h = int(m.get("facade_h", 0))
+	elif m.has("rhythm") or m.has("facade_h"):
+		errors.append("%s: rhythm / facade_h tylko dla mount 'facade'." % tag)
 	var tags: Array = WALL_TAGS if def.is_wall_mounted() else CONTEXT_TAGS
 
 	for t in m.get("context", []):

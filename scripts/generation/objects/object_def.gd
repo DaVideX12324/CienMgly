@@ -58,6 +58,10 @@ var order: int = 0                    # kolejność w pliku (remisy priorytetu)
 ## Montaż: "" = na podłodze (ObjectPlanner); "facade" = na licu ściany widocznym z południa
 ## (WallDecorPlanner) — kotwica = dolna kratka lica nad podłogą, bez kolizji i zajętości.
 var mount: StringName = &""
+## Na licu: rytm filarów — odstępy (przęsła w kratkach) do wyboru na odcinek lica; pusto = zwykłe losowanie.
+var rhythm: Array[int] = []
+## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
+var facade_h: int = 0
 
 
 func is_wall_mounted() -> bool:
