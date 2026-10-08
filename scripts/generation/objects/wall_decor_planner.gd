@@ -13,7 +13,8 @@ const MARGIN := 1
 const PORTAL_MARGIN := 2
 
 
-static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationFlags, objects: ObjectPlan) -> ObjectPlan:
+static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationFlags, objects: ObjectPlan,
+		floor_defs: Array[ObjectDef] = []) -> ObjectPlan:
 	var t0 := Time.get_ticks_usec()
 	if objects == null:
 		objects = ObjectPlan.new()
@@ -57,6 +58,12 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 			pillar_defs.append(def)
 	if not walls.is_empty() and not pillar_defs.is_empty():
 		_place_on_pillars(walls, pillar_defs, seed_v, objects)
+	var span_floor_defs: Array[ObjectDef] = []
+	for d in floor_defs:
+		if d.span_floor:
+			span_floor_defs.append(d)
+	if not walls.is_empty() and not span_floor_defs.is_empty():
+		_place_span_floor(result, walls, span_floor_defs, on_wall, seed_v, objects)
 	if not walls.is_empty() and not span_defs.is_empty():
 		_place_spans(walls, span_defs, slots, used, bases_4h, on_wall, seed_v, flags, objects)
 	for def in defs:
@@ -291,6 +298,55 @@ static func _place_on_pillars(walls: Array, defs: Array[ObjectDef], seed_v: int,
 			pl.def = def
 			pl.cell = p.cell
 			objects.placements.append(pl)
+			placed += 1
+		if placed > 0:
+			objects.stats[def.id] = objects.count(def.id) + placed
+
+
+## Ozdoby posadzki w osi przęseł (def.span_floor): na ścianie z filarami z szansą density jedna ozdoba (ta sama
+## na całej ścianie) pod każdym przęsłem, wyśrodkowana, w rzędzie SPAN_FLOOR_GAP kratek przed licem. Tylko na
+## wolnej podłodze (bez wody, przeszkód, innych obiektów i kratownic).
+const SPAN_FLOOR_GAP := 1
+
+
+static func _place_span_floor(result, walls: Array, defs: Array[ObjectDef], on_wall: bool, seed_v: int, objects: ObjectPlan) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([seed_v, "span_floor"])
+	var w: int = objects.width
+	var water: Dictionary = result.canals.water if result.canals != null else {}
+	for wall in walls:
+		var def: ObjectDef = defs[rng.randi() % defs.size()]
+		if rng.randf() >= def.density:
+			continue
+		var y: int = wall.y + (1 if on_wall else 0) + SPAN_FLOOR_GAP
+		var dw := maxi(def.size.x, 1)
+		var placed := 0
+		for span: Vector2i in wall.spans:
+			if dw > span.y:
+				continue
+			var a := Vector2i(span.x + (span.y - dw) / 2, y)
+			var cells := PackedInt32Array()
+			var ok := true
+			for fp in def.footprint:
+				var c := a + fp
+				if c.x < 0 or c.y < 0 or c.x >= w or c.y >= objects.height or water.has(c) or not GridUtils.is_walkable(result.grid, c):
+					ok = false
+					break
+				var j := c.y * w + c.x
+				if objects.occupancy[j] & (ObjectPlan.FORBID | ObjectPlan.USED | ObjectPlan.NO_DECAL):
+					ok = false
+					break
+				cells.append(j)
+			if not ok:
+				continue
+			var pl := ObjectPlacement.new()
+			pl.def = def
+			pl.cell = a
+			pl.cells = cells
+			pl.variant = rng.randi() % maxi(def.variant_count(), 1)
+			objects.placements.append(pl)
+			for j in cells:
+				objects.occupancy[j] |= ObjectPlan.USED
 			placed += 1
 		if placed > 0:
 			objects.stats[def.id] = objects.count(def.id) + placed
