@@ -50,6 +50,10 @@ var gates: Array = []
 var levers: Array = []
 var service: Dictionary = {}  # Vector2i -> bool
 
+## Obszar kratki podłogi: &"hall:<cid>" (kompleks), &"room:<i>" (pokój), &"corridor" (korytarze, chodniki).
+## Liczony przed przejściami czyszczącymi — kratki dodane później nie mają wpisu.
+var areas: Dictionary = {}  # Vector2i -> StringName
+
 
 func is_empty() -> bool:
 	return cells.is_empty()

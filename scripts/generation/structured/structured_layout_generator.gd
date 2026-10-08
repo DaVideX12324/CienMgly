@@ -179,6 +179,16 @@ static func _canal_layout(st: State):
 			layout.lanes[p] = true
 		if st.service[i]:
 			layout.service[p] = true
+		if st.floor_m[i] and not st.water[i]:
+			layout.areas[p] = StringName("hall:%d" % st.hall_cid[i]) if st.hall_cid[i] >= 0 else &"corridor"
+	for ri in st.rooms.size():
+		var r: Vector4i = st.rooms[ri]
+		var key := StringName("room:%d" % ri)
+		for y in range(r.y, r.w + 1):
+			for x in range(r.x, r.z + 1):
+				var p := Vector2i(x, y)
+				if layout.areas.has(p) and st.roomm[y * w + x]:
+					layout.areas[p] = key
 	for b in st.bridges:
 		var cells: Array = b.cells
 		var mn: Vector2i = cells[0]
