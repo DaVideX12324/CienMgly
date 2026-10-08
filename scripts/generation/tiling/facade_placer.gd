@@ -138,18 +138,20 @@ static func facade_on_wall(ctx: GenerationContext) -> bool:
 ## Cień zagłębienia na kolumnie lica w stopie `pos`: sąsiedni mur wystaje dalej do przodu (w rzędzie
 ## podłogi pod licem stoi ściana, nie kanał) albo w sąsiedniej kolumnie stoi filar -> &"SHADE_L" / &"SHADE_R" /
 ## &"SHADE_LR"; w kolumnie filara (lico za filarem) zawsze &"SHADE_LR"; inaczej &"".
+## Filar liczy się tylko w rzędach, do których sięga: `part_dy` = rząd części względem stopy (domyślnie 0 = stopa,
+## każdy filar); zniszczony, niski filar nie cieniuje szczytu lica.
 ## Wariant z cieniem bierze się z profilu, gdy go ma (lico, narożniki: &"SHADE"); bez niego — zwykły.
-static func recess_shade(ctx: GenerationContext, pos: Vector2i) -> StringName:
+static func recess_shade(ctx: GenerationContext, pos: Vector2i, part_dy: int = 0) -> StringName:
 	# rząd podłogi pod licem: przy licu na murze kotwica modułu to już kratka podłogi (części -1..-n), w jaskiniach
 	# kotwica = stopa lica, podłoga rząd niżej
 	var row := pos.y + (0 if facade_on_wall(ctx) else 1)
 	var water: Dictionary = ctx.canals.water if ctx.canals != null else {}
 	# lico bezpośrednio za filarem ma cień z obu stron (stopy filarów: ctx.pillar_feet)
-	if ctx.pillar_feet.has(pos):
+	if _pillar_reaches(ctx, pos, part_dy):
 		return &"SHADE_LR"
 	# filar w sąsiedniej kolumnie też rzuca cień na lico obok
-	var l := _protrudes(ctx, Vector2i(pos.x - 1, row), water) or ctx.pillar_feet.has(pos + Vector2i(-1, 0))
-	var r := _protrudes(ctx, Vector2i(pos.x + 1, row), water) or ctx.pillar_feet.has(pos + Vector2i(1, 0))
+	var l := _protrudes(ctx, Vector2i(pos.x - 1, row), water) or _pillar_reaches(ctx, pos + Vector2i(-1, 0), part_dy)
+	var r := _protrudes(ctx, Vector2i(pos.x + 1, row), water) or _pillar_reaches(ctx, pos + Vector2i(1, 0), part_dy)
 	if l and r:
 		return &"SHADE_LR"
 	if l:
@@ -157,6 +159,39 @@ static func recess_shade(ctx: GenerationContext, pos: Vector2i) -> StringName:
 	if r:
 		return &"SHADE_R"
 	return &""
+
+
+static func _pillar_reaches(ctx: GenerationContext, foot: Vector2i, part_dy: int) -> bool:
+	return ctx.pillar_feet.has(foot) and int(ctx.pillar_feet[foot]) <= part_dy
+
+
+## Lico (moduł `module_role`, wariant `variant_id`) z cieniem wybieranym osobno dla każdej części: część bierze
+## kafel z tym samym przesunięciem z wariantu cienia danego rzędu (recess_shade), gdy profil go ma.
+static func _try_shaded_module(
+	ctx: GenerationContext,
+	plan: TilePlacementPlan,
+	anchor: Vector2i,
+	module_role: TileModuleRole.Id,
+	variant_id: StringName,
+	table: Dictionary,
+	force_id: StringName = &""
+) -> bool:
+	var parts := TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, variant_id, force_id)
+	if parts.is_empty():
+		return false
+	var shaded := {}  # wariant cienia -> {przesunięcie: część}
+	for rp in parts:
+		var use = rp
+		var shade := recess_shade(ctx, anchor, rp.offset.y)
+		if shade != &"" and has_variant(ctx, module_role, shade):
+			if not shaded.has(shade):
+				var by_off := {}
+				for sp in TileResolver.resolve_module_parts(ctx, anchor, module_role, [], -1, shade, force_id):
+					by_off[sp.offset] = sp
+				shaded[shade] = by_off
+			use = shaded[shade].get(rp.offset, rp)
+		_queue_part(plan, anchor + use.offset, use, &"FACADE", table, Vector2i.ZERO, false)
+	return true
 
 
 ## Czy domyślny zestaw profilu ma wariant `vid` roli `module_role` — wymuszony brakujący wariant dałby
@@ -292,9 +327,8 @@ static func place_3h(
 
 	# Lico 4H (enable_4h_facades + rola FACADE_4H w profilu): tam, gdzie 3H dostałoby koronę.
 	var variant_id4: StringName = &"B" if is_b else &"A"
-	var shade := recess_shade(ctx, pos)
 	var force4: StringName = &"caves_roots" if use_roots else &""
-	if wants_4h(ctx, pos, state, edges) and ((shade != &"" and has_variant(ctx, TileModuleRole.Id.FACADE_4H, shade) and _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_4H, shade, table, force4)) 			or _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_4H, variant_id4, table, force4)):
+	if wants_4h(ctx, pos, state, edges) and _try_shaded_module(ctx, plan, pos, TileModuleRole.Id.FACADE_4H, variant_id4, table, force4):
 		mark_4h(ctx, pos, state)
 		return
 
@@ -305,7 +339,7 @@ static func place_3h(
 	# Anchor = stopa; base @ (0,0), mid @ (0,-1), top @ (0,-2). Korona = osobny CORNER.
 	var variant_id: StringName = &"B" if is_b else &"A"
 	var force_id: StringName = &"caves_roots" if use_roots else &""
-	if not ((shade != &"" and has_variant(ctx, TileModuleRole.Id.FACADE_3H, shade) and _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_3H, shade, table, force_id)) 			or _try_module(ctx, plan, pos, TileModuleRole.Id.FACADE_3H, variant_id, table, force_id)):
+	if not _try_shaded_module(ctx, plan, pos, TileModuleRole.Id.FACADE_3H, variant_id, table, force_id):
 		_queue(plan, pos + Vector2i(0, -2), top_t, &"FACADE", table)
 		_queue(plan, pos + Vector2i(0, -1), mid_t, &"FACADE", table)
 		_queue(plan, pos, base_t, &"FACADE", table)
