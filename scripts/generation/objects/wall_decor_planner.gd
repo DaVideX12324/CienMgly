@@ -408,7 +408,7 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 				continue
 			var pl := ObjectPlacement.new()
 			pl.def = def
-			pl.cell = anchor
+			pl.cell = anchor + Vector2i(0, def.canal_end_dy)   # miejsce sprawdzone na zwykłej kotwicy lica
 			pl.variant = hash([seed_v, a, "canal_end_v"]) % maxi(def.variant_count(), 1)
 			objects.placements.append(pl)
 			objects.stats[def.id] = objects.count(def.id) + 1
