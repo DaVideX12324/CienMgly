@@ -441,7 +441,8 @@ func _build_halls() -> void:
 					t1 = hi   # bez krótkiej resztki na końcu odcinka
 				for k in [0, 1]:
 					if rooms_mode:
-						ext[k] = walk if rng.randf() < float(pc.get("shallow", 0.25)) else rng.randi_range(walk + min_d, maxi(walk + min_d, ext_max))
+						var dr: Array = pc.get("depth", [walk + min_d, ext_max])
+						ext[k] = walk if rng.randf() < float(pc.get("shallow", 0.25)) else rng.randi_range(int(dr[0]), maxi(int(dr[0]), mini(int(dr[1]), ext_max)))
 					else:
 						ext[k] = maxi(0, mini(ext_max, ext[k] + rng.randi_range(-3, 3)))
 				var want: Array = ext.duplicate()
@@ -573,13 +574,18 @@ static func partitions(state: State, seed_val: int, config: Dictionary) -> int:
 ## każda komnata do niej wychodzi):
 ## - poprzeczne: ściany zaplanowane przy budowie brzegu (cx.partitions, _plan_partitions), każda z szansą `perp`,
 ##   na całą głębokość brzegu w swoich kolumnach;
+## - zawinięcia (ściany w L / U, wyraźniej oddzielona komnata): komnata między dwiema ścianami poprzecznymi
+##   z szansą `wrap_l` dostaje ramię L (pas muru za promenadą od jednej ściany, drzwi `door` przy drugiej),
+##   z szansą `wrap_u` — U (ramiona od obu, drzwi w środku); ściana bez sąsiadki z szansą `wrap_l` — L 3–7 kratek;
+##   komnata za ramieniem głęboka na >= `wrap_depth`;
 ## - równoległe: z szansą `parallel` na stronę odcinka pas muru (grubość wall_h / wall_v) tuż za promenadą na ciągu
 ##   kolumn o głębokości >= walkway + pas + min_depth, z drzwiami `door` kratek co `door_every` (co najmniej
 ##   jedne) — sala za murem.
 ## Ściana w całości albo wcale: nie dotyka obcej podłogi (`blocked`: korytarze, pokoje — ich wejścia do sali
 ## zostają; chodniki) ani wody bliżej niż walkway.
 ## JSON: "complex_partitions": {"perp": 0.85, "parallel": 0.3, "walkway": 3, "room": [6, 12], "min_depth": 3,
-##        "shallow": 0.25, "chunk": [6, 12], "door": 3, "door_every": 12} — chunk: długość odcinka brzegu o jednej
+##        "shallow": 0.25, "chunk": [6, 12], "door": 3, "door_every": 12, "wrap_l": 0.35, "wrap_u": 0.3,
+##        "wrap_depth": 2, "depth": [8, 14]} — depth: głębokość komnat brzegu (poza płytkimi) — chunk: długość odcinka brzegu o jednej
 ##        głębokości (budowa sali), room: odstęp ścian poprzecznych.
 func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) -> PackedInt32Array:
 	var pc: Dictionary = cfg.get("complex_partitions", {})
@@ -589,6 +595,10 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 	var door_every := int(pc.get("door_every", 12))
 	var p_perp := float(pc.get("perp", 0.85))
 	var p_par := float(pc.get("parallel", 0.3))
+	var p_l := float(pc.get("wrap_l", 0.35))
+	var p_u := float(pc.get("wrap_u", 0.3))
+	var wrap_d := int(pc.get("wrap_depth", 2))
+	var done: Array = []   # [seg, k, [ściany]] — wycięte ściany poprzeczne (do zawinięć)
 	var near_water := st.dilate(st.water, walk - 1, walk - 1)
 	var pinch: Dictionary = cx.get("pinch", {})
 	var cut := PackedInt32Array()
@@ -598,6 +608,25 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 		for i in cells:
 			if i < 0 or near_water[i] or blocked[i] or not pm[i] or taken.has(i):
 				return false
+		# bez przesmyków 1 kratki: podłoga obok nowej ściany nie może mieć muru po obu stronach
+		var mine := {}
+		for i in cells:
+			mine[i] = true
+		var solid := func(x: int, y: int) -> bool:
+			if not st.in_map(x, y):
+				return true
+			var j: int = y * st.w + x
+			return not st.floor_m[j] or taken.has(j) or mine.has(j)
+		for i in cells:
+			var x: int = i % st.w
+			var y: int = i / st.w
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nx: int = x + d.x
+				var ny: int = y + d.y
+				if solid.call(nx, ny):
+					continue
+				if (solid.call(nx - 1, ny) and solid.call(nx + 1, ny)) or (solid.call(nx, ny - 1) and solid.call(nx, ny + 1)):
+					return false
 		for i in cells:
 			taken[i] = true
 		cut.append_array(cells)
@@ -615,7 +644,87 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 				break
 			for e in range(walk + 1, d + 1):
 				cells.append(_bank_idx(w.seg, q, w.k, e))
-		try_cells.call(cells)
+		if try_cells.call(cells):
+			var found := false
+			for g in done:
+				if is_same(g[0], w.seg) and g[1] == w.k:
+					g[2].append(w)
+					found = true
+			if not found:
+				done.append([w.seg, w.k, [w]])
+	# zawinięcia: ramię = pas muru tuż za promenadą (grubość wall_h przy kanale poziomym — lico, wall_v przy pionowym),
+	# komnata za nim głęboka na >= wrap_depth. Między dwiema ścianami: L (ramię od jednej, drzwi przy drugiej) albo
+	# U (ramiona od obu, drzwi w środku). Przy ścianie bez sąsiadki: L — ramię 3–7 kratek w jedną stronę, za nim
+	# drzwi (kolumny głębsze niż ramię).
+	for g in done:
+		var s: Dictionary = g[0]
+		var k: int = g[1]
+		var ws: Array = g[2]
+		ws.sort_custom(func(a, b) -> bool: return a.t0 < b.t0)
+		var tb: int = st.wall_h if s.axis == "h" else st.wall_v
+		var need := walk + tb + wrap_d
+		var deep := func(q: int) -> bool:
+			return _depth(pm, s, q, k) >= need
+		var arms: Array = []   # tablice kolumn
+		var used_side := {}    # ściana -> strony z ramieniem (żeby L z pojedynczej nie nachodziło na komnatę obok)
+		for i in range(ws.size() - 1):
+			var a0: int = ws[i].t1 + 1
+			var a1: int = ws[i + 1].t0 - 1
+			if a1 - a0 + 1 < door + 2:
+				continue
+			var ok := true
+			for q in range(a0, a1 + 1):
+				if not deep.call(q):
+					ok = false
+			if not ok:
+				continue
+			used_side[[i, 1]] = true
+			used_side[[i + 1, -1]] = true
+			var r := rng.randf()
+			var cols: Array = []
+			if r < p_l:
+				var left := rng.randi() % 2 == 0
+				cols = range(a0, a1 - door + 1) if left else range(a0 + door, a1 + 1)
+			elif r < p_l + p_u:
+				var d0 := rng.randi_range(a0 + 1, maxi(a0 + 1, a1 - door))
+				for q in range(a0, a1 + 1):
+					if q < d0 or q >= d0 + door:
+						cols.append(q)
+			if not cols.is_empty():
+				arms.append(cols)
+		for i in range(ws.size()):
+			if rng.randf() >= p_l:
+				continue
+			var dirs := [-1, 1]
+			if rng.randi() % 2 == 0:
+				dirs.reverse()
+			for dir: int in dirs:
+				if used_side.has([i, dir]):
+					continue
+				var start: int = ws[i].t1 + 1 if dir > 0 else ws[i].t0 - 1
+				var n := rng.randi_range(3, 7)
+				var cols: Array = []
+				var q := start
+				while cols.size() < n and deep.call(q) and not taken.has(_bank_idx(s, q, k, walk + 1)):
+					cols.append(q)
+					q += dir
+				if cols.size() < 3:
+					continue
+				# drzwi: `door` kolumn za ramieniem, głębszych niż ramię (przejście do komnaty za nim)
+				var door_ok := true
+				for j in range(door):
+					var qd: int = q + dir * j
+					if _depth(pm, s, qd, k) < walk + tb + 1 or taken.has(_bank_idx(s, qd, k, walk + 1)):
+						door_ok = false
+				if door_ok:
+					arms.append(cols)
+					break
+		for cols in arms:
+			var cells := PackedInt32Array()
+			for q in cols:
+				for e in range(walk + 1, walk + tb + 1):
+					cells.append(_bank_idx(s, q, k, e))
+			try_cells.call(cells)
 	# równoległe
 	for s in cx.segs:
 		var horiz: bool = s.axis == "h"
