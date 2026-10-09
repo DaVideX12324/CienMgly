@@ -280,6 +280,10 @@ static func _place_scene(objects: Node2D, pl: ObjectPlacement, path: String, sce
 	inst.position = pl.origin()
 	# Stałe id (stan skrzyni w LevelStateManager): obiekt + kratka — ta sama mapa = te same id.
 	_set_unique_id(inst, "%s_%d_%d" % [pl.def.id, pl.cell.x, pl.cell.y])
+	if not pl.link.is_empty() and "gate_id" in inst:
+		inst.set("gate_id", pl.link)
+	if pl.def.is_wall_mounted():
+		inst.position.y += WALL_SORT_DROP   # na licu: y-sort tuż nad podłogą pod licem (jak wypieczone ozdoby)
 	if pl.flip:
 		inst.scale.x = -1.0
 	inst.add_to_group(GROUP)

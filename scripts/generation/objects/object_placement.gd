@@ -9,6 +9,7 @@ var offset := Vector2.ZERO       # przesunięcie punktu obiektu (grid_jitter / f
 var variant := 0                 # indeks w def.atlas
 var flip := false
 var cells := PackedInt32Array()  # zajęte kratki (idx) — podstawa albo kratki pod kształtem
+var link := ""                 # powiązanie scen (np. id bramy: bariera, zamek, klucz) — właściwość gate_id sceny
 var on_top := false              # leży NA innym obiekcie (np. sztućce na stole) — kafel alternatywny z y-sortem nad nim
 
 

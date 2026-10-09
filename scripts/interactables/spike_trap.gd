@@ -9,6 +9,10 @@ class_name SpikeTrap
 ## - PROXIMITY: jednorazowo — lider w promieniu proximity_radius -> po rise_delay wysunięcie, po up_time schowanie
 ##   na stałe.
 ## - BARRIER: kolce wysunięte z kolizją (blokują przejście); open() chowa je (dźwignia / klucz), close() wysuwa.
+##   Z gate_id (brama z generatora): w grupie "gate:<id>" — zamek bramy otwiera wszystkie jej kolce; brama otwarta
+##   w zapisie (GateState) -> schowane od razu.
+
+const GateStateScript = preload("gate_state.gd")
 
 enum Mode { TIMER, PROXIMITY, BARRIER }
 
@@ -18,6 +22,7 @@ enum Mode { TIMER, PROXIMITY, BARRIER }
 @export var down_time := 1.6
 @export var rise_delay := 0.25
 @export var proximity_radius := 28.0
+@export var gate_id: String = ""
 
 var is_up := false
 var _leader_inside := false
@@ -46,6 +51,19 @@ func _ready() -> void:
 	var cycle := up_time + down_time
 	_clock = fposmod(global_position.x * 0.013 + global_position.y * 0.007, 1.0) * cycle
 	set_process(mode == Mode.TIMER)
+	if not gate_id.is_empty():
+		add_to_group("gate:" + gate_id)
+		call_deferred("_check_gate")
+
+
+func _check_gate() -> void:
+	if GateStateScript.level_path(self).is_empty():
+		await get_tree().process_frame
+		if is_inside_tree():
+			_check_gate()
+		return
+	if GateStateScript.is_gate_open(self, gate_id):
+		open()
 
 
 func open() -> void:

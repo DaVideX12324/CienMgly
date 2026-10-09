@@ -26,6 +26,7 @@ const SlopeThicknessPassScript = preload("../preprocess/slope_thickness_pass.gd"
 const WallProtrusionPassScript = preload("../preprocess/wall_protrusion_pass.gd")
 const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
 const GratingPlannerScript = preload("../tiling/grating_planner.gd")
+const GatePlannerScript = preload("../objects/gate_planner.gd")
 
 const PORTAL_MIN_FREE := 60
 
@@ -155,9 +156,12 @@ static func generate_layout(
 			result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
 			GenProgress.end(&"terrain")
 			GenProgress.begin(&"objects")
+			if not catalog.gates.is_empty():
+				stats["gates"] = GatePlannerScript.select(result, flags.facade_base_on_wall)
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
 			if not catalog.wall_defs.is_empty():
 				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects, catalog.defs)
+			GatePlannerScript.emit(result, catalog.gates, result.objects)
 		GenProgress.end()
 
 	GenProgress.begin(&"spawns")

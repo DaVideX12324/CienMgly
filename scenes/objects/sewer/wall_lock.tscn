@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/interactables/gate_lock.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="2_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_empty"]
+atlas = ExtResource("2_props")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_key"]
+atlas = ExtResource("2_props")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 14.0
+
+[node name="WallLock" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Empty" type="Sprite2D" parent="."]
+position = Vector2(0, -15)
+texture = SubResource("AtlasTexture_empty")
+
+[node name="WithKey" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -15)
+texture = SubResource("AtlasTexture_key")
+
+[node name="InteractionArea" type="Area2D" parent="."]
+position = Vector2(0, 9)
+collision_layer = 0
+collision_mask = 1
+
+[node name="Shape" type="CollisionShape2D" parent="InteractionArea"]
+shape = SubResource("CircleShape2D_interaction")

@@ -5,6 +5,12 @@
     "corridor": 0.15
   },
   "set_gap": 2,
+  "gates": {
+    "barrier": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier.tscn",
+    "barrier_column": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_short.tscn",
+    "lock": "res://modules/quiz_rpg/scenes/objects/sewer/wall_lock.tscn",
+    "key": "res://modules/quiz_rpg/scenes/objects/sewer/gate_key.tscn"
+  },
   "groups": {
     "pillar_decor": {
       "class": "PROP",

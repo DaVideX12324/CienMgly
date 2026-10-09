@@ -47,7 +47,8 @@ var complexes: Dictionary = {}  # cid -> {segs: Array, mask: Dictionary, pinch: 
 
 ## Bramy i dźwignie przy korytarzach serwisowych
 var gates: Array = []
-var levers: Array = []
+var levers: Array = []        # wyrównane z gates ((-1, -1) = brak); dziś miejsce klucza do zamka bramy
+var gate_locks: Array = []    # wyrównane z gates: kotwica zamka na licu, (-1, -1) = brama nie powstaje (GatePlanner)
 var service: Dictionary = {}  # Vector2i -> bool
 
 ## Obszar kratki podłogi: &"hall:<cid>" (kompleks), &"room:<i>" (pokój), &"corridor" (korytarze, chodniki).

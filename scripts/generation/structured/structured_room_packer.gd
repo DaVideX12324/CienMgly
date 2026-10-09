@@ -1299,5 +1299,4 @@ static func place_levers(state: State, entrance: Vector2i) -> void:
 			if d < bd:
 				bd = d
 				best = Vector2i(i % state.w, i / state.w)
-		if best.x >= 0:
-			state.levers.append(best)
+		state.levers.append(best)   # wyrównane z gates — (-1, -1) = brak miejsca

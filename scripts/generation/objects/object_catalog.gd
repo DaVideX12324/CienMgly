@@ -46,6 +46,8 @@ var errors: Array[String] = []
 var area_weights: Dictionary = {}
 ## Odstęp (kratki, Chebyshev) między dużymi obiektami różnych zestawów (ObjectDef.set_id). JSON: "set_gap".
 var set_gap: int = 0
+## Sceny zagadek bram (GatePlanner): {"barrier": res://…, "lock": res://…, "key": res://…}. JSON: "gates".
+var gates: Dictionary = {}
 
 # @tool + leniwy mutex: jak w ObjectBake (narzędzie edytora).
 static var _cache: Dictionary = {}
@@ -110,6 +112,7 @@ func _parse(d: Dictionary) -> void:
 	for k in aw:
 		area_weights[StringName(k)] = float(aw[k])
 	set_gap = int(d.get("set_gap", 0))
+	gates = d.get("gates", {}) if d.get("gates", {}) is Dictionary else {}
 	var groups: Dictionary = d.get("groups", {}) if d.get("groups", {}) is Dictionary else {}
 	for g in groups:
 		if not (groups[g] is Dictionary):
