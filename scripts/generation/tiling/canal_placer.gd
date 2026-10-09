@@ -132,9 +132,55 @@ static func bridge_rect(b: Dictionary) -> Rect2i:
 
 
 ## Górny rząd kanału pod podłogą albo ścianą = lico brzegu (widok z południa); pod ścianą też — miedziane
-## zagłębienie biegnie ciągle wzdłuż kanału (wzór: sewer-gen-v2 951b847).
-static func _is_face(_ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
-	return not water.has(p + Vector2i(0, -1))
+## zagłębienie biegnie ciągle wzdłuż kanału (wzór: sewer-gen-v2 951b847). Wyjątek: koniec kanału prostopadły do
+## lica ściany (_faceless) — z szansą tiling.canal_end_face_chance zostaje z licem, inaczej kwas dochodzi do muru.
+static func _is_face(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
+	if water.has(p + Vector2i(0, -1)):
+		return false
+	return ctx == null or not _faceless(ctx, water).has(p)
+
+
+## Kratki górnego rzędu kanałów kończących się prostopadle do lica ściany, które NIE dostają lica kanału: krótki ciąg
+## (<= linear_width + 1) kratek wody z murem nad każdą, bez wody po bokach w tym rzędzie, z wodą pod spodem (kanał
+## płynie na południe). Kanał wzdłuż ściany (długi ciąg) zawsze z licem. Szansa na lico: tiling.canal_end_face_chance
+## (domyślnie 1 — jak dotąd), losowana hashem ciągu. Liczone raz na kontekst (meta).
+static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
+	if ctx.has_meta(&"canal_faceless"):
+		return ctx.get_meta(&"canal_faceless")
+	var out := {}
+	ctx.set_meta(&"canal_faceless", out)
+	var chance := float(ctx.generator_behaviour.get("tiling", {}).get("canal_end_face_chance", 1.0))
+	if chance >= 1.0:
+		return out
+	var max_run := int(ctx.generator_behaviour.get("structured_layout", {}).get("linear_width", 4)) + 1
+	var wall := func(c: Vector2i) -> bool:
+		return not water.has(c) and not GridUtils.is_walkable(ctx.grid, c)
+	var seen := {}
+	for p: Vector2i in water:
+		if seen.has(p) or water.has(p + Vector2i(0, -1)) or not wall.call(p + Vector2i(0, -1)):
+			continue
+		# początek ciągu: lewy koniec
+		var a := p
+		while water.has(a + Vector2i(-1, 0)) and not water.has(a + Vector2i(-1, -1)) and wall.call(a + Vector2i(-1, -1)):
+			a += Vector2i(-1, 0)
+		var run: Array[Vector2i] = []
+		var c := a
+		while water.has(c) and not water.has(c + Vector2i(0, -1)) and wall.call(c + Vector2i(0, -1)):
+			run.append(c)
+			seen[c] = true
+			c += Vector2i(1, 0)
+		if run.size() > max_run or water.has(a + Vector2i(-1, 0)) or water.has(c):
+			continue
+		var down := true
+		for q in run:
+			down = down and water.has(q + Vector2i(0, 1))
+		if not down:
+			continue
+		var u := float(hash([ctx.seed_value, a, "canal_end_face"]) & 0xFFFF) / 65536.0
+		if u >= chance:
+			for q in run:
+				out[q] = true
+	return out
 
 
 ## Warianty lica od najlepszego: koniec przy podłodze L / R, przy murze DL / DR / DLR (z obu stron),
