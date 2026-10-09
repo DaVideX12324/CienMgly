@@ -60,6 +60,7 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 	var opened := {}
 	var assigned := {}
 	var gate_area := {}   # brama -> część mapy, w której leży jej przełącznik (i szukany zamek)
+	var gate_sdist := {}  # brama -> odległości od wejścia w tej części
 	var target := int(cfg.get("switch_distance", 14))
 	var progress := true
 	while progress and assigned.size() < canals.gates.size():
@@ -70,14 +71,16 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 				for c: Vector2i in canals.gates[gj]:
 					blocked[c] = true
 		var area := _reach(result, blocked)
+		var sdist := _spawn_dist(result, area)
 		for gi in range(canals.gates.size()):
 			if assigned.has(gi):
 				continue
-			var key := _switch_cell(result, canals.gates[gi], area, blocked, levers, target)
+			var key := _switch_cell(result, canals.gates[gi], area, blocked, levers, target, sdist)
 			if key == NONE:
 				continue
 			levers[gi] = key
 			gate_area[gi] = area
+			gate_sdist[gi] = sdist
 			assigned[gi] = true
 			opened[gi] = true
 			progress = true
@@ -95,7 +98,7 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 			if has_plate and (not has_lock or rng.randf() < float(cfg.get("plate_chance", 0.5))):
 				opener = "plate"
 			elif has_lock:
-				lock = _lock_cell(result, canals.gates[gi], area, gate_cells)
+				lock = _lock_cell(result, canals.gates[gi], area, gate_cells, gate_sdist.get(gi, {}))
 				if lock != NONE:
 					opener = "lock"
 					lock = lock + Vector2i(0, -1) if on_wall else lock   # kotwica jak ozdoby lica (facade_base_on_wall)
@@ -274,19 +277,30 @@ static func _reach(result, gate_cells: Dictionary) -> Dictionary:
 	return seen
 
 
-## Miejsce przełącznika (klucz / płyta) bramy: przeszukiwanie po części startowej (reach) od kratek przy bramie;
+## Miejsce przełącznika (klucz / płyta) bramy: przeszukiwanie po części startowej (reach) od kratek przy bramie po
+## stronie bliższej wejściu (krótsza droga od spawnu, `sdist`); tylko kratki nie dalej od wejścia niż ta strona (+2) —
+## przełącznik przed bramą, gracz mija go w drodze do niej;
 ## kratka o odległości drogi najbliższej `target` (pokój / sala +0, korytarz / chodnik +3 do kary), bez wody, kładek,
 ## barierek, kratownic, portali, korytarzy serwisowych i ścian 1w, >= 3 kratki od przełączników innych bram.
-static func _switch_cell(result, gate: Array, reach: Dictionary, gate_cells: Dictionary, others: Array, target: int) -> Vector2i:
+static func _switch_cell(result, gate: Array, reach: Dictionary, gate_cells: Dictionary, others: Array, target: int,
+		sdist: Dictionary = {}) -> Vector2i:
 	var canals = result.canals
-	var dist := {}
-	var q: Array[Vector2i] = []
+	# strona bramy bliższa wejściu (krótsza droga od spawnu) — przełącznik tylko po niej, przed bramą
+	var near_d := 1 << 30
+	var seeds: Array[Vector2i] = []
 	for c: Vector2i in gate:
 		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 			var n: Vector2i = c + d
-			if reach.has(n) and not dist.has(n) and not gate_cells.has(n):
-				dist[n] = 1
-				q.append(n)
+			if reach.has(n) and not gate_cells.has(n):
+				seeds.append(n)
+				near_d = mini(near_d, int(sdist.get(n, 1 << 30)))
+	var dist := {}
+	var q: Array[Vector2i] = []
+	for n in seeds:
+		if dist.has(n) or (not sdist.is_empty() and int(sdist.get(n, 1 << 30)) > near_d + 1):
+			continue
+		dist[n] = 1
+		q.append(n)
 	var best := NONE
 	var bs := 1 << 30
 	var h := 0
@@ -296,7 +310,7 @@ static func _switch_cell(result, gate: Array, reach: Dictionary, gate_cells: Dic
 		var dc: int = dist[c]
 		if dc > target * 3:
 			break
-		var ok: bool = dc >= 4 and not canals.water.has(c) and not canals.bridge_cells.has(c) and not canals.rail_cells.has(c) 				and not canals.grating.has(c) and not canals.service.has(c) and not canals.walls_1w.has(c) 				and not result.portal_zone.has(c)
+		var ok: bool = dc >= 4 and (sdist.is_empty() or int(sdist.get(c, 1 << 30)) <= near_d + 2) and not canals.water.has(c) and not canals.bridge_cells.has(c) and not canals.rail_cells.has(c) 				and not canals.grating.has(c) and not canals.service.has(c) and not canals.walls_1w.has(c) 				and not result.portal_zone.has(c)
 		if ok:
 			for o in others:
 				var ov: Vector2i = o
@@ -315,6 +329,26 @@ static func _switch_cell(result, gate: Array, reach: Dictionary, gate_cells: Dic
 				dist[n] = dc + 1
 				q.append(n)
 	return best
+
+
+## Odległość drogi od wejścia (4-sąsiedzi) po kratkach `area`.
+static func _spawn_dist(result, area: Dictionary) -> Dictionary:
+	var out := {}
+	var start: Vector2i = result.entrance_pos
+	if not area.has(start):
+		return out
+	out[start] = 0
+	var q: Array[Vector2i] = [start]
+	var h := 0
+	while h < q.size():
+		var c := q[h]
+		h += 1
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if area.has(n) and not out.has(n):
+				out[n] = int(out[c]) + 1
+				q.append(n)
+	return out
 
 
 ## Zastępcze miejsce klucza / płyty: kratka pokoju albo sali osiągalna z wejścia bez bram, bez wody, chodników,
@@ -347,19 +381,25 @@ static func _fallback_key(result, gate: Array, reach: Dictionary, others: Array 
 
 
 ## Kratka podłogi pod licem (ściana >= MIN_FACE_H nad nią) najbliżej bramy, w części osiągalnej z wejścia.
-static func _lock_cell(result, gate: Array, reach: Dictionary, gate_cells: Dictionary) -> Vector2i:
+static func _lock_cell(result, gate: Array, reach: Dictionary, gate_cells: Dictionary, sdist: Dictionary = {}) -> Vector2i:
 	var canals = result.canals
 	var near_portal := {}
 	for p: Vector2i in result.portal_zone:
 		for dy in range(-2, 3):
 			for dx in range(-2, 3):
 				near_portal[p + Vector2i(dx, dy)] = true
+	# tylko strona bramy bliższa wejściu (jak przełącznik)
+	var near_d := 1 << 30
+	for c: Vector2i in gate:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if reach.has(c + d):
+				near_d = mini(near_d, int(sdist.get(c + d, 1 << 30)))
 	var dist := {}
 	var q: Array[Vector2i] = []
 	for c: Vector2i in gate:
 		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 			var n: Vector2i = c + d
-			if reach.has(n) and not dist.has(n):
+			if reach.has(n) and not dist.has(n) and (sdist.is_empty() or int(sdist.get(n, 1 << 30)) <= near_d + 1):
 				dist[n] = 1
 				q.append(n)
 	var h := 0
@@ -372,7 +412,8 @@ static func _lock_cell(result, gate: Array, reach: Dictionary, gate_cells: Dicti
 		if dc > bd or dc > LOCK_RADIUS:
 			break
 		if _face_above(result, c) and not near_portal.has(c) and not canals.bridge_cells.has(c) \
-				and not canals.rail_cells.has(c) and not canals.water.has(c):
+				and not canals.rail_cells.has(c) and not canals.water.has(c) \
+				and (sdist.is_empty() or int(sdist.get(c, 1 << 30)) <= near_d + 2):
 			if dc < bd or (dc == bd and (c.y < best.y or (c.y == best.y and c.x < best.x))):
 				best = c
 				bd = dc
