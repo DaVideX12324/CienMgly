@@ -2323,6 +2323,22 @@ texture = ExtResource("0_tiles")
 14:5/0/texture_origin = Vector2i(0, 16)
 14:5/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, -2, 6, 0, -6, 0, -8, -2)
 
+[sub_resource type="TileSetAtlasSource" id="src_table_cols"]
+resource_name = "Stoły (kolumny)"
+texture = ExtResource("1_props")
+2:5/size_in_atlas = Vector2i(1, 2)
+2:5/0 = 0
+2:5/0/texture_origin = Vector2i(0, 8)
+2:5/0/physics_layer_1/polygon_0/points = PackedVector2Array(-6, -4, 8, -4, 8, 6, -6, 6)
+3:5/size_in_atlas = Vector2i(1, 2)
+3:5/0 = 0
+3:5/0/texture_origin = Vector2i(0, 8)
+3:5/0/physics_layer_1/polygon_0/points = PackedVector2Array(-8, -4, 8, -4, 8, 6, -8, 6)
+4:5/size_in_atlas = Vector2i(1, 2)
+4:5/0 = 0
+4:5/0/texture_origin = Vector2i(0, 8)
+4:5/0/physics_layer_1/polygon_0/points = PackedVector2Array(-8, -4, 6, -4, 6, 6, -8, 6)
+
 [resource]
 physics_layer_0/collision_layer = 4
 physics_layer_0/collision_mask = 3
@@ -2350,3 +2366,4 @@ sources/3 = SubResource("src_dungeon")
 sources/4 = SubResource("TileSetAtlasSource_tsymo")
 sources/5 = SubResource("TileSetAtlasSource_i7ic5")
 sources/6 = SubResource("src_pillars")
+sources/7 = SubResource("src_table_cols")
