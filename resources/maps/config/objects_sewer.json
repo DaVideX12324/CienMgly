@@ -546,7 +546,16 @@
           8
         ]
       ],
-      "source": 5
+      "source": 5,
+      "big": true,
+      "density": 0.3,
+      "cluster": {
+        "size": [
+          1,
+          2
+        ],
+        "radius": 2
+      }
     },
     {
       "id": "debris",
