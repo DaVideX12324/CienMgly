@@ -138,6 +138,9 @@ static func generate_layout(
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
 	stats["dead_end_slivers"] = _fill_dead_end_slivers(ctx, canals)
+	stats["raised_protrusions"] = _raise_facade_protrusions(ctx, canals)
+	if int(stats["raised_protrusions"]) > 0:   # zasypane kratki mogą zostawić ślepą kieszeń obok
+		stats["dead_end_slivers"] = int(stats["dead_end_slivers"]) + _fill_dead_end_slivers(ctx, canals)
 	if bool(cfg.get("canal_rails", true)):
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
 	if flags.enable_1w_walls:
@@ -715,6 +718,64 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 				else:
 					for r in run:
 						ctx.grid[r] = CellType.FLOOR
+	return filled
+
+
+## Wystająca ściana (szer. <= MAX_PROTRUSION) przyklejona bokiem do lica innej ściany, ze szczytem w rzędzie pasa
+## lica (do FACADE_BAND kratek nad podłogą) — za mało miejsca na połączenie rantu z licem (decyzja usera: podnieść).
+## Kratki nad wystającą ścianą zasypane, aż jej szczyt wyjdzie ponad pas lica (łączy się wtedy z bokiem muru jak
+## zwykły schodek). Bez wody, kładek, portali; cofnięte, gdy rozcina podłogę.
+const MAX_PROTRUSION := 3
+const FACADE_BAND := 4
+static func _raise_facade_protrusions(ctx: GenerationContext, canals) -> int:
+	var wall := func(c: Vector2i) -> bool:
+		return not GridUtils.is_walkable(ctx.grid, c) and not canals.water.has(c)
+	var floor_ok := func(c: Vector2i) -> bool:
+		return GridUtils.is_walkable(ctx.grid, c) and not canals.water.has(c) and not canals.bridge_cells.has(c) 				and not ctx.portal_zone.has(c) and not canals.cells.has(c)
+	var in_band := func(c: Vector2i) -> bool:   # c w pasie lica: pod nim podłoga w odległości 1..FACADE_BAND
+		for k in range(1, FACADE_BAND + 1):
+			var b := c + Vector2i(0, k)
+			if not wall.call(b):
+				return GridUtils.is_walkable(ctx.grid, b)
+		return false
+	var filled := 0
+	for _round in range(FACADE_BAND + 1):
+		var changed := 0
+		for y in range(2, ctx.height - 1):
+			for x in range(1, ctx.width - 1):
+				var c := Vector2i(x, y)
+				if not wall.call(c) or not wall.call(c + Vector2i(0, -1)) or not in_band.call(c):
+					continue
+				for side in [Vector2i(-1, 0), Vector2i(1, 0)]:
+					# szczyt wystającej ściany obok c: ściana w rzędzie y, podłoga nad nią
+					var run: Array[Vector2i] = []
+					var q: Vector2i = c + side
+					while run.size() <= MAX_PROTRUSION and wall.call(q) and floor_ok.call(q + Vector2i(0, -1)):
+						run.append(q + Vector2i(0, -1))
+						q += side
+					if run.is_empty() or run.size() > MAX_PROTRUSION or wall.call(q + Vector2i(0, -1)):
+						continue   # nie wystająca ściana (szeroki mur albo dalej też mur u góry)
+					var nb: Array[Vector2i] = []
+					for f in run:
+						for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -1)]:
+							var n: Vector2i = f + d
+							if not run.has(n) and GridUtils.is_walkable(ctx.grid, n):
+								nb.append(n)
+					for f in run:
+						ctx.grid[f] = CellType.WALL
+					var ok := true
+					for i in range(1, nb.size()):
+						if not _connected(ctx, canals, nb[0], nb[i], 4000):
+							ok = false
+							break
+					if ok:
+						changed += run.size()
+					else:
+						for f in run:
+							ctx.grid[f] = CellType.FLOOR
+		filled += changed
+		if changed == 0:
+			break
 	return filled
 
 
