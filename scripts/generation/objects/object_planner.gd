@@ -832,7 +832,7 @@ func _set_ok(def: ObjectDef, cells: PackedInt32Array) -> bool:
 	if set_gap <= 0 or def.set_id == &"" or not def.is_big():
 		return true
 	var mine := int(set_ids.get(def.set_id, -1)) + 1
-	for j in cells:
+	for j in _draw_cells(def, cells):
 		var c := f.cell(j)
 		for dy in range(-set_gap, set_gap + 1):
 			for dx in range(-set_gap, set_gap + 1):
@@ -851,8 +851,21 @@ func _mark_set(def: ObjectDef, cells: PackedInt32Array) -> void:
 	if not set_ids.has(def.set_id):
 		set_ids[def.set_id] = set_ids.size()
 	var mine := int(set_ids[def.set_id]) + 1
-	for j in cells:
+	for j in _draw_cells(def, cells):
 		set_of[j] = mine
+
+
+## Kratki rysunku obiektu: podstawa i kratki nad nią do wysokości size.y — odstęp zestawów liczony od całego rysunku
+## (filar 1×5 stawał podstawą 3 kratki od stołu, a jego trzon sięgał blatu).
+func _draw_cells(def: ObjectDef, cells: PackedInt32Array) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	for j in cells:
+		var c := f.cell(j)
+		for dy in range(maxi(def.size.y, 1)):
+			var q := c + Vector2i(0, -dy)
+			if f.in_bounds(q):
+				out.append(f.idx(q))
+	return out
 
 
 ## Czy kształt kolizji obiektu w punkcie `pt` zachodzi (choćby częściowo) na zarezerwowane przejście.
