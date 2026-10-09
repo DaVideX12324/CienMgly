@@ -16,6 +16,12 @@ const GateStateScript = preload("gate_state.gd")
 
 enum Mode { TIMER, PROXIMITY, BARRIER }
 
+## Dźwięk wysunięcia (metaliczny „szczęk”); przy schowaniu bramy ten sam, niżej. Pozycyjny i o krótkim zasięgu:
+## kolce z czasomierzem cykają co ~2,4 s, z całej mapy naraz byłby szum.
+const RISE_SFX := "res://assets/audio/sfx/RPG Sound Pack/battle/sword-unsheathe2.wav"
+const SFX_RANGE := 240.0   # px (~15 kratek)
+const SFX_DB := -6.0
+
 @export var mode: Mode = Mode.TIMER
 @export_range(0.0, 1.0, 0.01) var damage_fraction := 0.1
 @export var up_time := 0.8
@@ -29,6 +35,7 @@ var _leader_inside := false
 var _hurt_this_rise := false
 var _used := false
 var _clock := 0.0
+var _sfx: AudioStreamPlayer2D
 
 @onready var _spike: Node2D = $Spike
 @onready var _blocker: CollisionShape2D = $BlockShape
@@ -62,10 +69,12 @@ func _check_gate() -> void:
 			_check_gate()
 		return
 	if GateStateScript.is_gate_open(self, gate_id):
-		open()
+		_set_up(false)   # brama otwarta w zapisie — bez dźwięku przy wczytaniu
 
 
 func open() -> void:
+	if is_up:
+		_play_sfx(0.75)
 	_set_up(false)
 
 
@@ -123,11 +132,24 @@ func _on_proximity_entered(body: Node2D) -> void:
 
 
 func _on_rise() -> void:
-	var audio := get_node_or_null("/root/AudioService")
-	if audio and audio.has_method("play_sfx_by_name"):
-		audio.play_sfx_by_name("spikes")
+	_play_sfx(1.0)
 	if _leader_inside:
 		_hurt()
+
+
+func _play_sfx(pitch: float) -> void:
+	if _sfx == null:
+		_sfx = AudioStreamPlayer2D.new()
+		_sfx.bus = "SFX"
+		_sfx.max_distance = SFX_RANGE
+		_sfx.attenuation = 1.5
+		_sfx.volume_db = SFX_DB
+		if ResourceLoader.exists(RISE_SFX):
+			_sfx.stream = load(RISE_SFX)
+		add_child(_sfx)
+	if _sfx.stream != null:
+		_sfx.pitch_scale = pitch * randf_range(0.92, 1.08)
+		_sfx.play()
 
 
 func _hurt() -> void:
