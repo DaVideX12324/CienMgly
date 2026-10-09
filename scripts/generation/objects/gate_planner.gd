@@ -51,20 +51,51 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 			gate_cells[c] = true
 	var reach := _reach(result, gate_cells)
 	var made := 0
+	# przełącznik (klucz / płyta) wybierany OD bramy: po drodze gracza ~switch_distance kratek, w części dostępnej
+	# bez tej bramy. Łańcuch: najpierw bramy przy części startowej, potem te za nimi (dostępne po ich otwarciu) —
+	# przełącznik bramy dalszej leży za bramą bliższą, przy niej (rozwiązywalne po kolei).
+	var levers: Array = []
+	levers.resize(canals.gates.size())
+	levers.fill(NONE)
+	var opened := {}
+	var assigned := {}
+	var gate_area := {}   # brama -> część mapy, w której leży jej przełącznik (i szukany zamek)
+	var target := int(cfg.get("switch_distance", 14))
+	var progress := true
+	while progress and assigned.size() < canals.gates.size():
+		progress = false
+		var blocked := {}
+		for gj in range(canals.gates.size()):
+			if not opened.has(gj):
+				for c: Vector2i in canals.gates[gj]:
+					blocked[c] = true
+		var area := _reach(result, blocked)
+		for gi in range(canals.gates.size()):
+			if assigned.has(gi):
+				continue
+			var key := _switch_cell(result, canals.gates[gi], area, blocked, levers, target)
+			if key == NONE:
+				continue
+			levers[gi] = key
+			gate_area[gi] = area
+			assigned[gi] = true
+			opened[gi] = true
+			progress = true
 	for gi in range(canals.gates.size()):
-		var key: Vector2i = canals.levers[gi] if gi < canals.levers.size() else NONE
+		if levers[gi] == NONE:
+			levers[gi] = _fallback_key(result, canals.gates[gi], reach, levers)
+			gate_area[gi] = reach
+	canals.levers = levers
+	for gi in range(canals.gates.size()):
+		var key: Vector2i = canals.levers[gi]
 		var lock := NONE
 		var opener := ""
-		if key == NONE or not reach.has(key):
-			# miejsce dźwigni wybrane przed czyszczeniem siatki / ścianami działowymi mogło wypaść z części startowej
-			key = _fallback_key(result, canals.gates[gi], reach, canals.levers)
-			if gi < canals.levers.size():
-				canals.levers[gi] = key
-		if key != NONE and reach.has(key):
+		var area: Dictionary = gate_area.get(gi, reach)
+		if key != NONE and area.has(key):
 			if has_plate and (not has_lock or rng.randf() < float(cfg.get("plate_chance", 0.5))):
 				opener = "plate"
 			elif has_lock:
-				lock = _lock_cell(result, canals.gates[gi], reach, gate_cells)
+				lock = _lock_cell(result, canals.gates[gi], area, gate_cells)
 				if lock != NONE:
 					opener = "lock"
 					lock = lock + Vector2i(0, -1) if on_wall else lock   # kotwica jak ozdoby lica (facade_base_on_wall)
@@ -241,6 +272,49 @@ static func _reach(result, gate_cells: Dictionary) -> Dictionary:
 			seen[n] = true
 			q.append(n)
 	return seen
+
+
+## Miejsce przełącznika (klucz / płyta) bramy: przeszukiwanie po części startowej (reach) od kratek przy bramie;
+## kratka o odległości drogi najbliższej `target` (pokój / sala +0, korytarz / chodnik +3 do kary), bez wody, kładek,
+## barierek, kratownic, portali, korytarzy serwisowych i ścian 1w, >= 3 kratki od przełączników innych bram.
+static func _switch_cell(result, gate: Array, reach: Dictionary, gate_cells: Dictionary, others: Array, target: int) -> Vector2i:
+	var canals = result.canals
+	var dist := {}
+	var q: Array[Vector2i] = []
+	for c: Vector2i in gate:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if reach.has(n) and not dist.has(n) and not gate_cells.has(n):
+				dist[n] = 1
+				q.append(n)
+	var best := NONE
+	var bs := 1 << 30
+	var h := 0
+	while h < q.size():
+		var c := q[h]
+		h += 1
+		var dc: int = dist[c]
+		if dc > target * 3:
+			break
+		var ok: bool = dc >= 4 and not canals.water.has(c) and not canals.bridge_cells.has(c) and not canals.rail_cells.has(c) 				and not canals.grating.has(c) and not canals.service.has(c) and not canals.walls_1w.has(c) 				and not result.portal_zone.has(c)
+		if ok:
+			for o in others:
+				var ov: Vector2i = o
+				if ov != NONE and maxi(absi(ov.x - c.x), absi(ov.y - c.y)) < 3:
+					ok = false
+					break
+		if ok:
+			var a := String(canals.areas.get(c, ""))
+			var score: int = absi(dc - target) + (0 if a.begins_with("room:") or a.begins_with("hall:") else 3)
+			if score < bs:
+				bs = score
+				best = c
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if reach.has(n) and not dist.has(n) and not gate_cells.has(n):
+				dist[n] = dc + 1
+				q.append(n)
+	return best
 
 
 ## Zastępcze miejsce klucza / płyty: kratka pokoju albo sali osiągalna z wejścia bez bram, bez wody, chodników,
