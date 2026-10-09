@@ -1,10 +1,11 @@
 extends RefCounted
 
-## Stan zagadek bram poziomu w LevelStateManager (zapis gry): podniesione klucze (spawned_items, prefiks
-## KEY_PREFIX) i otwarte bramy (destroyed_gates, prefiks GATE_PREFIX). Klucze są wspólne dla poziomu:
-## dostępne = podniesione - użyte (każdy zamek zużywa jeden).
+## Stan zagadek bram poziomu w LevelStateManager (zapis gry): podniesione i zużyte klucze (spawned_items, prefiksy
+## KEY_PREFIX / KEY_USED_PREFIX) i otwarte bramy (destroyed_gates, prefiks GATE_PREFIX — zamkiem albo płytą).
+## Klucze są wspólne dla poziomu: dostępne = podniesione - zużyte (każdy zamek zużywa jeden).
 
 const KEY_PREFIX := "gate_key:"
+const KEY_USED_PREFIX := "gate_key_used:"
 const GATE_PREFIX := "sewer_gate:"
 
 
@@ -19,10 +20,18 @@ static func keys_available(node: Node) -> int:
 		if String(s).begins_with(KEY_PREFIX):
 			taken += 1
 	var used := 0
-	for s in state.get("destroyed_gates", []):
-		if String(s).begins_with(GATE_PREFIX):
+	for s in state.get("spawned_items", []):
+		if String(s).begins_with(KEY_USED_PREFIX):
 			used += 1
 	return taken - used
+
+
+## Klucz zużyty w zamku bramy gate_id.
+static func use_key(node: Node, gate_id: String) -> void:
+	var lsm := _lsm(node)
+	var path := level_path(node)
+	if lsm != null and not path.is_empty():
+		lsm.mark_item_spawned(path, KEY_USED_PREFIX + gate_id)
 
 
 static func is_key_taken(node: Node, key_id: String) -> bool:

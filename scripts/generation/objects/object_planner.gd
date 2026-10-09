@@ -298,7 +298,7 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 		var want := def.density * total / 100.0
 		target = int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 	if target <= 0:
-		_place_chamber_extra(def, marker, rng)
+		_place_room_extra(def, marker, rng)
 		return
 	var placed := 0
 	if not pref.is_empty():
@@ -311,18 +311,19 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 		if placed >= target:
 			break
 		placed = _pick(def, marker, cands, rng, target, placed)
-	_place_chamber_extra(def, marker, rng)
+	_place_room_extra(def, marker, rng)
 
 
-## Dodatkowe sztuki w komnatach za ścianami działowymi: chamber_density na 100 kandydatów w komnatach.
-func _place_chamber_extra(def: ObjectDef, marker: int, rng: RandomNumberGenerator) -> void:
-	if def.chamber_density <= 0.0 or f.chamber_first >= f.room_count:
+## Dodatkowe sztuki w pokojach (poza portalowymi) i komnatach za ścianami działowymi: room_density na 100
+## kandydatów w nich — pomieszczenia zastawione gęściej niż korytarze i promenady.
+func _place_room_extra(def: ObjectDef, marker: int, rng: RandomNumberGenerator) -> void:
+	if def.room_density <= 0.0:
 		return
 	var cands := PackedInt32Array()
 	for i in _candidates(def):
-		if f.room[i] >= f.chamber_first:
+		if f.room[i] >= 0 and not f.portal_rooms.has(f.room[i]):
 			cands.append(i)
-	var want := def.chamber_density * cands.size() / 100.0
+	var want := def.room_density * cands.size() / 100.0
 	var extra := int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 	if extra > 0:
 		_pick(def, marker, cands, rng, extra, 0)

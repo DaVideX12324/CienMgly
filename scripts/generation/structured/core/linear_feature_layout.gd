@@ -48,7 +48,8 @@ var complexes: Dictionary = {}  # cid -> {segs: Array, mask: Dictionary, pinch: 
 ## Bramy i dźwignie przy korytarzach serwisowych
 var gates: Array = []
 var levers: Array = []        # wyrównane z gates ((-1, -1) = brak); dziś miejsce klucza do zamka bramy
-var gate_locks: Array = []    # wyrównane z gates: kotwica zamka na licu, (-1, -1) = brama nie powstaje (GatePlanner)
+var gate_locks: Array = []    # wyrównane z gates: kotwica zamka na licu, (-1, -1) = brak zamka (GatePlanner)
+var gate_openers: Array = []  # wyrównane z gates: "lock" / "plate" / "" (brama nie powstaje)
 var service: Dictionary = {}  # Vector2i -> bool
 
 ## Obszar kratki podłogi: &"hall:<cid>" (kompleks), &"room:<i>" (pokój), &"corridor" (korytarze, chodniki).
@@ -65,7 +66,7 @@ var grating_shapes: Array = []
 var grating: Dictionary = {}
 
 ## Komnaty za ścianami działowymi kompleksów (complex_partitions): Array[Array[Vector2i]] — planer obiektów
-## traktuje każdą jak pokój (meble per_chamber, dodatkowa gęstość chamber_density, ramki na licu).
+## traktuje każdą jak pokój (meble per_chamber, dodatkowa gęstość room_density, ramki na licu).
 var chambers: Array = []
 
 

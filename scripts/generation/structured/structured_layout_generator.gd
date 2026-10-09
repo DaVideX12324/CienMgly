@@ -161,7 +161,7 @@ static func generate_layout(
 			GenProgress.end(&"terrain")
 			GenProgress.begin(&"objects")
 			if not catalog.gates.is_empty():
-				stats["gates"] = GatePlannerScript.select(result, flags.facade_base_on_wall)
+				stats["gates"] = GatePlannerScript.select(result, flags.facade_base_on_wall, catalog.gates)
 			result.objects = ObjectPlanner.plan_objects(result, catalog, result.seed_used)
 			if not catalog.wall_defs.is_empty():
 				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects, catalog.defs)

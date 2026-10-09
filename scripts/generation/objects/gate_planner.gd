@@ -1,18 +1,21 @@
 extends RefCounted
 
-## Bramy korytarzy serwisowych (canals.gates — 3 kratki w poprzek korytarza) jako zagadka „klucz -> zamek":
-## - bariera z kolców (scena "barrier", tryb BARRIER) na każdej kratce bramy — blokuje przejście;
-## - zamek na licu ściany (scena "lock") najbliżej bramy po stronie wejścia (BFS do LOCK_RADIUS kratek);
-##   kratka podłogi pod licem = dojście do zamka;
-## - klucz (scena "key") w miejscu canals.levers (pokój / sala osiągalna z wejścia bez przechodzenia przez bramy,
-##   ~18 kratek od bramy) — każdy klucz osiągalny, więc zagadka zawsze rozwiązywalna.
-## Klucze są wspólne dla poziomu (licznik: podniesione - użyte), zamek po włożeniu klucza otwiera swoją bramę.
-## Brama bez miejsca na zamek albo bez klucza nie powstaje (korytarz zostaje otwarty).
+## Bramy korytarzy serwisowych (canals.gates — 3 kratki w poprzek korytarza): bariera z kolców (scena "barrier",
+## tryb BARRIER) na każdej kratce bramy blokuje przejście; otwiera ją jedna z dwóch zagadek:
+## - „klucz -> zamek": zamek na licu ściany (scena "lock") najbliżej bramy po stronie wejścia (BFS do LOCK_RADIUS
+##   kratek; kratka podłogi pod licem = dojście), klucz (scena "key") w miejscu canals.levers. Klucze wspólne dla
+##   poziomu (podniesione - użyte), zamek po włożeniu klucza otwiera swoją bramę;
+## - płyta naciskowa (scena "plate") w miejscu canals.levers: gracz staje -> płyta wciśnięta na stałe, brama otwarta.
+## Miejsce dźwigni (canals.levers) leży w pokoju / sali osiągalnej z wejścia bez przechodzenia przez bramy, ~18 kratek
+## od bramy — zagadka zawsze rozwiązywalna. Z szansą `plate_chance` (katalog "gates") płyta, inaczej zamek; bez
+## miejsca na zamek — płyta; bez sceny płyty i bez zamka — brama nie powstaje.
 ##
-## select() — w generatorze układu przed planerem obiektów: canals.gate_locks (kratka lica, wyrównane z gates;
-## (-1, -1) = brak). ObjectPlanner trzyma z dala obiekty, WallDecorPlanner — ozdoby lica.
+## select() — w generatorze układu przed planerem obiektów: canals.gate_openers ("lock" / "plate" / "", wyrównane
+## z gates) i canals.gate_locks (kratka lica, (-1, -1) = brak). ObjectPlanner trzyma z dala obiekty,
+## WallDecorPlanner — ozdoby lica.
 ## emit() — po planerach: sceny w ObjectPlan (ObjectPlacement.link = id bramy).
-## Katalog obiektów: "gates": {"barrier": "res://…", "barrier_column": "res://…", "lock": "res://…", "key": "res://…"}
+## Katalog obiektów: "gates": {"barrier": "res://…", "barrier_column": "res://…", "lock": "res://…", "key": "res://…",
+##   "plate": "res://…", "plate_chance": 0.5}
 ## — barrier_column (opcjonalnie): brama w kolumnie kratek (korytarz poziomy) — niskie kolce, żeby wysokie nie
 ## zlewały się w jeden słup.
 
@@ -21,11 +24,16 @@ const MIN_FACE_H := 3
 const NONE := Vector2i(-1, -1)
 
 
-static func select(result, on_wall: bool) -> int:
+static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 	var canals = result.canals
 	if canals == null or not "gates" in canals or canals.gates.is_empty():
 		return 0
 	canals.gate_locks = []
+	canals.gate_openers = []
+	var has_plate := not String(cfg.get("plate", "")).is_empty()
+	var has_lock := not String(cfg.get("lock", "")).is_empty() and not String(cfg.get("key", "")).is_empty()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([result.seed_used, "gates"])
 	var grid: Dictionary = result.grid
 	var gate_cells := {}
 	for g in canals.gates:
@@ -36,12 +44,26 @@ static func select(result, on_wall: bool) -> int:
 	for gi in range(canals.gates.size()):
 		var key: Vector2i = canals.levers[gi] if gi < canals.levers.size() else NONE
 		var lock := NONE
+		var opener := ""
+		if key == NONE or not reach.has(key):
+			# miejsce dźwigni wybrane przed czyszczeniem siatki / ścianami działowymi mogło wypaść z części startowej
+			key = _fallback_key(result, canals.gates[gi], reach)
+			if gi < canals.levers.size():
+				canals.levers[gi] = key
 		if key != NONE and reach.has(key):
-			lock = _lock_cell(result, canals.gates[gi], reach, gate_cells)
-		if lock != NONE:
+			if has_plate and (not has_lock or rng.randf() < float(cfg.get("plate_chance", 0.5))):
+				opener = "plate"
+			elif has_lock:
+				lock = _lock_cell(result, canals.gates[gi], reach, gate_cells)
+				if lock != NONE:
+					opener = "lock"
+					lock = lock + Vector2i(0, -1) if on_wall else lock   # kotwica jak ozdoby lica (facade_base_on_wall)
+				elif has_plate:
+					opener = "plate"
+		if not opener.is_empty():
 			made += 1
-			lock = lock + Vector2i(0, -1) if on_wall else lock   # kotwica jak ozdoby lica (facade_base_on_wall)
 		canals.gate_locks.append(lock)
+		canals.gate_openers.append(opener)
 	return made
 
 
@@ -68,6 +90,26 @@ static func _reach(result, gate_cells: Dictionary) -> Dictionary:
 			seen[n] = true
 			q.append(n)
 	return seen
+
+
+## Zastępcze miejsce klucza / płyty: kratka pokoju albo sali osiągalna z wejścia bez bram, bez wody, chodników,
+## korytarzy serwisowych, kładek, barierek, kratownic i portali, najbliżej 18 kratek (Manhattan) od bramy.
+static func _fallback_key(result, gate: Array, reach: Dictionary) -> Vector2i:
+	var canals = result.canals
+	var gc: Vector2i = gate[1]
+	var best := NONE
+	var bd := 1 << 30
+	for c: Vector2i in reach:
+		var a := String(canals.areas.get(c, ""))
+		if not (a.begins_with("room:") or a.begins_with("hall:")):
+			continue
+		if canals.water.has(c) or canals.lanes.has(c) or canals.service.has(c) or canals.bridge_cells.has(c) 				or canals.rail_cells.has(c) or canals.grating.has(c) or result.portal_zone.has(c):
+			continue
+		var d: int = absi(absi(c.x - gc.x) + absi(c.y - gc.y) - 18)
+		if d < bd or (d == bd and (c.y < best.y or (c.y == best.y and c.x < best.x))):
+			bd = d
+			best = c
+	return best
 
 
 ## Kratka podłogi pod licem (ściana >= MIN_FACE_H nad nią) najbliżej bramy, w części osiągalnej z wejścia.
@@ -120,18 +162,19 @@ static func _face_above(result, c: Vector2i) -> bool:
 ## Kratki zajęte przez zagadki bram (bramy, klucze, dojścia do zamków) — planer obiektów ich nie zastawia.
 static func reserved_cells(canals) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
-	if canals == null or not "gate_locks" in canals:
+	if canals == null or not "gate_openers" in canals:
 		return out
-	for gi in range(mini(canals.gates.size(), canals.gate_locks.size())):
-		var lock: Vector2i = canals.gate_locks[gi]
-		if lock == NONE:
+	for gi in range(mini(canals.gates.size(), canals.gate_openers.size())):
+		if String(canals.gate_openers[gi]).is_empty():
 			continue
 		for c: Vector2i in canals.gates[gi]:
 			out.append(c)
 		out.append(canals.levers[gi])
-		out.append(lock)
-		out.append(lock + Vector2i(0, 1))
-		out.append(lock + Vector2i(0, 2))
+		var lock: Vector2i = canals.gate_locks[gi]
+		if lock != NONE:
+			out.append(lock)
+			out.append(lock + Vector2i(0, 1))
+			out.append(lock + Vector2i(0, 2))
 	return out
 
 
@@ -157,26 +200,30 @@ static func gate_id(gate: Array) -> String:
 ## Sceny bram, zamków i kluczy do ObjectPlan (po planerach obiektów i ozdób lica).
 static func emit(result, scenes: Dictionary, objects: ObjectPlan) -> int:
 	var canals = result.canals
-	if objects == null or scenes.is_empty() or canals == null or not "gate_locks" in canals:
+	if objects == null or scenes.is_empty() or canals == null or not "gate_openers" in canals:
 		return 0
 	var barrier_def := _def(&"gate_barrier", String(scenes.get("barrier", "")), &"")
 	var lock_def := _def(&"gate_lock", String(scenes.get("lock", "")), &"facade")
 	var key_def := _def(&"gate_key", String(scenes.get("key", "")), &"")
+	var plate_def := _def(&"gate_plate", String(scenes.get("plate", "")), &"")
 	var column_def := _def(&"gate_barrier", String(scenes.get("barrier_column", scenes.get("barrier", ""))), &"")
-	if barrier_def.scene.is_empty() or lock_def.scene.is_empty() or key_def.scene.is_empty():
+	if barrier_def.scene.is_empty():
 		return 0
 	var made := 0
-	for gi in range(mini(canals.gates.size(), canals.gate_locks.size())):
-		var lock: Vector2i = canals.gate_locks[gi]
-		if lock == NONE:
+	for gi in range(mini(canals.gates.size(), canals.gate_openers.size())):
+		var opener := String(canals.gate_openers[gi])
+		if opener.is_empty():
 			continue
 		var id := gate_id(canals.gates[gi])
 		var gate: Array = canals.gates[gi]
 		var column: bool = gate[0].x == gate[2].x
 		for c: Vector2i in gate:
 			_add(objects, column_def if column else barrier_def, c, id)
-		_add(objects, lock_def, lock, id)
-		_add(objects, key_def, canals.levers[gi], id)
+		if opener == "lock":
+			_add(objects, lock_def, canals.gate_locks[gi], id)
+			_add(objects, key_def, canals.levers[gi], id)
+		else:
+			_add(objects, plate_def, canals.levers[gi], id)
 		made += 1
 	if made > 0:
 		objects.stats[&"gates"] = made

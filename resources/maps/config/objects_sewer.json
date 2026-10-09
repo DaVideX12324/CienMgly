@@ -10,7 +10,9 @@
     "barrier": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier.tscn",
     "barrier_column": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_short.tscn",
     "lock": "res://modules/quiz_rpg/scenes/objects/sewer/wall_lock.tscn",
-    "key": "res://modules/quiz_rpg/scenes/objects/sewer/gate_key.tscn"
+    "key": "res://modules/quiz_rpg/scenes/objects/sewer/gate_key.tscn",
+    "plate": "res://modules/quiz_rpg/scenes/objects/sewer/pressure_plate.tscn",
+    "plate_chance": 0.5
   },
   "groups": {
     "pillar_decor": {
@@ -328,7 +330,7 @@
           -7
         ]
       },
-      "per_room": 0.3,
+      "per_room": 0.5,
       "atlas": [
         2,
         5
@@ -414,7 +416,7 @@
       ],
       "stack": true,
       "canal_gap": 1,
-      "chamber_density": 4
+      "room_density": 4
     },
     {
       "id": "barrels",
@@ -437,7 +439,7 @@
         2
       ],
       "stack": true,
-      "chamber_density": 4
+      "room_density": 4
     },
     {
       "id": "wrecks",
@@ -471,37 +473,7 @@
         ]
       ],
       "source": 1,
-      "chamber_density": 1.5
-    },
-    {
-      "id": "copper_blocks",
-      "group": "wrecks",
-      "shape": {
-        "rect": [
-          14,
-          10
-        ],
-        "offset": [
-          0,
-          -7
-        ]
-      },
-      "atlas": [
-        5,
-        13
-      ],
-      "variants": [
-        [
-          5,
-          13
-        ],
-        [
-          5,
-          14
-        ]
-      ],
-      "source": 1,
-      "chamber_density": 1.5
+      "room_density": 1.5
     },
     {
       "id": "floor_holes",
@@ -776,7 +748,7 @@
         1,
         2
       ],
-      "chamber_density": 8
+      "room_density": 8
     },
     {
       "id": "wall_round_grates",
@@ -790,31 +762,7 @@
         1,
         2
       ],
-      "chamber_density": 6
-    },
-    {
-      "id": "wall_switches",
-      "group": "wall_details",
-      "density": 0.6,
-      "atlas": [
-        0,
-        0
-      ],
-      "variants": [
-        [
-          0,
-          0
-        ],
-        [
-          1,
-          0
-        ]
-      ],
-      "source": 1,
-      "size": [
-        1,
-        2
-      ]
+      "room_density": 6
     },
     {
       "id": "wall_frames",
@@ -843,7 +791,7 @@
         1,
         2
       ],
-      "chamber_density": 18
+      "room_density": 18
     },
     {
       "id": "wall_arch_big",
@@ -1047,7 +995,7 @@
           -7
         ]
       },
-      "per_room": 0.3,
+      "per_room": 0.4,
       "atlas": [
         0,
         6
@@ -1120,7 +1068,7 @@
         ]
       ],
       "source": 1,
-      "chamber_density": 1.5
+      "room_density": 1.5
     },
     {
       "id": "wall_pillar",
