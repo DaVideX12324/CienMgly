@@ -1358,8 +1358,6 @@ func _enemy_turn() -> void:
 				_flash_sprite(player_sprite_node, Color.RED)
 				HitParticles.create_at(player, player.global_position, Color.RED, 6)
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
-		if actual_damage > 0:
-			_try_poison(enemy_label)
 		_update_hp_bars()
 		_refresh_stats_panel()
 		await get_tree().create_timer(1.0).timeout
@@ -1369,16 +1367,6 @@ func _enemy_turn() -> void:
 	if await _apply_poison_round():
 		return
 	_start_player_turn()
-
-
-## Trafienie wroga z poison_chance zatruwa lidera (status zostaje po walce — PlayerStats).
-func _try_poison(enemy_label: String) -> void:
-	var chance := float(enemy.get("poison_chance")) if enemy and "poison_chance" in enemy else 0.0
-	if chance <= 0.0 or _ps == null or not _ps.has_method("add_status") or randf() >= chance:
-		return
-	if _ps.add_status(0, "poison"):
-		_push_log("%s zatruwa! Zatrucie." % enemy_label, POISON_COLOR)
-		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Zatrucie!", POISON_COLOR, 12)
 
 
 ## Koniec rundy wrogów: trucizna zabiera zatrutym część maks. HP (w walce może zbić do 0 — decyzja usera).
