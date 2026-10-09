@@ -54,6 +54,12 @@ collision_mask = 1
 [node name="Shape" type="CollisionShape2D" parent="Trigger"]
 shape = SubResource("RectangleShape2D_trigger")
 
+[node name="Proximity" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Proximity"]
+
 [node name="BlockShape" type="CollisionShape2D" parent="."]
 position = Vector2(0, 2)
 shape = SubResource("RectangleShape2D_block")

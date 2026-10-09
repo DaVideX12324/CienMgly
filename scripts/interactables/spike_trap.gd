@@ -2,23 +2,28 @@ extends StaticBody2D
 class_name SpikeTrap
 
 ## Kolce w posadzce (paczka Sewer: otwory Props (4,14), kolumna kolca: grot (3,9), pręt (0,13), podstawa (1,13)).
-## Tryb TRAP: lider (postać gracza) wchodzi na kratkę -> po rise_delay kolce się wysuwają; jeśli lider nadal na
-## kratce, cała drużyna traci damage_fraction maks. HP (PlayerStats.damage_party_percent, bez zabijania); po up_time
-## kolce się chowają, potem cooldown.
-## Tryb BARRIER: kolce wysunięte z kolizją (blokują przejście); open() chowa je na stałe (dźwignia / klucz),
-## close() wysuwa z powrotem.
+## Obrażenia: lider (postać gracza) na kratce przy wysunięciu albo wejście na wysunięte kolce -> cała drużyna traci
+## damage_fraction maks. HP (PlayerStats.damage_party_percent, bez zabijania), najwyżej raz na jedno wysunięcie.
+## Tryby:
+## - TIMER: kolce chowają się i wysuwają w rytmie down_time / up_time; faza z pozycji (grupa daje „falę”).
+## - PROXIMITY: jednorazowo — lider w promieniu proximity_radius -> po rise_delay wysunięcie, po up_time schowanie
+##   na stałe.
+## - BARRIER: kolce wysunięte z kolizją (blokują przejście); open() chowa je (dźwignia / klucz), close() wysuwa.
 
-enum Mode { TRAP, BARRIER }
+enum Mode { TIMER, PROXIMITY, BARRIER }
 
-@export var mode: Mode = Mode.TRAP
+@export var mode: Mode = Mode.TIMER
 @export_range(0.0, 1.0, 0.01) var damage_fraction := 0.1
-@export var rise_delay := 0.35
 @export var up_time := 0.8
-@export var cooldown := 0.6
+@export var down_time := 1.6
+@export var rise_delay := 0.25
+@export var proximity_radius := 28.0
 
 var is_up := false
-var _busy := false
 var _leader_inside := false
+var _hurt_this_rise := false
+var _used := false
+var _clock := 0.0
 
 @onready var _holes: Sprite2D = $Holes
 @onready var _spike: Node2D = $Spike
@@ -28,8 +33,19 @@ var _leader_inside := false
 func _ready() -> void:
 	add_to_group("spike_traps")
 	_set_up(mode == Mode.BARRIER)
-	$Trigger.body_entered.connect(_on_body_entered)
-	$Trigger.body_exited.connect(_on_body_exited)
+	$Trigger.body_entered.connect(_on_trigger_entered)
+	$Trigger.body_exited.connect(_on_trigger_exited)
+	if mode == Mode.PROXIMITY:
+		var shape := CircleShape2D.new()
+		shape.radius = proximity_radius
+		$Proximity/Shape.shape = shape
+		$Proximity.body_entered.connect(_on_proximity_entered)
+	else:
+		$Proximity.monitoring = false
+	# faza czasomierza z pozycji — sąsiednie kolce wysuwają się kolejno
+	var cycle := up_time + down_time
+	_clock = fposmod(global_position.x * 0.013 + global_position.y * 0.007, 1.0) * cycle
+	set_process(mode == Mode.TIMER)
 
 
 func open() -> void:
@@ -40,11 +56,22 @@ func close() -> void:
 	_set_up(true)
 
 
+func _process(delta: float) -> void:
+	_clock = fposmod(_clock + delta, up_time + down_time)
+	var want_up := _clock >= down_time
+	if want_up != is_up:
+		_set_up(want_up)
+		if want_up:
+			_on_rise()
+
+
 func _set_up(up: bool) -> void:
 	is_up = up
 	_spike.visible = up
 	_holes.visible = not up
-	# blokada tylko w trybie BARRIER (pułapka nie zamyka drogi — rani)
+	if up:
+		_hurt_this_rise = false
+	# kolizja tylko w trybie BARRIER (pułapki ranią, nie zamykają drogi)
 	_blocker.set_deferred("disabled", not (up and mode == Mode.BARRIER))
 
 
@@ -52,40 +79,48 @@ func _is_leader(body: Node) -> bool:
 	return body.is_in_group("player") or body.name == "Player"
 
 
-func _on_body_entered(body: Node2D) -> void:
+func _on_trigger_entered(body: Node2D) -> void:
 	if not _is_leader(body):
 		return
 	_leader_inside = true
-	if mode == Mode.TRAP and not _busy and not is_up:
-		_trigger()
+	if is_up and mode != Mode.BARRIER:
+		_hurt()
 
 
-func _on_body_exited(body: Node2D) -> void:
+func _on_trigger_exited(body: Node2D) -> void:
 	if _is_leader(body):
 		_leader_inside = false
 
 
-func _trigger() -> void:
-	_busy = true
+func _on_proximity_entered(body: Node2D) -> void:
+	if _used or not _is_leader(body):
+		return
+	_used = true
 	await get_tree().create_timer(rise_delay).timeout
 	if not is_inside_tree():
 		return
 	_set_up(true)
+	_on_rise()
+	await get_tree().create_timer(up_time).timeout
+	if is_inside_tree():
+		_set_up(false)
+
+
+func _on_rise() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio and audio.has_method("play_sfx_by_name"):
 		audio.play_sfx_by_name("spikes")
 	if _leader_inside:
-		var ps := _get_module_singleton("PlayerStats")
-		if ps and ps.has_method("damage_party_percent"):
-			ps.damage_party_percent(damage_fraction)
-	await get_tree().create_timer(up_time).timeout
-	if not is_inside_tree():
+		_hurt()
+
+
+func _hurt() -> void:
+	if _hurt_this_rise:
 		return
-	_set_up(false)
-	await get_tree().create_timer(cooldown).timeout
-	_busy = false
-	if _leader_inside and is_inside_tree():
-		_trigger()
+	_hurt_this_rise = true
+	var ps := _get_module_singleton("PlayerStats")
+	if ps and ps.has_method("damage_party_percent"):
+		ps.damage_party_percent(damage_fraction)
 
 
 func _get_module_singleton(singleton_name: String) -> Node:
