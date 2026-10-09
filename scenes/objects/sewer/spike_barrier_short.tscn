@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier.tscn" id="1_base"]
+
+[node name="SpikeBarrierShort" instance=ExtResource("1_base")]
+
+[node name="Rod" parent="Spike" index="1"]
+visible = false
+
+[node name="Tip" parent="Spike" index="2"]
+position = Vector2(0, -16)

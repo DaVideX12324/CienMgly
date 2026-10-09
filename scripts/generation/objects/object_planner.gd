@@ -13,6 +13,7 @@ extends RefCounted
 ## 4. Weryfikacja osiągalności: teren odcięty przez przeszkody -> zdejmij przeszkody przy nim.
 
 const GenProgress = preload("../core/gen_progress.gd")
+const GatePlannerScript = preload("gate_planner.gd")
 
 const PORTAL_RING := 2
 const STAIR_RING := 1
@@ -133,6 +134,9 @@ func _forbid(result) -> void:
 			for c in canals.grating:
 				if f.in_bounds(c):
 					plan.occupancy[f.idx(c)] |= ObjectPlan.NO_DECAL
+	# zagadki bram: bariery, klucze, dojścia do zamków
+	for c in GatePlannerScript.reserved_cells(canals):
+		_forbid_ring(c, 1, true)
 	for c in result.portal_zone:
 		_forbid_ring(c, PORTAL_RING, true)
 	_forbid_ring(result.player_spawn, SPAWN_RING, true)

@@ -11,6 +11,7 @@ extends RefCounted
 const MIN_FACE_H := 3
 const MARGIN := 1
 const PORTAL_MARGIN := 2
+const GatePlannerScript = preload("gate_planner.gd")
 
 
 static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationFlags, objects: ObjectPlan,
@@ -420,6 +421,7 @@ static func _face_slots(result, on_wall: bool) -> Dictionary:
 		for dy in range(-PORTAL_MARGIN, PORTAL_MARGIN + 1):
 			for dx in range(-PORTAL_MARGIN, PORTAL_MARGIN + 1):
 				near_portal[p + Vector2i(dx, dy)] = true
+	var locks := GatePlannerScript.lock_face_cells(result.canals)  # zamki bram na licu — bez ozdób obok
 	var out := {}
 	for y in range(1, result.height - 1):
 		for x in range(result.width):
@@ -436,6 +438,8 @@ static func _face_slots(result, on_wall: bool) -> Dictionary:
 			if not tall:
 				continue
 			var anchor := Vector2i(x, y) if on_wall else below
+			if locks.has(anchor):
+				continue
 			out[anchor] = &"over_canal" if water.has(below) else &"over_floor"
 	return out
 
