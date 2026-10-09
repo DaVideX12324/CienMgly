@@ -66,14 +66,15 @@
       "placement": "grid",
       "source": 1,
       "collision": "tile",
-      "density": 0.25,
+      "density": 0.15,
       "spacing": 2,
       "prefer": [
         "wall_any",
         "corner"
       ],
       "flip_h": true,
-      "set": "junk"
+      "set": "junk",
+      "big": true
     },
     "furniture": {
       "class": "PROP",
@@ -472,8 +473,7 @@
           2
         ]
       ],
-      "source": 1,
-      "room_density": 1.5
+      "source": 1
     },
     {
       "id": "floor_holes",
@@ -1174,8 +1174,7 @@
           4
         ]
       ],
-      "source": 1,
-      "room_density": 1.5
+      "source": 1
     },
     {
       "id": "wall_pillar",

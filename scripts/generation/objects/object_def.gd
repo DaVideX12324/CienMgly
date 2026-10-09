@@ -44,6 +44,7 @@ var avoid: Array[StringName] = []     # tagi wykluczające
 var require: Array[StringName] = []   # tagi wymagane WSZYSTKIE (AND) — np. ["room"] + context ["wall_any"]
 var prefer: Array[StringName] = []    # tagi próbowane najpierw (nisza, ślepy zaułek…), potem reszta
 var per_room: float = 0.0             # >0: w każdym pokoju poza portalowymi szansa na 1 sztukę (zamiast density)
+var force_big: bool = false            # katalog "big": licz jako duży obiekt (wagi obszarów, zestawy) mimo rozmiaru
 var per_chamber: float = 0.0          # jak per_room, ale w komnatach za ścianami działowymi (canals.chambers)
 var room_density: float = 0.0         # dodatkowe sztuki na 100 kandydatów w pokojach (poza portalowymi) i komnatach
                                       # (podłoga; obiekty lica — na licu nad nimi)
@@ -120,6 +121,8 @@ func is_solid() -> bool:
 ## Duży obiekt: z kolizją (PROP) i wielokratkowy (sprite / podstawa > 1 kratka) albo z kształtem kolizji na
 ## >= 80 % kratki. Takie obiekty planer stawia głównie w pokojach (katalog: area_weights).
 func is_big() -> bool:
+	if force_big:
+		return true
 	if not is_solid() or klass != Klass.PROP:
 		return false
 	if size.x * size.y > 1 or footprint.size() > 1:

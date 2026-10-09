@@ -17,7 +17,7 @@ extends RefCounted
 const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
-	"per_chamber", "room_density",
+	"per_chamber", "room_density", "big",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
 	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "span_floor", "canal_end", "canal_end_dy", "canal_end_on", "facade_h", "layer", "stack", "set", "canal_gap", "facing", "facing_pref",
@@ -346,6 +346,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 				errors.append("%s: nieznany tag w %s '%s'." % [tag, key, t])
 	def.per_room = clampf(float(m.get("per_room", 0.0)), 0.0, 1.0)
 	def.per_chamber = clampf(float(m.get("per_chamber", 0.0)), 0.0, 1.0)
+	def.force_big = bool(m.get("big", false))
 	def.room_density = maxf(float(m.get("room_density", 0.0)), 0.0)
 	for lv in m.get("levels", []):
 		if String(lv) in LEVELS:
