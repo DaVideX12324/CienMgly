@@ -193,6 +193,8 @@ static func _canal_layout(st: State):
 			layout.lanes[p] = true
 		if st.service[i]:
 			layout.service[p] = true
+		if st.corrm[i] and not st.water[i] and not st.service[i]:
+			layout.corridors[p] = true
 		if st.floor_m[i] and not st.water[i]:
 			layout.areas[p] = StringName("hall:%d" % st.hall_cid[i]) if st.hall_cid[i] >= 0 else &"corridor"
 	for comp in st.chambers:

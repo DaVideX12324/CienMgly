@@ -51,6 +51,8 @@ var levers: Array = []        # wyrównane z gates ((-1, -1) = brak); dziś miej
 var gate_locks: Array = []    # wyrównane z gates: kotwica zamka na licu, (-1, -1) = brak zamka (GatePlanner)
 var gate_openers: Array = []  # wyrównane z gates: "lock" / "plate" / "" (brama nie powstaje)
 var service: Dictionary = {}  # Vector2i -> bool
+## Korytarze między pokojami / salami (StructuredRoomPacker, bez serwisowych) — bramy na korytarzach (GatePlanner)
+var corridors: Dictionary = {}  # Vector2i -> bool
 
 ## Obszar kratki podłogi: &"hall:<cid>" (kompleks), &"room:<i>" (pokój), &"corridor" (korytarze, chodniki).
 ## Liczony przed przejściami czyszczącymi — kratki dodane później nie mają wpisu.
