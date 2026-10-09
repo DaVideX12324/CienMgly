@@ -560,6 +560,7 @@ static func partitions(state: State, seed_val: int, config: Dictionary) -> int:
 			state.floor_m[i] = 0
 			state.hallm[i] = 0
 			state.hall_cid[i] = -1
+		state.chambers.append_array(z._chambers(pm, keep, cut))
 		var cells := PackedInt32Array()
 		for i in cx.get("cells", PackedInt32Array()):
 			if state.hallm[i]:
@@ -766,6 +767,46 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 				a = b + 1
 	cx.partition_walls = walls[0]
 	return cut
+
+
+## Komnaty: spójne (4) kawałki sali za promenadą (bez chodników i pasa `walkway` przy wodzie), stykające się
+## z wyciętymi ścianami działowymi; 6–300 kratek.
+func _chambers(pm: PackedByteArray, keep: PackedByteArray, cut: PackedInt32Array) -> Array:
+	var walk := int((cfg.get("complex_partitions", {}) as Dictionary).get("walkway", 3))
+	var near_water := st.dilate(st.water, walk, walk)
+	var wall := {}
+	for i in cut:
+		wall[i] = true
+	var seen := {}
+	var out: Array = []
+	for i0 in cut:
+		var x0: int = i0 % st.w
+		var y0: int = i0 / st.w
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if not st.in_map(x0 + d.x, y0 + d.y):
+				continue
+			var s0: int = (y0 + d.y) * st.w + x0 + d.x
+			if seen.has(s0) or wall.has(s0) or not pm[s0] or keep[s0] or near_water[s0]:
+				continue
+			var comp := PackedInt32Array([s0])
+			seen[s0] = true
+			var h := 0
+			while h < comp.size() and comp.size() <= 300:
+				var c: int = comp[h]
+				h += 1
+				var cx: int = c % st.w
+				var cy: int = c / st.w
+				for e in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					if not st.in_map(cx + e.x, cy + e.y):
+						continue
+					var n: int = (cy + e.y) * st.w + cx + e.x
+					if seen.has(n) or wall.has(n) or not pm[n] or keep[n] or near_water[n]:
+						continue
+					seen[n] = true
+					comp.append(n)
+			if comp.size() >= 6 and comp.size() <= 300:
+				out.append(comp)
+	return out
 
 
 ## Głębokość brzegu w kolumnie t po stronie k: ciąg kratek `pm` od wody.

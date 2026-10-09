@@ -24,6 +24,7 @@ var roomm := PackedByteArray()
 var corrm := PackedByteArray()
 var bridge_m := PackedByteArray()
 var hall_cid := PackedInt32Array()   # -1 = nie hala
+var chambers: Array = []              # komnaty za ścianami działowymi kompleksów: PackedInt32Array kratek
 
 ## Odcinki sieci: {x0, y0, x1, y1, axis ("h" / "v"), line, idx, dry, kind ("tunnel" / "hall"), cid,
 ## junction, bridge_t}.

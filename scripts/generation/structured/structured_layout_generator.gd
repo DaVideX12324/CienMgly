@@ -195,6 +195,13 @@ static func _canal_layout(st: State):
 			layout.service[p] = true
 		if st.floor_m[i] and not st.water[i]:
 			layout.areas[p] = StringName("hall:%d" % st.hall_cid[i]) if st.hall_cid[i] >= 0 else &"corridor"
+	for comp in st.chambers:
+		var arr: Array[Vector2i] = []
+		for i in comp:
+			if st.floor_m[i] and not st.water[i]:
+				arr.append(Vector2i(i % w, i / w))
+		if not arr.is_empty():
+			layout.chambers.append(arr)
 	for ri in st.rooms.size():
 		var r: Vector4i = st.rooms[ri]
 		var key := StringName("room:%d" % ri)

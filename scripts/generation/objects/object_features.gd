@@ -30,6 +30,7 @@ var room := PackedInt32Array()    # indeks pokoju (prostokąt z ctx.rooms) albo 
 var level := PackedByteArray()    # wysokość + HEIGHT_OFFSET
 var edge := PackedByteArray()     # 1 = sąsiaduje (8) z barierą płaskowyżu
 var room_count := 0
+var chamber_first := 0           # indeksy pokoi >= chamber_first to komnaty za ścianami działowymi
 var portal_rooms := {}            # indeks pokoju -> true (wejście / wyjście w nim albo przy nim)
 var terrain := PackedByteArray()  # TERRAIN_* — teren podłogi (trawa wygrywa z błotem)
 var floor_cells := PackedInt32Array()
@@ -214,6 +215,14 @@ func _build(result) -> void:
 			for x in range(maxi(r.position.x, 0), mini(r.end.x, width)):
 				if room[y * width + x] < 0:
 					room[y * width + x] = r_i
+	chamber_first = room_count
+	var canals = result.canals
+	if canals != null and "chambers" in canals:
+		for j in range(canals.chambers.size()):
+			for c: Vector2i in canals.chambers[j]:
+				if c.x >= 0 and c.y >= 0 and c.x < width and c.y < height and room[c.y * width + c.x] < 0:
+					room[c.y * width + c.x] = chamber_first + j
+		room_count += canals.chambers.size()
 
 	# Teren: maski z etapu obiektów (te same maluje planer kafli); bez nich — policz tym samym seedem.
 	terrain.resize(n)

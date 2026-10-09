@@ -85,6 +85,11 @@ func _run(result, catalog: ObjectCatalog) -> void:
 			if f.in_bounds(c):
 				var a := String(result.canals.areas[c])
 				area_kind[f.idx(c)] = StringName(a.get_slice(":", 0))
+		if "chambers" in result.canals:
+			for comp in result.canals.chambers:
+				for c: Vector2i in comp:
+					if f.in_bounds(c):
+						area_kind[f.idx(c)] = &"chamber"
 	for di in range(catalog.defs.size()):
 		if catalog.defs[di].klass == ObjectDef.Klass.INTERACTIVE:
 			plan.interactive_scenes[catalog.defs[di].scene] = true
@@ -270,7 +275,7 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 	var cands := _candidates(def)
 	if cands.is_empty():
 		return
-	if def.per_room > 0.0:
+	if def.per_room > 0.0 or def.per_chamber > 0.0:
 		_place_per_room(def, marker, cands, rng)
 		return
 	var total := cands.size()
@@ -293,6 +298,7 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 		var want := def.density * total / 100.0
 		target = int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 	if target <= 0:
+		_place_chamber_extra(def, marker, rng)
 		return
 	var placed := 0
 	if not pref.is_empty():
@@ -305,6 +311,21 @@ func _place_def(def: ObjectDef, marker: int) -> void:
 		if placed >= target:
 			break
 		placed = _pick(def, marker, cands, rng, target, placed)
+	_place_chamber_extra(def, marker, rng)
+
+
+## Dodatkowe sztuki w komnatach za ścianami działowymi: chamber_density na 100 kandydatów w komnatach.
+func _place_chamber_extra(def: ObjectDef, marker: int, rng: RandomNumberGenerator) -> void:
+	if def.chamber_density <= 0.0 or f.chamber_first >= f.room_count:
+		return
+	var cands := PackedInt32Array()
+	for i in _candidates(def):
+		if f.room[i] >= f.chamber_first:
+			cands.append(i)
+	var want := def.chamber_density * cands.size() / 100.0
+	var extra := int(want) + (1 if rng.randf() < want - floorf(want) else 0)
+	if extra > 0:
+		_pick(def, marker, cands, rng, extra, 0)
 
 
 ## Losowanie bez powtórzeń z `cands` (tasowanie w miejscu) aż do `target` sztuk.
@@ -350,7 +371,8 @@ func _place_per_room(def: ObjectDef, marker: int, cands: PackedInt32Array, rng: 
 		rooms[k] = rooms[j]
 		rooms[j] = t
 	for r in rooms:
-		if not by_room.has(r) or rng.randf() >= def.per_room:
+		var chance := def.per_room if r < f.chamber_first else def.per_chamber
+		if not by_room.has(r) or chance <= 0.0 or rng.randf() >= chance:
 			continue
 		var parts: Array = by_room[r]
 		if _pick(def, marker, parts[0], rng, 1, 0) == 0:

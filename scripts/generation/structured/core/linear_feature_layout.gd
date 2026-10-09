@@ -64,6 +64,10 @@ var walls_1w: Dictionary = {}  # Vector2i -> StringName
 var grating_shapes: Array = []
 var grating: Dictionary = {}
 
+## Komnaty za ścianami działowymi kompleksów (complex_partitions): Array[Array[Vector2i]] — planer obiektów
+## traktuje każdą jak pokój (meble per_chamber, dodatkowa gęstość chamber_density, ramki na licu).
+var chambers: Array = []
+
 
 func is_empty() -> bool:
 	return cells.is_empty()
