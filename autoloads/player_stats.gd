@@ -21,7 +21,7 @@ const DEF_PER_LEVEL    := 1
 const BASE_XP_TO_LEVEL := 100
 const XP_GROWTH        := 1.5
 ## Statusy członków drużyny: member["statuses"] = {id: true} (zapisywane razem z drużyną). Trucizna (decyzje usera
-## 2026-10-09): nadaje ją wróg w walce (poison_chance), trwa także w eksploracji, dopóki nie użyje się przedmiotu
+## 2026-10-09): nada ją umiejętność użyta w walce (add_status; do zrobienia), trwa także w eksploracji, dopóki nie użyje się przedmiotu
 ## leczącego statusy (cure_statuses). Poza walką 1 HP co 3 s, najwyżej do 1 HP; w walce co turę ułamek maks. HP,
 ## może zbić do 0.
 const STATUS_POISON := "poison"
