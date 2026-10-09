@@ -148,7 +148,10 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 	if ctx.has_meta(&"canal_faceless"):
 		return ctx.get_meta(&"canal_faceless")
 	var out := {}
+	var under := {}
 	ctx.set_meta(&"canal_faceless", out)
+	ctx.set_meta(&"canal_under_wall", under)
+	var cont := bool(ctx.generator_behaviour.get("tiling", {}).get("canal_end_under_wall", false))
 	var chance := float(ctx.generator_behaviour.get("tiling", {}).get("canal_end_face_chance", 1.0))
 	if chance >= 1.0:
 		return out
@@ -180,7 +183,16 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 		if u >= chance:
 			for q in run:
 				out[q] = true
+				if cont:
+					under[q + Vector2i(0, -1)] = true
 	return out
+
+
+## Kratki muru nad końcami kanałów bez lica, gdy tiling.canal_end_under_wall: kanał „płynie dalej pod ścianą" —
+## przy wyborze wariantów kwasu i obrzeży liczą się jak woda (bez krawędzi zamykającej kanał, ciemne końce obrzeży).
+static func _under_wall(ctx: GenerationContext, water: Dictionary) -> Dictionary:
+	_faceless(ctx, water)
+	return ctx.get_meta(&"canal_under_wall", {})
 
 
 ## Warianty lica od najlepszego: koniec przy podłodze L / R, przy murze DL / DR / DLR (z obu stron),
@@ -238,6 +250,8 @@ static func _place_alt(ctx: GenerationContext, plan: TilePlacementPlan, p: Vecto
 ## Kwas sąsiada: kanał (nie lico). Ściana obok nie jest kwasem — koryto ma prosty brzeg także przy murze,
 ## zamiast „wpływać” w fasadę bez krawędzi (wzór: sewer-gen-v2).
 static func _acid(ctx: GenerationContext, water: Dictionary, q: Vector2i) -> bool:
+	if ctx != null and _under_wall(ctx, water).has(q):
+		return true
 	return water.has(q) and not _is_face(ctx, water, q)
 
 
@@ -263,38 +277,42 @@ static func _water_variant(ctx: GenerationContext, water: Dictionary, p: Vector2
 
 ## Obrzeże kratki podłogi `q` wg kanału obok. Ciemny koniec, gdy obrzeże dochodzi do ściany, a kanał
 ## płynie dalej pod nią.
-static func _bank_variant(ctx: GenerationContext, water: Dictionary, q: Vector2i) -> StringName:
-	var n := water.has(q + Vector2i(0, -1))
-	var s := water.has(q + Vector2i(0, 1))
-	var e := water.has(q + Vector2i(1, 0))
-	var w := water.has(q + Vector2i(-1, 0))
+static func _bank_variant(ctx: GenerationContext, water0: Dictionary, q: Vector2i) -> StringName:
+	# kanał płynący pod ścianą (_under_wall) — mur nad końcem kanału liczy się jak woda
+	var under := _under_wall(ctx, water0)
+	var wet := func(c: Vector2i) -> bool:
+		return water0.has(c) or under.has(c)
+	var n: bool = wet.call(q + Vector2i(0, -1))
+	var s: bool = wet.call(q + Vector2i(0, 1))
+	var e: bool = wet.call(q + Vector2i(1, 0))
+	var w: bool = wet.call(q + Vector2i(-1, 0))
 	var wall := func(d: Vector2i) -> bool:
 		var c := q + d
-		return not water.has(c) and not GridUtils.is_walkable(ctx.grid, c)
+		return not wet.call(c) and not GridUtils.is_walkable(ctx.grid, c)
 	if s and e: return &"SE"
 	if s and w: return &"SW"
 	if n and e: return &"NE"
 	if n and w: return &"NW"
 	if s:
-		if wall.call(Vector2i(-1, 0)) and water.has(q + Vector2i(-1, 1)): return &"S_DL"
-		if wall.call(Vector2i(1, 0)) and water.has(q + Vector2i(1, 1)): return &"S_DR"
+		if wall.call(Vector2i(-1, 0)) and wet.call(q + Vector2i(-1, 1)): return &"S_DL"
+		if wall.call(Vector2i(1, 0)) and wet.call(q + Vector2i(1, 1)): return &"S_DR"
 		return &"S"
 	if n:
-		if wall.call(Vector2i(-1, 0)) and water.has(q + Vector2i(-1, -1)): return &"N_DL"
-		if wall.call(Vector2i(1, 0)) and water.has(q + Vector2i(1, -1)): return &"N_DR"
+		if wall.call(Vector2i(-1, 0)) and wet.call(q + Vector2i(-1, -1)): return &"N_DL"
+		if wall.call(Vector2i(1, 0)) and wet.call(q + Vector2i(1, -1)): return &"N_DR"
 		return &"N"
 	if e:
-		if wall.call(Vector2i(0, -1)) and water.has(q + Vector2i(1, -1)): return &"E_DT"
-		if wall.call(Vector2i(0, 1)) and water.has(q + Vector2i(1, 1)): return &"E_DB"
+		if wall.call(Vector2i(0, -1)) and wet.call(q + Vector2i(1, -1)): return &"E_DT"
+		if wall.call(Vector2i(0, 1)) and wet.call(q + Vector2i(1, 1)): return &"E_DB"
 		return &"E"
 	if w:
-		if wall.call(Vector2i(0, -1)) and water.has(q + Vector2i(-1, -1)): return &"W_DT"
-		if wall.call(Vector2i(0, 1)) and water.has(q + Vector2i(-1, 1)): return &"W_DB"
+		if wall.call(Vector2i(0, -1)) and wet.call(q + Vector2i(-1, -1)): return &"W_DT"
+		if wall.call(Vector2i(0, 1)) and wet.call(q + Vector2i(-1, 1)): return &"W_DB"
 		return &"W"
-	if water.has(q + Vector2i(1, 1)): return &"IN_SE"
-	if water.has(q + Vector2i(-1, 1)): return &"IN_SW"
-	if water.has(q + Vector2i(1, -1)): return &"IN_NE"
-	if water.has(q + Vector2i(-1, -1)): return &"IN_NW"
+	if wet.call(q + Vector2i(1, 1)): return &"IN_SE"
+	if wet.call(q + Vector2i(-1, 1)): return &"IN_SW"
+	if wet.call(q + Vector2i(1, -1)): return &"IN_NE"
+	if wet.call(q + Vector2i(-1, -1)): return &"IN_NW"
 	return &""
 
 
