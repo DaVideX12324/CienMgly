@@ -662,7 +662,7 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 		var k: int = g[1]
 		var ws: Array = g[2]
 		ws.sort_custom(func(a, b) -> bool: return a.t0 < b.t0)
-		var tb: int = st.wall_h if s.axis == "h" else st.wall_v
+		var tb: int = _pt_h() if s.axis == "h" else _pt_v()
 		var need := walk + tb + wrap_d
 		var deep := func(q: int) -> bool:
 			return _depth(pm, s, q, k) >= need
@@ -732,7 +732,7 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 		var lo: int = (s.x0 if horiz else s.y0) + st.cw + 2
 		var hi: int = (s.x1 if horiz else s.y1) - st.cw - 2
 		var bt: int = s.get("bridge_t", -100)
-		var tb: int = st.wall_h if horiz else st.wall_v
+		var tb: int = _pt_h() if horiz else _pt_v()
 		var need := walk + tb + min_d
 		for k in [0, 1]:
 			if rng.randf() >= p_par:
@@ -809,6 +809,16 @@ func _chambers(pm: PackedByteArray, keep: PackedByteArray, cut: PackedInt32Array
 	return out
 
 
+## Grubość ścian działowych: pozioma (biegnie wzdłuż x — lico od południa) i pionowa; complex_partitions
+## "thickness_h" / "thickness_v" (domyślnie jak mury: wall_thickness_h / _v). Decyzja usera: jedna grubość, 2 albo 3.
+func _pt_h() -> int:
+	return int((cfg.get("complex_partitions", {}) as Dictionary).get("thickness_h", st.wall_h))
+
+
+func _pt_v() -> int:
+	return int((cfg.get("complex_partitions", {}) as Dictionary).get("thickness_v", st.wall_v))
+
+
 ## Głębokość brzegu w kolumnie t po stronie k: ciąg kratek `pm` od wody.
 func _depth(pm: PackedByteArray, s: Dictionary, t: int, k: int) -> int:
 	var e := 0
@@ -825,7 +835,7 @@ func _depth(pm: PackedByteArray, s: Dictionary, t: int, k: int) -> int:
 ## korytarzy.
 func _plan_partitions(s: Dictionary, side_chunks: Array, pinch: Dictionary, walk: int, min_d: int, out: Array) -> void:
 	var horiz: bool = s.axis == "h"
-	var th: int = st.wall_v if horiz else st.wall_h
+	var th: int = _pt_v() if horiz else _pt_h()
 	var lo: int = (s.x0 if horiz else s.y0) + 1
 	var hi: int = (s.x1 if horiz else s.y1) - 1
 	var room_r: Array = (cfg.get("complex_partitions", {}) as Dictionary).get("room", [6, 12])
