@@ -71,6 +71,10 @@ static func generate_layout(
 			pre.pinches += 1
 	var stats: Dictionary = StructuredRoomPackerScript.run(st, seed_used, cfg)
 	stats.merge(pre)
+	stats["partition_cells"] = StructuredZoningScript.partitions(st, seed_used, cfg)
+	stats["partition_walls"] = 0
+	for cid in st.complexes:
+		stats["partition_walls"] += int(st.complexes[cid].get("partition_walls", 0))
 	GenProgress.end(&"corridors")
 
 	# Siatka: podłoga (z wodą — kanał to nakładka na podłogę) i ściana.

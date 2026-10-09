@@ -10,7 +10,9 @@ extends RefCounted
 ##   dopasowane do miejsca (nie na obce kanały, ściana od sal innych kompleksów);
 ## - spójność: w kawałku ≥ 1 brzeg ≥ 2, ciągłość strony, w środku odcinka oba brzegi ≥ 2 (kładka);
 ## - zwężenie (R4): odcinek ≥ 18 (szansa 0,8), środek bez brzegu po stronie k, zatoki na wejścia korytarza;
-## - szczeliny 1 kratki między fragmentami wielokąta -> podłoga (min. ściana 2).
+## - szczeliny 1 kratki między fragmentami wielokąta -> podłoga (min. ściana 2);
+## - ściany działowe (complex_partitions): brzeg dzielony na komnaty jak na makietach — ściany poprzeczne do kanału
+##   albo pas muru równoległy do kanału z drzwiami; promenada przy wodzie zostaje wolna.
 ## Na końcu strefy przecięć dla korytarzy (cross_h / cross_v, ZH / ZV, JZ_C) i licznik zakazu fcnt.
 
 const State = preload("core/structured_state.gd")
@@ -414,6 +416,14 @@ func _build_halls() -> void:
 		var ext := [rng.randi_range(int(ext_start[0]), int(ext_start[1])), rng.randi_range(int(ext_start[0]), int(ext_start[1]))]
 		var prev_ok: Array = []
 		var have_prev := false
+		# Ściany działowe (complex_partitions): brzeg = ciąg komnat długości `room`, każda z własną głębokością
+		# (z szansą `shallow` sama promenada), ściany planowane na granicach głębokich komnat.
+		var pc: Dictionary = cfg.get("complex_partitions", {})
+		var rooms_mode := not pc.is_empty()
+		var walk := int(pc.get("walkway", 3))
+		var min_d := int(pc.get("min_depth", 3))
+		var chunk_r: Array = pc.get("chunk", [6, 12])   # długość komnaty o jednej głębokości
+		var planned: Array = []
 		for s in run_:
 			var lo: int = s.x0 if s.axis == "h" else s.y0
 			var hi: int = s.x1 if s.axis == "h" else s.y1
@@ -423,11 +433,17 @@ func _build_halls() -> void:
 			if is_pinch_seg and mid + 3 >= pinch.p0 and mid - 3 <= pinch.p1:
 				mid = lo + st.cw + 3 if pinch.p0 - lo > hi - pinch.p1 else hi - st.cw - 4
 			s.bridge_t = mid
+			var side_chunks := [[], []]   # [t, t1, głębokość] — komnaty brzegu (rooms_mode)
 			var t := lo
 			while t <= hi:
-				var t1 := mini(hi, t + rng.randi_range(4, 8) - 1)
+				var t1 := mini(hi, t + (rng.randi_range(int(chunk_r[0]), int(chunk_r[1])) if rooms_mode else rng.randi_range(4, 8)) - 1)
+				if rooms_mode and hi - t1 < int(chunk_r[0]):
+					t1 = hi   # bez krótkiej resztki na końcu odcinka
 				for k in [0, 1]:
-					ext[k] = maxi(0, mini(ext_max, ext[k] + rng.randi_range(-3, 3)))
+					if rooms_mode:
+						ext[k] = walk if rng.randf() < float(pc.get("shallow", 0.25)) else rng.randi_range(walk + min_d, maxi(walk + min_d, ext_max))
+					else:
+						ext[k] = maxi(0, mini(ext_max, ext[k] + rng.randi_range(-3, 3)))
 				var want: Array = ext.duplicate()
 				var force := [false, false]
 				if is_pinch_seg:
@@ -461,12 +477,15 @@ func _build_halls() -> void:
 					if got[k] > 0:
 						var r := _side_rect(s, t, t1, k, got[k])
 						st.fill(pm, r[0], r[1], r[2], r[3])
+					side_chunks[k].append([t, t1, got[k]])
 				prev_ok = []
 				for k in [0, 1]:
 					if got[k] >= 2:
 						prev_ok.append(k)
 				have_prev = true
 				t = t1 + 1
+			if rooms_mode:
+				_plan_partitions(s, side_chunks, pinch, walk, min_d, planned)
 		for i in range(st.w * st.h):
 			if st.water[i]:
 				pm[i] = 0
@@ -498,12 +517,211 @@ func _build_halls() -> void:
 				bb = Vector4i(mini(bb.x, x), mini(bb.y, y), maxi(bb.z, x), maxi(bb.w, y))
 		cx.cells = cells
 		cx.pinch = pinch
+		cx.partitions = planned
 		cx.bbox = bb
 		if not cells.is_empty():
 			st.halls.append(bb)
 	for i in range(st.w * st.h):
 		if st.water[i] or st.lanes[i] or st.hallm[i]:
 			st.floor_m[i] = 1
+
+
+## Ściany działowe kompleksów — po StructuredRoomPacker (pokoje, korytarze i ich wejścia do sal już są), własny
+## RNG (reszta układu bez zmian). Kratki ścian wypadają z floor_m / hallm / hall_cid / cells kompleksu.
+## Zwraca liczbę wyciętych kratek.
+static func partitions(state: State, seed_val: int, config: Dictionary) -> int:
+	if (config.get("complex_partitions", {}) as Dictionary).is_empty():
+		return 0
+	var z := StructuredZoning.new()
+	z.st = state
+	z.cfg = config
+	var n := 0
+	for cid in state.complexes:
+		var cx: Dictionary = state.complexes[cid]
+		z.rng = RandomNumberGenerator.new()
+		z.rng.seed = hash([seed_val, "complex_partitions", cid])
+		var pm := state.new_mask()
+		var foreign := state.new_mask()
+		var keep := state.new_mask()
+		for i in range(state.w * state.h):
+			if not state.floor_m[i] or state.water[i]:
+				continue
+			if state.hallm[i] and state.hall_cid[i] == cid and not (state.service[i] or state.corrm[i] or state.roomm[i] or state.bridge_m[i]):
+				pm[i] = 1
+				if state.lanes[i]:
+					keep[i] = 1   # chodnik w sali = promenada (głębokość liczona przez niego, ściana nie)
+			else:
+				foreign[i] = 1
+		var cut := z._partitions(pm, cx, state.m_or(state.dilate(foreign, 1, 1), keep))
+		if cut.is_empty():
+			continue
+		for i in cut:
+			state.floor_m[i] = 0
+			state.hallm[i] = 0
+			state.hall_cid[i] = -1
+		var cells := PackedInt32Array()
+		for i in cx.get("cells", PackedInt32Array()):
+			if state.hallm[i]:
+				cells.append(i)
+		cx.cells = cells
+		n += cut.size()
+	return n
+
+
+## Ściany działowe kompleksu (cfg "complex_partitions"; brak = wyłączone) — wycinane z wielokąta `pm` (sala po
+## rozmieszczeniu korytarzy) w brzegach odcinków, od głębokości `walkway` (promenada przy wodzie zawsze wolna,
+## każda komnata do niej wychodzi):
+## - poprzeczne: ściany zaplanowane przy budowie brzegu (cx.partitions, _plan_partitions), każda z szansą `perp`,
+##   na całą głębokość brzegu w swoich kolumnach;
+## - równoległe: z szansą `parallel` na stronę odcinka pas muru (grubość wall_h / wall_v) tuż za promenadą na ciągu
+##   kolumn o głębokości >= walkway + pas + min_depth, z drzwiami `door` kratek co `door_every` (co najmniej
+##   jedne) — sala za murem.
+## Ściana w całości albo wcale: nie dotyka obcej podłogi (`blocked`: korytarze, pokoje — ich wejścia do sali
+## zostają; chodniki) ani wody bliżej niż walkway.
+## JSON: "complex_partitions": {"perp": 0.85, "parallel": 0.3, "walkway": 3, "room": [6, 12], "min_depth": 3,
+##        "shallow": 0.25, "chunk": [6, 12], "door": 3, "door_every": 12} — chunk: długość odcinka brzegu o jednej
+##        głębokości (budowa sali), room: odstęp ścian poprzecznych.
+func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) -> PackedInt32Array:
+	var pc: Dictionary = cfg.get("complex_partitions", {})
+	var walk := int(pc.get("walkway", 3))
+	var min_d := int(pc.get("min_depth", 3))
+	var door := int(pc.get("door", 3))
+	var door_every := int(pc.get("door_every", 12))
+	var p_perp := float(pc.get("perp", 0.85))
+	var p_par := float(pc.get("parallel", 0.3))
+	var near_water := st.dilate(st.water, walk - 1, walk - 1)
+	var pinch: Dictionary = cx.get("pinch", {})
+	var cut := PackedInt32Array()
+	var taken := {}
+	var walls := [0]
+	var try_cells := func(cells: PackedInt32Array) -> bool:
+		for i in cells:
+			if i < 0 or near_water[i] or blocked[i] or not pm[i] or taken.has(i):
+				return false
+		for i in cells:
+			taken[i] = true
+		cut.append_array(cells)
+		walls[0] += 1
+		return true
+	# poprzeczne
+	for w in cx.get("partitions", []):
+		if rng.randf() >= p_perp:
+			continue
+		var cells := PackedInt32Array()
+		for q in range(w.t0, w.t1 + 1):
+			var d := _depth(pm, w.seg, q, w.k)
+			if d < walk + min_d:
+				cells.append(-1)
+				break
+			for e in range(walk + 1, d + 1):
+				cells.append(_bank_idx(w.seg, q, w.k, e))
+		try_cells.call(cells)
+	# równoległe
+	for s in cx.segs:
+		var horiz: bool = s.axis == "h"
+		var lo: int = (s.x0 if horiz else s.y0) + st.cw + 2
+		var hi: int = (s.x1 if horiz else s.y1) - st.cw - 2
+		var bt: int = s.get("bridge_t", -100)
+		var tb: int = st.wall_h if horiz else st.wall_v
+		var need := walk + tb + min_d
+		for k in [0, 1]:
+			if rng.randf() >= p_par:
+				continue
+			var ok_t := func(t: int) -> bool:
+				if absi(t - bt) <= 3 or _depth(pm, s, t, k) < need:
+					return false
+				return not (not pinch.is_empty() and is_same(pinch.seg, s) and pinch.k == k and t >= pinch.p0 - 9 and t <= pinch.p1 + 9)
+			var a := lo
+			while a <= hi:
+				if not ok_t.call(a):
+					a += 1
+					continue
+				var b := a
+				while b + 1 <= hi and ok_t.call(b + 1):
+					b += 1
+				if b - a + 1 >= 8:
+					var doors := {}
+					var nd := maxi(1, (b - a + 1) / door_every)
+					for di in range(nd):
+						var seg_lo := a + 1 + di * (b - a - 1) / nd
+						var seg_hi := a + 1 + (di + 1) * (b - a - 1) / nd - door
+						var d0 := rng.randi_range(seg_lo, maxi(seg_lo, seg_hi))
+						for q in range(d0, d0 + door):
+							doors[q] = true
+					var cells := PackedInt32Array()
+					for q in range(a, b + 1):
+						if not doors.has(q):
+							for e in range(walk + 1, walk + tb + 1):
+								cells.append(_bank_idx(s, q, k, e))
+					try_cells.call(cells)
+				a = b + 1
+	cx.partition_walls = walls[0]
+	return cut
+
+
+## Głębokość brzegu w kolumnie t po stronie k: ciąg kratek `pm` od wody.
+func _depth(pm: PackedByteArray, s: Dictionary, t: int, k: int) -> int:
+	var e := 0
+	while e < 40 and _bank_cell_in(pm, s, t, k, e + 1):
+		e += 1
+	return e
+
+
+## Ściany poprzeczne w brzegu: co `room` kratek (od końca poprzedniej ściany) tam, gdzie komnaty po obu stronach
+## (3 kolumny) są głębokie na >= walkway + min_depth, a ściana (wall_v przy kanale poziomym, wall_h przy pionowym)
+## nie jest płytsza od kolumn obok — wtedy granica komnat o różnej głębokości dostaje ścianę po stronie głębszej.
+## Nie w zatoce zwężenia; kładki i inne kanały nie przeszkadzają (ściana zaczyna się za promenadą, a kratki
+## bliżej wody niż walkway odrzuca partitions()). Plan: {seg, k, t0, t1} — wycina partitions() po rozmieszczeniu
+## korytarzy.
+func _plan_partitions(s: Dictionary, side_chunks: Array, pinch: Dictionary, walk: int, min_d: int, out: Array) -> void:
+	var horiz: bool = s.axis == "h"
+	var th: int = st.wall_v if horiz else st.wall_h
+	var lo: int = (s.x0 if horiz else s.y0) + 1
+	var hi: int = (s.x1 if horiz else s.y1) - 1
+	var room_r: Array = (cfg.get("complex_partitions", {}) as Dictionary).get("room", [6, 12])
+	var need := walk + min_d
+	for k in [0, 1]:
+		var depth := {}
+		for ch in side_chunks[k]:
+			for t in range(ch[0], ch[1] + 1):
+				depth[t] = ch[2]
+		var t := lo + 3
+		while t + th + 2 <= hi:
+			var ok := true
+			for q in [t - 3, t - 2, t - 1, t + th, t + th + 1, t + th + 2]:
+				if int(depth.get(q, 0)) < need:
+					ok = false
+			var side_max := maxi(int(depth.get(t - 1, 0)), int(depth.get(t + th, 0)))
+			for q in range(t, t + th):
+				if int(depth.get(q, 0)) < side_max:
+					ok = false
+			if not pinch.is_empty() and is_same(pinch.seg, s) and pinch.k == k and t + th - 1 >= pinch.p0 - 9 and t <= pinch.p1 + 9:
+				ok = false
+			if ok:
+				out.append({"seg": s, "k": k, "t0": t, "t1": t + th - 1})
+				t += th + rng.randi_range(int(room_r[0]), int(room_r[1]))
+			else:
+				t += 1
+
+
+## Kratka brzegu odcinka: kolumna t (wzdłuż osi), strona k, e kratek od wody (1 = pierwsza za wodą); -1 = poza mapą.
+func _bank_idx(s: Dictionary, t: int, k: int, e: int) -> int:
+	var x: int
+	var y: int
+	if s.axis == "h":
+		x = t
+		y = s.y0 - e if k == 0 else s.y1 + e
+	else:
+		y = t
+		x = s.x0 - e if k == 0 else s.x1 + e
+	if x < 0 or y < 0 or x >= st.w or y >= st.h:
+		return -1
+	return y * st.w + x
+
+
+func _bank_cell_in(pm: PackedByteArray, s: Dictionary, t: int, k: int, e: int) -> bool:
+	var i := _bank_idx(s, t, k, e)
+	return i >= 0 and pm[i] == 1
 
 
 ## Szerokość brzegu po stronie k: rośnie, póki pas nie wchodzi na obce (`foreign`) i mieści się w mapie;
