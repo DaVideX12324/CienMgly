@@ -177,23 +177,43 @@ static func _near_d(gate: Array, area: Dictionary, sdist: Dictionary) -> int:
 	return nd
 
 
+## Strona bramy bliższa wejściu: kierunek prostopadły do bramy (brama wzdłuż x -> N / S, wzdłuż y -> W / E; pojedyncza
+## kratka -> oś z podłogą po obu stronach), w którym kratki przy bramie mają najmniejszą odległość od wejścia (kratka
+## spoza `area` — najdalej). Po stronie, nie po progu odległości: przy szerokiej bramie podchodzonej ukosem kratki
+## bliższej strony różnią się o kilka kroków (seed 119: 7 / 8 / 9) i próg brał ich część za stronę dalszą.
+static func _near_dir(result, gate: Array, area: Dictionary, sdist: Dictionary) -> Vector2i:
+	var a: Vector2i = gate[0]
+	var b: Vector2i = gate[gate.size() - 1]
+	var dirs: Array[Vector2i] = [Vector2i(0, -1), Vector2i(0, 1)]
+	if a.x == b.x and a.y != b.y:
+		dirs = [Vector2i(-1, 0), Vector2i(1, 0)]
+	elif a == b and not (_walk(result, a + Vector2i(0, -1)) and _walk(result, a + Vector2i(0, 1))):
+		dirs = [Vector2i(-1, 0), Vector2i(1, 0)]
+	var best := dirs[0]
+	var bd := 1 << 30
+	for d in dirs:
+		for c: Vector2i in gate:
+			var n: Vector2i = c + d
+			var v := int(sdist.get(n, 1 << 29)) if area.has(n) else 1 << 30
+			if v < bd:
+				bd = v
+				best = d
+	return best
+
+
 ## Kratki po dalszej stronie bramy (od wejścia), do `maxd` kroków od niej, bez przechodzenia przez bramy i wodę:
 ## kratka -> odległość od bramy.
 static func _far_side(result, gate: Array, gate_cells: Dictionary, sdist: Dictionary, area: Dictionary, maxd: int) -> Dictionary:
-	var canals = result.canals
 	var nd := _near_d(gate, area, sdist)
+	var far_dir := -_near_dir(result, gate, area, sdist)
 	var dist := {}
 	var q: Array[Vector2i] = []
 	for c: Vector2i in gate:
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var n: Vector2i = c + d
-			if gate_cells.has(n) or dist.has(n) or not _walk(result, n):
-				continue
-			var sn := int(sdist.get(n, 1 << 30)) if area.has(n) else 1 << 30
-			if sn <= nd + 1:
-				continue   # strona bliższa wejściu
-			dist[n] = 1
-			q.append(n)
+		var n: Vector2i = c + far_dir
+		if gate_cells.has(n) or dist.has(n) or not _walk(result, n):
+			continue
+		dist[n] = 1
+		q.append(n)
 	var h := 0
 	while h < q.size():
 		var c := q[h]
@@ -205,6 +225,8 @@ static func _far_side(result, gate: Array, gate_cells: Dictionary, sdist: Dictio
 			var n: Vector2i = c + d
 			if gate_cells.has(n) or dist.has(n) or not _walk(result, n):
 				continue
+			if area.has(n) and int(sdist.get(n, 1 << 30)) < nd:
+				continue   # obejście z powrotem na stronę bliższą
 			dist[n] = dc + 1
 			q.append(n)
 	return dist
