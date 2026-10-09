@@ -530,34 +530,6 @@
       "source": 1
     },
     {
-      "id": "debris_src5",
-      "group": "clutter",
-      "atlas": [
-        46,
-        8
-      ],
-      "variants": [
-        [
-          46,
-          8
-        ],
-        [
-          47,
-          8
-        ]
-      ],
-      "source": 5,
-      "big": true,
-      "density": 0.3,
-      "cluster": {
-        "size": [
-          1,
-          2
-        ],
-        "radius": 2
-      }
-    },
-    {
       "id": "debris",
       "group": "clutter",
       "atlas": [
