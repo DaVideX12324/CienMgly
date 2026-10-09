@@ -31,14 +31,18 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	# 1. Kanał: lico brzegu i kwas (warstwa Floor). Wariant lica wg sąsiedztwa (lista od najlepszego —
 	# brak w profilu = następny), wersje _B / _C wariantu losowane z hasha kratki (te, które są w profilu).
 	var alts := {}
+	# Eksperyment tiling.canal_end_face_rim_over_wall: na zamkniętym końcu kanału pod licem ściany górna część lica
+	# kanału (rim, kratka muru) na warstwie Rails — nad dołem lica ściany, lico kanału pełne z górną krawędzią.
+	var rim_over_wall := bool(ctx.generator_behaviour.get("tiling", {}).get("canal_end_face_rim_over_wall", false))
 	# Pod kładką najpierw wariant <v>_OPEN (kafle bez kolizji — przejście po kładce), gdy jest w profilu.
 	for p: Vector2i in water:
 		var under: bool = canals.bridge_cells.has(p)
 		if _is_face(ctx, water, p):
+			var rim_layer := &"Rails" if rim_over_wall and _closed_end_face(ctx, water, p) else &""
 			for fv in _face_variants(ctx, water, p):
-				if under and _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, StringName(String(fv) + "_OPEN"), &"Floor", table, alts):
+				if under and _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, StringName(String(fv) + "_OPEN"), &"Floor", table, alts, rim_layer):
 					break
-				if _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table, alts):
+				if _place_alt(ctx, placement_plan, p, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table, alts, rim_layer):
 					break
 		elif canals.pit_cells.has(p) and _place_open(ctx, placement_plan, p, TileModuleRole.Id.CANAL_PIT, canals.pit_cells[p], under, table):
 			pass
@@ -202,6 +206,22 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 	return out
 
 
+## Kratka górnego rzędu kanału na zamkniętym (z licem kanału) północnym końcu pod licem ściany — wg decyzji
+## WallDecorPlanner (canals.north_end_face: początek ciągu -> zamknięty).
+static func _closed_end_face(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
+	var canals = ctx.canals
+	if canals == null or not "north_end_face" in canals:
+		return false
+	var wall := func(c: Vector2i) -> bool:
+		return not water.has(c) and not GridUtils.is_walkable(ctx.grid, c)
+	if not wall.call(p + Vector2i(0, -1)):
+		return false
+	var a := p
+	while water.has(a + Vector2i(-1, 0)) and wall.call(a + Vector2i(-1, -1)):
+		a += Vector2i(-1, 0)
+	return bool(canals.north_end_face.get(a, false))
+
+
 ## Kratki muru nad końcami kanałów bez lica, gdy tiling.canal_end_under_wall: kanał „płynie dalej pod ścianą" —
 ## przy wyborze wariantów kwasu i obrzeży liczą się jak woda (bez krawędzi zamykającej kanał, ciemne końce obrzeży).
 static func _under_wall(ctx: GenerationContext, water: Dictionary) -> Dictionary:
@@ -242,7 +262,7 @@ static func _place_open(ctx: GenerationContext, plan: TilePlacementPlan, p: Vect
 ## Wariant `base` albo jego wersja _B / _C / _D (losowo z hasha kratki spośród obecnych w profilu).
 ## `alts` — pamięć podręczna listy wersji na (rola, wariant).
 static func _place_alt(ctx: GenerationContext, plan: TilePlacementPlan, p: Vector2i, role: int, base: StringName,
-		layer: StringName, table: Dictionary, alts: Dictionary) -> bool:
+		layer: StringName, table: Dictionary, alts: Dictionary, upper_layer: StringName = &"") -> bool:
 	var key := [role, base]
 	if not alts.has(key):
 		var found: Array[StringName] = []
@@ -257,9 +277,9 @@ static func _place_alt(ctx: GenerationContext, plan: TilePlacementPlan, p: Vecto
 		alts[key] = found
 	var ids: Array = alts[key]
 	if ids.is_empty():
-		return _place(ctx, plan, p, role, base, layer, table)
+		return _place(ctx, plan, p, role, base, layer, table, upper_layer)
 	var pick: StringName = ids[hash([ctx.seed_value, p, base]) % ids.size()] if ids.size() > 1 else ids[0]
-	return _place(ctx, plan, p, role, pick, layer, table)
+	return _place(ctx, plan, p, role, pick, layer, table, upper_layer)
 
 
 ## Kwas sąsiada: kanał (nie lico). Ściana obok nie jest kwasem — koryto ma prosty brzeg także przy murze,
@@ -332,13 +352,16 @@ static func _bank_variant(ctx: GenerationContext, water0: Dictionary, q: Vector2
 
 
 ## Kafle modułu roli `role` (wariant `variant`) od kotwicy; false, gdy profil nie ma tej roli / wariantu.
-static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary) -> bool:
+static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary,
+		upper_layer: StringName = &"") -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, anchor, role, [], -1, variant)
 	for rp in parts:
 		var p := TilePlacement.new()
 		p.pos = anchor + rp.offset
 		# warstwa części z profilu, gdy inna niż domyślna (np. rim lica kanału na FloorDecor nad licem na Floor)
 		p.layer = layer if rp.layer == &"" or rp.layer == &"Walls" else rp.layer
+		if upper_layer != &"" and rp.offset.y < 0:
+			p.layer = upper_layer   # część nad kotwicą na wskazanej warstwie (np. rim nad dołem lica ściany)
 		p.source_id = rp.tile.source_id
 		p.atlas_coords = rp.tile.atlas_coords
 		p.alternative_tile = rp.tile.alternative_tile
