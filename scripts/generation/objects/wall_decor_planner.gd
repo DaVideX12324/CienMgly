@@ -359,8 +359,8 @@ static func _place_on_pillars(walls: Array, defs: Array[ObjectDef], seed_v: int,
 ## Lico nad północnymi końcami kanałów (def.canal_end): kanał kończący się pod ścianą — ciąg wody z murem nad każdą
 ## kratką, bez wody po bokach, z wodą pod spodem — dostaje obiekt o szerokości ciągu (np. kratę w łuku) tuż nad wodą,
 ## wybór ważony canal_end (suma < 1 — szansa na brak): kanał wygląda, jakby wpływał w ścianę. Tu też losowane, czy
-## koniec jest zamknięty licem kanału (canals.north_end_face; puste koryto — zawsze); nad zamkniętym bez obiektów
-## zatopionych (canal_end_dy > 0). Przed rytmem filarów; kolumny końca kanału są zajęte
+## koniec jest zamknięty licem kanału (canals.north_end_face; puste koryto — zawsze); wariant dopuszczony wg
+## def.canal_end_on (any / wet_open / dry). Przed rytmem filarów; kolumny końca kanału są zajęte
 ## także bez obiektu (filar ani inna ozdoba nie stanie nad wodą wpływającą pod ścianę).
 static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
 		on_wall: bool, seed_v: int, objects: ObjectPlan, flags: GenerationFlags = null) -> void:
@@ -415,8 +415,13 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		var fit: Array[ObjectDef] = []
 		var total := 0.0
 		for d in cands:
-			if (closed or dry_end) and d.canal_end_dy > 0:
-				continue   # zatopiona krata tylko nad otwartym końcem z wodą (w pustym korycie wyglądałaby na uciętą)
+			match d.canal_end_on:
+				&"wet_open":
+					if closed or dry_end:
+						continue   # zatopiona krata tylko nad otwartym końcem z wodą (w pustym korycie wyglądałaby na uciętą)
+				&"dry":
+					if not dry_end:
+						continue
 			if maxi(d.size.x, 1) == n and _fits_cols(slots, anchor, n) and _height_ok(d, anchor, n, bases_4h, on_wall):
 				fit.append(d)
 				total += d.canal_end
