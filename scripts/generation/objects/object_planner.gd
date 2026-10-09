@@ -46,6 +46,7 @@ var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indek
 var set_ids := {}                  # zestaw -> indeks
 var parent_center := Vector2(-1, -1)  # środek rodzica (kratki) przy stawianiu towarzyszy — facing_pref "parent"
 var canal_dist := PackedInt32Array()  # idx -> odległość (Chebyshev) od wody kanału; liczona, gdy jakiś obiekt ma canal_gap
+var vignettes_by_id := {}            # id winiety -> słownik z katalogu (wzory skupisk, cluster.patterns)
 var gate_canals = null                # canals z bramami GatePlanner (kontrola osiągalności B)
 var gate_gi := PackedInt32Array()     # brama (z otwieraczem) -> indeks w canals.gates
 var gate_idx: Array[PackedInt32Array] = []  # brama -> kratki kolców
@@ -100,6 +101,8 @@ func _run(result, catalog: ObjectCatalog) -> void:
 			plan.interactive_scenes[catalog.defs[di].scene] = true
 		defs_by_id[catalog.defs[di].id] = catalog.defs[di]
 		markers[catalog.defs[di].id] = di + 1
+	for v in catalog.vignettes:
+		vignettes_by_id[StringName(String(v.get("id", "")))] = v
 	_place_vignettes(catalog.vignettes)
 	for di in range(catalog.defs.size()):
 		GenProgress.sub_in(&"objects", float(di) / catalog.defs.size())
@@ -411,6 +414,9 @@ func _candidates(def: ObjectDef) -> PackedInt32Array:
 
 
 func _place_cluster(def: ObjectDef, marker: int, seed_i: int, rng: RandomNumberGenerator, left: int) -> int:
+	var pat := _place_pattern(def, seed_i, rng)
+	if pat > 0:
+		return pat
 	if not _place_one(def, marker, seed_i, rng):
 		return 0
 	var size := mini(rng.randi_range(def.cluster_min, def.cluster_max), left)
@@ -429,6 +435,53 @@ func _place_cluster(def: ObjectDef, marker: int, seed_i: int, rng: RandomNumberG
 		if _place_one(def, marker, i, rng):
 			placed += 1
 	return placed
+
+
+## Skupisko w kształcie winiety (cluster.patterns): z szansą pattern_chance winiety w losowej kolejności, kotwica
+## w kratce zarodka albo najbliższej w promieniu skupiska + 1 z tagami części 0, losowe odbicie (flip_h winiety) —
+## pierwsza pasująca. Zwraca liczbę postawionych części (0 = brak).
+func _place_pattern(def: ObjectDef, seed_i: int, rng: RandomNumberGenerator) -> int:
+	if def.cluster_patterns.is_empty() or rng.randf() >= def.cluster_pattern_chance:
+		return 0
+	var order: Array[StringName] = def.cluster_patterns.duplicate()
+	for k in range(order.size() - 1, 0, -1):
+		var j := rng.randi_range(0, k)
+		var t := order[k]
+		order[k] = order[j]
+		order[j] = t
+	for pid in order:
+		var v: Dictionary = vignettes_by_id.get(pid, {})
+		if v.is_empty():
+			continue
+		var parts := _vignette_parts(v)
+		if parts.is_empty():
+			continue
+		var can_flip := bool(v.get("flip_h", false))
+		var tags0: Array[StringName] = parts[0].tags
+		# kotwice: zarodek, potem kratki w promieniu cluster_radius + 1 z tagami części 0 (najbliższe pierwsze)
+		var anchors: Array[Vector2i] = [f.cell(seed_i)]
+		var r := def.cluster_radius + 1
+		for dist in range(1, r + 1):
+			for dy in range(-dist, dist + 1):
+				for dx in range(-dist, dist + 1):
+					if maxi(absi(dx), absi(dy)) != dist:
+						continue
+					var q := f.cell(seed_i) + Vector2i(dx, dy)
+					if not f.in_bounds(q) or plan.occupancy[f.idx(q)] & ObjectPlan.FORBID:
+						continue
+					var ok := true
+					for t in tags0:
+						if not (f.has_tag(f.idx(q), t) or (can_flip and t == &"wall_w" and f.has_tag(f.idx(q), &"wall_e")) 								or (can_flip and t == &"wall_e" and f.has_tag(f.idx(q), &"wall_w"))):
+							ok = false
+							break
+					if ok:
+						anchors.append(q)
+		for a in anchors:
+			var first := can_flip and rng.randf() < 0.5
+			if _try_vignette(v, parts, a, first, rng) or (can_flip and _try_vignette(v, parts, a, not first, rng)):
+				plan.stats[StringName("vignette:" + String(pid))] = int(plan.stats.get(StringName("vignette:" + String(pid)), 0)) + 1
+				return parts.size()
+	return 0
 
 
 ## Jedna sztuka + jej towarzysze (grupa mieszana, np. duży grzyb z małymi wokół).

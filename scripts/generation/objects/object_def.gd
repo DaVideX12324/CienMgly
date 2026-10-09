@@ -53,6 +53,10 @@ var terrain: Array[StringName] = []   # "grass" / "mud" / "plain" (goła podłog
 var terrain_margin: int = 0           # ten sam teren w promieniu (Chebyshev) — z dala od brzegu plamy
 var cluster_min: int = 0              # cluster: {"size": [a, b], "radius": r} — skupiska
 var cluster_max: int = 0
+## cluster.patterns: id winiet (ObjectCatalog.vignettes) jako gotowe kształty skupiska — z szansą
+## cluster.pattern_chance skupisko próbuje najpierw winiety pasującej w kratce zarodka, inaczej losowe.
+var cluster_patterns: Array[StringName] = []
+var cluster_pattern_chance: float = 0.0
 var cluster_radius: int = 0
 var companions: Array[Dictionary] = [] # {id: StringName, min, max, radius} — dostawiane wokół każdej sztuki
 var keep_paths: bool = true           # z kolizją: nie na zarezerwowanych przejściach
