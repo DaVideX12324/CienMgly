@@ -304,14 +304,14 @@
       "class": "DECAL",
       "placement": "grid",
       "source": 1,
-      "density": 3,
+      "density": 7,
       "flip_h": true,
       "cluster": {
         "size": [
-          2,
-          4
+          1,
+          3
         ],
-        "radius": 2
+        "radius": 1
       }
     },
     "bottles": {
@@ -750,7 +750,7 @@
     {
       "id": "copper_rubble",
       "group": "clutter",
-      "density": 1,
+      "density": 1.5,
       "atlas": [
         8,
         8
