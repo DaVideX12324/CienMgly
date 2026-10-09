@@ -12,7 +12,9 @@
     "lock": "res://modules/quiz_rpg/scenes/objects/sewer/wall_lock.tscn",
     "key": "res://modules/quiz_rpg/scenes/objects/sewer/gate_key.tscn",
     "plate": "res://modules/quiz_rpg/scenes/objects/sewer/pressure_plate.tscn",
-    "plate_chance": 0.5
+    "plate_chance": 0.5,
+    "min_gates": 2,
+    "barrier_offset": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_offset.tscn"
   },
   "groups": {
     "pillar_decor": {

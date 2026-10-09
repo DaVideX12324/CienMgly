@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier.tscn" id="1_base"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="2_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_holes_offset"]
+atlas = ExtResource("2_props")
+region = Rect2(72, 240, 16, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_block_wide"]
+size = Vector2(32, 12)
+
+[node name="SpikeBarrierOffset" instance=ExtResource("1_base")]
+
+[node name="Holes" parent="." index="0"]
+position = Vector2(8, 0)
+texture = SubResource("AtlasTexture_holes_offset")
+
+[node name="Spike" parent="." index="1"]
+position = Vector2(8, 0)
+
+[node name="Trigger" parent="." index="2"]
+position = Vector2(8, 0)
+
+[node name="BlockShape" parent="." index="4"]
+position = Vector2(8, 2)
+shape = SubResource("RectangleShape2D_block_wide")
