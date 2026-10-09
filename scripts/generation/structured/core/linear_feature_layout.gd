@@ -50,6 +50,7 @@ var gates: Array = []
 var levers: Array = []        # wyrównane z gates ((-1, -1) = brak); dziś miejsce klucza do zamka bramy
 var gate_locks: Array = []    # wyrównane z gates: kotwica zamka na licu, (-1, -1) = brak zamka (GatePlanner)
 var gate_openers: Array = []  # wyrównane z gates: "lock" / "plate" / "" (brama nie powstaje)
+var gate_plates: Array = []   # płyty naciskowe: {cell, gates: [indeksy bram]} — zagadki i skróty (GatePlanner)
 var service: Dictionary = {}  # Vector2i -> bool
 ## Korytarze między pokojami / salami (StructuredRoomPacker, bez serwisowych) — bramy na korytarzach (GatePlanner)
 var corridors: Dictionary = {}  # Vector2i -> bool
