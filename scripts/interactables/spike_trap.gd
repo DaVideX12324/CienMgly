@@ -30,7 +30,6 @@ var _hurt_this_rise := false
 var _used := false
 var _clock := 0.0
 
-@onready var _holes: Sprite2D = $Holes
 @onready var _spike: Node2D = $Spike
 @onready var _blocker: CollisionShape2D = $BlockShape
 
@@ -85,8 +84,7 @@ func _process(delta: float) -> void:
 
 func _set_up(up: bool) -> void:
 	is_up = up
-	_spike.visible = up
-	_holes.visible = not up
+	_spike.visible = up   # otwory w posadzce zostają pod kolcami (rysowane pod nimi)
 	if up:
 		_hurt_this_rise = false
 	# kolizja tylko w trybie BARRIER (pułapki ranią, nie zamykają drogi)
