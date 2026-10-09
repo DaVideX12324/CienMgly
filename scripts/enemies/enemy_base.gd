@@ -16,6 +16,8 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 @export var hp: int = 50
 @export var max_hp: int = 50
 @export var damage_on_wrong: int = 15
+## Szansa zatrucia celu przy trafieniu w walce (status PlayerStats.STATUS_POISON, trwa też poza walką).
+@export_range(0.0, 1.0, 0.05) var poison_chance: float = 0.0
 @export var xp_reward: int = 50
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
@@ -188,6 +190,7 @@ func _apply_enemy_data() -> void:
 	max_hp = maxi(enemy_data.max_hp, 1)
 	hp = max_hp
 	damage_on_wrong = maxi(enemy_data.damage_on_wrong, 0)
+	poison_chance = clampf(enemy_data.poison_chance, 0.0, 1.0)
 	xp_reward = maxi(enemy_data.xp_reward, 0)
 	encounter_tier = clampi(enemy_data.encounter_tier, 1, 5)
 	min_encounter_size = maxi(enemy_data.min_encounter_size, 1)
