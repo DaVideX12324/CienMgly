@@ -15,7 +15,8 @@
     "plate": "res://modules/quiz_rpg/scenes/objects/sewer/pressure_plate.tscn",
     "plate_chance": 0.5,
     "min_gates": 2,
-    "barrier_offset": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_offset.tscn"
+    "barrier_offset": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_offset.tscn",
+    "barrier_offset_chance": 0.0
   },
   "groups": {
     "pillar_decor": {
