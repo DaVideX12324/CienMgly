@@ -79,7 +79,7 @@
     "segment_length": [20, 40],
     "trunk_segments": 14,
     "branch_segments": [3, 7],
-    "zone_frequency": 0.008,
+    "zone_frequency": 0.006,
     "fill_gap": 34,
     "bridge_every_h": 28,
     "bridge_every_v": 24,
