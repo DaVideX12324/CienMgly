@@ -187,9 +187,13 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 				flows = flows and water.has(q - d)
 			if not flows:
 				continue
-			var u := float(hash([ctx.seed_value, a, "canal_end_face" if d.y < 0 else "canal_end_under"]) & 0xFFFF) / 65536.0
-			if u < (chance_n if d.y < 0 else chance):
-				continue
+			if d.y < 0 and "north_end_face" in ctx.canals and ctx.canals.north_end_face.has(a):
+				if ctx.canals.north_end_face[a]:
+					continue   # obiekt nad końcem (np. krata) chce lica kanału pod sobą
+			else:
+				var u := float(hash([ctx.seed_value, a, "canal_end_face" if d.y < 0 else "canal_end_under"]) & 0xFFFF) / 65536.0
+				if u < (chance_n if d.y < 0 else chance):
+					continue
 			for q in run:
 				if d.y < 0:
 					out[q] = true

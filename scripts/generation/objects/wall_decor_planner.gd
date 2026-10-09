@@ -396,16 +396,24 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		var y := a.y - 1 if on_wall else a.y
 		for k in range(n):
 			used[Vector2i(a.x + k, y)] = true
-		for def in cands:
-			var w := maxi(def.size.x, 1)
-			if w != n:
+		# wybór ważony canal_end spośród obiektów o szerokości kanału (suma < 1 — szansa na brak obiektu)
+		var anchor := Vector2i(a.x, y)
+		var fit: Array[ObjectDef] = []
+		var total := 0.0
+		for d in cands:
+			if maxi(d.size.x, 1) == n and _fits(slots, anchor, n, d) and _height_ok(d, anchor, n, bases_4h, on_wall):
+				fit.append(d)
+				total += d.canal_end
+		if fit.is_empty():
+			continue
+		var r := float(hash([seed_v, a, "canal_end"]) & 0xFFFF) / 65536.0 * maxf(total, 1.0)
+		for def in fit:
+			r -= def.canal_end
+			if r >= 0.0:
 				continue
-			var u := float(hash([seed_v, a, String(def.id), "canal_end"]) & 0xFFFF) / 65536.0
-			if u >= def.canal_end:
-				continue
-			var anchor := Vector2i(a.x, y)
-			if not _fits(slots, anchor, w, def) or not _height_ok(def, anchor, w, bases_4h, on_wall):
-				continue
+			var w := n
+			if "north_end_face" in result.canals:
+				result.canals.north_end_face[a] = def.canal_end_face
 			var pl := ObjectPlacement.new()
 			pl.def = def
 			pl.cell = anchor + Vector2i(0, def.canal_end_dy)   # miejsce sprawdzone na zwykłej kotwicy lica
