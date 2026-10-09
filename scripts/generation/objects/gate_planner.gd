@@ -57,7 +57,7 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 		var opener := ""
 		if key == NONE or not reach.has(key):
 			# miejsce dźwigni wybrane przed czyszczeniem siatki / ścianami działowymi mogło wypaść z części startowej
-			key = _fallback_key(result, canals.gates[gi], reach)
+			key = _fallback_key(result, canals.gates[gi], reach, canals.levers)
 			if gi < canals.levers.size():
 				canals.levers[gi] = key
 		if key != NONE and reach.has(key):
@@ -244,8 +244,9 @@ static func _reach(result, gate_cells: Dictionary) -> Dictionary:
 
 
 ## Zastępcze miejsce klucza / płyty: kratka pokoju albo sali osiągalna z wejścia bez bram, bez wody, chodników,
-## korytarzy serwisowych, kładek, barierek, kratownic i portali, najbliżej 18 kratek (Manhattan) od bramy.
-static func _fallback_key(result, gate: Array, reach: Dictionary) -> Vector2i:
+## korytarzy serwisowych, kładek, barierek, kratownic i portali, najbliżej 18 kratek (Manhattan) od bramy, co najmniej
+## 3 kratki od miejsc innych bram (`others` = canals.levers).
+static func _fallback_key(result, gate: Array, reach: Dictionary, others: Array = []) -> Vector2i:
 	var canals = result.canals
 	var gc: Vector2i = gate[gate.size() / 2]
 	var best := NONE
@@ -255,6 +256,14 @@ static func _fallback_key(result, gate: Array, reach: Dictionary) -> Vector2i:
 		if not (a.begins_with("room:") or a.begins_with("hall:")):
 			continue
 		if canals.water.has(c) or canals.lanes.has(c) or canals.service.has(c) or canals.bridge_cells.has(c) 				or canals.rail_cells.has(c) or canals.grating.has(c) or result.portal_zone.has(c):
+			continue
+		var clash := false
+		for o in others:   # z dala od kluczy / płyt innych bram (ta sama kratka = podniesienie obu naraz)
+			var ov: Vector2i = o
+			if ov != NONE and maxi(absi(ov.x - c.x), absi(ov.y - c.y)) < 3:
+				clash = true
+				break
+		if clash:
 			continue
 		var d: int = absi(absi(c.x - gc.x) + absi(c.y - gc.y) - 18)
 		if d < bd or (d == bd and (c.y < best.y or (c.y == best.y and c.x < best.x))):
