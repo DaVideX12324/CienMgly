@@ -259,10 +259,12 @@ static func _plan_4h_segments(ctx: GenerationContext) -> void:
 				if GridUtils.is_walkable(grid, top + Vector2i(-1, 0)) or GridUtils.is_walkable(grid, top + Vector2i(1, 0)):
 					ok = false
 				x += 1
-			if not ok:
+			# eksperyment dry_end_4h: odcinek nad zamurowanym końcem pustego koryta zawsze 4H
+			var forced: bool = ctx.canals != null and "force_4h_bases" in ctx.canals and ctx.canals.force_4h_bases.has(Vector2i(x0, y))
+			if not ok and not forced:
 				continue
 			var roll := float(hash([ctx.seed_value, y, x0, "facade_4h"]) & 0xFFFF) / 65536.0
-			if roll < ctx.flags.facade_4h_chance:
+			if forced or roll < ctx.flags.facade_4h_chance:
 				for cx in range(x0, x):
 					ctx.facade_4h_bases[Vector2i(cx, y)] = true
 

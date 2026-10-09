@@ -74,6 +74,9 @@ var chambers: Array = []
 ## żeby obiekt nad końcem (krata) pasował do kafli kanału.
 var north_end_face: Dictionary = {}
 
+## Eksperyment dry_end_4h: stopy lica wymuszone na 4H (mur nad pustym korytem schodzi do dna) — FacadePlacer.
+var force_4h_bases: Dictionary = {}
+
 
 func is_empty() -> bool:
 	return cells.is_empty()

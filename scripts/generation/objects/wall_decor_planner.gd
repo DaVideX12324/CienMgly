@@ -164,6 +164,7 @@ static func _bases_4h(result, seed_v: int, flags: GenerationFlags) -> Dictionary
 	c.height = result.height
 	c.flags = flags
 	c.seed_value = seed_v
+	c.canals = result.canals
 	FacadePlacer._plan_4h_segments(c)
 	return c.facade_4h_bases
 
@@ -400,7 +401,12 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		var y := a.y - 1 if on_wall else a.y
 		for k in range(n):
 			used[Vector2i(a.x + k, y)] = true
+		var dry_end := true
+		for k in range(n):
+			dry_end = dry_end and result.canals.dry.has(a + Vector2i(k, 0))
 		var closed := float(hash([seed_v, a, "canal_end_face"]) & 0xFFFF) / 65536.0 < chance_n
+		if dry_end and "force_4h_bases" in result.canals and result.canals.force_4h_bases.has(a):
+			closed = false   # eksperyment dry_end_4h: koniec pustego koryta pod murem 4H zawsze otwarty
 		if "north_end_face" in result.canals:
 			result.canals.north_end_face[a] = closed
 		# wybór ważony canal_end spośród obiektów o szerokości kanału (suma < 1 — szansa na brak obiektu)
@@ -408,9 +414,9 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		var fit: Array[ObjectDef] = []
 		var total := 0.0
 		for d in cands:
-			if closed and d.canal_end_dy > 0:
-				continue   # zatopiona krata tylko nad otwartym końcem (kwas pod ścianę)
-			if maxi(d.size.x, 1) == n and _fits(slots, anchor, n, d) and _height_ok(d, anchor, n, bases_4h, on_wall):
+			if (closed or dry_end) and d.canal_end_dy > 0:
+				continue   # zatopiona krata tylko nad otwartym końcem z wodą (w pustym korycie wyglądałaby na uciętą)
+			if maxi(d.size.x, 1) == n and _fits_cols(slots, anchor, n) and _height_ok(d, anchor, n, bases_4h, on_wall):
 				fit.append(d)
 				total += d.canal_end
 		if fit.is_empty():
@@ -430,6 +436,14 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 			for k in range(-MARGIN, w + MARGIN):
 				used[anchor + Vector2i(k, 0)] = true
 			break
+
+
+## Lico w kolumnach a..a+w-1 (bez marginesu: koniec kanału w zagłębieniu muru — obok bywa brzeg).
+static func _fits_cols(slots: Dictionary, a: Vector2i, w: int) -> bool:
+	for k in range(w):
+		if not slots.has(a + Vector2i(k, 0)):
+			return false
+	return true
 
 
 ## Ozdoby posadzki w osi przęseł (def.span_floor): na ścianie z filarami z szansą density jedna ozdoba (ta sama
