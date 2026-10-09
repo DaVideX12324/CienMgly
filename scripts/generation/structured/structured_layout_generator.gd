@@ -27,6 +27,7 @@ const WallProtrusionPassScript = preload("../preprocess/wall_protrusion_pass.gd"
 const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
 const GratingPlannerScript = preload("../tiling/grating_planner.gd")
 const GatePlannerScript = preload("../objects/gate_planner.gd")
+const StructuredPlatformsScript = preload("structured_platforms.gd")
 
 const PORTAL_MIN_FREE := 60
 
@@ -152,7 +153,13 @@ static func generate_layout(
 
 	if flags.enable_platforms:
 		GenProgress.begin(&"plateaus")
-		ctx.plateau = PlateauPass.run(ctx, flags)
+		if cfg.has("platforms") and ctx.entrance_pos != Vector2i.ZERO:
+			# Platformy pod ścianami pomieszczeń (kształt structured), schody i osiągalność — PlateauPass.
+			var pm: Dictionary = StructuredPlatformsScript.mask(ctx, canals, flags, cfg["platforms"])
+			ctx.plateau = PlateauPass.solve_levels(ctx, flags, {1: pm} if not pm.is_empty() else {})
+			stats["platform_cells"] = pm.size()
+		else:
+			ctx.plateau = PlateauPass.run(ctx, flags)
 		result.plateau = ctx.plateau
 		GenProgress.end()
 
