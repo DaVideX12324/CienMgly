@@ -181,6 +181,16 @@ func is_alive() -> bool:
 	return hp > 0
 
 
+## Cała drużyna bez przytomności — warunek ekranu śmierci (decyzja usera: wszyscy członkowie 0 HP, nie sam lider).
+func is_party_defeated() -> bool:
+	if hp > 0:
+		return false
+	for i in range(1, party.size()):
+		if int((party[i] as Dictionary).get("hp", 0)) > 0:
+			return false
+	return true
+
+
 func _recalculate_max_hp() -> void:
 	max_hp = BASE_HP + (level - 1) * HP_PER_LEVEL
 
