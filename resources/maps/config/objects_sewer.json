@@ -18,6 +18,177 @@
     "barrier_offset": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_offset.tscn",
     "barrier_offset_chance": 0.0
   },
+  "vignettes": [
+      {
+        "id": "sklad_pod_licem",
+        "flip_h": true,
+        "per_room": 0.35,
+        "per_chamber": 0.3,
+        "density": 0.04,
+        "parts": [
+          {
+            "id": "crates",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              2,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          }
+        ],
+        "clear": [
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "stos_skrzyn",
+        "flip_h": true,
+        "per_room": 0.3,
+        "per_chamber": 0.3,
+        "density": 0.03,
+        "parts": [
+          {
+            "id": "crates",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              0,
+              1
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          }
+        ],
+        "clear": [
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "kat_skrzyn",
+        "flip_h": true,
+        "per_room": 0.3,
+        "per_chamber": 0.4,
+        "density": 0.02,
+        "parts": [
+          {
+            "id": "crates",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n",
+              "wall_w"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              0,
+              1
+            ],
+            "tags": [
+              "wall_w"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "beczki",
+        "flip_h": true,
+        "per_room": 0.25,
+        "per_chamber": 0.25,
+        "density": 0.03,
+        "parts": [
+          {
+            "id": "barrels",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              0,
+              1
+            ]
+          }
+        ],
+        "clear": [
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    ],
   "groups": {
     "pillar_decor": {
       "class": "PROP",
