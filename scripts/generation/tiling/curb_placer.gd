@@ -10,10 +10,14 @@ extends RefCounted
 ##    Chodniki przy kanale nie są podnoszone (`raise_lanes`: false).
 ## 4. Krawężnik na każdej granicy podniesiony | niski: pozioma -> H_L / H_M / H_R na kratce od północy,
 ##    pionowa -> V_T / V_M / V_B na kratce od zachodu (pojedyncza kratka = środek). Warstwa z profilu (FloorDecor).
+##    Linia cofnięta w głąb przejścia (_inset, do INSET_MAX kratek wzdłuż przekroju): krawężnik leży między kaflami
+##    ścian — obie kratki przy linii mają na obu końcach odcinka ścianę albo wodę — a nie u wylotu, na otwartym
+##    (decyzja usera). Bez takiego miejsca zostaje na granicy jednostek.
 ##
 ## JSON: "curbs": {"chance": 0.35, "raise_lanes": false}
 
 const MAX_LEN := 5
+const INSET_MAX := 3
 const DIRS: Array[Vector2i] = [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]
 
 
@@ -116,10 +120,12 @@ static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
 		var b: Dictionary = bounds[key]
 		for y: int in b.h:
 			for run in _runs(b.h[y]):
-				_place(ctx, plan, table, run.map(func(x): return Vector2i(x, y)), [&"H_L", &"H_M", &"H_R"])
+				var cells: Array = run.map(func(x): return Vector2i(x, y))
+				_place(ctx, plan, table, _inset(g, canals, bad, cells, Vector2i(0, 1), Vector2i(1, 0)), [&"H_L", &"H_M", &"H_R"])
 		for x: int in b.v:
 			for run in _runs(b.v[x]):
-				_place(ctx, plan, table, run.map(func(y): return Vector2i(x, y)), [&"V_T", &"V_M", &"V_B"])
+				var cells: Array = run.map(func(y): return Vector2i(x, y))
+				_place(ctx, plan, table, _inset(g, canals, bad, cells, Vector2i(1, 0), Vector2i(0, 1)), [&"V_T", &"V_M", &"V_B"])
 
 
 ## Granica czysta: każdy odcinek do MAX_LEN, na obu końcach ściana albo woda.
@@ -147,6 +153,42 @@ static func _place(ctx: GenerationContext, plan: TilePlacementPlan, table: Dicti
 		var pos: Vector2i = cells[i]
 		for rp in TileResolver.resolve_module_parts(ctx, pos, TileModuleRole.Id.CURB, [], -1, vid):
 			FacadePlacer._queue_part(plan, pos + rp.offset, rp, &"FLOOR_DECOR", table)
+
+
+## Linia krawężnika (`cells` = kratki od północy / zachodu linii, `across` = w stronę drugiej kratki, `along` = wzdłuż
+## odcinka) przesunięta o najmniejsze s w [0, ±1 … ±INSET_MAX], przy którym kratki linii i kratki za nią są wolne
+## (podłoga, nie woda / kładka / portal), a na obu końcach odcinka, po obu stronach linii, jest ściana albo woda.
+## Kratki pomiędzy starą a nową linią też muszą być przejściem tej samej szerokości. Brak -> linia bez zmian.
+static func _inset(g: Dictionary, canals, bad: Dictionary, cells: Array, across: Vector2i, along: Vector2i) -> Array:
+	var shifts: Array[int] = [0]
+	for k in range(1, INSET_MAX + 1):
+		shifts.append(k)
+		shifts.append(-k)
+	for sft in shifts:
+		var ok := true
+		var lo := mini(0, sft)
+		var hi := maxi(0, sft) + 1   # wiersze lo..hi (linia + kratka za nią) — całe przejście
+		for k in range(lo, hi + 1):
+			var row: Array = cells.map(func(c: Vector2i) -> Vector2i: return c + across * k)
+			for c: Vector2i in row:
+				if not GridUtils.is_walkable(g, c) or bad.has(c):
+					ok = false
+					break
+			if not ok:
+				break
+			if k == sft or k == sft + 1:
+				var a: Vector2i = row[0] - along
+				var b: Vector2i = row[-1] + along
+				if not (_solid(g, canals, a) and _solid(g, canals, b)):
+					ok = false
+					break
+		if ok:
+			return cells.map(func(c: Vector2i) -> Vector2i: return c + across * sft)
+	return cells
+
+
+static func _solid(g: Dictionary, canals, c: Vector2i) -> bool:
+	return not GridUtils.is_walkable(g, c) or (canals.water.has(c) and not canals.crossing_cells.has(c))
 
 
 ## Koniec przekroju: ściana albo woda (bez kładki) w jednej z dwóch kratek.
