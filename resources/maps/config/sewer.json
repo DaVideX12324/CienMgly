@@ -140,6 +140,7 @@
   "tiling": {
     "canal_end_face_chance": 0.3,
     "canal_end_under_wall": true,
+    "canal_end_face_rim_over_wall": true,
     "connectors_enabled": false,
     "facades_enabled": true,
     "facade_top_independent": true,
