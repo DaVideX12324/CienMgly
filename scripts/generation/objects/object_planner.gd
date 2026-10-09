@@ -46,6 +46,10 @@ var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indek
 var set_ids := {}                  # zestaw -> indeks
 var parent_center := Vector2(-1, -1)  # środek rodzica (kratki) przy stawianiu towarzyszy — facing_pref "parent"
 var canal_dist := PackedInt32Array()  # idx -> odległość (Chebyshev) od wody kanału; liczona, gdy jakiś obiekt ma canal_gap
+var gate_canals = null                # canals z bramami GatePlanner (kontrola osiągalności B)
+var gate_gi := PackedInt32Array()     # brama (z otwieraczem) -> indeks w canals.gates
+var gate_idx: Array[PackedInt32Array] = []  # brama -> kratki kolców
+var gate_sets: Array = []             # brama -> Array[PackedInt32Array]: zestawy kratek, z których każdy ją otwiera
 
 
 ## Plan obiektów dla wyniku generacji. `features` można podać, gdy są już policzone.
@@ -71,6 +75,7 @@ func _run(result, catalog: ObjectCatalog) -> void:
 	set_of.resize(n)
 	_forbid(result)
 	_reserve_paths(result)
+	_collect_gates(result)
 	if catalog == null:
 		return
 	area_weights = catalog.area_weights
@@ -868,9 +873,136 @@ func _reserve_access(pl: ObjectPlacement) -> void:
 ## kratek przepuszczała szczeliny, w których siatka nawigacji się rwała (500×500: ~1/3 par bez ścieżki).
 ## Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada (obstawiony przeszkodami) -> zdejmij przeszkody
 ## wokół niego, a gdy się nie da — jego samego. Powtarzaj do skutku.
+## Kontrola B (bramy GatePlanner): przejście z wejścia przy zamkniętych bramach, brama otwiera się po dojściu do
+## jej płyty albo klucza i zamka (_bfs_gated). Brama, której nic osiągalnego nie otwiera — z samego planu bram albo
+## przez przeszkody, których naprawa nie zdjęła — nie powstaje (otwieracz "", płyty bez niej): mapa bez niej jest
+## grywalna, a z nią odcięta. Po kontroli każda brama się otwiera, więc osiągalność bez bram = z bramami.
 func _verify_reach() -> void:
 	if entrance_i < 0:
 		return
+	if not gate_idx.is_empty():
+		var zero := PackedByteArray()
+		zero.resize(f.width * f.height)
+		_drop_gates(_bfs_gated(zero, false)[1], &"gates_dropped_plan")
+	_repair_reach()
+	if not gate_idx.is_empty():
+		_drop_gates(_bfs_gated(_clearance(), true)[1], &"gates_dropped_objects")
+
+
+## Bramy z GatePlanner (z otwieraczem): kratki kolców i zestawy kratek, z których każdy ją otwiera — płyta naciskowa
+## z jej id (zagadka albo skrót za bramą) albo klucz + zamek.
+func _collect_gates(result) -> void:
+	var canals = result.canals
+	if canals == null or not "gate_openers" in canals:
+		return
+	gate_canals = canals
+	for gi in range(mini(canals.gates.size(), canals.gate_openers.size())):
+		var opener := String(canals.gate_openers[gi])
+		if opener.is_empty():
+			continue
+		var cells := PackedInt32Array()
+		for c: Vector2i in canals.gates[gi]:
+			if f.in_bounds(c):
+				cells.append(f.idx(c))
+		var sets: Array = []
+		if opener == "lock":
+			var key: Vector2i = canals.levers[gi]
+			var lock: Vector2i = canals.gate_locks[gi]
+			if f.in_bounds(key) and f.in_bounds(lock):
+				sets.append(PackedInt32Array([f.idx(key), f.idx(lock)]))
+		if "gate_plates" in canals:
+			for pe in canals.gate_plates:
+				var pc: Vector2i = pe.cell
+				if (pe.gates as Array).has(gi) and f.in_bounds(pc):
+					sets.append(PackedInt32Array([f.idx(pc)]))
+		gate_gi.append(gi)
+		gate_idx.append(cells)
+		gate_sets.append(sets)
+
+
+## BFS jak _bfs_agent przy zamkniętych bramach: brama otwiera się, gdy wszystkie kratki któregoś jej zestawu są
+## dotknięte (osiągalne albo z osiągalnym sąsiadem); powtarzane, dopóki otwierają się nowe.
+## `with_objects` false: bez przeszkód (clr same zera) — sam plan bram. -> [rodzice, PackedByteArray otwartych bram].
+func _bfs_gated(clr: PackedByteArray, with_objects: bool) -> Array:
+	var n := f.width * f.height
+	var closed := PackedByteArray()
+	closed.resize(n)
+	var opened := PackedByteArray()
+	opened.resize(gate_idx.size())
+	for cells in gate_idx:
+		for j in cells:
+			closed[j] = 1
+	var parent := PackedInt32Array()
+	for _stage in range(gate_idx.size() + 1):
+		parent = _bfs_agent(entrance_i, clr, closed, with_objects)
+		var more := false
+		for g in range(gate_idx.size()):
+			if opened[g] == 1:
+				continue
+			for st: PackedInt32Array in gate_sets[g]:
+				var all := true
+				for j in st:
+					if not _touched(j, parent):
+						all = false
+						break
+				if all:
+					opened[g] = 1
+					more = true
+					for j in gate_idx[g]:
+						closed[j] = 0
+					break
+		if not more:
+			break
+	return [parent, opened]
+
+
+func _touched(i: int, parent: PackedInt32Array) -> bool:
+	if parent[i] != -1:
+		return true
+	var w := f.width
+	var x := i % w
+	return (x > 0 and parent[i - 1] != -1) or (x < w - 1 and parent[i + 1] != -1) \
+			or (i >= w and parent[i - w] != -1) or (i + w < parent.size() and parent[i + w] != -1)
+
+
+## Bramy nieotwarte (`opened[g] == 0`) nie powstają: otwieracz "" w canals, płyty bez nich (pusta płyta znika).
+func _drop_gates(opened: PackedByteArray, stat: StringName) -> void:
+	var keep := PackedInt32Array()
+	var dropped := {}
+	for g in range(gate_idx.size()):
+		if opened[g] == 1:
+			keep.append(g)
+		else:
+			dropped[gate_gi[g]] = true
+	if dropped.is_empty():
+		return
+	plan.stats[stat] = int(plan.stats.get(stat, 0)) + dropped.size()
+	for gi: int in dropped:
+		gate_canals.gate_openers[gi] = ""
+	if "gate_plates" in gate_canals:
+		var plates: Array = []
+		for pe in gate_canals.gate_plates:
+			var left: Array = []
+			for gi in pe.gates:
+				if not dropped.has(gi):
+					left.append(gi)
+			if not left.is_empty():
+				pe.gates = left
+				plates.append(pe)
+		gate_canals.gate_plates = plates
+	var gi2 := PackedInt32Array()
+	var idx2: Array[PackedInt32Array] = []
+	var sets2: Array = []
+	for g in keep:
+		gi2.append(gate_gi[g])
+		idx2.append(gate_idx[g])
+		sets2.append(gate_sets[g])
+	gate_gi = gi2
+	gate_idx = idx2
+	gate_sets = sets2
+
+
+func _repair_reach() -> void:
 	var w := f.width
 	var n := f.width * f.height
 	for _round in range(REACH_ROUNDS):
@@ -999,7 +1131,8 @@ static func _near_poly(poly: PackedVector2Array, box: Rect2, p: Vector2, r: floa
 
 ## BFS z wejścia jak dla wroga: kratka chodliwa bez bariery i przeszkody, środek wolny (CLR_CENTER),
 ## przejście do sąsiada tylko po wolnym odcinku (CLR_EAST / CLR_SOUTH kratki z lewej / z góry).
-func _bfs_agent(start: int, clr: PackedByteArray) -> PackedInt32Array:
+## `closed`: kratki zamkniętych bram (puste = brak); `with_objects` false — przeszkody z planu nie blokują.
+func _bfs_agent(start: int, clr: PackedByteArray, closed := PackedByteArray(), with_objects := true) -> PackedInt32Array:
 	var n := f.width * f.height
 	var parent := PackedInt32Array()
 	parent.resize(n)
@@ -1008,8 +1141,11 @@ func _bfs_agent(start: int, clr: PackedByteArray) -> PackedInt32Array:
 		return parent
 	var ok := PackedByteArray()
 	ok.resize(n)
+	var solid := ObjectPlan.SOLID if with_objects else 0
+	var gated := not closed.is_empty()
 	for i in range(n):
-		if f.walk[i] == 1 and blocked[i] == 0 and not plan.occupancy[i] & ObjectPlan.SOLID and clr[i] & CLR_CENTER == 0:
+		if f.walk[i] == 1 and blocked[i] == 0 and not plan.occupancy[i] & solid and clr[i] & CLR_CENTER == 0 \
+				and not (gated and closed[i] == 1):
 			ok[i] = 1
 	ok[start] = 1  # strefa wejścia jest wolna od przeszkód (FORBID), start zawsze
 	parent[start] = start

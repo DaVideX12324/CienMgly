@@ -614,6 +614,10 @@ static func emit(result, scenes: Dictionary, objects: ObjectPlan) -> int:
 	var column_def := _def(&"gate_barrier", String(scenes.get("barrier_column", scenes.get("barrier", ""))), &"")
 	var offset_def := _def(&"gate_barrier", String(scenes.get("barrier_offset", "")), &"")
 	var offset_chance := float(scenes.get("barrier_offset_chance", 0.5))
+	# kolce bramy = przeszkoda (SOLID): siatka nawigacji omija bramę (wrogowie nie przechodzą między strefami nawet po
+	# otwarciu — siatka jest stała), spawny nie lądują na kolcach
+	for d: ObjectDef in [barrier_def, column_def, offset_def]:
+		d.collision = ObjectDef.Collision.SCENE
 	if barrier_def.scene.is_empty():
 		return 0
 	var made := 0
@@ -676,5 +680,5 @@ static func _add(objects: ObjectPlan, def: ObjectDef, c: Vector2i, link: String)
 		var j := c.y * objects.width + c.x
 		pl.cells = PackedInt32Array([j])
 		if def.mount.is_empty():
-			objects.occupancy[j] |= ObjectPlan.USED
+			objects.occupancy[j] |= ObjectPlan.USED | (ObjectPlan.SOLID if def.is_solid() else 0)
 	objects.placements.append(pl)
