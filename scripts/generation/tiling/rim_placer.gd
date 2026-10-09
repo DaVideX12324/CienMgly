@@ -88,7 +88,9 @@ static func plan(
 					_:
 						rim_t = Vector2i(3, 0) if is_b else Vector2i(2, 0)
 
-				if not _try_rim(ctx, placement_plan, pos, role, variant_id, table, corner):
+				# brak wariantu B w profilu -> A (np. ścieki mają tylko A narożników W / E); stały kafel jaskini dopiero
+				# bez roli — w innym atlasie wskazywałby obcy kafel (róg platformy zamiast rogu ściany)
+				if not _try_rim(ctx, placement_plan, pos, role, variant_id, table, corner) 						and (variant_id == &"A" or not _try_rim(ctx, placement_plan, pos, role, &"A", table, corner)):
 					_queue(placement_plan, pos, rim_t, &"RIM_BASE", table, corner)
 				state.mark(pos, &"RIM")
 
