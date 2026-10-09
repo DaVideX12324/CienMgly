@@ -56,7 +56,12 @@
     "canal_bridge_spacing": 24,
     "enable_objects": true,
     "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer.json",
-    "canal_dry_chance": 0.4
+    "canal_dry_chance": 0.4,
+    "enable_platforms": true,
+    "plateau_face_h": 3,
+    "plateau_min_area": 16,
+    "platform_max_stairs": 1,
+    "stair_max_width": 3
   },
   "structured_layout": {
     "linear_feature_type": "canal",
@@ -112,7 +117,8 @@
     "room_size_w": [10, 17],
     "room_size_h": [9, 14],
     "loop_chance": 0.35,
-    "corridor_room_chance": 0.5
+    "corridor_room_chance": 0.5,
+    "platforms": {"sides": ["N"], "sources": {"hall": 0.6, "chamber": 0.4, "room": 0.3}, "min_width": 8, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90}
   },
   "facade_rhythm": {
     "pillar_spacing_options": [4, 5],
@@ -125,6 +131,12 @@
     "frequency": 0.03,
     "threshold": 0.1,
     "segment_flip_chance": 0.1
+  },
+  "platform_tiles": {
+    "tileset": "sewer_platform",
+    "derive_from": "sewer",
+    "shift": {"source": 0, "rect": [6, 0, 6, 6], "offset": [-6, 0]},
+    "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]}
   },
   "scenes": {"chest": "res://modules/quiz_rpg/scenes/objects/sewer/sewer_chest.tscn"},
   "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
