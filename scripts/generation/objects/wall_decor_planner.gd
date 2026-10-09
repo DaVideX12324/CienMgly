@@ -405,8 +405,9 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		for k in range(n):
 			dry_end = dry_end and result.canals.dry.has(a + Vector2i(k, 0))
 		var closed := float(hash([seed_v, a, "canal_end_face"]) & 0xFFFF) / 65536.0 < chance_n
-		if dry_end and "force_4h_bases" in result.canals and result.canals.force_4h_bases.has(a):
-			closed = false   # eksperyment dry_end_4h: koniec pustego koryta pod murem 4H zawsze otwarty
+		var trench: bool = "trench" in result.canals and result.canals.trench.has(a)
+		if trench:
+			closed = false   # eksperyment dry_end_4h: lico 4H schodzi do dna — bez lica kanału
 		if "north_end_face" in result.canals:
 			result.canals.north_end_face[a] = closed
 		# wybór ważony canal_end spośród obiektów o szerokości kanału (suma < 1 — szansa na brak obiektu)
@@ -429,7 +430,8 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 			var w := n
 			var pl := ObjectPlacement.new()
 			pl.def = def
-			pl.cell = anchor + Vector2i(0, def.canal_end_dy)   # miejsce sprawdzone na zwykłej kotwicy lica
+			# miejsce sprawdzone na zwykłej kotwicy lica; nad wykopem (dry_end_4h) cała krata kratkę niżej, przy dnie
+			pl.cell = anchor + Vector2i(0, 1 if trench else def.canal_end_dy)
 			pl.variant = hash([seed_v, a, "canal_end_v"]) % maxi(def.variant_count(), 1)
 			objects.placements.append(pl)
 			objects.stats[def.id] = objects.count(def.id) + 1

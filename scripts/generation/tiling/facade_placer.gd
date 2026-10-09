@@ -259,12 +259,10 @@ static func _plan_4h_segments(ctx: GenerationContext) -> void:
 				if GridUtils.is_walkable(grid, top + Vector2i(-1, 0)) or GridUtils.is_walkable(grid, top + Vector2i(1, 0)):
 					ok = false
 				x += 1
-			# eksperyment dry_end_4h: odcinek nad zamurowanym końcem pustego koryta zawsze 4H
-			var forced: bool = ctx.canals != null and "force_4h_bases" in ctx.canals and ctx.canals.force_4h_bases.has(Vector2i(x0, y))
-			if not ok and not forced:
+			if not ok:
 				continue
 			var roll := float(hash([ctx.seed_value, y, x0, "facade_4h"]) & 0xFFFF) / 65536.0
-			if forced or roll < ctx.flags.facade_4h_chance:
+			if roll < ctx.flags.facade_4h_chance:
 				for cx in range(x0, x):
 					ctx.facade_4h_bases[Vector2i(cx, y)] = true
 
@@ -344,6 +342,15 @@ static func place_3h(
 	# Lico 4H (enable_4h_facades + rola FACADE_4H w profilu): tam, gdzie 3H dostałoby koronę.
 	var variant_id4: StringName = &"B" if is_b else &"A"
 	var force4: StringName = &"caves_roots" if use_roots else &""
+	# eksperyment dry_end_4h: nad końcem pustego koryta (canals.trench) proste lico 4H kratkę niżej — dolny rząd na
+	# górnym rzędzie koryta, góra równa z sąsiednim 3H; bez cieni (dolna kotwica, sąsiedzi na brzegu = podłoga)
+	if ctx.canals != null and "trench" in ctx.canals and ctx.canals.trench.has(pos):
+		var low := pos + Vector2i(0, 1)
+		if TileResolver.resolve_module_parts(ctx, low, TileModuleRole.Id.FACADE_4H, [], -1, variant_id4, force4).size() > 0:
+			for rp in TileResolver.resolve_module_parts(ctx, low, TileModuleRole.Id.FACADE_4H, [], -1, variant_id4, force4):
+				_queue_part(plan, low + rp.offset, rp, &"FACADE", table, low)
+			mark_4h(ctx, low, state)
+			return
 	if wants_4h(ctx, pos, state, edges) and _try_shaded_module(ctx, plan, pos, TileModuleRole.Id.FACADE_4H, variant_id4, table, force4):
 		mark_4h(ctx, pos, state)
 		return
