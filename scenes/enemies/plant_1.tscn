@@ -3,6 +3,8 @@
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://b7g5dqmag7gsi" path="res://modules/quiz_rpg/scripts/enemies/plant_1.gd" id="2_script"]
 [ext_resource type="SpriteFrames" uid="uid://3wjddt483e2" path="res://modules/quiz_rpg/resources/enemies/enemy_plant_1.tres" id="3_frames"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="9_skill_script"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/poison_vine.tres" id="9_poison_vine"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fix"]
 radius = 3.0
@@ -15,6 +17,7 @@ quiz_id = "ogolne"
 hp = 40
 max_hp = 40
 damage_on_wrong = 12
+battle_skills = Array[ExtResource("9_skill_script")]([ExtResource("9_poison_vine")])
 xp_reward = 40
 encounter_tier = 1
 patrol_speed = 65.0

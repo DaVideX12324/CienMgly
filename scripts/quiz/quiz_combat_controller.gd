@@ -1296,6 +1296,11 @@ func _enemy_turn() -> void:
 		if int(enemy_unit.get("hp", 0)) <= 0:
 			continue
 		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
+		var skill := _pick_enemy_skill(enemy_unit)
+		if skill != null:
+			if await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill):
+				return
+			continue
 		if turn_label:
 			turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
 		_push_log("%s atakuje!" % enemy_label, Color.WHITE)
@@ -1367,6 +1372,126 @@ func _enemy_turn() -> void:
 	if await _apply_poison_round():
 		return
 	_start_player_turn()
+
+
+## Umiejętność wroga na tę turę: pierwsza z battle_skills dostępna (cooldown, first_turn) i wylosowana z use_chance;
+## null = zwykły atak. Cooldowny w jednostce wroga ("cooldowns": {indeks: tury}), odliczane co jej turę.
+func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
+	if enemy == null or not "battle_skills" in enemy:
+		return null
+	var skills: Array = enemy.get("battle_skills")
+	if skills.is_empty():
+		return null
+	var cds: Dictionary = enemy_unit.get("cooldowns", {})
+	for k in cds.keys():
+		cds[k] = int(cds[k]) - 1
+		if int(cds[k]) <= 0:
+			cds.erase(k)
+	enemy_unit["cooldowns"] = cds
+	for i in range(skills.size()):
+		var sk := skills[i] as QuizRpgEnemySkill
+		if sk == null or cds.has(i) or turn_number < sk.first_turn:
+			continue
+		if randf() < sk.use_chance:
+			if sk.cooldown_turns > 0:
+				cds[i] = sk.cooldown_turns + 1   # odliczanie zaczyna się od następnej tury wroga
+			return sk
+	return null
+
+
+## Użycie umiejętności: `hits` ataków w serii na cel(e) — obrona lidera (blok / połowa) i pancerz wg ustawień
+## umiejętności, status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
+func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: String, sk: QuizRpgEnemySkill) -> bool:
+	var text := sk.log_text if sk.log_text != "" else "{enemy} używa: {skill}!"
+	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.skill_name)
+	if turn_label:
+		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.skill_name]
+	_push_log(text, sk.color)
+	result_label.text = text
+	result_label.add_theme_color_override("font_color", sk.color)
+	_active_enemy_index = enemy_index
+	_refresh_enemy_header()
+	var tier := int(enemy_unit.get("tier", _get_encounter_tier()))
+	var party_n := maxi(_ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1, 1)
+	var audio := get_node_or_null("/root/AudioService")
+	var touched := {}   # cele trafione (albo dosięgnięte przez umiejętność bez obrażeń)
+	for h in range(sk.hits):
+		if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
+			var disp: Node2D = _enemy_displays[enemy_index]
+			if disp.has_method("play_attack"):
+				disp.call("play_attack")
+		await get_tree().create_timer(0.5 if h == 0 else sk.hit_interval).timeout
+		var targets: Array[int] = [0]
+		if sk.target == QuizRpgEnemySkill.Target.RANDOM_MEMBER:
+			targets = [randi() % party_n]
+		elif sk.target == QuizRpgEnemySkill.Target.ALL_PARTY:
+			targets.clear()
+			for i in range(party_n):
+				targets.append(i)
+		var raw := 0
+		if sk.damage_mode == QuizRpgEnemySkill.DamageMode.MULTIPLIER:
+			raw = roundi((int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8) * sk.damage_multiplier)
+		elif sk.damage_mode == QuizRpgEnemySkill.DamageMode.FIXED:
+			raw = sk.fixed_damage
+		if raw > 0:
+			_gain_party_tp(0, _tp_from_damage(raw, tier))
+		for t in targets:
+			var mult := 1.0
+			var blocked := false
+			if t == 0 and defending and sk.can_be_blocked:
+				if quiz_correct:
+					blocked = true
+				else:
+					mult = 0.5
+			var dmg := 0
+			if raw > 0 and not blocked:
+				if sk.ignore_armor:
+					dmg = roundi(raw * mult)
+				elif _ps and _ps.has_method("calculate_incoming_damage"):
+					dmg = int(_ps.calculate_incoming_damage(raw, tier, mult, t))
+				else:
+					dmg = roundi(raw * mult)
+			if blocked:
+				if audio:
+					audio.play_sfx_by_name("hit")
+				_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
+				continue
+			if dmg > 0 and _ps:
+				_ps.damage_member(t, dmg)
+				if t == 0:
+					if audio:
+						audio.play_sfx_by_name("player_damage")
+					_flash_sprite(player_sprite_node, sk.color)
+					HitParticles.create_at(player, player.global_position, sk.color, 6)
+					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % dmg, sk.color, 14)
+			if dmg > 0 or sk.damage_mode == QuizRpgEnemySkill.DamageMode.NONE:
+				touched[t] = true
+				if sk.has_status() and sk.status_per_hit and randf() < sk.status_chance:
+					_inflict_status(t, sk)
+		_update_hp_bars()
+		_refresh_stats_panel()
+		if _ps and not _ps.is_alive():
+			await get_tree().create_timer(0.6).timeout
+			_end_combat(false)
+			return true
+	if sk.has_status() and not sk.status_per_hit:
+		for t: int in touched:
+			if randf() < sk.status_chance:
+				_inflict_status(t, sk)
+	await get_tree().create_timer(0.8).timeout
+	return false
+
+
+func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
+	if _ps == null or not _ps.has_method("add_status") or not _ps.add_status(member_index, sk.inflict_status):
+		return
+	var member: Dictionary = _ps.get_party_member(member_index) if _ps.has_method("get_party_member") else {}
+	var st_name := str(_ps.STATUS_NAMES.get(sk.inflict_status, sk.inflict_status)) if "STATUS_NAMES" in _ps else sk.inflict_status
+	var col := POISON_COLOR if sk.inflict_status == "poison" else sk.color
+	_push_log("%s: %s!" % [str(member.get("name", "Bohater")), st_name], col)
+	if member_index == 0:
+		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "%s!" % st_name, col, 12)
 
 
 ## Koniec rundy wrogów: trucizna zabiera zatrutym część maks. HP (w walce może zbić do 0 — decyzja usera).
