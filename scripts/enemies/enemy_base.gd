@@ -16,6 +16,8 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 @export var hp: int = 50
 @export var max_hp: int = 50
 @export var damage_on_wrong: int = 15
+## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
+@export var battle_skills: Array[QuizRpgEnemySkill] = []
 @export var xp_reward: int = 50
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
@@ -188,6 +190,8 @@ func _apply_enemy_data() -> void:
 	max_hp = maxi(enemy_data.max_hp, 1)
 	hp = max_hp
 	damage_on_wrong = maxi(enemy_data.damage_on_wrong, 0)
+	if not enemy_data.battle_skills.is_empty():
+		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)
 	encounter_tier = clampi(enemy_data.encounter_tier, 1, 5)
 	min_encounter_size = maxi(enemy_data.min_encounter_size, 1)

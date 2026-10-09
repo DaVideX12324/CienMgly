@@ -310,6 +310,17 @@ func _is_exploring() -> bool:
 	return gm is Node and (gm as Node).has_method("is_exploring") and bool((gm as Node).call("is_exploring"))
 
 
+## Obrażenia członka drużyny (umiejętności wrogów celujące w drużynę); lider przez take_damage (tryb boga).
+func damage_member(member_index: int, amount: int) -> void:
+	if member_index == 0:
+		take_damage(amount)
+		return
+	if member_index < 0 or member_index >= party.size():
+		return
+	_set_member_hp(member_index, maxi(_member_hp(member_index) - amount, 0))
+	party_changed.emit()
+
+
 ## Cała drużyna bez przytomności — warunek ekranu śmierci (decyzja usera: wszyscy członkowie 0 HP, nie sam lider).
 func is_party_defeated() -> bool:
 	if hp > 0:

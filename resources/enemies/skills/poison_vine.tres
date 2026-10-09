@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemySkill" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_name = "Trujące pnącze"
+log_text = "{enemy} oplata cię trującym pnączem!"
+use_chance = 0.35
+cooldown_turns = 2
+damage_multiplier = 0.6
+inflict_status = "poison"
+status_chance = 0.8
+color = Color(0.55, 0.9, 0.3, 1)
