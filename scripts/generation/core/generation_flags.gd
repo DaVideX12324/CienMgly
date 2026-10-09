@@ -110,6 +110,10 @@ var plateau_pit_levels: int = 0            # poziomy zagłębień (0 = brak, 1 =
 var plateau_pit_threshold: float = 0.3     # doły tam, gdzie szum < -próg (NIŻSZY = więcej dołów)
 var platform_max_stairs: int = 4           # maks. schodów „z wyglądu” na płaskowyż — liczba losowana 0..max (S, potem N, E, W); schody dla osiągalności ponad to
 var stair_max_width: int = 3               # schody: min. 2 ([L][R]), szersze dokładają MID
+# Wysokość lica płaskowyżu (rzędy lica w kolumnie, z krawędzią topu). 2 = jaskinie (krawędź maski + stopa pod
+# nią); z flagą facade_base_on_wall lico leży na kratkach maski: krawędź + face_h - 1 rzędów nad nią (ścieki 3H:
+# krawędź krzyża + 2 rzędy lica, jak moduł FACADE_3H). Schody S zajmują całe lico.
+var plateau_face_h: int = 2
 
 # --- Obiekty statyczne i interaktywne (ObjectPlanner) — domyślnie WYŁĄCZONE (parytet) ---
 var enable_objects: bool = false
