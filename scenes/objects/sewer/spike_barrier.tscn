@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/sewer/spike_trap.tscn" id="1_base"]
+
+[node name="SpikeBarrier" instance=ExtResource("1_base")]
+mode = 2
