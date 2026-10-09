@@ -208,18 +208,27 @@ static func _gap2(s: PackedByteArray, i: int, w: int) -> bool:
 static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]) -> Dictionary:
 	var fl: GenerationFlags = ctx.flags if ctx.flags != null else GenerationFlags.new()
 	var smoothing := ctx.flags != null and ctx.flags.enable_terrain_smoothing
-	# kanały (woda, puste koryto, kładki) bez plam — mech / foliage tylko na posadzce
+	# terrain_cells nie ma kanałów (podłogi nie maluje się na wodzie); plamy foliage dostają też dno pustego koryta —
+	# bez lica kanału (górny rząd koryta), dołów i kładek
 	var cells := terrain_cells
+	# plamy foliage tylko na chodliwej podłodze — domena terenu sięga pod krawędzie ścian (teren podłogi pod rimem),
+	# a mech na kratce muru wychodził na narożniki / pustkę w bloku ściany
+	var grass_cells: Array[Vector2i] = []
+	for p in terrain_cells:
+		if GridUtils.is_walkable(ctx.grid, p):
+			grass_cells.append(p)
 	var canals = ctx.canals
-	if canals != null and not canals.is_empty():
-		cells = []
-		for p in terrain_cells:
-			if not canals.water.has(p) and not canals.bridge_cells.has(p):
-				cells.append(p)
+	if canals != null and not canals.is_empty() and not canals.dry.is_empty():
+		var bed: Array[Vector2i] = []
+		for p: Vector2i in canals.dry:
+			if canals.water.has(p + Vector2i(0, -1)) and not canals.pit_cells.has(p) and not canals.bridge_cells.has(p):
+				bed.append(p)
+		bed.sort()
+		grass_cells.append_array(bed)
 	return {
 		"seed": ctx.seed_value,
 		"mud": _mask(cells, ctx.portal_zone, ctx.seed_value + 202, fl.terrain_mud_frequency, fl.terrain_mud_threshold, smoothing),
-		"grass": _mask(cells, ctx.portal_zone, ctx.seed_value, fl.terrain_grass_frequency, fl.terrain_grass_threshold, smoothing),
+		"grass": _mask(grass_cells, ctx.portal_zone, ctx.seed_value, fl.terrain_grass_frequency, fl.terrain_grass_threshold, smoothing),
 	}
 
 
