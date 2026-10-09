@@ -1,0 +1,60 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/interactables/spike_trap.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="2_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_holes"]
+atlas = ExtResource("2_props")
+region = Rect2(64, 224, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tip"]
+atlas = ExtResource("2_props")
+region = Rect2(48, 144, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rod"]
+atlas = ExtResource("2_props")
+region = Rect2(0, 208, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_base"]
+atlas = ExtResource("2_props")
+region = Rect2(16, 208, 16, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trigger"]
+size = Vector2(12, 12)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_block"]
+size = Vector2(16, 12)
+
+[node name="SpikeTrap" type="StaticBody2D"]
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="Holes" type="Sprite2D" parent="."]
+texture = SubResource("AtlasTexture_holes")
+
+[node name="Spike" type="Node2D" parent="."]
+visible = false
+
+[node name="Base" type="Sprite2D" parent="Spike"]
+texture = SubResource("AtlasTexture_base")
+
+[node name="Rod" type="Sprite2D" parent="Spike"]
+position = Vector2(0, -16)
+texture = SubResource("AtlasTexture_rod")
+
+[node name="Tip" type="Sprite2D" parent="Spike"]
+position = Vector2(0, -32)
+texture = SubResource("AtlasTexture_tip")
+
+[node name="Trigger" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="Shape" type="CollisionShape2D" parent="Trigger"]
+shape = SubResource("RectangleShape2D_trigger")
+
+[node name="BlockShape" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_block")
+disabled = true
