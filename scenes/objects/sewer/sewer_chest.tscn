@@ -1,0 +1,42 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" uid="uid://eq0y6pmpl2vc" path="res://modules/quiz_rpg/scenes/objects/closed_chest_tutorial.tscn" id="1_base"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="2_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_closed"]
+atlas = ExtResource("2_props")
+region = Rect2(128, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_open"]
+atlas = ExtResource("2_props")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_sewer"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_closed")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_open")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_base"]
+size = Vector2(26, 8)
+
+[node name="SewerChest" instance=ExtResource("1_base")]
+scale = Vector2(1, 1)
+
+[node name="CollisionShape2D" parent="." index="0"]
+position = Vector2(0, 3)
+shape = SubResource("RectangleShape2D_base")
+
+[node name="Chest" parent="." index="1"]
+position = Vector2(0, -8)
+scale = Vector2(1, 1)
+sprite_frames = SubResource("SpriteFrames_sewer")
+frame = 0
