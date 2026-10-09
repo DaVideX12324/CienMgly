@@ -46,6 +46,7 @@ var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indek
 var set_ids := {}                  # zestaw -> indeks
 var parent_center := Vector2(-1, -1)  # środek rodzica (kratki) przy stawianiu towarzyszy — facing_pref "parent"
 var canal_dist := PackedInt32Array()  # idx -> odległość (Chebyshev) od wody kanału; liczona, gdy jakiś obiekt ma canal_gap
+var room_groups := {}               # room_group -> {indeks pokoju: true} — zajęte przez obiekt tej grupy
 var vignettes_by_id := {}            # id winiety -> słownik z katalogu (wzory skupisk, cluster.patterns)
 var gate_canals = null                # canals z bramami GatePlanner (kontrola osiągalności B)
 var gate_gi := PackedInt32Array()     # brama (z otwieraczem) -> indeks w canals.gates
@@ -380,13 +381,21 @@ func _place_per_room(def: ObjectDef, marker: int, cands: PackedInt32Array, rng: 
 		var t = rooms[k]
 		rooms[k] = rooms[j]
 		rooms[j] = t
+	var used: Dictionary = room_groups.get(def.room_group, {})
 	for r in rooms:
 		var chance := def.per_room if r < f.chamber_first else def.per_chamber
 		if not by_room.has(r) or chance <= 0.0 or rng.randf() >= chance:
 			continue
+		if def.room_group != &"" and used.has(r):
+			continue   # pomieszczenie ma już obiekt tej grupy (np. inny stół)
 		var parts: Array = by_room[r]
-		if _pick(def, marker, parts[0], rng, 1, 0) == 0:
-			_pick(def, marker, parts[1], rng, 1, 0)
+		var got := _pick(def, marker, parts[0], rng, 1, 0)
+		if got == 0:
+			got = _pick(def, marker, parts[1], rng, 1, 0)
+		if got > 0 and def.room_group != &"":
+			used[r] = true
+	if def.room_group != &"":
+		room_groups[def.room_group] = used
 
 
 ## Kratki kotwic spełniające reguły i wolne od FORBID (bez duplikatów między tagami).
