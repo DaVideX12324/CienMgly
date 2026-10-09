@@ -54,7 +54,7 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 
 	# 1b. Eksperyment rim_over_wall na północnych końcach pod licem ściany: otwarty koniec z wodą — lico „pod wodą"
 	# (sama górna krawędź lica kanału nad dołem lica ściany, ścieki aż do niej); każdy koniec — narożniki ramy
-	# (obrzeże SE / SW) w kratkach muru po bokach krawędzi. Warstwa Rails (y-sort ze ścianami, rysuje się po nich).
+	# (obrzeże IN_SE / IN_SW, jak róg ramy przy podłodze) w kratkach muru po bokach krawędzi. Warstwa Rails (y-sort ze ścianami, rysuje się po nich).
 	if rim_over_wall and "north_end_face" in canals:
 		for a: Vector2i in canals.north_end_face:
 			var run: Array[Vector2i] = []
@@ -71,10 +71,11 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 							break
 			var left := a + Vector2i(-1, -1)
 			var right: Vector2i = run[run.size() - 1] + Vector2i(1, -1)
-			if not GridUtils.is_walkable(ctx.grid, left) and not water.has(left):
-				_place(ctx, placement_plan, left, TileModuleRole.Id.CANAL_BANK, &"SE", &"Rails", table, &"", false, &"Rails")
-			if not GridUtils.is_walkable(ctx.grid, right) and not water.has(right):
-				_place(ctx, placement_plan, right, TileModuleRole.Id.CANAL_BANK, &"SW", &"Rails", table, &"", false, &"Rails")
+			# róg tylko nad obrzeżem (podłoga pod nim); kanał przy murze bocznym — bez rogu
+			if not GridUtils.is_walkable(ctx.grid, left) and not water.has(left) and GridUtils.is_walkable(ctx.grid, left + Vector2i(0, 1)) 					and not water.has(left + Vector2i(0, 1)):
+				_place(ctx, placement_plan, left, TileModuleRole.Id.CANAL_BANK, &"IN_SE", &"Rails", table, &"", false, &"Rails")
+			if not GridUtils.is_walkable(ctx.grid, right) and not water.has(right) and GridUtils.is_walkable(ctx.grid, right + Vector2i(0, 1)) 					and not water.has(right + Vector2i(0, 1)):
+				_place(ctx, placement_plan, right, TileModuleRole.Id.CANAL_BANK, &"IN_SW", &"Rails", table, &"", false, &"Rails")
 
 	# 2. Kładki (Bridges) — cały ślad; kratki brzegu pod końcami zapamiętane dla obrzeży bez kolizji.
 	var bridge_ends := {}
