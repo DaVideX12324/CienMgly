@@ -687,7 +687,59 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 				for d in dirs:
 					next.append(c + d)
 		cand = next
+	# przesmyki otwarte z obu stron (ciąg kratek z murem po obu bokach): zasypane, gdy końce łączą się inną drogą
+	var blocked_cell := func(c: Vector2i) -> bool:
+		return canals.water.has(c) or canals.bridge_cells.has(c) or ctx.portal_zone.has(c)
+	for axis: Vector2i in [Vector2i(1, 0), Vector2i(0, 1)]:
+		var side := Vector2i(axis.y, axis.x)
+		var seen := {}
+		for y in range(1, ctx.height - 1):
+			for x in range(1, ctx.width - 1):
+				var c := Vector2i(x, y)
+				if seen.has(c) or not GridUtils.is_walkable(ctx.grid, c) or blocked_cell.call(c) 						or open.call(c + side) or open.call(c - side) or (open.call(c - axis) and _sliver(ctx, canals, c - axis, side)):
+					continue
+				var run: Array[Vector2i] = []
+				var q := c
+				while GridUtils.is_walkable(ctx.grid, q) and not blocked_cell.call(q) and _sliver(ctx, canals, q, side):
+					run.append(q)
+					seen[q] = true
+					q += axis
+				var a := c - axis
+				var b := q
+				if run.is_empty() or not open.call(a) or not open.call(b):
+					continue
+				for r in run:
+					ctx.grid[r] = CellType.WALL
+				if _connected(ctx, canals, a, b, ctx.width * ctx.height):
+					filled += run.size()
+				else:
+					for r in run:
+						ctx.grid[r] = CellType.FLOOR
 	return filled
+
+
+static func _sliver(ctx: GenerationContext, canals, c: Vector2i, side: Vector2i) -> bool:
+	var wall := func(q: Vector2i) -> bool:
+		return not GridUtils.is_walkable(ctx.grid, q) and not canals.water.has(q)
+	return wall.call(c + side) and wall.call(c - side)
+
+
+## Czy `b` osiągalne z `a` (4-sąsiedzi po podłodze i wodzie), najwyżej `limit` kratek.
+static func _connected(ctx: GenerationContext, canals, a: Vector2i, b: Vector2i, limit: int) -> bool:
+	var seen := {a: true}
+	var q: Array[Vector2i] = [a]
+	var h := 0
+	while h < q.size() and h < limit:
+		var c := q[h]
+		h += 1
+		if c == b:
+			return true
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if not seen.has(n) and (GridUtils.is_walkable(ctx.grid, n) or canals.water.has(n)):
+				seen[n] = true
+				q.append(n)
+	return false
 
 
 ## Kratki kanału zamurowane przez przejścia czyszczące wypadają z nakładki (woda tylko na podłodze).

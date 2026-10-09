@@ -592,7 +592,9 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 	var pc: Dictionary = cfg.get("complex_partitions", {})
 	var walk := int(pc.get("walkway", 3))
 	var min_d := int(pc.get("min_depth", 3))
-	var door := int(pc.get("door", 3))
+	var door_opts: Array = pc.get("door", [3]) if pc.get("door", 3) is Array else [int(pc.get("door", 3))]
+	var door := int(door_opts.max())        # pas równoległy i progi szerokości komnat — najszersze wejście
+	var exempt := {}                         # kratki wejść (drzwi) — mogą być przesmykiem szer. 1 (pokoik z małym wejściem)
 	var door_every := int(pc.get("door_every", 12))
 	var p_perp := float(pc.get("perp", 0.85))
 	var p_par := float(pc.get("parallel", 0.3))
@@ -624,7 +626,7 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 				var nx: int = x + d.x
 				var ny: int = y + d.y
-				if solid.call(nx, ny):
+				if solid.call(nx, ny) or exempt.has(ny * st.w + nx):
 					continue
 				if (solid.call(nx - 1, ny) and solid.call(nx + 1, ny)) or (solid.call(nx, ny - 1) and solid.call(nx, ny + 1)):
 					return false
@@ -662,8 +664,8 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 		var k: int = g[1]
 		var ws: Array = g[2]
 		ws.sort_custom(func(a, b) -> bool: return a.t0 < b.t0)
-		var tb: int = _pt_h() if s.axis == "h" else _pt_v()
-		var need := walk + tb + wrap_d
+		var arm_h: bool = s.axis == "h"   # ramię za promenadą biegnie wzdłuż kanału
+		var need := walk + _cells(_max_th(), arm_h) + wrap_d
 		var deep := func(q: int) -> bool:
 			return _depth(pm, s, q, k) >= need
 		var arms: Array = []   # tablice kolumn
@@ -682,17 +684,23 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 			used_side[[i, 1]] = true
 			used_side[[i + 1, -1]] = true
 			var r := rng.randf()
-			var cols: Array = []
+			var th_l: int = _cells(int(ws[i].get("th", 2)), arm_h)
+			var th_r: int = _cells(int(ws[i + 1].get("th", 2)), arm_h)
+			var dw: int = int(door_opts[rng.randi() % door_opts.size()])
 			if r < p_l:
 				var left := rng.randi() % 2 == 0
-				cols = range(a0, a1 - door + 1) if left else range(a0 + door, a1 + 1)
+				if left:
+					arms.append([range(a0, a1 - dw + 1), th_l])
+					_exempt_door(exempt, s, k, range(a1 - dw + 1, a1 + 1), walk, th_l)
+				else:
+					arms.append([range(a0 + dw, a1 + 1), th_r])
+					_exempt_door(exempt, s, k, range(a0, a0 + dw), walk, th_r)
 			elif r < p_l + p_u:
-				var d0 := rng.randi_range(a0 + 1, maxi(a0 + 1, a1 - door))
-				for q in range(a0, a1 + 1):
-					if q < d0 or q >= d0 + door:
-						cols.append(q)
-			if not cols.is_empty():
-				arms.append(cols)
+				# U = dwa L: każda połowa grubości swojej ściany
+				var d0 := rng.randi_range(a0 + 1, maxi(a0 + 1, a1 - dw))
+				arms.append([range(a0, d0), th_l])
+				arms.append([range(d0 + dw, a1 + 1), th_r])
+				_exempt_door(exempt, s, k, range(d0, d0 + dw), walk, maxi(th_l, th_r))
 		for i in range(ws.size()):
 			if rng.randf() >= p_l:
 				continue
@@ -712,18 +720,27 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 				if cols.size() < 3:
 					continue
 				# drzwi: `door` kolumn za ramieniem, głębszych niż ramię (przejście do komnaty za nim)
+				var th_w: int = _cells(int(ws[i].get("th", 2)), arm_h)
+				var dw: int = int(door_opts[rng.randi() % door_opts.size()])
 				var door_ok := true
-				for j in range(door):
+				for j in range(dw):
 					var qd: int = q + dir * j
-					if _depth(pm, s, qd, k) < walk + tb + 1 or taken.has(_bank_idx(s, qd, k, walk + 1)):
+					if _depth(pm, s, qd, k) < walk + th_w + 1 or taken.has(_bank_idx(s, qd, k, walk + 1)):
 						door_ok = false
 				if door_ok:
-					arms.append(cols)
+					arms.append([cols, th_w])
+					var dcols: Array = []
+					for j in range(dw):
+						dcols.append(q + dir * j)
+					_exempt_door(exempt, s, k, dcols, walk, th_w)
 					break
-		for cols in arms:
+		for arm in arms:
+			var cols: Array = arm[0]
+			if cols.is_empty():
+				continue
 			var cells := PackedInt32Array()
 			for q in cols:
-				for e in range(walk + 1, walk + tb + 1):
+				for e in range(walk + 1, walk + int(arm[1]) + 1):
 					cells.append(_bank_idx(s, q, k, e))
 			try_cells.call(cells)
 	# równoległe
@@ -732,7 +749,7 @@ func _partitions(pm: PackedByteArray, cx: Dictionary, blocked: PackedByteArray) 
 		var lo: int = (s.x0 if horiz else s.y0) + st.cw + 2
 		var hi: int = (s.x1 if horiz else s.y1) - st.cw - 2
 		var bt: int = s.get("bridge_t", -100)
-		var tb: int = _pt_h() if horiz else _pt_v()
+		var tb := _cells(_pick_th(), horiz)
 		var need := walk + tb + min_d
 		for k in [0, 1]:
 			if rng.randf() >= p_par:
@@ -809,14 +826,33 @@ func _chambers(pm: PackedByteArray, keep: PackedByteArray, cut: PackedInt32Array
 	return out
 
 
-## Grubość ścian działowych: pozioma (biegnie wzdłuż x — lico od południa) i pionowa; complex_partitions
-## "thickness_h" / "thickness_v" (domyślnie jak mury: wall_thickness_h / _v). Decyzja usera: jedna grubość, 2 albo 3.
-func _pt_h() -> int:
-	return int((cfg.get("complex_partitions", {}) as Dictionary).get("thickness_h", st.wall_h))
+## Grubość ściany działowej losowana z complex_partitions "thickness" (np. [2, 3]; decyzja usera — w przyszłości też 1)
+## = WIDOCZNA grubość (wierzch ściany). Część pionowa ma tyle kratek, pozioma o "facade_extra" (2) więcej — jej dół
+## zajmuje lico, więc wierzch wygląda tak samo. Jedna ściana (poprzeczna + jej ramię L) ma wszędzie tę samą grubość.
+func _pick_th() -> int:
+	var opts: Array = (cfg.get("complex_partitions", {}) as Dictionary).get("thickness", [st.wall_v])
+	return int(opts[rng.randi() % opts.size()])
 
 
-func _pt_v() -> int:
-	return int((cfg.get("complex_partitions", {}) as Dictionary).get("thickness_v", st.wall_v))
+## Kratki ściany o widocznej grubości `th`: pozioma (biegnie wzdłuż x, lico od południa) — th + facade_extra.
+func _cells(th: int, horizontal_wall: bool) -> int:
+	return th + int((cfg.get("complex_partitions", {}) as Dictionary).get("facade_extra", 2)) if horizontal_wall else th
+
+
+func _max_th() -> int:
+	var m := 1
+	for o in (cfg.get("complex_partitions", {}) as Dictionary).get("thickness", [st.wall_v]):
+		m = maxi(m, int(o))
+	return m
+
+
+## Kratki wejścia komnaty (kolumny `cols`, rzędy pasa ramienia) zwolnione z kontroli przesmyków.
+func _exempt_door(exempt: Dictionary, s: Dictionary, k: int, cols: Array, walk: int, th: int) -> void:
+	for q in cols:
+		for e in range(walk + 1, walk + th + 1):
+			var i := _bank_idx(s, int(q), k, e)
+			if i >= 0:
+				exempt[i] = true
 
 
 ## Głębokość brzegu w kolumnie t po stronie k: ciąg kratek `pm` od wody.
@@ -835,7 +871,6 @@ func _depth(pm: PackedByteArray, s: Dictionary, t: int, k: int) -> int:
 ## korytarzy.
 func _plan_partitions(s: Dictionary, side_chunks: Array, pinch: Dictionary, walk: int, min_d: int, out: Array) -> void:
 	var horiz: bool = s.axis == "h"
-	var th: int = _pt_v() if horiz else _pt_h()
 	var lo: int = (s.x0 if horiz else s.y0) + 1
 	var hi: int = (s.x1 if horiz else s.y1) - 1
 	var room_r: Array = (cfg.get("complex_partitions", {}) as Dictionary).get("room", [6, 12])
@@ -846,6 +881,8 @@ func _plan_partitions(s: Dictionary, side_chunks: Array, pinch: Dictionary, walk
 			for t in range(ch[0], ch[1] + 1):
 				depth[t] = ch[2]
 		var t := lo + 3
+		var vis := _pick_th()
+		var th := _cells(vis, not horiz)
 		while t + th + 2 <= hi:
 			var ok := true
 			for q in [t - 3, t - 2, t - 1, t + th, t + th + 1, t + th + 2]:
@@ -858,8 +895,10 @@ func _plan_partitions(s: Dictionary, side_chunks: Array, pinch: Dictionary, walk
 			if not pinch.is_empty() and is_same(pinch.seg, s) and pinch.k == k and t + th - 1 >= pinch.p0 - 9 and t <= pinch.p1 + 9:
 				ok = false
 			if ok:
-				out.append({"seg": s, "k": k, "t0": t, "t1": t + th - 1})
+				out.append({"seg": s, "k": k, "t0": t, "t1": t + th - 1, "th": vis})
 				t += th + rng.randi_range(int(room_r[0]), int(room_r[1]))
+				vis = _pick_th()
+				th = _cells(vis, not horiz)
 			else:
 				t += 1
 
