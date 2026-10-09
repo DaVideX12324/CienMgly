@@ -108,7 +108,134 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 			made += 1
 		canals.gate_locks.append(lock)
 		canals.gate_openers.append(opener)
+	_plan_plates(result, cfg, has_plate, gate_cells, gate_area, gate_sdist, reach)
 	return made
+
+
+## Płyty naciskowe bram (canals.gate_plates: [{cell, gates}]):
+## - zagadka (opener "plate"): miejsce przełącznika bramy; brama podpina się pod płytę już postawioną w promieniu
+##   plate_share_radius (Manhattan od środka bramy), jeśli ta leży po jej stronie bliższej wejściu — jedna płyta
+##   otwiera kilka bram w okolicy;
+## - skrót (shortcut_plates, domyślnie tak): za każdą bramą (strona dalsza od wejścia) płyta ~4 kratki od niej — gracz,
+##   który dotarł za bramę inną drogą, otwiera ją od środka; podpina się pod płytę leżącą już po tej stronie.
+## Zamki z kluczem zostają osobne dla każdej bramy.
+static func _plan_plates(result, cfg: Dictionary, has_plate: bool, gate_cells: Dictionary, gate_area: Dictionary,
+		gate_sdist: Dictionary, reach: Dictionary) -> void:
+	var canals = result.canals
+	var plates: Array = []
+	var share_r := int(cfg.get("plate_share_radius", 12))
+	for gi in range(canals.gates.size()):
+		if String(canals.gate_openers[gi]) != "plate":
+			continue
+		var area: Dictionary = gate_area.get(gi, reach)
+		var sd: Dictionary = gate_sdist.get(gi, {})
+		var nd := _near_d(canals.gates[gi], area, sd)
+		var gate: Array = canals.gates[gi]
+		var gc: Vector2i = gate[gate.size() / 2]
+		var joined := false
+		for pe in plates:
+			var pc: Vector2i = pe.cell
+			var near_ok: bool = sd.is_empty() or int(sd.get(pc, 1 << 30)) <= nd + 2
+			if area.has(pc) and near_ok and absi(pc.x - gc.x) + absi(pc.y - gc.y) <= share_r:
+				pe.gates.append(gi)
+				canals.levers[gi] = pc
+				joined = true
+				break
+		if not joined:
+			plates.append({"cell": canals.levers[gi], "gates": [gi]})
+	if has_plate and bool(cfg.get("shortcut_plates", true)):
+		for gi in range(canals.gates.size()):
+			if String(canals.gate_openers[gi]).is_empty():
+				continue
+			var far := _far_side(result, canals.gates[gi], gate_cells, gate_sdist.get(gi, {}), gate_area.get(gi, reach), 8)
+			if far.is_empty():
+				continue
+			var joined := false
+			for pe in plates:
+				if far.has(pe.cell) and not pe.gates.has(gi):
+					pe.gates.append(gi)
+					joined = true
+					break
+			if joined:
+				continue
+			var avoid: Array = canals.levers.duplicate()
+			for pe in plates:
+				avoid.append(pe.cell)
+			var cell := _pick_switch(result, far, 4, avoid)
+			if cell != NONE:
+				plates.append({"cell": cell, "gates": [gi]})
+	canals.gate_plates = plates
+
+
+## Najkrótsza odległość od wejścia kratek przy bramie (strona bliższa).
+static func _near_d(gate: Array, area: Dictionary, sdist: Dictionary) -> int:
+	var nd := 1 << 30
+	for c: Vector2i in gate:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if area.has(c + d):
+				nd = mini(nd, int(sdist.get(c + d, 1 << 30)))
+	return nd
+
+
+## Kratki po dalszej stronie bramy (od wejścia), do `maxd` kroków od niej, bez przechodzenia przez bramy i wodę:
+## kratka -> odległość od bramy.
+static func _far_side(result, gate: Array, gate_cells: Dictionary, sdist: Dictionary, area: Dictionary, maxd: int) -> Dictionary:
+	var canals = result.canals
+	var nd := _near_d(gate, area, sdist)
+	var dist := {}
+	var q: Array[Vector2i] = []
+	for c: Vector2i in gate:
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if gate_cells.has(n) or dist.has(n) or not _walk(result, n):
+				continue
+			var sn := int(sdist.get(n, 1 << 30)) if area.has(n) else 1 << 30
+			if sn <= nd + 1:
+				continue   # strona bliższa wejściu
+			dist[n] = 1
+			q.append(n)
+	var h := 0
+	while h < q.size():
+		var c := q[h]
+		h += 1
+		var dc: int = dist[c]
+		if dc >= maxd:
+			continue
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if gate_cells.has(n) or dist.has(n) or not _walk(result, n):
+				continue
+			dist[n] = dc + 1
+			q.append(n)
+	return dist
+
+
+## Kratka z `cand` (kratka -> odległość) o odległości najbliższej `target`, z filtrami przełącznika, >= 3 kratki od `avoid`.
+static func _pick_switch(result, cand: Dictionary, target: int, avoid: Array) -> Vector2i:
+	var canals = result.canals
+	var best := NONE
+	var bs := 1 << 30
+	var keys: Array = cand.keys()
+	keys.sort()
+	for c: Vector2i in keys:
+		var dc: int = cand[c]
+		if dc < 2 or canals.water.has(c) or canals.bridge_cells.has(c) or canals.rail_cells.has(c):
+			continue
+		if canals.grating.has(c) or canals.service.has(c) or canals.walls_1w.has(c) or result.portal_zone.has(c):
+			continue
+		var clash := false
+		for o in avoid:
+			var ov: Vector2i = o
+			if ov != NONE and maxi(absi(ov.x - c.x), absi(ov.y - c.y)) < 3:
+				clash = true
+				break
+		if clash:
+			continue
+		var score := absi(dc - target)
+		if score < bs:
+			bs = score
+			best = c
+	return best
 
 
 ## Bramy w poprzek prostych odcinków korytarzy (canals.corridors), aż będzie ich `min_gates` (katalog "gates").
@@ -450,6 +577,9 @@ static func reserved_cells(canals) -> Array[Vector2i]:
 			out.append(lock)
 			out.append(lock + Vector2i(0, 1))
 			out.append(lock + Vector2i(0, 2))
+	if "gate_plates" in canals:
+		for pe in canals.gate_plates:
+			out.append(pe.cell)
 	return out
 
 
@@ -510,9 +640,13 @@ static func emit(result, scenes: Dictionary, objects: ObjectPlan) -> int:
 		if opener == "lock":
 			_add(objects, lock_def, canals.gate_locks[gi], id)
 			_add(objects, key_def, canals.levers[gi], id)
-		else:
-			_add(objects, plate_def, canals.levers[gi], id)
 		made += 1
+	if "gate_plates" in canals and not plate_def.scene.is_empty():
+		for pe in canals.gate_plates:
+			var ids: PackedStringArray = []
+			for gj in pe.gates:
+				ids.append(gate_id(canals.gates[gj]))
+			_add(objects, plate_def, pe.cell, ",".join(ids))
 	if made > 0:
 		objects.stats[&"gates"] = made
 	return made
