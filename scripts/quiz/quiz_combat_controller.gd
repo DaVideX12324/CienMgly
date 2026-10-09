@@ -13,6 +13,7 @@ enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY }
 ## Kontroler panelu pytań jest w hoście (w wersji samodzielnej kopia w _host/), więc load zamiast preload.
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
+const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
 const PARTY_SKILL_SP_MAX := 100
 const PARTY_TP_MAX := 100
@@ -1409,6 +1410,12 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 	if audio:
 		audio.return_to_previous_track()
 	combat_finished.emit(player_won)
+	if not player_won and not fled and _ps and _ps.is_party_defeated():
+		# Śmierć drużyny: ekran śmierci zamiast powrotu do eksploracji. Wróg nie wraca do patrolu — jego
+		# on_combat_finished odpauzowałby grę i po 2 s przestawił stan na EXPLORING pod ekranem.
+		get_tree().root.add_child(DeathScreenScene.instantiate())
+		get_parent().queue_free()
+		return
 	enemy.on_combat_finished(player_won, player)
 	get_parent().queue_free()
 
