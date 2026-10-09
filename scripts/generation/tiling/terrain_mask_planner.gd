@@ -208,10 +208,18 @@ static func _gap2(s: PackedByteArray, i: int, w: int) -> bool:
 static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]) -> Dictionary:
 	var fl: GenerationFlags = ctx.flags if ctx.flags != null else GenerationFlags.new()
 	var smoothing := ctx.flags != null and ctx.flags.enable_terrain_smoothing
+	# kanały (woda, puste koryto, kładki) bez plam — mech / foliage tylko na posadzce
+	var cells := terrain_cells
+	var canals = ctx.canals
+	if canals != null and not canals.is_empty():
+		cells = []
+		for p in terrain_cells:
+			if not canals.water.has(p) and not canals.bridge_cells.has(p):
+				cells.append(p)
 	return {
 		"seed": ctx.seed_value,
-		"mud": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value + 202, fl.terrain_mud_frequency, fl.terrain_mud_threshold, smoothing),
-		"grass": _mask(terrain_cells, ctx.portal_zone, ctx.seed_value, fl.terrain_grass_frequency, fl.terrain_grass_threshold, smoothing),
+		"mud": _mask(cells, ctx.portal_zone, ctx.seed_value + 202, fl.terrain_mud_frequency, fl.terrain_mud_threshold, smoothing),
+		"grass": _mask(cells, ctx.portal_zone, ctx.seed_value, fl.terrain_grass_frequency, fl.terrain_grass_threshold, smoothing),
 	}
 
 
@@ -225,6 +233,7 @@ static func compute_for_result(result, seed_value: int, flags: GenerationFlags) 
 	ctx.seed_value = seed_value
 	ctx.flags = flags
 	ctx.plateau = result.plateau
+	ctx.canals = result.canals
 	for p in result.entrance_zone:
 		ctx.portal_zone[p] = true
 	for p in result.exit_zone:
