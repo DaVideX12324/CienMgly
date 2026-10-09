@@ -84,7 +84,7 @@ func _process(delta: float) -> void:
 
 func _set_up(up: bool) -> void:
 	is_up = up
-	_spike.visible = up   # otwory w posadzce zostają; przy wysuniętych dolny rząd (BaseShadow) = cień podstawy
+	_spike.visible = up   # otwory w posadzce zostają, rysowane pod kolcami
 	if up:
 		_hurt_this_rise = false
 	# kolizja tylko w trybie BARRIER (pułapki ranią, nie zamykają drogi)
