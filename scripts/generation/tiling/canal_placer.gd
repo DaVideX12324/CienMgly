@@ -52,6 +52,30 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 			var role: int = TileModuleRole.Id.CANAL_BED if canals.dry.has(p) else TileModuleRole.Id.CANAL_WATER
 			_place_open(ctx, placement_plan, p, role, _water_variant(ctx, water, p), under, table)
 
+	# 1b. Eksperyment rim_over_wall na północnych końcach pod licem ściany: otwarty koniec z wodą — lico „pod wodą"
+	# (sama górna krawędź lica kanału nad dołem lica ściany, ścieki aż do niej); każdy koniec — narożniki ramy
+	# (obrzeże SE / SW) w kratkach muru po bokach krawędzi. Warstwa Rails (y-sort ze ścianami, rysuje się po nich).
+	if rim_over_wall and "north_end_face" in canals:
+		for a: Vector2i in canals.north_end_face:
+			var run: Array[Vector2i] = []
+			var c := a
+			while water.has(c) and not water.has(c + Vector2i(0, -1)) and not GridUtils.is_walkable(ctx.grid, c + Vector2i(0, -1)):
+				run.append(c)
+				c += Vector2i(1, 0)
+			if run.is_empty():
+				continue
+			if not canals.north_end_face[a] and not canals.dry.has(a):
+				for q in run:
+					for fv in _face_variants(ctx, water, q):
+						if _place(ctx, placement_plan, q, TileModuleRole.Id.CANAL_FACE, fv, &"Floor", table, &"Rails", true):
+							break
+			var left := a + Vector2i(-1, -1)
+			var right: Vector2i = run[run.size() - 1] + Vector2i(1, -1)
+			if not GridUtils.is_walkable(ctx.grid, left) and not water.has(left):
+				_place(ctx, placement_plan, left, TileModuleRole.Id.CANAL_BANK, &"SE", &"Rails", table, &"", false, &"Rails")
+			if not GridUtils.is_walkable(ctx.grid, right) and not water.has(right):
+				_place(ctx, placement_plan, right, TileModuleRole.Id.CANAL_BANK, &"SW", &"Rails", table, &"", false, &"Rails")
+
 	# 2. Kładki (Bridges) — cały ślad; kratki brzegu pod końcami zapamiętane dla obrzeży bez kolizji.
 	var bridge_ends := {}
 	for b in canals.bridges:
@@ -353,15 +377,19 @@ static func _bank_variant(ctx: GenerationContext, water0: Dictionary, q: Vector2
 
 ## Kafle modułu roli `role` (wariant `variant`) od kotwicy; false, gdy profil nie ma tej roli / wariantu.
 static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary,
-		upper_layer: StringName = &"") -> bool:
+		upper_layer: StringName = &"", only_upper: bool = false, force_layer: StringName = &"") -> bool:
 	var parts := TileResolver.resolve_module_parts(ctx, anchor, role, [], -1, variant)
 	for rp in parts:
+		if only_upper and rp.offset.y >= 0:
+			continue
 		var p := TilePlacement.new()
 		p.pos = anchor + rp.offset
 		# warstwa części z profilu, gdy inna niż domyślna (np. rim lica kanału na FloorDecor nad licem na Floor)
 		p.layer = layer if rp.layer == &"" or rp.layer == &"Walls" else rp.layer
 		if upper_layer != &"" and rp.offset.y < 0:
 			p.layer = upper_layer   # część nad kotwicą na wskazanej warstwie (np. rim nad dołem lica ściany)
+		if force_layer != &"":
+			p.layer = force_layer
 		p.source_id = rp.tile.source_id
 		p.atlas_coords = rp.tile.atlas_coords
 		p.alternative_tile = rp.tile.alternative_tile
