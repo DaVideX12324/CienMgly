@@ -211,12 +211,7 @@ static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]
 	# terrain_cells nie ma kanałów (podłogi nie maluje się na wodzie); plamy foliage dostają też dno pustego koryta —
 	# bez lica kanału (górny rząd koryta), dołów i kładek
 	var cells := terrain_cells
-	# plamy foliage tylko na chodliwej podłodze — domena terenu sięga pod krawędzie ścian (teren podłogi pod rimem),
-	# a mech na kratce muru wychodził na narożniki / pustkę w bloku ściany
-	var grass_cells: Array[Vector2i] = []
-	for p in terrain_cells:
-		if GridUtils.is_walkable(ctx.grid, p):
-			grass_cells.append(p)
+	var grass_cells: Array[Vector2i] = terrain_cells.duplicate()
 	var canals = ctx.canals
 	if canals != null and not canals.is_empty() and not canals.dry.is_empty():
 		var bed: Array[Vector2i] = []
