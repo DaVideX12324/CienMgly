@@ -2,7 +2,8 @@
   "area_weights": {
     "room": 1.0,
     "hall": 0.5,
-    "corridor": 0.15
+    "corridor": 0.15,
+    "chamber": 1.0
   },
   "set_gap": 2,
   "gates": {
@@ -361,7 +362,8 @@
           "on": 0.8
         }
       ],
-      "source": 1
+      "source": 1,
+      "per_chamber": 0.5
     },
     {
       "id": "chairs",
@@ -411,7 +413,8 @@
         2
       ],
       "stack": true,
-      "canal_gap": 1
+      "canal_gap": 1,
+      "chamber_density": 4
     },
     {
       "id": "barrels",
@@ -433,7 +436,8 @@
         1,
         2
       ],
-      "stack": true
+      "stack": true,
+      "chamber_density": 4
     },
     {
       "id": "wrecks",
@@ -466,7 +470,8 @@
           2
         ]
       ],
-      "source": 1
+      "source": 1,
+      "chamber_density": 1.5
     },
     {
       "id": "copper_blocks",
@@ -495,7 +500,8 @@
           14
         ]
       ],
-      "source": 1
+      "source": 1,
+      "chamber_density": 1.5
     },
     {
       "id": "floor_holes",
@@ -769,7 +775,8 @@
       "size": [
         1,
         2
-      ]
+      ],
+      "chamber_density": 8
     },
     {
       "id": "wall_round_grates",
@@ -782,7 +789,8 @@
       "size": [
         1,
         2
-      ]
+      ],
+      "chamber_density": 6
     },
     {
       "id": "wall_switches",
@@ -834,7 +842,8 @@
       "size": [
         1,
         2
-      ]
+      ],
+      "chamber_density": 18
     },
     {
       "id": "wall_arch_big",
@@ -1044,7 +1053,8 @@
         6
       ],
       "source": 1,
-      "set": "wardrobe"
+      "set": "wardrobe",
+      "per_chamber": 0.4
     },
     {
       "id": "misc_clutter",
@@ -1109,7 +1119,8 @@
           4
         ]
       ],
-      "source": 1
+      "source": 1,
+      "chamber_density": 1.5
     },
     {
       "id": "wall_pillar",
