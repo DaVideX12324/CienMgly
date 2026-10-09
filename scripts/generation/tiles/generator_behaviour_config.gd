@@ -22,7 +22,7 @@ const FLAG_STRING_KEYS := ["objects_catalog", "room_shape", "corridor_shape", "r
 func mixed_pool_id() -> StringName:
 	return StringName(tilesets().get("mixed", &""))
 
-const VALID_LAYERS := [&"Walls", &"Floor", &"FloorDecor", &"Platforms", &""]
+const VALID_LAYERS := [&"Walls", &"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Rails", &"Platforms", &""]
 # Oczekiwana liczba części dla ról-modułów (klucz przechowywania = TileRole.Id).
 static func _expected_parts(role: int) -> int:
 	if role == TileRole.Id.FACADE_2H: return 2

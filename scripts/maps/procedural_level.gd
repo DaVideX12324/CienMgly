@@ -110,6 +110,7 @@ class GenJob extends RefCounted:
 	var result: RefCounted = null
 	var rng: RandomNumberGenerator = null
 	var plans: Dictionary = {}
+	var chest_scene: PackedScene = null  # scena skrzyni z companion-JSON (nadpisuje @export chest_scene)
 
 	func run() -> void:
 		if is_cave:
@@ -398,6 +399,10 @@ func _prepare_job(seed_val: int) -> GenJob:
 			job.rooms_count = rooms_count
 			# Named TileSet System (opcjonalny). Profil i pole zestawów z wczytanego configu.
 			job.behaviour = _build_tile_behaviour(cfg, gen_width, gen_height)
+			# Scena skrzyni z companion-JSON ("scenes": {"chest": "res://…"}) — np. skrzynia ścieków z grafiki paczki.
+			var chest_path := String((cfg.raw.get("scenes", {}) as Dictionary).get("chest", "")) if cfg != null else ""
+			if chest_path != "" and ResourceLoader.exists(chest_path):
+				job.chest_scene = load(chest_path) as PackedScene
 		LevelType.FOREST_OVERWORLD:
 			job.gen_script = OverworldForestGeneratorScript
 		LevelType.DUNGEON_CASTLE:
@@ -516,12 +521,12 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, chest_scene, door_scene, 16, per_frame)
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame)
 		GenProgress.end(&"entities")
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
 		GenProgress.begin(&"props")
-		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
+		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
 		GenProgress.end(&"props")
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 
