@@ -74,10 +74,6 @@ var chambers: Array = []
 ## żeby obiekt nad końcem (krata) pasował do kafli kanału.
 var north_end_face: Dictionary = {}
 
-## Eksperyment dry_end_4h: górny rząd pustego koryta na północnym końcu pod licem (kratka -> true). Siatka bez zmian;
-## FacadePlacer stawia tu proste lico 4H kratkę niżej (mur schodzi do dna wykopu), CanalPlacer nie rysuje tych kratek.
-var trench: Dictionary = {}
-
 
 func is_empty() -> bool:
 	return cells.is_empty()

@@ -342,15 +342,6 @@ static func place_3h(
 	# Lico 4H (enable_4h_facades + rola FACADE_4H w profilu): tam, gdzie 3H dostałoby koronę.
 	var variant_id4: StringName = &"B" if is_b else &"A"
 	var force4: StringName = &"caves_roots" if use_roots else &""
-	# eksperyment dry_end_4h: nad końcem pustego koryta (canals.trench) proste lico 4H kratkę niżej — dolny rząd na
-	# górnym rzędzie koryta, góra równa z sąsiednim 3H; bez cieni (dolna kotwica, sąsiedzi na brzegu = podłoga)
-	if ctx.canals != null and "trench" in ctx.canals and ctx.canals.trench.has(pos):
-		var low := pos + Vector2i(0, 1)
-		if TileResolver.resolve_module_parts(ctx, low, TileModuleRole.Id.FACADE_4H, [], -1, variant_id4, force4).size() > 0:
-			for rp in TileResolver.resolve_module_parts(ctx, low, TileModuleRole.Id.FACADE_4H, [], -1, variant_id4, force4):
-				_queue_part(plan, low + rp.offset, rp, &"FACADE", table, low)
-			mark_4h(ctx, low, state)
-			return
 	if wants_4h(ctx, pos, state, edges) and _try_shaded_module(ctx, plan, pos, TileModuleRole.Id.FACADE_4H, variant_id4, table, force4):
 		mark_4h(ctx, pos, state)
 		return

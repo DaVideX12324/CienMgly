@@ -137,8 +137,6 @@ static func generate_layout(
 	stats["restored"] = _restore_cuts(ctx, canals, before)
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
-	if bool(cfg.get("dry_end_4h", false)):
-		stats["dry_end_4h"] = _dry_end_walls(ctx, canals, int(cfg.get("linear_width", 4)) + 1)
 	if bool(cfg.get("canal_rails", true)):
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
 	if flags.enable_1w_walls:
@@ -657,44 +655,6 @@ static func _walls_1w(ctx: GenerationContext, canals, seed_val: int, cfg: Dictio
 			canals.walls_1w[top + Vector2i(0, k)] = v
 			canals.blocked[top + Vector2i(0, k)] = true
 	return placed.size()
-
-
-## Eksperyment (structured_layout.dry_end_4h): północny koniec PUSTEGO koryta pod licem ściany — górny rząd koryta
-## trafia do canals.trench: zwykłe proste lico 4H kratkę niżej (mur schodzi do dna wykopu, góra równa z sąsiednim 3H,
-## bez narożników i cieni — siatka bez zmian), krata nad końcem cała przy dnie.
-static func _dry_end_walls(ctx: GenerationContext, canals, max_run: int) -> int:
-	var water: Dictionary = canals.water
-	var wall := func(c: Vector2i) -> bool:
-		return not water.has(c) and not GridUtils.is_walkable(ctx.grid, c)
-	var runs: Array = []
-	var seen := {}
-	var keys: Array = water.keys()
-	keys.sort()
-	for p: Vector2i in keys:
-		if seen.has(p) or not wall.call(p + Vector2i(0, -1)):
-			continue
-		var a := p
-		while water.has(a + Vector2i(-1, 0)) and wall.call(a + Vector2i(-1, -1)):
-			a += Vector2i(-1, 0)
-		var run: Array[Vector2i] = []
-		var c := a
-		while water.has(c) and wall.call(c + Vector2i(0, -1)):
-			run.append(c)
-			seen[c] = true
-			c += Vector2i(1, 0)
-		if run.size() > max_run or water.has(a + Vector2i(-1, 0)) or water.has(c):
-			continue
-		var ok := true
-		for q in run:
-			ok = ok and canals.dry.has(q) and canals.dry.has(q + Vector2i(0, 1)) and canals.dry.has(q + Vector2i(0, 2)) \
-					and not canals.bridge_cells.has(q) and not canals.bridge_cells.has(q + Vector2i(0, 1))
-		if ok:
-			runs.append(run)
-	for run in runs:
-		for q: Vector2i in run:
-			canals.trench[q] = true
-			canals.pit_cells.erase(q)
-	return runs.size()
 
 
 ## Kratki kanału zamurowane przez przejścia czyszczące wypadają z nakładki (woda tylko na podłodze).

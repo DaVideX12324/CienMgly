@@ -359,7 +359,8 @@ static func _place_on_pillars(walls: Array, defs: Array[ObjectDef], seed_v: int,
 ## Lico nad północnymi końcami kanałów (def.canal_end): kanał kończący się pod ścianą — ciąg wody z murem nad każdą
 ## kratką, bez wody po bokach, z wodą pod spodem — dostaje obiekt o szerokości ciągu (np. kratę w łuku) tuż nad wodą,
 ## wybór ważony canal_end (suma < 1 — szansa na brak): kanał wygląda, jakby wpływał w ścianę. Tu też losowane, czy
-## koniec jest zamknięty licem kanału (canals.north_end_face); nad zamkniętym bez obiektów zatopionych (canal_end_dy > 0). Przed rytmem filarów; kolumny końca kanału są zajęte
+## koniec jest zamknięty licem kanału (canals.north_end_face; puste koryto — zawsze); nad zamkniętym bez obiektów
+## zatopionych (canal_end_dy > 0). Przed rytmem filarów; kolumny końca kanału są zajęte
 ## także bez obiektu (filar ani inna ozdoba nie stanie nad wodą wpływającą pod ścianę).
 static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
 		on_wall: bool, seed_v: int, objects: ObjectPlan, flags: GenerationFlags = null) -> void:
@@ -405,9 +406,8 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		for k in range(n):
 			dry_end = dry_end and result.canals.dry.has(a + Vector2i(k, 0))
 		var closed := float(hash([seed_v, a, "canal_end_face"]) & 0xFFFF) / 65536.0 < chance_n
-		var trench: bool = "trench" in result.canals and result.canals.trench.has(a)
-		if trench:
-			closed = false   # eksperyment dry_end_4h: lico 4H schodzi do dna — bez lica kanału
+		if dry_end:
+			closed = true   # puste koryto: koniec zawsze zamknięty licem kanału (user), krata zwykła nad nim
 		if "north_end_face" in result.canals:
 			result.canals.north_end_face[a] = closed
 		# wybór ważony canal_end spośród obiektów o szerokości kanału (suma < 1 — szansa na brak obiektu)
@@ -430,8 +430,7 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 			var w := n
 			var pl := ObjectPlacement.new()
 			pl.def = def
-			# miejsce sprawdzone na zwykłej kotwicy lica; nad wykopem (dry_end_4h) cała krata kratkę niżej, przy dnie
-			pl.cell = anchor + Vector2i(0, 1 if trench else def.canal_end_dy)
+			pl.cell = anchor + Vector2i(0, def.canal_end_dy)   # miejsce sprawdzone na zwykłej kotwicy lica
 			pl.variant = hash([seed_v, a, "canal_end_v"]) % maxi(def.variant_count(), 1)
 			objects.placements.append(pl)
 			objects.stats[def.id] = objects.count(def.id) + 1
