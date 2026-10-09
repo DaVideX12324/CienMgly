@@ -45,7 +45,8 @@ var require: Array[StringName] = []   # tagi wymagane WSZYSTKIE (AND) — np. ["
 var prefer: Array[StringName] = []    # tagi próbowane najpierw (nisza, ślepy zaułek…), potem reszta
 var per_room: float = 0.0             # >0: w każdym pokoju poza portalowymi szansa na 1 sztukę (zamiast density)
 var per_chamber: float = 0.0          # jak per_room, ale w komnatach za ścianami działowymi (canals.chambers)
-var chamber_density: float = 0.0      # dodatkowe sztuki na 100 kandydatów w komnatach (podłoga i lico nad nią)
+var room_density: float = 0.0         # dodatkowe sztuki na 100 kandydatów w pokojach (poza portalowymi) i komnatach
+                                      # (podłoga; obiekty lica — na licu nad nimi)
 var levels: Array[StringName] = []    # "ground" / "plateau" / "pit"; pusto = każda wysokość
 var terrain: Array[StringName] = []   # "grass" / "mud" / "plain" (goła podłoga); pusto = każdy teren
 var terrain_margin: int = 0           # ten sam teren w promieniu (Chebyshev) — z dala od brzegu plamy

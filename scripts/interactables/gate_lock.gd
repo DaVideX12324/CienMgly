@@ -53,6 +53,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	_show(true)
 	InteractPromptScript.release(self)
+	GateStateScript.use_key(self, gate_id)
 	GateStateScript.open_gate(self, gate_id)
 	if audio and audio.has_method("play_sfx_by_name"):
 		audio.play_sfx_by_name("chest_open")

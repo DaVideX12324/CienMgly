@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/interactables/pressure_plate.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/sewer/Assets/Props.png" id="2_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_off"]
+atlas = ExtResource("2_props")
+region = Rect2(80, 208, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_on"]
+atlas = ExtResource("2_props")
+region = Rect2(80, 224, 16, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plate"]
+size = Vector2(12, 12)
+
+[node name="PressurePlate" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_script")
+
+[node name="Off" type="Sprite2D" parent="."]
+position = Vector2(0, 7)
+texture = SubResource("AtlasTexture_off")
+
+[node name="On" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, 7)
+texture = SubResource("AtlasTexture_on")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(0, 7)
+shape = SubResource("RectangleShape2D_plate")

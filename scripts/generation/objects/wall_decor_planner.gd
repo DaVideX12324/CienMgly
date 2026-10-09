@@ -99,26 +99,31 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 			placed += 1
 		if placed > 0:
 			objects.stats[def.id] = objects.count(def.id) + placed
-	_place_chamber_walls(result, defs, slots, used, bases_4h, on_wall, seed_v, objects)
+	_place_room_walls(result, defs, slots, used, bases_4h, on_wall, seed_v, objects)
 	objects.time_usec += Time.get_ticks_usec() - t0
 	return objects
 
 
-## Lico nad komnatami za ścianami działowymi (canals.chambers): obiekty z chamber_density dostają dodatkowe sztuki
-## (na 100 miejsc lica nad komnatami), także przęsłowe (ramki, kratki) — komnaty bywają bez filarów.
-static func _place_chamber_walls(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
+## Lico nad pokojami (result.rooms) i komnatami za ścianami działowymi (canals.chambers): obiekty z room_density
+## dostają dodatkowe sztuki (na 100 miejsc lica nad nimi), także przęsłowe (ramki, kratki) — pokoje bywają bez filarów.
+static func _place_room_walls(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
 		on_wall: bool, seed_v: int, objects: ObjectPlan) -> void:
-	if result.canals == null or not "chambers" in result.canals or result.canals.chambers.is_empty():
-		return
 	var room := {}
-	for comp in result.canals.chambers:
-		for c: Vector2i in comp:
-			room[c] = true
+	if result.canals != null and "chambers" in result.canals:
+		for comp in result.canals.chambers:
+			for c: Vector2i in comp:
+				room[c] = true
+	for r: Rect2i in result.rooms:
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				room[Vector2i(x, y)] = true
+	if room.is_empty():
+		return
 	for def in defs:
-		if def.chamber_density <= 0.0 or not def.rhythm.is_empty() or def.on_pillar or def.is_rim_mounted():
+		if def.room_density <= 0.0 or not def.rhythm.is_empty() or def.on_pillar or def.is_rim_mounted():
 			continue
 		var rng := RandomNumberGenerator.new()
-		rng.seed = hash([seed_v, String(def.id), "chamber_wall"])
+		rng.seed = hash([seed_v, String(def.id), "room_wall"])
 		var w := maxi(def.size.x, 1)
 		var cands: Array[Vector2i] = []
 		for a: Vector2i in slots:
@@ -126,7 +131,7 @@ static func _place_chamber_walls(result, defs: Array[ObjectDef], slots: Dictiona
 			if room.has(below) and _fits(slots, a, w, def) and _height_ok(def, a, w, bases_4h, on_wall):
 				cands.append(a)
 		cands.sort()
-		var want := def.chamber_density * cands.size() / 100.0
+		var want := def.room_density * cands.size() / 100.0
 		var target := int(want) + (1 if rng.randf() < want - floorf(want) else 0)
 		_shuffle(cands, rng)
 		var placed := 0
