@@ -199,11 +199,22 @@ static func resolve_strict(
 ) -> Array:
 	if ctx == null or ctx.map_tile_profile == null:
 		return []
-	var own_set: NamedTileSetDefinition = ctx.map_tile_profile.get_tileset(tileset_id)
-	if own_set == null or not own_set.enabled:
+	return resolve_in_set(ctx, ctx.map_tile_profile.get_tileset(tileset_id), anchor_pos, module_role, variant_roll, forced_variant_id)
+
+
+## Jak resolve_strict, ale z podanego zestawu (np. wyprowadzonego w kodzie, spoza profilu).
+static func resolve_in_set(
+	ctx: GenerationContext,
+	own_set: NamedTileSetDefinition,
+	anchor_pos: Vector2i,
+	module_role: TileModuleRole.Id,
+	variant_roll: int = -1,
+	forced_variant_id: StringName = &""
+) -> Array:
+	if ctx == null or own_set == null or not own_set.enabled:
 		return []
 	var storage_role: int = TileModuleRole.to_storage_role(module_role)
-	return _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, tileset_id, module_role, variant_roll, forced_variant_id)
+	return _entry_parts(own_set.get_entry(storage_role), anchor_pos, ctx.seed_value, own_set.id, module_role, variant_roll, forced_variant_id)
 
 
 ## Buduje części z wpisu: wybrany wariant (ważony hash) LUB legacy tile jako 1 część (0,0).
