@@ -94,6 +94,7 @@ var span_floor: bool = false
 ## Na licu: szansa na sztukę nad północnym końcem kanału (kanał „wpływa w ścianę"), gdy szerokość obiektu = szerokość
 ## kanału; WallDecorPlanner stawia ją przed rytmem filarów, wyśrodkowaną nad wodą.
 var canal_end: float = 0.0
+var canal_end_dy: int = 0              # przesunięcie obiektu nad końcem kanału w pionie (+1 = kratkę niżej, nad wodą)
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
 ## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.

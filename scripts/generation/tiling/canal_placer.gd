@@ -156,7 +156,9 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 	ctx.set_meta(&"canal_under_wall", under)
 	var cont := bool(ctx.generator_behaviour.get("tiling", {}).get("canal_end_under_wall", false))
 	var chance := float(ctx.generator_behaviour.get("tiling", {}).get("canal_end_face_chance", 1.0))
-	if chance >= 1.0:
+	# końce północne (lico ściany nad kanałem) mogą mieć własną szansę na lico kanału
+	var chance_n := float(ctx.generator_behaviour.get("tiling", {}).get("canal_north_face_chance", chance))
+	if chance >= 1.0 and chance_n >= 1.0:
 		return out
 	var max_run := int(ctx.generator_behaviour.get("structured_layout", {}).get("linear_width", 4)) + 1
 	var wall := func(c: Vector2i) -> bool:
@@ -186,7 +188,7 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 			if not flows:
 				continue
 			var u := float(hash([ctx.seed_value, a, "canal_end_face" if d.y < 0 else "canal_end_under"]) & 0xFFFF) / 65536.0
-			if u < chance:
+			if u < (chance_n if d.y < 0 else chance):
 				continue
 			for q in run:
 				if d.y < 0:
