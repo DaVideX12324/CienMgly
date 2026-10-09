@@ -1,10 +1,11 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://blvxhohoql616"]
 
 [ext_resource type="Script" uid="uid://7hjlw7v5vdm1" path="res://modules/quiz_rpg/scripts/tools/battle_layout_preview.gd" id="1_06b7j"]
-[ext_resource type="Resource" uid="uid://d218sqq5wg2y8" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_2_training_layout.tres" id="2_f262x"]
+[ext_resource type="Resource" uid="uid://cc8x6lv4r4png" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_4_chamber_layout.tres" id="2_oauwv"]
 [ext_resource type="SpriteFrames" uid="uid://hakd74l6xj11" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_yxwq2"]
 [ext_resource type="SpriteFrames" uid="uid://dahqhhfiusn31" path="res://modules/quiz_rpg/resources/enemies/enemy_ork_1.tres" id="4_ork1"]
 [ext_resource type="SpriteFrames" uid="uid://bjx77wr2i5rp8" path="res://modules/quiz_rpg/resources/enemies/enemy_warhog.tres" id="5_whog"]
+[ext_resource type="SpriteFrames" uid="uid://rbydgnt15g5i" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/fungus_long.tres" id="8_665wi"]
 
 [node name="BattleLayoutPreview" type="Control" unique_id=336054848]
 custom_minimum_size = Vector2(1920, 1080)
@@ -13,5 +14,14 @@ anchors_preset = 0
 offset_right = 1920.0
 offset_bottom = 1080.0
 script = ExtResource("1_06b7j")
-layout = ExtResource("2_f262x")
-enemy_sprites = Array[SpriteFrames]([ExtResource("3_yxwq2"), ExtResource("4_ork1"), ExtResource("5_whog")])
+layout = ExtResource("2_oauwv")
+field_counts = PackedInt32Array()
+enemy_sprites = Array[SpriteFrames]([ExtResource("3_yxwq2"), ExtResource("4_ork1"), ExtResource("5_whog"), ExtResource("8_665wi")])
+
+[node name="Fields" type="Node2D" parent="." unique_id=1528560065]
+position = Vector2(1920, 765)
+
+[node name="Field1" type="Polygon2D" parent="Fields" unique_id=2095062198]
+position = Vector2(-257.40002, 0)
+color = Color(1, 0.85, 0.2, 0.18)
+polygon = PackedVector2Array(-1523.6, 0, 113.400024, 0, -154, -185, -1178.6, -185)

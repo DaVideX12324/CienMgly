@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drir6jvlqriyd"
-path="res://.godot/imported/Gemini_Generated_Image_q1ekwiq1ekwiq1ek.jpg-3d867e27b2d429c35f459f961e84d5d0.ctex"
+uid="uid://ncv2ajtbnrj5"
+path="res://.godot/imported/Variant (5).jpg-733e9ed4f92c9805a9c8b5fc90728504.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/Gemini_Generated_Image_q1ekwiq1ekwiq1ek.jpg"
-dest_files=["res://.godot/imported/Gemini_Generated_Image_q1ekwiq1ekwiq1ek.jpg-3d867e27b2d429c35f459f961e84d5d0.ctex"]
+source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/Variant (5).jpg"
+dest_files=["res://.godot/imported/Variant (5).jpg-733e9ed4f92c9805a9c8b5fc90728504.ctex"]
 
 [params]
 
