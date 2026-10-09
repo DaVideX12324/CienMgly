@@ -473,6 +473,7 @@
     },
     {
       "id": "table",
+      "room_group": "table",
       "group": "furniture",
       "size": [
         3,
@@ -541,6 +542,7 @@
     },
     {
       "id": "table_long",
+      "room_group": "table",
       "group": "furniture",
       "size": [
         4,
@@ -635,6 +637,7 @@
     },
     {
       "id": "table_xl",
+      "room_group": "table",
       "group": "furniture",
       "size": [
         5,
