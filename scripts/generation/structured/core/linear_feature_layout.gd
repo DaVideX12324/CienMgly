@@ -69,6 +69,10 @@ var grating: Dictionary = {}
 ## traktuje każdą jak pokój (meble per_chamber, dodatkowa gęstość room_density, ramki na licu).
 var chambers: Array = []
 
+## Końce kanałów pod licem ściany z obiektem nad nimi (WallDecorPlanner): kratka początku ciągu -> czy zostaje lico
+## kanału (canal_end_face obiektu). CanalPlacer bierze tę decyzję zamiast losowania szansy.
+var north_end_face: Dictionary = {}
+
 
 func is_empty() -> bool:
 	return cells.is_empty()
