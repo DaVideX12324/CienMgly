@@ -149,6 +149,27 @@ func take_damage(amount: int) -> void:
 	party_changed.emit()
 
 
+## Obrażenia procentowe całej drużyny (np. kolce w posadzce): każdy członek traci `fraction` swojego maks. HP
+## (co najmniej 1). keep_alive: HP nie spada poniżej 1 (pułapka nie zabija).
+func damage_party_percent(fraction: float, keep_alive := true) -> void:
+	var cheat_service := get_node_or_null("/root/CheatService")
+	if cheat_service and "god_mode" in cheat_service and bool(cheat_service.god_mode):
+		return
+	_ensure_party_defaults()
+	var floor_hp := 1 if keep_alive else 0
+	var lead_dmg := maxi(ceili(max_hp * fraction), 1)
+	hp = maxi(hp - lead_dmg, mini(floor_hp, hp))
+	for i in range(1, party.size()):
+		var m: Dictionary = party[i]
+		var mx := int(m.get("max_hp", 1))
+		var cur := int(m.get("hp", mx))
+		m["hp"] = maxi(cur - maxi(ceili(mx * fraction), 1), mini(floor_hp, cur))
+		party[i] = m
+	hp_changed.emit(hp, max_hp)
+	_sync_primary_party_member()
+	party_changed.emit()
+
+
 func heal(amount: int) -> void:
 	hp = mini(hp + amount, max_hp)
 	hp_changed.emit(hp, max_hp)
