@@ -660,8 +660,8 @@ static func _walls_1w(ctx: GenerationContext, canals, seed_val: int, cfg: Dictio
 
 
 ## Eksperyment (structured_layout.dry_end_4h): północny koniec PUSTEGO koryta pod licem ściany — górny rząd koryta
-## staje się murem, a nowe stopy lica (rząd niżej) dostają lico 4H (canals.force_4h_bases): mur schodzi do dna wykopu,
-## góra lica równa z sąsiednim 3H, krata nad końcem mieści się cała przy dnie.
+## trafia do canals.trench: zwykłe proste lico 4H kratkę niżej (mur schodzi do dna wykopu, góra równa z sąsiednim 3H,
+## bez narożników i cieni — siatka bez zmian), krata nad końcem cała przy dnie.
 static func _dry_end_walls(ctx: GenerationContext, canals, max_run: int) -> int:
 	var water: Dictionary = canals.water
 	var wall := func(c: Vector2i) -> bool:
@@ -692,14 +692,8 @@ static func _dry_end_walls(ctx: GenerationContext, canals, max_run: int) -> int:
 			runs.append(run)
 	for run in runs:
 		for q: Vector2i in run:
-			ctx.grid[q] = CellType.WALL
-			water.erase(q)
-			canals.dry.erase(q)
+			canals.trench[q] = true
 			canals.pit_cells.erase(q)
-			canals.areas.erase(q)
-			canals.force_4h_bases[q + Vector2i(0, 1)] = true
-	if not runs.is_empty():
-		canals.rebuild_blocked()
 	return runs.size()
 
 

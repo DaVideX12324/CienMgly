@@ -32,7 +32,10 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 	# brak w profilu = następny), wersje _B / _C wariantu losowane z hasha kratki (te, które są w profilu).
 	var alts := {}
 	# Pod kładką najpierw wariant <v>_OPEN (kafle bez kolizji — przejście po kładce), gdy jest w profilu.
+	var trench: Dictionary = canals.trench if "trench" in canals else {}
 	for p: Vector2i in water:
+		if trench.has(p):
+			continue   # eksperyment dry_end_4h: tu stoi dolny rząd lica 4H
 		var under: bool = canals.bridge_cells.has(p)
 		if _is_face(ctx, water, p):
 			for fv in _face_variants(ctx, water, p):
@@ -109,7 +112,7 @@ static func bed_terrain_cells(ctx: GenerationContext) -> Dictionary:
 		return {"cells": paint, "mask": mask}
 	for p: Vector2i in canals.dry:
 		mask.append(p)
-		if not _is_face(ctx, canals.water, p) and not canals.pit_cells.has(p):
+		if not _is_face(ctx, canals.water, p) and not canals.pit_cells.has(p) and not ("trench" in canals and canals.trench.has(p)):
 			paint.append(p)
 	paint.sort()
 	mask.sort()
@@ -137,6 +140,8 @@ static func bridge_rect(b: Dictionary) -> Rect2i:
 static func _is_face(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> bool:
 	if water.has(p + Vector2i(0, -1)):
 		return false
+	if ctx != null and ctx.canals != null and "trench" in ctx.canals and ctx.canals.trench.has(p):
+		return false   # wykop pod licem 4H: dla sąsiadów to dno koryta (bez krawędzi)
 	return ctx == null or not _faceless(ctx, water).has(p)
 
 
