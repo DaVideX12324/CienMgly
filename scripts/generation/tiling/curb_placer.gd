@@ -11,8 +11,10 @@ extends RefCounted
 ## 4. Krawężnik na każdej granicy podniesiony | niski: pozioma -> H_L / H_M / H_R na kratce od północy,
 ##    pionowa -> V_T / V_M / V_B na kratce od zachodu (pojedyncza kratka = środek). Warstwa z profilu (FloorDecor).
 ##    Linia cofnięta w głąb przejścia (_inset, do INSET_MAX kratek wzdłuż przekroju): krawężnik leży między kaflami
-##    ścian — obie kratki przy linii mają na obu końcach odcinka ścianę albo wodę — a nie u wylotu, na otwartym
-##    (decyzja usera). Bez takiego miejsca zostaje na granicy jednostek.
+##    ścian — kratka, na której jest rysowany (od północy / zachodu linii), ma na obu końcach odcinka ścianę albo
+##    wodę — a nie u wylotu, na otwartym (decyzja usera). Wylot południowy / wschodni zostaje na linii wylotu (kafel
+##    na ostatniej kratce przejścia, równo ze stopą lica — user: tak było dobrze), północny / zachodni wchodzi kratkę
+##    w głąb. Bez takiego miejsca zostaje na granicy jednostek.
 ##
 ## JSON: "curbs": {"chance": 0.35, "raise_lanes": false}
 
@@ -157,7 +159,7 @@ static func _place(ctx: GenerationContext, plan: TilePlacementPlan, table: Dicti
 
 ## Linia krawężnika (`cells` = kratki od północy / zachodu linii, `across` = w stronę drugiej kratki, `along` = wzdłuż
 ## odcinka) przesunięta o najmniejsze s w [0, ±1 … ±INSET_MAX], przy którym kratki linii i kratki za nią są wolne
-## (podłoga, nie woda / kładka / portal), a na obu końcach odcinka, po obu stronach linii, jest ściana albo woda.
+## (podłoga, nie woda / kładka / portal), a na obu końcach odcinka kratek linii jest ściana albo woda.
 ## Kratki pomiędzy starą a nową linią też muszą być przejściem tej samej szerokości. Brak -> linia bez zmian.
 static func _inset(g: Dictionary, canals, bad: Dictionary, cells: Array, across: Vector2i, along: Vector2i) -> Array:
 	var shifts: Array[int] = [0]
@@ -176,7 +178,7 @@ static func _inset(g: Dictionary, canals, bad: Dictionary, cells: Array, across:
 					break
 			if not ok:
 				break
-			if k == sft or k == sft + 1:
+			if k == sft:
 				var a: Vector2i = row[0] - along
 				var b: Vector2i = row[-1] + along
 				if not (_solid(g, canals, a) and _solid(g, canals, b)):
