@@ -49,7 +49,7 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 		done += float(job[3])
 		var res: Dictionary = PlateauRenderer.render(ctx, m, placement_plan.by_layer.get(&"Walls", {}), focus, from, done / maxf(total, 1.0))
 		if int(res.missing) > 0:
-			push_warning("PlateauPlacer: %d kafli bez roli w '%s' (pominięte)" % [res.missing, PlateauRenderer.TILESET_ID])
+			push_warning("PlateauPlacer: %d kafli bez roli w '%s' (pominięte)" % [res.missing, PlateauRenderer.tileset_id(ctx)])
 		for pos in res.tiles:
 			var src: TilePlacement = res.tiles[pos]
 			var p := TilePlacement.new()
@@ -100,9 +100,9 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 ## height > 3 (schody boczne 3H): moduł rozciągnięty — wiersz górny, środkowy powtórzony
 ## height-2 razy, dolny (tak jak szerokie schody S/N dokładają modułów MID).
 static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan, anchor: Vector2i, role: int, table: Dictionary, height: int = 0) -> void:
-	var parts := TileResolver.resolve_strict(ctx, PlateauRenderer.TILESET_ID, anchor, role)
+	var parts := TileResolver.resolve_in_set(ctx, PlateauRenderer.platform_tileset(ctx), anchor, role)
 	if parts.is_empty():
-		push_warning("PlateauPlacer: brak %s w '%s'" % [TileModuleRole.name_of(role), PlateauRenderer.TILESET_ID])
+		push_warning("PlateauPlacer: brak %s w '%s'" % [TileModuleRole.name_of(role), PlateauRenderer.tileset_id(ctx)])
 		return
 	var cells: Array = []  # [pozycja, część]
 	for rp in parts:

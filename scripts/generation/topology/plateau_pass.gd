@@ -533,7 +533,7 @@ static func _connect_region(ctx: GenerationContext, region: Dictionary, comps: A
 				owners[o] = true
 	var candidates := 0
 	# a) Z góry kawałka w dół, na osiągalny teren obok.
-	var near := _near_reach(region, reach)
+	var near := _near_reach(region, reach, (env.get("face", Vector2i.ZERO) as Vector2i).x)
 	if not owners.is_empty() and not near.is_empty():
 		for i in owners:
 			candidates += 1
@@ -598,12 +598,14 @@ static func _owner_at(comps: Array, comp_level: Array[int], alive: Array[bool], 
 	return -1
 
 
-## Osiągalna ziemia w promieniu 3 od `cells`, poszerzona o 2 — filtr `near` dla schodów.
-static func _near_reach(cells: Dictionary, reach: Dictionary) -> Dictionary:
+## Osiągalna ziemia w promieniu 3 (+ `extra`: rzędy lica nad krawędzią) od `cells`, poszerzona o 2 — filtr
+## `near` dla schodów.
+static func _near_reach(cells: Dictionary, reach: Dictionary, extra: int = 0) -> Dictionary:
 	var close := {}
+	var r := 3 + extra
 	for c in cells:
-		for dy in range(-3, 4):
-			for dx in range(-3, 4):
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
 				if reach.has(c + Vector2i(dx, dy)):
 					close[c + Vector2i(dx, dy)] = true
 	return _grow(close, 2)
@@ -1195,6 +1197,8 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 		return out
 	var max_w := maxi(flags.stair_max_width, 2)
 	var up := face_rows(flags).x  # wnętrze nad całym licem (lico na kratkach maski)
+	# Lico na kratkach maski: poręcze schodów stoją na flankach — kolumna lica także przy ścianie.
+	var wall_flank := 1 if flags.facade_base_on_wall else 0
 	for require_two_deep in [true, false]:
 		if not out.is_empty():
 			break
@@ -1227,7 +1231,7 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 				if out.size() >= cap:
 					break
 				var y: int = r[3]
-				var seg := _best_segment(ctx, comp, r[1], r[2], y, false, Vector2i(0, -1 - up), flank)
+				var seg := _best_segment(ctx, comp, r[1], r[2], y, false, Vector2i(0, -1 - up), flank, wall_flank)
 				var best_lo: int = seg.x
 				var best_len: int = seg.y
 				if allow_1w:
@@ -1789,23 +1793,23 @@ static func _as_v3(a: Array) -> Array[Vector3i]:
 ## kawałka — z flanką `flank` od każdego końca (0 przy ścianie). Gdy flanka > 1, sprawdzamy też flankę 1
 ## i bierzemy ją, jeśli schody wyjdą co najmniej o 2 szersze (krótkie lica przy tarasach z bloków).
 ## Zwraca Vector2i(początek, długość).
-static func _best_segment(ctx: GenerationContext, comp: Dictionary, a: int, b: int, fixed: int, vertical: bool, inner: Vector2i, flank: int) -> Vector2i:
-	var best := _segment_with_flank(ctx, comp, a, b, fixed, vertical, inner, flank)
+static func _best_segment(ctx: GenerationContext, comp: Dictionary, a: int, b: int, fixed: int, vertical: bool, inner: Vector2i, flank: int, wall_flank: int = 0) -> Vector2i:
+	var best := _segment_with_flank(ctx, comp, a, b, fixed, vertical, inner, flank, wall_flank)
 	if flank > 1:
-		var alt := _segment_with_flank(ctx, comp, a, b, fixed, vertical, inner, 1)
+		var alt := _segment_with_flank(ctx, comp, a, b, fixed, vertical, inner, 1, wall_flank)
 		if alt.y >= best.y + 2:
 			best = alt
 	return best
 
 
-static func _segment_with_flank(ctx: GenerationContext, comp: Dictionary, a: int, b: int, fixed: int, vertical: bool, inner: Vector2i, flank: int) -> Vector2i:
+static func _segment_with_flank(ctx: GenerationContext, comp: Dictionary, a: int, b: int, fixed: int, vertical: bool, inner: Vector2i, flank: int, wall_flank: int = 0) -> Vector2i:
 	var before := Vector2i(fixed, a - 1) if vertical else Vector2i(a - 1, fixed)
 	var after := Vector2i(fixed, b + 1) if vertical else Vector2i(b + 1, fixed)
 	var best_lo := 0
 	var best_len := 0
 	var cur_lo := 0
 	var cur_len := 0
-	for t in range(a + _end_flank(ctx, before, flank), b - _end_flank(ctx, after, flank) + 1):
+	for t in range(a + _end_flank(ctx, before, flank, wall_flank), b - _end_flank(ctx, after, flank, wall_flank) + 1):
 		var c := Vector2i(fixed, t) if vertical else Vector2i(t, fixed)
 		if _is_interior(ctx, comp, c + inner):
 			if cur_len == 0:
@@ -1819,10 +1823,10 @@ static func _segment_with_flank(ctx: GenerationContext, comp: Dictionary, a: int
 	return Vector2i(best_lo, best_len)
 
 
-## Flanka przy końcu biegu lica: 0, gdy za końcem jest ściana jaskini (wzniesienie wchodzi w ścianę,
-## lico ciągnie się pod nią — schody mogą iść od ściany do ściany), inaczej `flank` (róg/moduł IN).
-static func _end_flank(ctx: GenerationContext, beyond: Vector2i, flank: int) -> int:
-	return 0 if not GridUtils.is_walkable(ctx.grid, beyond) else flank
+## Flanka przy końcu biegu lica: `wall_flank` (0 w jaskiniach), gdy za końcem jest ściana (wzniesienie wchodzi
+## w ścianę, lico ciągnie się pod nią — schody mogą iść od ściany do ściany), inaczej `flank` (róg/moduł IN).
+static func _end_flank(ctx: GenerationContext, beyond: Vector2i, flank: int, wall_flank: int = 0) -> int:
+	return wall_flank if not GridUtils.is_walkable(ctx.grid, beyond) else flank
 
 
 ## Wysokość schodów bocznych (E/W): >= 3 (góra + środek + dół modułu), dłuższe dokładają wierszy
