@@ -20,7 +20,7 @@ const KEYS := [
 	"per_chamber", "room_density",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "span_floor", "facade_h", "layer", "stack", "set", "canal_gap", "facing", "facing_pref",
+	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "span_floor", "canal_end", "facade_h", "layer", "stack", "set", "canal_gap", "facing", "facing_pref",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade", "rim"]
@@ -390,6 +390,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	def.flip_h = bool(m.get("flip_h", false))
 	def.stack = bool(m.get("stack", false))
 	def.span_floor = bool(m.get("span_floor", false)) and not def.is_wall_mounted()
+	def.canal_end = clampf(float(m.get("canal_end", 0.0)), 0.0, 1.0) if def.is_wall_mounted() else 0.0
 	def.set_id = StringName(String(m.get("set", "")))
 	def.canal_gap = maxi(int(m.get("canal_gap", 0)), 0)
 	for fc in m.get("facing", []):

@@ -91,6 +91,9 @@ var on_pillar: bool = false
 ## Na podłodze: ozdoba posadzki w osi przęseł (np. rząd otworów) — WallDecorPlanner kładzie ją pod każdym
 ## przęsłem ściany z filarami (z szansą density na ścianę), kratkę przed licem; ObjectPlanner jej nie losuje.
 var span_floor: bool = false
+## Na licu: szansa na sztukę nad północnym końcem kanału (kanał „wpływa w ścianę"), gdy szerokość obiektu = szerokość
+## kanału; WallDecorPlanner stawia ją przed rytmem filarów, wyśrodkowaną nad wodą.
+var canal_end: float = 0.0
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
 ## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.

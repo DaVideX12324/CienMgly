@@ -137,7 +137,7 @@
     "missing_tileset_policy": "default"
   },
   "tiling": {
-    "canal_end_face_chance": 0.0,
+    "canal_end_face_chance": 0.3,
     "canal_end_under_wall": true,
     "connectors_enabled": false,
     "facades_enabled": true,
