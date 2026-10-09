@@ -47,6 +47,7 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 			rhythm_defs.append(def)
 		need_h = need_h or def.facade_h != 0
 	var bases_4h := _bases_4h(result, seed_v, flags) if need_h else {}
+	_place_canal_ends(result, defs, slots, used, bases_4h, on_wall, seed_v, objects)
 	var walls: Array = []  # ściany z filarami: {y, spans: [Vector2i(x, szerokość)]}
 	if not rhythm_defs.is_empty():
 		walls = _place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects, "wall_rhythm")
@@ -352,6 +353,68 @@ static func _place_on_pillars(walls: Array, defs: Array[ObjectDef], seed_v: int,
 			placed += 1
 		if placed > 0:
 			objects.stats[def.id] = objects.count(def.id) + placed
+
+
+## Lico nad północnymi końcami kanałów (def.canal_end): kanał kończący się pod ścianą — ciąg wody z murem nad każdą
+## kratką, bez wody po bokach, z wodą pod spodem — dostaje z szansą canal_end obiekt o szerokości ciągu (np. kratę
+## w łuku) tuż nad wodą: kanał wygląda, jakby wpływał w ścianę. Przed rytmem filarów; kolumny końca kanału są zajęte
+## także bez obiektu (filar ani inna ozdoba nie stanie nad wodą wpływającą pod ścianę).
+static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
+		on_wall: bool, seed_v: int, objects: ObjectPlan) -> void:
+	var cands: Array[ObjectDef] = []
+	for d in defs:
+		if d.canal_end > 0.0:
+			cands.append(d)
+	if result.canals == null or result.canals.is_empty():
+		return
+	var water: Dictionary = result.canals.water
+	var grid: Dictionary = result.grid
+	var wall := func(c: Vector2i) -> bool:
+		return not water.has(c) and not GridUtils.is_walkable(grid, c)
+	var seen := {}
+	var keys: Array = water.keys()
+	keys.sort()
+	for p: Vector2i in keys:
+		if seen.has(p) or not wall.call(p + Vector2i(0, -1)):
+			continue
+		var a := p
+		while water.has(a + Vector2i(-1, 0)) and wall.call(a + Vector2i(-1, -1)):
+			a += Vector2i(-1, 0)
+		var n := 0
+		var c := a
+		while water.has(c) and wall.call(c + Vector2i(0, -1)):
+			seen[c] = true
+			n += 1
+			c += Vector2i(1, 0)
+		if water.has(a + Vector2i(-1, 0)) or water.has(c):
+			continue
+		var flows := true
+		for k in range(n):
+			flows = flows and water.has(a + Vector2i(k, 1))
+		if not flows:
+			continue
+		var y := a.y - 1 if on_wall else a.y
+		for k in range(n):
+			used[Vector2i(a.x + k, y)] = true
+		for def in cands:
+			var w := maxi(def.size.x, 1)
+			if w != n:
+				continue
+			var u := float(hash([seed_v, a, String(def.id), "canal_end"]) & 0xFFFF) / 65536.0
+			if u >= def.canal_end:
+				continue
+			var anchor := Vector2i(a.x, y)
+			if not _fits(slots, anchor, w, def) or not _height_ok(def, anchor, w, bases_4h, on_wall):
+				continue
+			var pl := ObjectPlacement.new()
+			pl.def = def
+			pl.cell = anchor
+			pl.variant = hash([seed_v, a, "canal_end_v"]) % maxi(def.variant_count(), 1)
+			objects.placements.append(pl)
+			objects.stats[def.id] = objects.count(def.id) + 1
+			for k in range(-MARGIN, w + MARGIN):
+				used[anchor + Vector2i(k, 0)] = true
+			break
 
 
 ## Ozdoby posadzki w osi przęseł (def.span_floor): na ścianie z filarami z szansą density jedna ozdoba (ta sama

@@ -850,7 +850,8 @@
           16
         ]
       ],
-      "source": 0
+      "source": 0,
+      "canal_end": 0.7
     },
     {
       "id": "wall_arch_small",
