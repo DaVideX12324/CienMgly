@@ -137,6 +137,7 @@ static func generate_layout(
 	stats["restored"] = _restore_cuts(ctx, canals, before)
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
+	stats["dead_end_slivers"] = _fill_dead_end_slivers(ctx, canals)
 	if bool(cfg.get("canal_rails", true)):
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
 	if flags.enable_1w_walls:
@@ -657,6 +658,36 @@ static func _walls_1w(ctx: GenerationContext, canals, seed_val: int, cfg: Dictio
 			canals.walls_1w[top + Vector2i(0, k)] = v
 			canals.blocked[top + Vector2i(0, k)] = true
 	return placed.size()
+
+
+## Ślepe wnęki szerokości 1 (np. rząd podłogi wciśnięty przez przejścia czyszczące między ścianę działową a mur):
+## kratka podłogi z murem z >= 3 stron -> mur, powtarzane do stabilności. Zasypuje tylko liście (spójność bez zmian);
+## bez wody, kładek i strefy portali.
+static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
+	var dirs: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+	var open := func(c: Vector2i) -> bool:
+		return GridUtils.is_walkable(ctx.grid, c) or canals.water.has(c)
+	var cand: Array[Vector2i] = []
+	for y in range(1, ctx.height - 1):
+		for x in range(1, ctx.width - 1):
+			cand.append(Vector2i(x, y))
+	var filled := 0
+	while not cand.is_empty():
+		var next: Array[Vector2i] = []
+		for c in cand:
+			if not GridUtils.is_walkable(ctx.grid, c) or canals.water.has(c) or canals.bridge_cells.has(c) or ctx.portal_zone.has(c):
+				continue
+			var walls := 0
+			for d in dirs:
+				if not open.call(c + d):
+					walls += 1
+			if walls >= 3:
+				ctx.grid[c] = CellType.WALL
+				filled += 1
+				for d in dirs:
+					next.append(c + d)
+		cand = next
+	return filled
 
 
 ## Kratki kanału zamurowane przez przejścia czyszczące wypadają z nakładki (woda tylko na podłodze).
