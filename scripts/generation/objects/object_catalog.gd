@@ -168,6 +168,13 @@ func _parse(d: Dictionary) -> void:
 			wall_defs.append(def)
 		else:
 			defs.append(def)
+	var vig_ids := {}
+	for v in vignettes:
+		vig_ids[StringName(String(v.get("id", "")))] = true
+	for od in defs:
+		for pid in od.cluster_patterns:
+			if not vig_ids.has(pid):
+				errors.append("Obiekt '%s': cluster.patterns — nieznana winieta '%s'." % [od.id, pid])
 	for v in vignettes:
 		for part in v.get("parts", []):
 			if not (part is Dictionary) or not seen.has(StringName(String(part.get("id", "")))):
@@ -393,6 +400,9 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			def.cluster_min = maxi(sz.x, 1)
 			def.cluster_max = maxi(sz.y, def.cluster_min)
 			def.cluster_radius = maxi(int(cl.get("radius", 2)), 1)
+			for pid in cl.get("patterns", []):
+				def.cluster_patterns.append(StringName(String(pid)))
+			def.cluster_pattern_chance = clampf(float(cl.get("pattern_chance", 0.5 if not def.cluster_patterns.is_empty() else 0.0)), 0.0, 1.0)
 		else:
 			errors.append("%s: cluster to {\"size\": [a, b], \"radius\": r}." % tag)
 	var comps = m.get("companions", [])

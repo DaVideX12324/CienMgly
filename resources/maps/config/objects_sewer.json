@@ -22,9 +22,6 @@
       {
         "id": "sklad_pod_licem",
         "flip_h": true,
-        "per_room": 0.35,
-        "per_chamber": 0.3,
-        "density": 0.04,
         "parts": [
           {
             "id": "crates",
@@ -67,9 +64,6 @@
       {
         "id": "stos_skrzyn",
         "flip_h": true,
-        "per_room": 0.3,
-        "per_chamber": 0.3,
-        "density": 0.03,
         "parts": [
           {
             "id": "crates",
@@ -109,9 +103,6 @@
       {
         "id": "kat_skrzyn",
         "flip_h": true,
-        "per_room": 0.3,
-        "per_chamber": 0.4,
-        "density": 0.02,
         "parts": [
           {
             "id": "crates",
@@ -149,9 +140,6 @@
       {
         "id": "beczki",
         "flip_h": true,
-        "per_room": 0.25,
-        "per_chamber": 0.25,
-        "density": 0.03,
         "parts": [
           {
             "id": "barrels",
@@ -231,7 +219,14 @@
           1,
           4
         ],
-        "radius": 1
+        "radius": 1,
+        "patterns": [
+          "sklad_pod_licem",
+          "stos_skrzyn",
+          "kat_skrzyn",
+          "beczki"
+        ],
+        "pattern_chance": 0.6
       },
       "priority": 380,
       "set": "storage"
