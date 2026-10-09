@@ -50,6 +50,14 @@ var area_weights: Dictionary = {}
 var set_gap: int = 0
 ## Sceny zagadek bram (GatePlanner): {"barrier": res://…, "lock": res://…, "key": res://…}. JSON: "gates".
 var gates: Dictionary = {}
+## Winiety — kompozycje kilku obiektów z katalogu w stałym układzie (wzór: makiety autora paczki), stawiane przed
+## pojedynczymi obiektami (ObjectPlanner._place_vignettes). JSON "vignettes": [{
+##   "id": "skład", "parts": [{"id": "crates", "at": [0, 0], "variant": 0, "flip": false, "tags": ["wall_n"]}, …],
+##   "per_room": 0.4, "per_chamber": 0.4, "density": 0.1,   # szansa na pokój / komnatę, sztuki na 100 kotwic poza nimi
+##   "clear": [[0, 1], …],                                  # kratki (względem kotwicy) wolne od obiektów — dojście
+##   "flip_h": true                                          # odbicie całej winiety w poziomie (losowo)
+## }]. Kotwica = kratka części 0 (at = [0, 0]); "at" = przesunięcie podstawy części względem kotwicy.
+var vignettes: Array[Dictionary] = []
 
 # @tool + leniwy mutex: jak w ObjectBake (narzędzie edytora).
 static var _cache: Dictionary = {}
@@ -115,6 +123,12 @@ func _parse(d: Dictionary) -> void:
 		area_weights[StringName(k)] = float(aw[k])
 	set_gap = int(d.get("set_gap", 0))
 	gates = d.get("gates", {}) if d.get("gates", {}) is Dictionary else {}
+	if d.get("vignettes", []) is Array:
+		for v in d.get("vignettes", []):
+			if v is Dictionary and v.get("parts", []) is Array and not (v.get("parts", []) as Array).is_empty():
+				vignettes.append(v)
+			else:
+				errors.append("Winieta '%s': brak listy parts." % (v.get("id", "?") if v is Dictionary else "?"))
 	var groups: Dictionary = d.get("groups", {}) if d.get("groups", {}) is Dictionary else {}
 	for g in groups:
 		if not (groups[g] is Dictionary):
@@ -154,6 +168,10 @@ func _parse(d: Dictionary) -> void:
 			wall_defs.append(def)
 		else:
 			defs.append(def)
+	for v in vignettes:
+		for part in v.get("parts", []):
+			if not (part is Dictionary) or not seen.has(StringName(String(part.get("id", "")))):
+				errors.append("Winieta '%s': nieznany obiekt części '%s'." % [v.get("id", "?"), part.get("id", "?") if part is Dictionary else "?"])
 	# Towarzysze muszą wskazywać obiekty z katalogu.
 	for od in defs:
 		var ok: Array[Dictionary] = []
