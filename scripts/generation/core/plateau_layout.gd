@@ -15,6 +15,12 @@ var stairs_north: Array[Vector3i] = []   # północne schody w rimie: Vector3i(x
 var stairs_east: Array[Vector3i] = []    # wschodnie schody w boku: Vector3i(edge_x, top_y, height)
 var stairs_west: Array[Vector3i] = []    # zachodnie schody w boku: Vector3i(edge_x, top_y, height)
 
+# Geometria lica południowego (PlateauPass.face_rows): rzędy bariery nad krawędzią maski (face_up) i pod nią
+# (face_down). Jaskinie 2H: 0 / 1 (krawędź + stopa). Lico na kratkach maski (facade_base_on_wall) wysokości h:
+# h - 1 / 0 (krawędź i h - 1 rzędów nad nią, górny z krawędzią topu). Schody S zajmują wszystkie te rzędy.
+var face_up: int = 0
+var face_down: int = 1
+
 # Mapa wysokości (pole szumu na całej mapie), z której wycięto płaskowyż — do podglądu.
 # Odtwarzana przez PlateauPass.make_noise(noise_seed, noise_frequency) > threshold.
 var noise_seed: int = 0
@@ -72,13 +78,13 @@ func stair_pairs() -> Array:
 	return out
 
 
-## Komórki schodów (top i stopa) — chodliwe, łączą górę z ziemią.
+## Komórki schodów (top i stopa; S: wszystkie rzędy lica) — chodliwe, łączą górę z ziemią.
 func stair_cells() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for st in stairs:
 		for x in range(st.x, st.x + st.y):
-			out.append(Vector2i(x, st.z))
-			out.append(Vector2i(x, st.z + 1))
+			for y in range(st.z - face_up, st.z + face_down + 1):
+				out.append(Vector2i(x, y))
 	for st in stairs_north:
 		for x in range(st.x, st.x + st.y):
 			out.append(Vector2i(x, st.z))
