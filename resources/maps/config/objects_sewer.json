@@ -6,6 +6,7 @@
     "chamber": 1.0
   },
   "set_gap": 2,
+  "big_canal_gap": 1,
   "gates": {
     "barrier": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier.tscn",
     "barrier_column": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_short.tscn",

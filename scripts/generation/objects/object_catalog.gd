@@ -46,6 +46,7 @@ var errors: Array[String] = []
 ## "corridor"; brak = 1.0) — liczba sztuk bez zmian, więcej w pokojach. JSON: "area_weights".
 var area_weights: Dictionary = {}
 ## Odstęp (kratki, Chebyshev) między dużymi obiektami różnych zestawów (ObjectDef.set_id). JSON: "set_gap".
+## JSON "big_canal_gap": minimalny canal_gap dużych obiektów (is_big + interaktywne wielokratkowe).
 var set_gap: int = 0
 ## Sceny zagadek bram (GatePlanner): {"barrier": res://…, "lock": res://…, "key": res://…}. JSON: "gates".
 var gates: Dictionary = {}
@@ -162,6 +163,14 @@ func _parse(d: Dictionary) -> void:
 			else:
 				errors.append("Obiekt '%s': towarzysz '%s' nie istnieje w katalogu." % [od.id, c["id"]])
 		od.companions = ok
+	# Duże obiekty (meble, skrzynie, beczki, wraki, wolne filary, skrzynia quizu 2×2…) co najmniej big_canal_gap
+	# wolnych kratek od wody kanału (decyzja usera: nie przy samej krawędzi podłogi nad ściekami; przy ścianie wolno).
+	var big_gap := int(d.get("big_canal_gap", 0))
+	if big_gap > 0:
+		for od in defs:
+			var multi := od.size.x * od.size.y > 1 or od.footprint.size() > 1
+			if od.is_big() or (od.klass == ObjectDef.Klass.INTERACTIVE and multi):
+				od.canal_gap = maxi(od.canal_gap, big_gap)
 	var by_priority := func(a: ObjectDef, b: ObjectDef) -> bool:
 		return a.priority > b.priority or (a.priority == b.priority and a.order < b.order)
 	defs.sort_custom(by_priority)
