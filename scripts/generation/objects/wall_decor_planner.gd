@@ -47,7 +47,7 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 			rhythm_defs.append(def)
 		need_h = need_h or def.facade_h != 0
 	var bases_4h := _bases_4h(result, seed_v, flags) if need_h else {}
-	_place_canal_ends(result, defs, slots, used, bases_4h, on_wall, seed_v, objects)
+	_place_canal_ends(result, defs, slots, used, bases_4h, on_wall, seed_v, objects, flags)
 	var walls: Array = []  # ściany z filarami: {y, spans: [Vector2i(x, szerokość)]}
 	if not rhythm_defs.is_empty():
 		walls = _place_rhythm(result, rhythm_defs, slots, used, bases_4h, on_wall, seed_v, objects, "wall_rhythm")
@@ -356,11 +356,15 @@ static func _place_on_pillars(walls: Array, defs: Array[ObjectDef], seed_v: int,
 
 
 ## Lico nad północnymi końcami kanałów (def.canal_end): kanał kończący się pod ścianą — ciąg wody z murem nad każdą
-## kratką, bez wody po bokach, z wodą pod spodem — dostaje z szansą canal_end obiekt o szerokości ciągu (np. kratę
-## w łuku) tuż nad wodą: kanał wygląda, jakby wpływał w ścianę. Przed rytmem filarów; kolumny końca kanału są zajęte
+## kratką, bez wody po bokach, z wodą pod spodem — dostaje obiekt o szerokości ciągu (np. kratę w łuku) tuż nad wodą,
+## wybór ważony canal_end (suma < 1 — szansa na brak): kanał wygląda, jakby wpływał w ścianę. Tu też losowane, czy
+## koniec jest zamknięty licem kanału (canals.north_end_face); nad zamkniętym bez obiektów zatopionych (canal_end_dy > 0). Przed rytmem filarów; kolumny końca kanału są zajęte
 ## także bez obiektu (filar ani inna ozdoba nie stanie nad wodą wpływającą pod ścianę).
 static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary, used: Dictionary, bases_4h: Dictionary,
-		on_wall: bool, seed_v: int, objects: ObjectPlan) -> void:
+		on_wall: bool, seed_v: int, objects: ObjectPlan, flags: GenerationFlags = null) -> void:
+	# zamknięcie końca licem kanału: losowane tu (zapis w canals.north_end_face), żeby krata pasowała do kafli kanału
+	var tc: Dictionary = flags.tiling_config if flags != null else {}
+	var chance_n := float(tc.get("canal_north_face_chance", tc.get("canal_end_face_chance", 1.0)))
 	var cands: Array[ObjectDef] = []
 	for d in defs:
 		if d.canal_end > 0.0:
@@ -396,11 +400,16 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 		var y := a.y - 1 if on_wall else a.y
 		for k in range(n):
 			used[Vector2i(a.x + k, y)] = true
+		var closed := float(hash([seed_v, a, "canal_end_face"]) & 0xFFFF) / 65536.0 < chance_n
+		if "north_end_face" in result.canals:
+			result.canals.north_end_face[a] = closed
 		# wybór ważony canal_end spośród obiektów o szerokości kanału (suma < 1 — szansa na brak obiektu)
 		var anchor := Vector2i(a.x, y)
 		var fit: Array[ObjectDef] = []
 		var total := 0.0
 		for d in cands:
+			if closed and d.canal_end_dy > 0:
+				continue   # zatopiona krata tylko nad otwartym końcem (kwas pod ścianę)
 			if maxi(d.size.x, 1) == n and _fits(slots, anchor, n, d) and _height_ok(d, anchor, n, bases_4h, on_wall):
 				fit.append(d)
 				total += d.canal_end
@@ -412,8 +421,6 @@ static func _place_canal_ends(result, defs: Array[ObjectDef], slots: Dictionary,
 			if r >= 0.0:
 				continue
 			var w := n
-			if "north_end_face" in result.canals:
-				result.canals.north_end_face[a] = def.canal_end_face
 			var pl := ObjectPlacement.new()
 			pl.def = def
 			pl.cell = anchor + Vector2i(0, def.canal_end_dy)   # miejsce sprawdzone na zwykłej kotwicy lica
