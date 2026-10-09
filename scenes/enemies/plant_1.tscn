@@ -15,6 +15,7 @@ quiz_id = "ogolne"
 hp = 40
 max_hp = 40
 damage_on_wrong = 12
+poison_chance = 0.3
 xp_reward = 40
 encounter_tier = 1
 patrol_speed = 65.0

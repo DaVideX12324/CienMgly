@@ -13,6 +13,7 @@ enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY }
 ## Kontroler panelu pytań jest w hoście (w wersji samodzielnej kopia w _host/), więc load zamiast preload.
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
+const POISON_COLOR := Color(0.55, 0.9, 0.3)
 const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
 const PARTY_SKILL_SP_MAX := 100
@@ -1108,6 +1109,9 @@ func _use_item(item_data: Dictionary) -> void:
 	if tp_restore > 0:
 		_restore_party_tp(_active_actor_index, tp_restore)
 		effect_parts.append("+%d TP" % tp_restore)
+	if (use_result.get("cured_statuses", []) as Array).has("poison"):
+		effect_parts.append("zatrucie wyleczone")
+		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Wyleczono", POISON_COLOR, 12)
 	if effect_parts.is_empty():
 		result_label.text = str(use_result.get("message", "Użyto: %s" % item_name))
 		result_label.add_theme_color_override("font_color", Color.WHITE)
@@ -1354,13 +1358,50 @@ func _enemy_turn() -> void:
 				_flash_sprite(player_sprite_node, Color.RED)
 				HitParticles.create_at(player, player.global_position, Color.RED, 6)
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
+		if actual_damage > 0:
+			_try_poison(enemy_label)
 		_update_hp_bars()
 		_refresh_stats_panel()
 		await get_tree().create_timer(1.0).timeout
 		if _ps and not _ps.is_alive():
 			_end_combat(false)
 			return
+	if await _apply_poison_round():
+		return
 	_start_player_turn()
+
+
+## Trafienie wroga z poison_chance zatruwa lidera (status zostaje po walce — PlayerStats).
+func _try_poison(enemy_label: String) -> void:
+	var chance := float(enemy.get("poison_chance")) if enemy and "poison_chance" in enemy else 0.0
+	if chance <= 0.0 or _ps == null or not _ps.has_method("add_status") or randf() >= chance:
+		return
+	if _ps.add_status(0, "poison"):
+		_push_log("%s zatruwa! Zatrucie." % enemy_label, POISON_COLOR)
+		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Zatrucie!", POISON_COLOR, 12)
+
+
+## Koniec rundy wrogów: trucizna zabiera zatrutym część maks. HP (w walce może zbić do 0 — decyzja usera).
+## true = drużyna padła, walka zakończona.
+func _apply_poison_round() -> bool:
+	if _ps == null or not _ps.has_method("tick_poison_combat"):
+		return false
+	var hits: Array = _ps.tick_poison_combat()
+	if hits.is_empty():
+		return false
+	for h in hits:
+		var member: Dictionary = _ps.get_party_member(int(h[0])) if _ps.has_method("get_party_member") else {}
+		_push_log("%s cierpi od trucizny: -%d HP" % [str(member.get("name", "Bohater")), int(h[1])], POISON_COLOR)
+		if int(h[0]) == 0:
+			_flash_sprite(player_sprite_node, POISON_COLOR)
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % int(h[1]), POISON_COLOR, 14)
+	_update_hp_bars()
+	_refresh_stats_panel()
+	await get_tree().create_timer(0.8).timeout
+	if not _ps.is_alive():
+		_end_combat(false)
+		return true
+	return false
 
 
 func _end_combat(player_won: bool, fled: bool = false) -> void:
