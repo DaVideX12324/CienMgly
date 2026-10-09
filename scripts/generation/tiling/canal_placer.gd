@@ -140,10 +140,13 @@ static func _is_face(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> 
 	return ctx == null or not _faceless(ctx, water).has(p)
 
 
-## Kratki górnego rzędu kanałów kończących się prostopadle do lica ściany, które NIE dostają lica kanału: krótki ciąg
-## (<= linear_width + 1) kratek wody z murem nad każdą, bez wody po bokach w tym rzędzie, z wodą pod spodem (kanał
-## płynie na południe). Kanał wzdłuż ściany (długi ciąg) zawsze z licem. Szansa na lico: tiling.canal_end_face_chance
-## (domyślnie 1 — jak dotąd), losowana hashem ciągu. Liczone raz na kontekst (meta).
+## Końce kanałów na ścianie: krótki ciąg (<= linear_width + 1) kratek wody wzdłuż ściany, z murem za każdą (w kierunku
+## d), bez wody na końcach ciągu, z wodą przed każdą (kanał płynie od strony -d). Kanał wzdłuż ściany (długi ciąg)
+## się nie liczy. Z szansą 1 - tiling.canal_end_face_chance (losowane hashem ciągu) koniec jest „otwarty":
+## - północny (lico ściany nad kanałem): górny rząd bez lica kanału (wynik: kratki bez lica);
+## - każdy kierunek, gdy tiling.canal_end_under_wall: kanał płynie dalej pod ścianą — kratki muru za końcem
+##   trafiają do _under_wall (przy wyborze wariantów liczą się jak woda).
+## Liczone raz na kontekst (meta).
 static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 	if ctx.has_meta(&"canal_faceless"):
 		return ctx.get_meta(&"canal_faceless")
@@ -158,33 +161,38 @@ static func _faceless(ctx: GenerationContext, water: Dictionary) -> Dictionary:
 	var max_run := int(ctx.generator_behaviour.get("structured_layout", {}).get("linear_width", 4)) + 1
 	var wall := func(c: Vector2i) -> bool:
 		return not water.has(c) and not GridUtils.is_walkable(ctx.grid, c)
-	var seen := {}
-	for p: Vector2i in water:
-		if seen.has(p) or water.has(p + Vector2i(0, -1)) or not wall.call(p + Vector2i(0, -1)):
-			continue
-		# początek ciągu: lewy koniec
-		var a := p
-		while water.has(a + Vector2i(-1, 0)) and not water.has(a + Vector2i(-1, -1)) and wall.call(a + Vector2i(-1, -1)):
-			a += Vector2i(-1, 0)
-		var run: Array[Vector2i] = []
-		var c := a
-		while water.has(c) and not water.has(c + Vector2i(0, -1)) and wall.call(c + Vector2i(0, -1)):
-			run.append(c)
-			seen[c] = true
-			c += Vector2i(1, 0)
-		if run.size() > max_run or water.has(a + Vector2i(-1, 0)) or water.has(c):
-			continue
-		var down := true
-		for q in run:
-			down = down and water.has(q + Vector2i(0, 1))
-		if not down:
-			continue
-		var u := float(hash([ctx.seed_value, a, "canal_end_face"]) & 0xFFFF) / 65536.0
-		if u >= chance:
+	for d: Vector2i in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(1, 0), Vector2i(-1, 0)]:
+		if d.y >= 0 and not cont:
+			continue   # bez canal_end_under_wall tylko końce północne (lico kanału)
+		var t := Vector2i(1, 0) if d.x == 0 else Vector2i(0, 1)
+		var seen := {}
+		for p: Vector2i in water:
+			if seen.has(p) or not wall.call(p + d):
+				continue
+			var a := p   # początek ciągu
+			while water.has(a - t) and wall.call(a - t + d):
+				a -= t
+			var run: Array[Vector2i] = []
+			var c := a
+			while water.has(c) and wall.call(c + d):
+				run.append(c)
+				seen[c] = true
+				c += t
+			if run.size() > max_run or water.has(a - t) or water.has(c):
+				continue
+			var flows := true
 			for q in run:
-				out[q] = true
+				flows = flows and water.has(q - d)
+			if not flows:
+				continue
+			var u := float(hash([ctx.seed_value, a, "canal_end_face" if d.y < 0 else "canal_end_under"]) & 0xFFFF) / 65536.0
+			if u < chance:
+				continue
+			for q in run:
+				if d.y < 0:
+					out[q] = true
 				if cont:
-					under[q + Vector2i(0, -1)] = true
+					under[q + d] = true
 	return out
 
 
@@ -199,15 +207,16 @@ static func _under_wall(ctx: GenerationContext, water: Dictionary) -> Dictionary
 ## narożnik zewnętrzny OUT_NW / OUT_NE (podłoga nad licem kończy się — woda z boku i po skosie u góry),
 ## środek M. Placer bierze pierwszy, który jest w profilu.
 static func _face_variants(ctx: GenerationContext, water: Dictionary, p: Vector2i) -> Array[StringName]:
+	var under := _under_wall(ctx, water)   # kanał płynący pod ścianą boczną — lico ciągnie się dalej (M)
 	var wl := p + Vector2i(-1, 0)
 	var wr := p + Vector2i(1, 0)
-	if not water.has(wl):
+	if not water.has(wl) and not under.has(wl):
 		if GridUtils.is_walkable(ctx.grid, wl):
 			return [&"L"]
-		if not water.has(wr) and not GridUtils.is_walkable(ctx.grid, wr):
+		if not water.has(wr) and not under.has(wr) and not GridUtils.is_walkable(ctx.grid, wr):
 			return [&"DLR", &"DL"]
 		return [&"DL"]
-	if not water.has(wr):
+	if not water.has(wr) and not under.has(wr):
 		return [&"R"] if GridUtils.is_walkable(ctx.grid, wr) else [&"DR"]
 	if water.has(p + Vector2i(-1, -1)):
 		return [&"OUT_NW", &"M"]
