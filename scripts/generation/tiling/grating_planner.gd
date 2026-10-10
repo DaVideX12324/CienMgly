@@ -37,7 +37,7 @@ static func select(grid: Dictionary, canals, portal_zone: Dictionary, seed_value
 	var spacing := int(cfg.get("spacing", 4))
 	var bad := {}
 	for d in [canals.water, canals.lanes, canals.service, canals.crossing_cells, canals.bridge_clearance,
-			canals.rail_cells, canals.walls_1w, portal_zone, avoid]:
+			canals.rail_cells, canals.walls_1w, canals.stair_cells, portal_zone, avoid]:
 		bad.merge(d)
 	var grass_set := {}
 	for c in grass:

@@ -5,6 +5,7 @@ const CanalPlacerScript = preload("canal_placer.gd")
 const Wall1WPlacerScript = preload("wall_1w_placer.gd")
 const CurbPlacerScript = preload("curb_placer.gd")
 const GratingPlannerScript = preload("grating_planner.gd")
+const CorridorStairsPlacerScript = preload("corridor_stairs_placer.gd")
 
 
 const GenProgress = preload("../core/gen_progress.gd")
@@ -71,6 +72,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	# 9. Płaskowyże na osobnej warstwie Platforms (po ścianach — renderer czyta plan Walls)
 	GenProgress.begin(&"plateau_tiles")
 	PlateauPlacer.plan(ctx, tiles)
+	CorridorStairsPlacerScript.plan(ctx, tiles)
 	GenProgress.end(&"plateau_tiles")
 
 	return {

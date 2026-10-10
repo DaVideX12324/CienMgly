@@ -28,6 +28,7 @@ const WallDecorPlannerScript = preload("../objects/wall_decor_planner.gd")
 const GratingPlannerScript = preload("../tiling/grating_planner.gd")
 const GatePlannerScript = preload("../objects/gate_planner.gd")
 const StructuredPlatformsScript = preload("structured_platforms.gd")
+const StructuredStairsScript = preload("structured_stairs.gd")
 
 const PORTAL_MIN_FREE := 60
 
@@ -150,6 +151,9 @@ static func generate_layout(
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
 
+	# Korytarze-schody (przed platformami, kratownicami i obiektami — wszystkie ich unikają).
+	if cfg.has("corridor_stairs") and ctx.entrance_pos != Vector2i.ZERO:
+		stats["corridor_stairs"] = StructuredStairsScript.select(ctx, canals, cfg["corridor_stairs"])
 	if flags.enable_platforms:
 		GenProgress.begin(&"plateaus")
 		if cfg.has("platforms") and ctx.entrance_pos != Vector2i.ZERO:

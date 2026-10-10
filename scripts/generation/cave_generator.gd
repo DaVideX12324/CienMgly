@@ -272,7 +272,8 @@ static func prepare_cave_layers(
 	# z_index -1: pod Walls i encjami (nikt nie stoi pod/za płaskowyżem).
 	if platforms_layer == null and floor_layer.get_parent():
 		platforms_layer = floor_layer.get_parent().get_node_or_null("Platforms") as TileMapLayer
-		if platforms_layer == null and result.plateau != null and not result.plateau.is_empty():
+		var has_stairs: bool = result.canals != null and "stair_corridors" in result.canals and not result.canals.stair_corridors.is_empty()
+		if platforms_layer == null and ((result.plateau != null and not result.plateau.is_empty()) or has_stairs):
 			platforms_layer = TileMapLayer.new()
 			platforms_layer.name = "Platforms"
 			platforms_layer.tile_set = floor_layer.tile_set
