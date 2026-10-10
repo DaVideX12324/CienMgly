@@ -992,7 +992,7 @@ func _rebuild_skill_rows() -> void:
 	var member: Dictionary = _get_current_party_member()
 	var member_sp: int = int(member.get("sp", 0))
 	var member_tp: int = int(member.get("tp", 0))
-	var skills: Array = _ps.skills if _ps and _ps.get("skills") is Array else []
+	var skills: Array = _ps.get_member_skills(_selected_member_index) if _ps and _ps.has_method("get_member_skills") else []
 	for index: int in range(_skill_rows.size()):
 		var row: Control = _skill_rows[index]
 		var has_skill: bool = index < skills.size()
