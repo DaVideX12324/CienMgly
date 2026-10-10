@@ -19,6 +19,8 @@ signal status_tick(member_index: int, status_id: String, amount: int)
 const MAX_LEVEL        := 20
 const BASE_HP          := 250
 const HP_AT_MAX_LEVEL  := 1900
+const DEF_SOFTCAP_BASE     := 40.0
+const DEF_SOFTCAP_PER_TIER := 20.0
 const ATK_PER_LEVEL    := 1
 const DEF_PER_LEVEL    := 1
 const BASE_XP_TO_LEVEL := 100
@@ -422,6 +424,14 @@ func load_save_data(data: Dictionary) -> void:
 	skills = _to_dictionary_array(data.get("skills", skills.duplicate(true)))
 	inventory = _to_dictionary_array(data.get("inventory", inventory.duplicate(true)))
 	party = _to_dictionary_array(data.get("party", party.duplicate(true)))
+	# stary zapis (ATK 10 / DEF 8): nowe bazowe staty postaci to 30–50
+	for i in range(party.size()):
+		var m: Dictionary = party[i]
+		if int(m.get("base_atk", 0)) < 30:
+			m["base_atk"] = 40
+		if int(m.get("base_def", 0)) < 30:
+			m["base_def"] = 40
+		party[i] = m
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
@@ -602,12 +612,14 @@ func get_member_total_def(member_index: int) -> int:
 	return total_def
 
 
+## Redukcja procentowa od pancerza: DEF / (DEF + DEF_SOFTCAP_BASE + DEF_SOFTCAP_PER_TIER × tier) — DEF 40: ~40 % na tierze 1,
+## ~29 % na tierze 3, ~22 % na tierze 5. Bazowe DEF postaci to 30–50, reszta z przedmiotów.
 func calculate_incoming_damage(raw_damage: int, enemy_tier: int = 1, defending_multiplier: float = 1.0, member_index: int = 0) -> int:
 	var clamped_tier: int = clampi(enemy_tier, 1, 5)
 	var defense: int = get_member_total_def(member_index)
 	var scaled_raw: int = raw_damage + int(round(float(clamped_tier) * 4.0))
-	var mitigation: float = (float(defense) * 0.55) / float(clamped_tier)
-	var damage_after_armor: int = int(round(float(scaled_raw) - mitigation))
+	var reduction: float = float(defense) / (float(defense) + DEF_SOFTCAP_BASE + DEF_SOFTCAP_PER_TIER * float(clamped_tier))
+	var damage_after_armor: int = int(round(float(scaled_raw) * (1.0 - reduction)))
 	var final_damage: int = int(floor(float(damage_after_armor) * maxf(defending_multiplier, 0.0)))
 	var minimum_damage: int = 0 if clamped_tier <= 2 else 1
 	return maxi(minimum_damage, final_damage)
@@ -772,8 +784,8 @@ func _build_default_party_member() -> Dictionary:
 		"max_sp": 100,
 		"tp": 0,
 		"max_tp": 100,
-		"base_atk": 10,
-		"base_def": 8,
+		"base_atk": 40,
+		"base_def": 40,
 		"portrait": null,
 		"equipment": {
 			"weapon": "",
