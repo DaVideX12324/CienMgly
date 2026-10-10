@@ -16,6 +16,11 @@ class_name QuizRpgHeroData
 @export var base_hp: int = 334
 @export var hp_at_max_level: int = 1402
 ## SP na poziomie 1 i na MAX_LEVEL — liniowo (FNaFB1 FM, Freddy: MP 139 -> 446); koszty umiejętności są w tej skali.
+## Krzywa XP jak „exp params” klasy w RPG Makerze VX Ace / FNaFB1 (Freddy: 50, 40, 50, 39): lv 1->2 90 XP, 2->3 204, 5->6 943, 19->20 12 532.
+@export var xp_base: int = 50
+@export var xp_extra: int = 40
+@export var xp_acc_a: int = 50
+@export var xp_acc_b: int = 39
 @export var base_sp: int = 139
 @export var sp_at_max_level: int = 446
 @export var base_tp: int = 100
@@ -45,6 +50,19 @@ class_name QuizRpgHeroData
 ## Maks. HP na danym poziomie: liniowo od base_hp (poziom 1) do hp_at_max_level (max_level).
 func hp_for_level(lvl: int, max_level: int) -> int:
 	return QuizRpgHeroData.linear_hp(base_hp, hp_at_max_level, lvl, max_level)
+
+
+## Łączna liczba XP potrzebna do osiągnięcia poziomu lvl (wzór EXP klasy z RPG Makera VX Ace).
+func xp_total_for_level(lvl: int) -> int:
+	if lvl <= 1:
+		return 0
+	var l := float(lvl)
+	return roundi(xp_base * pow(l - 1.0, 0.9 + xp_acc_a / 250.0) * l * (l + 1.0) / (6.0 + l * l / 50.0 / xp_acc_b) + (l - 1.0) * xp_extra)
+
+
+## XP z poziomu lvl na lvl + 1.
+func xp_to_next(lvl: int) -> int:
+	return maxi(xp_total_for_level(lvl + 1) - xp_total_for_level(lvl), 1)
 
 
 ## Maks. SP na danym poziomie (jak hp_for_level).

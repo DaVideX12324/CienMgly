@@ -21,10 +21,8 @@ signal status_tick(member_index: int, status_id: String, amount: int)
 const MAX_LEVEL        := 20
 const BASE_HP          := 334
 const HP_AT_MAX_LEVEL  := 1402
-const BASE_XP_TO_LEVEL := 100
-## XP do następnego poziomu: BASE_XP_TO_LEVEL × poziom^XP_EXPONENT (lv 1->2: 100, 5->6: 1118, 19->20: ~8300; razem do lv 20 ~67 tys.).
-## Wrogowie wyższych tierów dają wielokrotnie więcej XP niż 35–85 dzisiejszych — stroić przy kolejnych mapach.
-const XP_EXPONENT      := 1.5
+## XP do następnego poziomu: krzywa z QuizRpgHeroData (xp_base, xp_extra, xp_acc_a, xp_acc_b — jak klasa w FNaFB1: lv 1->2 90, 2->3 204,
+## 19->20 12 532; razem do lv 20 ~87 tys.). Wrogowie wyższych tierów dają wielokrotnie więcej XP — stroić przy kolejnych mapach.
 ## Statusy członków drużyny: member["statuses"] = {id: {turns, …parametry}} (zapisywane razem z drużyną; definicje
 ## w resources/statuses/ — QuizRpgStatusCatalog). turns 0 = do wyleczenia. Trucizna (decyzje usera 2026-10-09): trwa
 ## także w eksploracji, dopóki nie użyje się przedmiotu leczącego statusy (cure_statuses); poza walką 1 HP co 3 s,
@@ -103,7 +101,9 @@ func _ready() -> void:
 
 
 func xp_to_next_level() -> int:
-	return int(BASE_XP_TO_LEVEL * pow(level, XP_EXPONENT))
+	if not hero_party_data.is_empty() and hero_party_data[0] != null:
+		return hero_party_data[0].xp_to_next(level)
+	return QuizRpgHeroData.new().xp_to_next(level)
 
 
 func add_xp(amount: int) -> void:
@@ -116,7 +116,6 @@ func add_xp(amount: int) -> void:
 		xp -= xp_to_next_level()
 		level += 1
 		_recalculate_max_hp()
-		hp = max_hp
 		_sync_primary_party_member()
 		learn_level_skills()
 		level_up.emit(level)
@@ -984,7 +983,7 @@ func _sync_primary_party_member() -> void:
 	_sync_member_max_sp(0)
 
 
-## Maks. SP członka z krzywej postaci (hero.sp_for_level); wzrost maks. SP dodaje się też do bieżącego SP.
+## Maks. SP członka z krzywej postaci (hero.sp_for_level); awans zwiększa tylko maksimum (bieżące SP bez zmian).
 func _sync_member_max_sp(index: int) -> void:
 	if index < 0 or index >= party.size():
 		return
@@ -997,7 +996,7 @@ func _sync_member_max_sp(index: int) -> void:
 	if new_max == old_max and member.has("sp"):
 		return
 	member["max_sp"] = new_max
-	member["sp"] = clampi(int(member.get("sp", new_max)) + maxi(new_max - old_max, 0), 0, new_max)
+	member["sp"] = clampi(int(member.get("sp", new_max)), 0, new_max)
 	party[index] = member
 
 
