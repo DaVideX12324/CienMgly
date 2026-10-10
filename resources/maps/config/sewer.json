@@ -139,7 +139,6 @@
     "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]}
   },
   "scenes": {"chest": "res://modules/quiz_rpg/scenes/objects/sewer/sewer_chest.tscn"},
-  "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
     "default": "sewer",
     "enabled": [
