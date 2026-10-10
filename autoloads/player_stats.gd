@@ -36,10 +36,10 @@ const POISON_WORLD_DAMAGE := 1
 const POISON_COMBAT_FRACTION := 0.05
 const EQUIPMENT_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 const EQUIPMENT_LABELS := {
-	"weapon": "Bron",
+	"weapon": "Broń",
 	"shield": "Tarcza",
-	"head": "Glowa",
-	"body": "Cialo",
+	"head": "Głowa",
+	"body": "Ciało",
 	"accessory": "Akcesorium",
 }
 
@@ -192,8 +192,8 @@ func is_alive() -> bool:
 
 # --- Umiejętności --------------------------------------------------------------------------
 
-## Dane postaci członka drużyny (hero_id), inaczej pierwsza z hero_party_data.
-func _hero_for(member: Dictionary) -> QuizRpgHeroData:
+## Dane postaci członka drużyny (hero_id), inaczej pierwsza z hero_party_data (miniaturki, umiejętności).
+func hero_for_member(member: Dictionary) -> QuizRpgHeroData:
 	_ensure_default_hero()
 	var hid := str(member.get("hero_id", ""))
 	for h: QuizRpgHeroData in hero_party_data:
@@ -209,7 +209,7 @@ func get_member_skills(member_index: int) -> Array[Dictionary]:
 		return out
 	var member: Dictionary = party[member_index]
 	var unlocked: Array = member.get("skills", [])
-	var hero := _hero_for(member)
+	var hero := hero_for_member(member)
 	if hero == null:
 		return out
 	for sk: QuizRpgSkillData in hero.skills:
@@ -223,7 +223,7 @@ func get_member_skill_pool(member_index: int) -> Array[QuizRpgSkillData]:
 	var out: Array[QuizRpgSkillData] = []
 	if member_index < 0 or member_index >= party.size():
 		return out
-	var hero := _hero_for(party[member_index])
+	var hero := hero_for_member(party[member_index])
 	if hero:
 		for sk: QuizRpgSkillData in hero.skills:
 			if sk != null:
@@ -550,10 +550,10 @@ func use_item(item_ref: String) -> Dictionary:
 func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 	var inventory_service: Node = _get_inventory_service()
 	if inventory_service == null or not inventory_service.has_method("use_item"):
-		return {"success": false, "message": "InventoryService niedostepny."}
+		return {"success": false, "message": "InventoryService niedostępny."}
 	_ensure_party_defaults()
 	if member_index < 0 or member_index >= party.size():
-		return {"success": false, "message": "Nieprawidlowy cel."}
+		return {"success": false, "message": "Nieprawidłowy cel."}
 	var item_data: QuizRpgItemData = inventory_service.call("get_item", item_ref)
 	if item_data == null:
 		return {"success": false, "message": "Nieznany przedmiot."}
@@ -594,7 +594,7 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 		"cured_statuses": cured,
 		"usable_in_menu": item_data.usable_in_menu,
 		"usable_in_combat": item_data.usable_in_combat,
-		"message": "%s: %s" % [item_data.display_name, item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else "Uzyto %s." % item_data.display_name,
+		"message": "%s: %s" % [item_data.display_name, item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else "Użyto %s." % item_data.display_name,
 	}
 	if bool(result.get("success", false)):
 		_sync_primary_party_member()
@@ -684,7 +684,7 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 	var empty_entry: Dictionary = {
 		"item_id": "",
 		"name": "(puste)",
-		"description": "Zdejmij wyposazenie z tego slotu.",
+		"description": "Zdejmij wyposażenie z tego slotu.",
 		"count": 1,
 		"equip_slot": slot_name,
 		"atk_bonus": 0,
@@ -765,7 +765,7 @@ func _ensure_party_defaults() -> void:
 	for index: int in range(party.size()):
 		var member: Dictionary = party[index]
 		if not (member.get("skills") is Array):
-			var hero := _hero_for(member)
+			var hero := hero_for_member(member)
 			member["skills"] = Array(hero.starting_skills) if hero else []
 		if not member.has("equipment") or not (member.get("equipment") is Dictionary):
 			member["equipment"] = {}

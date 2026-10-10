@@ -56,6 +56,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="Portrait" type="TextureRect" parent="PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=368401500]
+texture_filter = 1
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 expand_mode = 1
@@ -82,7 +83,7 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "ZYCIE"
+text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/HPRow" unique_id=235435160]
 theme_type_variation = &"QuizBarLP"
@@ -109,7 +110,7 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "MANA"
+text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow0/Margin/ContentRow/SPRow" unique_id=522337450]
 theme_type_variation = &"QuizBarSP"
@@ -156,6 +157,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="Portrait" type="TextureRect" parent="PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=1853684910]
+texture_filter = 1
 custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 expand_mode = 1
@@ -182,7 +184,7 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "ZYCIE"
+text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/HPRow" unique_id=1793299602]
 theme_type_variation = &"QuizBarLP"
@@ -209,7 +211,7 @@ theme_override_constants/separation = 8
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "MANA"
+text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="PartyListVBox/PartyRow1/Margin/ContentRow/SPRow" unique_id=953737951]
 theme_type_variation = &"QuizBarSP"
