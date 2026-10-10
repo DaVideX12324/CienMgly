@@ -10,8 +10,8 @@ height = 14.0
 
 [node name="Enemy" unique_id=1071891148 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
-hp = 120
-max_hp = 120
+hp = 100
+max_hp = 100
 enemy_name = "Bandit 1"
 quiz_id = "ogolne"
 attack = 26
