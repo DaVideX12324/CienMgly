@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5hmnfgtobndb"
-path="res://.godot/imported/Furniture.png-16e97fb173f3c1b99aba63491d3e3d93.ctex"
+uid="uid://dvhjfr4ukcwh4"
+path="res://.godot/imported/New Stairs.png-83b42841e0ba178838d4ca1e02eeec98.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://_host/assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png"
-dest_files=["res://.godot/imported/Furniture.png-16e97fb173f3c1b99aba63491d3e3d93.ctex"]
+source_file="res://_host/assets/textures/legacy_amonra/atlases/nieodkryteglebiny_textures/New Stairs.png"
+dest_files=["res://.godot/imported/New Stairs.png-83b42841e0ba178838d4ca1e02eeec98.ctex"]
 
 [params]
 
