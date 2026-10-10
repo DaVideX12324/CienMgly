@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "knight_broadsword"
+display_name = "Pałasz Rycerski"
+description = "Precyzyjnie wyważony miecz używany przez elitarną straż zamkową."
+category = "hand"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "weapon"
+atk_bonus = 80
