@@ -215,7 +215,7 @@ func get_member_skills(member_index: int) -> Array[Dictionary]:
 		return out
 	for sk: QuizRpgSkillData in hero.skills:
 		if sk != null and unlocked.has(sk.skill_id):
-			out.append(sk.to_entry())
+			out.append(sk.to_entry(int(member.get("max_sp", 0))))
 	return out
 
 
@@ -968,6 +968,7 @@ func _ensure_party_defaults() -> void:
 		if not member.has("body_color"):
 			member["body_color"] = Color(0.2, 0.6, 1.0)
 		party[index] = member
+		_sync_member_max_sp(index)
 
 
 func _sync_primary_party_member() -> void:
@@ -980,6 +981,24 @@ func _sync_primary_party_member() -> void:
 	member["hp"] = hp
 	member["max_hp"] = max_hp
 	party[0] = member
+	_sync_member_max_sp(0)
+
+
+## Maks. SP członka z krzywej postaci (hero.sp_for_level); wzrost maks. SP dodaje się też do bieżącego SP.
+func _sync_member_max_sp(index: int) -> void:
+	if index < 0 or index >= party.size():
+		return
+	var member: Dictionary = party[index]
+	var hero := hero_for_member(member)
+	if hero == null:
+		return
+	var new_max := hero.sp_for_level(int(member.get("level", 1)), MAX_LEVEL)
+	var old_max := int(member.get("max_sp", new_max))
+	if new_max == old_max and member.has("sp"):
+		return
+	member["max_sp"] = new_max
+	member["sp"] = clampi(int(member.get("sp", new_max)) + maxi(new_max - old_max, 0), 0, new_max)
+	party[index] = member
 
 
 func _get_member_level_bonus(member: Dictionary, per_level: float) -> int:

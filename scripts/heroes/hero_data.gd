@@ -15,7 +15,9 @@ class_name QuizRpgHeroData
 ## HP na poziomie 1 i na MAX_LEVEL (PlayerStats.MAX_LEVEL) — pomiędzy liniowo (hp_for_level). Każda postać ma swoją pulę.
 @export var base_hp: int = 334
 @export var hp_at_max_level: int = 1402
-@export var base_sp: int = 100
+## SP na poziomie 1 i na MAX_LEVEL — liniowo (FNaFB1 FM, Freddy: MP 139 -> 446); koszty umiejętności są w tej skali.
+@export var base_sp: int = 139
+@export var sp_at_max_level: int = 446
 @export var base_tp: int = 100
 ## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
 ## ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).
@@ -43,6 +45,11 @@ class_name QuizRpgHeroData
 ## Maks. HP na danym poziomie: liniowo od base_hp (poziom 1) do hp_at_max_level (max_level).
 func hp_for_level(lvl: int, max_level: int) -> int:
 	return QuizRpgHeroData.linear_hp(base_hp, hp_at_max_level, lvl, max_level)
+
+
+## Maks. SP na danym poziomie (jak hp_for_level).
+func sp_for_level(lvl: int, max_level: int) -> int:
+	return QuizRpgHeroData.linear_hp(base_sp, sp_at_max_level, lvl, max_level)
 
 
 static func linear_hp(hp_first: int, hp_last: int, lvl: int, max_level: int) -> int:

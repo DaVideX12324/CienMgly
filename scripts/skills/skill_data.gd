@@ -11,6 +11,8 @@ enum Occasion { ALWAYS, BATTLE, MENU, NEVER }
 
 @export var skill_id: String = ""
 @export_range(0, 999, 1) var sp_cost: int = 0
+## Koszt jako część maks. SP użytkownika (np. 0.24 jak „Custom MP Cost” w FNaFB CC); gdy > 0, zastępuje sp_cost.
+@export_range(0.0, 1.0, 0.01) var sp_cost_percent: float = 0.0
 @export_range(0, 100, 1) var tp_cost: int = 0
 @export var occasion: Occasion = Occasion.BATTLE
 ## Poziom, od którego postać zna umiejętność sama (0 = nie z poziomu: uczy NPC albo zdarzenie).
@@ -19,12 +21,19 @@ enum Occasion { ALWAYS, BATTLE, MENU, NEVER }
 @export var combo: bool = false
 
 
-func to_entry() -> Dictionary:
+## Koszt SP dla użytkownika o maks. SP max_sp (sp_cost_percent × max_sp w górę, inaczej sp_cost).
+func sp_cost_for(max_sp: int) -> int:
+	if sp_cost_percent > 0.0 and max_sp > 0:
+		return maxi(ceili(max_sp * sp_cost_percent), 1)
+	return sp_cost
+
+
+func to_entry(max_sp: int = 0) -> Dictionary:
 	return {
 		"skill_id": skill_id,
 		"name": display_name,
 		"description": description,
-		"sp_cost": sp_cost,
+		"sp_cost": sp_cost_for(max_sp),
 		"tp_cost": tp_cost,
 		"effect": "heal" if is_heal() else "attack",
 		"combo": combo,

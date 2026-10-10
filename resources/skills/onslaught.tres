@@ -14,4 +14,4 @@ atk_coeff = 1.6
 def_coeff = 0.8
 variance = 0.2
 hits = 6
-sp_cost = 80
+sp_cost = 150

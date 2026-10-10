@@ -13,5 +13,5 @@ atk_coeff = 3.4
 damage_multiplier = 0.55
 variance = 0.05
 hits = 2
-sp_cost = 24
+sp_cost_percent = 0.24
 learn_level = 5

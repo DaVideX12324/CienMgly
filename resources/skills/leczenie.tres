@@ -12,6 +12,6 @@ damage_mode = 2
 target = 4
 heal_mode = 2
 heal_percent = 0.3
-sp_cost = 20
+sp_cost = 40
 occasion = 0
 learn_level = 1
