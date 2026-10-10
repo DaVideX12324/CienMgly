@@ -216,17 +216,7 @@ func _ensure_default_resources() -> void:
 				QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
 				QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
 			]
-		for entry in enemy_paths:
-			var variants: Array[PackedScene] = []
-			for ep in (entry if entry is Array else [entry]):
-				if ResourceLoader.exists(ep):
-					var p := load(ep) as PackedScene
-					if p:
-						variants.append(p)
-			if variants.size() == 1:
-				_enemy_pool.append(variants[0])
-			elif variants.size() > 1:
-				_enemy_pool.append(variants)
+		_enemy_pool = _pool_from_paths(enemy_paths)
 
 	if chest_scene == null:
 		var cp := QuizRpgPaths.path("scenes/objects/closed_chest_tutorial.tscn")
@@ -346,11 +336,40 @@ func _loading_title() -> String:
 	return "Generowanie mapy…"
 
 
+## Pula wrogów z listy tierów: element = ścieżka sceny albo tablica ścieżek (warianty tieru); nieistniejące pomijane.
+func _pool_from_paths(enemy_paths: Array) -> Array:
+	var pool: Array = []
+	for entry in enemy_paths:
+		var variants: Array[PackedScene] = []
+		for ep in (entry if entry is Array else [entry]):
+			if ResourceLoader.exists(ep):
+				var p := load(ep) as PackedScene
+				if p:
+					variants.append(p)
+		if variants.size() == 1:
+			pool.append(variants[0])
+		elif variants.size() > 1:
+			pool.append(variants)
+	return pool
+
+
 ## Parametry generacji z UI/@export, zapisu i companion-JSON (główny wątek: węzły, zasoby).
 func _prepare_job(seed_val: int) -> GenJob:
 	# Companion-JSON: parametry generatora + Named TileSet System (opcjonalne).
 	# Precedencja parametrów: UI/@export (>0) > seed zapisu > JSON > default.
 	var cfg = _load_behaviour_config()
+	# Pula wrogów mapy z companion-JSON ("enemies": tiery, ścieżki względem modułu; tier = ścieżka albo lista
+	# wariantów) — gdy scena nie ma własnej (enemy_scenes); inaczej domyślna typu poziomu.
+	if enemy_scenes.is_empty() and cfg != null and cfg.raw.get("enemies") is Array:
+		var paths: Array = []
+		for entry in cfg.raw["enemies"]:
+			if entry is Array:
+				paths.append((entry as Array).map(func(e): return QuizRpgPaths.path(String(e))))
+			else:
+				paths.append(QuizRpgPaths.path(String(entry)))
+		var pool := _pool_from_paths(paths)
+		if not pool.is_empty():
+			_enemy_pool = pool
 	var level_key := _level_key()
 	var lsm = _get_level_state_manager()
 
