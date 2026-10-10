@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
-skill_name = "Trujące pnącze"
+display_name = "Trujące pnącze"
 log_text = "{enemy} oplata cię trującym pnączem!"
 use_chance = 0.35
 cooldown_turns = 2

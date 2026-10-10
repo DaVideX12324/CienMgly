@@ -71,7 +71,8 @@ var enemy_base_attack := 24
 var enemy_base_defense := 12
 var enemy_base_magic_attack := 24
 var enemy_base_magic_defense := 12
-var player_base_damage := 20
+## Leczenie umiejętności po złej odpowiedzi w quizie: tyle efektu po dobrej (dawne 30 % / 10 % HP).
+const WRONG_ANSWER_HEAL_FACTOR := 1.0 / 3.0
 var turn_number := 0
 
 @onready var battle_window: PanelContainer = $BattleWindow
@@ -147,6 +148,9 @@ var _action_menu_open := false
 var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
 var _actor_selected_idx := 0
 var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
+var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY)
+## Kursor drużyny wybiera cel leczenia zamiast postaci: 0 — nie, 1 — żywy sojusznik, 2 — nieprzytomny (wskrzeszenie).
+var _ally_pick := 0
 var _defender_index := 0         # postać, która wybrała Obronę w tej turze (blok umiejętności wrogów)
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
@@ -200,7 +204,6 @@ func setup(
 	enemy_base_defense = p_enemy.defense
 	enemy_base_magic_attack = p_enemy.magic_attack
 	enemy_base_magic_defense = p_enemy.magic_defense
-	player_base_damage = _get_player_attack_power()
 	_roll_enemy_party()
 	if is_node_ready():
 		_setup_enemy_display()
@@ -516,7 +519,6 @@ func _start_player_turn() -> void:
 	_clear_battle_log()
 	if turn_label:
 		turn_label.text = "Tura %d - Twój ruch" % turn_number
-	player_base_damage = _get_player_attack_power()
 	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	action_panel.visible = true
@@ -998,21 +1000,69 @@ func _ui_scale_px(base_size: int) -> int:
 	return base_size
 
 
+## Umiejętność z listy: leczenie (cel: ja / sojusznik — kursor drużyny, gdy jest wybór / drużyna / nieprzytomny)
+## albo atak (jeden przeciwnik — wybór celu; wszyscy / losowi — bez wyboru). Koszt pobierany po wyborze celu.
 func _use_skill(skill_data: Dictionary) -> void:
-	var effect: String = str(skill_data.get("effect", "heal"))
-	chosen_action = Action.HEAL
-	if effect == "attack":
-		chosen_action = Action.ATTACK
-	elif effect == "defend":
-		chosen_action = Action.DEFEND
+	var skill := skill_data.get("resource") as QuizRpgSkillBase
 	_close_list_menu()
-	if chosen_action == Action.ATTACK:
-		_pending_skill_data = skill_data.duplicate(true)
+	if skill != null and skill.is_heal():
+		chosen_action = Action.HEAL
+		if skill.target == QuizRpgSkillBase.Target.ONE_ALLY or skill.target == QuizRpgSkillBase.Target.DEAD_ALLY:
+			var dead := skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
+			var valid := _party_indices(dead)
+			if valid.is_empty():
+				result_label.visible = true
+				result_label.text = "Brak nieprzytomnych sojuszników." if dead else "Brak celu."
+				return
+			_pending_skill_data = skill_data.duplicate()
+			if valid.size() == 1:
+				_heal_target_index = valid[0]
+				_start_pending_skill()
+			else:
+				_open_ally_pick(dead)
+			return
+		_selected_skill_data = skill_data.duplicate()
+		_consume_skill_cost(_selected_skill_data)
+		_begin_action_quiz()
+		return
+	chosen_action = Action.ATTACK
+	if skill == null or skill.target == QuizRpgSkillBase.Target.ONE_OPPONENT:
+		_pending_skill_data = skill_data.duplicate()
 		_open_target_menu()
 		return
-	_selected_skill_data = skill_data.duplicate(true)
+	_selected_skill_data = skill_data.duplicate()
 	_consume_skill_cost(_selected_skill_data)
 	_begin_action_quiz()
+
+
+func _start_pending_skill() -> void:
+	_selected_skill_data = _pending_skill_data.duplicate()
+	_pending_skill_data.clear()
+	_consume_skill_cost(_selected_skill_data)
+	_begin_action_quiz()
+
+
+## Wybór celu leczenia kursorem na liście drużyny (jak wybór postaci), żywy albo nieprzytomny sojusznik.
+func _open_ally_pick(dead: bool) -> void:
+	_ally_pick = 2 if dead else 1
+	_actor_select_open = true
+	_actor_selected_idx = _find_selectable_actor(0, 1)
+	_set_band_mode(Band.STATUS_ONLY)
+	_refresh_actor_selection()
+
+
+func _confirm_ally_pick() -> void:
+	_heal_target_index = _actor_selected_idx
+	_ally_pick = 0
+	_close_actor_select()
+	_start_pending_skill()
+
+
+func _cancel_ally_pick() -> void:
+	_ally_pick = 0
+	_pending_skill_data.clear()
+	_close_actor_select()
+	_open_skills_menu()
 
 
 func _consume_skill_cost(skill_data: Dictionary) -> void:
@@ -1113,7 +1163,7 @@ func _resolve_action(correct: bool) -> void:
 	result_label.visible = true
 	match chosen_action:
 		Action.ATTACK:
-			_resolve_attack(correct)
+			await _resolve_attack(correct)
 		Action.DEFEND:
 			_resolve_defend(correct)
 		Action.HEAL:
@@ -1130,53 +1180,89 @@ func _resolve_action(correct: bool) -> void:
 	_enemy_turn()
 
 
+## Atak gracza (zwykły albo umiejętność): cele wg umiejętności, `hits` trafień, każde trafienie — szansa z quizu ×
+## success_rate, obrażenia QuizRpgSkillMath (staty aktywnej postaci vs staty jednostki), krytyk 15 % (×1,8).
 func _resolve_attack(correct: bool) -> void:
-	var target_index := _active_enemy_index
-	if target_index < 0 or target_index >= _enemy_units.size() or int(_enemy_units[target_index].get("hp", 0)) <= 0:
-		target_index = _find_next_alive_enemy_index(_active_enemy_index)
-	if target_index < 0:
+	var skill := _selected_skill_data.get("resource") as QuizRpgSkillBase
+	var targets := _offense_targets(skill)
+	if targets.is_empty():
 		return
-	_active_enemy_index = target_index
 	_gain_party_tp(_active_actor_index, TP_PER_ATTACK)
-	var target := _enemy_units[_active_enemy_index]
-	var target_name_str := str(target.get("name", enemy_name_str))
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
-	var hit_success: bool = _ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance
+	var hits: int = skill.hits if skill else 1
+	var user := _member_stats(_active_actor_index)
+	for h in range(hits):
+		if h > 0:
+			await get_tree().create_timer(skill.hit_interval).timeout
+		for ti in targets:
+			if int(_enemy_units[ti].get("hp", 0)) <= 0:
+				continue
+			_active_enemy_index = ti
+			var quiz_hit: bool = _ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance
+			if not quiz_hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)):
+				_show_attack_miss(ti, correct)
+				continue
+			_apply_player_hit(ti, QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti])))
+
+
+## Cele ataku gracza: jeden (wybrany), wszyscy żywi albo N losowych (z powtórzeniami, jak w RPG Makerze).
+func _offense_targets(skill: QuizRpgSkillBase) -> Array[int]:
+	var alive: Array[int] = []
+	for i in range(_enemy_units.size()):
+		if int(_enemy_units[i].get("hp", 0)) > 0:
+			alive.append(i)
+	if alive.is_empty():
+		return alive
+	if skill != null and skill.target == QuizRpgSkillBase.Target.ALL_OPPONENTS:
+		return alive
+	if skill != null and skill.target == QuizRpgSkillBase.Target.RANDOM_OPPONENTS:
+		var out: Array[int] = []
+		for k in range(skill.random_count):
+			out.append(alive.pick_random())
+		return out
+	var t := _active_enemy_index
+	if not alive.has(t):
+		t = _find_next_alive_enemy_index(_active_enemy_index)
+	return [t] if t >= 0 else [] as Array[int]
+
+
+func _apply_player_hit(ti: int, base_dmg: int) -> void:
 	var audio := get_node_or_null("/root/AudioService")
-	if hit_success:
-		if audio:
-			audio.play_sfx_by_name("hit")
-		var damage_multiplier: float = float(_selected_skill_data.get("damage_multiplier", 1.0))
-		# jak w FNAfB: (ATK × 4 − DEF wroga × 2) × mnożnik umiejętności, co najmniej 1
-		var target_def := int(target.get("def", enemy_base_defense))
-		var dmg: int = maxi(int((player_base_damage * 4.0 - target_def * 2.0) * damage_multiplier), 1)
-		var crit := false
-		if _ps and _ps.roll_with_bonus(0.15):
-			dmg = int(dmg * 1.8)
-			crit = true
-		target["hp"] = maxi(int(target.get("hp", 0)) - dmg, 0)
-		if int(target.get("hp", 0)) <= 0 and audio:
-			audio.play_sfx_by_name("enemy_death")
-		_enemy_units[_active_enemy_index] = target
-		_refresh_enemy_cache()
-		_sync_enemy_display_hit(_active_enemy_index)
-		if crit:
-			result_label.text = "%s: krytyk! -%d HP" % [target_name_str, dmg]
-			result_label.add_theme_color_override("font_color", Color.GOLD)
-			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "KRYT -%d" % dmg, Color.GOLD, 16)
-		else:
-			result_label.text = "%s: trafienie! -%d HP" % [target_name_str, dmg]
-			result_label.add_theme_color_override("font_color", Color.GREEN)
-			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
-		HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
+	if audio:
+		audio.play_sfx_by_name("hit")
+	var target := _enemy_units[ti]
+	var target_name_str := str(target.get("name", enemy_name_str))
+	var dmg := base_dmg
+	var crit := false
+	if _ps and _ps.roll_with_bonus(0.15):
+		dmg = int(dmg * 1.8)
+		crit = true
+	target["hp"] = maxi(int(target.get("hp", 0)) - dmg, 0)
+	if int(target.get("hp", 0)) <= 0 and audio:
+		audio.play_sfx_by_name("enemy_death")
+	_enemy_units[ti] = target
+	_refresh_enemy_cache()
+	_sync_enemy_display_hit(ti)
+	if crit:
+		result_label.text = "%s: krytyk! -%d HP" % [target_name_str, dmg]
+		result_label.add_theme_color_override("font_color", Color.GOLD)
+		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "KRYT -%d" % dmg, Color.GOLD, 16)
 	else:
-		if audio:
-			audio.play_sfx_by_name("attack")
-		var fail_type: String = ["Pudło!", "Unik wroga!", "Blok wroga!"][randi() % 3]
-		result_label.text = fail_type
-		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
-		_dodge_enemy_display(_active_enemy_index)
-		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), fail_type, Color(0.8, 0.8, 0.8) if correct else Color(0.9, 0.7, 0.45), 12)
+		result_label.text = "%s: trafienie! -%d HP" % [target_name_str, dmg]
+		result_label.add_theme_color_override("font_color", Color.GREEN)
+		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
+	HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
+
+
+func _show_attack_miss(ti: int, correct: bool) -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("attack")
+	var fail_type: String = ["Pudło!", "Unik wroga!", "Blok wroga!"][randi() % 3]
+	result_label.text = fail_type
+	result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
+	_dodge_enemy_display(ti)
+	FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), fail_type, Color(0.8, 0.8, 0.8) if correct else Color(0.9, 0.7, 0.45), 12)
 
 
 func _resolve_defend(correct: bool) -> void:
@@ -1194,25 +1280,44 @@ func _resolve_defend(correct: bool) -> void:
 		result_label.add_theme_color_override("font_color", Color(0.5, 0.6, 0.8))
 
 
+## Leczenie umiejętnością: cele wg umiejętności (ja / wybrany sojusznik / drużyna / nieprzytomny — wskrzeszenie),
+## ilość QuizRpgSkillMath.heal; po złej odpowiedzi WRONG_ANSWER_HEAL_FACTOR tego.
 func _resolve_heal(correct: bool) -> void:
 	if not _ps:
 		return
+	var skill := _selected_skill_data.get("resource") as QuizRpgSkillBase
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("magic")
-	var heal_pct: float = 0.30 if correct else 0.10
-	if not _selected_skill_data.is_empty():
-		heal_pct = float(_selected_skill_data.get("heal_ratio_correct", 0.30)) if correct else float(_selected_skill_data.get("heal_ratio_wrong", 0.10))
-	var heal_amount := int(_ps.max_hp * heal_pct)
-	_ps.heal(heal_amount)
-	_flash_sprite(player_sprite_node, Color.GREEN)
-	if correct:
-		result_label.text = "Leczenie +%d HP" % heal_amount
-		result_label.add_theme_color_override("font_color", Color.GREEN)
+	var factor := 1.0 if correct else WRONG_ANSWER_HEAL_FACTOR
+	var revive := skill != null and skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
+	var parts: Array[String] = []
+	for t in _heal_targets(skill):
+		var member: Dictionary = _ps.get_party_member(t) if _ps.has_method("get_party_member") else {}
+		var max_hp: int = int(member.get("max_hp", _ps.max_hp))
+		var amount := maxi(roundi((QuizRpgSkillMath.heal(skill, max_hp) if skill else max_hp * 0.3) * factor), 1)
+		var healed: int = _ps.heal_member(t, amount, revive) if _ps.has_method("heal_member") else 0
+		if healed <= 0:
+			continue
+		parts.append("%s +%d HP" % [str(member.get("name", "Bohater")), healed])
+		if t == 0:
+			_flash_sprite(player_sprite_node, Color.GREEN)
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % healed, Color.GREEN, 14)
+	var title: String = str(_selected_skill_data.get("name", "Leczenie"))
+	if parts.is_empty():
+		result_label.text = "%s: bez efektu." % title
+		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 	else:
-		result_label.text = "Słabe leczenie +%d HP" % heal_amount
-		result_label.add_theme_color_override("font_color", Color(0.6, 0.8, 0.5))
-	FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % heal_amount, Color.GREEN, 14)
+		result_label.text = "%s%s: %s" % [title, "" if correct else " (słabiej)", ", ".join(parts)]
+		result_label.add_theme_color_override("font_color", Color.GREEN if correct else Color(0.6, 0.8, 0.5))
+
+
+func _heal_targets(skill: QuizRpgSkillBase) -> Array[int]:
+	if skill == null or skill.target == QuizRpgSkillBase.Target.SELF:
+		return [_active_actor_index]
+	if skill.target == QuizRpgSkillBase.Target.ALL_ALLIES:
+		return _party_indices(false)
+	return [_heal_target_index]
 
 
 func _try_flee() -> void:
@@ -1261,9 +1366,9 @@ func _enemy_turn() -> void:
 			if active_display.has_method("play_attack"):
 				active_display.call("play_attack")
 		await get_tree().create_timer(0.5).timeout
-		var raw_damage := _enemy_attack_power(enemy_unit)
+		var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(0))
 		var actual_damage: int
-		_gain_party_tp(0, _tp_from_damage(raw_damage))
+		_gain_party_tp(0, _tp_from_damage(full_damage))
 		if defending and quiz_correct:
 			actual_damage = 0
 			var audio := get_node_or_null("/root/AudioService")
@@ -1274,7 +1379,7 @@ func _enemy_turn() -> void:
 			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
 		elif defending and not quiz_correct:
-			actual_damage = _calculate_player_damage_taken(raw_damage, 0.5)
+			actual_damage = maxi(floori(full_damage * 0.5), 1)
 			if _ps:
 				_ps.take_damage(actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
@@ -1293,7 +1398,7 @@ func _enemy_turn() -> void:
 				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
 		else:
-			actual_damage = _calculate_player_damage_taken(raw_damage)
+			actual_damage = full_damage
 			if _ps:
 				_ps.take_damage(actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
@@ -1331,6 +1436,13 @@ func _unit_source(unit: Dictionary) -> Node2D:
 	return src if src is Node2D and is_instance_valid(src) else enemy
 
 
+func _enemy_side_wounded() -> bool:
+	for u in _enemy_units:
+		if int(u.get("hp", 0)) > 0 and int(u.get("hp", 0)) < int(u.get("max_hp", 1)):
+			return true
+	return false
+
+
 func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 	var src: Node2D = _unit_source(enemy_unit)
 	if src == null or not "battle_skills" in src:
@@ -1348,6 +1460,8 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 		var sk := skills[i] as QuizRpgEnemySkill
 		if sk == null or cds.has(i) or turn_number < sk.first_turn:
 			continue
+		if sk.is_heal() and not _enemy_side_wounded():
+			continue
 		if randf() < sk.use_chance:
 			if sk.cooldown_turns > 0:
 				cds[i] = sk.cooldown_turns + 1   # odliczanie zaczyna się od następnej tury wroga
@@ -1355,19 +1469,22 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 	return null
 
 
-## Użycie umiejętności: `hits` ataków w serii na cel(e) — obrona lidera (blok / połowa) i pancerz wg ustawień
-## umiejętności, status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
+## Użycie umiejętności wroga: leczenie (siebie / sojusznika / wszystkich wrogów) albo `hits` ataków w serii na
+## cel(e) z drużyny — szansa trafienia, obrażenia QuizRpgSkillMath (staty jednostki vs staty członka), obrona
+## (blok / połowa), status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
 func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: String, sk: QuizRpgEnemySkill) -> bool:
 	var text := sk.log_text if sk.log_text != "" else "{enemy} używa: {skill}!"
-	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.skill_name)
+	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.display_name)
 	if turn_label:
-		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.skill_name]
+		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.display_name]
 	_push_log(text, sk.color)
 	result_label.text = text
 	result_label.add_theme_color_override("font_color", sk.color)
 	_active_enemy_index = enemy_index
 	_refresh_enemy_header()
-	var party_n := maxi(_ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1, 1)
+	if sk.is_heal():
+		await _enemy_heal(enemy_index, sk)
+		return false
 	var audio := get_node_or_null("/root/AudioService")
 	var touched := {}   # cele trafione (albo dosięgnięte przez umiejętność bez obrażeń)
 	for h in range(sk.hits):
@@ -1376,21 +1493,17 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			if disp.has_method("play_attack"):
 				disp.call("play_attack")
 		await get_tree().create_timer(0.5 if h == 0 else sk.hit_interval).timeout
-		var targets: Array[int] = [0]
-		if sk.target == QuizRpgEnemySkill.Target.RANDOM_MEMBER:
-			targets = [randi() % party_n]
-		elif sk.target == QuizRpgEnemySkill.Target.ALL_PARTY:
-			targets.clear()
-			for i in range(party_n):
-				targets.append(i)
-		var raw := 0
-		if sk.damage_mode == QuizRpgEnemySkill.DamageMode.MULTIPLIER:
-			raw = roundi(_enemy_attack_power(enemy_unit) * sk.damage_multiplier)
-		elif sk.damage_mode == QuizRpgEnemySkill.DamageMode.FIXED:
-			raw = sk.fixed_damage
+		var targets := _enemy_skill_targets(sk)
+		if targets.is_empty():
+			break
 		for t in targets:
-			if raw > 0:
-				_gain_party_tp(t, _tp_from_damage(raw))
+			if not QuizRpgSkillMath.roll_hit(sk):
+				if t == 0:
+					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
+				continue
+			var full := QuizRpgSkillMath.damage(sk, _unit_stats(enemy_unit), _member_stats(t))
+			if full > 0:
+				_gain_party_tp(t, _tp_from_damage(full))
 			var mult := 1.0
 			var blocked := false
 			if t == _defender_index and defending and sk.can_be_blocked:
@@ -1398,20 +1511,13 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 					blocked = true
 				else:
 					mult = 0.5
-			var dmg := 0
-			if raw > 0 and not blocked:
-				if sk.ignore_armor:
-					dmg = roundi(raw * mult)
-				elif _ps and _ps.has_method("calculate_incoming_damage"):
-					dmg = int(_ps.calculate_incoming_damage(raw, mult, t))
-				else:
-					dmg = roundi(raw * mult)
 			if blocked:
 				if audio:
 					audio.play_sfx_by_name("hit")
 				_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
 				continue
+			var dmg := maxi(floori(full * mult), 1) if full > 0 else 0
 			if dmg > 0 and _ps:
 				_ps.damage_member(t, dmg)
 				if t == 0:
@@ -1420,7 +1526,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 					_flash_sprite(player_sprite_node, sk.color)
 					HitParticles.create_at(player, player.global_position, sk.color, 6)
 					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % dmg, sk.color, 14)
-			if dmg > 0 or sk.damage_mode == QuizRpgEnemySkill.DamageMode.NONE:
+			if dmg > 0 or sk.damage_mode == QuizRpgSkillBase.DamageMode.NONE:
 				touched[t] = true
 				if sk.has_status() and sk.status_per_hit and randf() < sk.status_chance:
 					_inflict_status(t, sk)
@@ -1436,6 +1542,59 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 				_inflict_status(t, sk)
 	await get_tree().create_timer(0.8).timeout
 	return false
+
+
+## Cele umiejętności wroga w drużynie (żywi): jeden — lider (inaczej pierwszy żywy), wszyscy albo N losowych.
+func _enemy_skill_targets(sk: QuizRpgSkillBase) -> Array[int]:
+	var alive := _party_indices(false)
+	if alive.is_empty():
+		return alive
+	match sk.target:
+		QuizRpgSkillBase.Target.ALL_OPPONENTS:
+			return alive
+		QuizRpgSkillBase.Target.RANDOM_OPPONENTS:
+			var out: Array[int] = []
+			for k in range(sk.random_count):
+				out.append(alive.pick_random())
+			return out
+	return [0 if alive.has(0) else alive[0]] as Array[int]
+
+
+## Leczenie wroga: siebie (SELF), najbardziej rannego sojusznika (ONE_ALLY) albo wszystkich żywych wrogów (ALL_ALLIES).
+func _enemy_heal(enemy_index: int, sk: QuizRpgSkillBase) -> void:
+	await get_tree().create_timer(0.5).timeout
+	var targets: Array[int] = []
+	match sk.target:
+		QuizRpgSkillBase.Target.ALL_ALLIES:
+			for i in range(_enemy_units.size()):
+				if int(_enemy_units[i].get("hp", 0)) > 0:
+					targets.append(i)
+		QuizRpgSkillBase.Target.ONE_ALLY:
+			var best := -1
+			var best_ratio := 2.0
+			for i in range(_enemy_units.size()):
+				var u := _enemy_units[i]
+				var hp := int(u.get("hp", 0))
+				var ratio := float(hp) / float(maxi(int(u.get("max_hp", 1)), 1))
+				if hp > 0 and ratio < best_ratio:
+					best = i
+					best_ratio = ratio
+			if best >= 0:
+				targets.append(best)
+		_:
+			targets.append(enemy_index)
+	for i in targets:
+		var u := _enemy_units[i]
+		var max_hp := int(u.get("max_hp", 1))
+		var healed := mini(QuizRpgSkillMath.heal(sk, max_hp), max_hp - int(u.get("hp", 0)))
+		if healed <= 0:
+			continue
+		u["hp"] = int(u.get("hp", 0)) + healed
+		_enemy_units[i] = u
+		_push_log("%s odzyskuje %d HP." % [str(u.get("name", enemy_name_str)), healed], sk.color)
+	_refresh_enemy_cache()
+	_refresh_enemy_header()
+	await get_tree().create_timer(0.8).timeout
 
 
 func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
@@ -2348,28 +2507,41 @@ func _refresh_enemy_cache() -> void:
 	_sync_enemy_displays()
 
 
-func _get_player_attack_power() -> int:
-	if _ps and _ps.has_method("get_member_total_atk"):
-		return maxi(int(_ps.get_member_total_atk(0)), 1)
-	return player_base_damage
-
-
-## TP za cios wroga: część max HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
-func _tp_from_damage(raw_damage: int) -> int:
-	var undefended := _calculate_player_damage_taken(raw_damage)
+## TP za cios wroga: część maks. HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
+func _tp_from_damage(undefended_damage: int) -> int:
 	var max_hp: int = maxi(_ps.max_hp, 1) if _ps else 100
-	return roundi(TP_PER_FULL_HP_LOST * float(undefended) / float(max_hp))
+	return roundi(TP_PER_FULL_HP_LOST * float(undefended_damage) / float(max_hp))
 
 
-## Moc ataku wroga przed pancerzem: ATK × 4 z rozrzutem ±10 % (jak „ATK × 4 − DEF × 2” z FNAfB).
-func _enemy_attack_power(enemy_unit: Dictionary) -> int:
-	return roundi(int(enemy_unit.get("atk", enemy_base_attack)) * 4.0 * randf_range(0.9, 1.1))
+## Staty członka drużyny / jednostki wroga dla QuizRpgSkillMath ({atk, def, mat, mdf}).
+func _member_stats(i: int) -> Dictionary:
+	if _ps == null or not _ps.has_method("get_member_total_stat"):
+		return {"atk": 20, "def": 0, "mat": 20, "mdf": 0}
+	return {"atk": _ps.get_member_total_atk(i), "def": _ps.get_member_total_def(i),
+		"mat": _ps.get_member_total_mat(i), "mdf": _ps.get_member_total_mdf(i)}
 
 
-func _calculate_player_damage_taken(raw_damage: int, defending_multiplier: float = 1.0) -> int:
-	if _ps and _ps.has_method("calculate_incoming_damage"):
-		return int(_ps.calculate_incoming_damage(raw_damage, defending_multiplier, 0))
-	return maxi(0, int(round(float(raw_damage) * maxf(defending_multiplier, 0.0))))
+func _unit_stats(unit: Dictionary) -> Dictionary:
+	return {"atk": int(unit.get("atk", enemy_base_attack)), "def": int(unit.get("def", enemy_base_defense)),
+		"mat": int(unit.get("mat", enemy_base_magic_attack)), "mdf": int(unit.get("mdf", enemy_base_magic_defense))}
+
+
+## HP członka drużyny w walce (lider z PlayerStats.hp, reszta z danych drużyny).
+func _member_hp(i: int) -> int:
+	if _ps == null:
+		return 0
+	if i == 0:
+		return int(_ps.hp)
+	return int((_ps.get_party_member(i) as Dictionary).get("hp", 0)) if _ps.has_method("get_party_member") else 0
+
+
+func _party_indices(dead: bool) -> Array[int]:
+	var out: Array[int] = []
+	var n: int = _ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1
+	for i in range(n):
+		if (_member_hp(i) <= 0) == dead:
+			out.append(i)
+	return out
 
 
 func _get_encounter_tier(src: Node = null) -> int:
@@ -2696,6 +2868,8 @@ func _close_actor_select() -> void:
 func _is_actor_selectable(index: int) -> bool:
 	if index < 0 or index >= _party_state.size() or index >= party_rows.size():
 		return false
+	if _ally_pick == 2:
+		return int(_party_state[index].get("lp", 0)) <= 0  # wskrzeszenie: tylko nieprzytomni
 	return int(_party_state[index].get("lp", 0)) > 0
 
 
@@ -2726,6 +2900,9 @@ func _navigate_actor_list(delta: int) -> void:
 func _confirm_actor_selection() -> void:
 	if not _is_actor_selectable(_actor_selected_idx):
 		return
+	if _ally_pick != 0:
+		_confirm_ally_pick()
+		return
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
@@ -2736,6 +2913,9 @@ func _confirm_actor_selection() -> void:
 
 
 func _cancel_actor_selection() -> void:
+	if _ally_pick != 0:
+		_cancel_ally_pick()
+		return
 	_close_actor_select()
 	_show_primary_menu()
 	_highlight_action(0)
