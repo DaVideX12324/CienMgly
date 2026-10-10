@@ -26,13 +26,13 @@ class_name QuizRpgHeroData
 @export var base_tp: int = 100
 ## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
 ## ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).
-@export_range(5, 30) var base_atk: int = 20
-@export_range(5, 30) var base_def: int = 15
-@export_range(5, 30) var base_mat: int = 20
+@export_range(5, 30) var base_atk: int = 21
+@export_range(5, 30) var base_def: int = 11
+@export_range(5, 30) var base_mat: int = 21
 @export_range(5, 30) var base_mdf: int = 12
-@export_range(0.0, 4.0, 0.1) var atk_per_level: float = 2.0
-@export_range(0.0, 4.0, 0.1) var def_per_level: float = 1.5
-@export_range(0.0, 4.0, 0.1) var mat_per_level: float = 2.0
+@export_range(0.0, 4.0, 0.05) var atk_per_level: float = 1.95
+@export_range(0.0, 4.0, 0.1) var def_per_level: float = 1.1
+@export_range(0.0, 4.0, 0.05) var mat_per_level: float = 1.95
 @export_range(0.0, 4.0, 0.1) var mdf_per_level: float = 1.1
 
 @export_group("Skills")
