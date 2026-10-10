@@ -14,4 +14,4 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "body"
-def_bonus = 100
+def_bonus = 4
