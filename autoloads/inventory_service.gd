@@ -20,6 +20,16 @@ func get_item(item_ref: String) -> QuizRpgItemData:
 	return item_value as QuizRpgItemData
 
 
+## Wszystkie przedmioty z katalogu (resources/items), posortowane: kategoria, slot, nazwa — menu kodów.
+func get_all_items() -> Array[QuizRpgItemData]:
+	var out: Array[QuizRpgItemData] = []
+	for v in _items_by_id.values():
+		out.append(v as QuizRpgItemData)
+	out.sort_custom(func(a: QuizRpgItemData, b: QuizRpgItemData) -> bool:
+		return [a.category, a.equip_slot, a.display_name] < [b.category, b.equip_slot, b.display_name])
+	return out
+
+
 func has_item(item_ref: String) -> bool:
 	return resolve_item_id(item_ref) != ""
 
