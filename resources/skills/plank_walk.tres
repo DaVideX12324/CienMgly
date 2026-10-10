@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "plank_walk"
+display_name = "Spacer po Desce"
+description = "Wróg idzie po desce. Może sparaliżować."
+color = Color(0.9, 0.6, 0.3, 1)
+base_damage = 100
+atk_coeff = 1.6
+def_coeff = 0.8
+variance = 0.2
+inflict_status = "paralysis"
+status_chance = 0.5
+sp_cost = 50

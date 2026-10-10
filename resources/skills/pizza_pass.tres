@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "pizza_pass"
+display_name = "Podanie Pizzy"
+description = "Leczy sojusznika o 1000 HP. Działa też w menu."
+color = Color(0.4, 1, 0.5, 1)
+damage_mode = 2
+target = 4
+heal_mode = 1
+heal_amount = 1000
+sp_cost = 50
+occasion = 0

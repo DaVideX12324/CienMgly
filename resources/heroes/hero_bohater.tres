@@ -5,6 +5,16 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/leczenie.tres" id="3_heal"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/mocny_atak.tres" id="4_strong"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="5_skill_script"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/tophat_toss.tres" id="s_tophat_toss"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/lead_stinger.tres" id="s_lead_stinger"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/toreador_march.tres" id="s_toreador_march"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/bunny_hop.tres" id="s_bunny_hop"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/backup_bash.tres" id="s_backup_bash"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/fearless_flight.tres" id="s_fearless_flight"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/plank_walk.tres" id="s_plank_walk"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/rushdown.tres" id="s_rushdown"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/pizza_pass.tres" id="s_pizza_pass"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/caffeine_revival.tres" id="s_caffeine_revival"]
 
 [resource]
 script = ExtResource("1_hero_data")
@@ -24,7 +34,7 @@ base_mat = 20
 base_mdf = 12
 mat_per_level = 2.0
 mdf_per_level = 1.1
-skills = Array[ExtResource("5_skill_script")]([ExtResource("3_heal"), ExtResource("4_strong")])
+skills = Array[ExtResource("5_skill_script")]([ExtResource("3_heal"), ExtResource("4_strong"), ExtResource("s_tophat_toss"), ExtResource("s_lead_stinger"), ExtResource("s_toreador_march"), ExtResource("s_bunny_hop"), ExtResource("s_backup_bash"), ExtResource("s_fearless_flight"), ExtResource("s_plank_walk"), ExtResource("s_rushdown"), ExtResource("s_pizza_pass"), ExtResource("s_caffeine_revival")])
 default_weapon_id = "training_sword"
 default_shield_id = "wooden_shield"
 default_head_id = "cloth_cap"
