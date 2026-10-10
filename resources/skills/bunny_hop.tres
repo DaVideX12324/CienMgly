@@ -8,6 +8,7 @@ skill_id = "bunny_hop"
 display_name = "Królicze Skoki"
 description = "Pięć skoków po głowie wroga. Może ogłuszyć."
 color = Color(0.6, 0.5, 1.0, 1)
+damage_multiplier = 0.45
 base_damage = 20
 atk_coeff = 1.6
 def_coeff = 0.8

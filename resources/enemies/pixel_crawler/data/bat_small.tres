@@ -6,11 +6,11 @@
 script = ExtResource("1_mflys")
 enemy_name = "Mały Nietoperz"
 quiz_id = "ogolne"
-max_hp = 160
-attack = 18
-defense = 5
-magic_attack = 18
-magic_defense = 5
+max_hp = 120
+attack = 26
+defense = 30
+magic_attack = 26
+magic_defense = 30
 xp_reward = 200
 encounter_tier = 1
 patrol_speed = 85.0

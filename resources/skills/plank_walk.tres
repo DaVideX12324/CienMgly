@@ -8,6 +8,7 @@ skill_id = "plank_walk"
 display_name = "Spacer po Desce"
 description = "Wróg idzie po desce. Może sparaliżować."
 color = Color(0.9, 0.6, 0.3, 1)
+damage_multiplier = 0.9
 base_damage = 100
 atk_coeff = 1.6
 def_coeff = 0.8

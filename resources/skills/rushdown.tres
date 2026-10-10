@@ -8,6 +8,7 @@ skill_id = "rushdown"
 display_name = "Szturm"
 description = "Sześć ataków pazurami."
 color = Color(0.95, 0.3, 0.3, 1)
+damage_multiplier = 0.25
 base_damage = 200
 atk_coeff = 1.6
 def_coeff = 0.8
