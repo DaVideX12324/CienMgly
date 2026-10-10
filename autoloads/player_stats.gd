@@ -153,8 +153,7 @@ func roll_with_bonus(base_chance: float) -> bool:
 
 
 func take_damage(amount: int) -> void:
-	var cheat_service := get_node_or_null("/root/CheatService")
-	if cheat_service and "god_mode" in cheat_service and bool(cheat_service.god_mode):
+	if _god_mode():
 		return
 	hp = maxi(hp - amount, 0)
 	hp_changed.emit(hp, max_hp)
@@ -165,8 +164,7 @@ func take_damage(amount: int) -> void:
 ## Obrażenia procentowe całej drużyny (np. kolce w posadzce): każdy członek traci `fraction` swojego maks. HP
 ## (co najmniej 1). keep_alive: HP nie spada poniżej 1 (pułapka nie zabija).
 func damage_party_percent(fraction: float, keep_alive := true) -> void:
-	var cheat_service := get_node_or_null("/root/CheatService")
-	if cheat_service and "god_mode" in cheat_service and bool(cheat_service.god_mode):
+	if _god_mode():
 		return
 	_ensure_party_defaults()
 	var floor_hp := 1 if keep_alive else 0
@@ -249,6 +247,8 @@ func any_status(status_id: String) -> bool:
 ## (co najmniej 1), może spaść do 0. Zwraca [[indeks, obrażenia], …].
 func tick_poison_combat() -> Array:
 	var out: Array = []
+	if _god_mode():
+		return out
 	for i in range(party.size()):
 		if has_status(i, STATUS_POISON) and _member_hp(i) > 0:
 			var dmg := mini(maxi(ceili(_member_max_hp(i) * POISON_COMBAT_FRACTION), 1), _member_hp(i))
@@ -263,7 +263,7 @@ func tick_poison_combat() -> Array:
 ## Trucizna w eksploracji: co POISON_WORLD_INTERVAL s (tylko w stanie EXPLORING — pauza, walka, menu wstrzymują)
 ## POISON_WORLD_DAMAGE HP, najwyżej do 1 HP (poza walką nie zabija).
 func _process(delta: float) -> void:
-	if not any_status(STATUS_POISON) or not _is_exploring():
+	if not any_status(STATUS_POISON) or not _is_exploring() or _god_mode():
 		return
 	_status_clock += delta
 	if _status_clock < POISON_WORLD_INTERVAL:
@@ -279,6 +279,16 @@ func _process(delta: float) -> void:
 			hit = true
 	if hit:
 		party_changed.emit()
+
+
+func _god_mode() -> bool:
+	var cheat_service := get_node_or_null("/root/CheatService")
+	return cheat_service != null and "god_mode" in cheat_service and bool(cheat_service.god_mode)
+
+
+## Nazwa statusu do wyświetlenia (STATUS_NAMES), inaczej sam identyfikator.
+func status_name(id: String) -> String:
+	return str(STATUS_NAMES.get(id, id))
 
 
 func _member_hp(i: int) -> int:
