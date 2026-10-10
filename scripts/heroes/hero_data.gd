@@ -17,8 +17,9 @@ class_name QuizRpgHeroData
 @export var hp_at_max_level: int = 1900
 @export var base_sp: int = 100
 @export var base_tp: int = 100
-@export var base_atk: int = 10
-@export var base_def: int = 8
+## Bazowe staty postaci 30–50; reszta z przedmiotów (poziom daje tylko ATK_PER_LEVEL / DEF_PER_LEVEL).
+@export_range(30, 50) var base_atk: int = 40
+@export_range(30, 50) var base_def: int = 40
 
 @export_group("Equipment")
 @export var default_weapon_id: String = ""
