@@ -6,10 +6,12 @@
 script = ExtResource("1_skill")
 skill_id = "leczenie"
 display_name = "Leczenie"
-description = "Przywraca część HP po dobrej odpowiedzi (słabiej po złej). Działa też w menu."
+description = "Przywraca 30 % HP (po złej odpowiedzi 1/3 tego). Działa też w menu."
+color = Color(0.4, 1, 0.5, 1)
+damage_mode = 2
+target = 4
+heal_mode = 2
+heal_percent = 0.3
 sp_cost = 20
-effect = 1
 occasion = 0
 learn_level = 1
-heal_ratio_correct = 0.3
-heal_ratio_wrong = 0.1

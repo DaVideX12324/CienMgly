@@ -606,6 +606,11 @@ func _use_selected_skill() -> void:
 		_show_toast("Za mało SP / TP.")
 		return
 	_pending_skill_id = str(entry.get("skill_id", ""))
+	var res := entry.get("resource") as QuizRpgSkillBase
+	if res != null and (res.target == QuizRpgSkillBase.Target.SELF or res.target == QuizRpgSkillBase.Target.ALL_ALLIES):
+		_party_index = _selected_member_index  # bez wyboru celu: ja / cała drużyna
+		_use_pending_skill_on_member()
+		return
 	_mode = "skill_target_select"
 	_party_index = 0
 	_show_party_select_panel("Na kogo użyć: %s" % str(entry.get("name", "")))

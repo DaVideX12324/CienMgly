@@ -234,37 +234,69 @@ func get_member_skill_pool(member_index: int) -> Array[QuizRpgSkillData]:
 	return out
 
 
-## Umiejętność użyta w menu pauzy (Occasion ALWAYS / MENU): koszt SP / TP użytkownika, leczenie celu jak po dobrej
-## odpowiedzi (bez quizu). Bez efektu (pełne HP, brak zasobów) nic nie pobiera. Zwraca {success, message}.
+## Umiejętność użyta w menu pauzy (Occasion ALWAYS / MENU): koszt SP / TP użytkownika, leczenie jak po dobrej
+## odpowiedzi (QuizRpgSkillMath.heal, bez quizu). Cel wg umiejętności: ja / wskazany sojusznik / cała drużyna /
+## nieprzytomny (wskrzeszenie). Bez efektu (pełne HP, brak zasobów) nic nie pobiera. Zwraca {success, message}.
 func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -> Dictionary:
 	if user_index < 0 or user_index >= party.size() or target_index < 0 or target_index >= party.size():
 		return {"success": false, "message": "Nieprawidłowy cel."}
-	var skill: Dictionary = {}
+	var skill: QuizRpgSkillBase = null
+	var entry: Dictionary = {}
 	for e in get_member_skills(user_index):
 		if e.get("skill_id") == skill_id:
-			skill = e
-	if skill.is_empty() or not bool(skill.get("usable_in_menu", false)):
+			entry = e
+			skill = e.get("resource") as QuizRpgSkillBase
+	if skill == null or not bool(entry.get("usable_in_menu", false)):
 		return {"success": false, "message": "Tej umiejętności używa się tylko w walce."}
+	if not skill.is_heal():
+		return {"success": false, "message": "Ta umiejętność nic tu nie da."}
 	var user: Dictionary = party[user_index]
-	var sp_cost := int(skill.get("sp_cost", 0))
-	var tp_cost := int(skill.get("tp_cost", 0))
+	var sp_cost := int(entry.get("sp_cost", 0))
+	var tp_cost := int(entry.get("tp_cost", 0))
 	if int(user.get("sp", 0)) < sp_cost or int(user.get("tp", 0)) < tp_cost:
 		return {"success": false, "message": "Za mało SP / TP."}
-	if str(skill.get("effect", "")) != "heal":
-		return {"success": false, "message": "Ta umiejętność nic tu nie da."}
-	var hp_now := _member_hp(target_index)
-	var hp_max := _member_max_hp(target_index)
-	if hp_now >= hp_max:
+	var targets: Array[int] = []
+	match skill.target:
+		QuizRpgSkillBase.Target.SELF:
+			targets = [user_index]
+		QuizRpgSkillBase.Target.ALL_ALLIES:
+			for i in range(party.size()):
+				if _member_hp(i) > 0:
+					targets.append(i)
+		_:
+			targets = [target_index]
+	var revive := skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
+	if revive and _member_hp(target_index) > 0:
+		return {"success": false, "message": "Ta umiejętność wskrzesza tylko nieprzytomnych."}
+	var parts: Array[String] = []
+	for t in targets:
+		var healed := heal_member(t, QuizRpgSkillMath.heal(skill, _member_max_hp(t)), revive)
+		if healed > 0:
+			parts.append("%s +%d HP" % [str((party[t] as Dictionary).get("name", "Bohater")), healed])
+	if parts.is_empty():
 		return {"success": false, "message": "HP jest pełne."}
-	var amount := mini(maxi(ceili(hp_max * float(skill.get("heal_ratio_correct", 0.3))), 1), hp_max - hp_now)
 	user = party[user_index]
 	user["sp"] = int(user.get("sp", 0)) - sp_cost
 	user["tp"] = int(user.get("tp", 0)) - tp_cost
 	party[user_index] = user
-	_set_member_hp(target_index, hp_now + amount)
 	party_changed.emit()
-	var target_name := str((party[target_index] as Dictionary).get("name", "Bohater"))
-	return {"success": true, "message": "%s: %s +%d HP" % [skill.get("name", ""), target_name, amount]}
+	return {"success": true, "message": "%s: %s" % [skill.display_name, ", ".join(parts)]}
+
+
+## Leczy członka drużyny o amount (najwyżej do maks. HP); nieprzytomnego tylko z allow_revive (wskrzeszenie).
+## Zwraca wyleczone HP.
+func heal_member(member_index: int, amount: int, allow_revive: bool = false) -> int:
+	if member_index < 0 or member_index >= party.size() or amount <= 0:
+		return 0
+	var now := _member_hp(member_index)
+	if now <= 0 and not allow_revive:
+		return 0
+	var healed := mini(amount, _member_max_hp(member_index) - now)
+	if healed <= 0:
+		return 0
+	_set_member_hp(member_index, now + healed)
+	party_changed.emit()
+	return healed
 
 
 ## Umiejętności z poziomu (learn_level 1..poziom członka), których członek jeszcze nie zna -> odblokowane
@@ -713,13 +745,6 @@ func get_member_total_mat(member_index: int) -> int:
 
 func get_member_total_mdf(member_index: int) -> int:
 	return get_member_total_stat(member_index, "mdf")
-
-
-## Obrażenia członka drużyny jak w FNAfB: (moc ataku − DEF × 2) × mnożnik obrony, co najmniej 1. `attack_power` to ATK
-## wroga × 4 (× mnożnik umiejętności) albo stała z umiejętności.
-func calculate_incoming_damage(attack_power: int, defending_multiplier: float = 1.0, member_index: int = 0) -> int:
-	var after_armor := float(attack_power) - 2.0 * float(get_member_total_def(member_index))
-	return maxi(int(floor(after_armor * maxf(defending_multiplier, 0.0))), 1)
 
 
 func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Array[Dictionary]:
