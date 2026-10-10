@@ -146,7 +146,6 @@ static func generate_layout(
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
 	if flags.enable_1w_walls:
 		stats["walls_1w"] = _walls_1w(ctx, canals, seed_used, cfg)
-	stats["grating"] = GratingPlannerScript.select(ctx.grid, canals, ctx.portal_zone, seed_used, flags.tiling_config.get("grating", {}))
 	stats["lost_post"] = _unreachable(ctx, canals)
 	GenProgress.end(&"portals")
 	ctx.preprocess_stats["structured"] = stats
@@ -164,11 +163,18 @@ static func generate_layout(
 		GenProgress.end()
 
 	result.portal_zone = ctx.portal_zone
+	# Kratownice po platformach i maskach terenu: z dala od platform, foliage (maska grass) najwyżej na ich skraju.
+	var grating_cfg: Dictionary = flags.tiling_config.get("grating", {})
+	if not grating_cfg.is_empty():
+		result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
+		stats["grating"] = GratingPlannerScript.select(ctx.grid, canals, ctx.portal_zone, seed_used, grating_cfg,
+			_platform_cells(ctx.plateau), result.terrain_masks.get("grass", []))
 	if flags.enable_objects:
 		GenProgress.begin(&"terrain")
 		var catalog := ObjectCatalog.load_path(flags.objects_catalog)
 		if not catalog.defs.is_empty() or not catalog.wall_defs.is_empty():
-			result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
+			if result.terrain_masks.is_empty():
+				result.terrain_masks = TerrainMaskPlanner.compute_for_result(result, result.seed_used, flags)
 			GenProgress.end(&"terrain")
 			GenProgress.begin(&"objects")
 			if not catalog.gates.is_empty():
@@ -487,6 +493,18 @@ static func _rail_piece(layout, xs: Array, k0: int, k1: int, y: int, side: int, 
 
 ## Pokoje portali (wzorzec: krok 8 prototypu): kandydaci z ≥ PORTAL_MIN_FREE wolnymi kratkami, wejście
 ## najbliżej środka mapy, wyjście najdalej od wejścia. Zwraca (wejście, wyjście) albo (-1, -1).
+## Kratki platform (maska, bariery, schody) — kratownice ich unikają.
+static func _platform_cells(pl) -> Dictionary:
+	var out := {}
+	if pl == null or pl.is_empty():
+		return out
+	out.merge(pl.mask)
+	out.merge(pl.blocked)
+	for c in pl.stair_cells():
+		out[c] = true
+	return out
+
+
 static func _pick_portal_rooms(st: State, rooms: Array[Rect2i]) -> Vector2i:
 	var cand: Array = []
 	for i in range(rooms.size()):
