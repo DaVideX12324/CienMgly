@@ -17,6 +17,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Portrait" type="TextureRect" parent="ActorHeader" unique_id=706705855]
+texture_filter = 1
 custom_minimum_size = Vector2(128, 128)
 layout_mode = 2
 expand_mode = 1
@@ -39,7 +40,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=111093384]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Zycie"
+text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/HPRow" unique_id=1005126931]
 theme_type_variation = &"QuizBarLP"
@@ -62,7 +63,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=401452606]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Mana"
+text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/SPRow" unique_id=1024181917]
 theme_type_variation = &"QuizBarSP"
@@ -113,7 +114,7 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="EquipActionRow/EquipActionRow0/Margin/ContentRow" unique_id=97614374]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Zmien"
+text = "Zmień"
 
 [node name="RightLabel" type="Label" parent="EquipActionRow/EquipActionRow0/Margin/ContentRow" unique_id=492576085]
 layout_mode = 2
@@ -183,7 +184,7 @@ theme_override_constants/separation = 10
 [node name="LeftLabel" type="Label" parent="EquipActionRow/EquipActionRow2/Margin/ContentRow" unique_id=1889183301]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Wyczysc"
+text = "Wyczyść"
 
 [node name="RightLabel" type="Label" parent="EquipActionRow/EquipActionRow2/Margin/ContentRow" unique_id=1552670679]
 layout_mode = 2

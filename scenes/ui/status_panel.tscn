@@ -17,6 +17,7 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Portrait" type="TextureRect" parent="ActorHeader" unique_id=1207230364]
+texture_filter = 1
 custom_minimum_size = Vector2(128, 128)
 layout_mode = 2
 expand_mode = 1
@@ -39,7 +40,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=1849313518]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Zycie"
+text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/HPRow" unique_id=1867729771]
 theme_type_variation = &"QuizBarLP"
@@ -62,7 +63,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=245359012]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Mana"
+text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/SPRow" unique_id=462122799]
 theme_type_variation = &"QuizBarSP"
@@ -92,7 +93,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="StatusBarsVBox/StatusHPRow" unique_id=2106338664]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Zycie"
+text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="StatusBarsVBox/StatusHPRow" unique_id=477757530]
 theme_type_variation = &"QuizBarLP"
@@ -115,7 +116,7 @@ theme_override_constants/separation = 8
 [node name="BarLabel" type="Label" parent="StatusBarsVBox/StatusSPRow" unique_id=2114113368]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Mana"
+text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="StatusBarsVBox/StatusSPRow" unique_id=1411324527]
 theme_type_variation = &"QuizBarSP"
