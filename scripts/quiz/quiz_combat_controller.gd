@@ -73,6 +73,9 @@ var enemy_base_magic_attack := 24
 var enemy_base_magic_defense := 12
 ## Leczenie umiejętności po złej odpowiedzi w quizie: tyle efektu po dobrej (dawne 30 % / 10 % HP).
 const WRONG_ANSWER_HEAL_FACTOR := 1.0 / 3.0
+## Obrona: część obrażeń, która przechodzi (jak Guard w FNaFB — tam połowa): 1/4 po dobrej odpowiedzi, 1/2 po złej.
+const GUARD_DAMAGE_FACTOR_CORRECT := 0.25
+const GUARD_DAMAGE_FACTOR_WRONG := 0.5
 var turn_number := 0
 
 @onready var battle_window: PanelContainer = $BattleWindow
@@ -151,7 +154,7 @@ var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
 var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY)
 ## Kursor drużyny wybiera cel leczenia zamiast postaci: 0 — nie, 1 — żywy sojusznik, 2 — nieprzytomny (wskrzeszenie).
 var _ally_pick := 0
-var _defender_index := 0         # postać, która wybrała Obronę w tej turze (blok umiejętności wrogów)
+var _defender_index := 0         # postać, która wybrała Obronę w tej turze (obrona zmniejsza obrażenia od umiejętności wrogów)
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
 var _list_menu_entries: Array[Dictionary] = []
@@ -1313,7 +1316,7 @@ func _resolve_defend(correct: bool) -> void:
 	if audio:
 		audio.play_sfx_by_name("magic")
 	if correct:
-		result_label.text = "Pełna obrona!"
+		result_label.text = "Dobra obrona!"
 		result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
 		_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 	else:
@@ -1426,17 +1429,8 @@ func _enemy_turn() -> void:
 			continue
 		var actual_damage: int
 		_gain_party_tp(0, _tp_from_damage(full_damage))
-		if defending and quiz_correct:
-			actual_damage = 0
-			var audio := get_node_or_null("/root/AudioService")
-			if audio:
-				audio.play_sfx_by_name("hit")
-			result_label.text = "%s trafia w blok! 0 obrażeń." % enemy_label
-			result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
-			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
-		elif defending and not quiz_correct:
-			actual_damage = maxi(floori(full_damage * 0.5), 1)
+		if defending:
+			actual_damage = maxi(floori(full_damage * (GUARD_DAMAGE_FACTOR_CORRECT if quiz_correct else GUARD_DAMAGE_FACTOR_WRONG)), 1)
 			if _ps:
 				_ps.take_damage(actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
@@ -1551,7 +1545,7 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 
 ## Użycie umiejętności wroga: leczenie (siebie / sojusznika / wszystkich wrogów) albo `hits` ataków w serii na
 ## cel(e) z drużyny — szansa trafienia, obrażenia QuizRpgSkillMath (staty jednostki vs staty członka), obrona
-## (blok / połowa), status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
+## (obrona: 1/4 po dobrej odpowiedzi, 1/2 po złej), status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
 func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: String, sk: QuizRpgEnemySkill) -> bool:
 	var text := sk.log_text if sk.log_text != "" else "{enemy} używa: {skill}!"
 	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.display_name)
@@ -1585,18 +1579,8 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			if full > 0:
 				_gain_party_tp(t, _tp_from_damage(full))
 			var mult := 1.0
-			var blocked := false
 			if t == _defender_index and defending and sk.can_be_blocked:
-				if quiz_correct:
-					blocked = true
-				else:
-					mult = 0.5
-			if blocked:
-				if audio:
-					audio.play_sfx_by_name("hit")
-				_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
-				continue
+				mult = GUARD_DAMAGE_FACTOR_CORRECT if quiz_correct else GUARD_DAMAGE_FACTOR_WRONG
 			var dmg := maxi(floori(full * mult), 1) if full > 0 else 0
 			if dmg > 0 and _ps:
 				_ps.damage_member(t, dmg)
