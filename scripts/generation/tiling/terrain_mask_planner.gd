@@ -288,7 +288,25 @@ static func plan_masks(ctx: GenerationContext, terrain_plan: TerrainPaintPlan, t
 			for p in terrain_cells:
 				if GridUtils.is_walkable(ctx.grid, p):
 					edge_mask.append(p)
-		terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true, edge_mask)
+		var pl = ctx.plateau
+		if fl.floor_edges_by_walkable and pl != null and not pl.is_empty() and pl.face_down == 0:
+			# Platformy z licem na kratkach maski: góra platformy (z rimem / bokiem) osobno od reszty podłogi —
+			# brzeg terenu (cień) po obu stronach linii krawędzi platformy, nie kratkę dalej.
+			var top: Array[Vector2i] = []
+			var rest: Array[Vector2i] = []
+			var rest_mask: Array[Vector2i] = []
+			for p in terrain_cells:
+				if pl.mask.has(p):
+					top.append(p)
+				else:
+					rest.append(p)
+			for p in edge_mask:
+				if not pl.mask.has(p):
+					rest_mask.append(p)
+			terrain_plan.add_batch(&"Floor", rest, 0, fl.floor_terrain, 0, true, rest_mask)
+			terrain_plan.add_batch(&"Floor", top, 0, fl.floor_terrain, 0, true, top)
+		else:
+			terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true, edge_mask)
 	var mud_idx: int = fl.terrain_mud_index if fl != null else 1
 	var grass_idx: int = fl.terrain_grass_index if fl != null else 2
 	if mud_idx >= 0:

@@ -80,6 +80,9 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 
 
 ## Komórki terenu bez barier i schodów płaskowyżu. Bez płaskowyżu zwraca wejście bez zmian (parytet).
+## Lico na kratkach maski (ścieki, face_down 0): bez samego lica S i schodów S (nieprzezroczyste); rim, boki
+## i przejścia schodów N / E / W dostają teren — cień podłogi przy linii krawędzi (TerrainMaskPlanner dzieli
+## teren na górę platformy i resztę).
 static func terrain_cells(ctx: GenerationContext, cells: Array[Vector2i]) -> Array[Vector2i]:
 	if ctx.canals != null and not ctx.canals.is_empty():
 		var dry: Array[Vector2i] = []
@@ -89,11 +92,34 @@ static func terrain_cells(ctx: GenerationContext, cells: Array[Vector2i]) -> Arr
 		cells = dry
 	if ctx.plateau == null or ctx.plateau.is_empty():
 		return cells
-	var covered: Dictionary = ctx.plateau.blocked.duplicate()
-	for c in ctx.plateau.stair_cells():
-		covered[c] = true
+	var covered: Dictionary
+	if ctx.plateau.face_down == 0:
+		covered = plateau_opaque(ctx.plateau, ctx.grid)
+	else:
+		covered = ctx.plateau.blocked.duplicate()
+		for c in ctx.plateau.stair_cells():
+			covered[c] = true
 	var out: Array[Vector2i] = []
 	for c in cells:
 		if not covered.has(c):
 			out.append(c)
+	return out
+
+
+## Kratki pod nieprzezroczystym licem S platformy (lico na kratkach maski): w kolumnie nad krawędzią S (niżej
+## chodliwa kratka spoza maski) krawędź + face_up rzędów, oraz schody S.
+static func plateau_opaque(pl, grid: Dictionary) -> Dictionary:
+	var out := {}
+	for c in pl.mask:
+		var below: Vector2i = c + Vector2i(0, 1)
+		if pl.mask.has(below) or not GridUtils.is_walkable(grid, below) or pl.height_of(below) >= pl.height_of(c):
+			continue
+		for k in range(pl.face_up + 1):
+			out[c - Vector2i(0, k)] = true
+	var tmp := PlateauLayout.new()
+	tmp.face_up = pl.face_up
+	tmp.face_down = pl.face_down
+	tmp.stairs = pl.stairs
+	for c in tmp.stair_cells():
+		out[c] = true
 	return out
