@@ -13,8 +13,8 @@ class_name QuizRpgHeroData
 @export_group("Progression")
 @export var base_level: int = 1
 ## HP na poziomie 1 i na MAX_LEVEL (PlayerStats.MAX_LEVEL) — pomiędzy liniowo (hp_for_level). Każda postać ma swoją pulę.
-@export var base_hp: int = 250
-@export var hp_at_max_level: int = 1900
+@export var base_hp: int = 334
+@export var hp_at_max_level: int = 1402
 @export var base_sp: int = 100
 @export var base_tp: int = 100
 ## Staty jak w FNAfB: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.

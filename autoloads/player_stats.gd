@@ -17,10 +17,10 @@ signal skill_learned(member_index: int, skill_name: String)
 signal status_tick(member_index: int, status_id: String, amount: int)
 
 ## Maks. HP bohatera rośnie liniowo od BASE_HP (poziom 1) do HP_AT_MAX_LEVEL (MAX_LEVEL); z hero_party_data[0] — jego pola.
-## Wzór: FNAfB (Freddy ~250 HP na lv 1, ~1900 na lv 20); MAX_LEVEL podnieść, gdy pojawi się więcej map.
+## Wzór: FNaFB1 — Freddy 334 HP na lv 1, 1402 na lv 20; MAX_LEVEL podnieść, gdy pojawi się więcej map.
 const MAX_LEVEL        := 20
-const BASE_HP          := 250
-const HP_AT_MAX_LEVEL  := 1900
+const BASE_HP          := 334
+const HP_AT_MAX_LEVEL  := 1402
 const ATK_PER_LEVEL    := 2.0   # domyślne, gdy postać nie ma własnych atk_per_level / def_per_level
 const DEF_PER_LEVEL    := 1.5
 const BASE_XP_TO_LEVEL := 100
