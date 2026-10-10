@@ -112,7 +112,6 @@
     "patterns": ["A-A-A", "A-B-A", "A-B-B-A"],
     "pillar_cap": true
   },
-  "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
     "default": "sewer",
     "enabled": [
