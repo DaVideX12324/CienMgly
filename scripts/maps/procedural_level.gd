@@ -7,6 +7,7 @@ class_name ProceduralLevel
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const LevelPortal = preload("level_portal.gd")
 const HeightVeilScript = preload("height_veil.gd")
+const GateNavScript = preload("gate_nav.gd")
 const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
 const OverworldForestGeneratorScript = preload("../generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
@@ -536,10 +537,25 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	GenProgress.begin(&"navigation")
 	if setup_nav_enabled:
 		MapGeneratorBaseScript.setup_navigation_region(self, job.result)
+		_setup_gate_nav(job.result)
 	GenProgress.end(&"navigation")
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+
+
+## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.
+func _setup_gate_nav(result) -> void:
+	var old := get_node_or_null("GateNav")
+	if old != null:
+		old.queue_free()
+	var nav := get_node_or_null("NavigationRegion2D") as NavigationRegion2D
+	if result == null or result.objects == null or nav == null or result.nav_chunk_keys.is_empty():
+		return
+	var gn: Node = GateNavScript.new()
+	gn.name = "GateNav"
+	add_child(gn)
+	gn.setup(result, nav)
 
 
 ## Efekt wysokości korytarzy-schodów (HeightVeil): węzeł tworzony, gdy mapa ma korytarze-schody.

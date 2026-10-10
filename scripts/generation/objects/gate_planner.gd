@@ -636,8 +636,8 @@ static func emit(result, scenes: Dictionary, objects: ObjectPlan) -> int:
 	var column_def := _def(&"gate_barrier", String(scenes.get("barrier_column", scenes.get("barrier", ""))), &"")
 	var offset_def := _def(&"gate_barrier", String(scenes.get("barrier_offset", "")), &"")
 	var offset_chance := float(scenes.get("barrier_offset_chance", 0.5))
-	# kolce bramy = przeszkoda (SOLID): siatka nawigacji omija bramę (wrogowie nie przechodzą między strefami nawet po
-	# otwarciu — siatka jest stała), spawny nie lądują na kolcach
+	# kolce bramy = przeszkoda (SOLID): siatka nawigacji omija zamkniętą bramę (po otwarciu GateNav przebudowuje kawałki
+	# siatki bez jej kolców — wrogowie przechodzą), spawny nie lądują na kolcach
 	for d: ObjectDef in [barrier_def, column_def, offset_def]:
 		d.collision = ObjectDef.Collision.SCENE
 	if barrier_def.scene.is_empty():

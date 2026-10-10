@@ -45,6 +45,7 @@ class GenerationResult:
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
 	var nav_polygons: Array[NavigationPolygon] = []  # siatka nawigacji z NavOutlines w kawałkach (puste = prostokąt mapy)
+	var nav_chunk_keys: Array[Vector2i] = []  # indeksy kawałków nav_polygons (NavOutlines.CHUNK_CELLS) — przebudowa po otwarciu bramy
 	var canals: RefCounted = null  # CanalLayout — kanały ścieków jako nakładka (komórki zostają FLOOR)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
@@ -472,6 +473,11 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 
 # --- Automatyczne tworzenie NavigationRegion2D ---
 
+## Nazwa węzła kawałka siatki nawigacji o indeksie k (NavOutlines) — GateNav podmienia kawałki po otwarciu bramy.
+static func chunk_name(k: Vector2i) -> String:
+	return "NavChunk_%d_%d" % [k.x, k.y]
+
+
 static func setup_navigation_region(target_node: Node2D, result: GenerationResult, cell_size: int = 16) -> void:
 	var nav_node := target_node.get_node_or_null("NavigationRegion2D") as NavigationRegion2D
 	if not nav_node:
@@ -492,7 +498,7 @@ static func setup_navigation_region(target_node: Node2D, result: GenerationResul
 		nav_node.navigation_polygon = null
 		for i in range(result.nav_polygons.size()):
 			var chunk := NavigationRegion2D.new()
-			chunk.name = "NavChunk%d" % i
+			chunk.name = chunk_name(result.nav_chunk_keys[i]) if i < result.nav_chunk_keys.size() else "NavChunk%d" % i
 			chunk.navigation_polygon = result.nav_polygons[i]
 			nav_node.add_child(chunk)
 		return
