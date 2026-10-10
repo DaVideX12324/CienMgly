@@ -884,6 +884,7 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 				cost = (cost + "  " if cost != "" else "") + "%d TP" % tp_cost
 				kind = row.Kind.TP if sp_cost <= 0 else kind
 				disabled = disabled or int(actor.get("tp", 0)) < tp_cost
+			disabled = disabled or not bool(entry.get("usable_in_battle", true))
 		else:
 			var count: int = int(entry.get("count", 0))
 			cost = "×%s" % str(entry.get("display_count", count))

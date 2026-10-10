@@ -69,6 +69,7 @@ var _confirm_index: int = 0
 var _selected_member_index: int = 0
 var _selected_slot_name: String = ""
 var _pending_item_id: String = ""
+var _pending_skill_id: String = ""
 var _menu_rows: Array[Control] = []
 var _party_rows: Array[Control] = []
 var _item_tab_rows: Array[Control] = []
@@ -300,6 +301,10 @@ func _handle_close_input(event: InputEvent) -> bool:
 		"skills_list":
 			_mode = "skills_party_select"
 			_show_party_select_panel("Wybierz postać dla umiejętności")
+		"skill_target_select":
+			_pending_skill_id = ""
+			_mode = "skills_list"
+			_show_skills_panel()
 		"equip_actions", "equip_slots", "equip_item_list":
 			if _mode == "equip_item_list":
 				_mode = "equip_slots"
@@ -407,7 +412,7 @@ func _move_selection(delta: int) -> void:
 				return
 			_items_index = wrapi(_items_index + delta, 0, _current_item_entries.size())
 			_refresh_item_rows()
-		"item_target_select", "skills_party_select", "equip_party_select", "status_party_select":
+		"item_target_select", "skill_target_select", "skills_party_select", "equip_party_select", "status_party_select":
 			var visible_party_count: int = _get_visible_row_count(_party_rows)
 			if visible_party_count <= 0:
 				return
@@ -449,6 +454,8 @@ func _accept_current() -> void:
 			_accept_items_list()
 		"item_target_select":
 			_use_pending_item_on_member()
+		"skill_target_select":
+			_use_pending_skill_on_member()
 		"skills_party_select":
 			_selected_member_index = _party_index
 			_mode = "skills_list"
@@ -592,9 +599,34 @@ func _use_selected_skill() -> void:
 	if _skills_index < 0 or _skills_index >= _current_skill_entries.size():
 		return
 	var entry: Dictionary = _current_skill_entries[_skills_index]
-	if bool(entry.get("disabled", false)):
+	if not bool(entry.get("usable_in_menu", false)):
+		_show_toast("%s — tylko w walce." % str(entry.get("name", "Umiejętność")))
 		return
-	_show_toast("Umiejętności używa się w walce (%s)." % str(entry.get("name", "umiejętność")))
+	if bool(entry.get("disabled", false)):
+		_show_toast("Za mało SP / TP.")
+		return
+	_pending_skill_id = str(entry.get("skill_id", ""))
+	_mode = "skill_target_select"
+	_party_index = 0
+	_show_party_select_panel("Na kogo użyć: %s" % str(entry.get("name", "")))
+
+
+func _use_pending_skill_on_member() -> void:
+	if _ps == null or not _ps.has_method("use_skill_on_member"):
+		return
+	var result: Dictionary = _ps.use_skill_on_member(_selected_member_index, _pending_skill_id, _party_index)
+	_show_toast(str(result.get("message", "")))
+	if bool(result.get("success", false)):
+		_play_skill_sfx()
+	_pending_skill_id = ""
+	_mode = "skills_list"
+	_show_skills_panel()
+
+
+func _play_skill_sfx() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio and audio.has_method("play_sfx_by_name"):
+		audio.play_sfx_by_name("magic")
 
 
 func _accept_equip_action() -> void:
@@ -933,7 +965,7 @@ func _on_mouse_row_input(event: InputEvent, role: String, row: Control) -> void:
 
 
 func _is_party_selection_mode() -> bool:
-	return _mode == "item_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select"
+	return _mode == "item_target_select" or _mode == "skill_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select"
 
 
 func _refresh_left_menu_rows() -> void:
@@ -1024,6 +1056,7 @@ func _rebuild_skill_rows() -> void:
 				cost_text = (cost_text + "  " if cost_text != "" else "") + "%d TP" % tp_cost
 				cost_color = tp_cost_color if sp_cost <= 0 else cost_color
 				disabled = disabled or member_tp < tp_cost
+			disabled = disabled or not bool(skill.get("usable_in_menu", false))  # tylko walka -> przygaszona
 			_set_simple_row(row, str(skill.get("name", "---")), cost_text, disabled)
 			(row.get_node("Margin/ContentRow/RightLabel") as Label).add_theme_color_override("font_color", cost_color)
 			var skill_copy: Dictionary = skill.duplicate(true)

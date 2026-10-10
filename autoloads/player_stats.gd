@@ -231,6 +231,39 @@ func get_member_skill_pool(member_index: int) -> Array[QuizRpgSkillData]:
 	return out
 
 
+## Umiejętność użyta w menu pauzy (Occasion ALWAYS / MENU): koszt SP / TP użytkownika, leczenie celu jak po dobrej
+## odpowiedzi (bez quizu). Bez efektu (pełne HP, brak zasobów) nic nie pobiera. Zwraca {success, message}.
+func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -> Dictionary:
+	if user_index < 0 or user_index >= party.size() or target_index < 0 or target_index >= party.size():
+		return {"success": false, "message": "Nieprawidłowy cel."}
+	var skill: Dictionary = {}
+	for e in get_member_skills(user_index):
+		if e.get("skill_id") == skill_id:
+			skill = e
+	if skill.is_empty() or not bool(skill.get("usable_in_menu", false)):
+		return {"success": false, "message": "Tej umiejętności używa się tylko w walce."}
+	var user: Dictionary = party[user_index]
+	var sp_cost := int(skill.get("sp_cost", 0))
+	var tp_cost := int(skill.get("tp_cost", 0))
+	if int(user.get("sp", 0)) < sp_cost or int(user.get("tp", 0)) < tp_cost:
+		return {"success": false, "message": "Za mało SP / TP."}
+	if str(skill.get("effect", "")) != "heal":
+		return {"success": false, "message": "Ta umiejętność nic tu nie da."}
+	var hp_now := _member_hp(target_index)
+	var hp_max := _member_max_hp(target_index)
+	if hp_now >= hp_max:
+		return {"success": false, "message": "HP jest pełne."}
+	var amount := mini(maxi(ceili(hp_max * float(skill.get("heal_ratio_correct", 0.3))), 1), hp_max - hp_now)
+	user = party[user_index]
+	user["sp"] = int(user.get("sp", 0)) - sp_cost
+	user["tp"] = int(user.get("tp", 0)) - tp_cost
+	party[user_index] = user
+	_set_member_hp(target_index, hp_now + amount)
+	party_changed.emit()
+	var target_name := str((party[target_index] as Dictionary).get("name", "Bohater"))
+	return {"success": true, "message": "%s: %s +%d HP" % [skill.get("name", ""), target_name, amount]}
+
+
 ## Odblokowuje umiejętność z puli postaci (zakup u NPC). false = brak w puli albo już jest.
 func unlock_skill(member_index: int, skill_id: String) -> bool:
 	if member_index < 0 or member_index >= party.size():
