@@ -76,6 +76,8 @@ const WRONG_ANSWER_HEAL_FACTOR := 1.0 / 3.0
 ## Obrona: część obrażeń, która przechodzi (jak Guard w FNaFB — tam połowa): 1/4 po dobrej odpowiedzi, 1/2 po złej.
 const GUARD_DAMAGE_FACTOR_CORRECT := 0.25
 const GUARD_DAMAGE_FACTOR_WRONG := 0.5
+## Broniąca się postać ma o połowę mniejszą szansę na status od umiejętności wroga (jak Guard w FNaFB).
+const GUARD_STATUS_CHANCE_FACTOR := 0.5
 var turn_number := 0
 
 @onready var battle_window: PanelContainer = $BattleWindow
@@ -1593,7 +1595,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % dmg, sk.color, 14)
 			if dmg > 0 or sk.damage_mode == QuizRpgSkillBase.DamageMode.NONE:
 				touched[t] = true
-				if sk.has_status() and sk.status_per_hit and randf() < sk.status_chance:
+				if sk.has_status() and sk.status_per_hit and randf() < _guarded_status_chance(t, sk):
 					_inflict_status(t, sk)
 		_update_hp_bars()
 		_refresh_stats_panel()
@@ -1603,7 +1605,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			return true
 	if sk.has_status() and not sk.status_per_hit:
 		for t: int in touched:
-			if randf() < sk.status_chance:
+			if randf() < _guarded_status_chance(t, sk):
 				_inflict_status(t, sk)
 	await get_tree().create_timer(0.8).timeout
 	return false
@@ -2828,6 +2830,13 @@ func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, c
 	bg.corner_radius_bottom_left = corner
 	bg.corner_radius_bottom_right = corner
 	bar.add_theme_stylebox_override("background", bg)
+
+
+## Szansa statusu od umiejętności wroga na członka drużyny: połowa, gdy właśnie się broni.
+func _guarded_status_chance(member_index: int, sk: QuizRpgSkillBase) -> float:
+	if defending and member_index == _defender_index and sk.can_be_blocked:
+		return sk.status_chance * GUARD_STATUS_CHANCE_FACTOR
+	return sk.status_chance
 
 
 ## Statusy postaci w wierszu drużyny: nazwy w kolorach statusów (QuizRpgStatusCatalog), puste = brak.
