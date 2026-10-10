@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/combat_list_row.gd" id="1_row"]
+
+[node name="CombatListRow" type="Button"]
+custom_minimum_size = Vector2(0, 48)
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+text = "Umiejętność"
+alignment = 0
+script = ExtResource("1_row")
+
+[node name="CostLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -20.0
+offset_right = -12.0
+offset_bottom = 20.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+text = "SP 20"
+horizontal_alignment = 2
+vertical_alignment = 1

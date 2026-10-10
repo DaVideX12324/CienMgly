@@ -86,78 +86,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="BattleMenuOverlay" type="Control" parent="Root/Battlefield/FieldContent" unique_id=1173231907]
-visible = false
-z_index = 5
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="SkillsPanel" type="PanelContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay" unique_id=1944758089]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
-
-[node name="Margin" type="MarginContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel" unique_id=1265959556]
-layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
-
-[node name="VBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin" unique_id=1719113093]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="DescriptionLabel" type="Label" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox" unique_id=965120955]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-autowrap_mode = 3
-
-[node name="ListVBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox" unique_id=1418046697]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 4
-
-[node name="ItemsPanel" type="PanelContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay" unique_id=2146696085]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
-
-[node name="Margin" type="MarginContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel" unique_id=2044142363]
-layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
-
-[node name="VBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin" unique_id=1119236053]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="DescriptionLabel" type="Label" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox" unique_id=419067097]
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-autowrap_mode = 3
-
-[node name="ListVBox" type="VBoxContainer" parent="Root/Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox" unique_id=631221828]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 4
-
 [node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=1837799062]
 layout_mode = 1
 anchors_preset = -1
@@ -1344,6 +1272,31 @@ theme_type_variation = &"QuizMenuItem"
 text = "Przedmioty"
 alignment = 0
 
+[node name="ListPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1771200301]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"QuizWindow"
+
+[node name="ListMargin" type="MarginContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ListPanel" unique_id=1771200302]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="ListScroll" type="ScrollContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ListPanel/ListMargin" unique_id=1771200303]
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="ListGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/ListPanel/ListMargin/ListScroll" unique_id=1771200304]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 32
+theme_override_constants/v_separation = 0
+columns = 2
+
 [node name="MessageWindow" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox" unique_id=1394636847]
 visible = false
 layout_mode = 2
@@ -1445,6 +1398,13 @@ theme_override_constants/line_separation = 8
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
+
+[node name="HelpLabel" type="Label" parent="Root/TopWindow/VBox" unique_id=1771200305]
+visible = false
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+autowrap_mode = 3
 
 [node name="CorrectAnswerLabel" type="Label" parent="Root/TopWindow/VBox" unique_id=974434540]
 visible = false
