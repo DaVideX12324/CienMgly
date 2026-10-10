@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemySkill" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+display_name = "Krzyk Marionetki"
+log_text = "{enemy} wydaje z siebie pisk rozdzierający uszy!"
+use_chance = 0.3
+cooldown_turns = 2
+base_damage = 60
+atk_coeff = 2.4
+mat_coeff = 1.2
+def_coeff = 1.2
+mdf_coeff = 1.2
+inflict_status = "poison"
+status_chance = 0.4
+color = Color(0.7, 0.2, 0.9, 1)

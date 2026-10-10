@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemySkill" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+display_name = "Dymna Soczewka"
+log_text = "{enemy} spowija pole bitwy gęstym dymem!"
+use_chance = 0.3
+cooldown_turns = 2
+damage_mode = 2
+inflict_status = "blind"
+status_chance = 1.0
+color = Color(0.65, 0.65, 0.7, 1)
