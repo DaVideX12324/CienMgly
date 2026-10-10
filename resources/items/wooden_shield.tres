@@ -14,4 +14,4 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "shield"
-def_bonus = 3
+def_bonus = 4
