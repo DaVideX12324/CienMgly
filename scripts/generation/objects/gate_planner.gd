@@ -243,7 +243,7 @@ static func _pick_switch(result, cand: Dictionary, target: int, avoid: Array) ->
 		var dc: int = cand[c]
 		if dc < 2 or canals.water.has(c) or canals.bridge_cells.has(c) or canals.rail_cells.has(c):
 			continue
-		if canals.grating.has(c) or canals.service.has(c) or canals.walls_1w.has(c) or result.portal_zone.has(c):
+		if canals.grating.has(c) or canals.stair_cells.has(c) or canals.service.has(c) or canals.walls_1w.has(c) or result.portal_zone.has(c):
 			continue
 		var clash := false
 		for o in avoid:
@@ -319,7 +319,7 @@ static func _add_corridor_gates(result, cfg: Dictionary) -> void:
 					break
 			for q in cells:
 				ok = ok and canals.corridors.has(q) and not near_portal.has(q) and not canals.bridge_cells.has(q) \
-						and not canals.service.has(q) and not canals.water.has(q)
+						and not canals.service.has(q) and not canals.water.has(q) and not canals.stair_cells.has(q)
 			if ok:
 				cands.append(cells)
 	var rng := RandomNumberGenerator.new()
@@ -459,7 +459,7 @@ static func _switch_cell(result, gate: Array, reach: Dictionary, gate_cells: Dic
 		var dc: int = dist[c]
 		if dc > target * 3:
 			break
-		var ok: bool = dc >= 4 and (sdist.is_empty() or int(sdist.get(c, 1 << 30)) <= near_d + 2) and not canals.water.has(c) and not canals.bridge_cells.has(c) and not canals.rail_cells.has(c) 				and not canals.grating.has(c) and not canals.service.has(c) and not canals.walls_1w.has(c) 				and not result.portal_zone.has(c)
+		var ok: bool = dc >= 4 and (sdist.is_empty() or int(sdist.get(c, 1 << 30)) <= near_d + 2) and not canals.water.has(c) and not canals.bridge_cells.has(c) and not canals.rail_cells.has(c) 				and not canals.grating.has(c) and not canals.stair_cells.has(c) and not canals.service.has(c) and not canals.walls_1w.has(c) 				and not result.portal_zone.has(c)
 		if ok:
 			for o in others:
 				var ov: Vector2i = o
@@ -512,7 +512,7 @@ static func _fallback_key(result, gate: Array, reach: Dictionary, others: Array 
 		var a := String(canals.areas.get(c, ""))
 		if not (a.begins_with("room:") or a.begins_with("hall:")):
 			continue
-		if canals.water.has(c) or canals.lanes.has(c) or canals.service.has(c) or canals.bridge_cells.has(c) 				or canals.rail_cells.has(c) or canals.grating.has(c) or result.portal_zone.has(c):
+		if canals.water.has(c) or canals.lanes.has(c) or canals.service.has(c) or canals.bridge_cells.has(c) 				or canals.rail_cells.has(c) or canals.grating.has(c) or canals.stair_cells.has(c) or result.portal_zone.has(c):
 			continue
 		var clash := false
 		for o in others:   # z dala od kluczy / płyt innych bram (ta sama kratka = podniesienie obu naraz)

@@ -31,7 +31,7 @@ static func plan(ctx: GenerationContext, plan: TilePlacementPlan) -> void:
 	var g: Dictionary = ctx.grid
 	var areas: Dictionary = canals.areas
 	var bad := {}
-	for d in [canals.water, canals.crossing_cells, ctx.portal_zone, canals.walls_1w]:
+	for d in [canals.water, canals.crossing_cells, ctx.portal_zone, canals.walls_1w, canals.stair_cells]:
 		bad.merge(d)
 
 	# 1. jednostki

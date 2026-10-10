@@ -220,6 +220,13 @@ static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]
 				bed.append(p)
 		bed.sort()
 		grass_cells.append_array(bed)
+	if canals != null and "stair_cells" in canals and not canals.stair_cells.is_empty():
+		# korytarze-schody bez mchu
+		var dry_steps: Array[Vector2i] = []
+		for p in grass_cells:
+			if not canals.stair_cells.has(p):
+				dry_steps.append(p)
+		grass_cells = dry_steps
 	return {
 		"seed": ctx.seed_value,
 		"mud": _mask(cells, ctx.portal_zone, ctx.seed_value + 202, fl.terrain_mud_frequency, fl.terrain_mud_threshold, smoothing),

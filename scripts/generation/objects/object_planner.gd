@@ -155,6 +155,9 @@ func _forbid(result) -> void:
 		for c in canals.rail_cells:
 			if f.in_bounds(c):
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
+		for c in canals.stair_cells:  # korytarze-schody — przechodnie, bez obiektów
+			if f.in_bounds(c):
+				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 		# zejścia z kładek (prześwit) — przechodnie, bez obiektów
 		for c in canals.bridge_clearance:
 			if f.in_bounds(c):
