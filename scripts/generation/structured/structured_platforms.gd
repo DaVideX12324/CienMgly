@@ -8,7 +8,8 @@ extends RefCounted
 ##   "sides": ["N", "S", "E", "W"] — strony ściany, pod którą może stanąć platforma (N: lico + schody z paczki;
 ##            S / E / W: rim / bok, schody bez kafli — PlateauPlacer zostawia w krawędzi przejście),
 ##   "sources": {"hall": 0.6, "chamber": 0.4, "room": 0.3}   — szansa platformy w obszarze danego rodzaju,
-##   "min_width": 8, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90 }.
+##   "min_width": 8, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90,
+##   "wobble": {"chance": 0.7, "segment": [4, 7], "extra": 2} — krawędź łamana: odcinki różnej głębokości }.
 ## Miejsce na rozszerzenie: „korytarz = schody” (cały prosty korytarz północny prowadzący do pokoju jako
 ## schody) — źródło "corridor" w _area_groups, na razie pomijane.
 
@@ -105,8 +106,10 @@ static func _strips(ctx: GenerationContext, cells: Dictionary, excluded: Diction
 	var grid := ctx.grid
 	var min_w := int(cfg.get("min_width", 8))
 	var tr: Array = cfg.get("top_rows", [2, 3])
-	var depth: int = rng.randi_range(int(tr[0]), int(tr[1])) + (face_h if side == "N" else 1)
+	var edge: int = face_h if side == "N" else 1
+	var depth: int = rng.randi_range(int(tr[0]), int(tr[1])) + edge
 	var front := int(cfg.get("front", 3))
+	var wobble: Dictionary = cfg.get("wobble", {})
 	var lines := {}  # linia (y dla N / S, x dla E / W) -> Array[pozycja wzdłuż]
 	for p in cells:
 		if GridUtils.is_walkable(grid, p) and not GridUtils.is_walkable(grid, p + d):
@@ -124,12 +127,18 @@ static func _strips(ctx: GenerationContext, cells: Dictionary, excluded: Diction
 			if i < ts.size() and int(ts[i]) == int(ts[i - 1]) + 1:
 				continue
 			var b: int = ts[i - 1]
-			if b - a + 1 >= min_w and _strip_ok(grid, cells, excluded, wet, d, line, a, b, depth, front):
-				var m := {}
-				for k in range(depth):
-					for t in range(a, b + 1):
-						m[_at(d, line, t, k)] = true
-				out.append(m)
+			if b - a + 1 >= min_w:
+				var prof := _profile(a, b, depth, edge, side, tr, wobble, rng)
+				if _strip_ok(grid, cells, excluded, wet, d, line, a, b, prof, front):
+					var m := {}
+					var deepest := 0
+					for v in prof:
+						deepest = maxi(deepest, v)
+					for k in range(deepest):
+						for t in range(a, b + 1):
+							if k < prof[t - a]:
+								m[_at(d, line, t, k)] = true
+					out.append(m)
 			if i < ts.size():
 				a = ts[i]
 	return out
@@ -144,9 +153,46 @@ static func _at(d: Vector2i, line: int, t: int, k: int) -> Vector2i:
 	return base - d * k
 
 
-static func _strip_ok(grid: Dictionary, cells: Dictionary, excluded: Dictionary, wet: Dictionary, d: Vector2i, line: int, a: int, b: int, depth: int, front: int) -> bool:
-	for k in range(depth + front):
-		for t in range(a, b + 1):
+## Głębokość pasa w każdej kolumnie [a..b]. Bez wobble (albo gdy los nie trafi w wobble.chance): stała `depth`.
+## Z wobble: odcinki długości wobble.segment (pod ścianą N min. 5 — schody z poręczami na prostym licu), każdy
+## o głębokości edge + top_rows[0] .. top_rows[1] + wobble.extra, sąsiednie różne — krawędź platformy łamana.
+static func _profile(a: int, b: int, depth: int, edge: int, side: String, tr: Array, wobble: Dictionary, rng: RandomNumberGenerator) -> PackedInt32Array:
+	var n := b - a + 1
+	var prof := PackedInt32Array()
+	prof.resize(n)
+	prof.fill(depth)
+	if wobble.is_empty() or rng.randf() >= float(wobble.get("chance", 0.0)):
+		return prof
+	var sg: Array = wobble.get("segment", [4, 7])
+	var s_min := maxi(int(sg[0]), 5 if side == "N" else 2)
+	var s_max := maxi(int(sg[1]), s_min)
+	var lo := edge + int(tr[0])
+	var hi := edge + int(tr[1]) + int(wobble.get("extra", 2))
+	var lens: Array[int] = []
+	var left := n
+	while left > 0:
+		var l := rng.randi_range(s_min, s_max)
+		if left - l < s_min:
+			l = left  # reszta krótsza od odcinka — do tego odcinka
+		lens.append(l)
+		left -= l
+	var t := 0
+	var prev := -1
+	for l in lens:
+		var dd := rng.randi_range(lo, hi)
+		if dd == prev:
+			dd = dd + 1 if dd < hi else dd - 1
+		for i in l:
+			prof[t + i] = dd
+		t += l
+		prev = dd
+	return prof
+
+
+static func _strip_ok(grid: Dictionary, cells: Dictionary, excluded: Dictionary, wet: Dictionary, d: Vector2i, line: int, a: int, b: int, prof: PackedInt32Array, front: int) -> bool:
+	for t in range(a, b + 1):
+		var depth: int = prof[t - a]
+		for k in range(depth + front):
 			var p := _at(d, line, t, k)
 			if not GridUtils.is_walkable(grid, p):
 				return false
@@ -156,7 +202,10 @@ static func _strip_ok(grid: Dictionary, cells: Dictionary, excluded: Dictionary,
 			if k >= depth and wet.has(p):
 				return false
 	# Od ściany do ściany: na obu końcach pasa ściana w każdym rzędzie (drzwi z boku odpadają).
-	for k in range(depth):
-		if GridUtils.is_walkable(grid, _at(d, line, a - 1, k)) or GridUtils.is_walkable(grid, _at(d, line, b + 1, k)):
+	for k in range(prof[0]):
+		if GridUtils.is_walkable(grid, _at(d, line, a - 1, k)):
+			return false
+	for k in range(prof[prof.size() - 1]):
+		if GridUtils.is_walkable(grid, _at(d, line, b + 1, k)):
 			return false
 	return true
