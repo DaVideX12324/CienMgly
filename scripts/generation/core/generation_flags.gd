@@ -37,6 +37,9 @@ var structured_config: Dictionary = {}
 var facade_rhythm: Dictionary = {}
 ## Sekcja "tiling" companion-JSON (np. "grating" — kratownice wybierane już w układzie, przed obiektami).
 var tiling_config: Dictionary = {}
+## Sekcja "spawns" companion-JSON — wrogowie rozproszeni po całej mapie (SpawnPlanner._plan_spread); pusta = stary
+## tryb (2–4 wrogów w co drugim pokoju).
+var spawn_config: Dictionary = {}
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
