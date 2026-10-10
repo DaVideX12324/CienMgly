@@ -537,10 +537,8 @@ func _open_skills_menu() -> void:
 		audio.play_sfx_by_name("click")
 	_list_menu_mode = "skills"
 	var entries: Array[Dictionary] = []
-	if _ps and _ps.get("skills") is Array:
-		for s in _ps.skills:
-			if s is Dictionary:
-				entries.append(s)
+	if _ps and _ps.has_method("get_member_skills"):
+		entries = _ps.get_member_skills(_active_actor_index)
 	_list_menu_entries = entries
 	_list_selected_idx = 0
 	_build_list_menu(skills_list_vbox, _list_menu_entries, true)

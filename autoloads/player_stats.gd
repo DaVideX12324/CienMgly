@@ -44,6 +44,9 @@ const EQUIPMENT_LABELS := {
 }
 
 @export var hero_party_data: Array[QuizRpgHeroData] = []
+## Bohater, gdy hero_party_data puste (autoload bez module_root.tscn — testy).
+const DEFAULT_HERO_PATH := "resources/heroes/hero_bohater.tres"
+const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
 
 var _status_clock := 0.0
 
@@ -59,23 +62,6 @@ var total_correct: int     = 0
 var total_wrong: int       = 0
 var rewards: Array[String] = []
 var rng_bonus: float       = 0.0
-var skills: Array[Dictionary] = [
-	{
-		"name": "Leczenie",
-		"description": "Przywroc czesc HP po poprawnym rozwiazaniu quizu.",
-		"sp_cost": 20,
-		"effect": "heal",
-		"heal_ratio_correct": 0.30,
-		"heal_ratio_wrong": 0.10,
-	},
-	{
-		"name": "Mocny Atak",
-		"description": "Szansa na ciezsze trafienie kosztem TP.",
-		"tp_cost": 25,
-		"effect": "attack",
-		"damage_multiplier": 1.5,
-	},
-]
 var inventory: Array[Dictionary] = [
 	{
 		"item_id": "potion",
@@ -110,6 +96,7 @@ var party: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	_ensure_default_hero()
 	_recalculate_max_hp()
 	_normalize_inventory()
 	_ensure_party_defaults()
@@ -201,6 +188,66 @@ func heal(amount: int) -> void:
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+# --- Umiejętności --------------------------------------------------------------------------
+
+## Dane postaci członka drużyny (hero_id), inaczej pierwsza z hero_party_data.
+func _hero_for(member: Dictionary) -> QuizRpgHeroData:
+	_ensure_default_hero()
+	var hid := str(member.get("hero_id", ""))
+	for h: QuizRpgHeroData in hero_party_data:
+		if h != null and h.hero_id == hid:
+			return h
+	return hero_party_data[0]
+
+
+## Odblokowane umiejętności członka w kolejności puli postaci — słowniki QuizRpgSkillData.to_entry().
+func get_member_skills(member_index: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if member_index < 0 or member_index >= party.size():
+		return out
+	var member: Dictionary = party[member_index]
+	var unlocked: Array = member.get("skills", [])
+	var hero := _hero_for(member)
+	if hero == null:
+		return out
+	for sk: QuizRpgSkillData in hero.skills:
+		if sk != null and unlocked.has(sk.skill_id):
+			out.append(sk.to_entry())
+	return out
+
+
+## Pula umiejętności postaci członka (także zablokowane) — sklep NPC, podgląd.
+func get_member_skill_pool(member_index: int) -> Array[QuizRpgSkillData]:
+	var out: Array[QuizRpgSkillData] = []
+	if member_index < 0 or member_index >= party.size():
+		return out
+	var hero := _hero_for(party[member_index])
+	if hero:
+		for sk: QuizRpgSkillData in hero.skills:
+			if sk != null:
+				out.append(sk)
+	return out
+
+
+## Odblokowuje umiejętność z puli postaci (zakup u NPC). false = brak w puli albo już jest.
+func unlock_skill(member_index: int, skill_id: String) -> bool:
+	if member_index < 0 or member_index >= party.size():
+		return false
+	var in_pool := false
+	for sk in get_member_skill_pool(member_index):
+		if sk.skill_id == skill_id:
+			in_pool = true
+	var member: Dictionary = party[member_index]
+	var unlocked: Array = member.get("skills", [])
+	if not in_pool or unlocked.has(skill_id):
+		return false
+	unlocked.append(skill_id)
+	member["skills"] = unlocked
+	party[member_index] = member
+	party_changed.emit()
+	return true
 
 
 # --- Statusy -----------------------------------------------------------------------------
@@ -397,7 +444,7 @@ func get_save_data() -> Dictionary:
 		"streak": streak, "best_streak": best_streak,
 		"total_correct": total_correct, "total_wrong": total_wrong,
 		"rewards": rewards.duplicate(), "rng_bonus": rng_bonus,
-		"skills": skills.duplicate(true), "inventory": inventory.duplicate(true),
+		"inventory": inventory.duplicate(true),
 		"party": party.duplicate(true),
 	}
 
@@ -419,7 +466,6 @@ func load_save_data(data: Dictionary) -> void:
 	total_wrong   = data.get("total_wrong", 0)
 	rewards.assign(data.get("rewards", []))
 	rng_bonus     = data.get("rng_bonus", 0.0)
-	skills = _to_dictionary_array(data.get("skills", skills.duplicate(true)))
 	inventory = _to_dictionary_array(data.get("inventory", inventory.duplicate(true)))
 	party = _to_dictionary_array(data.get("party", party.duplicate(true)))
 	_normalize_inventory()
@@ -704,16 +750,23 @@ func clear_member_equipment(member_index: int) -> void:
 		set_member_equipment(member_index, slot_name, str(defaults.get(slot_name, "")))
 
 
+func _ensure_default_hero() -> void:
+	if hero_party_data.is_empty():
+		var hero := load(QuizRpgPaths.path(DEFAULT_HERO_PATH)) as QuizRpgHeroData
+		hero_party_data.append(hero if hero != null else QuizRpgHeroData.new())
+
+
 func _ensure_party_defaults() -> void:
+	_ensure_default_hero()
 	if party.is_empty():
-		if hero_party_data.is_empty():
-			party.append(_build_default_party_member())
-		else:
-			for hero_data: QuizRpgHeroData in hero_party_data:
-				if hero_data:
-					party.append(hero_data.build_member_data())
+		for hero_data: QuizRpgHeroData in hero_party_data:
+			if hero_data:
+				party.append(hero_data.build_member_data())
 	for index: int in range(party.size()):
 		var member: Dictionary = party[index]
+		if not (member.get("skills") is Array):
+			var hero := _hero_for(member)
+			member["skills"] = Array(hero.starting_skills) if hero else []
 		if not member.has("equipment") or not (member.get("equipment") is Dictionary):
 			member["equipment"] = {}
 		if not member.has("default_equipment") or not (member.get("default_equipment") is Dictionary):
@@ -756,38 +809,6 @@ func _sync_primary_party_member() -> void:
 	member["hp"] = hp
 	member["max_hp"] = max_hp
 	party[0] = member
-
-
-func _build_default_party_member() -> Dictionary:
-	return {
-		"name": player_name,
-		"level": level,
-		"hp": hp,
-		"max_hp": max_hp,
-		"sp": 100,
-		"max_sp": 100,
-		"tp": 0,
-		"max_tp": 100,
-		"base_atk": 20,
-		"base_def": 15,
-		"atk_per_level": ATK_PER_LEVEL,
-		"def_per_level": DEF_PER_LEVEL,
-		"portrait": null,
-		"equipment": {
-			"weapon": "",
-			"shield": "",
-			"head": "",
-			"body": "",
-			"accessory": "",
-		},
-		"default_equipment": {
-			"weapon": "",
-			"shield": "",
-			"head": "",
-			"body": "",
-			"accessory": "",
-		},
-	}
 
 
 func _get_member_level_bonus(member: Dictionary, per_level: float) -> int:
