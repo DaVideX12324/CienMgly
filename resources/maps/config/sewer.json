@@ -139,6 +139,11 @@
     "shift": {"source": 0, "rect": [6, 0, 6, 6], "offset": [-6, 0]},
     "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]}
   },
+  "enemies": [
+    "scenes/enemies/pixel_crawler/rat_base.tscn",
+    ["scenes/enemies/pixel_crawler/rat_rogue.tscn", "scenes/enemies/pixel_crawler/rat_mage.tscn"],
+    "scenes/enemies/pixel_crawler/rat_warrior.tscn"
+  ],
   "scenes": {"chest": "res://modules/quiz_rpg/scenes/objects/sewer/sewer_chest.tscn"},
   "tilesets": {
     "default": "sewer",
