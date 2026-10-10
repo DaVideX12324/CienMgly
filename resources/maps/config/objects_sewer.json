@@ -1144,6 +1144,8 @@
         1,
         2
       ],
+      "facade_h": 4,
+      "facade_dy": -1,
       "room_density": 18
     },
     {

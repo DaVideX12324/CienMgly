@@ -25,6 +25,7 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 	if defs.is_empty():
 		return objects
 	var on_wall: bool = flags != null and flags.facade_base_on_wall
+	var first_new := objects.placements.size()
 	# obiekty na rimie północnym (np. filary od tyłu): osobne miejsca i rytm, przed licem
 	var rim_defs: Array[ObjectDef] = []
 	var face_defs: Array[ObjectDef] = []
@@ -101,6 +102,11 @@ static func plan(result, defs: Array[ObjectDef], seed_v: int, flags: GenerationF
 		if placed > 0:
 			objects.stats[def.id] = objects.count(def.id) + placed
 	_place_room_walls(result, defs, slots, used, bases_4h, on_wall, seed_v, objects)
+	# facade_dy: obiekt wyżej na licu (miejsce i odstępy liczone na kotwicy).
+	for i in range(first_new, objects.placements.size()):
+		var pl: ObjectPlacement = objects.placements[i]
+		if pl.def.facade_dy != 0:
+			pl.cell += Vector2i(0, pl.def.facade_dy)
 	objects.time_usec += Time.get_ticks_usec() - t0
 	return objects
 

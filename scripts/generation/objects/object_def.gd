@@ -108,6 +108,8 @@ var canal_end_dy: int = 0              # przesunięcie obiektu nad końcem kana�
 var canal_end_on: StringName = &"any"
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
+## Na licu: przesunięcie obiektu w pionie względem kotwicy (-1 = kratkę wyżej, np. ramka nad bazą lica 4H).
+var facade_dy: int = 0
 ## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.
 var layer_name: StringName = &""
 
