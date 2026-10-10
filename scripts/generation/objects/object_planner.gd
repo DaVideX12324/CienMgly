@@ -1299,13 +1299,18 @@ func _drop_gates(opened: PackedByteArray, stat: StringName) -> void:
 func _repair_reach() -> void:
 	var w := f.width
 	var n := f.width * f.height
+	# Ruch po kratkach (gracz, bez promienia wroga): kieszonka zamknięta przeszkodami też jest odcięta.
+	var cells0 := _bfs_parents(entrance_i, false)
 	for _round in range(REACH_ROUNDS):
 		var clr := _clearance()
 		var parent := _bfs_agent(entrance_i, clr)
+		var cells1 := _bfs_parents(entrance_i, true)
 		var cut := {}
 		for i in range(parent.size()):
-			# Kratki, na których środku wróg się nie mieści (obrzeże przeszkody), nie liczą się jako odcięte.
+			# Kratki, na których środku wróg się nie mieści (obrzeże przeszkody), nie liczą się jako odcięte (model wroga).
 			if reach0[i] == 1 and parent[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID and clr[i] & CLR_CENTER == 0:
+				cut[i] = true
+			elif cells0[i] != -1 and cells1[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID:
 				cut[i] = true
 		var boxed := {}
 		for pl in plan.placements:
