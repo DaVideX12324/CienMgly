@@ -2,8 +2,13 @@
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/sonic_blast.tres" id="s_sonic_blast"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/toxic_gaze.tres" id="s_toxic_gaze"]
+
 [resource]
 script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_sonic_blast"), ExtResource("s_toxic_gaze")])
 enemy_name = "Elf Druid"
 quiz_id = "ogolne"
 quiz_category = "ogolne"

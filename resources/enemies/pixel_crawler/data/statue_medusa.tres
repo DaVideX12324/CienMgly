@@ -2,8 +2,14 @@
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/phantom_volt.tres" id="s_phantom_volt"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/spook_howl.tres" id="s_spook_howl"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/dizzying_gaze.tres" id="s_dizzying_gaze"]
+
 [resource]
 script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_phantom_volt"), ExtResource("s_spook_howl"), ExtResource("s_dizzying_gaze")])
 enemy_name = "Meduza"
 quiz_id = "ogolne"
 quiz_category = "ogolne"
