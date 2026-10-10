@@ -8,7 +8,7 @@ enum Phase { ACTION_SELECT, TARGET_SELECT, QUIZ, PLAYER_RESULT, ENEMY_TURN, COMB
 enum Action { ATTACK, DEFEND, HEAL, FLEE }
 ## Dolny pas jak w RPG Makerze: komendy drużyny po lewej (Walcz / Uciekaj), komendy postaci po prawej
 ## (status wtedy po lewej), sam status wyśrodkowany (tura wroga, komunikaty).
-enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY }
+enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY, LIST }
 
 ## Kontroler panelu pytań jest w hoście (w wersji samodzielnej kopia w _host/), więc load zamiast preload.
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
@@ -47,6 +47,7 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
+@export_range(0.2, 0.8, 0.01) var list_party_width := 0.4  ## lista umiejętności / przedmiotów: okno drużyny obok (reszta pasa = lista)
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
 @export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
 
@@ -99,13 +100,12 @@ var _shadow_height := 35.0
 @onready var enemy_target_home_slot: Control = get_node_or_null("Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0") as Control
 @onready var player_sprite_node: Control = $Battlefield/FieldContent/PlayerSection/PlayerSprite
 @onready var battle_background: Control = $Background if has_node("Background") else $Battlefield/Background
-@onready var battle_menu_overlay: Control = $Battlefield/FieldContent/BattleMenuOverlay
-@onready var skills_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel
-@onready var skills_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/DescriptionLabel
-@onready var skills_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/ListVBox
-@onready var items_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel
-@onready var items_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/DescriptionLabel
-@onready var items_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/ListVBox
+## Lista umiejętności / przedmiotów w dolnym pasie (jak okna RPG Makera), opis w górnym oknie (HelpLabel).
+@onready var list_panel: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/ListPanel
+@onready var list_scroll: ScrollContainer = $BattleWindow/WindowMargin/VBox/ContentRow/ListPanel/ListMargin/ListScroll
+@onready var list_grid: GridContainer = $BattleWindow/WindowMargin/VBox/ContentRow/ListPanel/ListMargin/ListScroll/ListGrid
+@onready var help_label: Label = $TopWindow/VBox/HelpLabel
+const ListRowScene := preload("res://modules/quiz_rpg/scenes/quiz/combat_list_row.tscn")
 @onready var turn_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/TurnLabel") as Label
 @onready var streak_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/StreakLabel") as Label
 @onready var target_panel: VBoxContainer = (party_panel_container.get_node_or_null("PartyMargin/TargetPanel") if party_panel_container else null) as VBoxContainer
@@ -389,11 +389,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if _list_menu_mode != "":
+		var cols: int = maxi(list_grid.columns, 1)
 		if _is_menu_down(event):
-			_navigate_list(1)
+			_navigate_list(cols)
 			get_viewport().set_input_as_handled()
 			return
 		if _is_menu_up(event):
+			_navigate_list(-cols)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D]):
+			_navigate_list(1)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A]):
 			_navigate_list(-1)
 			get_viewport().set_input_as_handled()
 			return
@@ -532,59 +541,42 @@ func _on_action(action: Action) -> void:
 
 
 func _open_skills_menu() -> void:
-	var audio := get_node_or_null("/root/AudioService")
-	if audio:
-		audio.play_sfx_by_name("click")
-	_list_menu_mode = "skills"
 	var entries: Array[Dictionary] = []
 	if _ps and _ps.has_method("get_member_skills"):
 		entries = _ps.get_member_skills(_active_actor_index)
-	_list_menu_entries = entries
-	_list_selected_idx = 0
-	_build_list_menu(skills_list_vbox, _list_menu_entries, true)
-	skills_panel.visible = true
-	items_panel.visible = false
-	battle_menu_overlay.visible = true
-	battle_background.visible = false
-	if action_panel:
-		action_panel.visible = false
-	if actor_command_panel:
-		actor_command_panel.visible = false
-	_update_list_description()
+	_open_list_menu("skills", entries)
 
 
 func _open_items_menu() -> void:
-	var audio := get_node_or_null("/root/AudioService")
-	if audio:
-		audio.play_sfx_by_name("click")
-	_list_menu_mode = "items"
 	var entries: Array[Dictionary] = []
 	if _ps and _ps.has_method("get_inventory_entries"):
 		for it in _ps.get_inventory_entries():
-			if it is Dictionary:
+			if it is Dictionary and str(it.get("category", "item")) == "item":
 				entries.append(it)
+	_open_list_menu("items", entries)
+
+
+## Lista w dolnym pasie zamiast okna komend postaci (okno drużyny zostaje obok); pole bitwy widoczne.
+func _open_list_menu(mode: String, entries: Array[Dictionary]) -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
+	_list_menu_mode = mode
 	_list_menu_entries = entries
 	_list_selected_idx = 0
-	_build_list_menu(items_list_vbox, _list_menu_entries, false)
-	items_panel.visible = true
-	skills_panel.visible = false
-	battle_menu_overlay.visible = true
-	battle_background.visible = false
-	if action_panel:
-		action_panel.visible = false
-	if actor_command_panel:
-		actor_command_panel.visible = false
-	_update_list_description()
+	_build_list_menu(entries, mode == "skills")
+	_set_band_mode(Band.LIST)
+	_refresh_list_selection()
 
 
 func _close_list_menu() -> void:
 	_list_menu_mode = ""
 	_list_menu_entries.clear()
 	_list_menu_rows.clear()
-	skills_panel.visible = false
-	items_panel.visible = false
-	battle_menu_overlay.visible = false
-	battle_background.visible = true
+	if list_panel:
+		list_panel.visible = false
+	if help_label:
+		help_label.visible = false
 	if action_panel:
 		action_panel.visible = true
 	_show_action_menu()
@@ -845,23 +837,19 @@ func _read_quizless_flag(settings_service: Node, module_scope: bool) -> bool:
 	return false
 
 
+## Ruch kursora po siatce listy (delta: ±1 w poziomie, ±kolumny w pionie), z zawijaniem.
 func _navigate_list(delta: int) -> void:
-	if _list_menu_rows.is_empty():
+	var n := _list_menu_rows.size()
+	if n == 0:
 		return
-	var next_idx: int = _list_selected_idx
-	for _step in range(_list_menu_rows.size()):
-		next_idx = (next_idx + delta + _list_menu_rows.size()) % _list_menu_rows.size()
-		if not _list_menu_rows[next_idx].get_meta("disabled", false):
-			_list_selected_idx = next_idx
-			_refresh_list_selection()
-			return
+	_list_selected_idx = posmod(_list_selected_idx + delta, n)
+	_refresh_list_selection()
 
 
 func _confirm_list_selection() -> void:
 	if _list_selected_idx < 0 or _list_selected_idx >= _list_menu_entries.size():
 		return
-	var row: Control = _list_menu_rows[_list_selected_idx]
-	if row.get_meta("disabled", false):
+	if (_list_menu_rows[_list_selected_idx] as Button).disabled:
 		return
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
@@ -873,128 +861,78 @@ func _confirm_list_selection() -> void:
 		_use_item(entry)
 
 
-func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_skill_menu: bool) -> void:
-	for child in list_box.get_children():
+func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
+	for child in list_grid.get_children():
+		list_grid.remove_child(child)
 		child.queue_free()
 	_list_menu_rows.clear()
+	var actor: Dictionary = _party_state[_active_actor_index] if _has_active_actor() else {}
 	for entry in entries:
-		var row: PanelContainer = PanelContainer.new()
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		row.custom_minimum_size = Vector2(0.0, _ui_scale_px(38))
-		var margin: MarginContainer = MarginContainer.new()
-		margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		margin.mouse_filter = Control.MOUSE_FILTER_STOP
-		margin.add_theme_constant_override("margin_left", _ui_scale_px(8))
-		margin.add_theme_constant_override("margin_top", _ui_scale_px(6))
-		margin.add_theme_constant_override("margin_right", _ui_scale_px(8))
-		margin.add_theme_constant_override("margin_bottom", _ui_scale_px(6))
-		var content: HBoxContainer = HBoxContainer.new()
-		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		content.add_theme_constant_override("separation", _ui_scale_px(12))
-		var name_label: Label = Label.new()
-		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_label.text = str(entry.get("name", "---"))
-		name_label.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		var value_label: Label = Label.new()
-		value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		value_label.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		var disabled: bool = false
+		var row := ListRowScene.instantiate() as Button
+		list_grid.add_child(row)
+		var kind: int = row.Kind.NONE
+		var cost := ""
+		var disabled := false
 		if is_skill_menu:
 			var sp_cost: int = int(entry.get("sp_cost", 0))
 			var tp_cost: int = int(entry.get("tp_cost", 0))
 			if sp_cost > 0:
-				value_label.text = "SP %d" % sp_cost
-				disabled = not _has_active_actor() or int(_party_state[_active_actor_index].get("sp", 0)) < sp_cost
-			elif tp_cost > 0:
-				value_label.text = "TP %d" % tp_cost
-				disabled = not _has_active_actor() or int(_party_state[_active_actor_index].get("tp", 0)) < tp_cost
-			else:
-				value_label.text = "-"
+				cost = "%d SP" % sp_cost
+				kind = row.Kind.SP
+				disabled = int(actor.get("sp", 0)) < sp_cost
+			if tp_cost > 0:
+				cost = (cost + "  " if cost != "" else "") + "%d TP" % tp_cost
+				kind = row.Kind.TP if sp_cost <= 0 else kind
+				disabled = disabled or int(actor.get("tp", 0)) < tp_cost
 		else:
 			var count: int = int(entry.get("count", 0))
-			var display_count: String = str(entry.get("display_count", count))
-			value_label.text = "X" if display_count == "X" else "x%s" % display_count
+			cost = "×%s" % str(entry.get("display_count", count))
+			kind = row.Kind.COUNT
 			disabled = count <= 0 or not bool(entry.get("usable_in_combat", true))
-		if disabled:
-			name_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
-			value_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
-		row.set_meta("disabled", disabled)
-		content.add_child(name_label)
-		content.add_child(value_label)
-		margin.add_child(content)
-		row.add_child(margin)
+		row.setup(str(entry.get("name", "---")), cost, kind, disabled)
 		var row_index: int = _list_menu_rows.size()
-		row.gui_input.connect(func(event: InputEvent): _on_list_row_gui_input(event, row_index))
+		row.pressed.connect(func(): _on_list_row_pressed(row_index))
 		row.mouse_entered.connect(func(): _on_list_row_hover(row_index))
-		margin.gui_input.connect(func(event: InputEvent): _on_list_row_gui_input(event, row_index))
-		margin.mouse_entered.connect(func(): _on_list_row_hover(row_index))
-		list_box.add_child(row)
 		_list_menu_rows.append(row)
-	_refresh_list_selection()
+	if entries.is_empty():
+		var empty := ListRowScene.instantiate() as Button
+		list_grid.add_child(empty)
+		empty.setup("Brak umiejętności" if is_skill_menu else "Brak przedmiotów", "", 0, true)
 
 
 func _on_list_row_hover(index: int) -> void:
 	if index < 0 or index >= _list_menu_rows.size():
 		return
-	if _list_menu_rows[index].get_meta("disabled", false):
-		return
 	_list_selected_idx = index
 	_refresh_list_selection()
 
 
-func _on_list_row_gui_input(event: InputEvent, index: int) -> void:
-	if not (event is InputEventMouseButton):
-		return
-	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
-		return
+func _on_list_row_pressed(index: int) -> void:
 	if index < 0 or index >= _list_menu_rows.size():
-		return
-	if _list_menu_rows[index].get_meta("disabled", false):
 		return
 	_list_selected_idx = index
 	_refresh_list_selection()
 	_confirm_list_selection()
 
 
+## Kursor (styl „selected” z motywu) także na pozycjach niedostępnych — opis widać, wybór blokuje _confirm_list_selection.
 func _refresh_list_selection() -> void:
-	var active_style: StyleBoxFlat = StyleBoxFlat.new()
-	active_style.bg_color = Color(0, 0, 0, 0)
-	active_style.border_width_bottom = 2
-	active_style.border_color = UI_ACCENT
-	var selected_color: Color = UI_TEXT_PRIMARY
-	var idle_color: Color = Color(0.7, 0.7, 0.76)
-	var disabled_color: Color = Color(0.55, 0.55, 0.6)
 	for i in range(_list_menu_rows.size()):
-		var row: Control = _list_menu_rows[i]
-		var is_selected: bool = i == _list_selected_idx
-		var target_color: Color = selected_color if is_selected else idle_color
-		if bool(row.get_meta("disabled", false)):
-			target_color = disabled_color
-		if i == _list_selected_idx:
-			row.add_theme_stylebox_override("panel", active_style)
-		else:
-			row.remove_theme_stylebox_override("panel")
-		var labels: Array = row.find_children("*", "Label", true, false)
-		for label_value: Variant in labels:
-			var label: Label = label_value as Label
-			if label:
-				label.self_modulate = target_color
+		QuizTheme.set_menu_item_selected(_list_menu_rows[i] as Button, i == _list_selected_idx)
+	if _list_selected_idx >= 0 and _list_selected_idx < _list_menu_rows.size():
+		list_scroll.ensure_control_visible(_list_menu_rows[_list_selected_idx])
 	_update_list_description()
 
 
 func _update_list_description() -> void:
-	var label: Label = skills_description_label if _list_menu_mode == "skills" else items_description_label
-	if label == null:
+	if help_label == null:
 		return
+	help_label.visible = _list_menu_mode != ""
 	if _list_selected_idx < 0 or _list_selected_idx >= _list_menu_entries.size():
-		label.text = ""
-		return
-	label.text = str(_list_menu_entries[_list_selected_idx].get("description", ""))
+		help_label.text = ""
+	else:
+		help_label.text = str(_list_menu_entries[_list_selected_idx].get("description", ""))
+	_update_top_window()
 
 
 func _is_menu_up(event: InputEvent) -> bool:
@@ -2192,6 +2130,8 @@ func _set_band_mode(mode: Band) -> void:
 		return  # quiz zajmuje pas (_set_quiz_layout_active)
 	var vp_w: float = get_viewport_rect().size.x
 	party_panel_container.visible = true
+	if list_panel:
+		list_panel.visible = mode == Band.LIST
 	content_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	# Opcje -> Motyw: „UI walki na szerokość treści” — okno drużyny o stałej szerokości, okna wyśrodkowane
 	# (inaczej rozciągnięte na cały ekran).
@@ -2215,6 +2155,12 @@ func _set_band_mode(mode: Band) -> void:
 				actor_command_panel.custom_minimum_size = Vector2(vp_w * actor_command_width, 0)
 			party_panel_container.size_flags_horizontal = party_flags
 			party_panel_container.custom_minimum_size = party_min
+		Band.LIST:
+			party_command_panel.visible = false
+			if actor_command_panel:
+				actor_command_panel.visible = false
+			party_panel_container.size_flags_horizontal = Control.SIZE_FILL
+			party_panel_container.custom_minimum_size = Vector2(vp_w * list_party_width, 0)
 		Band.STATUS_ONLY:
 			party_command_panel.visible = false
 			if actor_command_panel:
@@ -2966,6 +2912,7 @@ func _update_top_window() -> void:
 	var quiz_on: bool = qpc != null and qpc.quiz_panel.visible and not (quiz_modal_overlay and quiz_modal_overlay.visible)
 	qpc.question_label.visible = quiz_on
 	_timer_row.visible = quiz_on
-	_log_label.visible = not _log_lines.is_empty()
+	var help_on: bool = help_label != null and help_label.visible
+	_log_label.visible = not _log_lines.is_empty() and not help_on
 	var question_in_log: bool = qpc.question_label.get_parent() == _top_vbox  # opcja „Pytanie w walce”
-	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or qpc.correct_answer_label.visible
+	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or qpc.correct_answer_label.visible or help_on
