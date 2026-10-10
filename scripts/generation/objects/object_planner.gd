@@ -31,7 +31,8 @@ var f: ObjectFeatures
 var plan: ObjectPlan
 var seed_value := 0
 var blocked := PackedByteArray()   # bariery płaskowyżu (ruch)
-var pl_wall := PackedByteArray()   # bariery płaskowyżu (lico, rimy) — rysunek dużego obiektu ich nie zasłania, jak ściany
+var pl_wall := PackedByteArray()   # 1: bariery płaskowyżu (lico, rimy) — rysunek dużego obiektu ich nie zasłania, jak ściany;
+                                   # 2: schody z obwódką — rysunek nigdy (także przy licu, facade_ok)
 var owner := PackedInt32Array()    # indeks defa + 1, który zajął kratkę (USED)
 var stamp := PackedInt32Array()    # odstęp `spacing`: indeks defa + 1 w promieniu kotwicy
 var reach0 := PackedByteArray()    # osiągalne z wejścia przed obiektami
@@ -134,6 +135,12 @@ func _forbid(result) -> void:
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 		for c in pl.stair_cells():
 			_forbid_ring(c, STAIR_RING, false)
+			if as_wall:
+				for dy in range(-1, 2):
+					for dx in range(-1, 2):
+						var q: Vector2i = c + Vector2i(dx, dy)
+						if f.in_bounds(q):
+							pl_wall[f.idx(q)] = 2
 	# Kanały: kwas nieprzechodni, kładki przechodnie, ale bez obiektów.
 	var canals = result.canals
 	if canals != null and not canals.is_empty():
@@ -919,8 +926,9 @@ func _visual_on_wall(def: ObjectDef, pt: Vector2, facade_ok := false) -> bool:
 				return true
 			if f.walk[f.idx(q)] == 0 and not (facade_ok and _facade_over_floor(q)):
 				return true
-			if pl_wall[f.idx(q)] == 1 and not facade_ok:
-				return true  # lico / rim platformy — jak ściana
+			var pw := pl_wall[f.idx(q)]
+			if pw == 2 or (pw == 1 and not facade_ok):
+				return true  # schody platformy / lico, rim — jak ściana
 	return false
 
 

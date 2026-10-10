@@ -2,10 +2,11 @@ extends RefCounted
 
 ## Platformy układu structured (ścieki): podwyższona część pomieszczenia pod jego ścianą, z licem i schodami.
 ## Kształt stąd, schody i osiągalność — PlateauPass.solve_levels (wspólne z jaskiniami), kafle — PlateauPlacer.
-## Pas pod ścianą północną: cała szerokość między ścianami bocznymi (bez drzwi w pasie), głębokość = rzędy góry
-## + lico (plateau_face_h), przed licem wolna podłoga. Źródła: hale kompleksów, komnaty, większe pokoje.
+## Pas pod ścianą: cała długość między ścianami po bokach (bez drzwi w pasie), głębokość = rzędy góry + krawędź
+## (pod ścianą N lico plateau_face_h), przed krawędzią wolna podłoga. Źródła: hale kompleksów, komnaty, większe pokoje.
 ## Config: structured_layout.platforms {
-##   "sides": ["N"]           — strony ściany (na razie tylko N; miejsce na S / E / W w _strips),
+##   "sides": ["N", "S", "E", "W"] — strony ściany, pod którą może stanąć platforma (N: lico + schody z paczki;
+##            S / E / W: rim / bok, schody bez kafli — PlateauPlacer zostawia w krawędzi przejście),
 ##   "sources": {"hall": 0.6, "chamber": 0.4, "room": 0.3}   — szansa platformy w obszarze danego rodzaju,
 ##   "min_width": 8, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90 }.
 ## Miejsce na rozszerzenie: „korytarz = schody” (cały prosty korytarz północny prowadzący do pokoju jako
@@ -70,11 +71,11 @@ static func _area_groups(canals, sources: Dictionary) -> Array:
 
 
 ## Kratki, na których platforma nie stanie: woda (+1), chodniki, korytarze serwisowe, kładki z prześwitem,
-## barierki, ściany szer. 1, doły, bramy, dźwignie, portale z pierścieniem.
+## barierki, ściany szer. 1, doły, kraty podłogowe, bramy, dźwignie, portale z pierścieniem.
 static func _excluded(ctx: GenerationContext, canals, portal_ring: int) -> Dictionary:
 	var ex := {}
 	for src in [canals.water, canals.lanes, canals.service, canals.corridors, canals.blocked, canals.bridge_cells,
-			canals.bridge_clearance, canals.rail_cells, canals.walls_1w, canals.pit_cells]:
+			canals.bridge_clearance, canals.rail_cells, canals.walls_1w, canals.pit_cells, canals.grating]:
 		for p in src:
 			ex[p] = true
 	for p in canals.water:
@@ -92,58 +93,70 @@ static func _excluded(ctx: GenerationContext, canals, portal_ring: int) -> Dicti
 	return ex
 
 
-## Pasy pod ścianą strony `side` w obszarze `cells` — każdy jako maska. Na razie tylko "N": bieg kratek
-## z niechodliwą kratką nad sobą, od ściany do ściany (bez drzwi z boku w rzędach pasa), głębokość
-## top_rows + face_h, przed licem `front` rzędów suchej podłogi (`wet` = woda).
+## Pasy pod ścianą strony `side` ("N", "S", "E", "W") w obszarze `cells` — każdy jako maska. Bieg kratek z niechodliwą
+## kratką po stronie ściany, od ściany do ściany (bez drzwi z boku w rzędach pasa), głębokość top_rows + krawędź
+## (N: lico face_h, inaczej 1 rząd rimu / boku), przed krawędzią `front` rzędów suchej podłogi (`wet` = woda).
 static func _strips(ctx: GenerationContext, cells: Dictionary, excluded: Dictionary, wet: Dictionary, side: String, face_h: int, rng: RandomNumberGenerator, cfg: Dictionary) -> Array:
 	var out: Array = []
-	if side != "N":
-		return out  # S / E / W: lico w innym kierunku — schody i kafle tylko dla lica południowego
+	if not SIDE_DIRS.has(side):
+		return out
+	var d: Vector2i = SIDE_DIRS[side]   # w stronę ściany
+	var vertical := d.x != 0            # pas wzdłuż ściany E / W biegnie w osi y
 	var grid := ctx.grid
 	var min_w := int(cfg.get("min_width", 8))
 	var tr: Array = cfg.get("top_rows", [2, 3])
-	var depth: int = rng.randi_range(int(tr[0]), int(tr[1])) + face_h
+	var depth: int = rng.randi_range(int(tr[0]), int(tr[1])) + (face_h if side == "N" else 1)
 	var front := int(cfg.get("front", 3))
-	var rows := {}  # y -> Array[x]
+	var lines := {}  # linia (y dla N / S, x dla E / W) -> Array[pozycja wzdłuż]
 	for p in cells:
-		if GridUtils.is_walkable(grid, p) and not GridUtils.is_walkable(grid, p + Vector2i(0, -1)):
-			if not rows.has(p.y):
-				rows[p.y] = []
-			(rows[p.y] as Array).append(p.x)
-	var ys := rows.keys()
-	ys.sort()
-	for y in ys:
-		var xs: Array = rows[y]
-		xs.sort()
-		var a: int = xs[0]
-		for i in range(1, xs.size() + 1):
-			if i < xs.size() and int(xs[i]) == int(xs[i - 1]) + 1:
+		if GridUtils.is_walkable(grid, p) and not GridUtils.is_walkable(grid, p + d):
+			var line: int = p.x if vertical else p.y
+			if not lines.has(line):
+				lines[line] = []
+			(lines[line] as Array).append(p.y if vertical else p.x)
+	var keys := lines.keys()
+	keys.sort()
+	for line in keys:
+		var ts: Array = lines[line]
+		ts.sort()
+		var a: int = ts[0]
+		for i in range(1, ts.size() + 1):
+			if i < ts.size() and int(ts[i]) == int(ts[i - 1]) + 1:
 				continue
-			var b: int = xs[i - 1]
-			if b - a + 1 >= min_w and _strip_ok(grid, cells, excluded, wet, a, b, y, depth, front):
+			var b: int = ts[i - 1]
+			if b - a + 1 >= min_w and _strip_ok(grid, cells, excluded, wet, d, line, a, b, depth, front):
 				var m := {}
-				for yy in range(y, y + depth):
-					for x in range(a, b + 1):
-						m[Vector2i(x, yy)] = true
+				for k in range(depth):
+					for t in range(a, b + 1):
+						m[_at(d, line, t, k)] = true
 				out.append(m)
-			if i < xs.size():
-				a = xs[i]
+			if i < ts.size():
+				a = ts[i]
 	return out
 
 
-static func _strip_ok(grid: Dictionary, cells: Dictionary, excluded: Dictionary, wet: Dictionary, a: int, b: int, y: int, depth: int, front: int) -> bool:
-	for yy in range(y, y + depth + front):
-		for x in range(a, b + 1):
-			var p := Vector2i(x, yy)
+const SIDE_DIRS := {"N": Vector2i(0, -1), "S": Vector2i(0, 1), "E": Vector2i(1, 0), "W": Vector2i(-1, 0)}
+
+
+## Kratka pasu: linia `line` przy ścianie (kierunek `d`), pozycja `t` wzdłuż, `k` kratek w głąb pomieszczenia.
+static func _at(d: Vector2i, line: int, t: int, k: int) -> Vector2i:
+	var base := Vector2i(line, t) if d.x != 0 else Vector2i(t, line)
+	return base - d * k
+
+
+static func _strip_ok(grid: Dictionary, cells: Dictionary, excluded: Dictionary, wet: Dictionary, d: Vector2i, line: int, a: int, b: int, depth: int, front: int) -> bool:
+	for k in range(depth + front):
+		for t in range(a, b + 1):
+			var p := _at(d, line, t, k)
 			if not GridUtils.is_walkable(grid, p):
 				return false
-			# Pas: w obszarze, bez wykluczonych; przed licem wystarczy sucha podłoga (korytarz / chodnik może biec).
-			if yy < y + depth and (not cells.has(p) or excluded.has(p)):
+			# Pas: w obszarze, bez wykluczonych; przed krawędzią wystarczy sucha podłoga (korytarz / chodnik może biec).
+			if k < depth and (not cells.has(p) or excluded.has(p)):
 				return false
-			if yy >= y + depth and wet.has(p):
+			if k >= depth and wet.has(p):
 				return false
-	# Od ściany do ściany: z boku pasa ściana w każdym rzędzie (drzwi z boku odpadają).
-	for yy in range(y, y + depth):
-		if GridUtils.is_walkable(grid, Vector2i(a - 1, yy)) or GridUtils.is_walkable(grid, Vector2i(b + 1, yy)):
+	# Od ściany do ściany: na obu końcach pasa ściana w każdym rzędzie (drzwi z boku odpadają).
+	for k in range(depth):
+		if GridUtils.is_walkable(grid, _at(d, line, a - 1, k)) or GridUtils.is_walkable(grid, _at(d, line, b + 1, k)):
 			return false
 	return true

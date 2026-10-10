@@ -118,7 +118,7 @@
     "room_size_h": [9, 14],
     "loop_chance": 0.35,
     "corridor_room_chance": 0.5,
-    "platforms": {"sides": ["N"], "sources": {"hall": 0.6, "chamber": 0.4, "room": 0.3}, "min_width": 8, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90}
+    "platforms": {"sides": ["N", "S", "E", "W"], "sources": {"hall": 0.6, "chamber": 0.4, "room": 0.3}, "min_width": 8, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90}
   },
   "facade_rhythm": {
     "pillar_spacing_options": [4, 5],
