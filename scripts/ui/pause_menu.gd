@@ -649,7 +649,7 @@ func _accept_equip_action() -> void:
 			if _ps and _ps.has_method("clear_member_equipment"):
 				_ps.clear_member_equipment(_selected_member_index)
 			_show_equipment_panel()
-			_show_toast("Przywrócono domyślny ekwipunek.")
+			_show_toast("Zdjęto cały ekwipunek.")
 
 
 func _accept_equip_item() -> void:

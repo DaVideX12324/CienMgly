@@ -912,10 +912,8 @@ func optimize_member_equipment(member_index: int) -> void:
 func clear_member_equipment(member_index: int) -> void:
 	if member_index < 0 or member_index >= party.size():
 		return
-	var member: Dictionary = party[member_index]
-	var defaults: Dictionary = member.get("default_equipment", {})
 	for slot_name: String in EQUIPMENT_SLOTS:
-		set_member_equipment(member_index, slot_name, str(defaults.get(slot_name, "")))
+		set_member_equipment(member_index, slot_name, "")
 
 
 func _ensure_default_hero() -> void:
