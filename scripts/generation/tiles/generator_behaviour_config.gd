@@ -71,6 +71,7 @@ func build_flags(base: GenerationFlags = null) -> GenerationFlags:
 	f.structured_config = structured_layout()
 	f.facade_rhythm = facade_rhythm()
 	f.tiling_config = tiling()
+	f.spawn_config = raw.get("spawns", {})
 	return f
 
 func default_tileset_id() -> StringName:
