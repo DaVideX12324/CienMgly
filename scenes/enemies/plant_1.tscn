@@ -19,7 +19,7 @@ max_hp = 160
 attack = 21
 defense = 5
 battle_skills = Array[ExtResource("9_skill_script")]([ExtResource("9_poison_vine")])
-xp_reward = 40
+xp_reward = 200
 encounter_tier = 1
 patrol_speed = 65.0
 

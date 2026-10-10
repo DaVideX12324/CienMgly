@@ -14,7 +14,7 @@ class_name QuizRpgEnemyData
 @export var attack: int = 24
 @export var defense: int = 12
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
-@export var xp_reward: int = 50
+@export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
