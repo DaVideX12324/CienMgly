@@ -10,6 +10,8 @@ quad = PackedVector2Array(286, 765, 1634, 765, 1417, 638, 1075, 423, 845, 423, 5
 rows = 3
 row_capacity = 5
 row_capacities = PackedInt32Array(6, 3, 2)
+auto_depth_scale = false
+back_scale = 0.75
 
 [resource]
 script = ExtResource("2_o8xfp")
