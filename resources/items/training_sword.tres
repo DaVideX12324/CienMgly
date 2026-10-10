@@ -6,7 +6,7 @@
 script = ExtResource("1_qrpg_item")
 item_id = "training_sword"
 display_name = "Miecz Treningowy"
-description = "Prosty miecz dla poczatkujacego bohatera."
+description = "Prosty miecz dla początkującego bohatera."
 category = "hand"
 stackable = false
 max_stack = 1

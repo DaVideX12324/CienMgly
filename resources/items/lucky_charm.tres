@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "lucky_charm"
-display_name = "Szczesliwy Urok"
-description = "Drobny talizman dodajacy otuchy."
+display_name = "Szczęśliwy Urok"
+description = "Drobny talizman dodający otuchy."
 category = "key"
 stackable = false
 max_stack = 1

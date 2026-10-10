@@ -6,7 +6,7 @@
 script = ExtResource("1_qrpg_item")
 item_id = "adventurer_tunic"
 display_name = "Tunika Poszukiwacza"
-description = "Lekki stroj na poczatek przygody."
+description = "Lekki strój na początek przygody."
 category = "part"
 stackable = false
 max_stack = 1
