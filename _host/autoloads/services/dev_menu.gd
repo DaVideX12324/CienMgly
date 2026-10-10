@@ -27,6 +27,9 @@ var _btn_add_streak: Button
 var _opt_speed: OptionButton
 var _opt_quizzes: OptionButton
 var _opt_quiz_layout: OptionButton
+var _opt_items: OptionButton
+var _spin_item_count: SpinBox
+var _btn_equip_item: Button
 var _lbl_fps: Label
 var _lbl_info: Label
 var _lbl_stats_details: Label
@@ -114,6 +117,7 @@ func toggle() -> void:
 	_modal_root.visible = new_vis
 	if new_vis:
 		_refresh_controls_state()
+		_refresh_item_cheats()
 		_center_panel()
 	menu_visibility_changed.emit(new_vis)
 
@@ -725,7 +729,115 @@ func _build_tab_gameplay() -> Control:
 	party_content.add_child(party_grid)
 	vbox.add_child(party_box)
 
+	vbox.add_child(_build_item_cheats())
+
 	return scroll
+
+
+## Dowolny przedmiot / ekwipunek z katalogu modułu (InventoryService.get_all_items): dodanie do plecaka
+## albo od razu założenie bohaterowi (PlayerStats.set_member_equipment, członek 0).
+func _build_item_cheats() -> PanelContainer:
+	var box := _create_card_container("Przedmioty i ekwipunek", "[ ITEM ]", "Dowolny przedmiot z katalogu: dodaj do plecaka albo załóż bohaterowi (ekwipunek).")
+	var content: VBoxContainer = _get_card_content(box)
+	_opt_items = OptionButton.new()
+	_opt_items.focus_mode = Control.FOCUS_NONE
+	_opt_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_opt_items.item_selected.connect(func(_idx): _update_item_cheat_buttons())
+	content.add_child(_opt_items)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_spin_item_count = SpinBox.new()
+	_spin_item_count.min_value = 1
+	_spin_item_count.max_value = 99
+	_spin_item_count.value = 1
+	_spin_item_count.prefix = "×"
+	row.add_child(_spin_item_count)
+	var add_btn := Button.new()
+	add_btn.text = "➕ Dodaj do plecaka"
+	add_btn.focus_mode = Control.FOCUS_NONE
+	add_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_min_height(add_btn, 36)
+	add_btn.pressed.connect(_on_cheat_add_item)
+	row.add_child(add_btn)
+	_btn_equip_item = Button.new()
+	_btn_equip_item.text = "🛡️ Załóż bohaterowi"
+	_btn_equip_item.focus_mode = Control.FOCUS_NONE
+	_btn_equip_item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_min_height(_btn_equip_item, 36)
+	_btn_equip_item.pressed.connect(_on_cheat_equip_item)
+	row.add_child(_btn_equip_item)
+	content.add_child(row)
+	return box
+
+
+func _module_singleton(singleton_name: String) -> Node:
+	var core_mgr = _get_service("CoreManager")
+	var node: Variant = core_mgr.get_singleton(singleton_name) if core_mgr and core_mgr.has_method("get_singleton") else null
+	return node as Node
+
+
+## Lista przedmiotów odświeżana przy otwarciu menu (katalog ładuje moduł, nie host).
+func _refresh_item_cheats() -> void:
+	if _opt_items == null:
+		return
+	var prev: String = str(_opt_items.get_item_metadata(_opt_items.selected)) if _opt_items.selected >= 0 else ""
+	_opt_items.clear()
+	var inv := _module_singleton("InventoryService")
+	if inv == null or not inv.has_method("get_all_items"):
+		_opt_items.add_item("(brak katalogu przedmiotów — moduł nieaktywny)")
+		_opt_items.disabled = true
+		_update_item_cheat_buttons()
+		return
+	_opt_items.disabled = false
+	for item in inv.get_all_items():
+		var kind: String = str(item.equip_slot) if str(item.equip_slot) != "" else str(item.category)
+		_opt_items.add_item("%s  [%s]" % [item.display_name, kind])
+		_opt_items.set_item_metadata(_opt_items.item_count - 1, item.item_id)
+		if item.item_id == prev:
+			_opt_items.selected = _opt_items.item_count - 1
+	_update_item_cheat_buttons()
+
+
+func _selected_cheat_item() -> Resource:
+	if _opt_items == null or _opt_items.disabled or _opt_items.selected < 0:
+		return null
+	var inv := _module_singleton("InventoryService")
+	return inv.get_item(str(_opt_items.get_item_metadata(_opt_items.selected))) if inv else null
+
+
+func _update_item_cheat_buttons() -> void:
+	if _btn_equip_item == null:
+		return
+	var item := _selected_cheat_item()
+	_btn_equip_item.disabled = item == null or str(item.get("equip_slot")) == ""
+
+
+func _on_cheat_add_item() -> void:
+	var item := _selected_cheat_item()
+	var ps := _module_singleton("PlayerStats")
+	if item == null or ps == null or not ps.has_method("add_item"):
+		return
+	var count := int(_spin_item_count.value)
+	ps.add_item(str(item.get("item_id")), count)
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		cheat_service.show_toast("➕ Dodano: %s ×%d" % [item.get("display_name"), count], Color(0.5, 0.9, 1.0))
+
+
+func _on_cheat_equip_item() -> void:
+	var item := _selected_cheat_item()
+	var ps := _module_singleton("PlayerStats")
+	if item == null or ps == null or not ps.has_method("set_member_equipment"):
+		return
+	var item_id := str(item.get("item_id"))
+	ps.add_item(item_id, 1)
+	var ok: bool = ps.set_member_equipment(0, str(item.get("equip_slot")), item_id)
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		if ok:
+			cheat_service.show_toast("🛡️ Założono: %s" % item.get("display_name"), Color(0.5, 1.0, 0.6))
+		else:
+			cheat_service.show_toast("Nie udało się założyć: %s" % item.get("display_name"), Color(1.0, 0.5, 0.4))
 
 
 func _create_card_container(title: String, badge: String, description: String) -> PanelContainer:
