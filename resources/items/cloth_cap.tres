@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "cloth_cap"
-display_name = "Czapka Materialowa"
-description = "Skromna ochrona glowy."
+display_name = "Czapka Materiałowa"
+description = "Skromna ochrona głowy."
 category = "part"
 stackable = false
 max_stack = 1

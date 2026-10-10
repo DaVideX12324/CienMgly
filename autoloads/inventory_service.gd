@@ -165,7 +165,7 @@ func use_item(user: Node, raw_inventory: Array, item_ref: String) -> Dictionary:
 func _build_use_message(item_data: QuizRpgItemData) -> String:
 	var summary: String = item_data.get_effect_summary()
 	if summary == "":
-		return "Uzyto %s." % item_data.display_name
+		return "Użyto %s." % item_data.display_name
 	return "%s: %s" % [item_data.display_name, summary]
 
 

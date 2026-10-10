@@ -90,7 +90,7 @@ theme_override_constants/separation = 10
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 27
-text = "Umiejetnosci"
+text = "Umiejętności"
 
 [node name="RightLabel" type="Label" parent="MenuRow1/Margin/ContentRow" unique_id=1980612895]
 layout_mode = 2
@@ -315,7 +315,7 @@ theme_override_constants/separation = 10
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 27
-text = "Zakoncz gre"
+text = "Zakończ grę"
 
 [node name="RightLabel" type="Label" parent="MenuRow6/Margin/ContentRow"]
 layout_mode = 2
