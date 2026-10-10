@@ -66,7 +66,8 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 
 	for st in ctx.plateau.stairs:
 		if st.y == 1:
-			_put_stair(ctx, placement_plan, Vector2i(st.x, st.z + 1), TileModuleRole.Id.STAIR_SINGLE, table)
+			if not _put_stair(ctx, placement_plan, Vector2i(st.x, st.z + 1), TileModuleRole.Id.STAIR_SINGLE, table):
+				_hole(ctx, placement_plan, 0, st, table)
 		else:
 			for x in range(st.x, st.x + st.y):
 				var role: int = TileModuleRole.Id.STAIR_MID
@@ -74,11 +75,14 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					role = TileModuleRole.Id.STAIR_LEFT
 				elif x == st.x + st.y - 1:
 					role = TileModuleRole.Id.STAIR_RIGHT
-				_put_stair(ctx, placement_plan, Vector2i(x, st.z + 1), role, table)
+				if not _put_stair(ctx, placement_plan, Vector2i(x, st.z + 1), role, table):
+					_hole(ctx, placement_plan, 0, st, table)
+					break
 
 	for st in ctx.plateau.stairs_north:
 		if st.y == 1:
-			_put_stair(ctx, placement_plan, Vector2i(st.x, st.z), TileModuleRole.Id.STAIR_NORTH_SINGLE, table)
+			if not _put_stair(ctx, placement_plan, Vector2i(st.x, st.z), TileModuleRole.Id.STAIR_NORTH_SINGLE, table):
+				_hole(ctx, placement_plan, 1, st, table)
 		else:
 			for x in range(st.x, st.x + st.y):
 				var role: int = TileModuleRole.Id.STAIR_NORTH_MID
@@ -86,24 +90,49 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					role = TileModuleRole.Id.STAIR_NORTH_LEFT
 				elif x == st.x + st.y - 1:
 					role = TileModuleRole.Id.STAIR_NORTH_RIGHT
-				_put_stair(ctx, placement_plan, Vector2i(x, st.z), role, table)
+				if not _put_stair(ctx, placement_plan, Vector2i(x, st.z), role, table):
+					_hole(ctx, placement_plan, 1, st, table)
+					break
 
 	for st in ctx.plateau.stairs_east:
 		var role: int = TileModuleRole.Id.STAIR_EAST_1H if st.z == 1 else TileModuleRole.Id.STAIR_EAST_3H
-		_put_stair(ctx, placement_plan, Vector2i(st.x, st.y), role, table, st.z)
+		if not _put_stair(ctx, placement_plan, Vector2i(st.x, st.y), role, table, st.z):
+			_hole(ctx, placement_plan, 2, st, table)
 
 	for st in ctx.plateau.stairs_west:
 		var role: int = TileModuleRole.Id.STAIR_WEST_1H if st.z == 1 else TileModuleRole.Id.STAIR_WEST_3H
-		_put_stair(ctx, placement_plan, Vector2i(st.x, st.y), role, table, st.z)
+		if not _put_stair(ctx, placement_plan, Vector2i(st.x, st.y), role, table, st.z):
+			_hole(ctx, placement_plan, 3, st, table)
+
+
+## Schody bez kafli w zestawie (np. ścieki: paczka ma tylko schody S) -> przejście w krawędzi platformy:
+## kafle Platforms na kratkach schodów wymazane (kategoria STAIR wygrywa z rimem / bokiem / licem), widać podłogę.
+## Kratki schodów są chodliwe (PlateauLayout.stair_cells), więc dojście działa bez grafiki schodów.
+static func _hole(ctx: GenerationContext, placement_plan: TilePlacementPlan, dir: int, st: Vector3i, table: Dictionary) -> void:
+	var tmp := PlateauLayout.new()
+	tmp.face_up = ctx.plateau.face_up
+	tmp.face_down = ctx.plateau.face_down
+	([tmp.stairs, tmp.stairs_north, tmp.stairs_east, tmp.stairs_west][dir] as Array).append(st)
+	for c in tmp.stair_cells():
+		var p := TilePlacement.new()
+		p.pos = c
+		p.layer = LAYER
+		p.source_id = -1
+		p.atlas_coords = Vector2i(-1, -1)
+		p.category = &"STAIR"
+		p.origin = c
+		p.tie_breaker = 10
+		PlacementPriority.assign(p, table)
+		placement_plan.queue(p)
 
 
 ## height > 3 (schody boczne 3H): moduł rozciągnięty — wiersz górny, środkowy powtórzony
 ## height-2 razy, dolny (tak jak szerokie schody S/N dokładają modułów MID).
-static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan, anchor: Vector2i, role: int, table: Dictionary, height: int = 0) -> void:
+## False, gdy zestaw nie ma roli — wołający zostawia przejście (_hole).
+static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan, anchor: Vector2i, role: int, table: Dictionary, height: int = 0) -> bool:
 	var parts := TileResolver.resolve_in_set(ctx, PlateauRenderer.platform_tileset(ctx), anchor, role)
 	if parts.is_empty():
-		push_warning("PlateauPlacer: brak %s w '%s'" % [TileModuleRole.name_of(role), PlateauRenderer.tileset_id(ctx)])
-		return
+		return false
 	var cells: Array = []  # [pozycja, część]
 	for rp in parts:
 		if height > 3 and rp.offset.y == 1:
@@ -126,3 +155,4 @@ static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan
 		p.tie_breaker = 10
 		PlacementPriority.assign(p, table)
 		placement_plan.queue(p)
+	return true
