@@ -24,10 +24,8 @@ class_name QuizRpgHeroData
 @export_range(0.0, 4.0, 0.1) var def_per_level: float = 1.5
 
 @export_group("Skills")
-## Pula umiejętności postaci (kolejność = kolejność w menu).
+## Pula umiejętności postaci (kolejność = kolejność w menu); z poziomu — QuizRpgSkillData.learn_level, reszta od NPC.
 @export var skills: Array[QuizRpgSkillData] = []
-## Odblokowane od początku (skill_id); reszta kupowana u NPC (PlayerStats.unlock_skill).
-@export var starting_skills: PackedStringArray = PackedStringArray()
 
 @export_group("Equipment")
 @export var default_weapon_id: String = ""
@@ -63,7 +61,7 @@ func build_member_data() -> Dictionary:
 		"base_atk": base_atk,
 		"base_def": base_def,
 		"atk_per_level": atk_per_level,
-		"skills": Array(starting_skills),
+		"skills": [],
 		"def_per_level": def_per_level,
 		"portrait": portrait,
 		"actor_scene": actor_scene,
