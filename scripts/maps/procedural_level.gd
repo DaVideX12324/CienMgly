@@ -54,6 +54,7 @@ var flag_overrides: Dictionary = {}
 ## Pula do spawn_entities (indeks = tier - 1): enemy_scenes z edytora albo domyślna pula typu poziomu,
 ## w której tier może mieć kilka wariantów (tablica scen).
 var _enemy_pool: Array = []
+var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -353,6 +354,17 @@ func _pool_from_paths(enemy_paths: Array) -> Array:
 	return pool
 
 
+## Tiery puli ze ścieżek względem modułu (tier = ścieżka albo lista wariantów) -> ścieżki res://.
+func _module_paths(tiers: Array) -> Array:
+	var paths: Array = []
+	for entry in tiers:
+		if entry is Array:
+			paths.append((entry as Array).map(func(e): return QuizRpgPaths.path(String(e))))
+		else:
+			paths.append(QuizRpgPaths.path(String(entry)))
+	return paths
+
+
 ## Parametry generacji z UI/@export, zapisu i companion-JSON (główny wątek: węzły, zasoby).
 func _prepare_job(seed_val: int) -> GenJob:
 	# Companion-JSON: parametry generatora + Named TileSet System (opcjonalne).
@@ -360,16 +372,21 @@ func _prepare_job(seed_val: int) -> GenJob:
 	var cfg = _load_behaviour_config()
 	# Pula wrogów mapy z companion-JSON ("enemies": tiery, ścieżki względem modułu; tier = ścieżka albo lista
 	# wariantów) — gdy scena nie ma własnej (enemy_scenes); inaczej domyślna typu poziomu.
-	if enemy_scenes.is_empty() and cfg != null and cfg.raw.get("enemies") is Array:
-		var paths: Array = []
-		for entry in cfg.raw["enemies"]:
-			if entry is Array:
-				paths.append((entry as Array).map(func(e): return QuizRpgPaths.path(String(e))))
-			else:
-				paths.append(QuizRpgPaths.path(String(entry)))
-		var pool := _pool_from_paths(paths)
-		if not pool.is_empty():
-			_enemy_pool = pool
+	# Słownik frakcja -> tiery: osobne pule (spawny z "faction", SpawnPlanner); pierwsza frakcja = pula domyślna.
+	_faction_pools = {}
+	if enemy_scenes.is_empty() and cfg != null:
+		var en: Variant = cfg.raw.get("enemies")
+		if en is Array:
+			var pool := _pool_from_paths(_module_paths(en))
+			if not pool.is_empty():
+				_enemy_pool = pool
+		elif en is Dictionary:
+			for k in en:
+				var fp := _pool_from_paths(_module_paths(en[k]))
+				if not fp.is_empty():
+					_faction_pools[String(k)] = fp
+					if _faction_pools.size() == 1:
+						_enemy_pool = fp
 	var level_key := _level_key()
 	var lsm = _get_level_state_manager()
 
@@ -542,7 +559,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame)
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame, _faction_pools)
 		GenProgress.end(&"entities")
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer

@@ -139,12 +139,17 @@
     "shift": {"source": 0, "rect": [6, 0, 6, 6], "offset": [-6, 0]},
     "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]}
   },
-  "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35, "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15},
-  "enemies": [
-    ["scenes/enemies/pixel_crawler/rat_base.tscn", "scenes/enemies/bandit_1.tscn", "scenes/enemies/bandit_2.tscn"],
-    ["scenes/enemies/pixel_crawler/rat_rogue.tscn", "scenes/enemies/pixel_crawler/rat_mage.tscn"],
-    "scenes/enemies/pixel_crawler/rat_warrior.tscn"
-  ],
+  "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35, "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15, "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025},
+  "enemies": {
+    "beasts": [
+      "scenes/enemies/pixel_crawler/rat_base.tscn",
+      ["scenes/enemies/pixel_crawler/rat_rogue.tscn", "scenes/enemies/pixel_crawler/rat_mage.tscn"],
+      "scenes/enemies/pixel_crawler/rat_warrior.tscn"
+    ],
+    "bandits": [
+      ["scenes/enemies/bandit_1.tscn", "scenes/enemies/bandit_2.tscn"]
+    ]
+  },
   "scenes": {"chest": "res://modules/quiz_rpg/scenes/objects/sewer/sewer_chest.tscn"},
   "tilesets": {
     "default": "sewer",

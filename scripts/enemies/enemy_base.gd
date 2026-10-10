@@ -71,6 +71,8 @@ var last_seen_player_pos: Vector2 = Vector2.ZERO
 
 var player_ref: Node2D = null
 var defeated: bool = false
+## Frakcja z generatora (spawns.factions, np. "beasts" / "bandits"): do walki dołączają tylko wrogowie tej samej frakcji.
+var faction: StringName = &""
 var _use_programmer_art: bool = true
 var _anim_time: float = 0.0
 var _flash_timer: float = 0.0
@@ -706,7 +708,7 @@ func start_combat(player: Node2D) -> void:
 	get_tree().paused = true
 
 
-## Grupowanie walk: wrogowie (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego, z czystą
+## Grupowanie walk: wrogowie tej samej frakcji (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego, z czystą
 ## linią (ściany i obiekty z kolizją zasłaniają), najbliżsi pierwsi — razem z tym najwyżej GROUP_MAX jednostek.
 func _group_joiners() -> Array:
 	var out: Array = []
@@ -716,7 +718,7 @@ func _group_joiners() -> Array:
 	for n in get_tree().get_nodes_in_group("enemies"):
 		if n == self or not (n is Node2D) or not n.has_method("join_combat"):
 			continue
-		if n.defeated or n.state == State.COMBAT or n.is_boss:
+		if n.defeated or n.state == State.COMBAT or n.is_boss or n.faction != faction:
 			continue
 		var d := global_position.distance_to((n as Node2D).global_position)
 		if d <= GROUP_RADIUS and _clear_line_to(n as Node2D):

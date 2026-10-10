@@ -294,7 +294,8 @@ static func spawn_entities(
 	chest_scene: PackedScene = null,
 	door_scene: PackedScene = null,
 	cell_size: int = 16,
-	per_frame: int = 0
+	per_frame: int = 0,
+	faction_pools: Dictionary = {}  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
 ) -> void:
 	# per_frame > 0: co tyle instancji czekamy klatkę (generowanie w tle — pasek ładowania żyje).
 	# 0 = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
@@ -328,16 +329,22 @@ static func spawn_entities(
 		for child in enemies_node.get_children():
 			child.queue_free()
 			
-	if not enemy_scenes.is_empty():
+	if not enemy_scenes.is_empty() or not faction_pools.is_empty():
 		for spawn_info in result.enemy_spawns:
 			var pos: Vector2i = spawn_info.get("pos", Vector2i.ZERO)
 			var tier: int = spawn_info.get("tier", 1)
-			var scene_idx := mini(tier - 1, enemy_scenes.size() - 1)
-			var enemy_packed: PackedScene = _pick_enemy_variant(enemy_scenes[scene_idx], pos)
+			var faction := String(spawn_info.get("faction", ""))
+			var pool: Array = faction_pools.get(faction, enemy_scenes)
+			if pool.is_empty():
+				continue
+			var scene_idx := mini(tier - 1, pool.size() - 1)
+			var enemy_packed: PackedScene = _pick_enemy_variant(pool[scene_idx], pos)
 			if enemy_packed:
 				var enemy_inst := enemy_packed.instantiate() as Node2D
 				if enemy_inst:
 					enemy_inst.position = Vector2(pos.x * cell_size + cell_size * 0.5, pos.y * cell_size + cell_size * 0.5)
+					if "faction" in enemy_inst:
+						enemy_inst.set("faction", StringName(faction))
 					enemies_node.add_child(enemy_inst)
 			made += 1
 			if per_frame > 0 and made % per_frame == 0:

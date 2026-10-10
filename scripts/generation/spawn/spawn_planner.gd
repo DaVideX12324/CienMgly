@@ -22,6 +22,10 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 	var chests_by_objects: bool = result.objects != null and result.objects.interactive_scenes.has("chest")
 
 	var spread: Dictionary = ctx.flags.spawn_config if ctx.flags != null else {}
+	# Boss z głównej (pierwszej) frakcji mapy.
+	var factions: Dictionary = spread.get("factions", {})
+	if not factions.is_empty():
+		result.enemy_spawns[0]["faction"] = String(factions.keys()[0])
 
 	# Wrogowie i skrzynie w pokojach pośrednich (wrogowie tylko w starym trybie — spread rozkłada ich po mapie)
 	for i in range(rooms.size()):
@@ -63,8 +67,11 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 ## wejścia: do tier2_from (część najdalszej odległości) 1, dalej 2, a z szansą tier3_chance za tier3_from 3.
 ## Osiągalność bez obiektów (kolce bram też są obiektem — za bramami też ma być kogo spotkać).
 ## Najpierw near_entrance punktów najbliżej wejścia (pierwsze korytarze za pokojem startowym), potem losowo.
+## Frakcje ("factions": nazwa -> waga): terytoria z szumu o częstotliwości faction_frequency (spójne obszary mapy),
+## grupka zawsze z jednej frakcji; spawn dostaje "faction" (pula wrogów frakcji, grupowanie walk tylko w frakcji).
 ## JSON "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35,
-##   "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15}
+##   "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15,
+##   "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025}
 static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, entrance_room: Rect2i,
 		exit_room: Rect2i, cfg: Dictionary, covered: Dictionary) -> void:
 	var blocked := {}
@@ -122,6 +129,9 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 	var target := int(round(cands.size() * float(cfg.get("per_1000", 6.0)) / 1000.0))
 	var spacing := int(cfg.get("spacing", 7))
 	var gs: Array = cfg.get("group_size", [2, 3])
+	var noise := FastNoiseLite.new()
+	noise.seed = hash([ctx.seed_value, "spawn_factions"])
+	noise.frequency = float(cfg.get("faction_frequency", 0.025))
 	var picked: Array[Vector2i] = []
 	var taken := covered.duplicate()
 	var placed := 0
@@ -143,9 +153,10 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 		var n := 1
 		if rng.randf() < float(cfg.get("group_chance", 0.35)):
 			n = rng.randi_range(int(gs[0]), int(gs[1]))
+		var faction := _faction_at(p, cfg, noise)
 		var cell := p
 		for k in n:
-			result.enemy_spawns.append({"pos": cell, "tier": tier})
+			result.enemy_spawns.append({"pos": cell, "tier": tier, "faction": faction})
 			taken[cell] = true
 			placed += 1
 			cell = _nearest_free(ctx, cell, taken)
@@ -179,6 +190,24 @@ static func _nudge_off(ctx: GenerationContext, result: MapGeneratorBase.Generati
 	for i in range(result.chest_spawns.size()):
 		if covered.has(result.chest_spawns[i]):
 			result.chest_spawns[i] = _nearest_free(ctx, result.chest_spawns[i], covered)
+
+
+## Frakcja kratki: szum (-1..1) dzielony na przedziały proporcjonalne do wag frakcji (kolejność z configu); "" bez frakcji.
+static func _faction_at(p: Vector2i, cfg: Dictionary, noise: FastNoiseLite) -> String:
+	var factions: Dictionary = cfg.get("factions", {})
+	if factions.is_empty():
+		return ""
+	var total := 0.0
+	for k in factions:
+		total += maxf(float(factions[k]), 0.0)
+	# szum ~ symetryczny wokół 0 -> przez tanh rozciągnięty na (0, 1), żeby wagi odpowiadały udziałom
+	var u := clampf(0.5 + 0.5 * tanh(noise.get_noise_2d(p.x, p.y) * 2.5), 0.0, 0.9999)
+	var acc := 0.0
+	for k in factions:
+		acc += maxf(float(factions[k]), 0.0) / maxf(total, 0.0001)
+		if u < acc:
+			return String(k)
+	return String(factions.keys().back())
 
 
 static func _nearest_free(ctx: GenerationContext, start: Vector2i, covered: Dictionary) -> Vector2i:
