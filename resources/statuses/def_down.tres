@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="QuizRpgStatusData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/status_data.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status_id = "def_down"
+display_name = "DEF w dół"
+color = Color(0.4, 0.45, 0.6, 1)
+min_turns = 3
+max_turns = 3
+def_mult = 0.75

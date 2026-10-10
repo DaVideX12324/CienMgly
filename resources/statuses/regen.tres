@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="QuizRpgStatusData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/status_data.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status_id = "regen"
+display_name = "Regeneracja"
+color = Color(0.4, 1, 0.6, 1)
+min_turns = 4
+max_turns = 4
+turn_hp_percent = 0.05

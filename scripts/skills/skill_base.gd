@@ -46,8 +46,8 @@ enum PoisonMode { PERCENT, FIXED }
 @export_range(0.0, 1.0, 0.05) var heal_percent: float = 0.3
 
 @export_group("Status")
-## Status nadawany celowi ("none" = brak); id jak PlayerStats.STATUS_* (np. "poison").
-@export_enum("none", "poison") var inflict_status: String = "none"
+## Status nadawany celowi ("none" = brak) — status_id z resources/statuses/ (QuizRpgStatusCatalog).
+@export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "regen") var inflict_status: String = "none"
 @export_range(0.0, 1.0, 0.05) var status_chance: float = 1.0
 ## Status losowany przy każdym trafieniu (inaczej raz po serii, gdy cokolwiek trafiło).
 @export var status_per_hit: bool = false
@@ -62,6 +62,11 @@ func has_status() -> bool:
 
 func is_heal() -> bool:
 	return heal_mode != HealMode.NONE
+
+
+## Cel po stronie użytkownika (ja / sojusznik / drużyna / nieprzytomny) — wsparcie: leczenie i / albo status.
+func targets_allies() -> bool:
+	return not targets_opponents()
 
 
 func targets_opponents() -> bool:
