@@ -45,6 +45,11 @@ enum PoisonMode { PERCENT, FIXED }
 @export_range(0, 99999, 1) var heal_amount: int = 0
 @export_range(0.0, 1.0, 0.05) var heal_percent: float = 0.3
 
+@export_group("Bonus na cel ze statusem")
+## Cel z tym statusem dostaje obrażenia razy bonus_multiplier (np. Krzyk prowadzącego z FNaFB CC: ×2,1 na zatrutego).
+@export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "regen") var bonus_vs_status: String = "none"
+@export_range(1.0, 10.0, 0.05) var bonus_multiplier: float = 1.0
+
 @export_group("Status")
 ## Status nadawany celowi ("none" = brak) — status_id z resources/statuses/ (QuizRpgStatusCatalog).
 @export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "regen") var inflict_status: String = "none"

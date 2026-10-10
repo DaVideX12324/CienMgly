@@ -2,7 +2,7 @@ extends RefCounted
 class_name QuizRpgSkillMath
 
 ## Obrażenia i leczenie umiejętności (QuizRpgSkillBase) — te same dla gracza i wrogów. Staty jako słowniki
-## {atk, def, mat, mdf}: użytkownik (atk / mat) i cel (def / mdf).
+## {atk, def, mat, mdf, statuses}: użytkownik (atk / mat) i cel (def / mdf, statuses = id statusów — bonus_vs_status).
 
 ## Zwykły atak bez umiejętności: ATK × 4 − DEF × 2, rozrzut ±10 % (jak „Scream” w FNaFB).
 const BASIC_VARIANCE := 0.1
@@ -20,7 +20,10 @@ static func damage(skill: QuizRpgSkillBase, user: Dictionary, target: Dictionary
 	var raw := float(skill.base_damage) \
 		+ float(user.get("atk", 0)) * skill.atk_coeff + float(user.get("mat", 0)) * skill.mat_coeff \
 		- float(target.get("def", 0)) * skill.def_coeff - float(target.get("mdf", 0)) * skill.mdf_coeff
-	return maxi(roundi(raw * skill.damage_multiplier * _spread(skill.variance, rng)), 1)
+	var mult := skill.damage_multiplier
+	if skill.bonus_vs_status != "none" and (target.get("statuses", []) as Array).has(skill.bonus_vs_status):
+		mult *= skill.bonus_multiplier
+	return maxi(roundi(raw * mult * _spread(skill.variance, rng)), 1)
 
 
 static func basic_attack(user: Dictionary, target: Dictionary, rng: RandomNumberGenerator = null) -> int:

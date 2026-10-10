@@ -2647,6 +2647,7 @@ func _member_stats(i: int) -> Dictionary:
 	var out := {}
 	for stat in ["atk", "def", "mat", "mdf"]:
 		out[stat] = roundi(_ps.get_member_total_stat(i, stat) * _ps.member_status_mult(i, stat))
+	out["statuses"] = _ps.get_statuses(i)
 	return out
 
 
@@ -2655,6 +2656,7 @@ func _unit_stats(unit: Dictionary) -> Dictionary:
 		"mat": int(unit.get("mat", enemy_base_magic_attack)), "mdf": int(unit.get("mdf", enemy_base_magic_defense))}
 	for stat in base:
 		base[stat] = roundi(base[stat] * _unit_status_mult(unit, stat))
+	base["statuses"] = (unit.get("statuses", {}) as Dictionary).keys()
 	return base
 
 
