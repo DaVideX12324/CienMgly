@@ -13,9 +13,11 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 @export var quiz_category: String = "ogolne"
 @export_group("Combat")
 @export var question_count: int = 3
-@export var hp: int = 50
-@export var max_hp: int = 50
-@export var damage_on_wrong: int = 15
+@export var hp: int = 200
+@export var max_hp: int = 200
+## ATK / DEF wroga: obrażenia = ATK × 4 − DEF celu × 2 (× mnożnik umiejętności).
+@export var attack: int = 24
+@export var defense: int = 12
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
 @export var xp_reward: int = 50
@@ -193,7 +195,8 @@ func _apply_enemy_data() -> void:
 	question_count = enemy_data.question_count
 	max_hp = maxi(enemy_data.max_hp, 1)
 	hp = max_hp
-	damage_on_wrong = maxi(enemy_data.damage_on_wrong, 0)
+	attack = maxi(enemy_data.attack, 0)
+	defense = maxi(enemy_data.defense, 0)
 	if not enemy_data.battle_skills.is_empty():
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)

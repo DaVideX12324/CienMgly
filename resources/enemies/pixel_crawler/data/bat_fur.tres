@@ -6,8 +6,9 @@
 script = ExtResource("1_jfa6g")
 enemy_name = "Włochaty Nietoperz"
 quiz_id = "ogolne"
-max_hp = 80
-damage_on_wrong = 16
+max_hp = 320
+attack = 26
+defense = 12
 xp_reward = 65
 patrol_speed = 75.0
 detection_radius = 100.0
