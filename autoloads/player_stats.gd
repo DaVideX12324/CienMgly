@@ -21,8 +21,8 @@ const BASE_HP          := 250
 const HP_AT_MAX_LEVEL  := 1900
 const DEF_SOFTCAP_BASE     := 40.0
 const DEF_SOFTCAP_PER_TIER := 20.0
-const ATK_PER_LEVEL    := 1
-const DEF_PER_LEVEL    := 1
+const ATK_PER_LEVEL    := 2.0   # domyślne, gdy postać nie ma własnych atk_per_level / def_per_level
+const DEF_PER_LEVEL    := 1.5
 const BASE_XP_TO_LEVEL := 100
 ## XP do następnego poziomu: BASE_XP_TO_LEVEL × poziom^XP_EXPONENT (lv 1->2: 100, 5->6: 1118, 19->20: ~8300; razem do lv 20 ~67 tys.).
 ## Wrogowie wyższych tierów dają wielokrotnie więcej XP niż 35–85 dzisiejszych — stroić przy kolejnych mapach.
@@ -424,14 +424,6 @@ func load_save_data(data: Dictionary) -> void:
 	skills = _to_dictionary_array(data.get("skills", skills.duplicate(true)))
 	inventory = _to_dictionary_array(data.get("inventory", inventory.duplicate(true)))
 	party = _to_dictionary_array(data.get("party", party.duplicate(true)))
-	# stary zapis (ATK 10 / DEF 8): nowe bazowe staty postaci to 30–50
-	for i in range(party.size()):
-		var m: Dictionary = party[i]
-		if int(m.get("base_atk", 0)) < 30:
-			m["base_atk"] = 40
-		if int(m.get("base_def", 0)) < 30:
-			m["base_def"] = 40
-		party[i] = m
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
@@ -596,7 +588,7 @@ func get_member_total_atk(member_index: int) -> int:
 	if member_index < 0 or member_index >= party.size():
 		return 0
 	var member: Dictionary = party[member_index]
-	var total_atk: int = int(member.get("base_atk", 0)) + _get_member_level_bonus(member, ATK_PER_LEVEL)
+	var total_atk: int = int(member.get("base_atk", 0)) + _get_member_level_bonus(member, float(member.get("atk_per_level", ATK_PER_LEVEL)))
 	for slot_name: String in EQUIPMENT_SLOTS:
 		total_atk += int(_get_equipped_stat_bonus(member, slot_name, "atk_bonus"))
 	return total_atk
@@ -606,14 +598,14 @@ func get_member_total_def(member_index: int) -> int:
 	if member_index < 0 or member_index >= party.size():
 		return 0
 	var member: Dictionary = party[member_index]
-	var total_def: int = int(member.get("base_def", 0)) + _get_member_level_bonus(member, DEF_PER_LEVEL)
+	var total_def: int = int(member.get("base_def", 0)) + _get_member_level_bonus(member, float(member.get("def_per_level", DEF_PER_LEVEL)))
 	for slot_name: String in EQUIPMENT_SLOTS:
 		total_def += int(_get_equipped_stat_bonus(member, slot_name, "def_bonus"))
 	return total_def
 
 
 ## Redukcja procentowa od pancerza: DEF / (DEF + DEF_SOFTCAP_BASE + DEF_SOFTCAP_PER_TIER × tier) — DEF 40: ~40 % na tierze 1,
-## ~29 % na tierze 3, ~22 % na tierze 5. Bazowe DEF postaci to 30–50, reszta z przedmiotów.
+## ~29 % na tierze 3, ~22 % na tierze 5. Wrogowie nie mają statu DEF / ATK (stałe obrażenia), więc nie płaski wzór FNAfB.
 func calculate_incoming_damage(raw_damage: int, enemy_tier: int = 1, defending_multiplier: float = 1.0, member_index: int = 0) -> int:
 	var clamped_tier: int = clampi(enemy_tier, 1, 5)
 	var defense: int = get_member_total_def(member_index)
@@ -784,8 +776,10 @@ func _build_default_party_member() -> Dictionary:
 		"max_sp": 100,
 		"tp": 0,
 		"max_tp": 100,
-		"base_atk": 40,
-		"base_def": 40,
+		"base_atk": 20,
+		"base_def": 15,
+		"atk_per_level": ATK_PER_LEVEL,
+		"def_per_level": DEF_PER_LEVEL,
 		"portrait": null,
 		"equipment": {
 			"weapon": "",
@@ -804,8 +798,8 @@ func _build_default_party_member() -> Dictionary:
 	}
 
 
-func _get_member_level_bonus(member: Dictionary, per_level: int) -> int:
-	return maxi(int(member.get("level", 1)) - 1, 0) * per_level
+func _get_member_level_bonus(member: Dictionary, per_level: float) -> int:
+	return roundi(maxi(int(member.get("level", 1)) - 1, 0) * per_level)
 
 
 func _get_equipped_stat_bonus(member: Dictionary, slot_name: String, stat_name: String) -> int:

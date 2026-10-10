@@ -17,9 +17,11 @@ class_name QuizRpgHeroData
 @export var hp_at_max_level: int = 1900
 @export var base_sp: int = 100
 @export var base_tp: int = 100
-## Bazowe staty postaci 30–50; reszta z przedmiotów (poziom daje tylko ATK_PER_LEVEL / DEF_PER_LEVEL).
-@export_range(30, 50) var base_atk: int = 40
-@export_range(30, 50) var base_def: int = 40
+## Staty jak w FNAfB: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
+@export_range(5, 30) var base_atk: int = 20
+@export_range(5, 30) var base_def: int = 15
+@export_range(0.0, 4.0, 0.1) var atk_per_level: float = 2.0
+@export_range(0.0, 4.0, 0.1) var def_per_level: float = 1.5
 
 @export_group("Equipment")
 @export var default_weapon_id: String = ""
@@ -54,6 +56,8 @@ func build_member_data() -> Dictionary:
 		"max_tp": base_tp,
 		"base_atk": base_atk,
 		"base_def": base_def,
+		"atk_per_level": atk_per_level,
+		"def_per_level": def_per_level,
 		"portrait": portrait,
 		"actor_scene": actor_scene,
 		"sprite_frames": sprite_frames,
