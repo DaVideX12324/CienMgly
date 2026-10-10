@@ -175,63 +175,126 @@ static func build_chunks(result, agent_radius: float = AGENT_RADIUS, chunk_cells
 	var w: int = result.width
 	var h: int = result.height
 	var mask := walkable_mask(result)
-	var obstacles: Array[PackedVector2Array] = []
-	var boxes: Array[Rect2] = []
-	if result.objects != null:
-		for poly in obstacle_outlines(result.objects):
-			if signed_area(poly) < 0.0:
-				poly.reverse()
-			obstacles.append(poly)
-			boxes.append(_bounds(poly))
-	var border := ceilf(agent_radius) + 1.0
+	var obs := _obstacles(result, {})
 	var out: Array[NavigationPolygon] = []
+	var keys: Array[Vector2i] = []
 	var cx_n := ceili(float(w) / chunk_cells)
 	var cy_n := ceili(float(h) / chunk_cells)
 	for cy in range(cy_n):
 		for cx in range(cx_n):
 			GenProgress.sub(float(cy * cx_n + cx) / float(cx_n * cy_n))
-			var x0 := cx * chunk_cells
-			var y0 := cy * chunk_cells
-			var x1 := mini(x0 + chunk_cells, w)
-			var y1 := mini(y0 + chunk_cells, h)
-			# Wycinek maski z marginesem (poza mapą = niechodliwe).
-			var sx := x0 - CHUNK_MARGIN
-			var sy := y0 - CHUNK_MARGIN
-			var sw := x1 - x0 + 2 * CHUNK_MARGIN
-			var sh := y1 - y0 + 2 * CHUNK_MARGIN
-			var sub := PackedByteArray()
-			sub.resize(sw * sh)
-			var any := false
-			for y in range(maxi(sy, 0), mini(sy + sh, h)):
-				for x in range(maxi(sx, 0), mini(sx + sw, w)):
-					if mask[y * w + x] != 0:
-						sub[(y - sy) * sw + (x - sx)] = 1
-						if x >= x0 and x < x1 and y >= y0 and y < y1:
-							any = true
-			if not any:
-				continue
-			var geo := NavigationMeshSourceGeometryData2D.new()
-			var shift := Vector2(sx, sy)
-			for loop in trace(sub, sw, sh):
-				var px := PackedVector2Array()
-				for p in loop:
-					px.append((p + shift) * CELL)
-				if signed_area(loop) < 0.0:
-					geo.add_traversable_outline(px)
-				else:
-					geo.add_obstruction_outline(px)
-			var src := Rect2(Vector2(sx, sy) * CELL, Vector2(sw, sh) * CELL)
-			for i in range(obstacles.size()):
-				if boxes[i].intersects(src):
-					geo.add_obstruction_outline(obstacles[i])
-			var np := NavigationPolygon.new()
-			np.agent_radius = agent_radius
-			np.baking_rect = Rect2(Vector2(x0, y0) * CELL, Vector2(x1 - x0, y1 - y0) * CELL).grow(border)
-			np.border_size = border
-			NavigationServer2D.bake_from_source_geometry_data(np, geo)
-			if np.get_polygon_count() > 0:
+			var np := _bake_chunk(result, mask, obs, Vector2i(cx, cy), agent_radius, chunk_cells)
+			if np != null:
 				out.append(np)
+				keys.append(Vector2i(cx, cy))
+	if "nav_chunk_keys" in result:
+		result.nav_chunk_keys = keys
 	return out
+
+
+## Kawałki `keys` od nowa, bez przeszkód obiektów z `link` w `skip_links` (kolce otwartych bram) ->
+## {Vector2i: NavigationPolygon albo null (kawałek bez podłogi)} — siatka po otwarciu bramy (GateNav).
+static func rebake_chunks(result, keys: Array, skip_links: Dictionary, agent_radius: float = AGENT_RADIUS, chunk_cells: int = CHUNK_CELLS) -> Dictionary:
+	var mask := walkable_mask(result)
+	var obs := _obstacles(result, skip_links)
+	var out := {}
+	for k: Vector2i in keys:
+		out[k] = _bake_chunk(result, mask, obs, k, agent_radius, chunk_cells)
+	return out
+
+
+## Kawałki siatki (z marginesem), których dotykają przeszkody obiektów z `link` (np. kolce bramy).
+static func chunks_of_link(result, link: String, chunk_cells: int = CHUNK_CELLS) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if result.objects == null:
+		return out
+	var w: int = result.width
+	var h: int = result.height
+	for pl in result.objects.placements:
+		if pl.link != link:
+			continue
+		for poly in placement_outlines(pl, result.objects):
+			var b := _bounds(poly)
+			for cy in range(ceili(float(h) / chunk_cells)):
+				for cx in range(ceili(float(w) / chunk_cells)):
+					var k := Vector2i(cx, cy)
+					if not out.has(k) and _chunk_src(result, k, chunk_cells).intersects(b):
+						out.append(k)
+	return out
+
+
+## Przeszkody obiektów (obrysy CCW + bboxy), bez obiektów z `link` w skip_links.
+static func _obstacles(result, skip_links: Dictionary) -> Array:
+	var obstacles: Array[PackedVector2Array] = []
+	var boxes: Array[Rect2] = []
+	if result.objects != null:
+		for pl in result.objects.placements:
+			if not skip_links.is_empty() and skip_links.has(pl.link):
+				continue
+			for poly in placement_outlines(pl, result.objects):
+				if signed_area(poly) < 0.0:
+					poly.reverse()
+				obstacles.append(poly)
+				boxes.append(_bounds(poly))
+	return [obstacles, boxes]
+
+
+## Obszar źródłowy kawałka (z marginesem CHUNK_MARGIN) w px.
+static func _chunk_src(result, k: Vector2i, chunk_cells: int) -> Rect2:
+	var x0 := k.x * chunk_cells
+	var y0 := k.y * chunk_cells
+	var x1 := mini(x0 + chunk_cells, int(result.width))
+	var y1 := mini(y0 + chunk_cells, int(result.height))
+	return Rect2(Vector2(x0 - CHUNK_MARGIN, y0 - CHUNK_MARGIN) * CELL, Vector2(x1 - x0 + 2 * CHUNK_MARGIN, y1 - y0 + 2 * CHUNK_MARGIN) * CELL)
+
+
+## Siatka jednego kawałka (k = indeks kawałka) z maski chodliwej i przeszkód; null, gdy kawałek bez podłogi.
+static func _bake_chunk(result, mask: PackedByteArray, obs: Array, k: Vector2i, agent_radius: float, chunk_cells: int) -> NavigationPolygon:
+	var w: int = result.width
+	var h: int = result.height
+	var obstacles: Array[PackedVector2Array] = obs[0]
+	var boxes: Array[Rect2] = obs[1]
+	var border := ceilf(agent_radius) + 1.0
+	var x0 := k.x * chunk_cells
+	var y0 := k.y * chunk_cells
+	var x1 := mini(x0 + chunk_cells, w)
+	var y1 := mini(y0 + chunk_cells, h)
+	# Wycinek maski z marginesem (poza mapą = niechodliwe).
+	var sx := x0 - CHUNK_MARGIN
+	var sy := y0 - CHUNK_MARGIN
+	var sw := x1 - x0 + 2 * CHUNK_MARGIN
+	var sh := y1 - y0 + 2 * CHUNK_MARGIN
+	var sub := PackedByteArray()
+	sub.resize(sw * sh)
+	var any := false
+	for y in range(maxi(sy, 0), mini(sy + sh, h)):
+		for x in range(maxi(sx, 0), mini(sx + sw, w)):
+			if mask[y * w + x] != 0:
+				sub[(y - sy) * sw + (x - sx)] = 1
+				if x >= x0 and x < x1 and y >= y0 and y < y1:
+					any = true
+	if not any:
+		return null
+	var geo := NavigationMeshSourceGeometryData2D.new()
+	var shift := Vector2(sx, sy)
+	for loop in trace(sub, sw, sh):
+		var px := PackedVector2Array()
+		for p in loop:
+			px.append((p + shift) * CELL)
+		if signed_area(loop) < 0.0:
+			geo.add_traversable_outline(px)
+		else:
+			geo.add_obstruction_outline(px)
+	var src := Rect2(Vector2(sx, sy) * CELL, Vector2(sw, sh) * CELL)
+	for i in range(obstacles.size()):
+		if boxes[i].intersects(src):
+			geo.add_obstruction_outline(obstacles[i])
+	var np := NavigationPolygon.new()
+	np.agent_radius = agent_radius
+	np.baking_rect = Rect2(Vector2(x0, y0) * CELL, Vector2(x1 - x0, y1 - y0) * CELL).grow(border)
+	np.border_size = border
+	NavigationServer2D.bake_from_source_geometry_data(np, geo)
+	return np if np.get_polygon_count() > 0 else null
 
 
 static func _bounds(poly: PackedVector2Array) -> Rect2:
