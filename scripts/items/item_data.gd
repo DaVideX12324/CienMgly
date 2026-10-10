@@ -19,6 +19,8 @@ class_name QuizRpgItemData
 @export var cure_statuses: PackedStringArray = []
 @export var atk_bonus: int = 0
 @export var def_bonus: int = 0
+@export var mat_bonus: int = 0
+@export var mdf_bonus: int = 0
 
 
 func get_effect_summary() -> String:

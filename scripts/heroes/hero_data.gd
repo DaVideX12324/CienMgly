@@ -17,11 +17,16 @@ class_name QuizRpgHeroData
 @export var hp_at_max_level: int = 1402
 @export var base_sp: int = 100
 @export var base_tp: int = 100
-## Staty jak w FNAfB: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
+## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
+## ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).
 @export_range(5, 30) var base_atk: int = 20
 @export_range(5, 30) var base_def: int = 15
+@export_range(5, 30) var base_mat: int = 20
+@export_range(5, 30) var base_mdf: int = 12
 @export_range(0.0, 4.0, 0.1) var atk_per_level: float = 2.0
 @export_range(0.0, 4.0, 0.1) var def_per_level: float = 1.5
+@export_range(0.0, 4.0, 0.1) var mat_per_level: float = 2.0
+@export_range(0.0, 4.0, 0.1) var mdf_per_level: float = 1.1
 
 @export_group("Skills")
 ## Pula umiejętności postaci (kolejność = kolejność w menu); z poziomu — QuizRpgSkillData.learn_level, reszta od NPC.
@@ -61,6 +66,10 @@ func build_member_data() -> Dictionary:
 		"base_atk": base_atk,
 		"base_def": base_def,
 		"atk_per_level": atk_per_level,
+		"base_mat": base_mat,
+		"base_mdf": base_mdf,
+		"mat_per_level": mat_per_level,
+		"mdf_per_level": mdf_per_level,
 		"skills": [],
 		"def_per_level": def_per_level,
 		"portrait": portrait,

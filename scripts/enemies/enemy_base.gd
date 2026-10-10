@@ -18,6 +18,8 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 ## ATK / DEF wroga: obrażenia = ATK × 4 − DEF celu × 2 (× mnożnik umiejętności).
 @export var attack: int = 24
 @export var defense: int = 12
+@export var magic_attack: int = 24
+@export var magic_defense: int = 12
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
@@ -197,6 +199,8 @@ func _apply_enemy_data() -> void:
 	hp = max_hp
 	attack = maxi(enemy_data.attack, 0)
 	defense = maxi(enemy_data.defense, 0)
+	magic_attack = maxi(enemy_data.magic_attack, 0)
+	magic_defense = maxi(enemy_data.magic_defense, 0)
 	if not enemy_data.battle_skills.is_empty():
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)

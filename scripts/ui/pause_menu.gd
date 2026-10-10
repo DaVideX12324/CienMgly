@@ -744,7 +744,9 @@ func _show_equipment_panel() -> void:
 	_populate_actor_header(equipment_actor_header, member, false)
 	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
 	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
-	equipment_stats_label.text = "ATK %d   DEF %d" % [atk, def]
+	var mat: int = _ps.get_member_total_mat(_selected_member_index) if _ps and _ps.has_method("get_member_total_mat") else 0
+	var mdf: int = _ps.get_member_total_mdf(_selected_member_index) if _ps and _ps.has_method("get_member_total_mdf") else 0
+	equipment_stats_label.text = "ATK %d   DEF %d   MAT %d   MDF %d" % [atk, def, mat, mdf]
 	_rebuild_equip_action_rows()
 	_rebuild_equipment_slots()
 	_rebuild_equipment_item_rows()
@@ -1146,13 +1148,12 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 	var current_xp: int = _ps.xp if _selected_member_index == 0 and _ps and ("xp" in _ps) else 0
 	status_info_label.text = "LV %d   Exp %d   Do następnego poziomu %d" % [int(member.get("level", 1)), current_xp, exp_to_next]
 	if _status_bar_rows.size() >= 2:
-		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
-		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
-	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
-	if _status_stat_rows.size() >= 2:
-		_set_simple_row(_status_stat_rows[0], "ATK", str(atk))
-		_set_simple_row(_status_stat_rows[1], "DEF", str(def))
+		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "SP", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	var stat_names := ["ATK", "DEF", "MAT", "MDF"]
+	for i in range(mini(_status_stat_rows.size(), stat_names.size())):
+		var value: int = _ps.get_member_total_stat(_selected_member_index, stat_names[i].to_lower()) if _ps and _ps.has_method("get_member_total_stat") else 0
+		_set_simple_row(_status_stat_rows[i], stat_names[i], str(value))
 	var equipment: Dictionary = member.get("equipment", {})
 	for index: int in range(_status_equip_rows.size()):
 		var slot_name: String = STATUS_EQUIP_SLOTS[index] if index < STATUS_EQUIP_SLOTS.size() else ""
@@ -1436,13 +1437,12 @@ func _get_equipment_delta_text(entry: Dictionary) -> String:
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
 	var equipment: Dictionary = member.get("equipment", {})
 	var current_item_id: String = str(equipment.get(_selected_slot_name, ""))
-	var current_atk: int = _get_item_stat(current_item_id, "atk_bonus")
-	var current_def: int = _get_item_stat(current_item_id, "def_bonus")
-	var next_atk: int = int(entry.get("atk_bonus", 0))
-	var next_def: int = int(entry.get("def_bonus", 0))
-	var delta_atk: int = next_atk - current_atk
-	var delta_def: int = next_def - current_def
-	return "ATK %s%d  DEF %s%d" % [_delta_sign(delta_atk), delta_atk, _delta_sign(delta_def), delta_def]
+	var parts: Array[String] = []
+	for stat in ["atk", "def", "mat", "mdf"]:
+		var delta: int = int(entry.get(stat + "_bonus", 0)) - _get_item_stat(current_item_id, stat + "_bonus")
+		if delta != 0 or stat in ["atk", "def"]:
+			parts.append("%s %s%d" % [stat.to_upper(), _delta_sign(delta), delta])
+	return "  ".join(parts)
 
 
 func _get_item_stat(item_id: String, stat_name: String) -> int:

@@ -21,8 +21,6 @@ signal status_tick(member_index: int, status_id: String, amount: int)
 const MAX_LEVEL        := 20
 const BASE_HP          := 334
 const HP_AT_MAX_LEVEL  := 1402
-const ATK_PER_LEVEL    := 2.0   # domyślne, gdy postać nie ma własnych atk_per_level / def_per_level
-const DEF_PER_LEVEL    := 1.5
 const BASE_XP_TO_LEVEL := 100
 ## XP do następnego poziomu: BASE_XP_TO_LEVEL × poziom^XP_EXPONENT (lv 1->2: 100, 5->6: 1118, 19->20: ~8300; razem do lv 20 ~67 tys.).
 ## Wrogowie wyższych tierów dają wielokrotnie więcej XP niż 35–85 dzisiejszych — stroić przy kolejnych mapach.
@@ -687,24 +685,34 @@ func get_equipment_label(slot_name: String) -> String:
 	return str(EQUIPMENT_LABELS.get(slot_name, slot_name.capitalize()))
 
 
-func get_member_total_atk(member_index: int) -> int:
+## Staty członka: baza + poziom × przyrost postaci + bonusy ekwipunku (<stat>_bonus przedmiotów).
+const STATS: Array[String] = ["atk", "def", "mat", "mdf"]
+
+
+func get_member_total_stat(member_index: int, stat: String) -> int:
 	if member_index < 0 or member_index >= party.size():
 		return 0
 	var member: Dictionary = party[member_index]
-	var total_atk: int = int(member.get("base_atk", 0)) + _get_member_level_bonus(member, float(member.get("atk_per_level", ATK_PER_LEVEL)))
+	var total: int = int(member.get("base_" + stat, 0)) + _get_member_level_bonus(member, float(member.get(stat + "_per_level", 0.0)))
 	for slot_name: String in EQUIPMENT_SLOTS:
-		total_atk += int(_get_equipped_stat_bonus(member, slot_name, "atk_bonus"))
-	return total_atk
+		total += int(_get_equipped_stat_bonus(member, slot_name, stat + "_bonus"))
+	return total
+
+
+func get_member_total_atk(member_index: int) -> int:
+	return get_member_total_stat(member_index, "atk")
 
 
 func get_member_total_def(member_index: int) -> int:
-	if member_index < 0 or member_index >= party.size():
-		return 0
-	var member: Dictionary = party[member_index]
-	var total_def: int = int(member.get("base_def", 0)) + _get_member_level_bonus(member, float(member.get("def_per_level", DEF_PER_LEVEL)))
-	for slot_name: String in EQUIPMENT_SLOTS:
-		total_def += int(_get_equipped_stat_bonus(member, slot_name, "def_bonus"))
-	return total_def
+	return get_member_total_stat(member_index, "def")
+
+
+func get_member_total_mat(member_index: int) -> int:
+	return get_member_total_stat(member_index, "mat")
+
+
+func get_member_total_mdf(member_index: int) -> int:
+	return get_member_total_stat(member_index, "mdf")
 
 
 ## Obrażenia członka drużyny jak w FNAfB: (moc ataku − DEF × 2) × mnożnik obrony, co najmniej 1. `attack_power` to ATK
@@ -842,10 +850,13 @@ func _ensure_party_defaults() -> void:
 			member["max_tp"] = 100
 		if not member.has("tp"):
 			member["tp"] = 0
-		if not member.has("base_atk"):
-			member["base_atk"] = 10
-		if not member.has("base_def"):
-			member["base_def"] = 8
+		# brakujące staty (stary zapis, nowe staty jak MAT / MDF) — z danych postaci
+		var hero := hero_for_member(member)
+		for stat in STATS:
+			if not member.has("base_" + stat) and hero:
+				member["base_" + stat] = int(hero.get("base_" + stat))
+			if not member.has(stat + "_per_level") and hero:
+				member[stat + "_per_level"] = float(hero.get(stat + "_per_level"))
 		if not member.has("portrait"):
 			member["portrait"] = null
 		if not member.has("actor_scene"):
