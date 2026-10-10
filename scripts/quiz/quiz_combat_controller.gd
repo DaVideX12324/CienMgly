@@ -68,8 +68,6 @@ var enemy_max_hp := 50
 var enemy_name_str := "Przeciwnik"
 var enemy_base_damage := 15
 var player_base_damage := 20
-## Obrażenia ciosu = ATK × mnożnik umiejętności × PLAYER_DAMAGE_PER_ATK (bazowe ATK postaci to 30–50, nie 10).
-const PLAYER_DAMAGE_PER_ATK := 0.4
 var turn_number := 0
 
 @onready var battle_window: PanelContainer = $BattleWindow
@@ -1206,7 +1204,7 @@ func _resolve_attack(correct: bool) -> void:
 		if audio:
 			audio.play_sfx_by_name("hit")
 		var damage_multiplier: float = float(_selected_skill_data.get("damage_multiplier", 1.0))
-		var dmg: int = maxi(int(player_base_damage * damage_multiplier * PLAYER_DAMAGE_PER_ATK), 1)
+		var dmg: int = int(player_base_damage * damage_multiplier)
 		var crit := false
 		if _ps and _ps.roll_with_bonus(0.15):
 			dmg = int(dmg * 1.8)
