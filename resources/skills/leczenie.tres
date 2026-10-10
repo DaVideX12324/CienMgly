@@ -10,5 +10,6 @@ description = "Przywraca część HP po dobrej odpowiedzi (słabiej po złej). D
 sp_cost = 20
 effect = 1
 occasion = 0
+learn_level = 1
 heal_ratio_correct = 0.3
 heal_ratio_wrong = 0.1

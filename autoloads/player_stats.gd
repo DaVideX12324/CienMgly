@@ -11,6 +11,8 @@ signal points_changed(new_points: int)
 signal reward_earned(reward_name: String)
 signal inventory_changed()
 signal party_changed()
+## Członek drużyny poznał umiejętność z poziomu (learn_level) — komunikat w walce po awansie.
+signal skill_learned(member_index: int, skill_name: String)
 ## Obrażenia od statusu (trucizna): członek drużyny, status, utracone HP — świat (co POISON_WORLD_INTERVAL) i walka.
 signal status_tick(member_index: int, status_id: String, amount: int)
 
@@ -101,6 +103,7 @@ func _ready() -> void:
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
+	learn_level_skills()
 
 
 func xp_to_next_level() -> int:
@@ -118,6 +121,8 @@ func add_xp(amount: int) -> void:
 		level += 1
 		_recalculate_max_hp()
 		hp = max_hp
+		_sync_primary_party_member()
+		learn_level_skills()
 		level_up.emit(level)
 	if level >= MAX_LEVEL:
 		xp = 0
@@ -262,6 +267,26 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 	party_changed.emit()
 	var target_name := str((party[target_index] as Dictionary).get("name", "Bohater"))
 	return {"success": true, "message": "%s: %s +%d HP" % [skill.get("name", ""), target_name, amount]}
+
+
+## Umiejętności z poziomu (learn_level 1..poziom członka), których członek jeszcze nie zna -> odblokowane
+## (sygnał skill_learned). Zwraca nazwy nowych umiejętności. Wołane po awansie, wczytaniu i starcie.
+func learn_level_skills() -> Array[String]:
+	var out: Array[String] = []
+	for i in range(party.size()):
+		var member: Dictionary = party[i]
+		var lvl := int(member.get("level", 1))
+		var unlocked: Array = member.get("skills", [])
+		for sk in get_member_skill_pool(i):
+			if sk.learn_level > 0 and sk.learn_level <= lvl and not unlocked.has(sk.skill_id):
+				unlocked.append(sk.skill_id)
+				out.append(sk.display_name)
+				skill_learned.emit(i, sk.display_name)
+		member["skills"] = unlocked
+		party[i] = member
+	if not out.is_empty():
+		party_changed.emit()
+	return out
 
 
 ## Odblokowuje umiejętność z puli postaci (zakup u NPC). false = brak w puli albo już jest.
@@ -504,6 +529,7 @@ func load_save_data(data: Dictionary) -> void:
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
+	learn_level_skills()
 
 
 func reset() -> void:
@@ -798,8 +824,7 @@ func _ensure_party_defaults() -> void:
 	for index: int in range(party.size()):
 		var member: Dictionary = party[index]
 		if not (member.get("skills") is Array):
-			var hero := hero_for_member(member)
-			member["skills"] = Array(hero.starting_skills) if hero else []
+			member["skills"] = []
 		if not member.has("equipment") or not (member.get("equipment") is Dictionary):
 			member["equipment"] = {}
 		if not member.has("default_equipment") or not (member.get("default_equipment") is Dictionary):

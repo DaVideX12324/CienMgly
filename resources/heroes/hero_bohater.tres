@@ -21,7 +21,6 @@ base_def = 15
 atk_per_level = 2.0
 def_per_level = 1.5
 skills = Array[ExtResource("5_skill_script")]([ExtResource("3_heal"), ExtResource("4_strong")])
-starting_skills = PackedStringArray("leczenie", "mocny_atak")
 default_weapon_id = "training_sword"
 default_shield_id = "wooden_shield"
 default_head_id = "cloth_cap"

@@ -1488,12 +1488,20 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 			audio.play_sfx_by_name("victory")
 		var total_xp_reward :int= enemy.xp_reward + _bonus_xp_reward
 		var lvl_before :int= _ps.level if _ps else 1
+		var learned: Array[String] = []
+		var on_learned := func(_i: int, skill_name: String): learned.append(skill_name)
+		if _ps and _ps.has_signal("skill_learned"):
+			_ps.skill_learned.connect(on_learned)
 		if _ps:
 			_ps.add_xp(total_xp_reward)
 		var lines: Array[String] = ["%s i drużyna wygrywają walkę!" % (_ps.player_name if _ps else "Bohater")]
 		lines.append("Zdobyto %d EXP!" % total_xp_reward)
 		if _ps and _ps.level > lvl_before:
 			lines.append("%s osiąga poziom %d!" % [_ps.player_name, _ps.level])
+		for skill_name in learned:
+			lines.append("Nowa umiejętność: %s!" % skill_name)
+		if _ps and _ps.has_signal("skill_learned") and _ps.skill_learned.is_connected(on_learned):
+			_ps.skill_learned.disconnect(on_learned)
 		var item_name := _roll_item_drop()
 		if item_name != "":
 			lines.append("Zdobyto: %s!" % item_name)

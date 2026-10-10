@@ -1,8 +1,9 @@
 extends Resource
 class_name QuizRpgSkillData
 
-## Umiejętność postaci drużyny. Pula postaci: QuizRpgHeroData.skills (kolejność = kolejność w menu); odblokowane
-## (kupione u NPC — jak umiejętności u Balloon Boya w FNaFB) — id w member["skills"] (PlayerStats.unlock_skill).
+## Umiejętność postaci drużyny. Pula postaci: QuizRpgHeroData.skills (kolejność = kolejność w menu); odblokowane — id
+## w member["skills"]. Podstawowe postać zna sama od learn_level; zaawansowane (learn_level 0) uczą NPC-e, którym
+## wracają wspomnienia, albo zdarzenia (PlayerStats.unlock_skill).
 ## W walce i menu umiejętność to słownik z to_entry() (klucze jak dawne PlayerStats.skills).
 
 enum Effect { ATTACK, HEAL, DEFEND }
@@ -16,6 +17,8 @@ enum Occasion { ALWAYS, BATTLE, MENU, NEVER }
 @export_range(0, 100, 1) var tp_cost: int = 0
 @export var effect: Effect = Effect.ATTACK
 @export var occasion: Occasion = Occasion.BATTLE
+## Poziom, od którego postać zna umiejętność sama (0 = nie z poziomu: uczy NPC albo zdarzenie).
+@export_range(0, 100, 1) var learn_level: int = 0
 ## Umiejętność combo (5. slot, za TP — game_design „System skilli”).
 @export var combo: bool = false
 

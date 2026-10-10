@@ -9,4 +9,5 @@ display_name = "Mocny Atak"
 description = "Cięższy cios: 1,5 × zwykłe obrażenia."
 tp_cost = 25
 effect = 0
+learn_level = 1
 damage_multiplier = 1.5
