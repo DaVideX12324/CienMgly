@@ -25,15 +25,13 @@ const BASE_XP_TO_LEVEL := 100
 ## XP do następnego poziomu: BASE_XP_TO_LEVEL × poziom^XP_EXPONENT (lv 1->2: 100, 5->6: 1118, 19->20: ~8300; razem do lv 20 ~67 tys.).
 ## Wrogowie wyższych tierów dają wielokrotnie więcej XP niż 35–85 dzisiejszych — stroić przy kolejnych mapach.
 const XP_EXPONENT      := 1.5
-## Statusy członków drużyny: member["statuses"] = {id: true} (zapisywane razem z drużyną). Trucizna (decyzje usera
-## 2026-10-09): nada ją umiejętność użyta w walce (add_status; do zrobienia), trwa także w eksploracji, dopóki nie użyje się przedmiotu
-## leczącego statusy (cure_statuses). Poza walką 1 HP co 3 s, najwyżej do 1 HP; w walce co turę ułamek maks. HP,
-## może zbić do 0.
+## Statusy członków drużyny: member["statuses"] = {id: {turns, …parametry}} (zapisywane razem z drużyną; definicje
+## w resources/statuses/ — QuizRpgStatusCatalog). turns 0 = do wyleczenia. Trucizna (decyzje usera 2026-10-09): trwa
+## także w eksploracji, dopóki nie użyje się przedmiotu leczącego statusy (cure_statuses); poza walką 1 HP co 3 s,
+## najwyżej do 1 HP; w walce co rundę część maks. HP (może zbić do 0). Inne statusy znikają z końcem walki.
 const STATUS_POISON := "poison"
-const STATUS_NAMES := {"poison": "Zatrucie"}
 const POISON_WORLD_INTERVAL := 3.0
 const POISON_WORLD_DAMAGE := 1
-const POISON_COMBAT_FRACTION := 0.05
 const EQUIPMENT_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 const EQUIPMENT_LABELS := {
 	"weapon": "Broń",
@@ -352,14 +350,18 @@ func get_statuses(member_index: int) -> Array:
 	return ((party[member_index] as Dictionary).get("statuses", {}) as Dictionary).keys()
 
 
-## params: parametry statusu zapisywane z nim (trucizna: {"mode": "percent" | "fixed", "amount": float}); puste = domyślne.
+## params: parametry statusu zapisywane z nim (trucizna: {"mode": "percent" | "fixed", "amount": float}); czas w turach
+## losowany z definicji statusu. Już nałożony status nie zmienia się (false).
 func add_status(member_index: int, status_id: String, params: Dictionary = {}) -> bool:
 	_ensure_party_defaults()
 	if member_index < 0 or member_index >= party.size() or has_status(member_index, status_id):
 		return false
 	var member: Dictionary = party[member_index]
 	var st: Dictionary = member.get("statuses", {})
-	st[status_id] = params.duplicate() if not params.is_empty() else true
+	var data: Dictionary = params.duplicate()
+	var def := QuizRpgStatusCatalog.get_status(status_id)
+	data["turns"] = def.roll_turns() if def else 0
+	st[status_id] = data
 	member["statuses"] = st
 	party[member_index] = member
 	party_changed.emit()
@@ -390,25 +392,99 @@ func any_status(status_id: String) -> bool:
 	return false
 
 
-## Trucizna w walce (wywołuje ekran walki raz na turę): każdy zatruty członek traci POISON_COMBAT_FRACTION maks. HP
-## (co najmniej 1), może spaść do 0. Zwraca [[indeks, obrażenia], …].
-func tick_poison_combat() -> Array:
+## Koniec rundy walki: zmiana HP od statusów (trucizna, regeneracja — QuizRpgStatusData.turn_hp_percent; trucizna
+## może zbić do 0) i odliczanie tur (wygasłe znikają). Zwraca zdarzenia {member, status, hp (zmiana)} i
+## {member, status, expired: true}.
+func tick_statuses_combat() -> Array:
 	var out: Array = []
-	if _god_mode():
-		return out
 	for i in range(party.size()):
-		if has_status(i, STATUS_POISON) and _member_hp(i) > 0:
-			var dmg := mini(_poison_combat_damage(i), _member_hp(i))
-			_set_member_hp(i, _member_hp(i) - dmg)
-			out.append([i, dmg])
-			status_tick.emit(i, STATUS_POISON, dmg)
+		var st: Dictionary = (party[i] as Dictionary).get("statuses", {})
+		for sid in st.keys():
+			var def := QuizRpgStatusCatalog.get_status(String(sid))
+			if def == null or _member_hp(i) <= 0:
+				continue
+			var delta := 0
+			if def.turn_hp_percent < 0.0 and not _god_mode():
+				var dmg := _poison_combat_damage(i) if sid == STATUS_POISON else maxi(ceili(_member_max_hp(i) * -def.turn_hp_percent), 1)
+				delta = -mini(dmg, _member_hp(i))
+			elif def.turn_hp_percent > 0.0:
+				delta = mini(maxi(ceili(_member_max_hp(i) * def.turn_hp_percent), 1), _member_max_hp(i) - _member_hp(i))
+			if delta != 0:
+				_set_member_hp(i, _member_hp(i) + delta)
+				out.append({"member": i, "status": String(sid), "hp": delta})
+				if delta < 0:
+					status_tick.emit(i, String(sid), -delta)
+		for sid in st.keys():
+			var data: Variant = st[sid]
+			if data is Dictionary and int((data as Dictionary).get("turns", 0)) > 0:
+				data["turns"] = int(data["turns"]) - 1
+				if int(data["turns"]) <= 0:
+					st.erase(sid)
+					out.append({"member": i, "status": String(sid), "expired": true})
+		var member: Dictionary = party[i]
+		member["statuses"] = st
+		party[i] = member
 	if not out.is_empty():
 		party_changed.emit()
 	return out
 
 
-## Obrażenia trucizny członka na turę walki: z parametrów nadanych przez umiejętność (procent maks. HP albo stała),
-## domyślnie POISON_COMBAT_FRACTION maks. HP; co najmniej 1.
+## Koniec walki: znikają statusy bez persists_after_battle (zostaje np. trucizna).
+func clear_battle_statuses() -> void:
+	var changed := false
+	for i in range(party.size()):
+		var st: Dictionary = (party[i] as Dictionary).get("statuses", {})
+		for sid in st.keys():
+			var def := QuizRpgStatusCatalog.get_status(String(sid))
+			if def == null or not def.persists_after_battle:
+				st.erase(sid)
+				changed = true
+	if changed:
+		party_changed.emit()
+
+
+## Iloczyn mnożników statu (atk / def / mat / mdf) ze statusów członka (buffy, debuffy).
+func member_status_mult(member_index: int, stat: String) -> float:
+	var m := 1.0
+	for sid in get_statuses(member_index):
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def:
+			m *= def.stat_mult(stat)
+	return m
+
+
+func member_hit_mult(member_index: int) -> float:
+	var m := 1.0
+	for sid in get_statuses(member_index):
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def:
+			m *= def.hit_mult
+	return m
+
+
+## Czy członek ma status z ograniczeniem (QuizRpgStatusData.Restriction) — np. sen pomija turę, cisza blokuje umiejętności.
+func member_has_restriction(member_index: int, restriction: int) -> bool:
+	for sid in get_statuses(member_index):
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def and def.restriction == restriction:
+			return true
+	return false
+
+
+## Obrażenia mogą zdjąć status (sen zawsze, zamroczenie w połowie przypadków). Zwraca zdjęte.
+func on_member_damaged(member_index: int) -> Array:
+	var gone: Array = []
+	for sid in get_statuses(member_index):
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def and def.remove_on_damage_chance > 0.0 and randf() < def.remove_on_damage_chance:
+			gone.append(String(sid))
+	if not gone.is_empty():
+		cure_statuses(member_index, gone)
+	return gone
+
+
+## Obrażenia trucizny członka na rundę walki: z parametrów nadanych przez umiejętność (procent maks. HP albo stała),
+## domyślnie turn_hp_percent statusu trucizny; co najmniej 1.
 func _poison_combat_damage(i: int) -> int:
 	var p: Variant = ((party[i] as Dictionary).get("statuses", {}) as Dictionary).get(STATUS_POISON)
 	if p is Dictionary:
@@ -417,7 +493,8 @@ func _poison_combat_damage(i: int) -> int:
 			if String((p as Dictionary).get("mode", "percent")) == "fixed":
 				return maxi(roundi(amount), 1)
 			return maxi(ceili(_member_max_hp(i) * amount / 100.0), 1)
-	return maxi(ceili(_member_max_hp(i) * POISON_COMBAT_FRACTION), 1)
+	var def := QuizRpgStatusCatalog.get_status(STATUS_POISON)
+	return maxi(ceili(_member_max_hp(i) * (absf(def.turn_hp_percent) if def else 0.05)), 1)
 
 
 ## Trucizna w eksploracji: co POISON_WORLD_INTERVAL s (tylko w stanie EXPLORING — pauza, walka, menu wstrzymują)
@@ -446,9 +523,9 @@ func _god_mode() -> bool:
 	return cheat_service != null and "god_mode" in cheat_service and bool(cheat_service.god_mode)
 
 
-## Nazwa statusu do wyświetlenia (STATUS_NAMES), inaczej sam identyfikator.
+## Nazwa statusu do wyświetlenia (resources/statuses/), inaczej sam identyfikator.
 func status_name(id: String) -> String:
-	return str(STATUS_NAMES.get(id, id))
+	return QuizRpgStatusCatalog.name_of(id)
 
 
 func _member_hp(i: int) -> int:

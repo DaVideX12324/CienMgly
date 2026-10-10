@@ -526,8 +526,29 @@ func _start_player_turn() -> void:
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	_set_action_buttons_enabled(true)
+	if not _any_actor_can_act():
+		await _skip_party_turn()
+		return
 	_show_primary_menu()
 	_highlight_action(0)
+
+
+func _any_actor_can_act() -> bool:
+	for i in range(mini(_party_state.size(), party_rows.size())):
+		if _is_actor_selectable(i):
+			return true
+	return false
+
+
+## Nikt w drużynie nie może się ruszyć (sen, ogłuszenie, paraliż) — od razu tura wrogów.
+func _skip_party_turn() -> void:
+	phase = Phase.PLAYER_RESULT
+	_set_band_mode(Band.STATUS_ONLY)
+	result_label.visible = true
+	result_label.text = "Drużyna nie może się ruszyć!"
+	result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.9))
+	await get_tree().create_timer(1.2).timeout
+	_enemy_turn()
 
 
 func _on_action(action: Action) -> void:
@@ -547,6 +568,11 @@ func _on_action(action: Action) -> void:
 
 
 func _open_skills_menu() -> void:
+	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(_active_actor_index, QuizRpgStatusData.Restriction.SILENCED):
+		result_label.visible = true
+		result_label.text = "%s: cisza — umiejętności zablokowane." % _member_name(_active_actor_index)
+		result_label.add_theme_color_override("font_color", QuizRpgStatusCatalog.color_of("silence"))
+		return
 	var entries: Array[Dictionary] = []
 	if _ps and _ps.has_method("get_member_skills"):
 		entries = _ps.get_member_skills(_active_actor_index)
@@ -1005,7 +1031,7 @@ func _ui_scale_px(base_size: int) -> int:
 func _use_skill(skill_data: Dictionary) -> void:
 	var skill := skill_data.get("resource") as QuizRpgSkillBase
 	_close_list_menu()
-	if skill != null and skill.is_heal():
+	if skill != null and skill.targets_allies():
 		chosen_action = Action.HEAL
 		if skill.target == QuizRpgSkillBase.Target.ONE_ALLY or skill.target == QuizRpgSkillBase.Target.DEAD_ALLY:
 			var dead := skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
@@ -1189,8 +1215,11 @@ func _resolve_attack(correct: bool) -> void:
 		return
 	_gain_party_tp(_active_actor_index, TP_PER_ATTACK)
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
+	if _ps and _ps.has_method("member_hit_mult"):
+		hit_chance *= _ps.member_hit_mult(_active_actor_index)
 	var hits: int = skill.hits if skill else 1
 	var user := _member_stats(_active_actor_index)
+	var touched := {}
 	for h in range(hits):
 		if h > 0:
 			await get_tree().create_timer(skill.hit_interval).timeout
@@ -1203,6 +1232,14 @@ func _resolve_attack(correct: bool) -> void:
 				_show_attack_miss(ti, correct)
 				continue
 			_apply_player_hit(ti, QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti])))
+			_unit_on_damaged(ti)
+			touched[ti] = true
+			if skill != null and skill.has_status() and skill.status_per_hit and randf() < skill.status_chance:
+				_unit_add_status(ti, skill.inflict_status)
+	if skill != null and skill.has_status() and not skill.status_per_hit:
+		for ti: int in touched:
+			if int(_enemy_units[ti].get("hp", 0)) > 0 and randf() < skill.status_chance:
+				_unit_add_status(ti, skill.inflict_status)
 
 
 ## Cele ataku gracza: jeden (wybrany), wszyscy żywi albo N losowych (z powtórzeniami, jak w RPG Makerze).
@@ -1215,15 +1252,19 @@ func _offense_targets(skill: QuizRpgSkillBase) -> Array[int]:
 		return alive
 	if skill != null and skill.target == QuizRpgSkillBase.Target.ALL_OPPONENTS:
 		return alive
-	if skill != null and skill.target == QuizRpgSkillBase.Target.RANDOM_OPPONENTS:
+	var confused: bool = _ps != null and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(_active_actor_index, QuizRpgStatusData.Restriction.CONFUSED)
+	if confused or (skill != null and skill.target == QuizRpgSkillBase.Target.RANDOM_OPPONENTS):
 		var out: Array[int] = []
-		for k in range(skill.random_count):
+		for k in range(skill.random_count if skill else 1):
 			out.append(alive.pick_random())
 		return out
 	var t := _active_enemy_index
 	if not alive.has(t):
 		t = _find_next_alive_enemy_index(_active_enemy_index)
-	return [t] if t >= 0 else [] as Array[int]
+	var one: Array[int] = []
+	if t >= 0:
+		one.append(t)
+	return one
 
 
 func _apply_player_hit(ti: int, base_dmg: int) -> void:
@@ -1295,6 +1336,10 @@ func _resolve_heal(correct: bool) -> void:
 	for t in _heal_targets(skill):
 		var member: Dictionary = _ps.get_party_member(t) if _ps.has_method("get_party_member") else {}
 		var max_hp: int = int(member.get("max_hp", _ps.max_hp))
+		if skill != null and skill.has_status() and randf() < skill.status_chance and _ps.add_status(t, skill.inflict_status, skill.status_params()):
+			parts.append("%s: %s" % [str(member.get("name", "Bohater")), QuizRpgStatusCatalog.name_of(skill.inflict_status)])
+		if skill != null and not skill.is_heal():
+			continue
 		var amount := maxi(roundi((QuizRpgSkillMath.heal(skill, max_hp) if skill else max_hp * 0.3) * factor), 1)
 		var healed: int = _ps.heal_member(t, amount, revive) if _ps.has_method("heal_member") else 0
 		if healed <= 0:
@@ -1313,11 +1358,11 @@ func _resolve_heal(correct: bool) -> void:
 
 
 func _heal_targets(skill: QuizRpgSkillBase) -> Array[int]:
-	if skill == null or skill.target == QuizRpgSkillBase.Target.SELF:
-		return [_active_actor_index]
-	if skill.target == QuizRpgSkillBase.Target.ALL_ALLIES:
+	var out: Array[int] = []
+	if skill != null and skill.target == QuizRpgSkillBase.Target.ALL_ALLIES:
 		return _party_indices(false)
-	return [_heal_target_index]
+	out.append(_active_actor_index if skill == null or skill.target == QuizRpgSkillBase.Target.SELF else _heal_target_index)
+	return out
 
 
 func _try_flee() -> void:
@@ -1351,6 +1396,13 @@ func _enemy_turn() -> void:
 		if int(enemy_unit.get("hp", 0)) <= 0:
 			continue
 		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
+		var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
+		if stop != null:
+			_push_log("%s: %s — traci turę." % [enemy_label, stop.display_name], stop.color)
+			await get_tree().create_timer(0.6).timeout
+			continue
+		if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
+			continue
 		var skill := _pick_enemy_skill(enemy_unit)
 		if skill != null:
 			if await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill):
@@ -1367,6 +1419,11 @@ func _enemy_turn() -> void:
 				active_display.call("play_attack")
 		await get_tree().create_timer(0.5).timeout
 		var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(0))
+		if randf() >= _unit_hit_mult(enemy_unit):
+			_push_log("%s pudłuje!" % enemy_label, Color(0.75, 0.75, 0.82))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
+			await get_tree().create_timer(0.8).timeout
+			continue
 		var actual_damage: int
 		_gain_party_tp(0, _tp_from_damage(full_damage))
 		if defending and quiz_correct:
@@ -1401,6 +1458,7 @@ func _enemy_turn() -> void:
 			actual_damage = full_damage
 			if _ps:
 				_ps.take_damage(actual_damage)
+				_member_damaged(0)
 			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
 				if audio:
@@ -1423,7 +1481,7 @@ func _enemy_turn() -> void:
 		if _ps and not _ps.is_alive():
 			_end_combat(false)
 			return
-	if await _apply_poison_round():
+	if await _apply_status_round():
 		return
 	_start_player_turn()
 
@@ -1434,6 +1492,28 @@ func _enemy_turn() -> void:
 func _unit_source(unit: Dictionary) -> Node2D:
 	var src: Variant = unit.get("source", null)
 	return src if src is Node2D and is_instance_valid(src) else enemy
+
+
+## Zamroczony wróg bije losowego innego wroga (zwykły atak). false = brak innego celu (atakuje normalnie).
+func _confused_unit_strike(enemy_index: int) -> bool:
+	var others: Array[int] = []
+	for i in range(_enemy_units.size()):
+		if i != enemy_index and int(_enemy_units[i].get("hp", 0)) > 0:
+			others.append(i)
+	if others.is_empty():
+		return false
+	var ti: int = others.pick_random()
+	var attacker := _enemy_units[enemy_index]
+	var victim := _enemy_units[ti]
+	var dmg := QuizRpgSkillMath.basic_attack(_unit_stats(attacker), _unit_stats(victim))
+	victim["hp"] = maxi(int(victim.get("hp", 0)) - dmg, 0)
+	_enemy_units[ti] = victim
+	_push_log("%s w zamroczeniu atakuje: %s -%d HP" % [str(attacker.get("name", enemy_name_str)), str(victim.get("name", enemy_name_str)), dmg], QuizRpgStatusCatalog.color_of("confusion"))
+	_unit_on_damaged(ti)
+	_refresh_enemy_cache()
+	_refresh_enemy_header()
+	await get_tree().create_timer(0.8).timeout
+	return true
 
 
 func _enemy_side_wounded() -> bool:
@@ -1482,7 +1562,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 	result_label.add_theme_color_override("font_color", sk.color)
 	_active_enemy_index = enemy_index
 	_refresh_enemy_header()
-	if sk.is_heal():
+	if sk.targets_allies():
 		await _enemy_heal(enemy_index, sk)
 		return false
 	var audio := get_node_or_null("/root/AudioService")
@@ -1497,7 +1577,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 		if targets.is_empty():
 			break
 		for t in targets:
-			if not QuizRpgSkillMath.roll_hit(sk):
+			if not QuizRpgSkillMath.roll_hit(sk, _unit_hit_mult(enemy_unit)):
 				if t == 0:
 					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
 				continue
@@ -1520,6 +1600,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			var dmg := maxi(floori(full * mult), 1) if full > 0 else 0
 			if dmg > 0 and _ps:
 				_ps.damage_member(t, dmg)
+				_member_damaged(t)
 				if t == 0:
 					if audio:
 						audio.play_sfx_by_name("player_damage")
@@ -1557,7 +1638,8 @@ func _enemy_skill_targets(sk: QuizRpgSkillBase) -> Array[int]:
 			for k in range(sk.random_count):
 				out.append(alive.pick_random())
 			return out
-	return [0 if alive.has(0) else alive[0]] as Array[int]
+	var lead: Array[int] = [0 if alive.has(0) else alive[0]]
+	return lead
 
 
 ## Leczenie wroga: siebie (SELF), najbardziej rannego sojusznika (ONE_ALLY) albo wszystkich żywych wrogów (ALL_ALLIES).
@@ -1586,6 +1668,9 @@ func _enemy_heal(enemy_index: int, sk: QuizRpgSkillBase) -> void:
 	for i in targets:
 		var u := _enemy_units[i]
 		var max_hp := int(u.get("max_hp", 1))
+		if sk.has_status() and randf() < sk.status_chance:
+			_unit_add_status(i, sk.inflict_status)
+			u = _enemy_units[i]
 		var healed := mini(QuizRpgSkillMath.heal(sk, max_hp), max_hp - int(u.get("hp", 0)))
 		if healed <= 0:
 			continue
@@ -1602,37 +1687,79 @@ func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
 		return
 	var member: Dictionary = _ps.get_party_member(member_index) if _ps.has_method("get_party_member") else {}
 	var st_name: String = _ps.status_name(sk.inflict_status) if _ps.has_method("status_name") else sk.inflict_status
-	var col := POISON_COLOR if sk.inflict_status == "poison" else sk.color
+	var col := QuizRpgStatusCatalog.color_of(sk.inflict_status, sk.color)
 	_push_log("%s: %s!" % [str(member.get("name", "Bohater")), st_name], col)
 	if member_index == 0:
 		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "%s!" % st_name, col, 12)
 
 
-## Koniec rundy wrogów: trucizna zabiera zatrutym część maks. HP (w walce może zbić do 0 — decyzja usera).
-## true = drużyna padła, walka zakończona.
-func _apply_poison_round() -> bool:
-	if _ps == null or not _ps.has_method("tick_poison_combat"):
+## Koniec rundy: statusy drużyny (PlayerStats.tick_statuses_combat — trucizna może zbić do 0, regeneracja, wygasanie)
+## i wrogów (to samo w jednostkach). true = walka zakończona (drużyna padła albo wrogowie zginęli).
+func _apply_status_round() -> bool:
+	var any := false
+	if _ps and _ps.has_method("tick_statuses_combat"):
+		for ev in _ps.tick_statuses_combat():
+			any = true
+			var i := int(ev["member"])
+			var sid := String(ev["status"])
+			var col := QuizRpgStatusCatalog.color_of(sid, POISON_COLOR)
+			if ev.get("expired", false):
+				_push_log("%s: koniec — %s." % [_member_name(i), QuizRpgStatusCatalog.name_of(sid)], col)
+				continue
+			var delta := int(ev["hp"])
+			if delta < 0:
+				_push_log("%s: %s -%d HP" % [_member_name(i), QuizRpgStatusCatalog.name_of(sid), -delta], col)
+			else:
+				_push_log("%s: %s +%d HP" % [_member_name(i), QuizRpgStatusCatalog.name_of(sid), delta], col)
+			if i == 0:
+				_flash_sprite(player_sprite_node, col)
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "%+d" % delta, col, 14)
+	for ti in range(_enemy_units.size()):
+		var unit := _enemy_units[ti]
+		if int(unit.get("hp", 0)) <= 0:
+			continue
+		var st: Dictionary = unit.get("statuses", {})
+		for sid in st.keys():
+			var def := QuizRpgStatusCatalog.get_status(String(sid))
+			if def == null:
+				continue
+			if def.turn_hp_percent != 0.0:
+				var max_hp := int(unit.get("max_hp", 1))
+				var amount := maxi(ceili(max_hp * absf(def.turn_hp_percent)), 1)
+				var delta := -mini(amount, int(unit.get("hp", 0))) if def.turn_hp_percent < 0.0 else mini(amount, max_hp - int(unit.get("hp", 0)))
+				if delta != 0:
+					unit["hp"] = int(unit.get("hp", 0)) + delta
+					any = true
+					_push_log("%s: %s %+d HP" % [str(unit.get("name", enemy_name_str)), def.display_name, delta], def.color)
+			var data: Dictionary = st[sid] if st[sid] is Dictionary else {}
+			if int(data.get("turns", 0)) > 0:
+				data["turns"] = int(data["turns"]) - 1
+				if int(data["turns"]) <= 0:
+					st.erase(sid)
+					any = true
+					_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.display_name], def.color)
+		unit["statuses"] = st
+		_enemy_units[ti] = unit
+	if not any:
 		return false
-	var hits: Array = _ps.tick_poison_combat()
-	if hits.is_empty():
-		return false
-	for h in hits:
-		var member: Dictionary = _ps.get_party_member(int(h[0])) if _ps.has_method("get_party_member") else {}
-		_push_log("%s cierpi od trucizny: -%d HP" % [str(member.get("name", "Bohater")), int(h[1])], POISON_COLOR)
-		if int(h[0]) == 0:
-			_flash_sprite(player_sprite_node, POISON_COLOR)
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % int(h[1]), POISON_COLOR, 14)
+	_refresh_enemy_cache()
+	_refresh_enemy_header()
 	_update_hp_bars()
 	_refresh_stats_panel()
 	await get_tree().create_timer(0.8).timeout
-	if not _ps.is_alive():
+	if _ps and not _ps.is_alive():
 		_end_combat(false)
+		return true
+	if _all_enemies_defeated():
+		_end_combat(true)
 		return true
 	return false
 
 
 func _end_combat(player_won: bool, fled: bool = false) -> void:
 	phase = Phase.COMBAT_END
+	if _ps and _ps.has_method("clear_battle_statuses"):
+		_ps.clear_battle_statuses()
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false, false)
 	_victory_skip = false
@@ -2517,13 +2644,92 @@ func _tp_from_damage(undefended_damage: int) -> int:
 func _member_stats(i: int) -> Dictionary:
 	if _ps == null or not _ps.has_method("get_member_total_stat"):
 		return {"atk": 20, "def": 0, "mat": 20, "mdf": 0}
-	return {"atk": _ps.get_member_total_atk(i), "def": _ps.get_member_total_def(i),
-		"mat": _ps.get_member_total_mat(i), "mdf": _ps.get_member_total_mdf(i)}
+	var out := {}
+	for stat in ["atk", "def", "mat", "mdf"]:
+		out[stat] = roundi(_ps.get_member_total_stat(i, stat) * _ps.member_status_mult(i, stat))
+	return out
 
 
 func _unit_stats(unit: Dictionary) -> Dictionary:
-	return {"atk": int(unit.get("atk", enemy_base_attack)), "def": int(unit.get("def", enemy_base_defense)),
+	var base := {"atk": int(unit.get("atk", enemy_base_attack)), "def": int(unit.get("def", enemy_base_defense)),
 		"mat": int(unit.get("mat", enemy_base_magic_attack)), "mdf": int(unit.get("mdf", enemy_base_magic_defense))}
+	for stat in base:
+		base[stat] = roundi(base[stat] * _unit_status_mult(unit, stat))
+	return base
+
+
+# --- Statusy wrogów: unit["statuses"] = {id: {turns}} (definicje — QuizRpgStatusCatalog) ---
+
+func _unit_status_defs(unit: Dictionary) -> Array:
+	var out: Array = []
+	for sid in (unit.get("statuses", {}) as Dictionary).keys():
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def:
+			out.append(def)
+	return out
+
+
+func _unit_status_mult(unit: Dictionary, stat: String) -> float:
+	var m := 1.0
+	for def: QuizRpgStatusData in _unit_status_defs(unit):
+		m *= def.stat_mult(stat)
+	return m
+
+
+func _unit_hit_mult(unit: Dictionary) -> float:
+	var m := 1.0
+	for def: QuizRpgStatusData in _unit_status_defs(unit):
+		m *= def.hit_mult
+	return m
+
+
+func _unit_restriction(unit: Dictionary, restriction: int) -> QuizRpgStatusData:
+	for def: QuizRpgStatusData in _unit_status_defs(unit):
+		if def.restriction == restriction:
+			return def
+	return null
+
+
+## Nadaje wrogowi status (już nałożony — bez zmian). true = nowy.
+func _unit_add_status(ti: int, status_id: String) -> bool:
+	var def := QuizRpgStatusCatalog.get_status(status_id)
+	if def == null or ti < 0 or ti >= _enemy_units.size():
+		return false
+	var unit := _enemy_units[ti]
+	var st: Dictionary = unit.get("statuses", {})
+	if st.has(status_id):
+		return false
+	st[status_id] = {"turns": def.roll_turns()}
+	unit["statuses"] = st
+	_enemy_units[ti] = unit
+	_push_log("%s: %s!" % [str(unit.get("name", enemy_name_str)), def.display_name], def.color)
+	return true
+
+
+## Obrażenia mogą zdjąć wrogowi status (sen, zamroczenie).
+func _unit_on_damaged(ti: int) -> void:
+	var unit := _enemy_units[ti]
+	var st: Dictionary = unit.get("statuses", {})
+	for sid in st.keys():
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def and def.remove_on_damage_chance > 0.0 and randf() < def.remove_on_damage_chance:
+			st.erase(sid)
+			_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.display_name], def.color)
+	unit["statuses"] = st
+	_enemy_units[ti] = unit
+
+
+func _member_name(i: int) -> String:
+	var member: Dictionary = _ps.get_party_member(i) if _ps and _ps.has_method("get_party_member") else {}
+	return str(member.get("name", "Bohater"))
+
+
+## Obrażenia członka drużyny mogą zdjąć status (sen budzi).
+func _member_damaged(t: int) -> void:
+	if _ps == null or not _ps.has_method("on_member_damaged"):
+		return
+	for sid in _ps.on_member_damaged(t):
+		_push_log("%s: koniec — %s." % [_member_name(t), QuizRpgStatusCatalog.name_of(String(sid))], QuizRpgStatusCatalog.color_of(String(sid)))
 
 
 ## HP członka drużyny w walce (lider z PlayerStats.hp, reszta z danych drużyny).
@@ -2581,7 +2787,11 @@ func _refresh_enemy_header() -> void:
 		return
 	if _active_enemy_index >= 0 and _active_enemy_index < _enemy_units.size():
 		var active_enemy := _enemy_units[_active_enemy_index]
-		enemy_name_label.text = "%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), living_count]
+		var tags: Array[String] = []
+		for def: QuizRpgStatusData in _unit_status_defs(active_enemy):
+			tags.append(def.display_name)
+		var suffix := "" if tags.is_empty() else "  [%s]" % ", ".join(tags)
+		enemy_name_label.text = "%s%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), suffix, living_count]
 	else:
 		enemy_name_label.text = "Wrogowie  (%d pozostało)" % living_count
 	if _enemy_name_label:
@@ -2870,6 +3080,8 @@ func _is_actor_selectable(index: int) -> bool:
 		return false
 	if _ally_pick == 2:
 		return int(_party_state[index].get("lp", 0)) <= 0  # wskrzeszenie: tylko nieprzytomni
+	if _ally_pick == 0 and _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(index, QuizRpgStatusData.Restriction.SKIP_TURN):
+		return false  # sen / ogłuszenie / paraliż — postać traci turę
 	return int(_party_state[index].get("lp", 0)) > 0
 
 

@@ -1282,7 +1282,7 @@ func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars
 		(sp_progress as Control).visible = show_bars
 
 
-## Statusy członka po nazwie, np. „  [Zatrucie]” (PlayerStats.STATUS_NAMES).
+## Statusy członka po nazwie, np. „  [Zatrucie]” (resources/statuses/).
 func _status_suffix(member: Dictionary) -> String:
 	var names: Array[String] = []
 	for sid in (member.get("statuses", {}) as Dictionary).keys():
