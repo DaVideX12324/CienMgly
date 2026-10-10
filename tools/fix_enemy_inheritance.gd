@@ -115,7 +115,7 @@ func _read_enemy_base_props(root: Node) -> Dictionary:
 		"question_count": int(root.get("question_count")),
 		"hp": int(root.get("hp")),
 		"max_hp": int(root.get("max_hp")),
-		"damage_on_wrong": int(root.get("damage_on_wrong")),
+		"attack": int(root.get("attack")),
 		"xp_reward": int(root.get("xp_reward")),
 		"encounter_tier": int(root.get("encounter_tier")),
 		"min_encounter_size": int(root.get("min_encounter_size")),
@@ -173,7 +173,7 @@ func _build_scene_text(rel_script: String, rel_sprite: String, animation_name: S
 	content += "question_count = %d\n" % props["question_count"]
 	content += "hp = %d\n" % props["hp"]
 	content += "max_hp = %d\n" % props["max_hp"]
-	content += "damage_on_wrong = %d\n" % props["damage_on_wrong"]
+	content += "attack = %d\n" % props["attack"]
 	content += "xp_reward = %d\n" % props["xp_reward"]
 	content += "encounter_tier = %d\n" % props["encounter_tier"]
 	content += "min_encounter_size = %d\n" % props["min_encounter_size"]

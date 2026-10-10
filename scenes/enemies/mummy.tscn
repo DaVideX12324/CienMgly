@@ -12,9 +12,10 @@ height = 10.0
 script = ExtResource("2_script")
 enemy_name = "Mummy"
 quiz_id = "ogolne"
-hp = 60
-max_hp = 60
-damage_on_wrong = 10
+hp = 240
+max_hp = 240
+attack = 18
+defense = 5
 encounter_tier = 1
 patrol_speed = 60.0
 

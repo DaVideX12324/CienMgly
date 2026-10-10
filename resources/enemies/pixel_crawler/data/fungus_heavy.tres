@@ -6,8 +6,9 @@
 script = ExtResource("1_data")
 enemy_name = "Ciężki Grzyb"
 quiz_id = "ogolne"
-max_hp = 100
-damage_on_wrong = 14
+max_hp = 400
+attack = 24
+defense = 12
 xp_reward = 60
 patrol_speed = 40.0
 detection_radius = 100.0

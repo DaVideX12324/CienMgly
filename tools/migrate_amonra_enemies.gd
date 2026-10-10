@@ -141,7 +141,7 @@ func _write_scene(slug: String, display_name: String, hp: int, dmg: int, speed: 
 	content += "quiz_category = \"ogolne\"\n"
 	content += "hp = %d\n" % hp
 	content += "max_hp = %d\n" % hp
-	content += "damage_on_wrong = %d\n" % dmg
+	content += "attack = %d\n" % dmg
 	content += "xp_reward = %d\n" % xp
 	content += "encounter_tier = %d\n" % (4 if is_boss else 1)
 	content += "patrol_speed = %.1f\n" % speed

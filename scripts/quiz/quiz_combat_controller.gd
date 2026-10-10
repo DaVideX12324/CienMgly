@@ -66,7 +66,8 @@ var _joined: Array = []   # wrogowie ze świata dołączeni do walki (grupa) —
 var enemy_hp := 50
 var enemy_max_hp := 50
 var enemy_name_str := "Przeciwnik"
-var enemy_base_damage := 15
+var enemy_base_attack := 24
+var enemy_base_defense := 12
 var player_base_damage := 20
 var turn_number := 0
 
@@ -193,7 +194,8 @@ func setup(
 	enemy_hp = p_enemy.hp
 	enemy_max_hp = p_enemy.max_hp
 	enemy_name_str = p_enemy.enemy_name
-	enemy_base_damage = p_enemy.damage_on_wrong
+	enemy_base_attack = p_enemy.attack
+	enemy_base_defense = p_enemy.defense
 	player_base_damage = _get_player_attack_power()
 	_roll_enemy_party()
 	if is_node_ready():
@@ -1204,7 +1206,9 @@ func _resolve_attack(correct: bool) -> void:
 		if audio:
 			audio.play_sfx_by_name("hit")
 		var damage_multiplier: float = float(_selected_skill_data.get("damage_multiplier", 1.0))
-		var dmg: int = int(player_base_damage * damage_multiplier)
+		# jak w FNAfB: (ATK × 4 − DEF wroga × 2) × mnożnik umiejętności, co najmniej 1
+		var target_def := int(target.get("def", enemy_base_defense))
+		var dmg: int = maxi(int((player_base_damage * 4.0 - target_def * 2.0) * damage_multiplier), 1)
 		var crit := false
 		if _ps and _ps.roll_with_bonus(0.15):
 			dmg = int(dmg * 1.8)
@@ -1316,10 +1320,9 @@ func _enemy_turn() -> void:
 			if active_display.has_method("play_attack"):
 				active_display.call("play_attack")
 		await get_tree().create_timer(0.5).timeout
-		var raw_damage := int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8
-		var enemy_tier: int = int(enemy_unit.get("tier", _get_encounter_tier()))
+		var raw_damage := _enemy_attack_power(enemy_unit)
 		var actual_damage: int
-		_gain_party_tp(0, _tp_from_damage(raw_damage, enemy_tier))
+		_gain_party_tp(0, _tp_from_damage(raw_damage))
 		if defending and quiz_correct:
 			actual_damage = 0
 			var audio := get_node_or_null("/root/AudioService")
@@ -1330,7 +1333,7 @@ func _enemy_turn() -> void:
 			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
 		elif defending and not quiz_correct:
-			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier, 0.5)
+			actual_damage = _calculate_player_damage_taken(raw_damage, 0.5)
 			if _ps:
 				_ps.take_damage(actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
@@ -1349,7 +1352,7 @@ func _enemy_turn() -> void:
 				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
 		else:
-			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier)
+			actual_damage = _calculate_player_damage_taken(raw_damage)
 			if _ps:
 				_ps.take_damage(actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
@@ -1423,7 +1426,6 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 	result_label.add_theme_color_override("font_color", sk.color)
 	_active_enemy_index = enemy_index
 	_refresh_enemy_header()
-	var tier := int(enemy_unit.get("tier", _get_encounter_tier()))
 	var party_n := maxi(_ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1, 1)
 	var audio := get_node_or_null("/root/AudioService")
 	var touched := {}   # cele trafione (albo dosięgnięte przez umiejętność bez obrażeń)
@@ -1442,12 +1444,12 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 				targets.append(i)
 		var raw := 0
 		if sk.damage_mode == QuizRpgEnemySkill.DamageMode.MULTIPLIER:
-			raw = roundi((int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8) * sk.damage_multiplier)
+			raw = roundi(_enemy_attack_power(enemy_unit) * sk.damage_multiplier)
 		elif sk.damage_mode == QuizRpgEnemySkill.DamageMode.FIXED:
 			raw = sk.fixed_damage
 		for t in targets:
 			if raw > 0:
-				_gain_party_tp(t, _tp_from_damage(raw, tier))
+				_gain_party_tp(t, _tp_from_damage(raw))
 			var mult := 1.0
 			var blocked := false
 			if t == _defender_index and defending and sk.can_be_blocked:
@@ -1460,7 +1462,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 				if sk.ignore_armor:
 					dmg = roundi(raw * mult)
 				elif _ps and _ps.has_method("calculate_incoming_damage"):
-					dmg = int(_ps.calculate_incoming_damage(raw, tier, mult, t))
+					dmg = int(_ps.calculate_incoming_damage(raw, mult, t))
 				else:
 					dmg = roundi(raw * mult)
 			if blocked:
@@ -2339,12 +2341,13 @@ func _roll_enemy_party() -> void:
 			if int(names[nm]) > 1:
 				seen[nm] = int(seen.get(nm, 0)) + 1
 				nm = "%s %d" % [nm, seen[nm]]
-			var hp_u := maxi(1, int(src.max_hp) + randi_range(-6, 10))
+			var hp_u := maxi(1, roundi(int(src.max_hp) * randf_range(0.92, 1.08)))
 			_enemy_units.append({
 				"name": nm,
 				"hp": hp_u,
 				"max_hp": hp_u,
-				"damage": maxi(1, int(src.damage_on_wrong) + randi_range(-2, 3)),
+				"atk": maxi(1, int(src.attack)),
+				"def": maxi(0, int(src.defense)),
 				"tier": _get_encounter_tier(src),
 				"source": src,
 			})
@@ -2358,13 +2361,13 @@ func _roll_enemy_party() -> void:
 	var encounter_count := randi_range(min_count, max_count)
 	for enemy_index in range(encounter_count):
 		var unit_name := enemy_name_str if encounter_count == 1 else "%s %d" % [enemy_name_str, enemy_index + 1]
-		var unit_hp := maxi(1, enemy_max_hp + randi_range(-6, 10))
-		var unit_damage := maxi(1, enemy_base_damage + randi_range(-2, 3))
+		var unit_hp := maxi(1, roundi(enemy_max_hp * randf_range(0.92, 1.08)))
 		_enemy_units.append({
 			"name": unit_name,
 			"hp": unit_hp,
 			"max_hp": unit_hp,
-			"damage": unit_damage,
+			"atk": maxi(1, enemy_base_attack),
+			"def": maxi(0, enemy_base_defense),
 			"tier": _get_encounter_tier(),
 		})
 	_active_enemy_index = 0
@@ -2391,15 +2394,20 @@ func _get_player_attack_power() -> int:
 
 
 ## TP za cios wroga: część max HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
-func _tp_from_damage(raw_damage: int, enemy_tier: int) -> int:
-	var undefended := _calculate_player_damage_taken(raw_damage, enemy_tier)
+func _tp_from_damage(raw_damage: int) -> int:
+	var undefended := _calculate_player_damage_taken(raw_damage)
 	var max_hp: int = maxi(_ps.max_hp, 1) if _ps else 100
 	return roundi(TP_PER_FULL_HP_LOST * float(undefended) / float(max_hp))
 
 
-func _calculate_player_damage_taken(raw_damage: int, enemy_tier: int, defending_multiplier: float = 1.0) -> int:
+## Moc ataku wroga przed pancerzem: ATK × 4 z rozrzutem ±10 % (jak „ATK × 4 − DEF × 2” z FNAfB).
+func _enemy_attack_power(enemy_unit: Dictionary) -> int:
+	return roundi(int(enemy_unit.get("atk", enemy_base_attack)) * 4.0 * randf_range(0.9, 1.1))
+
+
+func _calculate_player_damage_taken(raw_damage: int, defending_multiplier: float = 1.0) -> int:
 	if _ps and _ps.has_method("calculate_incoming_damage"):
-		return int(_ps.calculate_incoming_damage(raw_damage, enemy_tier, defending_multiplier, 0))
+		return int(_ps.calculate_incoming_damage(raw_damage, defending_multiplier, 0))
 	return maxi(0, int(round(float(raw_damage) * maxf(defending_multiplier, 0.0))))
 
 

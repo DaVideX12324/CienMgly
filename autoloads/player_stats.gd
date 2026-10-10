@@ -19,8 +19,6 @@ signal status_tick(member_index: int, status_id: String, amount: int)
 const MAX_LEVEL        := 20
 const BASE_HP          := 250
 const HP_AT_MAX_LEVEL  := 1900
-const DEF_SOFTCAP_BASE     := 40.0
-const DEF_SOFTCAP_PER_TIER := 20.0
 const ATK_PER_LEVEL    := 2.0   # domyślne, gdy postać nie ma własnych atk_per_level / def_per_level
 const DEF_PER_LEVEL    := 1.5
 const BASE_XP_TO_LEVEL := 100
@@ -604,17 +602,11 @@ func get_member_total_def(member_index: int) -> int:
 	return total_def
 
 
-## Redukcja procentowa od pancerza: DEF / (DEF + DEF_SOFTCAP_BASE + DEF_SOFTCAP_PER_TIER × tier) — DEF 40: ~40 % na tierze 1,
-## ~29 % na tierze 3, ~22 % na tierze 5. Wrogowie nie mają statu DEF / ATK (stałe obrażenia), więc nie płaski wzór FNAfB.
-func calculate_incoming_damage(raw_damage: int, enemy_tier: int = 1, defending_multiplier: float = 1.0, member_index: int = 0) -> int:
-	var clamped_tier: int = clampi(enemy_tier, 1, 5)
-	var defense: int = get_member_total_def(member_index)
-	var scaled_raw: int = raw_damage + int(round(float(clamped_tier) * 4.0))
-	var reduction: float = float(defense) / (float(defense) + DEF_SOFTCAP_BASE + DEF_SOFTCAP_PER_TIER * float(clamped_tier))
-	var damage_after_armor: int = int(round(float(scaled_raw) * (1.0 - reduction)))
-	var final_damage: int = int(floor(float(damage_after_armor) * maxf(defending_multiplier, 0.0)))
-	var minimum_damage: int = 0 if clamped_tier <= 2 else 1
-	return maxi(minimum_damage, final_damage)
+## Obrażenia członka drużyny jak w FNAfB: (moc ataku − DEF × 2) × mnożnik obrony, co najmniej 1. `attack_power` to ATK
+## wroga × 4 (× mnożnik umiejętności) albo stała z umiejętności.
+func calculate_incoming_damage(attack_power: int, defending_multiplier: float = 1.0, member_index: int = 0) -> int:
+	var after_armor := float(attack_power) - 2.0 * float(get_member_total_def(member_index))
+	return maxi(int(floor(after_armor * maxf(defending_multiplier, 0.0))), 1)
 
 
 func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Array[Dictionary]:
