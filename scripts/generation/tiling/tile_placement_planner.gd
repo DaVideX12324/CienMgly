@@ -107,19 +107,18 @@ static func terrain_cells(ctx: GenerationContext, cells: Array[Vector2i]) -> Arr
 
 
 ## Kratki pod nieprzezroczystym licem S platformy (lico na kratkach maski): w kolumnie nad krawędzią S (niżej
-## chodliwa kratka spoza maski) krawędź + face_up rzędów, oraz schody S.
+## chodliwa kratka spoza maski) krawędź + face_up - 1 rzędów (bez rzędu krawędzi krzyża), oraz schody S (bez górnego rzędu).
 static func plateau_opaque(pl, grid: Dictionary) -> Dictionary:
 	var out := {}
 	for c in pl.mask:
 		var below: Vector2i = c + Vector2i(0, 1)
 		if pl.mask.has(below) or not GridUtils.is_walkable(grid, below) or pl.height_of(below) >= pl.height_of(c):
 			continue
-		for k in range(pl.face_up + 1):
+		for k in range(pl.face_up):  # górny rząd (krawędź krzyża) półprzezroczysty — teren pod nim, cień przy krawędzi
 			out[c - Vector2i(0, k)] = true
-	var tmp := PlateauLayout.new()
-	tmp.face_up = pl.face_up
-	tmp.face_down = pl.face_down
-	tmp.stairs = pl.stairs
-	for c in tmp.stair_cells():
-		out[c] = true
+	# Schody S: rzędy lica; górny rząd (stopnie zaczynają się niżej, nad licem wystają tylko poręcze) dostaje teren.
+	for st in pl.stairs:
+		for x in range(st.x, st.x + st.y):
+			for y in range(st.z - pl.face_up + 1, st.z + pl.face_down + 1):
+				out[Vector2i(x, y)] = true
 	return out
