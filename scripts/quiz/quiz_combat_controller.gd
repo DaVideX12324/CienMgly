@@ -2794,6 +2794,7 @@ func _refresh_stats_panel() -> void:
 			row.visible = true
 			var member := _party_state[i]
 			_set_party_row_name(row, str(member.get("name", "Bohater")))
+			_set_party_row_statuses(row, i)
 			_set_party_stat(row, "StatLP", int(member.get("lp", 0)), int(member.get("lp_max", 1)), "%d/%d" % [int(member.get("lp", 0)), int(member.get("lp_max", 1))])
 			_set_party_stat(row, "StatSP", int(member.get("sp", 0)), int(member.get("sp_max", 1)), "%d/%d" % [int(member.get("sp", 0)), int(member.get("sp_max", 1))])
 			_set_party_stat(row, "StatTP", int(member.get("tp", 0)), int(member.get("tp_max", 1)), "%d/%d" % [int(member.get("tp", 0)), int(member.get("tp_max", 1))])
@@ -2827,6 +2828,18 @@ func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, c
 	bg.corner_radius_bottom_left = corner
 	bg.corner_radius_bottom_right = corner
 	bar.add_theme_stylebox_override("background", bg)
+
+
+## Statusy postaci w wierszu drużyny: nazwy w kolorach statusów (QuizRpgStatusCatalog), puste = brak.
+func _set_party_row_statuses(row: HBoxContainer, member_index: int) -> void:
+	var label := row.get_node_or_null("StatusLabel") as RichTextLabel
+	if label == null:
+		return
+	var parts: Array[String] = []
+	if _ps and _ps.has_method("get_statuses"):
+		for sid in _ps.get_statuses(member_index):
+			parts.append("[color=#%s]%s[/color]" % [QuizRpgStatusCatalog.color_of(String(sid)).to_html(false), QuizRpgStatusCatalog.name_of(String(sid))])
+	label.text = ", ".join(parts)
 
 
 func _set_party_row_name(row: HBoxContainer, value: String) -> void:

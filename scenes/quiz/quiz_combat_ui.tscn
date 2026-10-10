@@ -761,6 +761,15 @@ size_flags_horizontal = 0
 size_flags_vertical = 0
 text = "Bohater"
 
+[node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1771300000]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
 [node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1092062408]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -874,6 +883,15 @@ custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
 text = "Ally 2"
+
+[node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1771300001]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 
 [node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=509783440]
 layout_mode = 2
@@ -989,6 +1007,15 @@ layout_mode = 2
 size_flags_vertical = 0
 text = "Ally 3"
 
+[node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1771300002]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
 [node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=2028103206]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -1102,6 +1129,15 @@ custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
 text = "Ally 4"
+
+[node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1771300003]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
 
 [node name="StatLP" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1848860792]
 layout_mode = 2
