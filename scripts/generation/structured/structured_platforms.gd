@@ -72,11 +72,11 @@ static func _area_groups(canals, sources: Dictionary) -> Array:
 
 
 ## Kratki, na których platforma nie stanie: woda (+1), chodniki, korytarze serwisowe, kładki z prześwitem,
-## barierki, ściany szer. 1, doły, kraty podłogowe, bramy, dźwignie, portale z pierścieniem.
+## barierki, ściany szer. 1, doły, bramy, dźwignie, portale z pierścieniem (kratownice wybierane później, omijają platformy).
 static func _excluded(ctx: GenerationContext, canals, portal_ring: int) -> Dictionary:
 	var ex := {}
 	for src in [canals.water, canals.lanes, canals.service, canals.corridors, canals.blocked, canals.bridge_cells,
-			canals.bridge_clearance, canals.rail_cells, canals.walls_1w, canals.pit_cells, canals.grating]:
+			canals.bridge_clearance, canals.rail_cells, canals.walls_1w, canals.pit_cells]:
 		for p in src:
 			ex[p] = true
 	for p in canals.water:
