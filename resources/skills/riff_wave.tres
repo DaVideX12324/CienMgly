@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "riff_wave"
+display_name = "Fala Riffu"
+description = "Silne wibracje z gitary Bonniego. Szansa na zatrucie wroga."
+color = Color(0.6, 0.4, 0.9, 1)
+atk_coeff = 4.0
+def_coeff = 2.0
+damage_multiplier = 2.0
+hits = 1
+inflict_status = "poison"
+status_chance = 0.4
+sp_cost = 25
+tp_cost = 12
+learn_level = 10

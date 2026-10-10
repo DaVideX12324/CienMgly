@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "speed_share"
+display_name = "Podział Prędkości"
+description = "[TODO: wymaga AGI — na razie daje ATK w górę] Foxy dzieli się swoim impetem z całą drużyną, zwiększając ich zwinność."
+color = Color(0.9, 0.3, 0.2, 1)
+damage_mode = 2
+target = 5
+inflict_status = "atk_up"
+status_chance = 1.0
+sp_cost = 25
+learn_level = 0
