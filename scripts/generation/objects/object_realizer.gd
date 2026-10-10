@@ -43,9 +43,10 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 		level.add_child(runtime)
 	runtime.clear()
 	for layer_name in [DECALS, PROPS] + EXTRA_LAYERS:
-		var old := level.get_node_or_null(layer_name) as TileMapLayer
-		if old != null:
-			old.clear()
+		for name in [layer_name, layer_name + "_up"]:
+			var old := level.get_node_or_null(name) as TileMapLayer
+			if old != null:
+				old.clear()
 	var objects := _objects_node(level)
 	var decal_items := _decal_items_node(level)
 	for child in objects.get_children():
@@ -117,7 +118,15 @@ static func _objects_node(level: Node2D) -> Node2D:
 
 ## Wypieczone DECAL-e: z = 0 z y-sortem (nad trawą z FloorDecor, która na z = -1 sortuje się
 ## kaflami po Y i przykrywała cały węzeł); pod postaciami dzięki DECAL_SORT_LIFT.
-const FACADE_LIFT_SORT := 24  # y_sort_origin warstwy obiektów podniesionych na licu (facade_dy)
+const FACADE_TILE_SORT := 22  # y_sort_origin kafli lica nad bazą (sewer.tres)
+const FACADE_LIFT_SORT := 24  # y_sort_origin warstwy części obiektów nad bazą lica: ponad licem z tych rzędów, pod postaciami
+
+
+## Warstwa `<nazwa>_up` dla części obiektów na licu nad bazą (y_sort_origin FACADE_LIFT_SORT).
+static func _lifted_layer(level: Node2D, tileset: TileSet, layer_name: String) -> TileMapLayer:
+	var layer := _layer(level, tileset, layer_name + "_up")
+	layer.y_sort_origin = FACADE_LIFT_SORT
+	return layer
 
 
 static func _decal_items_node(level: Node2D) -> Node2D:
@@ -148,17 +157,20 @@ static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, ru
 	# Na licu zawsze Props (y-sort razem ze ścianami), na podłodze DECAL pod Decals.
 	var flat := def.klass == ObjectDef.Klass.DECAL and not def.is_wall_mounted()
 	var layer_name := String(def.layer_name) if def.layer_name != &"" else (DECALS if flat else PROPS)
-	if def.facade_dy != 0:
-		layer_name += "_dy%d" % -def.facade_dy
-	var layer := _layer(level, tileset, layer_name)
-	if def.facade_dy != 0:
-		# Podniesiony na licu (facade_dy): sortowanie ponad kaflami lica z tych rzędów (y_sort_origin 22 w sewer.tres),
-		# a pod postaciami przed ścianą (rząd podłogi niżej) — inaczej lico przykrywa obiekt.
-		layer.y_sort_origin = FACADE_LIFT_SORT
+	# Podniesiony na licu (facade_dy): cały na warstwie podniesionej (sortowanie ponad licem z tych rzędów).
+	var layer := _lifted_layer(level, tileset, layer_name) if def.facade_dy != 0 else _layer(level, tileset, layer_name)
 	if not def.tiles.is_empty():
-		# Moduł z kilku kafli (np. kratka 9-slice) — sortowanie / kolizja z danych kafli TileSetu.
+		# Moduł z kilku kafli (np. kratka 9-slice) — sortowanie / kolizja z danych kafli TileSetu. Na licu części nad rzędem
+		# kotwicy z niższym y_sort_origin niż kafle lica idą na warstwę podniesioną — inaczej lico je przykrywa (łuki, dziura).
+		var src_up := tileset.get_source(def.source_id) as TileSetAtlasSource if def.is_wall_mounted() else null
 		for t in def.tiles:
-			layer.set_cell(pl.cell + (t["off"] as Vector2i), def.source_id, t["coords"], int(t.get("alt", 0)))
+			var off: Vector2i = t["off"]
+			var coords_t: Vector2i = t["coords"]
+			var alt_t := int(t.get("alt", 0))
+			var target := layer
+			if src_up != null and off.y < 0 and src_up.has_tile(coords_t) 					and src_up.get_tile_data(coords_t, alt_t).y_sort_origin < FACADE_TILE_SORT:
+				target = _lifted_layer(level, tileset, layer_name)
+			target.set_cell(pl.cell + off, def.source_id, coords_t, alt_t)
 			runtime.counts["tiles"] += 1
 		return
 	var alt := TileSetAtlasSource.TRANSFORM_FLIP_H if pl.flip else 0
