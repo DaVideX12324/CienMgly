@@ -2,9 +2,6 @@
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_mflys"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/dual_attack.tres" id="s_dual_attack"]
-
 [resource]
 script = ExtResource("1_mflys")
 enemy_name = "Mały Nietoperz"
