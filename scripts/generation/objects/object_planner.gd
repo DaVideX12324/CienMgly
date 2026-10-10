@@ -18,8 +18,9 @@ const GatePlannerScript = preload("gate_planner.gd")
 const PORTAL_RING := 2
 const STAIR_RING := 1
 const SPAWN_RING := 1
-const REACH_ROUNDS := 8
-const REACH_NEAR := 2       # przeszkody w tym promieniu (kratki) od odciętego terenu są zdejmowane
+const REACH_ROUNDS := 24
+const REACH_NEAR := 2       # przeszkoda zdejmowana dla odciętego terenu leży najwyżej tyle kratek od niego
+const REACH_MASS_ROUNDS := 4  # ostatnie rundy naprawy: wszystkie przeszkody w REACH_NEAR (zapas przy wielu kawałkach)
 # Przejezdność dla wroga (bity na kratkę): środek kratki / odcinek do środka kratki na E / na S za blisko
 # kształtu przeszkody (promień agenta siatki nawigacji).
 const CLR_CENTER := 1
@@ -1156,12 +1157,13 @@ func _reserve_access(pl: ObjectPlacement) -> void:
 
 # --- 4. Osiągalność ----------------------------------------------------------------------
 
-## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> zdejmij przeszkody w promieniu
-## REACH_NEAR od odciętego kawałka. Osiągalność jak dla wroga (_bfs_agent): po środkach kratek, z odstępem
+## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> z każdego odciętego kawałka zdejmij JEDNĄ przeszkodę
+## (najbliżej przylegającą: promień 1, gdy brak — REACH_NEAR) i policz od nowa — zwykle szczelinę zamyka jeden obiekt,
+## więc reszta zostaje. Osiągalność jak dla wroga (_bfs_agent): po środkach kratek, z odstępem
 ## promienia agenta od dokładnych kształtów przeszkód (te same obrysy co siatka nawigacji) — sama zajętość
 ## kratek przepuszczała szczeliny, w których siatka nawigacji się rwała (500×500: ~1/3 par bez ścieżki).
-## Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada (obstawiony przeszkodami) -> zdejmij przeszkody
-## wokół niego, a gdy się nie da — jego samego. Powtarzaj do skutku.
+## Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada (obstawiony przeszkodami) -> zdejmij jedną przeszkodę
+## przy nim, a gdy się nie da — jego samego. Powtarzaj do skutku.
 ## Kontrola B (bramy GatePlanner): przejście z wejścia przy zamkniętych bramach, brama otwiera się po dojściu do
 ## jej płyty albo klucza i zamka (_bfs_gated). Brama, której nic osiągalnego nie otwiera — z samego planu bram albo
 ## przez przeszkody, których naprawa nie zdjęła — nie powstaje (otwieracz "", płyty bez niej): mapa bez niej jest
@@ -1315,39 +1317,32 @@ func _repair_reach() -> void:
 				boxed[pl] = true
 		if cut.is_empty() and boxed.is_empty():
 			return
-		var near := {}
-		var src: Array = cut.keys()
+		# Grupy: odcięte kawałki (8-spójne) i kratki obstawionych obiektów interaktywnych — z każdej jedna przeszkoda.
+		var groups: Array = _cut_groups(cut)
 		for pl in boxed:
-			src.append_array(Array(pl.cells))
-		for i in src:
-			for dy in range(-REACH_NEAR, REACH_NEAR + 1):
-				for dx in range(-REACH_NEAR, REACH_NEAR + 1):
-					var j: int = i + dy * w + dx
-					if j >= 0 and j < n and absi(j % w - i % w) <= REACH_NEAR:
-						near[j] = true
+			groups.append(Array(pl.cells))
+		var drop := {}
+		# Ostatnie rundy (duże mapy, wiele kawałków): po staremu — wszystkie przeszkody w zasięgu, żeby nic nie zostało odcięte.
+		var greedy: bool = _round < REACH_ROUNDS - REACH_MASS_ROUNDS
+		for g in groups:
+			if greedy:
+				var pick: ObjectPlacement = _blocker(g, boxed, drop)
+				if pick != null:
+					drop[pick] = true
+			else:
+				for pl in _blockers_near(g, boxed):
+					drop[pl] = true
+		if drop.is_empty():
+			if boxed.is_empty():
+				return
+			drop = boxed  # nic wokół nie da się zdjąć — zdejmij obstawione obiekty interaktywne
 		var keep: Array[ObjectPlacement] = []
 		var removed := 0
 		for pl in plan.placements:
-			var hit := false
-			if pl.def.is_solid() and not boxed.has(pl):
-				for j in pl.cells:
-					if near.has(j):
-						hit = true
-						break
-			if hit:
+			if drop.has(pl):
 				removed += 1
 			else:
 				keep.append(pl)
-		if removed == 0:
-			if boxed.is_empty():
-				return
-			# Nic wokół nie da się zdjąć — zdejmij obstawione obiekty interaktywne.
-			keep = []
-			for pl in plan.placements:
-				if boxed.has(pl):
-					removed += 1
-				else:
-					keep.append(pl)
 		plan.removed_for_reach += removed
 		plan.placements = keep
 		# Odtwórz bity zajętości z pozostałych obiektów (zdjęte kratki bywają dzielone przez free).
@@ -1357,6 +1352,88 @@ func _repair_reach() -> void:
 			var bits := ObjectPlan.USED | (ObjectPlan.SOLID if pl.def.is_solid() else 0)
 			for j in pl.cells:
 				plan.occupancy[j] |= bits
+
+
+## Kawałki (8-spójne) odciętych kratek -> Array[Array[int]], kolejność stała (od najmniejszego indeksu).
+func _cut_groups(cut: Dictionary) -> Array:
+	var w := f.width
+	var keys: Array = cut.keys()
+	keys.sort()
+	var seen := {}
+	var out: Array = []
+	for start in keys:
+		if seen.has(start):
+			continue
+		seen[start] = true
+		var comp: Array = [start]
+		var head := 0
+		while head < comp.size():
+			var i: int = comp[head]
+			head += 1
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					var j: int = i + dy * w + dx
+					if cut.has(j) and not seen.has(j) and absi(j % w - i % w) <= 1:
+						seen[j] = true
+						comp.append(j)
+		out.append(comp)
+	return out
+
+
+## Przeszkoda do zdjęcia dla grupy kratek: z kolizją, nie obstawiona skrzynia, z największą liczbą kratek w promieniu 1
+## od grupy (gdy żadnej — REACH_NEAR); null, gdy grupę obsługuje już zdejmowany obiekt albo nic nie ma w zasięgu.
+func _blocker(group: Array, boxed: Dictionary, drop: Dictionary) -> ObjectPlacement:
+	var w := f.width
+	var n := f.width * f.height
+	for r in [1, REACH_NEAR]:
+		var near := {}
+		for i in group:
+			for dy in range(-r, r + 1):
+				for dx in range(-r, r + 1):
+					var j: int = i + dy * w + dx
+					if j >= 0 and j < n and absi(j % w - i % w) <= r:
+						near[j] = true
+		var best: ObjectPlacement = null
+		var best_hits := 0
+		for pl in plan.placements:
+			if not pl.def.is_solid() or boxed.has(pl):
+				continue
+			var hits := 0
+			for j in pl.cells:
+				if near.has(j):
+					hits += 1
+			if hits == 0:
+				continue
+			if drop.has(pl):
+				return null
+			if hits > best_hits:
+				best = pl
+				best_hits = hits
+		if best != null:
+			return best
+	return null
+
+
+## Wszystkie przeszkody z kolizją (bez obstawionych skrzyń) w promieniu REACH_NEAR od grupy.
+func _blockers_near(group: Array, boxed: Dictionary) -> Array:
+	var w := f.width
+	var n := f.width * f.height
+	var near := {}
+	for i in group:
+		for dy in range(-REACH_NEAR, REACH_NEAR + 1):
+			for dx in range(-REACH_NEAR, REACH_NEAR + 1):
+				var j: int = i + dy * w + dx
+				if j >= 0 and j < n and absi(j % w - i % w) <= REACH_NEAR:
+					near[j] = true
+	var out: Array = []
+	for pl in plan.placements:
+		if not pl.def.is_solid() or boxed.has(pl):
+			continue
+		for j in pl.cells:
+			if near.has(j):
+				out.append(pl)
+				break
+	return out
 
 
 ## Przejezdność dla wroga przy obecnych przeszkodach (bity CLR_* na kratkę). Próbki: środek kratki oraz
