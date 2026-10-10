@@ -13,6 +13,9 @@ class_name QuizRpgEnemyData
 ## Staty walki jak w FNAfB: obrażenia = ATK × 4 − DEF celu × 2 (× mnożnik umiejętności).
 @export var attack: int = 24
 @export var defense: int = 12
+## Magia (MAT / MDF) — umiejętności z wzorem magicznym (jak w FNaFB).
+@export var magic_attack: int = 24
+@export var magic_defense: int = 12
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
 @export_range(1, 5, 1) var encounter_tier: int = 2

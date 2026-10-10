@@ -203,6 +203,74 @@ size_flags_horizontal = 3
 layout_mode = 2
 horizontal_alignment = 2
 
+[node name="StatusStatRow2" type="PanelContainer" parent="StatusStatsVBox" unique_id=1771200401]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBox/StatusStatRow2" unique_id=1771200402]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBox/StatusStatRow2/Control" unique_id=1771200403]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBox/StatusStatRow2" unique_id=1771200404]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBox/StatusStatRow2/Margin" unique_id=1771200405]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200406]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200407]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="StatusStatRow3" type="PanelContainer" parent="StatusStatsVBox" unique_id=1771200408]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBox/StatusStatRow3" unique_id=1771200409]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBox/StatusStatRow3/Control" unique_id=1771200410]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBox/StatusStatRow3" unique_id=1771200411]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBox/StatusStatRow3/Margin" unique_id=1771200412]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200413]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200414]
+layout_mode = 2
+horizontal_alignment = 2
+
 [node name="StatusEquipVBox" type="VBoxContainer" parent="." unique_id=1623688138]
 layout_mode = 2
 theme_override_constants/separation = 6

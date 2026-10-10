@@ -69,6 +69,8 @@ var enemy_max_hp := 50
 var enemy_name_str := "Przeciwnik"
 var enemy_base_attack := 24
 var enemy_base_defense := 12
+var enemy_base_magic_attack := 24
+var enemy_base_magic_defense := 12
 var player_base_damage := 20
 var turn_number := 0
 
@@ -196,6 +198,8 @@ func setup(
 	enemy_name_str = p_enemy.enemy_name
 	enemy_base_attack = p_enemy.attack
 	enemy_base_defense = p_enemy.defense
+	enemy_base_magic_attack = p_enemy.magic_attack
+	enemy_base_magic_defense = p_enemy.magic_defense
 	player_base_damage = _get_player_attack_power()
 	_roll_enemy_party()
 	if is_node_ready():
@@ -2301,6 +2305,8 @@ func _roll_enemy_party() -> void:
 				"max_hp": hp_u,
 				"atk": maxi(1, int(src.attack)),
 				"def": maxi(0, int(src.defense)),
+				"mat": maxi(0, int(src.magic_attack)),
+				"mdf": maxi(0, int(src.magic_defense)),
 				"tier": _get_encounter_tier(src),
 				"source": src,
 			})
@@ -2321,6 +2327,8 @@ func _roll_enemy_party() -> void:
 			"max_hp": unit_hp,
 			"atk": maxi(1, enemy_base_attack),
 			"def": maxi(0, enemy_base_defense),
+			"mat": maxi(0, enemy_base_magic_attack),
+			"mdf": maxi(0, enemy_base_magic_defense),
 			"tier": _get_encounter_tier(),
 		})
 	_active_enemy_index = 0

@@ -17,6 +17,8 @@ hp = 240
 max_hp = 240
 attack = 18
 defense = 5
+magic_attack = 18
+magic_defense = 5
 encounter_tier = 1
 patrol_speed = 60.0
 
