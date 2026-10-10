@@ -1240,7 +1240,7 @@ func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars
 func _status_suffix(member: Dictionary) -> String:
 	var names: Array[String] = []
 	for sid in (member.get("statuses", {}) as Dictionary).keys():
-		names.append(str(_ps.STATUS_NAMES.get(sid, sid)) if _ps and "STATUS_NAMES" in _ps else str(sid))
+		names.append(_ps.status_name(str(sid)) if _ps and _ps.has_method("status_name") else str(sid))
 	return "" if names.is_empty() else "  [%s]" % ", ".join(names)
 
 
