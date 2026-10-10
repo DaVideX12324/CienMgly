@@ -55,6 +55,8 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 @export_range(0.0, 0.9, 0.05) var direction_hysteresis: float = 0.5
 
 enum State { IDLE, PATROL, CHASING, COMBAT, DEFEATED }
+const GROUP_RADIUS := 96.0  # px — wrogowie bliżej dołączają do walki (grupa)
+const GROUP_MAX := 4        # najwyżej tyle jednostek w walce z grupy (pole walki ma 5 miejsc)
 var state: State = State.PATROL
 
 var patrol_points: Array[Vector2] = []
@@ -679,6 +681,10 @@ func start_combat(player: Node2D) -> void:
 
 	state = State.COMBAT
 	velocity = Vector2.ZERO
+	# Wrogowie obok (w zasięgu wzroku) dołączają do tej walki — zamiast walki zaraz po walce.
+	var joiners := _group_joiners()
+	for j in joiners:
+		j.join_combat()
 
 	if player.has_method("set_can_move"):
 		player.set_can_move(false)
@@ -693,11 +699,48 @@ func start_combat(player: Node2D) -> void:
 
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
-	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range)
+	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners)
 	var target_parent: Node = get_tree().current_scene if (get_tree() and get_tree().current_scene) else (get_tree().root if get_tree() else null)
 	if target_parent:
 		target_parent.add_child(combat_canvas)
 	get_tree().paused = true
+
+
+## Grupowanie walk: wrogowie (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego, z czystą
+## linią (ściany i obiekty z kolizją zasłaniają), najbliżsi pierwsi — razem z tym najwyżej GROUP_MAX jednostek.
+func _group_joiners() -> Array:
+	var out: Array = []
+	if is_boss or not is_inside_tree():
+		return out
+	var cands: Array = []
+	for n in get_tree().get_nodes_in_group("enemies"):
+		if n == self or not (n is Node2D) or not n.has_method("join_combat"):
+			continue
+		if n.defeated or n.state == State.COMBAT or n.is_boss:
+			continue
+		var d := global_position.distance_to((n as Node2D).global_position)
+		if d <= GROUP_RADIUS and _clear_line_to(n as Node2D):
+			cands.append([d, n])
+	cands.sort_custom(func(a, b) -> bool: return a[0] < b[0])
+	for c in cands:
+		if out.size() + 1 >= GROUP_MAX:
+			break
+		out.append(c[1])
+	return out
+
+
+## Linia do innego wroga bez ścian i przeszkód (jak wzrok: SIGHT_RAY_MASK + obiekty).
+func _clear_line_to(other: Node2D) -> bool:
+	var space := get_world_2d().direct_space_state
+	var q := PhysicsRayQueryParameters2D.create(global_position, other.global_position, SIGHT_RAY_MASK | ObjectBake.object_layer_bit())
+	q.exclude = [get_rid(), (other as CollisionObject2D).get_rid()] if other is CollisionObject2D else [get_rid()]
+	return space.intersect_ray(q).is_empty()
+
+
+## Dołączenie do cudzej walki (grupa): stoi, nie zaczyna własnej; koniec — on_combat_finished jak główny wróg.
+func join_combat() -> void:
+	state = State.COMBAT
+	velocity = Vector2.ZERO
 
 
 func on_combat_finished(player_won: bool, player: Node2D) -> void:

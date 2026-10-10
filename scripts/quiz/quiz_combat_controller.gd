@@ -61,6 +61,7 @@ var quiz_id := ""
 var _diff_range := Vector2i(1, 3)
 var _question_count := 1
 var _encounter_size_range := Vector2i(1, 1)
+var _joined: Array = []   # wrogowie ze świata dołączeni do walki (grupa) — każdy to osobna jednostka
 
 var enemy_hp := 50
 var enemy_max_hp := 50
@@ -178,9 +179,11 @@ func setup(
 	p_quiz_id: String,
 	diff_range: Vector2i,
 	question_count: int,
-	encounter_size_range: Vector2i = Vector2i(1, 1)
+	encounter_size_range: Vector2i = Vector2i(1, 1),
+	p_joined: Array = []
 ) -> void:
 	enemy = p_enemy
+	_joined = p_joined.duplicate()
 	player = p_player
 	quiz_id = p_quiz_id
 	_diff_range = diff_range
@@ -1376,10 +1379,17 @@ func _enemy_turn() -> void:
 
 ## Umiejętność wroga na tę turę: pierwsza z battle_skills dostępna (cooldown, first_turn) i wylosowana z use_chance;
 ## null = zwykły atak. Cooldowny w jednostce wroga ("cooldowns": {indeks: tury}), odliczane co jej turę.
+## Wróg-źródło jednostki (grupa: każda jednostka ze swojego wroga), inaczej główny wróg walki.
+func _unit_source(unit: Dictionary) -> Node2D:
+	var src: Variant = unit.get("source", null)
+	return src if src is Node2D and is_instance_valid(src) else enemy
+
+
 func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
-	if enemy == null or not "battle_skills" in enemy:
+	var src: Node2D = _unit_source(enemy_unit)
+	if src == null or not "battle_skills" in src:
 		return null
-	var skills: Array = enemy.get("battle_skills")
+	var skills: Array = src.get("battle_skills")
 	if skills.is_empty():
 		return null
 	var cds: Dictionary = enemy_unit.get("cooldowns", {})
@@ -1571,6 +1581,10 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		get_parent().queue_free()
 		return
 	enemy.on_combat_finished(player_won, player)
+	for j in _joined:
+		if is_instance_valid(j):
+			j.hp = 0 if player_won else j.max_hp
+			j.on_combat_finished(player_won, player)
 	get_parent().queue_free()
 
 
@@ -1703,7 +1717,7 @@ func _setup_enemy_display() -> void:
 
 	_enemy_displays.clear()
 	for i in range(units.size()):
-		var source_enemy: Node2D = enemy
+		var source_enemy: Node2D = _unit_source(units[i])
 		var display: Node2D = _create_enemy_display_clone(source_enemy, i)
 		var unit_data: Dictionary = units[i]
 		display.sync_hp(int(unit_data.get("hp", source_enemy.hp)))
@@ -2310,6 +2324,33 @@ func _fallback_actor_label(actor: Node) -> String:
 
 func _roll_enemy_party() -> void:
 	_enemy_units.clear()
+	if not _joined.is_empty():
+		# Grupa ze świata: główny wróg + dołączeni, każdy z własnymi statystykami, grafiką i umiejętnościami.
+		var sources: Array = [enemy] + _joined
+		var names := {}
+		for src in sources:
+			names[src.enemy_name] = int(names.get(src.enemy_name, 0)) + 1
+		var seen := {}
+		_bonus_xp_reward = 0
+		for src in sources:
+			var nm: String = src.enemy_name
+			if int(names[nm]) > 1:
+				seen[nm] = int(seen.get(nm, 0)) + 1
+				nm = "%s %d" % [nm, seen[nm]]
+			var hp_u := maxi(1, int(src.max_hp) + randi_range(-6, 10))
+			_enemy_units.append({
+				"name": nm,
+				"hp": hp_u,
+				"max_hp": hp_u,
+				"damage": maxi(1, int(src.damage_on_wrong) + randi_range(-2, 3)),
+				"tier": _get_encounter_tier(src),
+				"source": src,
+			})
+			if src != enemy:
+				_bonus_xp_reward += int(src.xp_reward)
+		_active_enemy_index = 0
+		_refresh_enemy_cache()
+		return
 	var min_count := maxi(1, _encounter_size_range.x)
 	var max_count := maxi(min_count, _encounter_size_range.y)
 	var encounter_count := randi_range(min_count, max_count)
@@ -2360,12 +2401,13 @@ func _calculate_player_damage_taken(raw_damage: int, enemy_tier: int, defending_
 	return maxi(0, int(round(float(raw_damage) * maxf(defending_multiplier, 0.0))))
 
 
-func _get_encounter_tier() -> int:
-	if enemy != null:
-		var direct_tier: Variant = enemy.get("encounter_tier")
+func _get_encounter_tier(src: Node = null) -> int:
+	var e: Node = src if src != null else enemy
+	if e != null:
+		var direct_tier: Variant = e.get("encounter_tier")
 		if direct_tier is int:
 			return clampi(int(direct_tier), 1, 5)
-	if enemy != null and bool(enemy.get("is_boss")):
+	if e != null and bool(e.get("is_boss")):
 		return clampi(_diff_range.y, 1, 5)
 	return clampi(int(round(float(_diff_range.x + _diff_range.y) * 0.5)), 1, 5)
 
