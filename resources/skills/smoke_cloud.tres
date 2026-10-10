@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "smoke_cloud"
+display_name = "Chmura Dymu"
+description = "Wypuszcza gęsty dym. Szansa na oślepienie wroga."
+color = Color(0.6, 0.6, 0.65, 1)
+damage_mode = 2
+target = 0
+inflict_status = "blind"
+status_chance = 0.5
+sp_cost = 30
+tp_cost = 0
+learn_level = 15

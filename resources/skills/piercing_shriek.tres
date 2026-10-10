@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "piercing_shriek"
+display_name = "Przeszywający Krzyk"
+description = "Wrzask, który rani zatrutego wroga ponad dwa razy mocniej. Może zatruć."
+color = Color(0.7, 0.9, 0.3, 1)
+base_damage = 105
+atk_coeff = 3.5
+def_coeff = 1.6
+damage_multiplier = 1.0
+variance = 0.05
+bonus_vs_status = "poison"
+bonus_multiplier = 2.1
+inflict_status = "poison"
+status_chance = 0.15
+sp_cost = 29
+learn_level = 10

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "rousing_tune"
+display_name = "Porywająca Melodia"
+description = "Gra motywujący utwór. Zwiększa atak sojusznika."
+color = Color(0.9, 0.6, 0.3, 1)
+damage_mode = 2
+target = 4
+inflict_status = "atk_up"
+status_chance = 1.0
+sp_cost = 30
+tp_cost = 20
+learn_level = 20

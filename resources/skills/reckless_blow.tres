@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "reckless_blow"
+display_name = "Ryzykowny Cios"
+description = "Niewiarygodny cios... ale trafia rzadko (8 %)."
+color = Color(1, 0.4, 0.3, 1)
+damage_mode = 1
+fixed_damage = 25000
+variance = 0.0
+success_rate = 0.08
+sp_cost = 50

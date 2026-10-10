@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemySkill" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+display_name = "Fala Uderzeniowa"
+log_text = "{enemy} generuje potężną falę dźwiękową!"
+use_chance = 0.3
+cooldown_turns = 2
+target = 1
+base_damage = 80
+mat_coeff = 2.5
+mdf_coeff = 1.5
+inflict_status = "confusion"
+status_chance = 0.3
+color = Color(0.3, 0.6, 1.0, 1)
