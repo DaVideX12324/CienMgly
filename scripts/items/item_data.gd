@@ -15,6 +15,8 @@ class_name QuizRpgItemData
 @export var heal_amount: int = 0
 @export var sp_restore: int = 0
 @export var tp_restore: int = 0
+## Statusy zdejmowane przez przedmiot (np. "poison" — PlayerStats.STATUS_*).
+@export var cure_statuses: PackedStringArray = []
 @export var atk_bonus: int = 0
 @export var def_bonus: int = 0
 
@@ -27,4 +29,6 @@ func get_effect_summary() -> String:
 		parts.append("+%d SP" % sp_restore)
 	if tp_restore > 0:
 		parts.append("+%d TP" % tp_restore)
+	if cure_statuses.has("poison"):
+		parts.append("leczy zatrucie")
 	return ", ".join(parts)

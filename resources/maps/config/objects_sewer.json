@@ -18,6 +18,165 @@
     "barrier_offset": "res://modules/quiz_rpg/scenes/objects/sewer/spike_barrier_offset.tscn",
     "barrier_offset_chance": 0.0
   },
+  "vignettes": [
+      {
+        "id": "sklad_pod_licem",
+        "flip_h": true,
+        "parts": [
+          {
+            "id": "crates",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              2,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          }
+        ],
+        "clear": [
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "stos_skrzyn",
+        "flip_h": true,
+        "parts": [
+          {
+            "id": "crates",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              0,
+              1
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          }
+        ],
+        "clear": [
+          [
+            1,
+            1
+          ]
+        ]
+      },
+      {
+        "id": "kat_skrzyn",
+        "flip_h": true,
+        "parts": [
+          {
+            "id": "crates",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n",
+              "wall_w"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "crates",
+            "at": [
+              0,
+              1
+            ],
+            "tags": [
+              "wall_w"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "beczki",
+        "flip_h": true,
+        "parts": [
+          {
+            "id": "barrels",
+            "at": [
+              0,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              1,
+              0
+            ],
+            "tags": [
+              "wall_n"
+            ]
+          },
+          {
+            "id": "barrels",
+            "at": [
+              0,
+              1
+            ]
+          }
+        ],
+        "clear": [
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    ],
   "groups": {
     "pillar_decor": {
       "class": "PROP",
@@ -60,7 +219,14 @@
           1,
           4
         ],
-        "radius": 1
+        "radius": 1,
+        "patterns": [
+          "sklad_pod_licem",
+          "stos_skrzyn",
+          "kat_skrzyn",
+          "beczki"
+        ],
+        "pattern_chance": 0.6
       },
       "priority": 380,
       "set": "storage"
@@ -133,14 +299,14 @@
       "class": "DECAL",
       "placement": "grid",
       "source": 1,
-      "density": 3,
+      "density": 7,
       "flip_h": true,
       "cluster": {
         "size": [
-          2,
-          4
+          1,
+          3
         ],
-        "radius": 2
+        "radius": 1
       }
     },
     "bottles": {
@@ -231,6 +397,7 @@
       "collision": "tile",
       "density": 0.15,
       "spacing": 3,
+      "set": "pillars",
       "prefer": [
         "open"
       ]
@@ -306,6 +473,7 @@
     },
     {
       "id": "table",
+      "room_group": "table",
       "group": "furniture",
       "size": [
         3,
@@ -335,7 +503,7 @@
           -7
         ]
       },
-      "per_room": 0.5,
+      "per_room": 0.25,
       "atlas": [
         2,
         5
@@ -370,7 +538,207 @@
         }
       ],
       "source": 1,
-      "per_chamber": 0.5
+      "per_chamber": 0.25
+    },
+    {
+      "id": "table_long",
+      "room_group": "table",
+      "group": "furniture",
+      "size": [
+        4,
+        2
+      ],
+      "footprint": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "shape": {
+        "rect": [
+          60,
+          10
+        ],
+        "offset": [
+          0,
+          -7
+        ]
+      },
+      "per_room": 0.2,
+      "per_chamber": 0.2,
+      "tiles": [
+        [
+          0,
+          0,
+          2,
+          5
+        ],
+        [
+          1,
+          0,
+          3,
+          5
+        ],
+        [
+          2,
+          0,
+          3,
+          5
+        ],
+        [
+          3,
+          0,
+          4,
+          5
+        ]
+      ],
+      "source": 7,
+      "companions": [
+        {
+          "id": "chairs",
+          "count": [
+            1,
+            3
+          ],
+          "radius": 1,
+          "no_corners": true
+        },
+        {
+          "id": "misc_clutter",
+          "count": [
+            1,
+            3
+          ],
+          "radius": 1,
+          "on": 0.8
+        },
+        {
+          "id": "cups",
+          "count": [
+            0,
+            2
+          ],
+          "radius": 1,
+          "on": 0.8
+        }
+      ]
+    },
+    {
+      "id": "table_xl",
+      "room_group": "table",
+      "group": "furniture",
+      "size": [
+        5,
+        2
+      ],
+      "footprint": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ],
+      "shape": {
+        "rect": [
+          76,
+          10
+        ],
+        "offset": [
+          0,
+          -7
+        ]
+      },
+      "per_room": 0.12,
+      "per_chamber": 0.12,
+      "tiles": [
+        [
+          0,
+          0,
+          2,
+          5
+        ],
+        [
+          1,
+          0,
+          3,
+          5
+        ],
+        [
+          2,
+          0,
+          3,
+          5
+        ],
+        [
+          3,
+          0,
+          3,
+          5
+        ],
+        [
+          4,
+          0,
+          4,
+          5
+        ]
+      ],
+      "source": 7,
+      "companions": [
+        {
+          "id": "chairs",
+          "count": [
+            1,
+            3
+          ],
+          "radius": 1,
+          "no_corners": true
+        },
+        {
+          "id": "misc_clutter",
+          "count": [
+            1,
+            3
+          ],
+          "radius": 1,
+          "on": 0.8
+        },
+        {
+          "id": "cups",
+          "count": [
+            0,
+            2
+          ],
+          "radius": 1,
+          "on": 0.8
+        }
+      ]
     },
     {
       "id": "chairs",
@@ -579,7 +947,7 @@
     {
       "id": "copper_rubble",
       "group": "clutter",
-      "density": 1,
+      "density": 1.5,
       "atlas": [
         8,
         8
@@ -776,6 +1144,8 @@
         1,
         2
       ],
+      "facade_h": 4,
+      "facade_dy": -1,
       "room_density": 18
     },
     {

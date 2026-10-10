@@ -77,6 +77,12 @@ var chambers: Array = []
 ## żeby obiekt nad końcem (krata) pasował do kafli kanału.
 var north_end_face: Dictionary = {}
 
+## Korytarze-schody (StructuredStairs): {rect: Rect2i, room: StringName, zone: Array[Vector2i], veil_rows: int} —
+## prosty korytarz pod ślepym pokojem to schody w górę, pokój wyżej (HeightVeil). stair_cells: wszystkie ich kratki
+## (bez obiektów, bram, kratownic, krawężników, platform).
+var stair_corridors: Array = []
+var stair_cells: Dictionary = {}  # Vector2i -> bool
+
 
 func is_empty() -> bool:
 	return cells.is_empty()

@@ -4,7 +4,7 @@
 
 [node name="Cave" instance=ExtResource("1_base")]
 level_type = 2
-next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+next_level_path = "res://modules/quiz_rpg/scenes/maps/levels/sewer.tscn"
 previous_level_path = "res://modules/quiz_rpg/scenes/maps/tutorial_area.tscn"
 previous_spawn_name = "Tutorial-Caves"
 location_name = "Jaskinia"

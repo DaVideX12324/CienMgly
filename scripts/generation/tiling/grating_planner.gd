@@ -4,12 +4,14 @@ extends RefCounted
 ## kompleksów i pokoi (canals.areas) — prostokąt z `sizes` ([w, h]), z szansą `shape_chance` suma dwóch
 ## nachodzących prostokątów (L / T / krzyż); liczba `per_1000` na 1000 kratek tych obszarów. Kratownica + `margin`
 ## kratek dookoła (odstęp od ściany i krawędzi podłogi) musi leżeć na podłodze bez wody, chodników,
-## korytarzy serwisowych, kładek z prześwitem, barierek, portali i ścian szer. 1; odstęp `spacing` od innych.
+## korytarzy serwisowych, kładek z prześwitem, barierek, portali, ścian szer. 1 i platform (`avoid`); odstęp `spacing`
+## od innych. Foliage (`grass`, maska terenu na FloorDecor) najwyżej na skraju: tylko na kratkach obwodu kratownicy,
+## nie więcej niż `foliage_edge` (część) z nich — kratownica nie ginie pod mchem.
 ## Wybór w generatorze układu (select -> canals.grating_shapes — planer obiektów trzyma z dala drobnicę), malowanie
 ## w tilingu (plan): teren na Floor po podłodze (maska = sama kratownica — krawędzie na jej obwodzie).
 ##
 ## JSON: "grating": {"terrain": 5, "per_1000": 1.5, "sizes": [[2, 2], [3, 2], [4, 3], [6, 3]], "shape_chance": 0.6,
-##        "margin": 1, "spacing": 4}
+##        "margin": 1, "spacing": 4, "foliage_edge": 0.34}
 
 
 static func plan(ctx: GenerationContext, terrain: TerrainPaintPlan) -> void:
@@ -27,7 +29,7 @@ static func plan(ctx: GenerationContext, terrain: TerrainPaintPlan) -> void:
 
 
 ## Wybór kratownic (w generatorze układu, przed obiektami) -> canals.grating_shapes / canals.grating.
-static func select(grid: Dictionary, canals, portal_zone: Dictionary, seed_value: int, cfg: Dictionary) -> int:
+static func select(grid: Dictionary, canals, portal_zone: Dictionary, seed_value: int, cfg: Dictionary, avoid: Dictionary = {}, grass: Array = []) -> int:
 	if cfg.is_empty() or canals == null or not "areas" in canals or canals.areas.is_empty() or int(cfg.get("terrain", -1)) < 0:
 		return 0
 	var sizes: Array = cfg.get("sizes", [[2, 2], [4, 3]])
@@ -35,8 +37,12 @@ static func select(grid: Dictionary, canals, portal_zone: Dictionary, seed_value
 	var spacing := int(cfg.get("spacing", 4))
 	var bad := {}
 	for d in [canals.water, canals.lanes, canals.service, canals.crossing_cells, canals.bridge_clearance,
-			canals.rail_cells, canals.walls_1w, portal_zone]:
+			canals.rail_cells, canals.walls_1w, canals.stair_cells, portal_zone, avoid]:
 		bad.merge(d)
+	var grass_set := {}
+	for c in grass:
+		grass_set[c] = true
+	var foliage_edge := float(cfg.get("foliage_edge", 0.34))
 	var cands: Array[Vector2i] = []
 	for p: Vector2i in canals.areas:
 		var a := String(canals.areas[p])
@@ -69,7 +75,7 @@ static func select(grid: Dictionary, canals, portal_zone: Dictionary, seed_value
 		var bbox := Rect2i(cells.keys()[0], Vector2i.ONE)
 		for c: Vector2i in cells:
 			bbox = bbox.expand(c).expand(c + Vector2i.ONE)
-		if _fits(grid, canals, bad, cells, bbox, margin, placed, spacing):
+		if _fits(grid, canals, bad, cells, bbox, margin, placed, spacing) and _foliage_ok(cells, grass_set, foliage_edge):
 			placed.append(bbox)
 			var arr: Array[Vector2i] = []
 			for c: Vector2i in cells:
@@ -78,6 +84,28 @@ static func select(grid: Dictionary, canals, portal_zone: Dictionary, seed_value
 			arr.sort()
 			canals.grating_shapes.append(arr)
 	return placed.size()
+
+
+## Foliage na kratownicy tylko na skraju: kratki z mchem leżą na obwodzie (sąsiad ortogonalny spoza kratownicy) i jest
+## ich najwyżej `share` kratek obwodu (min. 1).
+static func _foliage_ok(cells: Dictionary, grass: Dictionary, share: float) -> bool:
+	if grass.is_empty():
+		return true
+	var border := 0
+	var covered := 0
+	for c: Vector2i in cells:
+		var edge := false
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if not cells.has(c + d):
+				edge = true
+				break
+		if edge:
+			border += 1
+		if grass.has(c):
+			if not edge:
+				return false
+			covered += 1
+	return covered <= maxi(1, int(border * share))
 
 
 static func _rect_cells(r: Rect2i) -> Dictionary:

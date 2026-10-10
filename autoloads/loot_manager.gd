@@ -95,7 +95,7 @@ func _roll_item_count(item_id: String) -> int:
 	match item_id:
 		"potion":
 			return 1 if _rng.randf() < 0.8 else 2
-		"ether", "focus_tonic":
+		"ether", "focus_tonic", "antidote":
 			return 1
 		_:
 			return 1
@@ -106,6 +106,7 @@ func _get_barrel_loot_table() -> Array[Dictionary]:
 		{"item_id": "potion", "weight": 55},
 		{"item_id": "ether", "weight": 25},
 		{"item_id": "focus_tonic", "weight": 15},
+		{"item_id": "antidote", "weight": 15},
 		{"item_id": "lucky_charm", "weight": 5},
 	]
 
