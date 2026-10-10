@@ -1227,13 +1227,21 @@ func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars
 	var hp_progress: Range = hp_row.get_node("BarProgress") as Range
 	var sp_progress: Range = sp_row.get_node("BarProgress") as Range
 	portrait.texture = member.get("portrait") as Texture2D
-	name_label.text = "%s  LV %d" % [str(member.get("name", "Bohater")), int(member.get("level", 1))]
+	name_label.text = "%s  LV %d%s" % [str(member.get("name", "Bohater")), int(member.get("level", 1)), _status_suffix(member)]
 	_populate_bar_row(hp_row, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 	_populate_bar_row(sp_row, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
 	if hp_progress:
 		(hp_progress as Control).visible = show_bars
 	if sp_progress:
 		(sp_progress as Control).visible = show_bars
+
+
+## Statusy członka po nazwie, np. „  [Zatrucie]” (PlayerStats.STATUS_NAMES).
+func _status_suffix(member: Dictionary) -> String:
+	var names: Array[String] = []
+	for sid in (member.get("statuses", {}) as Dictionary).keys():
+		names.append(_ps.status_name(str(sid)) if _ps and _ps.has_method("status_name") else str(sid))
+	return "" if names.is_empty() else "  [%s]" % ", ".join(names)
 
 
 func _populate_party_row(row: Control, member: Dictionary) -> void:
@@ -1243,7 +1251,7 @@ func _populate_party_row(row: Control, member: Dictionary) -> void:
 	var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
 	var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
 	portrait.texture = member.get("portrait") as Texture2D
-	name_label.text = str(member.get("name", "Bohater"))
+	name_label.text = str(member.get("name", "Bohater")) + _status_suffix(member)
 	level_label.text = "LV %d" % int(member.get("level", 1))
 	_populate_bar_row(hp_row, "ZYCIE", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 	_populate_bar_row(sp_row, "MANA", int(member.get("sp", 0)), int(member.get("max_sp", 1)))

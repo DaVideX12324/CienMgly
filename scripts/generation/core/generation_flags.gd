@@ -29,6 +29,12 @@ var room_density: float = 1.0
 # Wejście: edge (wnęka przy krawędzi mapy, jak dotąd) | center (w pokoju najbliżej środka mapy, bez
 # wnęki — np. zejście włazem w ściekach; wyjście nadal przy krawędzi, w najdalszym pokoju).
 var entrance_mode: String = "edge"
+# Wygląd wejścia i wyjścia (PortalGenerator.carve_portal_at_wall): "" — jak dotąd (środek pokoju / wnęka przy krawędzi),
+# "ladder" — drabina na licu północnej ściany pokoju (scena portal_scene), "stairs" — schody od środka pokoju do
+# północnej ściany (kafle generator_behaviour.portal_stairs_tiles), przejście na ich szczycie, "alcove_stairs" — jak ""
+# (wnęki przy krawędzi mapy), w każdej wnęce schody od jej połowy do końca (portal_stairs_tiles.N / S / E / W).
+var portal_style: String = ""
+var portal_scene: String = ""
 # Układ pomieszczeń: interior (pokoje organiczne / jaskiniowe) | structured (układ strukturalny / architektoniczny).
 var layout: String = "interior"
 ## Opcje zaawansowane układu structured z sekcji "structured_layout" companion-JSON
@@ -37,6 +43,9 @@ var structured_config: Dictionary = {}
 var facade_rhythm: Dictionary = {}
 ## Sekcja "tiling" companion-JSON (np. "grating" — kratownice wybierane już w układzie, przed obiektami).
 var tiling_config: Dictionary = {}
+## Sekcja "spawns" companion-JSON — wrogowie rozproszeni po całej mapie (SpawnPlanner._plan_spread); pusta = stary
+## tryb (2–4 wrogów w co drugim pokoju).
+var spawn_config: Dictionary = {}
 
 # --- Pre-processing ---
 var enable_grid_cleanup: bool = true
@@ -110,6 +119,10 @@ var plateau_pit_levels: int = 0            # poziomy zagłębień (0 = brak, 1 =
 var plateau_pit_threshold: float = 0.3     # doły tam, gdzie szum < -próg (NIŻSZY = więcej dołów)
 var platform_max_stairs: int = 4           # maks. schodów „z wyglądu” na płaskowyż — liczba losowana 0..max (S, potem N, E, W); schody dla osiągalności ponad to
 var stair_max_width: int = 3               # schody: min. 2 ([L][R]), szersze dokładają MID
+# Wysokość lica płaskowyżu (rzędy lica w kolumnie, z krawędzią topu). 2 = jaskinie (krawędź maski + stopa pod
+# nią); z flagą facade_base_on_wall lico leży na kratkach maski: krawędź + face_h - 1 rzędów nad nią (ścieki 3H:
+# krawędź krzyża + 2 rzędy lica, jak moduł FACADE_3H). Schody S zajmują całe lico.
+var plateau_face_h: int = 2
 
 # --- Obiekty statyczne i interaktywne (ObjectPlanner) — domyślnie WYŁĄCZONE (parytet) ---
 var enable_objects: bool = false

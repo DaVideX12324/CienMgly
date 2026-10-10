@@ -220,6 +220,13 @@ static func compute_masks(ctx: GenerationContext, terrain_cells: Array[Vector2i]
 				bed.append(p)
 		bed.sort()
 		grass_cells.append_array(bed)
+	if canals != null and "stair_cells" in canals and not canals.stair_cells.is_empty():
+		# korytarze-schody bez mchu
+		var dry_steps: Array[Vector2i] = []
+		for p in grass_cells:
+			if not canals.stair_cells.has(p):
+				dry_steps.append(p)
+		grass_cells = dry_steps
 	return {
 		"seed": ctx.seed_value,
 		"mud": _mask(cells, ctx.portal_zone, ctx.seed_value + 202, fl.terrain_mud_frequency, fl.terrain_mud_threshold, smoothing),
@@ -237,6 +244,7 @@ static func compute_for_result(result, seed_value: int, flags: GenerationFlags) 
 	ctx.seed_value = seed_value
 	ctx.flags = flags
 	ctx.plateau = result.plateau
+	ctx.portal_void = result.portal_void
 	ctx.canals = result.canals
 	for p in result.entrance_zone:
 		ctx.portal_zone[p] = true
@@ -288,7 +296,25 @@ static func plan_masks(ctx: GenerationContext, terrain_plan: TerrainPaintPlan, t
 			for p in terrain_cells:
 				if GridUtils.is_walkable(ctx.grid, p):
 					edge_mask.append(p)
-		terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true, edge_mask)
+		var pl = ctx.plateau
+		if fl.floor_edges_by_walkable and pl != null and not pl.is_empty() and pl.face_down == 0:
+			# Platformy z licem na kratkach maski: góra platformy (z rimem / bokiem) osobno od reszty podłogi —
+			# brzeg terenu (cień) po obu stronach linii krawędzi platformy, nie kratkę dalej.
+			var top: Array[Vector2i] = []
+			var rest: Array[Vector2i] = []
+			var rest_mask: Array[Vector2i] = []
+			for p in terrain_cells:
+				if pl.mask.has(p):
+					top.append(p)
+				else:
+					rest.append(p)
+			for p in edge_mask:
+				if not pl.mask.has(p):
+					rest_mask.append(p)
+			terrain_plan.add_batch(&"Floor", rest, 0, fl.floor_terrain, 0, true, rest_mask)
+			terrain_plan.add_batch(&"Floor", top, 0, fl.floor_terrain, 0, true, top)
+		else:
+			terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true, edge_mask)
 	var mud_idx: int = fl.terrain_mud_index if fl != null else 1
 	var grass_idx: int = fl.terrain_grass_index if fl != null else 2
 	if mud_idx >= 0:

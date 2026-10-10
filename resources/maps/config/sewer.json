@@ -56,7 +56,14 @@
     "canal_bridge_spacing": 24,
     "enable_objects": true,
     "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer.json",
-    "canal_dry_chance": 0.4
+    "canal_dry_chance": 0.4,
+    "portal_style": "ladder",
+    "portal_scene": "res://modules/quiz_rpg/scenes/objects/portal_ladder.tscn",
+    "enable_platforms": true,
+    "plateau_face_h": 3,
+    "plateau_min_area": 16,
+    "platform_max_stairs": 1,
+    "stair_max_width": 3
   },
   "structured_layout": {
     "linear_feature_type": "canal",
@@ -112,7 +119,9 @@
     "room_size_w": [10, 17],
     "room_size_h": [9, 14],
     "loop_chance": 0.35,
-    "corridor_room_chance": 0.5
+    "corridor_room_chance": 0.5,
+    "platforms": {"sides": ["N", "S", "E", "W"], "sources": {"hall": 0.9, "chamber": 0.7, "room": 0.6}, "min_width": 7, "top_rows": [2, 3], "front": 3, "portal_ring": 3, "room_min_area": 90, "wobble": {"chance": 0.7, "segment": [4, 7], "extra": 2}},
+    "corridor_stairs": {"chance": 0.7, "max": 3, "min_len": 4, "max_width": 4, "zone": [30, 900], "veil_rows": 4, "portal_ring": 2}
   },
   "facade_rhythm": {
     "pillar_spacing_options": [4, 5],
@@ -126,8 +135,24 @@
     "threshold": 0.1,
     "segment_flip_chance": 0.1
   },
+  "platform_tiles": {
+    "tileset": "sewer_platform",
+    "derive_from": "sewer",
+    "shift": {"source": 0, "rect": [6, 0, 6, 6], "offset": [-6, 0]},
+    "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]}
+  },
+  "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35, "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15, "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025},
+  "enemies": {
+    "beasts": [
+      "scenes/enemies/pixel_crawler/rat_base.tscn",
+      ["scenes/enemies/pixel_crawler/rat_rogue.tscn", "scenes/enemies/pixel_crawler/rat_mage.tscn"],
+      "scenes/enemies/pixel_crawler/rat_warrior.tscn"
+    ],
+    "bandits": [
+      ["scenes/enemies/bandit_1.tscn", "scenes/enemies/bandit_2.tscn"]
+    ]
+  },
   "scenes": {"chest": "res://modules/quiz_rpg/scenes/objects/sewer/sewer_chest.tscn"},
-  "vignettes_catalog": "res://modules/quiz_rpg/resources/maps/vignettes/sewer_vignettes.json",
   "tilesets": {
     "default": "sewer",
     "enabled": [

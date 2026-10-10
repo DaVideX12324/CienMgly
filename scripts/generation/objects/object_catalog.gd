@@ -17,10 +17,10 @@ extends RefCounted
 const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 const KEYS := [
 	"id", "group", "class", "placement", "jitter", "spacing", "spacing_px", "density", "count", "per_room",
-	"per_chamber", "room_density", "big",
+	"per_chamber", "room_density", "big", "room_group",
 	"atlas", "variants", "size", "footprint", "scene", "collision", "shape", "context", "avoid", "require", "prefer",
 	"levels", "terrain", "terrain_margin", "cluster", "companions", "keep_paths", "priority", "flip_h",
-	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "span_floor", "canal_end", "canal_end_dy", "canal_end_on", "facade_h", "layer", "stack", "set", "canal_gap", "facing", "facing_pref",
+	"mount", "source", "tiles", "rhythm", "rhythm_area_chance", "span", "on_pillar", "span_floor", "canal_end", "canal_end_dy", "canal_end_on", "facade_h", "facade_dy", "layer", "stack", "set", "canal_gap", "facing", "facing_pref",
 ]
 ## Montaż obiektu: na podłodze (domyślnie) albo na licu ściany (WallDecorPlanner).
 const MOUNTS := ["floor", "facade", "rim"]
@@ -50,6 +50,14 @@ var area_weights: Dictionary = {}
 var set_gap: int = 0
 ## Sceny zagadek bram (GatePlanner): {"barrier": res://…, "lock": res://…, "key": res://…}. JSON: "gates".
 var gates: Dictionary = {}
+## Winiety — kompozycje kilku obiektów z katalogu w stałym układzie (wzór: makiety autora paczki), stawiane przed
+## pojedynczymi obiektami (ObjectPlanner._place_vignettes). JSON "vignettes": [{
+##   "id": "skład", "parts": [{"id": "crates", "at": [0, 0], "variant": 0, "flip": false, "tags": ["wall_n"]}, …],
+##   "per_room": 0.4, "per_chamber": 0.4, "density": 0.1,   # szansa na pokój / komnatę, sztuki na 100 kotwic poza nimi
+##   "clear": [[0, 1], …],                                  # kratki (względem kotwicy) wolne od obiektów — dojście
+##   "flip_h": true                                          # odbicie całej winiety w poziomie (losowo)
+## }]. Kotwica = kratka części 0 (at = [0, 0]); "at" = przesunięcie podstawy części względem kotwicy.
+var vignettes: Array[Dictionary] = []
 
 # @tool + leniwy mutex: jak w ObjectBake (narzędzie edytora).
 static var _cache: Dictionary = {}
@@ -115,6 +123,12 @@ func _parse(d: Dictionary) -> void:
 		area_weights[StringName(k)] = float(aw[k])
 	set_gap = int(d.get("set_gap", 0))
 	gates = d.get("gates", {}) if d.get("gates", {}) is Dictionary else {}
+	if d.get("vignettes", []) is Array:
+		for v in d.get("vignettes", []):
+			if v is Dictionary and v.get("parts", []) is Array and not (v.get("parts", []) as Array).is_empty():
+				vignettes.append(v)
+			else:
+				errors.append("Winieta '%s': brak listy parts." % (v.get("id", "?") if v is Dictionary else "?"))
 	var groups: Dictionary = d.get("groups", {}) if d.get("groups", {}) is Dictionary else {}
 	for g in groups:
 		if not (groups[g] is Dictionary):
@@ -154,6 +168,17 @@ func _parse(d: Dictionary) -> void:
 			wall_defs.append(def)
 		else:
 			defs.append(def)
+	var vig_ids := {}
+	for v in vignettes:
+		vig_ids[StringName(String(v.get("id", "")))] = true
+	for od in defs:
+		for pid in od.cluster_patterns:
+			if not vig_ids.has(pid):
+				errors.append("Obiekt '%s': cluster.patterns — nieznana winieta '%s'." % [od.id, pid])
+	for v in vignettes:
+		for part in v.get("parts", []):
+			if not (part is Dictionary) or not seen.has(StringName(String(part.get("id", "")))):
+				errors.append("Winieta '%s': nieznany obiekt części '%s'." % [v.get("id", "?"), part.get("id", "?") if part is Dictionary else "?"])
 	# Towarzysze muszą wskazywać obiekty z katalogu.
 	for od in defs:
 		var ok: Array[Dictionary] = []
@@ -355,6 +380,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 				errors.append("%s: nieznany tag w %s '%s'." % [tag, key, t])
 	def.per_room = clampf(float(m.get("per_room", 0.0)), 0.0, 1.0)
 	def.per_chamber = clampf(float(m.get("per_chamber", 0.0)), 0.0, 1.0)
+	def.room_group = StringName(String(m.get("room_group", "")))
 	def.force_big = bool(m.get("big", false))
 	def.room_density = maxf(float(m.get("room_density", 0.0)), 0.0)
 	for lv in m.get("levels", []):
@@ -375,6 +401,9 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 			def.cluster_min = maxi(sz.x, 1)
 			def.cluster_max = maxi(sz.y, def.cluster_min)
 			def.cluster_radius = maxi(int(cl.get("radius", 2)), 1)
+			for pid in cl.get("patterns", []):
+				def.cluster_patterns.append(StringName(String(pid)))
+			def.cluster_pattern_chance = clampf(float(cl.get("pattern_chance", 0.5 if not def.cluster_patterns.is_empty() else 0.0)), 0.0, 1.0)
 		else:
 			errors.append("%s: cluster to {\"size\": [a, b], \"radius\": r}." % tag)
 	var comps = m.get("companions", [])
@@ -402,6 +431,7 @@ func _build(m: Dictionary, order: int) -> ObjectDef:
 	def.span_floor = bool(m.get("span_floor", false)) and not def.is_wall_mounted()
 	def.canal_end = clampf(float(m.get("canal_end", 0.0)), 0.0, 1.0) if def.is_wall_mounted() else 0.0
 	def.canal_end_dy = clampi(int(m.get("canal_end_dy", 0)), -2, 1)
+	def.facade_dy = clampi(int(m.get("facade_dy", 0)), -2, 0) if def.is_wall_mounted() else 0
 	def.canal_end_on = StringName(String(m.get("canal_end_on", "any")))
 	def.set_id = StringName(String(m.get("set", "")))
 	def.canal_gap = maxi(int(m.get("canal_gap", 0)), 0)

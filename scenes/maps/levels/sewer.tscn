@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://c8npsap0omws"]
+
+[ext_resource type="PackedScene" uid="uid://cc8kde0qlhh73" path="res://modules/quiz_rpg/scenes/maps/procedural_level.tscn" id="1_base"]
+[ext_resource type="TileSet" uid="uid://ctx3guckjpr6a" path="res://modules/quiz_rpg/resources/maps/sewer.tres" id="2_sewer"]
+
+[node name="Sewer" instance=ExtResource("1_base")]
+level_type = 2
+custom_tileset = ExtResource("2_sewer")
+next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
+previous_level_path = "res://modules/quiz_rpg/scenes/maps/levels/cave.tscn"
+location_name = "Ścieki"

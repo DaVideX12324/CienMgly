@@ -36,6 +36,10 @@ class GenerationResult:
 	var decoration_spawns: Array[Dictionary] = [] # { pos: Vector2i, id: int }
 	var entrance_zone: Array[Vector2i] = []  # komórki strefy wejściowej
 	var exit_zone: Array[Vector2i] = []  # komórki strefy wyjściowej
+	var portal_stairs: Array[Dictionary] = []  # schody wejścia / wyjścia {rect: Rect2i, dir: "N"/"E"/"S"/"W"} — CorridorStairsPlacer
+	var portal_void: Array[Vector2i] = []   # koniec schodów portalu przy krawędzi mapy — kafle ścian wymazane (void)
+	var portal_ladders: Array[Dictionary] = []  # {cell, height} — drabiny wejścia / wyjścia (portal_style "ladder")
+	var portal_scene: String = ""           # scena drabiny (flags.portal_scene)
 	var profile_id: StringName = &""  # który profil wygenerował ten wynik
 	var flags_used: RefCounted = null  # GenerationFlags faktycznie użyte
 	var overrides_used: Dictionary = {}  # nadpisania runtime
@@ -45,6 +49,7 @@ class GenerationResult:
 	var plateau: RefCounted = null  # PlateauLayout — płaskowyże jako nakładka (komórki zostają FLOOR)
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
 	var nav_polygons: Array[NavigationPolygon] = []  # siatka nawigacji z NavOutlines w kawałkach (puste = prostokąt mapy)
+	var nav_chunk_keys: Array[Vector2i] = []  # indeksy kawałków nav_polygons (NavOutlines.CHUNK_CELLS) — przebudowa po otwarciu bramy
 	var canals: RefCounted = null  # CanalLayout — kanały ścieków jako nakładka (komórki zostają FLOOR)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
@@ -293,7 +298,8 @@ static func spawn_entities(
 	chest_scene: PackedScene = null,
 	door_scene: PackedScene = null,
 	cell_size: int = 16,
-	per_frame: int = 0
+	per_frame: int = 0,
+	faction_pools: Dictionary = {}  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
 ) -> void:
 	# per_frame > 0: co tyle instancji czekamy klatkę (generowanie w tle — pasek ładowania żyje).
 	# 0 = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
@@ -327,16 +333,22 @@ static func spawn_entities(
 		for child in enemies_node.get_children():
 			child.queue_free()
 			
-	if not enemy_scenes.is_empty():
+	if not enemy_scenes.is_empty() or not faction_pools.is_empty():
 		for spawn_info in result.enemy_spawns:
 			var pos: Vector2i = spawn_info.get("pos", Vector2i.ZERO)
 			var tier: int = spawn_info.get("tier", 1)
-			var scene_idx := mini(tier - 1, enemy_scenes.size() - 1)
-			var enemy_packed: PackedScene = _pick_enemy_variant(enemy_scenes[scene_idx], pos)
+			var faction := String(spawn_info.get("faction", ""))
+			var pool: Array = faction_pools.get(faction, enemy_scenes)
+			if pool.is_empty():
+				continue
+			var scene_idx := mini(tier - 1, pool.size() - 1)
+			var enemy_packed: PackedScene = _pick_enemy_variant(pool[scene_idx], pos)
 			if enemy_packed:
 				var enemy_inst := enemy_packed.instantiate() as Node2D
 				if enemy_inst:
 					enemy_inst.position = Vector2(pos.x * cell_size + cell_size * 0.5, pos.y * cell_size + cell_size * 0.5)
+					if "faction" in enemy_inst:
+						enemy_inst.set("faction", StringName(faction))
 					enemies_node.add_child(enemy_inst)
 			made += 1
 			if per_frame > 0 and made % per_frame == 0:
@@ -393,6 +405,17 @@ static func spawn_entities(
 	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size)
 	if result.exit_pos != Vector2i.ZERO:
 		LevelPortal.place_from_next_marker(target_node, _cell_center(arrival_cell(result, result.exit_pos), cell_size))
+	# 6. Drabiny wejścia / wyjścia (portal_style "ladder") — scena na kratce przejścia, wysokość lica z generatora.
+	if not result.portal_ladders.is_empty() and ResourceLoader.exists(result.portal_scene):
+		var ladder_scene := load(result.portal_scene) as PackedScene
+		for lad in result.portal_ladders:
+			var inst := ladder_scene.instantiate() as Node2D
+			if inst == null:
+				continue
+			inst.position = _cell_center(lad["cell"], cell_size)
+			if "height_cells" in inst:
+				inst.set("height_cells", int(lad.get("height", 3)))
+			objects_node.add_child(inst)
 
 
 ## Odległość (w kratkach, w linii prostej) punktu pojawienia się od kratki przejścia — obszar ma 1,5 kratki.
@@ -472,6 +495,11 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 
 # --- Automatyczne tworzenie NavigationRegion2D ---
 
+## Nazwa węzła kawałka siatki nawigacji o indeksie k (NavOutlines) — GateNav podmienia kawałki po otwarciu bramy.
+static func chunk_name(k: Vector2i) -> String:
+	return "NavChunk_%d_%d" % [k.x, k.y]
+
+
 static func setup_navigation_region(target_node: Node2D, result: GenerationResult, cell_size: int = 16) -> void:
 	var nav_node := target_node.get_node_or_null("NavigationRegion2D") as NavigationRegion2D
 	if not nav_node:
@@ -492,7 +520,7 @@ static func setup_navigation_region(target_node: Node2D, result: GenerationResul
 		nav_node.navigation_polygon = null
 		for i in range(result.nav_polygons.size()):
 			var chunk := NavigationRegion2D.new()
-			chunk.name = "NavChunk%d" % i
+			chunk.name = chunk_name(result.nav_chunk_keys[i]) if i < result.nav_chunk_keys.size() else "NavChunk%d" % i
 			chunk.navigation_polygon = result.nav_polygons[i]
 			nav_node.add_child(chunk)
 		return

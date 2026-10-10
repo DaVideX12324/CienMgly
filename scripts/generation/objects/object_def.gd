@@ -45,6 +45,9 @@ var require: Array[StringName] = []   # tagi wymagane WSZYSTKIE (AND) — np. ["
 var prefer: Array[StringName] = []    # tagi próbowane najpierw (nisza, ślepy zaułek…), potem reszta
 var per_room: float = 0.0             # >0: w każdym pokoju poza portalowymi szansa na 1 sztukę (zamiast density)
 var force_big: bool = false            # katalog "big": licz jako duży obiekt (wagi obszarów, zestawy) mimo rozmiaru
+## Grupa wyłączności w pomieszczeniu (per_room / per_chamber): obiekty z tą samą grupą — najwyżej jeden na pokój /
+## komnatę (np. stoły różnej szerokości). Pusta = bez ograniczenia.
+var room_group: StringName = &""
 var per_chamber: float = 0.0          # jak per_room, ale w komnatach za ścianami działowymi (canals.chambers)
 var room_density: float = 0.0         # dodatkowe sztuki na 100 kandydatów w pokojach (poza portalowymi) i komnatach
                                       # (podłoga; obiekty lica — na licu nad nimi)
@@ -53,6 +56,10 @@ var terrain: Array[StringName] = []   # "grass" / "mud" / "plain" (goła podłog
 var terrain_margin: int = 0           # ten sam teren w promieniu (Chebyshev) — z dala od brzegu plamy
 var cluster_min: int = 0              # cluster: {"size": [a, b], "radius": r} — skupiska
 var cluster_max: int = 0
+## cluster.patterns: id winiet (ObjectCatalog.vignettes) jako gotowe kształty skupiska — z szansą
+## cluster.pattern_chance skupisko próbuje najpierw winiety pasującej w kratce zarodka, inaczej losowe.
+var cluster_patterns: Array[StringName] = []
+var cluster_pattern_chance: float = 0.0
 var cluster_radius: int = 0
 var companions: Array[Dictionary] = [] # {id: StringName, min, max, radius} — dostawiane wokół każdej sztuki
 var keep_paths: bool = true           # z kolizją: nie na zarezerwowanych przejściach
@@ -101,6 +108,8 @@ var canal_end_dy: int = 0              # przesunięcie obiektu nad końcem kana�
 var canal_end_on: StringName = &"any"
 ## Na licu: tylko lico tej wysokości (3 / 4 — odcinki 4H jak w FacadePlacer); 0 = każde.
 var facade_h: int = 0
+## Na licu: przesunięcie obiektu w pionie względem kotwicy (-1 = kratkę wyżej, np. ramka nad bazą lica 4H).
+var facade_dy: int = 0
 ## Kafle obiektu na osobnej warstwie poziomu (np. "WallDecor" — filary nad licem); pusto = Decals / Props.
 var layer_name: StringName = &""
 

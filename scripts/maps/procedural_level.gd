@@ -6,6 +6,8 @@ class_name ProceduralLevel
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const LevelPortal = preload("level_portal.gd")
+const HeightVeilScript = preload("height_veil.gd")
+const GateNavScript = preload("gate_nav.gd")
 const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
 const OverworldForestGeneratorScript = preload("../generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
@@ -52,6 +54,7 @@ var flag_overrides: Dictionary = {}
 ## Pula do spawn_entities (indeks = tier - 1): enemy_scenes z edytora albo domyślna pula typu poziomu,
 ## w której tier może mieć kilka wariantów (tablica scen).
 var _enemy_pool: Array = []
+var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -214,17 +217,7 @@ func _ensure_default_resources() -> void:
 				QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
 				QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
 			]
-		for entry in enemy_paths:
-			var variants: Array[PackedScene] = []
-			for ep in (entry if entry is Array else [entry]):
-				if ResourceLoader.exists(ep):
-					var p := load(ep) as PackedScene
-					if p:
-						variants.append(p)
-			if variants.size() == 1:
-				_enemy_pool.append(variants[0])
-			elif variants.size() > 1:
-				_enemy_pool.append(variants)
+		_enemy_pool = _pool_from_paths(enemy_paths)
 
 	if chest_scene == null:
 		var cp := QuizRpgPaths.path("scenes/objects/closed_chest_tutorial.tscn")
@@ -344,11 +337,56 @@ func _loading_title() -> String:
 	return "Generowanie mapy…"
 
 
+## Pula wrogów z listy tierów: element = ścieżka sceny albo tablica ścieżek (warianty tieru); nieistniejące pomijane.
+func _pool_from_paths(enemy_paths: Array) -> Array:
+	var pool: Array = []
+	for entry in enemy_paths:
+		var variants: Array[PackedScene] = []
+		for ep in (entry if entry is Array else [entry]):
+			if ResourceLoader.exists(ep):
+				var p := load(ep) as PackedScene
+				if p:
+					variants.append(p)
+		if variants.size() == 1:
+			pool.append(variants[0])
+		elif variants.size() > 1:
+			pool.append(variants)
+	return pool
+
+
+## Tiery puli ze ścieżek względem modułu (tier = ścieżka albo lista wariantów) -> ścieżki res://.
+func _module_paths(tiers: Array) -> Array:
+	var paths: Array = []
+	for entry in tiers:
+		if entry is Array:
+			paths.append((entry as Array).map(func(e): return QuizRpgPaths.path(String(e))))
+		else:
+			paths.append(QuizRpgPaths.path(String(entry)))
+	return paths
+
+
 ## Parametry generacji z UI/@export, zapisu i companion-JSON (główny wątek: węzły, zasoby).
 func _prepare_job(seed_val: int) -> GenJob:
 	# Companion-JSON: parametry generatora + Named TileSet System (opcjonalne).
 	# Precedencja parametrów: UI/@export (>0) > seed zapisu > JSON > default.
 	var cfg = _load_behaviour_config()
+	# Pula wrogów mapy z companion-JSON ("enemies": tiery, ścieżki względem modułu; tier = ścieżka albo lista
+	# wariantów) — gdy scena nie ma własnej (enemy_scenes); inaczej domyślna typu poziomu.
+	# Słownik frakcja -> tiery: osobne pule (spawny z "faction", SpawnPlanner); pierwsza frakcja = pula domyślna.
+	_faction_pools = {}
+	if enemy_scenes.is_empty() and cfg != null:
+		var en: Variant = cfg.raw.get("enemies")
+		if en is Array:
+			var pool := _pool_from_paths(_module_paths(en))
+			if not pool.is_empty():
+				_enemy_pool = pool
+		elif en is Dictionary:
+			for k in en:
+				var fp := _pool_from_paths(_module_paths(en[k]))
+				if not fp.is_empty():
+					_faction_pools[String(k)] = fp
+					if _faction_pools.size() == 1:
+						_enemy_pool = fp
 	var level_key := _level_key()
 	var lsm = _get_level_state_manager()
 
@@ -521,7 +559,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame)
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame, _faction_pools)
 		GenProgress.end(&"entities")
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
@@ -529,15 +567,44 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
 		GenProgress.end(&"props")
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
+	_setup_height_veil(job.result)
 
 	# 4. Nawigacja 2D
 	GenProgress.begin(&"navigation")
 	if setup_nav_enabled:
 		MapGeneratorBaseScript.setup_navigation_region(self, job.result)
+		_setup_gate_nav(job.result)
 	GenProgress.end(&"navigation")
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+
+
+## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.
+func _setup_gate_nav(result) -> void:
+	var old := get_node_or_null("GateNav")
+	if old != null:
+		old.queue_free()
+	var nav := get_node_or_null("NavigationRegion2D") as NavigationRegion2D
+	if result == null or result.objects == null or nav == null or result.nav_chunk_keys.is_empty():
+		return
+	var gn: Node = GateNavScript.new()
+	gn.name = "GateNav"
+	add_child(gn)
+	gn.setup(result, nav)
+
+
+## Efekt wysokości korytarzy-schodów (HeightVeil): węzeł tworzony, gdy mapa ma korytarze-schody.
+func _setup_height_veil(result) -> void:
+	var old := get_node_or_null("HeightVeil")
+	if old != null:
+		old.queue_free()
+	if result == null or result.canals == null or not "stair_corridors" in result.canals or result.canals.stair_corridors.is_empty():
+		return
+	var veil: Node2D = HeightVeilScript.new()
+	veil.name = "HeightVeil"
+	add_child(veil)
+	veil.setup(result)
 
 
 func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMapLayer:

@@ -11,6 +11,7 @@ class_name QuizRpgEnemyData
 @export var question_count: int = 3
 @export var max_hp: int = 50
 @export var damage_on_wrong: int = 15
+@export var battle_skills: Array[QuizRpgEnemySkill] = []
 @export var xp_reward: int = 50
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1

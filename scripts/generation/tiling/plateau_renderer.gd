@@ -8,7 +8,7 @@ const GenProgress = preload("../core/gen_progress.gd")
 ## płaskowyż „rysuje maksymalnie do wykrytych krawędzi, przy voidzie przestaje". Syntetyczna
 ## bryła = P ∪ void; zostają tylko kafle w P i w stopach lica P — nic w voidzie.
 
-const TILESET_ID := &"caves_platform"
+const TILESET_ID := &"caves_platform"  # domyślny zestaw platform (jaskinie); inny: generator_behaviour.platform_tiles
 const LAYER := &"Platforms"
 const WINDOW_MARGIN := 6
 # Poszerzenie bboxa kawałka P do prostokąta skanu (kafle zostają tylko w P i stopach lica, a analiza
@@ -30,9 +30,9 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 	var result := {"tiles": {}, "region": {}, "missing": 0}
 	if mask.is_empty() or real_ctx.map_tile_profile == null:
 		return result
-	var platform_set = real_ctx.map_tile_profile.get_tileset(TILESET_ID)
+	var platform_set := platform_tileset(real_ctx)
 	if platform_set == null:
-		push_warning("PlateauRenderer: brak zestawu '%s' w profilu" % TILESET_ID)
+		push_warning("PlateauRenderer: brak zestawu '%s' w profilu" % tileset_id(real_ctx))
 		return result
 
 	var focus_scans: Array[Rect2i] = []
@@ -97,8 +97,145 @@ static func render(real_ctx: GenerationContext, mask: Dictionary, wall_cells: Di
 				result.missing += 1
 				continue
 			tiles[pos] = p
-	_end_facades_at_absorbed(sctx, tiles, region, absorbed_feet)
+	if sctx.plateau_face_h <= 2:
+		_end_facades_at_absorbed(sctx, tiles, region, absorbed_feet)
 	return result
+
+
+## Id zestawu platform mapy: generator_behaviour.platform_tiles.tileset (domyślnie TILESET_ID).
+static func tileset_id(ctx: GenerationContext) -> StringName:
+	return StringName(_tiles_cfg(ctx).get("tileset", String(TILESET_ID)))
+
+
+static func _tiles_cfg(ctx: GenerationContext) -> Dictionary:
+	return ctx.generator_behaviour.get("platform_tiles", {}) if ctx != null else {}
+
+
+## Zestaw platform: z profilu, a gdy go tam nie ma i config ma "derive_from" — wyprowadzony w kodzie z zestawu
+## ścian (cache w meta profilu). platform_tiles: {"tileset", "derive_from", "shift": {"source", "rect": [x, y, w, h],
+## "offset": [dx, dy]} — kafle ścian z prostokąta przesunięte (top pełnej ściany -> top platformy), "stairs":
+## {"source", "origin": [x, y], "size": [5, 3]} — moduł schodów S: poręcz, stopnie L / M / R, poręcz}.
+## Wyprowadzony zestaw: role ścian bez 4H, kanałów, kładek, podłogi i ściany szer. 1; warianty bez cienia; wszystkie
+## części na warstwie Platforms; kafel spoza atlasu -> wypełnienie (SOLID_FILL, korona) wymazane, reszta wariantu odpada.
+static func platform_tileset(ctx: GenerationContext) -> NamedTileSetDefinition:
+	var profile: MapTileProfile = ctx.map_tile_profile
+	if profile == null:
+		return null
+	var id := tileset_id(ctx)
+	var own := profile.get_tileset(id)
+	if own != null:
+		return own
+	var cfg := _tiles_cfg(ctx)
+	if not cfg.has("derive_from"):
+		return null
+	var meta := StringName("_platform_set_" + String(id))
+	if profile.has_meta(meta):
+		return profile.get_meta(meta)
+	var derived := _derive_set(profile, id, cfg)
+	if derived != null:
+		profile.set_meta(meta, derived)
+	return derived
+
+
+const _DERIVE_SKIP := ["CANAL_", "BRIDGE_", "FLOOR_", "WALL_1W", "STAIR_"]
+const _ERASE_ROLES := ["SOLID_FILL", "FACADE_CROWN_3H"]
+
+
+static func _derive_set(profile: MapTileProfile, id: StringName, cfg: Dictionary) -> NamedTileSetDefinition:
+	var base := profile.get_tileset(StringName(cfg.get("derive_from", "")))
+	if base == null:
+		return null
+	var shift: Dictionary = cfg.get("shift", {})
+	var r: Array = shift.get("rect", [0, 0, 0, 0])
+	var rect := Rect2i(int(r[0]), int(r[1]), int(r[2]), int(r[3]))
+	var o: Array = shift.get("offset", [0, 0])
+	var offset := Vector2i(int(o[0]), int(o[1]))
+	var shift_src := int(shift.get("source", 0))
+	var out := NamedTileSetDefinition.new()
+	out.id = id
+	out.display_name = "%s (z %s)" % [id, base.id]
+	out.tile_set = base.tile_set
+	for e in base.tile_entries:
+		if e == null or e.role >= TileRole.Id.size():
+			continue
+		var role_name := str(TileRole.Id.keys()[e.role])
+		if role_name.ends_with("_4H") or _DERIVE_SKIP.any(func(pre): return role_name.begins_with(pre)):
+			continue
+		var erase := role_name in _ERASE_ROLES
+		var entry := TileRoleEntry.new()
+		entry.role = e.role
+		for v in e.variants:
+			if String(v.variant_id).begins_with("SHADE"):
+				continue
+			var nv := TileVariant.new()
+			nv.variant_id = v.variant_id
+			nv.weight = v.weight
+			var ok := true
+			for part in v.parts:
+				if part == null or part.tile == null:
+					continue
+				var t: TileRef = part.tile
+				var coords := t.atlas_coords
+				if t.source_id == shift_src and rect.has_point(coords):
+					coords += offset
+				var np := TileModulePart.new()
+				np.offset = part.offset
+				np.layer = LAYER
+				if _has_tile(base.tile_set, t.source_id, coords):
+					np.tile = TileRef.make(coords, t.source_id, t.alternative_tile)
+				elif erase:
+					np.tile = TileRef.make(Vector2i(-1, -1), t.source_id)
+				else:
+					ok = false
+					break
+				nv.parts.append(np)
+			if ok and not nv.parts.is_empty():
+				entry.variants.append(nv)
+		if not entry.variants.is_empty():
+			out.tile_entries.append(entry)
+	_add_stairs(out, cfg.get("stairs", {}))
+	return out
+
+
+static func _has_tile(ts: TileSet, source_id: int, coords: Vector2i) -> bool:
+	if ts == null or not ts.has_source(source_id):
+		return false
+	var src := ts.get_source(source_id) as TileSetAtlasSource
+	return src != null and src.has_tile(coords)
+
+
+## Moduł schodów S z atlasu (kolumny: poręcz, stopnie L / M / R, poręcz; rzędy = lico od góry): role STAIR_LEFT /
+## MID / RIGHT / SINGLE, kotwica = kratka pod licem (jak FACADE przy facade_base_on_wall), poręcze na flankach.
+static func _add_stairs(out: NamedTileSetDefinition, cfg: Dictionary) -> void:
+	if cfg.is_empty():
+		return
+	var src := int(cfg.get("source", 0))
+	var org: Array = cfg.get("origin", [0, 0])
+	var sz: Array = cfg.get("size", [5, 3])
+	var o := Vector2i(int(org[0]), int(org[1]))
+	var h := int(sz[1])
+	var last := int(sz[0]) - 1
+	# rola -> [kolumna atlasu, przesunięcie x w module] dla każdej kolumny modułu
+	var cols := {
+		TileRole.Id.STAIR_LEFT: [[0, -1], [1, 0]],
+		TileRole.Id.STAIR_MID: [[2, 0]],
+		TileRole.Id.STAIR_RIGHT: [[last - 1, 0], [last, 1]],
+		TileRole.Id.STAIR_SINGLE: [[0, -1], [2, 0], [last, 1]],
+	}
+	for role in cols:
+		var entry := TileRoleEntry.new()
+		entry.role = role
+		var v := TileVariant.new()
+		v.variant_id = &"A"
+		for col in cols[role]:
+			for row in h:
+				var part := TileModulePart.new()
+				part.offset = Vector2i(int(col[1]), row - h)
+				part.tile = TileRef.make(o + Vector2i(int(col[0]), row), src)
+				part.layer = LAYER
+				v.parts.append(part)
+		entry.variants.append(v)
+		out.tile_entries.append(entry)
 
 
 ## Lico płaskowyżu urwane przy wchłoniętej kolumnie: kolumna obok dostaje zakończenie lica 2H (jak
@@ -338,15 +475,24 @@ static func _synthetic_ctx(real_ctx: GenerationContext, sgrid: Dictionary, platf
 	var f := GenerationFlags.new()
 	f.enable_decorative_niches = false
 	f.enable_pillars = false
+	var rf: GenerationFlags = real_ctx.flags
+	if rf != null and rf.facade_base_on_wall:
+		# Lico na kratkach ściany (ścieki): wysokość lica z plateau_face_h, bez 4H; top lica jak w ścianach mapy.
+		f.facade_base_on_wall = true
+		f.enable_2h_facades = rf.enable_2h_facades
+		f.enable_3h_facades = true
+		f.enable_4h_facades = false
+		sctx.generator_behaviour = {"tiling": real_ctx.generator_behaviour.get("tiling", {})}
 	sctx.flags = f
 	sctx.theme_override = 0  # rock — bez korzeni
 	sctx.plateau_mode = true
+	sctx.plateau_face_h = rf.plateau_face_h if rf != null else 2
 	sctx.priority_table = real_ctx.priority_table if not real_ctx.priority_table.is_empty() \
 		else PlacementPriority.get_table(&"legacy_facade_wins", {})
 	# Profil tylko z rodziną platform: resolver nie ma dokąd spaść (brak fallbacku do ścian).
 	var profile := MapTileProfile.new()
 	profile.tilesets = [platform_set]
-	profile.default_tileset_id = TILESET_ID
+	profile.default_tileset_id = platform_set.id
 	sctx.map_tile_profile = profile
 	sctx.tileset_field = TileSetField.new()
 	return sctx

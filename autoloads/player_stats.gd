@@ -11,6 +11,8 @@ signal points_changed(new_points: int)
 signal reward_earned(reward_name: String)
 signal inventory_changed()
 signal party_changed()
+## Obrażenia od statusu (trucizna): członek drużyny, status, utracone HP — świat (co POISON_WORLD_INTERVAL) i walka.
+signal status_tick(member_index: int, status_id: String, amount: int)
 
 const BASE_HP          := 100
 const HP_PER_LEVEL     := 20
@@ -18,6 +20,15 @@ const ATK_PER_LEVEL    := 1
 const DEF_PER_LEVEL    := 1
 const BASE_XP_TO_LEVEL := 100
 const XP_GROWTH        := 1.5
+## Statusy członków drużyny: member["statuses"] = {id: true} (zapisywane razem z drużyną). Trucizna (decyzje usera
+## 2026-10-09): nada ją umiejętność użyta w walce (add_status; do zrobienia), trwa także w eksploracji, dopóki nie użyje się przedmiotu
+## leczącego statusy (cure_statuses). Poza walką 1 HP co 3 s, najwyżej do 1 HP; w walce co turę ułamek maks. HP,
+## może zbić do 0.
+const STATUS_POISON := "poison"
+const STATUS_NAMES := {"poison": "Zatrucie"}
+const POISON_WORLD_INTERVAL := 3.0
+const POISON_WORLD_DAMAGE := 1
+const POISON_COMBAT_FRACTION := 0.05
 const EQUIPMENT_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 const EQUIPMENT_LABELS := {
 	"weapon": "Bron",
@@ -28,6 +39,8 @@ const EQUIPMENT_LABELS := {
 }
 
 @export var hero_party_data: Array[QuizRpgHeroData] = []
+
+var _status_clock := 0.0
 
 var player_name: String    = "Bohater"
 var level: int             = 1
@@ -140,8 +153,7 @@ func roll_with_bonus(base_chance: float) -> bool:
 
 
 func take_damage(amount: int) -> void:
-	var cheat_service := get_node_or_null("/root/CheatService")
-	if cheat_service and "god_mode" in cheat_service and bool(cheat_service.god_mode):
+	if _god_mode():
 		return
 	hp = maxi(hp - amount, 0)
 	hp_changed.emit(hp, max_hp)
@@ -152,8 +164,7 @@ func take_damage(amount: int) -> void:
 ## Obrażenia procentowe całej drużyny (np. kolce w posadzce): każdy członek traci `fraction` swojego maks. HP
 ## (co najmniej 1). keep_alive: HP nie spada poniżej 1 (pułapka nie zabija).
 func damage_party_percent(fraction: float, keep_alive := true) -> void:
-	var cheat_service := get_node_or_null("/root/CheatService")
-	if cheat_service and "god_mode" in cheat_service and bool(cheat_service.god_mode):
+	if _god_mode():
 		return
 	_ensure_party_defaults()
 	var floor_hp := 1 if keep_alive else 0
@@ -179,6 +190,169 @@ func heal(amount: int) -> void:
 
 func is_alive() -> bool:
 	return hp > 0
+
+
+# --- Statusy -----------------------------------------------------------------------------
+
+func has_status(member_index: int, status_id: String) -> bool:
+	if member_index < 0 or member_index >= party.size():
+		return false
+	return ((party[member_index] as Dictionary).get("statuses", {}) as Dictionary).has(status_id)
+
+
+func get_statuses(member_index: int) -> Array:
+	if member_index < 0 or member_index >= party.size():
+		return []
+	return ((party[member_index] as Dictionary).get("statuses", {}) as Dictionary).keys()
+
+
+## params: parametry statusu zapisywane z nim (trucizna: {"mode": "percent" | "fixed", "amount": float}); puste = domyślne.
+func add_status(member_index: int, status_id: String, params: Dictionary = {}) -> bool:
+	_ensure_party_defaults()
+	if member_index < 0 or member_index >= party.size() or has_status(member_index, status_id):
+		return false
+	var member: Dictionary = party[member_index]
+	var st: Dictionary = member.get("statuses", {})
+	st[status_id] = params.duplicate() if not params.is_empty() else true
+	member["statuses"] = st
+	party[member_index] = member
+	party_changed.emit()
+	return true
+
+
+## Zdejmuje podane statusy; zwraca zdjęte.
+func cure_statuses(member_index: int, status_ids: Array) -> Array:
+	var out: Array = []
+	if member_index < 0 or member_index >= party.size():
+		return out
+	var member: Dictionary = party[member_index]
+	var st: Dictionary = member.get("statuses", {})
+	for sid in status_ids:
+		if st.erase(String(sid)):
+			out.append(String(sid))
+	if not out.is_empty():
+		member["statuses"] = st
+		party[member_index] = member
+		party_changed.emit()
+	return out
+
+
+func any_status(status_id: String) -> bool:
+	for i in range(party.size()):
+		if has_status(i, status_id):
+			return true
+	return false
+
+
+## Trucizna w walce (wywołuje ekran walki raz na turę): każdy zatruty członek traci POISON_COMBAT_FRACTION maks. HP
+## (co najmniej 1), może spaść do 0. Zwraca [[indeks, obrażenia], …].
+func tick_poison_combat() -> Array:
+	var out: Array = []
+	if _god_mode():
+		return out
+	for i in range(party.size()):
+		if has_status(i, STATUS_POISON) and _member_hp(i) > 0:
+			var dmg := mini(_poison_combat_damage(i), _member_hp(i))
+			_set_member_hp(i, _member_hp(i) - dmg)
+			out.append([i, dmg])
+			status_tick.emit(i, STATUS_POISON, dmg)
+	if not out.is_empty():
+		party_changed.emit()
+	return out
+
+
+## Obrażenia trucizny członka na turę walki: z parametrów nadanych przez umiejętność (procent maks. HP albo stała),
+## domyślnie POISON_COMBAT_FRACTION maks. HP; co najmniej 1.
+func _poison_combat_damage(i: int) -> int:
+	var p: Variant = ((party[i] as Dictionary).get("statuses", {}) as Dictionary).get(STATUS_POISON)
+	if p is Dictionary:
+		var amount := float((p as Dictionary).get("amount", 0.0))
+		if amount > 0.0:
+			if String((p as Dictionary).get("mode", "percent")) == "fixed":
+				return maxi(roundi(amount), 1)
+			return maxi(ceili(_member_max_hp(i) * amount / 100.0), 1)
+	return maxi(ceili(_member_max_hp(i) * POISON_COMBAT_FRACTION), 1)
+
+
+## Trucizna w eksploracji: co POISON_WORLD_INTERVAL s (tylko w stanie EXPLORING — pauza, walka, menu wstrzymują)
+## POISON_WORLD_DAMAGE HP, najwyżej do 1 HP (poza walką nie zabija).
+func _process(delta: float) -> void:
+	if not any_status(STATUS_POISON) or not _is_exploring() or _god_mode():
+		return
+	_status_clock += delta
+	if _status_clock < POISON_WORLD_INTERVAL:
+		return
+	_status_clock -= POISON_WORLD_INTERVAL
+	var hit := false
+	for i in range(party.size()):
+		var cur := _member_hp(i)
+		if has_status(i, STATUS_POISON) and cur > 1:
+			var dmg := mini(POISON_WORLD_DAMAGE, cur - 1)
+			_set_member_hp(i, cur - dmg)
+			status_tick.emit(i, STATUS_POISON, dmg)
+			hit = true
+	if hit:
+		party_changed.emit()
+
+
+func _god_mode() -> bool:
+	var cheat_service := get_node_or_null("/root/CheatService")
+	return cheat_service != null and "god_mode" in cheat_service and bool(cheat_service.god_mode)
+
+
+## Nazwa statusu do wyświetlenia (STATUS_NAMES), inaczej sam identyfikator.
+func status_name(id: String) -> String:
+	return str(STATUS_NAMES.get(id, id))
+
+
+func _member_hp(i: int) -> int:
+	return hp if i == 0 else int((party[i] as Dictionary).get("hp", 0))
+
+
+func _member_max_hp(i: int) -> int:
+	return max_hp if i == 0 else int((party[i] as Dictionary).get("max_hp", 1))
+
+
+func _set_member_hp(i: int, v: int) -> void:
+	if i == 0:
+		hp = v
+		hp_changed.emit(hp, max_hp)
+		_sync_primary_party_member()
+	else:
+		var m: Dictionary = party[i]
+		m["hp"] = v
+		party[i] = m
+
+
+func _is_exploring() -> bool:
+	var core_manager: Node = get_node_or_null("/root/CoreManager")
+	var gm: Variant = null
+	if core_manager and core_manager.has_method("get_singleton"):
+		gm = core_manager.call("get_singleton", "GameManager")
+	if not (gm is Node):
+		gm = get_node_or_null("/root/GameManager")
+	return gm is Node and (gm as Node).has_method("is_exploring") and bool((gm as Node).call("is_exploring"))
+
+
+## Obrażenia członka drużyny (umiejętności wrogów celujące w drużynę); lider przez take_damage (tryb boga).
+func damage_member(member_index: int, amount: int) -> void:
+	if member_index == 0:
+		take_damage(amount)
+		return
+	if member_index < 0 or member_index >= party.size():
+		return
+	_set_member_hp(member_index, maxi(_member_hp(member_index) - amount, 0))
+	party_changed.emit()
+
+
+## Cała drużyna bez przytomności — warunek ekranu śmierci (decyzja usera: wszyscy członkowie 0 HP, nie sam lider).
+func is_party_defeated() -> bool:
+	if hp > 0:
+		return false
+	for i in range(1, party.size()):
+		if int((party[i] as Dictionary).get("hp", 0)) > 0:
+			return false
+	return true
 
 
 func _recalculate_max_hp() -> void:
@@ -242,6 +416,7 @@ func reset() -> void:
 	inventory = [
 		{"item_id": "potion", "count": 2},
 		{"item_id": "ether", "count": 1},
+		{"item_id": "antidote", "count": 1},
 		{"item_id": "training_sword", "count": 1},
 		{"item_id": "wooden_shield", "count": 1},
 		{"item_id": "cloth_cap", "count": 1},
@@ -327,6 +502,13 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 		member["sp"] = mini(int(member.get("sp", 0)) + item_data.sp_restore, int(member.get("max_sp", 1)))
 	if item_data.tp_restore > 0:
 		member["tp"] = mini(int(member.get("tp", 0)) + item_data.tp_restore, int(member.get("max_tp", 1)))
+	var cured: Array = []
+	if not item_data.cure_statuses.is_empty():
+		var st: Dictionary = member.get("statuses", {})
+		for sid in item_data.cure_statuses:
+			if st.erase(String(sid)):
+				cured.append(String(sid))
+		member["statuses"] = st
 	party[member_index] = member
 	if member_index == 0:
 		hp = int(member.get("hp", hp))
@@ -343,6 +525,7 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 		"heal_amount": item_data.heal_amount,
 		"sp_restore": item_data.sp_restore,
 		"tp_restore": item_data.tp_restore,
+		"cured_statuses": cured,
 		"usable_in_menu": item_data.usable_in_menu,
 		"usable_in_combat": item_data.usable_in_combat,
 		"message": "%s: %s" % [item_data.display_name, item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else "Uzyto %s." % item_data.display_name,

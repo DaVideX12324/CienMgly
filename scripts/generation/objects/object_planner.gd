@@ -18,8 +18,9 @@ const GatePlannerScript = preload("gate_planner.gd")
 const PORTAL_RING := 2
 const STAIR_RING := 1
 const SPAWN_RING := 1
-const REACH_ROUNDS := 8
-const REACH_NEAR := 2       # przeszkody w tym promieniu (kratki) od odciętego terenu są zdejmowane
+const REACH_ROUNDS := 24
+const REACH_NEAR := 2       # przeszkoda zdejmowana dla odciętego terenu leży najwyżej tyle kratek od niego
+const REACH_MASS_ROUNDS := 4  # ostatnie rundy naprawy: wszystkie przeszkody w REACH_NEAR (zapas przy wielu kawałkach)
 # Przejezdność dla wroga (bity na kratkę): środek kratki / odcinek do środka kratki na E / na S za blisko
 # kształtu przeszkody (promień agenta siatki nawigacji).
 const CLR_CENTER := 1
@@ -31,6 +32,8 @@ var f: ObjectFeatures
 var plan: ObjectPlan
 var seed_value := 0
 var blocked := PackedByteArray()   # bariery płaskowyżu (ruch)
+var pl_wall := PackedByteArray()   # 1: bariery płaskowyżu (lico, rimy) — rysunek dużego obiektu ich nie zasłania, jak ściany;
+                                   # 2: schody z obwódką — rysunek nigdy (także przy licu, facade_ok)
 var owner := PackedInt32Array()    # indeks defa + 1, który zajął kratkę (USED)
 var stamp := PackedInt32Array()    # odstęp `spacing`: indeks defa + 1 w promieniu kotwicy
 var reach0 := PackedByteArray()    # osiągalne z wejścia przed obiektami
@@ -46,6 +49,8 @@ var set_of := PackedInt32Array()   # idx kratki -> zestaw dużego obiektu (indek
 var set_ids := {}                  # zestaw -> indeks
 var parent_center := Vector2(-1, -1)  # środek rodzica (kratki) przy stawianiu towarzyszy — facing_pref "parent"
 var canal_dist := PackedInt32Array()  # idx -> odległość (Chebyshev) od wody kanału; liczona, gdy jakiś obiekt ma canal_gap
+var room_groups := {}               # room_group -> {indeks pokoju: true} — zajęte przez obiekt tej grupy
+var vignettes_by_id := {}            # id winiety -> słownik z katalogu (wzory skupisk, cluster.patterns)
 var gate_canals = null                # canals z bramami GatePlanner (kontrola osiągalności B)
 var gate_gi := PackedInt32Array()     # brama (z otwieraczem) -> indeks w canals.gates
 var gate_idx: Array[PackedInt32Array] = []  # brama -> kratki kolców
@@ -70,6 +75,7 @@ func _run(result, catalog: ObjectCatalog) -> void:
 	var n := f.width * f.height
 	plan.occupancy.resize(n)
 	blocked.resize(n)
+	pl_wall.resize(n)
 	owner.resize(n)
 	stamp.resize(n)
 	set_of.resize(n)
@@ -100,6 +106,9 @@ func _run(result, catalog: ObjectCatalog) -> void:
 			plan.interactive_scenes[catalog.defs[di].scene] = true
 		defs_by_id[catalog.defs[di].id] = catalog.defs[di]
 		markers[catalog.defs[di].id] = di + 1
+	for v in catalog.vignettes:
+		vignettes_by_id[StringName(String(v.get("id", "")))] = v
+	_place_vignettes(catalog.vignettes)
 	for di in range(catalog.defs.size()):
 		GenProgress.sub_in(&"objects", float(di) / catalog.defs.size())
 		_place_def(catalog.defs[di], di + 1)
@@ -116,12 +125,23 @@ func _forbid(result) -> void:
 			plan.occupancy[i] = ObjectPlan.FORBID
 	var pl = result.plateau
 	if pl != null and not pl.is_empty():
+		# Lico na kratkach maski (ścieki, face_down 0): rysunek dużych obiektów nie wchodzi na lico. Jaskinie (2H ze
+		# stopą) bez zmian — parytet obiektów i spawnów.
+		var as_wall: bool = pl.face_down == 0
 		for c in pl.blocked:
 			if f.in_bounds(c):
 				blocked[f.idx(c)] = 1
+				if as_wall:
+					pl_wall[f.idx(c)] = 1
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 		for c in pl.stair_cells():
 			_forbid_ring(c, STAIR_RING, false)
+			if as_wall:
+				for dy in range(-1, 2):
+					for dx in range(-1, 2):
+						var q: Vector2i = c + Vector2i(dx, dy)
+						if f.in_bounds(q):
+							pl_wall[f.idx(q)] = 2
 	# Kanały: kwas nieprzechodni, kładki przechodnie, ale bez obiektów.
 	var canals = result.canals
 	if canals != null and not canals.is_empty():
@@ -133,6 +153,9 @@ func _forbid(result) -> void:
 			if f.in_bounds(c):
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 		for c in canals.rail_cells:
+			if f.in_bounds(c):
+				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
+		for c in canals.stair_cells:  # korytarze-schody — przechodnie, bez obiektów
 			if f.in_bounds(c):
 				plan.occupancy[f.idx(c)] |= ObjectPlan.FORBID
 		# zejścia z kładek (prześwit) — przechodnie, bez obiektów
@@ -376,13 +399,21 @@ func _place_per_room(def: ObjectDef, marker: int, cands: PackedInt32Array, rng: 
 		var t = rooms[k]
 		rooms[k] = rooms[j]
 		rooms[j] = t
+	var used: Dictionary = room_groups.get(def.room_group, {})
 	for r in rooms:
 		var chance := def.per_room if r < f.chamber_first else def.per_chamber
 		if not by_room.has(r) or chance <= 0.0 or rng.randf() >= chance:
 			continue
+		if def.room_group != &"" and used.has(r):
+			continue   # pomieszczenie ma już obiekt tej grupy (np. inny stół)
 		var parts: Array = by_room[r]
-		if _pick(def, marker, parts[0], rng, 1, 0) == 0:
-			_pick(def, marker, parts[1], rng, 1, 0)
+		var got := _pick(def, marker, parts[0], rng, 1, 0)
+		if got == 0:
+			got = _pick(def, marker, parts[1], rng, 1, 0)
+		if got > 0 and def.room_group != &"":
+			used[r] = true
+	if def.room_group != &"":
+		room_groups[def.room_group] = used
 
 
 ## Kratki kotwic spełniające reguły i wolne od FORBID (bez duplikatów między tagami).
@@ -410,6 +441,9 @@ func _candidates(def: ObjectDef) -> PackedInt32Array:
 
 
 func _place_cluster(def: ObjectDef, marker: int, seed_i: int, rng: RandomNumberGenerator, left: int) -> int:
+	var pat := _place_pattern(def, seed_i, rng)
+	if pat > 0:
+		return pat
 	if not _place_one(def, marker, seed_i, rng):
 		return 0
 	var size := mini(rng.randi_range(def.cluster_min, def.cluster_max), left)
@@ -428,6 +462,53 @@ func _place_cluster(def: ObjectDef, marker: int, seed_i: int, rng: RandomNumberG
 		if _place_one(def, marker, i, rng):
 			placed += 1
 	return placed
+
+
+## Skupisko w kształcie winiety (cluster.patterns): z szansą pattern_chance winiety w losowej kolejności, kotwica
+## w kratce zarodka albo najbliższej w promieniu skupiska + 1 z tagami części 0, losowe odbicie (flip_h winiety) —
+## pierwsza pasująca. Zwraca liczbę postawionych części (0 = brak).
+func _place_pattern(def: ObjectDef, seed_i: int, rng: RandomNumberGenerator) -> int:
+	if def.cluster_patterns.is_empty() or rng.randf() >= def.cluster_pattern_chance:
+		return 0
+	var order: Array[StringName] = def.cluster_patterns.duplicate()
+	for k in range(order.size() - 1, 0, -1):
+		var j := rng.randi_range(0, k)
+		var t := order[k]
+		order[k] = order[j]
+		order[j] = t
+	for pid in order:
+		var v: Dictionary = vignettes_by_id.get(pid, {})
+		if v.is_empty():
+			continue
+		var parts := _vignette_parts(v)
+		if parts.is_empty():
+			continue
+		var can_flip := bool(v.get("flip_h", false))
+		var tags0: Array[StringName] = parts[0].tags
+		# kotwice: zarodek, potem kratki w promieniu cluster_radius + 1 z tagami części 0 (najbliższe pierwsze)
+		var anchors: Array[Vector2i] = [f.cell(seed_i)]
+		var r := def.cluster_radius + 1
+		for dist in range(1, r + 1):
+			for dy in range(-dist, dist + 1):
+				for dx in range(-dist, dist + 1):
+					if maxi(absi(dx), absi(dy)) != dist:
+						continue
+					var q := f.cell(seed_i) + Vector2i(dx, dy)
+					if not f.in_bounds(q) or plan.occupancy[f.idx(q)] & ObjectPlan.FORBID:
+						continue
+					var ok := true
+					for t in tags0:
+						if not (f.has_tag(f.idx(q), t) or (can_flip and t == &"wall_w" and f.has_tag(f.idx(q), &"wall_e")) 								or (can_flip and t == &"wall_e" and f.has_tag(f.idx(q), &"wall_w"))):
+							ok = false
+							break
+					if ok:
+						anchors.append(q)
+		for a in anchors:
+			var first := can_flip and rng.randf() < 0.5
+			if _try_vignette(v, parts, a, first, rng) or (can_flip and _try_vignette(v, parts, a, not first, rng)):
+				plan.stats[StringName("vignette:" + String(pid))] = int(plan.stats.get(StringName("vignette:" + String(pid)), 0)) + 1
+				return parts.size()
+	return 0
 
 
 ## Jedna sztuka + jej towarzysze (grupa mieszana, np. duży grzyb z małymi wokół).
@@ -515,27 +596,50 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator,
 	if def.spacing > 1 and stamp[i] == marker:
 		return false
 	var anchor := f.cell(i)
-	var h := f.height_at(i)
+	var cells := _fit_cells(def, anchor)
+	if cells.is_empty():
+		return false
+	var offset := Vector2.ZERO
+	if def.placement == ObjectDef.Placement.GRID_JITTER:
+		offset = Vector2(rng.randf_range(-def.jitter_px, def.jitter_px), rng.randf_range(-def.jitter_px, def.jitter_px))
+	if not _fit_rest(def, anchor, cells, offset):
+		return false
+	_commit(def, marker, anchor, cells, offset, on_top, rng)
+	return true
+
+
+## Kratki podstawy obiektu w `anchor` — wolne, na jednej wysokości; puste = nie mieści się.
+func _fit_cells(def: ObjectDef, anchor: Vector2i) -> PackedInt32Array:
+	if not f.in_bounds(anchor):
+		return PackedInt32Array()
+	var h := f.height_at(f.idx(anchor))
 	var cells := PackedInt32Array()
 	for fp in def.footprint:
 		var q := anchor + fp
 		if not f.in_bounds(q):
-			return false
+			return PackedInt32Array()
 		var j := f.idx(q)
 		if not _cell_free(def, j) or f.height_at(j) != h:
-			return false
+			return PackedInt32Array()
 		cells.append(j)
-	var offset := Vector2.ZERO
-	if def.placement == ObjectDef.Placement.GRID_JITTER:
-		offset = Vector2(rng.randf_range(-def.jitter_px, def.jitter_px), rng.randf_range(-def.jitter_px, def.jitter_px))
+	return cells
+
+
+## Reszta reguł miejsca: kształt nie na przejściach, rysunek nie w ścianie (`facade_ok`: wolno przed licem), zestawy,
+## odstęp od wody.
+func _fit_rest(def: ObjectDef, anchor: Vector2i, cells: PackedInt32Array, offset: Vector2, facade_ok := false) -> bool:
 	if _shape_on_reserved(def, def.base_point(anchor) + offset):
 		return false
-	if _visual_on_wall(def, def.base_point(anchor) + offset):
+	if _visual_on_wall(def, def.base_point(anchor) + offset, facade_ok):
 		return false
 	if not _set_ok(def, cells):
 		return false
-	if not _canal_ok(def, anchor):
-		return false
+	return _canal_ok(def, anchor)
+
+
+## Postawienie obiektu (po _fit_cells / _fit_rest). `variant` / `flip` >= 0 wymuszają wariant i odbicie (winiety).
+func _commit(def: ObjectDef, marker: int, anchor: Vector2i, cells: PackedInt32Array, offset: Vector2, on_top: bool,
+		rng: RandomNumberGenerator, variant := -1, flip := -1) -> ObjectPlacement:
 	var pl := ObjectPlacement.new()
 	pl.def = def
 	pl.cell = anchor
@@ -543,6 +647,10 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator,
 	pl.offset = offset
 	pl.on_top = on_top
 	_finish(pl, marker, rng)
+	if variant >= 0:
+		pl.variant = clampi(variant, 0, maxi(def.variant_count() - 1, 0))
+	if flip >= 0:
+		pl.flip = flip == 1
 	_mark_set(def, cells)
 	if def.spacing > 1:
 		var s := def.spacing - 1
@@ -551,6 +659,161 @@ func _try_place(def: ObjectDef, marker: int, i: int, rng: RandomNumberGenerator,
 				var q := anchor + Vector2i(dx, dy)
 				if f.in_bounds(q):
 					stamp[f.idx(q)] = marker
+	return pl
+
+
+# --- 3a. Winiety --------------------------------------------------------------------------
+
+## Winiety z katalogu (ObjectCatalog.vignettes) — przed pojedynczymi obiektami. Kotwice: kratki z tagami części 0.
+## Cała winieta albo nic: każda część przechodzi te same reguły co pojedynczy obiekt (_fit_cells / _fit_rest) i swoje
+## tagi, części się nie nakładają, kratki "clear" są wolne (potem RESERVED — dojście). per_room / per_chamber: jedna
+## z szansą w każdym pokoju / komnacie (poza portalowymi); density: sztuki na 100 kotwic w halach (nie w korytarzach).
+## Żadna część na przejściach (RESERVED) — winieta nie zatyka drogi i naprawa osiągalności jej nie rozbiera. "flip_h":
+## losowo odbita w poziomie (przesunięcia x, tagi wall_e <-> wall_w, odbicie części).
+func _place_vignettes(list: Array) -> void:
+	for v: Dictionary in list:
+		var vid := String(v.get("id", "winieta"))
+		var parts := _vignette_parts(v)
+		if parts.is_empty():
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash([seed_value, "vignette", vid])
+		var by_room := {}
+		var outside := PackedInt32Array()
+		for i in _vignette_anchors(parts[0].tags):
+			var r := f.room[i]
+			if r < 0:
+				if area_kind.get(i, &"hall") == &"hall":   # poza pokojami tylko hale — nie zwężać korytarzy
+					outside.append(i)
+			elif not f.portal_rooms.has(r):
+				var lst: PackedInt32Array = by_room.get(r, PackedInt32Array())
+				lst.append(i)
+				by_room[r] = lst   # PackedInt32Array to wartość — zapis z powrotem
+		var made := 0
+		var rooms: Array = by_room.keys()
+		rooms.sort()
+		for k in range(rooms.size() - 1, 0, -1):
+			var j := rng.randi_range(0, k)
+			var t = rooms[k]
+			rooms[k] = rooms[j]
+			rooms[j] = t
+		for r in rooms:
+			var chance := float(v.get("per_room", 0.0)) if int(r) < f.chamber_first else float(v.get("per_chamber", 0.0))
+			if chance > 0.0 and rng.randf() < chance:
+				made += _vignette_pick(v, parts, by_room[r], rng, 1)
+		var want := float(v.get("density", 0.0)) * outside.size() / 100.0
+		var n := int(want) + (1 if rng.randf() < want - floorf(want) else 0)
+		if n > 0:
+			made += _vignette_pick(v, parts, outside, rng, n)
+		if made > 0:
+			plan.stats[StringName("vignette:" + vid)] = made
+
+
+## Części winiety: [{def, marker, at, variant, flip, tags}]; pusto, gdy któraś wskazuje nieznany obiekt.
+func _vignette_parts(v: Dictionary) -> Array:
+	var out: Array = []
+	for part in v.get("parts", []):
+		var def: ObjectDef = defs_by_id.get(StringName(String(part.get("id", ""))))
+		if def == null or def.placement == ObjectDef.Placement.FREE:
+			return []
+		var at: Array = part.get("at", [0, 0])
+		var tags: Array[StringName] = []
+		for t in part.get("tags", []):
+			tags.append(StringName(t))
+		out.append({
+			"def": def, "marker": int(markers.get(def.id, 0)), "at": Vector2i(int(at[0]), int(at[1])),
+			"variant": int(part.get("variant", -1)), "flip": (1 if bool(part["flip"]) else 0) if part.has("flip") else -1,
+			"tags": tags,
+		})
+	return out
+
+
+## Kandydaci na kotwicę: kratki pierwszego tagu części 0 (bez tagów — cała podłoga), bez FORBID.
+func _vignette_anchors(tags: Array[StringName]) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	var src: PackedInt32Array
+	if not tags.is_empty() and f.tag_cells.has(tags[0]):
+		src = f.tag_cells[tags[0]]
+	else:
+		for i in range(f.walk.size()):
+			if f.walk[i] == 1:
+				src.append(i)
+	for i in src:
+		if not plan.occupancy[i] & ObjectPlan.FORBID:
+			out.append(i)
+	return out
+
+
+## Losowanie bez powtórzeń z `cands` aż do `target` winiet; każda kotwica w losowym odbiciu (flip_h), potem drugim.
+func _vignette_pick(v: Dictionary, parts: Array, cands: PackedInt32Array, rng: RandomNumberGenerator, target: int) -> int:
+	var k := cands.size()
+	var placed := 0
+	var can_flip := bool(v.get("flip_h", false))
+	while k > 0 and placed < target:
+		var j := rng.randi_range(0, k - 1)
+		var i := cands[j]
+		cands[j] = cands[k - 1]
+		cands[k - 1] = i
+		k -= 1
+		var first := can_flip and rng.randf() < 0.5
+		if _try_vignette(v, parts, f.cell(i), first, rng) or (can_flip and _try_vignette(v, parts, f.cell(i), not first, rng)):
+			placed += 1
+	return placed
+
+
+func _try_vignette(v: Dictionary, parts: Array, anchor: Vector2i, mirrored: bool, rng: RandomNumberGenerator) -> bool:
+	var fits: Array = []
+	var taken := {}
+	for p in parts:
+		var def: ObjectDef = p.def
+		var at: Vector2i = p.at
+		if mirrored:
+			at.x = -at.x - (maxi(def.size.x, 1) - 1)
+		var a := anchor + at
+		if not f.in_bounds(a):
+			return false
+		for t: StringName in p.tags:
+			var tt := t
+			if mirrored and t == &"wall_e":
+				tt = &"wall_w"
+			elif mirrored and t == &"wall_w":
+				tt = &"wall_e"
+			if not f.has_tag(f.idx(a), tt):
+				return false
+		var cells := _fit_cells(def, a)
+		if cells.is_empty() or not _fit_rest(def, a, cells, Vector2.ZERO, true):
+			return false
+		for j in cells:
+			if taken.has(j) or plan.occupancy[j] & ObjectPlan.RESERVED:   # nie na przejściach (jak keep_paths)
+				return false
+			taken[j] = true
+		fits.append([p, a, cells])
+	var clear := PackedInt32Array()
+	for c in v.get("clear", []):
+		var q := anchor + Vector2i(-int(c[0]) if mirrored else int(c[0]), int(c[1]))
+		if not f.in_bounds(q):
+			return false
+		var j := f.idx(q)
+		if not _movable(j) or taken.has(j) or plan.occupancy[j] & (ObjectPlan.USED | ObjectPlan.SOLID | ObjectPlan.FORBID):
+			return false
+		clear.append(j)
+	for fit in fits:
+		var p: Dictionary = fit[0]
+		var fl: int = p.flip
+		if mirrored:
+			fl = 1 - (fl if fl >= 0 else 0)
+		_commit(p.def, p.marker, fit[1], fit[2], Vector2.ZERO, false, rng, p.variant, fl)
+	for j in clear:
+		plan.occupancy[j] |= ObjectPlan.RESERVED
+	# Obwódka (8 sąsiadów części na podłodze) bez innych obiektów: pojedyncza skrzynia tuż przed winietą zamykała
+	# rząd przed nią w kieszeń, a naprawa osiągalności zdejmowała całą winietę (seed 3: 25 obiektów).
+	for j in taken:
+		var c := f.cell(j)
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var q := c + Vector2i(dx, dy)
+				if f.in_bounds(q) and not taken.has(f.idx(q)) and f.walk[f.idx(q)] == 1:
+					plan.occupancy[f.idx(q)] |= ObjectPlan.FORBID
 	return true
 
 
@@ -596,7 +859,7 @@ func _set_ok(def: ObjectDef, cells: PackedInt32Array) -> bool:
 	if set_gap <= 0 or def.set_id == &"" or not def.is_big():
 		return true
 	var mine := int(set_ids.get(def.set_id, -1)) + 1
-	for j in cells:
+	for j in _draw_cells(def, cells):
 		var c := f.cell(j)
 		for dy in range(-set_gap, set_gap + 1):
 			for dx in range(-set_gap, set_gap + 1):
@@ -615,8 +878,21 @@ func _mark_set(def: ObjectDef, cells: PackedInt32Array) -> void:
 	if not set_ids.has(def.set_id):
 		set_ids[def.set_id] = set_ids.size()
 	var mine := int(set_ids[def.set_id]) + 1
-	for j in cells:
+	for j in _draw_cells(def, cells):
 		set_of[j] = mine
+
+
+## Kratki rysunku obiektu: podstawa i kratki nad nią do wysokości size.y — odstęp zestawów liczony od całego rysunku
+## (filar 1×5 stawał podstawą 3 kratki od stołu, a jego trzon sięgał blatu).
+func _draw_cells(def: ObjectDef, cells: PackedInt32Array) -> PackedInt32Array:
+	var out := PackedInt32Array()
+	for j in cells:
+		var c := f.cell(j)
+		for dy in range(maxi(def.size.y, 1)):
+			var q := c + Vector2i(0, -dy)
+			if f.in_bounds(q):
+				out.append(f.idx(q))
+	return out
 
 
 ## Czy kształt kolizji obiektu w punkcie `pt` zachodzi (choćby częściowo) na zarezerwowane przejście.
@@ -637,8 +913,9 @@ func _shape_on_reserved(def: ObjectDef, pt: Vector2) -> bool:
 
 
 ## Czy grafika dużego obiektu (większego niż kratka) w punkcie `pt` zakrywa ścianę albo wystaje poza mapę.
-## Przy losowym odbiciu sprawdzane są obie strony.
-func _visual_on_wall(def: ObjectDef, pt: Vector2) -> bool:
+## Przy losowym odbiciu sprawdzane są obie strony. `facade_ok` (części winiet): wolno zakryć lico tuż nad podstawą —
+## kratkę ściany, pod którą w tej kolumnie jest podłoga obiektu (skrzynia przed licem, jak na makietach).
+func _visual_on_wall(def: ObjectDef, pt: Vector2, facade_ok := false) -> bool:
 	if not def.is_large() or def.visual_rect.size == Vector2.ZERO:
 		return false
 	var r := def.visual_rect
@@ -649,8 +926,24 @@ func _visual_on_wall(def: ObjectDef, pt: Vector2) -> bool:
 	for y in range(floori(r.position.y / cs), floori((r.end.y - 0.001) / cs) + 1):
 		for x in range(floori(r.position.x / cs), floori((r.end.x - 0.001) / cs) + 1):
 			var q := Vector2i(x, y)
-			if not f.in_bounds(q) or f.walk[f.idx(q)] == 0:
+			if not f.in_bounds(q):
 				return true
+			if f.walk[f.idx(q)] == 0 and not (facade_ok and _facade_over_floor(q)):
+				return true
+			var pw := pl_wall[f.idx(q)]
+			if pw == 2 or (pw == 1 and not facade_ok):
+				return true  # schody platformy / lico, rim — jak ściana
+	return false
+
+
+## Kratka ściany `q` należy do lica nad podłogą: w jej kolumnie, w zasięgu 3 kratek w dół, jest podłoga.
+func _facade_over_floor(q: Vector2i) -> bool:
+	for k in range(1, 4):
+		var b := q + Vector2i(0, k)
+		if not f.in_bounds(b):
+			return false
+		if f.walk[f.idx(b)] != 0:
+			return true
 	return false
 
 
@@ -867,12 +1160,13 @@ func _reserve_access(pl: ObjectPlacement) -> void:
 
 # --- 4. Osiągalność ----------------------------------------------------------------------
 
-## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> zdejmij przeszkody w promieniu
-## REACH_NEAR od odciętego kawałka. Osiągalność jak dla wroga (_bfs_agent): po środkach kratek, z odstępem
+## Teren osiągalny przed obiektami, a odcięty przez przeszkody -> z każdego odciętego kawałka zdejmij JEDNĄ przeszkodę
+## (najbliżej przylegającą: promień 1, gdy brak — REACH_NEAR) i policz od nowa — zwykle szczelinę zamyka jeden obiekt,
+## więc reszta zostaje. Osiągalność jak dla wroga (_bfs_agent): po środkach kratek, z odstępem
 ## promienia agenta od dokładnych kształtów przeszkód (te same obrysy co siatka nawigacji) — sama zajętość
 ## kratek przepuszczała szczeliny, w których siatka nawigacji się rwała (500×500: ~1/3 par bez ścieżki).
-## Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada (obstawiony przeszkodami) -> zdejmij przeszkody
-## wokół niego, a gdy się nie da — jego samego. Powtarzaj do skutku.
+## Obiekt INTERACTIVE (skrzynia) bez osiągalnego sąsiada (obstawiony przeszkodami) -> zdejmij jedną przeszkodę
+## przy nim, a gdy się nie da — jego samego. Powtarzaj do skutku.
 ## Kontrola B (bramy GatePlanner): przejście z wejścia przy zamkniętych bramach, brama otwiera się po dojściu do
 ## jej płyty albo klucza i zamka (_bfs_gated). Brama, której nic osiągalnego nie otwiera — z samego planu bram albo
 ## przez przeszkody, których naprawa nie zdjęła — nie powstaje (otwieracz "", płyty bez niej): mapa bez niej jest
@@ -1005,13 +1299,18 @@ func _drop_gates(opened: PackedByteArray, stat: StringName) -> void:
 func _repair_reach() -> void:
 	var w := f.width
 	var n := f.width * f.height
+	# Ruch po kratkach (gracz, bez promienia wroga): kieszonka zamknięta przeszkodami też jest odcięta.
+	var cells0 := _bfs_parents(entrance_i, false)
 	for _round in range(REACH_ROUNDS):
 		var clr := _clearance()
 		var parent := _bfs_agent(entrance_i, clr)
+		var cells1 := _bfs_parents(entrance_i, true)
 		var cut := {}
 		for i in range(parent.size()):
-			# Kratki, na których środku wróg się nie mieści (obrzeże przeszkody), nie liczą się jako odcięte.
+			# Kratki, na których środku wróg się nie mieści (obrzeże przeszkody), nie liczą się jako odcięte (model wroga).
 			if reach0[i] == 1 and parent[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID and clr[i] & CLR_CENTER == 0:
+				cut[i] = true
+			elif cells0[i] != -1 and cells1[i] == -1 and not plan.occupancy[i] & ObjectPlan.SOLID:
 				cut[i] = true
 		var boxed := {}
 		for pl in plan.placements:
@@ -1026,39 +1325,32 @@ func _repair_reach() -> void:
 				boxed[pl] = true
 		if cut.is_empty() and boxed.is_empty():
 			return
-		var near := {}
-		var src: Array = cut.keys()
+		# Grupy: odcięte kawałki (8-spójne) i kratki obstawionych obiektów interaktywnych — z każdej jedna przeszkoda.
+		var groups: Array = _cut_groups(cut)
 		for pl in boxed:
-			src.append_array(Array(pl.cells))
-		for i in src:
-			for dy in range(-REACH_NEAR, REACH_NEAR + 1):
-				for dx in range(-REACH_NEAR, REACH_NEAR + 1):
-					var j: int = i + dy * w + dx
-					if j >= 0 and j < n and absi(j % w - i % w) <= REACH_NEAR:
-						near[j] = true
+			groups.append(Array(pl.cells))
+		var drop := {}
+		# Ostatnie rundy (duże mapy, wiele kawałków): po staremu — wszystkie przeszkody w zasięgu, żeby nic nie zostało odcięte.
+		var greedy: bool = _round < REACH_ROUNDS - REACH_MASS_ROUNDS
+		for g in groups:
+			if greedy:
+				var pick: ObjectPlacement = _blocker(g, boxed, drop)
+				if pick != null:
+					drop[pick] = true
+			else:
+				for pl in _blockers_near(g, boxed):
+					drop[pl] = true
+		if drop.is_empty():
+			if boxed.is_empty():
+				return
+			drop = boxed  # nic wokół nie da się zdjąć — zdejmij obstawione obiekty interaktywne
 		var keep: Array[ObjectPlacement] = []
 		var removed := 0
 		for pl in plan.placements:
-			var hit := false
-			if pl.def.is_solid() and not boxed.has(pl):
-				for j in pl.cells:
-					if near.has(j):
-						hit = true
-						break
-			if hit:
+			if drop.has(pl):
 				removed += 1
 			else:
 				keep.append(pl)
-		if removed == 0:
-			if boxed.is_empty():
-				return
-			# Nic wokół nie da się zdjąć — zdejmij obstawione obiekty interaktywne.
-			keep = []
-			for pl in plan.placements:
-				if boxed.has(pl):
-					removed += 1
-				else:
-					keep.append(pl)
 		plan.removed_for_reach += removed
 		plan.placements = keep
 		# Odtwórz bity zajętości z pozostałych obiektów (zdjęte kratki bywają dzielone przez free).
@@ -1068,6 +1360,88 @@ func _repair_reach() -> void:
 			var bits := ObjectPlan.USED | (ObjectPlan.SOLID if pl.def.is_solid() else 0)
 			for j in pl.cells:
 				plan.occupancy[j] |= bits
+
+
+## Kawałki (8-spójne) odciętych kratek -> Array[Array[int]], kolejność stała (od najmniejszego indeksu).
+func _cut_groups(cut: Dictionary) -> Array:
+	var w := f.width
+	var keys: Array = cut.keys()
+	keys.sort()
+	var seen := {}
+	var out: Array = []
+	for start in keys:
+		if seen.has(start):
+			continue
+		seen[start] = true
+		var comp: Array = [start]
+		var head := 0
+		while head < comp.size():
+			var i: int = comp[head]
+			head += 1
+			for dy in range(-1, 2):
+				for dx in range(-1, 2):
+					var j: int = i + dy * w + dx
+					if cut.has(j) and not seen.has(j) and absi(j % w - i % w) <= 1:
+						seen[j] = true
+						comp.append(j)
+		out.append(comp)
+	return out
+
+
+## Przeszkoda do zdjęcia dla grupy kratek: z kolizją, nie obstawiona skrzynia, z największą liczbą kratek w promieniu 1
+## od grupy (gdy żadnej — REACH_NEAR); null, gdy grupę obsługuje już zdejmowany obiekt albo nic nie ma w zasięgu.
+func _blocker(group: Array, boxed: Dictionary, drop: Dictionary) -> ObjectPlacement:
+	var w := f.width
+	var n := f.width * f.height
+	for r in [1, REACH_NEAR]:
+		var near := {}
+		for i in group:
+			for dy in range(-r, r + 1):
+				for dx in range(-r, r + 1):
+					var j: int = i + dy * w + dx
+					if j >= 0 and j < n and absi(j % w - i % w) <= r:
+						near[j] = true
+		var best: ObjectPlacement = null
+		var best_hits := 0
+		for pl in plan.placements:
+			if not pl.def.is_solid() or boxed.has(pl):
+				continue
+			var hits := 0
+			for j in pl.cells:
+				if near.has(j):
+					hits += 1
+			if hits == 0:
+				continue
+			if drop.has(pl):
+				return null
+			if hits > best_hits:
+				best = pl
+				best_hits = hits
+		if best != null:
+			return best
+	return null
+
+
+## Wszystkie przeszkody z kolizją (bez obstawionych skrzyń) w promieniu REACH_NEAR od grupy.
+func _blockers_near(group: Array, boxed: Dictionary) -> Array:
+	var w := f.width
+	var n := f.width * f.height
+	var near := {}
+	for i in group:
+		for dy in range(-REACH_NEAR, REACH_NEAR + 1):
+			for dx in range(-REACH_NEAR, REACH_NEAR + 1):
+				var j: int = i + dy * w + dx
+				if j >= 0 and j < n and absi(j % w - i % w) <= REACH_NEAR:
+					near[j] = true
+	var out: Array = []
+	for pl in plan.placements:
+		if not pl.def.is_solid() or boxed.has(pl):
+			continue
+		for j in pl.cells:
+			if near.has(j):
+				out.append(pl)
+				break
+	return out
 
 
 ## Przejezdność dla wroga przy obecnych przeszkodach (bity CLR_* na kratkę). Próbki: środek kratki oraz

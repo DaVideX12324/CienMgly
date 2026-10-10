@@ -351,7 +351,7 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var is_horizontal_facade: bool = FacadeSegmentDetector.has_same_y(facade_cols, x - 1, y, horiz_tol) \
 				and FacadeSegmentDetector.has_same_y(facade_cols, x + 1, y, horiz_tol)
 			# Wymuszone 2H: płaskowyż albo mała wolnostojąca wyspa ściany nad stopą.
-			var force_2h: bool = ctx.plateau_mode or ctx.force_2h_cells.has(pos + Vector2i(0, -1))
+			var force_2h: bool = (ctx.plateau_mode and ctx.plateau_face_h <= 2) or ctx.force_2h_cells.has(pos + Vector2i(0, -1))
 			var is_2h: bool = is_horizontal_facade and (edge.solid_depth == 2 or force_2h)
 
 			if is_2h:
