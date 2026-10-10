@@ -390,6 +390,8 @@ static func plan_cave_tiles(
 	ctx.rooms = result.rooms
 	ctx.plateau = result.plateau
 	ctx.canals = result.canals
+	ctx.portal_stairs = result.portal_stairs
+	ctx.portal_void = result.portal_void
 	if result.objects != null:
 		for pl in result.objects.placements:
 			if pl.def.mount == &"facade" and not pl.def.rhythm.is_empty():

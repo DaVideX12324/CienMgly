@@ -22,6 +22,23 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
 
 	var walls: Dictionary = placement_plan.get_placements(&"Walls")
+	# Koniec schodów portalu przy krawędzi mapy (alcove_stairs): void bez ściany, jak wyjście w tutorialu.
+	for pos in ctx.portal_void:
+		for layer in [&"Walls", &"Floor", &"FloorDecor"]:
+			var vp := TilePlacement.new()
+			vp.pos = pos
+			vp.layer = layer
+			vp.atlas_coords = Vector2i(-1, -1)
+			vp.category = &"PORTAL_CLEAR"
+			if layer == &"Walls":
+				# kafel voidu mapy (SOLID_FILL z profilu), żeby kolor zgadzał się z resztą voidu
+				var parts := TileResolver.resolve_module_parts(ctx, pos, TileModuleRole.Id.SOLID_FILL)
+				if not parts.is_empty():
+					vp.source_id = parts[0].tile.source_id
+					vp.atlas_coords = parts[0].tile.atlas_coords
+					vp.alternative_tile = parts[0].tile.alternative_tile
+			PlacementPriority.assign(vp, table)
+			placement_plan.queue(vp)
 	for pos in portal_cells.keys():
 		# Dekoracja szczytu ściany (RIM_TIP — górna część rimu z korzeniami) wisi nad podłogą tuż nad rimem;
 		# nie zasłania portalu, więc zostaje (zgłoszenie usera 2026-10-03: portal ucinał TOP rimów z dekoracją).

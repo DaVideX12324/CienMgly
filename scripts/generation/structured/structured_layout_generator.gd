@@ -100,7 +100,9 @@ static func generate_layout(
 	var entrance_room_idx: int = picked.x
 	var exit_room_idx: int = picked.y
 	if entrance_room_idx >= 0:
-		var ent: Dictionary = PortalGenerator.carve_portal_in_room(ctx, rooms[entrance_room_idx])
+		var ent: Dictionary = PortalGenerator.carve_portal_at_wall(ctx, rooms[entrance_room_idx], flags.portal_style) \
+			if flags.portal_style != "" else PortalGenerator.carve_portal_in_room(ctx, rooms[entrance_room_idx])
+		PortalGenerator.register_wall_portal(result, ent, flags)
 		ctx.entrance_pos = ent["center"] as Vector2i
 		result.entrance_pos = ctx.entrance_pos
 		result.player_spawn = ctx.entrance_pos
@@ -108,7 +110,9 @@ static func generate_layout(
 		for p in result.entrance_zone:
 			ctx.grid[p] = CellType.ENTRANCE
 			ctx.portal_zone[p] = true
-		var ex: Dictionary = PortalGenerator.carve_portal_in_room(ctx, rooms[exit_room_idx])
+		var ex: Dictionary = PortalGenerator.carve_portal_at_wall(ctx, rooms[exit_room_idx], flags.portal_style) \
+			if flags.portal_style != "" else PortalGenerator.carve_portal_in_room(ctx, rooms[exit_room_idx])
+		PortalGenerator.register_wall_portal(result, ex, flags)
 		ctx.exit_pos = ex["center"] as Vector2i
 		result.exit_pos = ctx.exit_pos
 		result.exit_zone = ex["cells"] as Array[Vector2i]
@@ -188,6 +192,11 @@ static func generate_layout(
 				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects, catalog.defs)
 			GatePlannerScript.emit(result, catalog.gates, result.objects)
 		GenProgress.end()
+	# Drabiny wejścia / wyjścia: wysokość lica nad przejściem (4H jak FacadePlacer, inaczej 3H).
+	if not result.portal_ladders.is_empty():
+		var bases_4h: Dictionary = WallDecorPlannerScript._bases_4h(result, result.seed_used, flags)
+		for lad in result.portal_ladders:
+			lad["height"] = 4 if bases_4h.has(lad["cell"]) else 3
 
 	GenProgress.begin(&"spawns")
 	if not rooms.is_empty() and entrance_room_idx >= 0:

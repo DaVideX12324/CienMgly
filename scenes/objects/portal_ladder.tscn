@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/portal_ladder.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/textures/legacy_amonra/atlases/nieodkryteglebiny_textures/New Stairs.png" id="2_ladder"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Assets/Light.png" id="3_light"]
+
+[sub_resource type="CanvasItemMaterial" id="mat_add"]
+blend_mode = 1
+
+[node name="PortalLadder" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Ladder" type="Sprite2D" parent="."]
+texture_filter = 1
+texture_repeat = 2
+texture = ExtResource("2_ladder")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 52)
+position = Vector2(-8, -56)
+
+[node name="Light" type="Sprite2D" parent="."]
+modulate = Color(1, 0.92, 0.75, 0.42)
+texture_filter = 1
+material = SubResource("mat_add")
+texture = ExtResource("3_light")
+region_enabled = true
+region_rect = Rect2(96, 10, 104, 126)
+scale = Vector2(0.62, 0.635)

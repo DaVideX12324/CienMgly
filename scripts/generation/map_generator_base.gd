@@ -36,6 +36,10 @@ class GenerationResult:
 	var decoration_spawns: Array[Dictionary] = [] # { pos: Vector2i, id: int }
 	var entrance_zone: Array[Vector2i] = []  # komórki strefy wejściowej
 	var exit_zone: Array[Vector2i] = []  # komórki strefy wyjściowej
+	var portal_stairs: Array[Dictionary] = []  # schody wejścia / wyjścia {rect: Rect2i, dir: "N"/"E"/"S"/"W"} — CorridorStairsPlacer
+	var portal_void: Array[Vector2i] = []   # koniec schodów portalu przy krawędzi mapy — kafle ścian wymazane (void)
+	var portal_ladders: Array[Dictionary] = []  # {cell, height} — drabiny wejścia / wyjścia (portal_style "ladder")
+	var portal_scene: String = ""           # scena drabiny (flags.portal_scene)
 	var profile_id: StringName = &""  # który profil wygenerował ten wynik
 	var flags_used: RefCounted = null  # GenerationFlags faktycznie użyte
 	var overrides_used: Dictionary = {}  # nadpisania runtime
@@ -401,6 +405,17 @@ static func spawn_entities(
 	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size)
 	if result.exit_pos != Vector2i.ZERO:
 		LevelPortal.place_from_next_marker(target_node, _cell_center(arrival_cell(result, result.exit_pos), cell_size))
+	# 6. Drabiny wejścia / wyjścia (portal_style "ladder") — scena na kratce przejścia, wysokość lica z generatora.
+	if not result.portal_ladders.is_empty() and ResourceLoader.exists(result.portal_scene):
+		var ladder_scene := load(result.portal_scene) as PackedScene
+		for lad in result.portal_ladders:
+			var inst := ladder_scene.instantiate() as Node2D
+			if inst == null:
+				continue
+			inst.position = _cell_center(lad["cell"], cell_size)
+			if "height_cells" in inst:
+				inst.set("height_cells", int(lad.get("height", 3)))
+			objects_node.add_child(inst)
 
 
 ## Odległość (w kratkach, w linii prostej) punktu pojawienia się od kratki przejścia — obszar ma 1,5 kratki.

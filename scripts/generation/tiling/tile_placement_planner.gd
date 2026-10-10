@@ -86,6 +86,16 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 ## i przejścia schodów N / E / W dostają teren — cień podłogi przy linii krawędzi (TerrainMaskPlanner dzieli
 ## teren na górę platformy i resztę).
 static func terrain_cells(ctx: GenerationContext, cells: Array[Vector2i]) -> Array[Vector2i]:
+	if not ctx.portal_void.is_empty():
+		# koniec schodów portalu — void, bez podłogi i terenu
+		var pv := {}
+		for c in ctx.portal_void:
+			pv[c] = true
+		var kept: Array[Vector2i] = []
+		for c in cells:
+			if not pv.has(c):
+				kept.append(c)
+		cells = kept
 	if ctx.canals != null and not ctx.canals.is_empty():
 		var dry: Array[Vector2i] = []
 		for c in cells:

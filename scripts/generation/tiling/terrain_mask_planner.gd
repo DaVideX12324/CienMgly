@@ -244,6 +244,7 @@ static func compute_for_result(result, seed_value: int, flags: GenerationFlags) 
 	ctx.seed_value = seed_value
 	ctx.flags = flags
 	ctx.plateau = result.plateau
+	ctx.portal_void = result.portal_void
 	ctx.canals = result.canals
 	for p in result.entrance_zone:
 		ctx.portal_zone[p] = true
