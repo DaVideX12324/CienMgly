@@ -60,6 +60,14 @@
     "forbidden_contact_policy": "use_default",
     "missing_tileset_policy": "default"
   },
+  "enemies": [
+    ["scenes/enemies/pixel_crawler/fungus_immature.tscn", "scenes/enemies/pixel_crawler/bat_small.tscn",
+      "scenes/enemies/slime_1.tscn", "scenes/enemies/slime_2.tscn", "scenes/enemies/pixel_crawler/stone_broken.tscn"],
+    ["scenes/enemies/pixel_crawler/fungus_long.tscn", "scenes/enemies/pixel_crawler/fungus_heavy.tscn",
+      "scenes/enemies/pixel_crawler/bat_fur.tscn", "scenes/enemies/pixel_crawler/stone_base.tscn", "scenes/enemies/slime_3.tscn"],
+    ["scenes/enemies/pixel_crawler/fungus_old.tscn", "scenes/enemies/pixel_crawler/stone_golem.tscn",
+      "scenes/enemies/pixel_crawler/stone_lava.tscn"]
+  ],
   "tiling": {
     "connectors_enabled": true,
     "facades_enabled": true,

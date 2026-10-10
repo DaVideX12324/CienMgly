@@ -140,7 +140,7 @@
     "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]}
   },
   "enemies": [
-    "scenes/enemies/pixel_crawler/rat_base.tscn",
+    ["scenes/enemies/pixel_crawler/rat_base.tscn", "scenes/enemies/bandit_1.tscn", "scenes/enemies/bandit_2.tscn"],
     ["scenes/enemies/pixel_crawler/rat_rogue.tscn", "scenes/enemies/pixel_crawler/rat_mage.tscn"],
     "scenes/enemies/pixel_crawler/rat_warrior.tscn"
   ],
