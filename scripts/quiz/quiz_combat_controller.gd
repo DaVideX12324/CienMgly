@@ -144,6 +144,7 @@ var _action_menu_open := false
 var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
 var _actor_selected_idx := 0
 var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
+var _defender_index := 0         # postać, która wybrała Obronę w tej turze (blok umiejętności wrogów)
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
 var _list_menu_entries: Array[Dictionary] = []
@@ -1235,6 +1236,7 @@ func _resolve_attack(correct: bool) -> void:
 
 func _resolve_defend(correct: bool) -> void:
 	defending = true
+	_defender_index = _active_actor_index
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("magic")
@@ -1443,12 +1445,12 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			raw = roundi((int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8) * sk.damage_multiplier)
 		elif sk.damage_mode == QuizRpgEnemySkill.DamageMode.FIXED:
 			raw = sk.fixed_damage
-		if raw > 0:
-			_gain_party_tp(0, _tp_from_damage(raw, tier))
 		for t in targets:
+			if raw > 0:
+				_gain_party_tp(t, _tp_from_damage(raw, tier))
 			var mult := 1.0
 			var blocked := false
-			if t == 0 and defending and sk.can_be_blocked:
+			if t == _defender_index and defending and sk.can_be_blocked:
 				if quiz_correct:
 					blocked = true
 				else:
@@ -1497,7 +1499,7 @@ func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
 	if _ps == null or not _ps.has_method("add_status") or not _ps.add_status(member_index, sk.inflict_status):
 		return
 	var member: Dictionary = _ps.get_party_member(member_index) if _ps.has_method("get_party_member") else {}
-	var st_name := str(_ps.STATUS_NAMES.get(sk.inflict_status, sk.inflict_status)) if "STATUS_NAMES" in _ps else sk.inflict_status
+	var st_name: String = _ps.status_name(sk.inflict_status) if _ps.has_method("status_name") else sk.inflict_status
 	var col := POISON_COLOR if sk.inflict_status == "poison" else sk.color
 	_push_log("%s: %s!" % [str(member.get("name", "Bohater")), st_name], col)
 	if member_index == 0:
