@@ -6,6 +6,7 @@ class_name ProceduralLevel
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const LevelPortal = preload("level_portal.gd")
+const HeightVeilScript = preload("height_veil.gd")
 const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
 const OverworldForestGeneratorScript = preload("../generation/overworld_forest_generator.gd")
 const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
@@ -529,6 +530,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
 		GenProgress.end(&"props")
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
+	_setup_height_veil(job.result)
 
 	# 4. Nawigacja 2D
 	GenProgress.begin(&"navigation")
@@ -538,6 +540,19 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+
+
+## Efekt wysokości korytarzy-schodów (HeightVeil): węzeł tworzony, gdy mapa ma korytarze-schody.
+func _setup_height_veil(result) -> void:
+	var old := get_node_or_null("HeightVeil")
+	if old != null:
+		old.queue_free()
+	if result == null or result.canals == null or not "stair_corridors" in result.canals or result.canals.stair_corridors.is_empty():
+		return
+	var veil: Node2D = HeightVeilScript.new()
+	veil.name = "HeightVeil"
+	add_child(veil)
+	veil.setup(result)
 
 
 func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMapLayer:
