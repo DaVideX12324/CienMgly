@@ -6,10 +6,10 @@
 script = ExtResource("1_qrpg_item")
 item_id = "ether"
 display_name = "Eter"
-description = "Przywraca 20 SP."
+description = "Przywraca 40 SP."
 stackable = true
 max_stack = 99
 consumable = true
 usable_in_menu = true
 usable_in_combat = true
-sp_restore = 20
+sp_restore = 40

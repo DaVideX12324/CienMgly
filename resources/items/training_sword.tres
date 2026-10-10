@@ -14,4 +14,4 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "weapon"
-atk_bonus = 4
+atk_bonus = 10
