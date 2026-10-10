@@ -206,13 +206,14 @@ func get_statuses(member_index: int) -> Array:
 	return ((party[member_index] as Dictionary).get("statuses", {}) as Dictionary).keys()
 
 
-func add_status(member_index: int, status_id: String) -> bool:
+## params: parametry statusu zapisywane z nim (trucizna: {"mode": "percent" | "fixed", "amount": float}); puste = domyślne.
+func add_status(member_index: int, status_id: String, params: Dictionary = {}) -> bool:
 	_ensure_party_defaults()
 	if member_index < 0 or member_index >= party.size() or has_status(member_index, status_id):
 		return false
 	var member: Dictionary = party[member_index]
 	var st: Dictionary = member.get("statuses", {})
-	st[status_id] = true
+	st[status_id] = params.duplicate() if not params.is_empty() else true
 	member["statuses"] = st
 	party[member_index] = member
 	party_changed.emit()
@@ -251,13 +252,26 @@ func tick_poison_combat() -> Array:
 		return out
 	for i in range(party.size()):
 		if has_status(i, STATUS_POISON) and _member_hp(i) > 0:
-			var dmg := mini(maxi(ceili(_member_max_hp(i) * POISON_COMBAT_FRACTION), 1), _member_hp(i))
+			var dmg := mini(_poison_combat_damage(i), _member_hp(i))
 			_set_member_hp(i, _member_hp(i) - dmg)
 			out.append([i, dmg])
 			status_tick.emit(i, STATUS_POISON, dmg)
 	if not out.is_empty():
 		party_changed.emit()
 	return out
+
+
+## Obrażenia trucizny członka na turę walki: z parametrów nadanych przez umiejętność (procent maks. HP albo stała),
+## domyślnie POISON_COMBAT_FRACTION maks. HP; co najmniej 1.
+func _poison_combat_damage(i: int) -> int:
+	var p: Variant = ((party[i] as Dictionary).get("statuses", {}) as Dictionary).get(STATUS_POISON)
+	if p is Dictionary:
+		var amount := float((p as Dictionary).get("amount", 0.0))
+		if amount > 0.0:
+			if String((p as Dictionary).get("mode", "percent")) == "fixed":
+				return maxi(roundi(amount), 1)
+			return maxi(ceili(_member_max_hp(i) * amount / 100.0), 1)
+	return maxi(ceili(_member_max_hp(i) * POISON_COMBAT_FRACTION), 1)
 
 
 ## Trucizna w eksploracji: co POISON_WORLD_INTERVAL s (tylko w stanie EXPLORING — pauza, walka, menu wstrzymują)

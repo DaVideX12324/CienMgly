@@ -8,6 +8,7 @@ class_name QuizRpgEnemySkill
 
 enum DamageMode { MULTIPLIER, FIXED, NONE }
 enum Target { LEADER, RANDOM_MEMBER, ALL_PARTY }
+enum PoisonMode { PERCENT, FIXED }
 
 @export var skill_name: String = "Umiejętność"
 ## Tekst w logu walki: {enemy} = nazwa wroga, {skill} = nazwa umiejętności. Pusty -> „{enemy} używa: {skill}!”.
@@ -40,6 +41,11 @@ enum Target { LEADER, RANDOM_MEMBER, ALL_PARTY }
 @export_range(0.0, 1.0, 0.05) var status_chance: float = 1.0
 ## Status losowany przy każdym trafieniu (inaczej raz po serii, gdy cokolwiek trafiło).
 @export var status_per_hit: bool = false
+## Trucizna: obrażenia na turę walki — procent maks. HP celu (PERCENT) albo stała liczba HP (FIXED).
+## Poza walką trucizna zawsze tyka tak samo (PlayerStats.POISON_WORLD_*).
+@export var poison_mode: PoisonMode = PoisonMode.PERCENT
+## PERCENT: procent maks. HP na turę (np. 5 = 5 %); FIXED: HP na turę. Co najmniej 1 HP.
+@export_range(0.5, 999.0, 0.5) var poison_amount: float = 5.0
 
 @export_group("Wygląd")
 @export var color: Color = Color(1.0, 0.55, 0.2)
@@ -47,3 +53,10 @@ enum Target { LEADER, RANDOM_MEMBER, ALL_PARTY }
 
 func has_status() -> bool:
 	return inflict_status != "" and inflict_status != "none"
+
+
+## Parametry nadawanego statusu dla PlayerStats.add_status (puste = domyślne).
+func status_params() -> Dictionary:
+	if inflict_status == "poison":
+		return {"mode": "fixed" if poison_mode == PoisonMode.FIXED else "percent", "amount": poison_amount}
+	return {}

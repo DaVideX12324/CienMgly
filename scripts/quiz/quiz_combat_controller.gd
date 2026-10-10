@@ -1496,7 +1496,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 
 
 func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
-	if _ps == null or not _ps.has_method("add_status") or not _ps.add_status(member_index, sk.inflict_status):
+	if _ps == null or not _ps.has_method("add_status") or not _ps.add_status(member_index, sk.inflict_status, sk.status_params()):
 		return
 	var member: Dictionary = _ps.get_party_member(member_index) if _ps.has_method("get_party_member") else {}
 	var st_name: String = _ps.status_name(sk.inflict_status) if _ps.has_method("status_name") else sk.inflict_status
