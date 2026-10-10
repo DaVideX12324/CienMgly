@@ -14,8 +14,11 @@ signal party_changed()
 ## Obrażenia od statusu (trucizna): członek drużyny, status, utracone HP — świat (co POISON_WORLD_INTERVAL) i walka.
 signal status_tick(member_index: int, status_id: String, amount: int)
 
-const BASE_HP          := 100
-const HP_PER_LEVEL     := 20
+## Maks. HP bohatera rośnie liniowo od BASE_HP (poziom 1) do HP_AT_MAX_LEVEL (MAX_LEVEL); z hero_party_data[0] — jego pola.
+## Wzór: FNAfB (Freddy ~250 HP na lv 1, ~1900 na lv 20); MAX_LEVEL podnieść, gdy pojawi się więcej map.
+const MAX_LEVEL        := 20
+const BASE_HP          := 250
+const HP_AT_MAX_LEVEL  := 1900
 const ATK_PER_LEVEL    := 1
 const DEF_PER_LEVEL    := 1
 const BASE_XP_TO_LEVEL := 100
@@ -116,13 +119,19 @@ func xp_to_next_level() -> int:
 
 
 func add_xp(amount: int) -> void:
+	if level >= MAX_LEVEL:
+		xp = 0
+		xp_changed.emit(xp, xp_to_next_level())
+		return
 	xp += amount
-	while xp >= xp_to_next_level():
+	while level < MAX_LEVEL and xp >= xp_to_next_level():
 		xp -= xp_to_next_level()
 		level += 1
 		_recalculate_max_hp()
 		hp = max_hp
 		level_up.emit(level)
+	if level >= MAX_LEVEL:
+		xp = 0
 	xp_changed.emit(xp, xp_to_next_level())
 
 
@@ -356,7 +365,12 @@ func is_party_defeated() -> bool:
 
 
 func _recalculate_max_hp() -> void:
-	max_hp = BASE_HP + (level - 1) * HP_PER_LEVEL
+	var first := BASE_HP
+	var last := HP_AT_MAX_LEVEL
+	if not hero_party_data.is_empty() and hero_party_data[0] != null:
+		first = hero_party_data[0].base_hp
+		last = hero_party_data[0].hp_at_max_level
+	max_hp = QuizRpgHeroData.linear_hp(first, last, level, MAX_LEVEL)
 
 
 func _check_rewards() -> void:
@@ -392,6 +406,10 @@ func load_save_data(data: Dictionary) -> void:
 	xp            = data.get("xp", 0)
 	hp            = data.get("hp", BASE_HP)
 	max_hp        = data.get("max_hp", BASE_HP)
+	# stary zapis (HP 100 + 20 / poziom): nowa skala, zachowany stosunek hp / max_hp
+	var saved_max := maxi(max_hp, 1)
+	_recalculate_max_hp()
+	hp = clampi(roundi(float(hp) * float(max_hp) / float(saved_max)), 0, max_hp)
 	points        = data.get("points", 0)
 	streak        = data.get("streak", 0)
 	best_streak   = data.get("best_streak", 0)
