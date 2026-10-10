@@ -117,6 +117,9 @@ static func _objects_node(level: Node2D) -> Node2D:
 
 ## Wypieczone DECAL-e: z = 0 z y-sortem (nad trawą z FloorDecor, która na z = -1 sortuje się
 ## kaflami po Y i przykrywała cały węzeł); pod postaciami dzięki DECAL_SORT_LIFT.
+const FACADE_LIFT_SORT := 24  # y_sort_origin warstwy obiektów podniesionych na licu (facade_dy)
+
+
 static func _decal_items_node(level: Node2D) -> Node2D:
 	var n := level.get_node_or_null(DECAL_ITEMS) as Node2D
 	if n == null:
@@ -144,7 +147,14 @@ static func _place_tile(level: Node2D, tileset: TileSet, pl: ObjectPlacement, ru
 	var def := pl.def
 	# Na licu zawsze Props (y-sort razem ze ścianami), na podłodze DECAL pod Decals.
 	var flat := def.klass == ObjectDef.Klass.DECAL and not def.is_wall_mounted()
-	var layer := _layer(level, tileset, String(def.layer_name) if def.layer_name != &"" else (DECALS if flat else PROPS))
+	var layer_name := String(def.layer_name) if def.layer_name != &"" else (DECALS if flat else PROPS)
+	if def.facade_dy != 0:
+		layer_name += "_dy%d" % -def.facade_dy
+	var layer := _layer(level, tileset, layer_name)
+	if def.facade_dy != 0:
+		# Podniesiony na licu (facade_dy): sortowanie ponad kaflami lica z tych rzędów (y_sort_origin 22 w sewer.tres),
+		# a pod postaciami przed ścianą (rząd podłogi niżej) — inaczej lico przykrywa obiekt.
+		layer.y_sort_origin = FACADE_LIFT_SORT
 	if not def.tiles.is_empty():
 		# Moduł z kilku kafli (np. kratka 9-slice) — sortowanie / kolizja z danych kafli TileSetu.
 		for t in def.tiles:
