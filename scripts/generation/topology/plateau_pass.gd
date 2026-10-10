@@ -1961,7 +1961,12 @@ static func _assemble(ctx: GenerationContext, comps: Array, lists: Array, alive:
 				cand[c + d] = true
 	var heights := layout.heights
 	var grid := ctx.grid
+	var portal_void := {}  # koniec schodów portalu (void bez ściany) nie jest wyżej od dołu — bez lica i bariery na przejściu
+	for c in ctx.portal_void:
+		portal_void[c] = true
 	for c in cand:
+		if portal_void.has(c):
+			continue
 		var hc: int = heights.get(c, 0)
 		for d in DIRS4:
 			var n: Vector2i = c + d

@@ -30,6 +30,9 @@ var plateau_mode: bool = false
 # Wysokość lica płaskowyżu w trybie płaskowyżu (flaga plateau_face_h): 2H wymuszane tylko przy 2; wyższe lico
 # (ścieki 3H) liczone jak zwykłe ściany.
 var plateau_face_h: int = 2
+# Schody wejścia / wyjścia (portal_style "stairs", GenerationResult.portal_stairs) — CorridorStairsPlacer.
+var portal_stairs: Array[Dictionary] = []
+var portal_void: Array[Vector2i] = []  # koniec schodów portalu — PortalClearPlacer wymazuje kafle ścian
 # Kratki ściany małych wolnostojących wysp (EdgeAnalyzer.small_wall_islands): fasada pod nimi zawsze 2H.
 # Liczone w EdgeAnalyzer.analyze, gdy puste (flaga small_pillar_2h_max_area).
 var force_2h_cells: Dictionary = {}

@@ -11,6 +11,7 @@
     "corridor_width": 3
   },
   "flags": {
+    "portal_style": "alcove_stairs",
     "enable_slope_thickness": true,
     "enable_meandering": true,
     "enable_variable_width": true,
@@ -61,6 +62,12 @@
     "missing_tileset_policy": "default"
   },
   "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35, "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15},
+  "portal_stairs_tiles": {
+    "N": {"source": 0, "origin": [0, 17], "size": [5, 2]},
+    "S": {"source": 0, "origin": [12, 18], "size": [5, 2]},
+    "E": {"source": 0, "origin": [15, 20], "size": [2, 3]},
+    "W": {"source": 0, "origin": [13, 20], "size": [2, 3]}
+  },
   "enemies": [
     ["scenes/enemies/pixel_crawler/fungus_immature.tscn", "scenes/enemies/pixel_crawler/bat_small.tscn",
       "scenes/enemies/slime_1.tscn", "scenes/enemies/slime_2.tscn"],

@@ -57,6 +57,8 @@
     "enable_objects": true,
     "objects_catalog": "res://modules/quiz_rpg/resources/maps/config/objects_sewer.json",
     "canal_dry_chance": 0.4,
+    "portal_style": "ladder",
+    "portal_scene": "res://modules/quiz_rpg/scenes/objects/portal_ladder.tscn",
     "enable_platforms": true,
     "plateau_face_h": 3,
     "plateau_min_area": 16,

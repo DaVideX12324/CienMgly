@@ -53,6 +53,10 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 	if result.canals != null and not result.canals.is_empty():
 		covered = covered.duplicate()
 		covered.merge(result.canals.blocked)
+	if not result.portal_stairs.is_empty() or not result.portal_ladders.is_empty():
+		# przejścia przy ścianie (schody / drabina) — boss i wrogowie nie stoją w ich strefie
+		covered = covered.duplicate()
+		covered.merge(ctx.portal_zone)
 	if not spread.is_empty():
 		_plan_spread(ctx, result, rooms[entrance_room_idx] if entrance_room_idx >= 0 else Rect2i(), exit_room, spread, covered)
 	if not covered.is_empty():

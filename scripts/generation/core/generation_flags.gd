@@ -29,6 +29,12 @@ var room_density: float = 1.0
 # Wejście: edge (wnęka przy krawędzi mapy, jak dotąd) | center (w pokoju najbliżej środka mapy, bez
 # wnęki — np. zejście włazem w ściekach; wyjście nadal przy krawędzi, w najdalszym pokoju).
 var entrance_mode: String = "edge"
+# Wygląd wejścia i wyjścia (PortalGenerator.carve_portal_at_wall): "" — jak dotąd (środek pokoju / wnęka przy krawędzi),
+# "ladder" — drabina na licu północnej ściany pokoju (scena portal_scene), "stairs" — schody od środka pokoju do
+# północnej ściany (kafle generator_behaviour.portal_stairs_tiles), przejście na ich szczycie, "alcove_stairs" — jak ""
+# (wnęki przy krawędzi mapy), w każdej wnęce schody od jej połowy do końca (portal_stairs_tiles.N / S / E / W).
+var portal_style: String = ""
+var portal_scene: String = ""
 # Układ pomieszczeń: interior (pokoje organiczne / jaskiniowe) | structured (układ strukturalny / architektoniczny).
 var layout: String = "interior"
 ## Opcje zaawansowane układu structured z sekcji "structured_layout" companion-JSON
