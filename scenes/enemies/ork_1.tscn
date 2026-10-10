@@ -16,7 +16,7 @@ hp = 320
 max_hp = 320
 attack = 18
 defense = 5
-xp_reward = 60
+xp_reward = 200
 encounter_tier = 1
 patrol_speed = 60.0
 

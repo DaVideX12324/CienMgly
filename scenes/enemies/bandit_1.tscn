@@ -14,7 +14,7 @@ enemy_name = "Bandit 1"
 quiz_id = "ogolne"
 attack = 21
 defense = 5
-xp_reward = 45
+xp_reward = 200
 encounter_tier = 1
 patrol_speed = 60.0
 

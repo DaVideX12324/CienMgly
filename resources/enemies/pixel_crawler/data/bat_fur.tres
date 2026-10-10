@@ -9,6 +9,6 @@ quiz_id = "ogolne"
 max_hp = 320
 attack = 26
 defense = 12
-xp_reward = 65
+xp_reward = 400
 patrol_speed = 75.0
 detection_radius = 100.0
