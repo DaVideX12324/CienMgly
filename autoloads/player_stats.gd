@@ -22,7 +22,9 @@ const HP_AT_MAX_LEVEL  := 1900
 const ATK_PER_LEVEL    := 1
 const DEF_PER_LEVEL    := 1
 const BASE_XP_TO_LEVEL := 100
-const XP_GROWTH        := 1.5
+## XP do następnego poziomu: BASE_XP_TO_LEVEL × poziom^XP_EXPONENT (lv 1->2: 100, 5->6: 1118, 19->20: ~8300; razem do lv 20 ~67 tys.).
+## Wrogowie wyższych tierów dają wielokrotnie więcej XP niż 35–85 dzisiejszych — stroić przy kolejnych mapach.
+const XP_EXPONENT      := 1.5
 ## Statusy członków drużyny: member["statuses"] = {id: true} (zapisywane razem z drużyną). Trucizna (decyzje usera
 ## 2026-10-09): nada ją umiejętność użyta w walce (add_status; do zrobienia), trwa także w eksploracji, dopóki nie użyje się przedmiotu
 ## leczącego statusy (cure_statuses). Poza walką 1 HP co 3 s, najwyżej do 1 HP; w walce co turę ułamek maks. HP,
@@ -115,7 +117,7 @@ func _ready() -> void:
 
 
 func xp_to_next_level() -> int:
-	return int(BASE_XP_TO_LEVEL * pow(XP_GROWTH, level - 1))
+	return int(BASE_XP_TO_LEVEL * pow(level, XP_EXPONENT))
 
 
 func add_xp(amount: int) -> void:
