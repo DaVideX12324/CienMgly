@@ -2266,14 +2266,10 @@ func _is_pause_menu_open() -> bool:
 	return false
 
 
+## Menu pauzy z grupy (pause_menu.gd dodaje się w _enter_tree) — wołane co klatkę i przy każdym zdarzeniu wejścia,
+## więc bez find_child po całym drzewie (rosło z wielkością poziomu).
 func _find_pause_menu_node() -> Node:
-	if get_tree() and get_tree().current_scene:
-		var pm: Node = get_tree().current_scene.get_node_or_null("PauseMenu")
-		if pm:
-			return pm
-	if get_tree() and get_tree().root:
-		return get_tree().root.find_child("PauseMenu", true, false)
-	return null
+	return get_tree().get_first_node_in_group(&"quiz_pause_menu") if get_tree() else null
 
 
 func _open_pause_menu(start_in_exit_confirm: bool = false) -> void:

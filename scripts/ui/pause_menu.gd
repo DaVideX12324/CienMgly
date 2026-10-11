@@ -6,6 +6,8 @@ const ITEM_TAB_CATEGORIES: Array[String] = ["item", "hand", "part", "key"]
 ## Kolumny list umiejętności / przedmiotów (siatka ListVBox w scenach paneli).
 const LIST_COLUMNS := 2
 const ITEM_ICON_SIZE := 32
+## Grupa, po której walka znajduje menu pauzy bez przeszukiwania drzewa (sprawdzane co klatkę i przy każdym zdarzeniu).
+const GROUP := &"quiz_pause_menu"
 
 ## Koszty w listach umiejętności (jak w walce: combat_list_row.tscn).
 @export var sp_cost_color := Color(0.45, 0.75, 1.0)
@@ -134,6 +136,10 @@ func _is_in_combat() -> bool:
 			if child is CanvasLayer and str(child.name).begins_with("QuizCombatUI"):
 				return true
 	return false
+
+
+func _enter_tree() -> void:
+	add_to_group(GROUP)
 
 
 func _ready() -> void:
