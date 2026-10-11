@@ -20,6 +20,8 @@ func _ready() -> void:
 		_scene_root.name = "SceneRoot"
 		add_child(_scene_root)
 	_register_singletons()
+	if OS.is_debug_build():
+		add_child(preload("scripts/tools/perf_monitor.gd").new())  # F3 = nakładka, zacięcia w user://perf_log.txt
 	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania (z motywem z ustawień)
 	var settings := get_node_or_null("/root/SettingsService")
 	if settings and settings.has_signal("module_setting_changed"):
