@@ -477,6 +477,21 @@ func _idle_wander(delta: float) -> void:
 
 	if is_on_wall() and not _has_nav_path():
 		_set_new_wander_target(get_wall_normal())
+		return
+	_bounce_off_enemies()
+
+
+## Zderzenie z innym wrogiem podczas wałęsania (np. dwóch idących na siebie): odbicie jak od ściany — nowy cel w stronę
+## normalnej zderzenia, bieżący kierunek zawrócony od drugiego wroga, ścieżka do przeliczenia.
+func _bounce_off_enemies() -> void:
+	for i in range(get_slide_collision_count()):
+		var col := get_slide_collision(i)
+		if col.get_collider() is EnemyBase:
+			var n := col.get_normal()
+			_set_new_wander_target(n)
+			_move_dir = n
+			_repath_timer = 0.0
+			return
 
 
 ## Nowy cel wałęsania w promieniu `wander_radius`. Z siatką nawigacji: punkt przyciągnięty do siatki,
