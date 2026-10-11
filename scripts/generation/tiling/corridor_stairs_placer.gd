@@ -37,13 +37,16 @@ static func plan(ctx: GenerationContext, tiles: TilePlacementPlan) -> void:
 			_plan_rects(ctx, tiles, one, mc, PORTAL_LAYER)
 
 
-## Kafle modułu 1:1 na prostokąt, moduł powtarzany (size) — schody boczne E / W.
+## Schody boczne E / W. Z "middle": [kol, wiersz] (kolumna środków w arkuszu, tyle wierszy co moduł) — w poziomie
+## lewy łącznik (kolumna 0 modułu), środki powtarzane, prawy łącznik (ostatnia kolumna); w pionie górny wiersz,
+## powtarzany środkowy, dolny. Bez "middle": moduł 1:1 powtarzany (size) jak dawniej.
 static func _plan_copy(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect2i, cfg: Dictionary, layer: StringName) -> void:
 	var src := int(cfg.get("source", 0))
 	var org: Array = cfg.get("origin", [0, 0])
 	var o := Vector2i(int(org[0]), int(org[1]))
 	var sz: Array = cfg.get("size", [r.size.x, r.size.y])
 	var ms := Vector2i(maxi(int(sz[0]), 1), maxi(int(sz[1]), 1))
+	var mid: Array = cfg.get("middle", [])
 	var table: Dictionary = ctx.priority_table
 	if table.is_empty():
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
@@ -53,8 +56,17 @@ static func _plan_copy(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect
 			p.pos = Vector2i(x, y)
 			p.layer = layer
 			p.source_id = src
-			# moduł powtarzany (schody dłuższe niż moduł)
-			p.atlas_coords = o + Vector2i(posmod(x - r.position.x, ms.x), posmod(y - r.position.y, ms.y))
+			if mid.size() >= 2 and ms.y >= 2:
+				var row := 0 if y == r.position.y else (ms.y - 1 if y == r.end.y - 1 else mini(1, ms.y - 1))
+				if x == r.position.x:
+					p.atlas_coords = o + Vector2i(0, row)
+				elif x == r.end.x - 1:
+					p.atlas_coords = o + Vector2i(ms.x - 1, row)
+				else:
+					p.atlas_coords = Vector2i(int(mid[0]), int(mid[1])) + Vector2i(0, row)
+			else:
+				# moduł powtarzany (schody dłuższe niż moduł)
+				p.atlas_coords = o + Vector2i(posmod(x - r.position.x, ms.x), posmod(y - r.position.y, ms.y))
 			p.category = &"STAIR"
 			p.origin = r.position
 			p.tie_breaker = 10
