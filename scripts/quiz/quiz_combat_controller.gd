@@ -236,6 +236,25 @@ func play_entry_transition(snapshot: Image) -> void:
 	intro.call("play", snapshot)
 
 
+## Animacja wyjścia z walki: ta sama „źrenica” co przy wejściu, ale na zrzucie ekranu walki i na warstwie ponad wszystkim
+## (przeżywa usunięcie ekranu walki). Wraca, gdy ekran jest czarny — dalej można zwolnić walkę; świat odsłania się sam.
+func _play_exit_transition() -> void:
+	if not QuizTheme.combat_intro_enabled() or get_viewport() == null:
+		return
+	var snapshot := get_viewport().get_texture().get_image()
+	if snapshot == null:
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().root.add_child(layer)
+	var outro := preload("../../scenes/quiz/combat_intro.tscn").instantiate() as Control
+	layer.add_child(outro)
+	outro.finished.connect(layer.queue_free)
+	outro.call("play", snapshot)
+	await outro.covered
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	theme = QuizTheme.combat_theme()  # większy tekst w walce (QuizTheme.COMBAT_FONT_SIZE), ten sam motyw
@@ -1852,6 +1871,8 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 			audio.play_sfx_by_name("defeat")
 		await _show_message_sequence(["Porażka..."])
 	_refresh_stats_panel()
+	if player_won or fled or not (_ps and _ps.is_party_defeated()):
+		await _play_exit_transition()  # przy śmierci drużyny zamiast tego ekran śmierci
 	enemy.hp = 0 if player_won else enemy.max_hp
 	_clear_enemy_display()
 	if get_tree() and get_tree().paused:
