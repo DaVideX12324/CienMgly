@@ -50,7 +50,9 @@ text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeaderFrame/ActorHeader/InfoVBox/HPRow" unique_id=1867729771]
 theme_type_variation = &"QuizBarLP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
@@ -73,7 +75,9 @@ text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="ActorHeaderFrame/ActorHeader/InfoVBox/SPRow" unique_id=462122799]
 theme_type_variation = &"QuizBarSP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
@@ -108,7 +112,9 @@ text = "HP"
 
 [node name="BarProgress" type="ProgressBar" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusHPRow" unique_id=477757530]
 theme_type_variation = &"QuizBarLP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
@@ -131,7 +137,9 @@ text = "SP"
 
 [node name="BarProgress" type="ProgressBar" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusSPRow" unique_id=1411324527]
 theme_type_variation = &"QuizBarSP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
