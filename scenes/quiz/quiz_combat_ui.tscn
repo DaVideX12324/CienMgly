@@ -5,14 +5,6 @@
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
 [ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_dark"]
-bg_color = Color(0.02, 0.03, 0.05, 0.9)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.22, 0.3, 0.95)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_hp_fill"]
 bg_color = Color(0.9, 0.3, 0.3, 1)
 
@@ -26,6 +18,14 @@ width = 4
 fill_to = Vector2(0, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6br0c"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_dark"]
+bg_color = Color(0.02, 0.03, 0.05, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.22, 0.3, 0.95)
 
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
 process_mode = 3
@@ -762,7 +762,7 @@ size_flags_vertical = 0
 text = "Bohater"
 
 [node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1771300000]
-custom_minimum_size = Vector2(230, 0)
+custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/normal_font_size = 24
@@ -885,7 +885,7 @@ size_flags_vertical = 0
 text = "Ally 2"
 
 [node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1771300001]
-custom_minimum_size = Vector2(230, 0)
+custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/normal_font_size = 24
@@ -1008,7 +1008,7 @@ size_flags_vertical = 0
 text = "Ally 3"
 
 [node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1771300002]
-custom_minimum_size = Vector2(230, 0)
+custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/normal_font_size = 24
@@ -1131,7 +1131,7 @@ size_flags_vertical = 0
 text = "Ally 4"
 
 [node name="StatusLabel" type="RichTextLabel" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1771300003]
-custom_minimum_size = Vector2(230, 0)
+custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/normal_font_size = 24
