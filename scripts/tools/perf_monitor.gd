@@ -133,7 +133,7 @@ func _cycle_vsync() -> void:
 
 
 func _vsync_name(mode: int) -> String:
-	return ["WŁĄCZONY", "WYŁĄCZONY", "ADAPTACYJNY", "MAILBOX"][clampi(mode, 0, 3)]
+	return ["WYŁĄCZONY", "WŁĄCZONY", "ADAPTACYJNY", "MAILBOX"][clampi(mode, 0, 3)]  # kolejność enuma DisplayServer.VSyncMode
 
 
 func _metrics() -> String:
