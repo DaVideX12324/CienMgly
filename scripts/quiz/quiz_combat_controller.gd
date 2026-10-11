@@ -3240,9 +3240,26 @@ func _on_exit_pressed() -> void:
 	_open_pause_menu(true)
 
 
+## Okno komunikatów po bitwie ma szerokość UI walki (wyśrodkowane): zakres widocznych okien paska tuż przed ich ukryciem,
+## nie mniej niż status_only_width.
+func _fit_message_window_width() -> void:
+	var vp_w := get_viewport_rect().size.x
+	var left := INF
+	var right := -INF
+	if content_row:
+		for c in content_row.get_children():
+			if c is Control and (c as Control).visible:
+				left = minf(left, (c as Control).global_position.x)
+				right = maxf(right, (c as Control).global_position.x + (c as Control).size.x)
+	var width := maxf(right - left, vp_w * status_only_width) if right > left else vp_w * status_only_width
+	_message_window.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_message_window.custom_minimum_size.x = minf(width, vp_w)
+
+
 func _get_or_create_victory_log() -> Label:
 	# Jak w RPG Makerze: komunikaty po bitwie zajmują cały dolny pas (MessageWindow ze sceny; okna
 	# statusu i komend znikają), log u góry gaśnie.
+	_fit_message_window_width()
 	if content_row:
 		content_row.visible = false
 	_message_window.visible = true
