@@ -943,20 +943,17 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 	_fit_list_columns.call_deferred()
 
 
-## Okno listy dopasowane do zawartości (decyzja usera 2026-10-11): kolumny wg szerokości wierszy (CombatListRow:
-## minimum ze sceny albo nazwa + koszt), najwyżej tyle, ile pozycji i ile mieści się obok pozostałych okien paska;
-## wysokość = wiersze (nadmiar przewijany). Reszta paska przezroczysta — widać tło bitwy (ListPanel nie rozciąga się).
+## Okno listy na szerokość zawartości (decyzja usera 2026-10-11): kolumny wg szerokości wierszy (CombatListRow:
+## minimum ze sceny albo nazwa + koszt), najwyżej tyle, ile pozycji i ile mieści się obok pozostałych okien paska.
+## Wysokość — cały pas (nadmiar przewijany); okna paska wyśrodkowane (ContentRow), po bokach widać tło bitwy.
 func _fit_list_columns() -> void:
 	var content_row := list_panel.get_parent() as Control
 	var n := list_grid.get_child_count()
 	if content_row == null or content_row.size.x <= 0.0 or n == 0:
 		return
 	var row_w := 1.0
-	var row_h := 1.0
 	for row in list_grid.get_children():
-		var m := (row as Control).get_combined_minimum_size()
-		row_w = maxf(row_w, m.x)
-		row_h = maxf(row_h, m.y)
+		row_w = maxf(row_w, (row as Control).get_combined_minimum_size().x)
 	# Miejsce: wiersz paska minus inne widoczne okna i ramki okna listy (min. panelu − min. przewijania).
 	var used := 0.0
 	var visible_count := 0
@@ -970,10 +967,6 @@ func _fit_list_columns() -> void:
 	var sep := float(list_grid.get_theme_constant(&"h_separation"))
 	var cols := clampi(int((avail + sep) / (row_w + sep)), 1, 4)
 	list_grid.columns = mini(cols, n)
-	var rows := ceili(float(n) / float(list_grid.columns))
-	var vsep := float(list_grid.get_theme_constant(&"v_separation"))
-	var content_h := rows * row_h + (rows - 1) * vsep
-	list_scroll.custom_minimum_size.y = minf(content_h, maxf(row_h, content_row.size.y - pad.y))
 
 
 func _on_list_row_hover(index: int) -> void:
