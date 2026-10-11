@@ -17,10 +17,10 @@ signal skill_learned(member_index: int, skill_name: String)
 signal status_tick(member_index: int, status_id: String, amount: int)
 
 ## Maks. HP bohatera rośnie liniowo od BASE_HP (poziom 1) do HP_AT_MAX_LEVEL (MAX_LEVEL); z hero_party_data[0] — jego pola.
-## Wzór: FNaFB1 — Freddy 334 HP na lv 1, 1402 na lv 20; MAX_LEVEL podnieść, gdy pojawi się więcej map.
-const MAX_LEVEL        := 20
+## 100 poziomów = 15 map (wyczyszczenie 120 % wrogów z każdej mapy daje razem lv 100, QuizRpgEnemyXp). HP liniowo 334 -> 5000.
+const MAX_LEVEL        := 100
 const BASE_HP          := 334
-const HP_AT_MAX_LEVEL  := 1402
+const HP_AT_MAX_LEVEL  := 5000
 ## XP do następnego poziomu: krzywa z QuizRpgHeroData (xp_base, xp_extra, xp_acc_a, xp_acc_b — jak klasa w FNaFB1: lv 1->2 90, 2->3 204,
 ## 19->20 12 532; razem do lv 20 ~87 tys.). Wrogowie wyższych tierów dają wielokrotnie więcej XP — stroić przy kolejnych mapach.
 ## Statusy członków drużyny: member["statuses"] = {id: {turns, …parametry}} (zapisywane razem z drużyną; definicje

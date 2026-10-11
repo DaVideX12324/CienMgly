@@ -14,7 +14,7 @@ class_name QuizRpgHeroData
 @export var base_level: int = 1
 ## HP na poziomie 1 i na MAX_LEVEL (PlayerStats.MAX_LEVEL) — pomiędzy liniowo (hp_for_level). Każda postać ma swoją pulę.
 @export var base_hp: int = 334
-@export var hp_at_max_level: int = 1402
+@export var hp_at_max_level: int = 5000
 ## SP na poziomie 1 i na MAX_LEVEL — liniowo (FNaFB1 FM, Freddy: MP 139 -> 446); koszty umiejętności są w tej skali.
 ## Krzywa XP jak „exp params” klasy w RPG Makerze VX Ace / FNaFB1 (Freddy: 50, 40, 50, 39): lv 1->2 90 XP, 2->3 204, 5->6 943, 19->20 12 532.
 @export var xp_base: int = 50
@@ -22,7 +22,7 @@ class_name QuizRpgHeroData
 @export var xp_acc_a: int = 50
 @export var xp_acc_b: int = 39
 @export var base_sp: int = 139
-@export var sp_at_max_level: int = 446
+@export var sp_at_max_level: int = 1739
 @export var base_tp: int = 100
 ## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
 ## ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).

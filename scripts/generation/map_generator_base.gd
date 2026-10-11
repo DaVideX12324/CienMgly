@@ -300,12 +300,22 @@ static func spawn_entities(
 	door_scene: PackedScene = null,
 	cell_size: int = 16,
 	per_frame: int = 0,
-	faction_pools: Dictionary = {}  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
+	faction_pools: Dictionary = {},  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
+	enemy_levels: Dictionary = {}  # "1" / "2" / "3" (tier) -> [min, max] poziomu wroga (companion-JSON "enemy_levels")
 ) -> void:
 	# per_frame > 0: co tyle instancji czekamy klatkę (generowanie w tle — pasek ładowania żyje).
 	# 0 = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
 	var total: int = result.enemy_spawns.size() + result.chest_spawns.size() + (result.doors.size() if door_scene else 0)
 	var made := 0
+	# Skala XP wg rozmiaru mapy: wzorzec "ref_spawns" (zwykli wrogowie na mapie wzorcowej 160x160) / ich liczba na tej
+	# mapie, żeby wyczyszczenie mapy dawało ten sam budżet XP (poziomów) niezależnie od jej wielkości.
+	var regular_spawns := 0
+	for sp in result.enemy_spawns:
+		if int(sp.get("tier", 1)) < 3:
+			regular_spawns += 1
+	var xp_scale := 1.0
+	if enemy_levels.has("ref_spawns") and regular_spawns > 0:
+		xp_scale = clampf(float(enemy_levels["ref_spawns"]) / float(regular_spawns), 0.25, 4.0)
 
 	# 1. Spawns / Spawn
 	var spawns_node := target_node.get_node_or_null("Spawns")
@@ -350,6 +360,10 @@ static func spawn_entities(
 					enemy_inst.position = Vector2(pos.x * cell_size + cell_size * 0.5, pos.y * cell_size + cell_size * 0.5)
 					if "faction" in enemy_inst:
 						enemy_inst.set("faction", StringName(faction))
+					var band: Variant = enemy_levels.get(str(scene_idx + 1))
+					if band is Array and band.size() == 2 and enemy_inst.has_method("set_enemy_level"):
+						# poziom z przedziału tieru, deterministycznie z pozycji (ten sam seed = te same poziomy)
+						enemy_inst.call("set_enemy_level", int(band[0]) + absi(hash(pos)) % (int(band[1]) - int(band[0]) + 1), xp_scale if tier < 3 else 1.0)
 					enemies_node.add_child(enemy_inst)
 			made += 1
 			if per_frame > 0 and made % per_frame == 0:

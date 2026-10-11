@@ -19,6 +19,8 @@ class_name QuizRpgEnemyData
 @export var magic_attack: int = 24
 @export var magic_defense: int = 12
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
+## Poziom wroga (QuizRpgEnemyXp): > 0 = XP z poziomu i tieru (mapa nadpisuje poziomem z "enemy_levels"), 0 = stałe xp_reward.
+@export_range(0, 100) var enemy_level: int = 0
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1

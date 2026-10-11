@@ -817,7 +817,8 @@ func _scan_enemy(enemy_index: int) -> void:
 		text = "ATK %d · DEF %d · MAT %d · MDF %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0))]
 		if not skill_names.is_empty():
 			text += "\nUmiejętności: " + ", ".join(skill_names)
-	_push_log("%s — HP %d/%d" % [str(unit.get("name", "?")), int(unit.get("hp", 0)), int(unit.get("max_hp", 1))], Color(0.55, 0.85, 1.0))
+	var level: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
+	_push_log("%s%s — HP %d/%d" % [str(unit.get("name", "?")), " (lv %d)" % level if level > 0 else "", int(unit.get("hp", 0)), int(unit.get("max_hp", 1))], Color(0.55, 0.85, 1.0))
 	_push_log(text, Color.WHITE)
 	_pending_skill_data.clear()
 	_selected_skill_data.clear()

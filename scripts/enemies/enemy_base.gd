@@ -22,6 +22,8 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 @export var magic_defense: int = 12
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
+## Poziom wroga: > 0 = XP z poziomu (QuizRpgEnemyXp.kill_xp), 0 = stałe xp_reward. Ustawia dane albo mapa (set_enemy_level).
+@export_range(0, 100) var enemy_level: int = 0
 ## Opis dla Skanu (QuizRpgEnemyData.scan_text); pusty = statystyki.
 @export_multiline var scan_text: String = ""
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
@@ -207,6 +209,7 @@ func _apply_enemy_data() -> void:
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)
 	scan_text = enemy_data.scan_text
+	enemy_level = enemy_data.enemy_level
 	encounter_tier = clampi(enemy_data.encounter_tier, 1, 5)
 	min_encounter_size = maxi(enemy_data.min_encounter_size, 1)
 	max_encounter_size = maxi(enemy_data.max_encounter_size, min_encounter_size)
@@ -215,6 +218,16 @@ func _apply_enemy_data() -> void:
 	detection_radius = enemy_data.detection_radius
 	body_color = enemy_data.body_color
 	shape_type = enemy_data.shape_type
+	if enemy_level > 0:
+		xp_reward = QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss)
+
+
+## Poziom z mapy (spawn_entities, config "enemy_levels"): przelicza nagrodę XP.
+## xp_scale: korekta rozmiaru mapy (ile wrogów ma mapa względem wzorcowej) — budżet XP mapy nie zależy od jej wielkości.
+func set_enemy_level(level: int, xp_scale: float = 1.0) -> void:
+	enemy_level = level
+	if level > 0:
+		xp_reward = maxi(roundi(QuizRpgEnemyXp.kill_xp(level, encounter_tier, is_boss) * xp_scale), 1)
 
 
 func _physics_process(delta: float) -> void:
