@@ -13,5 +13,6 @@ atk_coeff = 1.6
 def_coeff = 0.8
 hits = 8
 hit_interval = 0.15
+damage_multiplier = 0.3
 variance = 0.2
 color = Color(1.0, 0.7, 0.1, 1)
