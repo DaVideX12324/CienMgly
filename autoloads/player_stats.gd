@@ -650,11 +650,6 @@ func reset() -> void:
 		{"item_id": "potion", "count": 2},
 		{"item_id": "ether", "count": 1},
 		{"item_id": "antidote", "count": 1},
-		{"item_id": "training_sword", "count": 1},
-		{"item_id": "wooden_shield", "count": 1},
-		{"item_id": "cloth_cap", "count": 1},
-		{"item_id": "adventurer_tunic", "count": 1},
-		{"item_id": "lucky_charm", "count": 1},
 	]
 	party.clear()
 	_normalize_inventory()
