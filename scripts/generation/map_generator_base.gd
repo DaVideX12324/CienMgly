@@ -50,6 +50,7 @@ class GenerationResult:
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
 	var nav_polygons: Array[NavigationPolygon] = []  # siatka nawigacji z NavOutlines w kawałkach (puste = prostokąt mapy)
 	var nav_chunk_keys: Array[Vector2i] = []  # indeksy kawałków nav_polygons (NavOutlines.CHUNK_CELLS) — przebudowa po otwarciu bramy
+	var nav_excluded: Dictionary = {}  # Vector2i -> true: bez nawigacji wrogów (pokoje wejścia / wyjścia, pierwszy za wejściem, portale)
 	var canals: RefCounted = null  # CanalLayout — kanały ścieków jako nakładka (komórki zostają FLOOR)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 

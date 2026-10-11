@@ -110,7 +110,7 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 	var cands: Array[Vector2i] = []
 	for p in queue:
 		if int(dist[p]) < clear or no_room.has_point(p) or exit_room.has_point(p) or covered.has(p) \
-				or ctx.portal_zone.has(p) or stairs.has(p) or safe.has(p):
+				or ctx.portal_zone.has(p) or stairs.has(p) or safe.has(p) or result.nav_excluded.has(p):
 			continue
 		cands.append(p)
 	cands.sort()
@@ -145,6 +145,7 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 	var picked: Array[Vector2i] = []
 	var taken := covered.duplicate()
 	taken.merge(safe)  # członkowie grupki też poza azylem
+	taken.merge(result.nav_excluded)  # i poza kratkami bez nawigacji wrogów
 	var placed := 0
 	for p in cands:
 		if placed >= target:

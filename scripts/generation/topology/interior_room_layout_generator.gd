@@ -211,6 +211,11 @@ static func generate_layout(
 				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects)
 		GenProgress.end()  # terrain (pusty katalog) albo objects
 
+	# P11d. Bez nawigacji wrogów (decyzja usera 2026-10-11): pokój wejścia, pokój wyjścia, pierwszy pokój za wejściem
+	# i strefy portali — wrogowie tam nie wchodzą (pościg / wałęsanie po siatce), spawny pomijają te kratki.
+	if not rooms.is_empty():
+		result.nav_excluded = _nav_excluded_cells(ctx, rooms, entrance_room_idx, exit_room_idx)
+
 	# P12. Spawny wrogów i skrzyń
 	GenProgress.begin(&"spawns")
 	if not rooms.is_empty():
@@ -223,6 +228,41 @@ static func generate_layout(
 
 
 ## Ściany pod tilesety bez lica 2H (ścieki): uzupełnienie do 3H i wyrównanie górnej krawędzi (flagi).
+## Kratki bez nawigacji wrogów: strefy portali + podłoga pokoju wejścia, wyjścia i pierwszego pokoju za wejściem
+## (pierwszy inny pokój, do którego dochodzi BFS po podłodze od wejścia).
+static func _nav_excluded_cells(ctx: GenerationContext, rooms: Array[Rect2i], entrance_idx: int, exit_idx: int) -> Dictionary:
+	var out := {}
+	for p in ctx.portal_zone:
+		out[p] = true
+	var first_idx := -1
+	if ctx.entrance_pos != Vector2i.ZERO:
+		var seen := {ctx.entrance_pos: true}
+		var queue: Array[Vector2i] = [ctx.entrance_pos]
+		var head := 0
+		while head < queue.size() and first_idx < 0:
+			var c := queue[head]
+			head += 1
+			for i in range(rooms.size()):
+				if i != entrance_idx and rooms[i].has_point(c):
+					first_idx = i
+					break
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var n: Vector2i = c + d
+				if not seen.has(n) and GridUtils.is_walkable(ctx.grid, n):
+					seen[n] = true
+					queue.append(n)
+	for idx in [entrance_idx, exit_idx, first_idx]:
+		if idx < 0 or idx >= rooms.size():
+			continue
+		var r: Rect2i = rooms[idx]
+		for y in range(r.position.y, r.end.y):
+			for x in range(r.position.x, r.end.x):
+				var c := Vector2i(x, y)
+				if GridUtils.is_walkable(ctx.grid, c):
+					out[c] = true
+	return out
+
+
 static func _run_wall_shape_passes(ctx: GenerationContext, flags: GenerationFlags) -> void:
 	if flags.enforce_3h_walls:
 		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
