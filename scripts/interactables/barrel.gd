@@ -64,23 +64,24 @@ func _interact() -> void:
 		if level_state_manager:
 			level_state_manager.mark_barrel_destroyed(level_path, unique_id)
 
-	var loot_result: Dictionary = {
-		"found": false,
-		"title": "Pusta beczka",
-		"message": "Nic nie wypadlo.",
-		"detail": "Nacisnij E albo Enter, aby kontynuowac.",
-	}
+	# Łup: domyślnie jedno losowanie; rodzic beczek może podać własne (metadane "barrel_loot" na węźle, np. Destructibles
+	# w tutorial_area: {drop_chance, rolls_min, rolls_max}) — bogatsze beczki tam, gdzie nie ma jeszcze sklepów.
+	var rolls: Dictionary = {}
+	if get_parent() != null and get_parent().has_meta("barrel_loot"):
+		rolls = get_parent().get_meta("barrel_loot") as Dictionary
+	var loot_result: Dictionary = {"found": false}
 	var loot_manager := _get_loot_manager()
 	if loot_manager and loot_manager.has_method("search_barrel"):
-		var raw_result: Variant = loot_manager.call("search_barrel", interaction_drop_chance)
+		var raw_result: Variant = loot_manager.call("search_barrel", float(rolls.get("drop_chance", interaction_drop_chance)),
+				int(rolls.get("rolls_min", 1)), int(rolls.get("rolls_max", 1)))
 		if raw_result is Dictionary:
-			loot_result = (raw_result as Dictionary).duplicate(true)
+			loot_result = raw_result
 
 	if remove_after_interaction:
 		_play_death_and_free()
 
-	if bool(loot_result.get("found", false)) and loot_manager and loot_manager.has_method("show_loot_popup"):
-		loot_manager.call("show_loot_popup", loot_result)
+	if bool(loot_result.get("found", false)) and loot_manager and loot_manager.has_method("show_loot_toast"):
+		loot_manager.call("show_loot_toast", loot_result)
 
 
 func _play_death_and_free() -> void:

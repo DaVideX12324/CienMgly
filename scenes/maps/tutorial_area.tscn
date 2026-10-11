@@ -69,6 +69,11 @@ position = Vector2(920, -292)
 [node name="Destructibles" type="Node2D" parent="." unique_id=866287351]
 y_sort_enabled = true
 position = Vector2(304, 336)
+metadata/barrel_loot = {
+"drop_chance": 1.0,
+"rolls_min": 2,
+"rolls_max": 4
+}
 
 [node name="barrel" parent="Destructibles" unique_id=1174031552 instance=ExtResource("12_1duei")]
 position = Vector2(165, -183)

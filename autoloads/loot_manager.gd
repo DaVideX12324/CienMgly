@@ -4,6 +4,8 @@ signal loot_awarded(item_id: String, count: int)
 signal loot_popup_closed
 
 const BARREL_POPUP_HEIGHT := 228.0
+const TOAST_SECONDS := 3.0
+const MAX_TOASTS := 8
 
 var barrel_drop_chance: float = 0.45
 var _rng := RandomNumberGenerator.new()
@@ -14,6 +16,8 @@ var _popup_message: Label
 var _popup_detail: Label
 var _popup_button: Button
 var _previous_pause_state: bool = false
+var _toast_layer: CanvasLayer
+var _toast_box: VBoxContainer
 
 
 func _ready() -> void:
@@ -21,38 +25,83 @@ func _ready() -> void:
 	_rng.randomize()
 
 
-func search_barrel(drop_chance: float = -1.0) -> Dictionary:
+## Przeszukanie beczki: `rolls_min..rolls_max` losowań z tabeli, każde z szansą `drop_chance` (powtórzone przedmioty
+## sumują się w liczbę kopii). found = coś wypadło; items = [{item_id, item_name, count}].
+func search_barrel(drop_chance: float = -1.0, rolls_min: int = 1, rolls_max: int = 1) -> Dictionary:
 	var chance := barrel_drop_chance if drop_chance < 0.0 else clampf(drop_chance, 0.0, 1.0)
-	if _rng.randf() > chance:
-		return {
-			"found": false,
-			"title": "Pusta beczka",
-			"message": "Nic nie wypadlo.",
-			"detail": "Nacisnij E albo Enter, aby kontynuowac.",
-		}
+	var counts := {}
+	for _i in range(_rng.randi_range(maxi(rolls_min, 1), maxi(rolls_max, maxi(rolls_min, 1)))):
+		if _rng.randf() > chance:
+			continue
+		var item_id := _roll_weighted_item_id(_get_barrel_loot_table())
+		if item_id != "":
+			counts[item_id] = int(counts.get(item_id, 0)) + _roll_item_count(item_id)
+	var items: Array[Dictionary] = []
+	for item_id: String in counts:
+		var item_data := _get_item_data(item_id)
+		_award_item(item_id, int(counts[item_id]))
+		items.append({
+			"item_id": item_id,
+			"item_name": item_data.display_name if item_data != null else item_id,
+			"count": int(counts[item_id]),
+			"icon": item_data.icon if item_data != null else null,
+		})
+	return {"found": not items.is_empty(), "items": items}
 
-	var item_id := _roll_weighted_item_id(_get_barrel_loot_table())
-	if item_id == "":
-		return {
-			"found": false,
-			"title": "Pusta beczka",
-			"message": "Nic nie wypadlo.",
-			"detail": "Nacisnij E albo Enter, aby kontynuowac.",
-		}
 
-	var count := _roll_item_count(item_id)
-	var item_data := _get_item_data(item_id)
-	var item_name := item_data.display_name if item_data != null else item_id
-	_award_item(item_id, count)
-	return {
-		"found": true,
-		"item_id": item_id,
-		"item_name": item_name,
-		"count": count,
-		"title": "Znaleziono przedmiot",
-		"message": "%s x%d trafia do ekwipunku." % [item_name, count],
-		"detail": item_data.description if item_data != null and item_data.description != "" else "Nacisnij E albo Enter, aby kontynuowac.",
-	}
+## Powiadomienie o łupie bez pauzy i bez klikania: lista „ikona + nazwa ×liczba” w prawym dolnym rogu, znika po chwili.
+func show_loot_toast(result: Dictionary) -> void:
+	var items: Array = result.get("items", [])
+	if items.is_empty():
+		return
+	_ensure_toasts()
+	for entry: Dictionary in items:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var icon := TextureRect.new()
+		icon.texture = entry.get("icon") as Texture2D
+		icon.custom_minimum_size = Vector2(32, 32)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(icon)
+		var label := Label.new()
+		label.text = "%s ×%d" % [entry.get("item_name", "?"), int(entry.get("count", 1))]
+		label.add_theme_font_size_override("font_size", QuizTheme.snap(24))
+		label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+		label.add_theme_constant_override("outline_size", 6)
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(label)
+		_toast_box.add_child(row)
+		while _toast_box.get_child_count() > MAX_TOASTS:
+			_toast_box.get_child(0).queue_free()
+			_toast_box.remove_child(_toast_box.get_child(0))
+		var tween := row.create_tween()
+		tween.tween_interval(TOAST_SECONDS)
+		tween.tween_property(row, "modulate:a", 0.0, 0.6)
+		tween.tween_callback(row.queue_free)
+
+
+func _ensure_toasts() -> void:
+	if _toast_layer:
+		return
+	_toast_layer = CanvasLayer.new()
+	_toast_layer.name = "LootToastLayer"
+	_toast_layer.layer = 39
+	_toast_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_toast_layer)
+	_toast_box = VBoxContainer.new()
+	_toast_box.name = "Toasts"
+	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_toast_box.alignment = BoxContainer.ALIGNMENT_END
+	_toast_box.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_toast_box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_toast_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_toast_box.offset_right = -24
+	_toast_box.offset_bottom = -24
+	_toast_layer.add_child(_toast_box)
 
 
 func show_loot_popup(result: Dictionary) -> void:
@@ -94,9 +143,9 @@ func _roll_weighted_item_id(entries: Array[Dictionary]) -> String:
 func _roll_item_count(item_id: String) -> int:
 	match item_id:
 		"potion":
-			return 1 if _rng.randf() < 0.8 else 2
+			return _rng.randi_range(1, 3)
 		"ether", "focus_tonic", "antidote":
-			return 1
+			return _rng.randi_range(1, 2)
 		_:
 			return 1
 
