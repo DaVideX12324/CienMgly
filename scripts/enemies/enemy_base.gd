@@ -804,13 +804,15 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		await tween.finished
 		queue_free()
 		return
-	else:
-		state = State.IDLE
-		await get_tree().create_timer(2.0).timeout
-		state = State.PATROL
-
+	# Ucieczka / porażka: świat rusza od razu (jak po wygranej), wróg tylko stoi 2 s, a gracz ma nietykalność —
+	# wcześniej stan EXPLORING wracał dopiero po tych 2 s (freeze świata).
 	if _gm:
 		_gm.change_state(_gm.GameState.EXPLORING)
+	if player.has_method("grant_encounter_immunity"):
+		player.grant_encounter_immunity()
+	state = State.IDLE
+	await get_tree().create_timer(2.0).timeout
+	state = State.PATROL
 
 
 func take_quiz_damage(amount: int) -> void:
