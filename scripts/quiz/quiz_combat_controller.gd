@@ -226,6 +226,15 @@ func _exit_tree() -> void:
 		get_tree().paused = false
 
 
+## Animacja wejścia do walki (combat_intro.tscn): nakłada się na gotowy ekran walki i odsłania go po zamknięciu źrenicy.
+func play_entry_transition(snapshot: Image) -> void:
+	if snapshot == null or not QuizTheme.combat_intro_enabled():
+		return
+	var intro := preload("../../scenes/quiz/combat_intro.tscn").instantiate() as Control
+	add_child(intro)
+	intro.call("play", snapshot)
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	theme = QuizTheme.combat_theme()  # większy tekst w walce (QuizTheme.COMBAT_FONT_SIZE), ten sam motyw

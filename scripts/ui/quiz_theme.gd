@@ -78,12 +78,15 @@ const SETTING_ANSWERS_LAYOUT := "ui_answers_layout"
 const ANSWERS_LIST := "list"
 const ANSWERS_GRID := "grid"
 ## Umiejętności i przedmioty w walce: siatka 2 kolumny albo jedna przewijana lista.
+## Animacja wejścia do walki (zrzut świata wiruje i zamyka się w czerń).
+const SETTING_COMBAT_INTRO := "ui_combat_intro"
 const SETTING_LIST_LAYOUT := "ui_list_layout"
 const LIST_GRID := "grid"
 const LIST_SCROLL := "list"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
+	{"key": "ui_combat_intro", "label": "Animacja wejścia do walki", "type": "bool", "default": true},
 	{"key": "ui_pause_compact", "label": "Menu pauzy tylko na szerokość treści", "type": "bool", "default": false},
 	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "log",
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
@@ -295,6 +298,11 @@ static func _pick(layers: Array[Theme], t: StringName, n: StringName, kind: Them
 static func pause_ui_compact() -> bool:
 	var settings := _settings_service()
 	return bool(settings.call("get_module", MODULE_ID, SETTING_PAUSE_COMPACT, false)) if settings else false
+
+
+static func combat_intro_enabled() -> bool:
+	var settings := _settings_service()
+	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_INTRO, true)) if settings else true
 
 
 static func combat_ui_compact() -> bool:

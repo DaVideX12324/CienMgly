@@ -733,6 +733,8 @@ func start_combat(player: Node2D) -> void:
 	var lo := clampi(min_encounter_size, 1, GROUP_MAX)
 	var encounter_size_range := Vector2i(lo, clampi(max_encounter_size, lo, GROUP_MAX))
 
+	# Zrzut świata do animacji wejścia (przed dodaniem ekranu walki i pauzą).
+	var snapshot: Image = get_viewport().get_texture().get_image() if get_viewport() else null
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
 	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners)
@@ -740,6 +742,7 @@ func start_combat(player: Node2D) -> void:
 	if target_parent:
 		target_parent.add_child(combat_canvas)
 	get_tree().paused = true
+	combat_ui.call("play_entry_transition", snapshot)
 
 
 ## Grupowanie walk (decyzja usera 2026-10-11: zawsze działa): do walki dołączają WSZYSCY wrogowie tej samej frakcji

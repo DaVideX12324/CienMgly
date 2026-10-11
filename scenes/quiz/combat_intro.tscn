@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/combat_intro.gd" id="1_intro"]
+[ext_resource type="Shader" path="res://modules/quiz_rpg/resources/shaders/combat_intro.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_intro"]
+shader = ExtResource("2_shader")
+shader_parameter/progress = 0.0
+shader_parameter/pixel_size_max = 40.0
+shader_parameter/swirl_turns = 0.9
+shader_parameter/zoom = 0.4
+
+[node name="CombatIntro" type="Control"]
+process_mode = 3
+z_index = 100
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_intro")
+
+[node name="Swirl" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_intro")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
