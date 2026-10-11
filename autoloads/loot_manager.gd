@@ -84,6 +84,26 @@ func show_loot_toast(result: Dictionary) -> void:
 		tween.tween_callback(row.queue_free)
 
 
+## Krótki komunikat tekstowy w tym samym stosie co łup (bez pauzy).
+func show_message_toast(text: String) -> void:
+	_ensure_toasts()
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", QuizTheme.snap(24))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
+	label.add_theme_constant_override("outline_size", 6)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_toast_box.add_child(label)
+	while _toast_box.get_child_count() > MAX_TOASTS:
+		_toast_box.get_child(0).queue_free()
+		_toast_box.remove_child(_toast_box.get_child(0))
+	var tween := label.create_tween()
+	tween.tween_interval(TOAST_SECONDS)
+	tween.tween_property(label, "modulate:a", 0.0, 0.6)
+	tween.tween_callback(label.queue_free)
+
+
 func _ensure_toasts() -> void:
 	if _toast_layer:
 		return
@@ -144,7 +164,7 @@ func _roll_item_count(item_id: String) -> int:
 	match item_id:
 		"potion":
 			return _rng.randi_range(1, 3)
-		"ether", "focus_tonic", "antidote":
+		"ether", "focus_tonic", "antidote", "lockpick":
 			return _rng.randi_range(1, 2)
 		_:
 			return 1
@@ -156,6 +176,7 @@ func _get_barrel_loot_table() -> Array[Dictionary]:
 		{"item_id": "ether", "weight": 25},
 		{"item_id": "focus_tonic", "weight": 15},
 		{"item_id": "antidote", "weight": 15},
+		{"item_id": "lockpick", "weight": 30},
 		{"item_id": "lucky_charm", "weight": 5},
 	]
 

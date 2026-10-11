@@ -1796,9 +1796,8 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 			lines.append("Nowa umiejętność: %s!" % skill_name)
 		if _ps and _ps.has_signal("skill_learned") and _ps.skill_learned.is_connected(on_learned):
 			_ps.skill_learned.disconnect(on_learned)
-		var item_name := _roll_item_drop()
-		if item_name != "":
-			lines.append("Zdobyto: %s!" % item_name)
+		for item_id in _roll_item_drops():
+			lines.append("Zdobyto: %s!" % _item_display_name(item_id))
 		_refresh_stats_panel()
 		await _show_message_sequence(lines)
 	elif fled:
@@ -3264,17 +3263,27 @@ func _wait_for_victory_advance(max_wait: float) -> void:
 		elapsed += 0.05
 
 
-func _roll_item_drop() -> String:
-	if enemy == null or not enemy.has_method("get_drop_table"):
-		return ""
-	var drops: Array = enemy.call("get_drop_table")
-	for drop in drops:
-		if randf() < float(drop.get("chance", 0.0)):
-			var item_name := str(drop.get("item", ""))
-			if item_name != "" and _ps and _ps.has_method("add_item"):
-				_ps.add_item(item_name)
-			return item_name
-	return ""
+## Klucz uniwersalny z pokonanych wrogów: każdy wróg osobno, szansa rośnie z tierem (boss = tier 4). Wytrychy wypadają
+## z beczek (LootManager), nie z wrogów.
+const KEY_DROP_ITEM := "universal_key"
+const KEY_DROP_CHANCE_BY_TIER := {1: 0.04, 2: 0.07, 3: 0.11, 4: 0.3}
+
+
+func _roll_item_drops() -> Array[String]:
+	var dropped: Array[String] = []
+	for unit in _enemy_units:
+		var chance := float(KEY_DROP_CHANCE_BY_TIER.get(clampi(int(unit.get("tier", 1)), 1, 4), 0.04))
+		if randf() < chance and _ps and _ps.has_method("add_item"):
+			_ps.add_item(KEY_DROP_ITEM)
+			dropped.append(KEY_DROP_ITEM)
+	return dropped
+
+
+func _item_display_name(item_id: String) -> String:
+	var inv := get_node_or_null("/root/CoreManager")
+	var svc: Variant = inv.call("get_singleton", "InventoryService") if inv else null
+	var data: QuizRpgItemData = svc.call("get_item", item_id) if svc is Node else null
+	return data.display_name if data != null else item_id
 
 
 func _find_current_map_node() -> Node:

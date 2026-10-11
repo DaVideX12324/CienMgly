@@ -693,6 +693,18 @@ func add_item(item_ref: String, count: int = 1, _description: String = "") -> vo
 		inventory_changed.emit()
 
 
+## Liczba sztuk przedmiotu w ekwipunku (0 = brak / nieznany).
+func get_item_count(item_ref: String) -> int:
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service == null or not inventory_service.has_method("resolve_item_id"):
+		return 0
+	var item_id: String = inventory_service.call("resolve_item_id", item_ref)
+	for entry: Dictionary in inventory_service.call("normalize_inventory", inventory):
+		if str(entry.get("item_id", "")) == item_id:
+			return int(entry.get("count", 0))
+	return 0
+
+
 func consume_item(item_ref: String, count: int = 1) -> bool:
 	var inventory_service: Node = _get_inventory_service()
 	if inventory_service == null or not inventory_service.has_method("consume_item_from_inventory"):
