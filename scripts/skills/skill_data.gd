@@ -17,6 +17,9 @@ enum Occasion { ALWAYS, BATTLE, MENU, NEVER }
 @export var occasion: Occasion = Occasion.BATTLE
 ## Poziom, od którego postać zna umiejętność sama (0 = nie z poziomu: uczy NPC albo zdarzenie).
 @export_range(0, 100, 1) var learn_level: int = 0
+## Wymagany rodzaj broni w slocie "weapon" (QuizRpgItemData.weapon_type; "none" = bez wymagań) i czy użycie niszczy tę broń.
+@export_enum("none", "sword", "staff", "bow", "instrument") var required_weapon_type: String = "none"
+@export var consumes_weapon: bool = false
 ## Umiejętność combo (5. slot, za TP — game_design „System skilli”).
 @export var combo: bool = false
 
@@ -32,7 +35,9 @@ func to_entry(max_sp: int = 0) -> Dictionary:
 	return {
 		"skill_id": skill_id,
 		"name": display_name,
-		"description": description,
+		"description": description + (" Wymaga broni: %s%s." % [QuizRpgItemData.weapon_type_name(required_weapon_type), ", niszczy ją" if consumes_weapon else ""] if required_weapon_type != "none" else ""),
+		"required_weapon_type": required_weapon_type,
+		"consumes_weapon": consumes_weapon,
 		"sp_cost": sp_cost_for(max_sp),
 		"tp_cost": tp_cost,
 		"effect": "heal" if is_heal() else "attack",

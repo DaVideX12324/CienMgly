@@ -252,6 +252,8 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 	var tp_cost := int(entry.get("tp_cost", 0))
 	if int(user.get("sp", 0)) < sp_cost or int(user.get("tp", 0)) < tp_cost:
 		return {"success": false, "message": "Za mało SP / TP."}
+	if not member_meets_weapon_requirement(user_index, entry):
+		return {"success": false, "message": "Wymaga innej broni."}
 	var targets: Array[int] = []
 	match skill.target:
 		QuizRpgSkillBase.Target.SELF:
@@ -860,6 +862,41 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 	}
 	options.insert(0, empty_entry)
 	return options
+
+
+## Rodzaj broni założonej przez członka ("" = brak broni albo broń bez rodzaju).
+func get_member_weapon_type(member_index: int) -> String:
+	if member_index < 0 or member_index >= party.size():
+		return ""
+	var weapon_id: String = str(((party[member_index] as Dictionary).get("equipment", {}) as Dictionary).get("weapon", ""))
+	if weapon_id == "":
+		return ""
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service == null or not inventory_service.has_method("get_item"):
+		return ""
+	var item_data: QuizRpgItemData = inventory_service.call("get_item", weapon_id)
+	return item_data.weapon_type if item_data and item_data.weapon_type != "none" else ""
+
+
+## Czy członek spełnia wymaganie broni umiejętności (wpis z QuizRpgSkillData.to_entry): brak wymagania albo pasujący rodzaj.
+func member_meets_weapon_requirement(member_index: int, entry: Dictionary) -> bool:
+	var required := str(entry.get("required_weapon_type", "none"))
+	return required == "" or required == "none" or get_member_weapon_type(member_index) == required
+
+
+## Użycie umiejętności z consumes_weapon: założona broń znika (nie wraca do plecaka). Zwraca true, gdy coś zniszczono.
+func consume_member_weapon(member_index: int) -> bool:
+	if member_index < 0 or member_index >= party.size():
+		return false
+	var member: Dictionary = party[member_index]
+	var equipment: Dictionary = (member.get("equipment", {}) as Dictionary).duplicate(true)
+	if str(equipment.get("weapon", "")) == "":
+		return false
+	equipment["weapon"] = ""
+	member["equipment"] = equipment
+	party[member_index] = member
+	party_changed.emit()
+	return true
 
 
 func set_member_equipment(member_index: int, slot_name: String, item_id: String) -> bool:

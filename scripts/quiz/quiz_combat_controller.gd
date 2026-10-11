@@ -922,6 +922,7 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 				kind = row.Kind.TP if sp_cost <= 0 else kind
 				disabled = disabled or int(actor.get("tp", 0)) < tp_cost
 			disabled = disabled or not bool(entry.get("usable_in_battle", true))
+			disabled = disabled or (_ps != null and not _ps.member_meets_weapon_requirement(_active_actor_index, entry))
 		else:
 			var count: int = int(entry.get("count", 0))
 			cost = "×%s" % str(entry.get("display_count", count))
@@ -1097,6 +1098,8 @@ func _cancel_ally_pick() -> void:
 
 
 func _consume_skill_cost(skill_data: Dictionary) -> void:
+	if bool(skill_data.get("consumes_weapon", false)) and _ps != null:
+		_ps.consume_member_weapon(_active_actor_index)
 	var sp_cost: int = int(skill_data.get("sp_cost", 0))
 	var tp_cost: int = int(skill_data.get("tp_cost", 0))
 	if sp_cost > 0:

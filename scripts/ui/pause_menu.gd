@@ -1074,6 +1074,7 @@ func _rebuild_skill_rows() -> void:
 				cost_color = tp_cost_color if sp_cost <= 0 else cost_color
 				disabled = disabled or member_tp < tp_cost
 			disabled = disabled or not bool(skill.get("usable_in_menu", false))  # tylko walka -> przygaszona
+			disabled = disabled or (_ps != null and not _ps.member_meets_weapon_requirement(_selected_member_index, skill))
 			_set_simple_row(row, str(skill.get("name", "---")), cost_text, disabled)
 			(row.get_node("Margin/ContentRow/RightLabel") as Label).add_theme_color_override("font_color", cost_color)
 			var skill_copy: Dictionary = skill.duplicate(true)
