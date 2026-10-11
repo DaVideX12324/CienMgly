@@ -47,6 +47,10 @@ func _ready() -> void:
 	RenderingServer.frame_post_draw.connect(_on_post_draw)
 	_last_frame_msec = Time.get_ticks_msec()
 	_append("=== start sesji %s, log: %s ===" % [Time.get_datetime_string_from_system(), ProjectSettings.globalize_path(LOG_PATH)])
+	_append("   VSync %s, ekrany %d, okno na ekranie %d (%.0f Hz), tryb okna %d, rozdzielczość %s, GPU %s" % [
+		_vsync_name(DisplayServer.window_get_vsync_mode()), DisplayServer.get_screen_count(), DisplayServer.window_get_current_screen(),
+		DisplayServer.screen_get_refresh_rate(DisplayServer.window_get_current_screen()), DisplayServer.window_get_mode(),
+		str(DisplayServer.window_get_size()), RenderingServer.get_video_adapter_name()])
 	_watchdog = Thread.new()
 	_watchdog.start(_watchdog_loop)
 
@@ -65,6 +69,9 @@ func _input(event: InputEvent) -> void:
 	_evt_count += 1
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
 		_label.visible = not _label.visible
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F4:
+		_cycle_vsync()
 		return
 	if event is InputEventMouseMotion:
 		return
@@ -104,15 +111,29 @@ func _process(delta: float) -> void:
 		_window_worst_ms = 0.0
 		_window_t = 0.0
 	if _label.visible:
-		_label.text = "%d FPS  %.1f ms (najgorsza 1 s: %.0f ms)\nwęzłów %d  draw calli %d\n%s" % [
+		_label.text = "%d FPS  %.1f ms (najgorsza 1 s: %.0f ms)\nwęzłów %d  draw calli %d  VSync: %s (F4)\n%s" % [
 			Engine.get_frames_per_second(), frame_ms, _shown_worst_ms,
 			int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
-			int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), _last_context]
+			int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), _vsync_name(DisplayServer.window_get_vsync_mode()), _last_context]
 	if frame_ms >= HITCH_MS:
 		_append("ZACIĘCIE %.0f ms | %s" % [frame_ms, _metrics()])
 		_append("   %s" % _evt_report)
 		_append("   kontekst: %s" % _last_context)
 		_append("   wejście: %s" % _events_text)
+
+
+## F4: przełącza tryb VSync w działającej grze (test, czy zacięcia to prezentacja klatki / sterownik).
+func _cycle_vsync() -> void:
+	var modes := [DisplayServer.VSYNC_ENABLED, DisplayServer.VSYNC_DISABLED, DisplayServer.VSYNC_ADAPTIVE, DisplayServer.VSYNC_MAILBOX]
+	var cur := DisplayServer.window_get_vsync_mode()
+	var next: int = modes[(modes.find(cur) + 1) % modes.size()]
+	DisplayServer.window_set_vsync_mode(next)
+	_label.visible = true
+	_append("VSync -> %s" % _vsync_name(next))
+
+
+func _vsync_name(mode: int) -> String:
+	return ["WŁĄCZONY", "WYŁĄCZONY", "ADAPTACYJNY", "MAILBOX"][clampi(mode, 0, 3)]
 
 
 func _metrics() -> String:
