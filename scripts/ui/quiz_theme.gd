@@ -142,8 +142,12 @@ static func snap(size: int) -> int:
 
 
 ## Zaznaczenie pozycji menu: styl „selected” z motywu (linia pod tekstem) na stanach normal / hover /
-## pressed; odznaczenie zdejmuje nadpisania (wraca wygląd z motywu).
-static func set_menu_item_selected(btn: Button, selected: bool) -> void:
+## pressed; odznaczenie zdejmuje nadpisania (wraca wygląd z motywu). Bez zmiany stanu nic nie robi
+## (każde nadpisanie motywu przelicza układ — przy hoverze 7 przycisków kosztowało ~1 ms); force wymusza
+## ponowne nałożenie (zmiana motywu).
+static func set_menu_item_selected(btn: Button, selected: bool, force: bool = false) -> void:
+	if not force and bool(btn.get_meta(&"quiz_menu_selected", false)) == selected:
+		return
 	for st in ["normal", "hover", "pressed", "hover_pressed"]:
 		btn.remove_theme_stylebox_override(st)
 	btn.remove_theme_color_override("font_color")
@@ -255,7 +259,7 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 	for w in _selected_buttons.duplicate():
 		var btn := w.get_ref() as Button
 		if btn and bool(btn.get_meta(&"quiz_menu_selected", false)):
-			set_menu_item_selected(btn, true)
+			set_menu_item_selected(btn, true, true)
 	_selected_buttons = _selected_buttons.filter(func(w: WeakRef) -> bool: return w.get_ref() != null and bool((w.get_ref() as Button).get_meta(&"quiz_menu_selected", false)))
 
 
