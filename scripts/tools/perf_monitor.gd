@@ -23,6 +23,10 @@ var _events_text: String = ""  # jw. (kopia tekstowa historii wejścia)
 var _stall_logged: bool = false
 var _t_process_us: int = 0  # początek _process bieżącej klatki
 var _t_postdraw_us: int = 0  # koniec rysowania poprzedniej klatki
+var _evt_count: int = 0  # zdarzenia wejścia od ostatniego _process
+var _evt_first_us: int = 0
+var _evt_last_us: int = 0
+var _evt_report: String = ""  # podsumowanie poprzedniej klatki
 var _pre_draw_ms: float = 0.0  # _process -> frame_post_draw (skrypty + submit renderu)
 var _post_draw_ms: float = 0.0  # frame_post_draw -> następny _process (prezentacja / VSync / system)
 
@@ -54,6 +58,11 @@ func _exit_tree() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	var t := Time.get_ticks_usec()
+	if _evt_count == 0:
+		_evt_first_us = t
+	_evt_last_us = t
+	_evt_count += 1
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
 		_label.visible = not _label.visible
 		return
@@ -79,6 +88,9 @@ func _on_post_draw() -> void:
 func _process(delta: float) -> void:
 	var now := Time.get_ticks_usec()
 	_post_draw_ms = (now - _t_postdraw_us) / 1000.0
+	_evt_report = "zdarzeń wejścia %d, pierwsze %.0f ms po rysowaniu, ostatnie %.0f ms po rysowaniu" % [
+		_evt_count, maxf(_evt_first_us - _t_postdraw_us, 0) / 1000.0, maxf(_evt_last_us - _t_postdraw_us, 0) / 1000.0] if _evt_count > 0 else "bez zdarzeń wejścia"
+	_evt_count = 0
 	_t_process_us = now
 	var frame_ms := (now - _last_us) / 1000.0
 	_last_us = now
@@ -98,6 +110,7 @@ func _process(delta: float) -> void:
 			int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)), _last_context]
 	if frame_ms >= HITCH_MS:
 		_append("ZACIĘCIE %.0f ms | %s" % [frame_ms, _metrics()])
+		_append("   %s" % _evt_report)
 		_append("   kontekst: %s" % _last_context)
 		_append("   wejście: %s" % _events_text)
 
