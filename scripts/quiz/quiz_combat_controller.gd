@@ -2586,9 +2586,15 @@ func _fallback_actor_label(actor: Node) -> String:
 
 func _roll_enemy_party() -> void:
 	_enemy_units.clear()
+	var min_count := maxi(1, _encounter_size_range.x)
+	var max_count := maxi(min_count, _encounter_size_range.y)
 	if not _joined.is_empty():
-		# Grupa ze świata: główny wróg + dołączeni, każdy z własnymi statystykami, grafiką i umiejętnościami.
+		# Grupa ze świata: główny wróg + dołączeni, każdy z własnymi statystykami, grafiką i umiejętnościami. Liczba
+		# jednostek i tak losowana z zakresu (grupa to minimum) — brakujące miejsca to kopie głównego wroga.
 		var sources: Array = [enemy] + _joined
+		var extra := maxi(0, randi_range(min_count, maxi(max_count, sources.size())) - sources.size())
+		for _i in range(extra):
+			sources.append(enemy)
 		var names := {}
 		for src in sources:
 			names[src.enemy_name] = int(names.get(src.enemy_name, 0)) + 1
@@ -2613,11 +2619,10 @@ func _roll_enemy_party() -> void:
 			})
 			if src != enemy:
 				_bonus_xp_reward += int(src.xp_reward)
+		_bonus_xp_reward += extra * int(enemy.xp_reward)  # kopie głównego wroga jak w walce bez grupy
 		_active_enemy_index = 0
 		_refresh_enemy_cache()
 		return
-	var min_count := maxi(1, _encounter_size_range.x)
-	var max_count := maxi(min_count, _encounter_size_range.y)
 	var encounter_count := randi_range(min_count, max_count)
 	for enemy_index in range(encounter_count):
 		var unit_name := enemy_name_str if encounter_count == 1 else "%s %d" % [enemy_name_str, enemy_index + 1]

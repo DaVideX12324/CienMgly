@@ -60,7 +60,6 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 
 enum State { IDLE, PATROL, CHASING, COMBAT, DEFEATED }
 const GROUP_RADIUS := 96.0  # px — wrogowie bliżej dołączają do walki (grupa)
-var _group_size_range := Vector2i.ZERO  # zakres rozmiaru walki z _group_joiners (ZERO = z pól wroga)
 const GROUP_MAX := 4        # najwyżej tyle jednostek w walce z grupy (pole walki ma 5 miejsc)
 var state: State = State.PATROL
 
@@ -714,7 +713,10 @@ func start_combat(player: Node2D) -> void:
 	var diff_range: Vector2i = Vector2i(1, 3)
 	if _dm:
 		diff_range = _dm.get_difficulty_range(quiz_category)
-	var encounter_size_range: Vector2i = _group_size_range if _group_size_range != Vector2i.ZERO else Vector2i(maxi(1, min_encounter_size), maxi(maxi(1, min_encounter_size), max_encounter_size))
+	# Liczba przeciwników zawsze losowana z zakresu tego wroga (najwyżej GROUP_MAX); grupa ze świata to minimum —
+	# walka dokłada kopie tego wroga do wylosowanej liczby (QuizCombatController._roll_enemy_party).
+	var lo := clampi(min_encounter_size, 1, GROUP_MAX)
+	var encounter_size_range := Vector2i(lo, clampi(max_encounter_size, lo, GROUP_MAX))
 
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
@@ -725,13 +727,12 @@ func start_combat(player: Node2D) -> void:
 	get_tree().paused = true
 
 
-## Grupowanie walk: kandydaci to wrogowie tej samej frakcji (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego,
-## z czystą linią (ściany i obiekty z kolizją zasłaniają). Gdy są kandydaci: liczba jednostek jest losowana z zakresu
-## min_encounter_size..max_encounter_size tego wroga (najwyżej GROUP_MAX), a dołączający są losowani spośród kandydatów (mieszanie typów,
-## bez dokładania kopii; reszta zostaje w świecie). Bez kandydatów: sam wróg i losowe kopie z zakresu (_group_size_range = ZERO).
+## Grupowanie walk (decyzja usera 2026-10-11: zawsze działa): do walki dołączają WSZYSCY wrogowie tej samej frakcji
+## (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego, z czystą linią (ściany i obiekty z kolizją
+## zasłaniają) — najbliżsi pierwsi, razem z tym wrogiem najwyżej GROUP_MAX. Liczba przeciwników w walce jest losowana
+## niezależnie od grupy (start_combat: zakres min..max_encounter_size), grupa jest jej minimum.
 func _group_joiners() -> Array:
 	var out: Array = []
-	_group_size_range = Vector2i.ZERO
 	if is_boss or not is_inside_tree():
 		return out
 	var cands: Array = []
@@ -742,18 +743,12 @@ func _group_joiners() -> Array:
 			continue
 		var d := global_position.distance_to((n as Node2D).global_position)
 		if d <= GROUP_RADIUS and _clear_line_to(n as Node2D):
-			cands.append(n)
-	if cands.is_empty():
-		return out
-	var lo := clampi(maxi(1, min_encounter_size), 1, GROUP_MAX)
-	var hi := clampi(maxi(lo, max_encounter_size), lo, GROUP_MAX)
-	var size := randi_range(lo, hi)
-	cands.shuffle()
+			cands.append([d, n])
+	cands.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	for c in cands:
-		if out.size() + 1 >= size:
+		if out.size() + 1 >= GROUP_MAX:
 			break
-		out.append(c)
-	_group_size_range = Vector2i(1, 1)
+		out.append(c[1])
 	return out
 
 
