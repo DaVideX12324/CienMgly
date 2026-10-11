@@ -97,6 +97,18 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.32, 0.32, 0.45, 0.9)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frm01"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.02, 0.02, 0.06, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.47, 0.62, 1)
+
 [resource]
 default_font = ExtResource("1_6kev7")
 default_font_size = 27
@@ -139,6 +151,8 @@ QuizMenuItem/styles/hover_pressed = SubResource("StyleBoxFlat_plpt2")
 QuizMenuItem/styles/normal = SubResource("StyleBoxFlat_plpt2")
 QuizMenuItem/styles/pressed = SubResource("StyleBoxFlat_plpt2")
 QuizMenuItem/styles/selected = SubResource("StyleBoxFlat_c553f")
+QuizFrame/base_type = &"PanelContainer"
+QuizFrame/styles/panel = SubResource("StyleBoxFlat_frm01")
 QuizWindow/base_type = &"PanelContainer"
 QuizWindow/styles/panel = SubResource("StyleBoxFlat_n23op")
 RichTextLabel/colors/font_outline_color = Color(0, 0, 0, 1)

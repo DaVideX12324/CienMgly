@@ -35,15 +35,16 @@ const COMBAT_FONT_SIZE := 36
 ## Typy motywu (theme_type_variation) w stylu RPG Makera.
 const WINDOW := &"QuizWindow"          # PanelContainer: okno (status, komendy, komunikaty)
 const LOG := &"QuizLog"                # PanelContainer: pasek u góry (log bitwy / pytanie)
+const FRAME := &"QuizFrame"            # PanelContainer: ramka sekcji wewnątrz okna (menu pauzy) — styl okna, mniejsze marginesy
 const MENU_ITEM := &"QuizMenuItem"     # Button: pozycja menu bez tła; zaznaczona = styl „selected”
 const BAR_LP := &"QuizBarLP"           # ProgressBar: paski drużyny, czasu odpowiedzi, HP wrogów
 const BAR_SP := &"QuizBarSP"
 const BAR_TP := &"QuizBarTP"
 const BAR_TIMER := &"QuizBarTimer"
 const BAR_ENEMY := &"QuizBarEnemy"
-const CUSTOM_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM, BAR_LP, BAR_SP, BAR_TP, BAR_TIMER, BAR_ENEMY]
+const CUSTOM_TYPES: Array[StringName] = [WINDOW, LOG, FRAME, MENU_ITEM, BAR_LP, BAR_SP, BAR_TP, BAR_TIMER, BAR_ENEMY]
 ## Typy, których kolor zmienia suwak jasności (okna i zaznaczenie; paski zostają w swoich kolorach).
-const BRIGHTNESS_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM]
+const BRIGHTNESS_TYPES: Array[StringName] = [WINDOW, LOG, FRAME, MENU_ITEM]
 
 const MODULE_ID := "quiz_rpg"
 const SETTING_SKIN := "ui_skin"
@@ -66,6 +67,8 @@ const SKINS: Array[Dictionary] = [
 const SETTING_BAR_STYLE := "ui_bar_style"
 ## UI walki tylko na szerokość treści (okna wyśrodkowane) zamiast na cały ekran.
 const SETTING_COMBAT_COMPACT := "ui_combat_compact"
+## Menu pauzy tylko na szerokość treści (wyśrodkowane okno zamiast całego ekranu).
+const SETTING_PAUSE_COMPACT := "ui_pause_compact"
 ## Pytanie i pasek czasu w walce: w oknie logu u góry albo w menu walki, tuż nad odpowiedziami.
 const SETTING_QUESTION_POSITION := "ui_question_position"
 const QUESTION_IN_LOG := "log"
@@ -77,6 +80,7 @@ const ANSWERS_GRID := "grid"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
+	{"key": "ui_pause_compact", "label": "Menu pauzy tylko na szerokość treści", "type": "bool", "default": false},
 	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "log",
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
 	{"key": "ui_answers_layout", "label": "Odpowiedzi w walce", "type": "choice", "default": "list",
@@ -278,6 +282,11 @@ static func _pick(layers: Array[Theme], t: StringName, n: StringName, kind: Them
 	return null
 
 
+static func pause_ui_compact() -> bool:
+	var settings := _settings_service()
+	return bool(settings.call("get_module", MODULE_ID, SETTING_PAUSE_COMPACT, false)) if settings else false
+
+
 static func combat_ui_compact() -> bool:
 	var settings := _settings_service()
 	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_COMPACT, false)) if settings else false
@@ -424,6 +433,12 @@ static func build_default_theme(font_res: Font = null) -> Theme:
 	win.set_border_width_all(2)
 	win.set_content_margin_all(18)
 	th.set_stylebox(&"panel", WINDOW, win)
+	# Ramka sekcji w oknie (menu pauzy): jak okno, ale ciaśniejsza i z wyraźniejszym obrysem.
+	th.set_type_variation(FRAME, &"PanelContainer")
+	var frame := win.duplicate() as StyleBoxFlat
+	frame.set_content_margin_all(12)
+	frame.border_color = Color(0.45, 0.47, 0.62, 1.0)
+	th.set_stylebox(&"panel", FRAME, frame)
 	# Pasek u góry (log bitwy / pytanie): ciemny, półprzezroczysty, bez ramki.
 	th.set_type_variation(LOG, &"PanelContainer")
 	var lg := StyleBoxFlat.new()

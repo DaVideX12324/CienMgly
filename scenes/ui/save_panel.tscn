@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://ddsk0jw6shqvq"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_frame.gd" id="frame_script"]
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="SavePanel" type="VBoxContainer" unique_id=2119516108]
@@ -15,113 +17,119 @@ theme_override_constants/separation = 10
 layout_mode = 2
 autowrap_mode = 3
 
-[node name="SaveSlotsVBox" type="VBoxContainer" parent="." unique_id=2078188669]
+[node name="SaveSlotsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400015]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"QuizFrame"
+script = ExtResource("frame_script")
+
+[node name="SaveSlotsVBox" type="VBoxContainer" parent="SaveSlotsVBoxFrame" unique_id=2078188669]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="SaveSlotRow0" type="PanelContainer" parent="SaveSlotsVBox" unique_id=1302290392]
+[node name="SaveSlotRow0" type="PanelContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox" unique_id=1302290392]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="SaveSlotsVBox/SaveSlotRow0" unique_id=852983533]
+[node name="Control" type="Control" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0" unique_id=852983533]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBox/SaveSlotRow0/Control" unique_id=772426522]
+[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0/Control" unique_id=772426522]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="SaveSlotsVBox/SaveSlotRow0" unique_id=1444207384]
+[node name="Margin" type="MarginContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0" unique_id=1444207384]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBox/SaveSlotRow0/Margin" unique_id=2107599933]
+[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0/Margin" unique_id=2107599933]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=798754985]
+[node name="LeftLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=798754985]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 1  Pusty slot"
 
-[node name="RightLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=1078069613]
+[node name="RightLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=1078069613]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="SaveSlotRow1" type="PanelContainer" parent="SaveSlotsVBox" unique_id=64022233]
+[node name="SaveSlotRow1" type="PanelContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox" unique_id=64022233]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="SaveSlotsVBox/SaveSlotRow1" unique_id=164302893]
+[node name="Control" type="Control" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1" unique_id=164302893]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBox/SaveSlotRow1/Control" unique_id=1478332982]
+[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1/Control" unique_id=1478332982]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="SaveSlotsVBox/SaveSlotRow1" unique_id=947826247]
+[node name="Margin" type="MarginContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1" unique_id=947826247]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBox/SaveSlotRow1/Margin" unique_id=1793963391]
+[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1/Margin" unique_id=1793963391]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=218323630]
+[node name="LeftLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=218323630]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 2  Pusty slot"
 
-[node name="RightLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=1000320678]
+[node name="RightLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=1000320678]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="SaveSlotRow2" type="PanelContainer" parent="SaveSlotsVBox" unique_id=821994338]
+[node name="SaveSlotRow2" type="PanelContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox" unique_id=821994338]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="SaveSlotsVBox/SaveSlotRow2" unique_id=909900459]
+[node name="Control" type="Control" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2" unique_id=909900459]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBox/SaveSlotRow2/Control" unique_id=1950940888]
+[node name="SelectionUnderline" type="ColorRect" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2/Control" unique_id=1950940888]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="SaveSlotsVBox/SaveSlotRow2" unique_id=32065567]
+[node name="Margin" type="MarginContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2" unique_id=32065567]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBox/SaveSlotRow2/Margin" unique_id=1831535745]
+[node name="ContentRow" type="HBoxContainer" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2/Margin" unique_id=1831535745]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=742675859]
+[node name="LeftLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=742675859]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 3  Pusty slot"
 
-[node name="RightLabel" type="Label" parent="SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=1552980373]
+[node name="RightLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=1552980373]
 layout_mode = 2
 horizontal_alignment = 2
 
