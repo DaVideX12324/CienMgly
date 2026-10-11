@@ -22,6 +22,8 @@ const QuizRpgEnemyData = preload("enemy_data.gd")
 @export var magic_defense: int = 12
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
+## Opis dla Skanu (QuizRpgEnemyData.scan_text); pusty = statystyki.
+@export_multiline var scan_text: String = ""
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
@@ -204,6 +206,7 @@ func _apply_enemy_data() -> void:
 	if not enemy_data.battle_skills.is_empty():
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)
+	scan_text = enemy_data.scan_text
 	encounter_tier = clampi(enemy_data.encounter_tier, 1, 5)
 	min_encounter_size = maxi(enemy_data.min_encounter_size, 1)
 	max_encounter_size = maxi(enemy_data.max_encounter_size, min_encounter_size)

@@ -6,6 +6,8 @@ class_name QuizRpgEnemyData
 @export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export var is_boss: bool = false
+## Opis pokazywany przez umiejętność Skan (puste = statystyki i umiejętności wroga).
+@export_multiline var scan_text: String = ""
 
 @export_group("Combat")
 @export var question_count: int = 3

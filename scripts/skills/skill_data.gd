@@ -22,6 +22,8 @@ enum Occasion { ALWAYS, BATTLE, MENU, NEVER }
 @export var consumes_weapon: bool = false
 ## Umiejętność combo (5. slot, za TP — game_design „System skilli”).
 @export var combo: bool = false
+## Skan (jak w FNaFB CC): bez quizu i bez zużywania tury — pokazuje HP, statystyki i opis wybranego wroga w logu.
+@export var scan: bool = false
 
 
 ## Koszt SP dla użytkownika o maks. SP max_sp (sp_cost_percent × max_sp w górę, inaczej sp_cost).
@@ -42,6 +44,7 @@ func to_entry(max_sp: int = 0) -> Dictionary:
 		"tp_cost": tp_cost,
 		"effect": "heal" if is_heal() else "attack",
 		"combo": combo,
+		"scan": scan,
 		"usable_in_battle": occasion == Occasion.ALWAYS or occasion == Occasion.BATTLE,
 		"usable_in_menu": occasion == Occasion.ALWAYS or occasion == Occasion.MENU,
 		"resource": self,

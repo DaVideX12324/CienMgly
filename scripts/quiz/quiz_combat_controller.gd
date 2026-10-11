@@ -787,6 +787,9 @@ func _confirm_target_selection() -> void:
 	if audio:
 		audio.play_sfx_by_name("click")
 	var entry: Dictionary = _target_entries[_target_selected_idx]
+	if bool(_pending_skill_data.get("scan", false)):
+		_scan_enemy(int(entry.get("enemy_index", 0)))
+		return
 	_active_enemy_index = int(entry.get("enemy_index", 0))
 	if not _pending_skill_data.is_empty():
 		_selected_skill_data = _pending_skill_data.duplicate(true)
@@ -796,6 +799,31 @@ func _confirm_target_selection() -> void:
 		_selected_skill_data.clear()
 	_hide_target_panel()
 	_begin_action_quiz()
+
+
+## Skan (jak w FNaFB CC): nazwa i HP wroga oraz jego opis (scan_text) albo statystyki i umiejętności — w logu u góry.
+## Nie zużywa tury ani kosztu: wraca do menu postaci.
+func _scan_enemy(enemy_index: int) -> void:
+	var unit: Dictionary = _enemy_units[enemy_index]
+	var src: Variant = unit.get("source", enemy)
+	var text := str(src.get("scan_text")) if src != null and src.get("scan_text") != null else ""
+	if text.strip_edges() == "":
+		var skill_names: Array[String] = []
+		for sk in (src.get("battle_skills") if src != null and src.get("battle_skills") != null else []):
+			skill_names.append(sk.display_name)
+		text = "ATK %d · DEF %d · MAT %d · MDF %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0))]
+		if not skill_names.is_empty():
+			text += "\nUmiejętności: " + ", ".join(skill_names)
+	_push_log("%s — HP %d/%d" % [str(unit.get("name", "?")), int(unit.get("hp", 0)), int(unit.get("max_hp", 1))], Color(0.55, 0.85, 1.0))
+	_push_log(text, Color.WHITE)
+	_pending_skill_data.clear()
+	_selected_skill_data.clear()
+	_hide_target_panel()
+	phase = Phase.ACTION_SELECT
+	_refresh_stats_panel()
+	action_panel.visible = true
+	_show_action_menu()
+	_highlight_action(0)
 
 
 func _cancel_target_selection() -> void:
