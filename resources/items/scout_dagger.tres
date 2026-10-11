@@ -2,9 +2,12 @@
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/item_icons/scout_dagger.png" id="2_icon"]
+
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "scout_dagger"
+icon = ExtResource("2_icon")
 display_name = "Sztylet Zwiadowcy"
 description = "Lekki sztylet do szybkich cięć."
 category = "hand"

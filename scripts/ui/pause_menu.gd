@@ -5,6 +5,7 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const ITEM_TAB_CATEGORIES: Array[String] = ["item", "hand", "part", "key"]
 ## Kolumny list umiejętności / przedmiotów (siatka ListVBox w scenach paneli).
 const LIST_COLUMNS := 2
+const ITEM_ICON_SIZE := 32
 
 ## Koszty w listach umiejętności (jak w walce: combat_list_row.tscn).
 @export var sp_cost_color := Color(0.45, 0.75, 1.0)
@@ -1034,7 +1035,7 @@ func _rebuild_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), "×%s" % str(entry.get("display_count", int(entry.get("count", 0)))), false)
+			_set_simple_row(row, str(entry.get("name", "---")), "×%s" % str(entry.get("display_count", int(entry.get("count", 0)))), false, true, entry.get("icon") as Texture2D)
 			_current_item_entries.append(entry)
 	if _current_item_entries.is_empty():
 		items_footer_label.text = "Brak przedmiotów w tej zakładce."
@@ -1114,7 +1115,7 @@ func _rebuild_equipment_slots() -> void:
 			var slot_name: String = str(slots[index])
 			var equipped_name: String = _get_equipped_item_name(str(equipment.get(slot_name, "")))
 			var slot_label: String = _ps.get_equipment_label(slot_name) if _ps and _ps.has_method("get_equipment_label") else slot_name
-			_set_simple_row(row, slot_label, equipped_name)
+			_set_simple_row(row, slot_label, equipped_name, false, true, _get_item_icon(str(equipment.get(slot_name, ""))))
 	_refresh_equipment_slot_rows()
 
 
@@ -1135,7 +1136,7 @@ func _rebuild_equipment_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = _current_equip_entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry), not items_selectable)
+			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry), not items_selectable, true, entry.get("icon") as Texture2D)
 	_refresh_equipment_item_rows()
 
 
@@ -1320,12 +1321,42 @@ func _portrait_for(member: Dictionary) -> Texture2D:
 	return QuizRpgPartyPortrait.for_member(member, hero, portrait_head_only)
 
 
-func _set_simple_row(row: Control, left_text: String, right_text: String, disabled: bool = false) -> void:
+## show_icon: wiersz rezerwuje po lewej kwadrat na ikonę przedmiotu (pusty, gdy icon == null), żeby nazwy w liście były wyrównane.
+func _set_simple_row(row: Control, left_text: String, right_text: String, disabled: bool = false, show_icon: bool = false, icon: Texture2D = null) -> void:
 	var left_label: Label = row.get_node("Margin/ContentRow/LeftLabel") as Label
 	var right_label: Label = row.get_node("Margin/ContentRow/RightLabel") as Label
 	left_label.text = left_text
 	right_label.text = right_text
 	row.set_meta("disabled", disabled)
+	if show_icon:
+		_ensure_row_icon(row).texture = icon
+
+
+func _ensure_row_icon(row: Control) -> TextureRect:
+	var content: Node = row.get_node("Margin/ContentRow")
+	var icon_rect := content.get_node_or_null("ItemIcon") as TextureRect
+	if icon_rect == null:
+		icon_rect = TextureRect.new()
+		icon_rect.name = "ItemIcon"
+		icon_rect.custom_minimum_size = Vector2(ITEM_ICON_SIZE, ITEM_ICON_SIZE)
+		icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.add_child(icon_rect)
+		content.move_child(icon_rect, 0)
+	return icon_rect
+
+
+func _get_item_icon(item_id: String) -> Texture2D:
+	if item_id == "":
+		return null
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service == null or not inventory_service.has_method("get_item"):
+		return null
+	var item_data: QuizRpgItemData = inventory_service.call("get_item", item_id)
+	return item_data.icon if item_data else null
 
 
 func _set_row_selection(rows: Array[Control], selected_index: int) -> void:

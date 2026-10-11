@@ -842,6 +842,7 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 						"count": 1,
 						"category": item_data.category,
 						"equip_slot": item_data.equip_slot,
+						"icon": item_data.icon,
 						"atk_bonus": item_data.atk_bonus,
 						"def_bonus": item_data.def_bonus,
 						"equipped": true,
