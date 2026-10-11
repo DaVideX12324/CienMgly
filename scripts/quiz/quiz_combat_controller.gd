@@ -937,6 +937,22 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 		var empty := ListRowScene.instantiate() as Button
 		list_grid.add_child(empty)
 		empty.setup("Brak umiejętności" if is_skill_menu else "Brak przedmiotów", "", 0, true)
+	if not list_scroll.resized.is_connected(_fit_list_columns):
+		list_scroll.resized.connect(_fit_list_columns)
+	_fit_list_columns.call_deferred()
+
+
+## Kolumny listy wg szerokości wierszy (CombatListRow: minimum ze sceny albo nazwa + koszt) i miejsca w pasku —
+## wiersze nie rozciągają się na całą szerokość (koszt przy nazwie, więcej pozycji na ekranie).
+func _fit_list_columns() -> void:
+	var avail := list_scroll.size.x
+	if avail <= 0.0 or list_grid.get_child_count() == 0:
+		return
+	var row_w := 1.0
+	for row in list_grid.get_children():
+		row_w = maxf(row_w, (row as Control).get_combined_minimum_size().x)
+	var sep := float(list_grid.get_theme_constant(&"h_separation"))
+	list_grid.columns = clampi(int((avail + sep) / (row_w + sep)), 1, 4)
 
 
 func _on_list_row_hover(index: int) -> void:
