@@ -211,10 +211,10 @@ static func generate_layout(
 				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects)
 		GenProgress.end()  # terrain (pusty katalog) albo objects
 
-	# P11d. Bez nawigacji wrogów (decyzja usera 2026-10-11): pokój wejścia, pokój wyjścia, pierwszy pokój za wejściem
-	# i strefy portali — wrogowie tam nie wchodzą (pościg / wałęsanie po siatce), spawny pomijają te kratki.
+	# P11d. Bez nawigacji wrogów (decyzja usera 2026-10-11): pokój wejścia, pierwszy pokój za wejściem i strefy
+	# portali — wrogowie tam nie wchodzą (pościg / wałęsanie po siatce), spawny pomijają te kratki.
 	if not rooms.is_empty():
-		result.nav_excluded = _nav_excluded_cells(ctx, rooms, entrance_room_idx, exit_room_idx)
+		result.nav_excluded = _nav_excluded_cells(ctx, rooms, entrance_room_idx)
 
 	# P12. Spawny wrogów i skrzyń
 	GenProgress.begin(&"spawns")
@@ -227,10 +227,10 @@ static func generate_layout(
 	return ctx
 
 
-## Ściany pod tilesety bez lica 2H (ścieki): uzupełnienie do 3H i wyrównanie górnej krawędzi (flagi).
-## Kratki bez nawigacji wrogów: strefy portali + podłoga pokoju wejścia, wyjścia i pierwszego pokoju za wejściem
-## (pierwszy inny pokój, do którego dochodzi BFS po podłodze od wejścia).
-static func _nav_excluded_cells(ctx: GenerationContext, rooms: Array[Rect2i], entrance_idx: int, exit_idx: int) -> Dictionary:
+## Kratki bez nawigacji wrogów: strefy portali + podłoga pokoju wejścia i pierwszego pokoju za wejściem
+## (pierwszy inny pokój, do którego dochodzi BFS po podłodze od wejścia). Pokój wyjścia (boss) ma nawigację
+## (decyzja usera), poza strefą portalu.
+static func _nav_excluded_cells(ctx: GenerationContext, rooms: Array[Rect2i], entrance_idx: int) -> Dictionary:
 	var out := {}
 	for p in ctx.portal_zone:
 		out[p] = true
@@ -251,7 +251,7 @@ static func _nav_excluded_cells(ctx: GenerationContext, rooms: Array[Rect2i], en
 				if not seen.has(n) and GridUtils.is_walkable(ctx.grid, n):
 					seen[n] = true
 					queue.append(n)
-	for idx in [entrance_idx, exit_idx, first_idx]:
+	for idx in [entrance_idx, first_idx]:
 		if idx < 0 or idx >= rooms.size():
 			continue
 		var r: Rect2i = rooms[idx]
@@ -263,6 +263,7 @@ static func _nav_excluded_cells(ctx: GenerationContext, rooms: Array[Rect2i], en
 	return out
 
 
+## Ściany pod tilesety bez lica 2H (ścieki): uzupełnienie do 3H i wyrównanie górnej krawędzi (flagi).
 static func _run_wall_shape_passes(ctx: GenerationContext, flags: GenerationFlags) -> void:
 	if flags.enforce_3h_walls:
 		GridPreprocessor.run(ctx, [Wall3HPassScript.new()])
