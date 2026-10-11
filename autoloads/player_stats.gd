@@ -16,11 +16,13 @@ signal skill_learned(member_index: int, skill_name: String)
 ## Obrażenia od statusu (trucizna): członek drużyny, status, utracone HP — świat (co POISON_WORLD_INTERVAL) i walka.
 signal status_tick(member_index: int, status_id: String, amount: int)
 
-## Maks. HP bohatera rośnie liniowo od BASE_HP (poziom 1) do HP_AT_MAX_LEVEL (MAX_LEVEL); z hero_party_data[0] — jego pola.
-## 100 poziomów = 15 map (wyczyszczenie 120 % wrogów z każdej mapy daje razem lv 100, QuizRpgEnemyXp). HP liniowo 334 -> 5000.
+## Maks. HP bohatera: QuizRpgHeroData.hp_for_level (z hero_party_data[0] — jego pola).
+## 100 poziomów = 15 map (wyczyszczenie 120 % wrogów z każdej mapy daje razem lv 100, QuizRpgEnemyXp). HP: lv 1 334, lv 20 1402
+## (jak FNaFB1), lv 100 50000 (QuizRpgHeroData.hp_for_level).
 const MAX_LEVEL        := 100
+## Aktualny limit poziomu (rośnie z rozwojem gry: kolejne mapy podnoszą go, np. cmentarz = limit dla 3 map) — XP ponad limit przepada.
+const LEVEL_CAP        := 20
 const BASE_HP          := 334
-const HP_AT_MAX_LEVEL  := 5000
 ## XP do następnego poziomu: krzywa z QuizRpgHeroData (xp_base, xp_extra, xp_acc_a, xp_acc_b — jak klasa w FNaFB1: lv 1->2 90, 2->3 204,
 ## 19->20 12 532; razem do lv 20 ~87 tys.). Wrogowie wyższych tierów dają wielokrotnie więcej XP — stroić przy kolejnych mapach.
 ## Statusy członków drużyny: member["statuses"] = {id: {turns, …parametry}} (zapisywane razem z drużyną; definicje
@@ -107,19 +109,19 @@ func xp_to_next_level() -> int:
 
 
 func add_xp(amount: int) -> void:
-	if level >= MAX_LEVEL:
+	if level >= mini(MAX_LEVEL, LEVEL_CAP):
 		xp = 0
 		xp_changed.emit(xp, xp_to_next_level())
 		return
 	xp += amount
-	while level < MAX_LEVEL and xp >= xp_to_next_level():
+	while level < mini(MAX_LEVEL, LEVEL_CAP) and xp >= xp_to_next_level():
 		xp -= xp_to_next_level()
 		level += 1
 		_recalculate_max_hp()
 		_sync_primary_party_member()
 		learn_level_skills()
 		level_up.emit(level)
-	if level >= MAX_LEVEL:
+	if level >= mini(MAX_LEVEL, LEVEL_CAP):
 		xp = 0
 	xp_changed.emit(xp, xp_to_next_level())
 
@@ -580,12 +582,8 @@ func is_party_defeated() -> bool:
 
 
 func _recalculate_max_hp() -> void:
-	var first := BASE_HP
-	var last := HP_AT_MAX_LEVEL
-	if not hero_party_data.is_empty() and hero_party_data[0] != null:
-		first = hero_party_data[0].base_hp
-		last = hero_party_data[0].hp_at_max_level
-	max_hp = QuizRpgHeroData.linear_hp(first, last, level, MAX_LEVEL)
+	var hero: QuizRpgHeroData = hero_party_data[0] if not hero_party_data.is_empty() and hero_party_data[0] != null else QuizRpgHeroData.new()
+	max_hp = hero.hp_for_level(level, MAX_LEVEL)
 
 
 func _check_rewards() -> void:

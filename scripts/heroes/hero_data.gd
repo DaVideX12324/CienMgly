@@ -12,9 +12,12 @@ class_name QuizRpgHeroData
 
 @export_group("Progression")
 @export var base_level: int = 1
-## HP na poziomie 1 i na MAX_LEVEL (PlayerStats.MAX_LEVEL) — pomiędzy liniowo (hp_for_level). Każda postać ma swoją pulę.
+## HP: poziom 1 -> liniowo do hp_at_knee na hp_knee_level (jak FNaFB1: 334 -> 1402 na lv 20), dalej krzywa potęgowa do hp_at_max_level
+## na MAX_LEVEL (PlayerStats.MAX_LEVEL; „chore liczby” późnej gry, decyzja usera 2026-10-12). Każda postać ma swoją pulę.
 @export var base_hp: int = 334
-@export var hp_at_max_level: int = 5000
+@export var hp_knee_level: int = 20
+@export var hp_at_knee: int = 1402
+@export var hp_at_max_level: int = 50000
 ## SP na poziomie 1 i na MAX_LEVEL — liniowo (FNaFB1 FM, Freddy: MP 139 -> 446); koszty umiejętności są w tej skali.
 ## Krzywa XP jak „exp params” klasy w RPG Makerze VX Ace / FNaFB1 (Freddy: 50, 40, 50, 39): lv 1->2 90 XP, 2->3 204, 5->6 943, 19->20 12 532.
 @export var xp_base: int = 50
@@ -47,9 +50,14 @@ class_name QuizRpgHeroData
 @export var default_accessory_id: String = ""
 
 
-## Maks. HP na danym poziomie: liniowo od base_hp (poziom 1) do hp_at_max_level (max_level).
+## Maks. HP na danym poziomie: do hp_knee_level liniowo (base_hp -> hp_at_knee), dalej hp_at_knee × (lvl / knee)^p tak,
+## żeby na max_level było hp_at_max_level.
 func hp_for_level(lvl: int, max_level: int) -> int:
-	return QuizRpgHeroData.linear_hp(base_hp, hp_at_max_level, lvl, max_level)
+	var knee := clampi(hp_knee_level, 2, maxi(max_level - 1, 2))
+	if lvl <= knee or max_level <= knee:
+		return QuizRpgHeroData.linear_hp(base_hp, hp_at_knee, lvl, knee)
+	var p := log(float(hp_at_max_level) / float(hp_at_knee)) / log(float(max_level) / float(knee))
+	return roundi(float(hp_at_knee) * pow(float(mini(lvl, max_level)) / float(knee), p))
 
 
 ## Łączna liczba XP potrzebna do osiągnięcia poziomu lvl (wzór EXP klasy z RPG Makera VX Ace).
