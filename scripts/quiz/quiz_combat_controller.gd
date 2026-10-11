@@ -182,6 +182,7 @@ var _band_mode: Band = Band.PARTY_COMMAND
 @onready var _message_window: PanelContainer = $BattleWindow/WindowMargin/VBox/MessageWindow  # po bitwie
 @onready var _victory_label: Label = $BattleWindow/WindowMargin/VBox/MessageWindow/VictoryLog
 var _band_height := 250.0  # wysokość dolnego pasa ze sceny (BattleWindow.offset_top)
+var _band_peak := 0.0  # najwyższy pas w tej walce (treść wyższa niż zadana wysokość) — pas już nie maleje
 var _log_lines: Array[String] = []
 var _last_logged := ""
 
@@ -294,6 +295,7 @@ func _ready() -> void:
 	_setup_party_layout()
 	if battle_window:
 		_band_height = -battle_window.offset_top
+		battle_window.resized.connect(_on_battle_window_resized)
 	if window_shadow:
 		window_shadow.anchor_left = 0.0
 		window_shadow.anchor_right = 1.0
@@ -2415,16 +2417,34 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 	pass
 
 
-func _get_desired_battle_window_height(is_quiz: bool) -> float:
-	# Wysokość pasa jak w scenie (BattleWindow.offset_top), przeskalowana skalą UI; quiz — wyżej, poza
-	# siatką odpowiedzi (2 wiersze zamiast 4; gdy pytanie stoi w menu, okno i tak rośnie do treści).
+## Stała wysokość pasa (decyzja usera 2026-10-11: UI nie skacze) = najwyższy z trybów: pas ze sceny
+## (BattleWindow.offset_top) + dodatek quizu (poza siatką odpowiedzi), w skali UI; treść wyższa od tego (np. długie
+## pytanie) podnosi pas na resztę walki (_band_peak).
+func _get_desired_battle_window_height() -> float:
 	var quiz_extra := quiz_band_extra_height if QuizTheme.answers_layout() != QuizTheme.ANSWERS_GRID else 0.0
-	var h: float = _band_height + (quiz_extra if is_quiz else 0.0)
-	return h * _get_ui_scale_factor()
+	return maxf(maxf((_band_height + quiz_extra) * _get_ui_scale_factor(), _band_peak), _band_content_min_height())
 
 
-func _update_window_heights(is_quiz: bool = false) -> void:
-	var menu_h: float = _get_desired_battle_window_height(is_quiz)
+## Najwyższe okno ze wszystkich trybów pasa (także ukrytych teraz) + ramki pasa — od początku walki, zanim się pokażą.
+func _band_content_min_height() -> float:
+	if battle_window == null or content_row == null:
+		return 0.0
+	var overhead := battle_window.get_combined_minimum_size().y - content_row.get_combined_minimum_size().y
+	var tallest := 0.0
+	for p: Control in [party_command_panel, actor_command_panel, party_panel_container, list_panel]:
+		if p:
+			tallest = maxf(tallest, p.get_combined_minimum_size().y)
+	return tallest + overhead
+
+
+func _on_battle_window_resized() -> void:
+	if battle_window.size.y > _get_desired_battle_window_height() + 0.5:
+		_band_peak = battle_window.size.y
+		_update_window_heights()
+
+
+func _update_window_heights() -> void:
+	var menu_h: float = _get_desired_battle_window_height()
 	if battle_window:
 		battle_window.offset_top = -menu_h
 	var battlefield := get_node_or_null("Battlefield") as Control
@@ -2492,12 +2512,12 @@ func _update_corner_label() -> void:
 
 
 func _apply_responsive_layout() -> void:
-	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
-	_update_window_heights(is_quiz)
+	_update_window_heights()
 
 	# Przyciski, wiersze drużyny, czcionki: wygląd ze sceny i motywu (bez nadpisań z kodu).
 	# Rozmieszczenie potworków i ich odstępów:
 	_apply_responsive_enemy_layout()
+	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
 	if not is_quiz:
 		_set_band_mode(_band_mode)
 
