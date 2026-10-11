@@ -1168,7 +1168,7 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 	var stat_names := ["ATK", "DEF", "MAT", "MDF"]
 	for i in range(mini(_status_stat_rows.size(), stat_names.size())):
 		var value: int = _ps.get_member_total_stat(_selected_member_index, stat_names[i].to_lower()) if _ps and _ps.has_method("get_member_total_stat") else 0
-		_set_simple_row(_status_stat_rows[i], stat_names[i], str(value))
+		_set_simple_row(_status_stat_rows[i], stat_names[i] + ":", str(value))
 	var equipment: Dictionary = member.get("equipment", {})
 	for index: int in range(_status_equip_rows.size()):
 		var slot_name: String = STATUS_EQUIP_SLOTS[index] if index < STATUS_EQUIP_SLOTS.size() else ""
