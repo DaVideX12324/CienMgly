@@ -8,6 +8,7 @@ const LOG_PATH := "user://perf_log.txt"
 const HITCH_MS := 60.0  # klatka dłuższa od tego trafia do logu
 const STALL_MS := 1500  # główny wątek bez klatki dłużej niż to = wpis strażnika
 const INPUT_HISTORY := 16
+const PULSE_SEC := 5.0  # co ile sekund wpis z podsumowaniem (FPS, metryki), także bez zacięć
 
 var _label: Label
 var _last_us: int = 0
@@ -21,6 +22,10 @@ var _last_frame_msec: int = 0  # czytany przez wątek strażnika
 var _last_context: String = ""  # jw.; odświeżany co klatkę
 var _events_text: String = ""  # jw. (kopia tekstowa historii wejścia)
 var _stall_logged: bool = false
+var _pulse_t: float = 0.0
+var _pulse_frames: int = 0
+var _pulse_worst_ms: float = 0.0
+var _pulse_hitches: int = 0
 var _t_process_us: int = 0  # początek _process bieżącej klatki
 var _t_postdraw_us: int = 0  # koniec rysowania poprzedniej klatki
 var _evt_count: int = 0  # zdarzenia wejścia od ostatniego _process
@@ -105,6 +110,19 @@ func _process(delta: float) -> void:
 	_last_context = _context()
 	_stall_logged = false
 	_window_worst_ms = maxf(_window_worst_ms, frame_ms)
+	_pulse_frames += 1
+	_pulse_worst_ms = maxf(_pulse_worst_ms, frame_ms)
+	_pulse_t += frame_ms / 1000.0
+	if frame_ms >= HITCH_MS:
+		_pulse_hitches += 1
+	if _pulse_t >= PULSE_SEC:
+		_append("PUŁS %.1f s: śr. %.0f FPS (%.2f ms/klatkę), najgorsza klatka %.0f ms, zacięć %d | %s | VSync %s | %s" % [
+			_pulse_t, _pulse_frames / _pulse_t, _pulse_t * 1000.0 / _pulse_frames, _pulse_worst_ms, _pulse_hitches,
+			_metrics(), _vsync_name(DisplayServer.window_get_vsync_mode()), _last_context])
+		_pulse_t = 0.0
+		_pulse_frames = 0
+		_pulse_worst_ms = 0.0
+		_pulse_hitches = 0
 	_window_t += delta
 	if _window_t >= 1.0:
 		_shown_worst_ms = _window_worst_ms
