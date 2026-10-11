@@ -46,7 +46,7 @@ var status_panel: VBoxContainer
 var status_actor_header: HBoxContainer
 var status_info_label: Label
 var status_bars_vbox: VBoxContainer
-var status_stats_vbox: VBoxContainer
+var status_stats_vbox: Container
 var status_equip_vbox: VBoxContainer
 var confirm_panel: VBoxContainer
 var confirm_label: Label
@@ -192,7 +192,7 @@ func _cache_panel_nodes() -> void:
 	status_actor_header = status_panel.find_child("ActorHeader", true, false) as HBoxContainer if status_panel else null
 	status_info_label = status_panel.find_child("StatusInfoLabel", true, false) as Label if status_panel else null
 	status_bars_vbox = status_panel.find_child("StatusBarsVBox", true, false) as VBoxContainer if status_panel else null
-	status_stats_vbox = status_panel.find_child("StatusStatsVBox", true, false) as VBoxContainer if status_panel else null
+	status_stats_vbox = status_panel.find_child("StatusStatsVBox", true, false) as Container if status_panel else null
 	status_equip_vbox = status_panel.find_child("StatusEquipVBox", true, false) as VBoxContainer if status_panel else null
 	confirm_label = confirm_panel.find_child("ConfirmLabel", true, false) as Label if confirm_panel else null
 	confirm_options_vbox = confirm_panel.find_child("OptionsVBox", true, false) as VBoxContainer if confirm_panel else null
