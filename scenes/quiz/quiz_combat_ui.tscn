@@ -737,10 +737,12 @@ theme_override_constants/separation = 8
 layout_mode = 2
 text = "Wybierz cel"
 
-[node name="TargetListVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/TargetPanel" unique_id=1191194108]
+[node name="TargetListVBox" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/TargetPanel" unique_id=1191194108]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 4
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+columns = 2
 
 [node name="PartyVBox" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin" unique_id=1670251784]
 layout_mode = 2

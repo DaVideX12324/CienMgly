@@ -118,7 +118,7 @@ const ListRowScene := preload("res://modules/quiz_rpg/scenes/quiz/combat_list_ro
 @onready var streak_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/StreakLabel") as Label
 @onready var target_panel: VBoxContainer = (party_panel_container.get_node_or_null("PartyMargin/TargetPanel") if party_panel_container else null) as VBoxContainer
 @onready var target_label: Label = (target_panel.get_node_or_null("TargetLabel") if target_panel else null) as Label
-@onready var target_list_vbox: VBoxContainer = (target_panel.get_node_or_null("TargetListVBox") if target_panel else null) as VBoxContainer
+@onready var target_list_vbox: GridContainer = (target_panel.get_node_or_null("TargetListVBox") if target_panel else null) as GridContainer
 @onready var party_rows : Array[HBoxContainer] = [
 		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow0") if party_panel_container else null) as HBoxContainer,
 		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow1") if party_panel_container else null) as HBoxContainer,
@@ -439,11 +439,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if phase == Phase.TARGET_SELECT:
+		# Siatka 2 kolumn: góra / dół o wiersz, lewo / prawo o jedną pozycję.
 		if _is_menu_down(event):
-			_navigate_target_list(1)
+			_navigate_target_list(maxi(target_list_vbox.columns, 1))
 			get_viewport().set_input_as_handled()
 			return
 		if _is_menu_up(event):
+			_navigate_target_list(-maxi(target_list_vbox.columns, 1))
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D]):
+			_navigate_target_list(1)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A]):
 			_navigate_target_list(-1)
 			get_viewport().set_input_as_handled()
 			return
@@ -650,6 +659,7 @@ func _open_target_menu() -> void:
 			"max_hp": int(enemy_unit.get("max_hp", 1)),
 		})
 	_target_selected_idx = 0
+	target_list_vbox.columns = mini(2, maxi(_target_entries.size(), 1))
 	_build_target_menu()
 	party_panel_container.visible = true
 	_show_target_panel()
@@ -676,14 +686,7 @@ func _build_target_menu() -> void:
 		name_text.text = str(entry.get("name", enemy_name_str))
 		name_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		name_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
-		var hp_text: Label = Label.new()
-		hp_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		hp_text.text = "%d/%d HP" % [int(entry.get("hp", 0)), int(entry.get("max_hp", 1))]
-		hp_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		hp_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
-		row_content.add_child(name_text)
-		row_content.add_child(hp_text)
+		row_content.add_child(name_text)  # HP wroga pokazuje umiejętność Skan, nie lista celów
 		row_margin.add_child(row_content)
 		row.add_child(row_margin)
 		var row_index: int = _target_rows.size()
@@ -724,7 +727,7 @@ func _hide_target_panel() -> void:
 func _navigate_target_list(delta: int) -> void:
 	if _target_rows.is_empty():
 		return
-	_target_selected_idx = (_target_selected_idx + delta + _target_rows.size()) % _target_rows.size()
+	_target_selected_idx = posmod(_target_selected_idx + delta, _target_rows.size())
 	_refresh_target_selection()
 	_refresh_enemy_slot_highlight()
 
