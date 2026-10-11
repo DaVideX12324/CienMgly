@@ -13,6 +13,14 @@ var _scene_root: Node
 var _current_scene: Node
 
 
+## Log progresji do testów balansu (QuizRpgProgressLog): sesja + awanse.
+func _start_progress_log() -> void:
+	var ps: Node = CoreManager.get_singleton("PlayerStats") if get_node_or_null("/root/CoreManager") else null
+	QuizRpgProgressLog.session_begin(ps)
+	if ps != null and ps.has_signal("level_up"):
+		ps.level_up.connect(func(l: int) -> void: QuizRpgProgressLog.level_up(ps, l))
+
+
 func _ready() -> void:
 	_scene_root = get_node_or_null("SceneRoot")
 	if _scene_root == null:
@@ -22,6 +30,7 @@ func _ready() -> void:
 	_register_singletons()
 	if OS.is_debug_build():
 		add_child(preload("scripts/tools/perf_monitor.gd").new())  # F3 = nakładka, zacięcia w user://perf_log.txt
+	_start_progress_log()
 	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania (z motywem z ustawień)
 	var settings := get_node_or_null("/root/SettingsService")
 	if settings and settings.has_signal("module_setting_changed"):

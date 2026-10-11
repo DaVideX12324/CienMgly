@@ -79,6 +79,7 @@ const GUARD_DAMAGE_FACTOR_WRONG := 0.5
 ## Broniąca się postać ma o połowę mniejszą szansę na status od umiejętności wroga (jak Guard w FNaFB).
 const GUARD_STATUS_CHANCE_FACTOR := 0.5
 var turn_number := 0
+var _combat_started_msec := Time.get_ticks_msec()  # początek walki (log progresji)
 
 @onready var battle_window: PanelContainer = $BattleWindow
 @onready var window_shadow: Control = get_node_or_null("WindowShadow") as Control
@@ -1803,6 +1804,7 @@ func _apply_status_round() -> bool:
 
 func _end_combat(player_won: bool, fled: bool = false) -> void:
 	phase = Phase.COMBAT_END
+	_log_combat_end(player_won, fled)
 	if _ps and _ps.has_method("clear_battle_statuses"):
 		_ps.clear_battle_statuses()
 	_quiz_panel_controller.reset_question()
@@ -3319,6 +3321,18 @@ func _wait_for_victory_advance(max_wait: float) -> void:
 	while elapsed < max_wait and not _victory_skip:
 		await get_tree().create_timer(0.05).timeout
 		elapsed += 0.05
+
+
+## Wpis do logu progresji (QuizRpgProgressLog): wynik, wrogowie z poziomami, XP, tury, czas walki.
+func _log_combat_end(player_won: bool, fled: bool) -> void:
+	var names: Array[String] = []
+	for u in _enemy_units:
+		var src: Variant = u.get("source", enemy)
+		var lv: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
+		names.append("%s%s t%d" % [str(u.get("name", "?")), " lv%d" % lv if lv > 0 else "", int(u.get("tier", 1))])
+	var outcome := "wygrana" if player_won else ("ucieczka" if fled else "porazka")
+	var xp := (int(enemy.xp_reward) + _bonus_xp_reward) if player_won else 0
+	QuizRpgProgressLog.combat_end(_ps, outcome, ", ".join(names), _is_boss_encounter(), xp, turn_number, float(Time.get_ticks_msec() - _combat_started_msec) / 1000.0)
 
 
 ## Klucz uniwersalny z pokonanych wrogów: każdy wróg osobno, szansa rośnie z tierem (boss = tier 4). Wytrychy wypadają

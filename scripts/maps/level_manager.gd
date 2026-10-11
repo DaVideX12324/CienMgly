@@ -42,6 +42,11 @@ func change_level(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -
 	await load_level_direct(level_path, spawn_name)
 
 
+func _progress_ps() -> Node:
+	var core := get_node_or_null("/root/CoreManager")
+	return core.call("get_singleton", "PlayerStats") as Node if core else null
+
+
 func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -> void:
 	level_path = QuizRpgPaths.localize(level_path)  # ścieżki z eksportów scen / zapisów w formie hosta
 	if level_path == "":
@@ -89,6 +94,7 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	var spawn_pos := _place_player_at_spawn(spawn_name)
 	_setup_start_safety(spawn_pos)
 	_play_level_music(level_path, current_level)
+	QuizRpgProgressLog.map_entered(_progress_ps(), level_path)
 	_close_loading_screen()
 
 
