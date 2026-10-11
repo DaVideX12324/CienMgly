@@ -235,7 +235,9 @@ func _ready() -> void:
 			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_COMBAT_COMPACT:
 				_set_band_mode(_band_mode)
 			elif module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_QUESTION_POSITION:
-				_apply_question_position())
+				_apply_question_position()
+			elif module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_LIST_LAYOUT:
+				_fit_list_columns())
 	_apply_question_position.call_deferred()
 	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
 	if parent_canvas != null:
@@ -938,35 +940,17 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 		var empty := ListRowScene.instantiate() as Button
 		list_grid.add_child(empty)
 		empty.setup("Brak umiejętności" if is_skill_menu else "Brak przedmiotów", "", 0, true)
-	var content_row := list_panel.get_parent() as Control
-	if not content_row.resized.is_connected(_fit_list_columns):
-		content_row.resized.connect(_fit_list_columns)
-	_fit_list_columns.call_deferred()
+	_fit_list_columns()
 
 
-## Okno listy na szerokość zawartości (decyzja usera 2026-10-11): kolumny wg szerokości wierszy (CombatListRow:
-## minimum ze sceny albo nazwa + koszt), najwyżej tyle, ile pozycji i ile mieści się obok pozostałych okien paska.
-## Wysokość — cały pas (nadmiar przewijany); okna paska wyśrodkowane (ContentRow), po bokach widać tło bitwy.
+## Opcje -> Motyw „Umiejętności i przedmioty w walce”: siatka 2 kolumny albo jedna przewijana lista (QuizTheme.list_layout).
+## Okno listy ma szerokość najszerszego wiersza (CombatListRow: minimum ze sceny albo nazwa + koszt), wysokość — cały pas
+## (nadmiar przewijany); okna paska wyśrodkowane (ContentRow), po bokach widać tło bitwy.
 func _fit_list_columns() -> void:
-	var content_row := list_panel.get_parent() as Control
 	var n := list_grid.get_child_count()
-	if content_row == null or content_row.size.x <= 0.0 or n == 0:
+	if n == 0:
 		return
-	var row_w := 1.0
-	for row in list_grid.get_children():
-		row_w = maxf(row_w, (row as Control).get_combined_minimum_size().x)
-	# Miejsce: wiersz paska minus inne widoczne okna i ramki okna listy (min. panelu − min. przewijania).
-	var used := 0.0
-	var visible_count := 0
-	for c in content_row.get_children():
-		if c is Control and (c as Control).visible and c != list_panel:
-			used += (c as Control).size.x
-			visible_count += 1
-	var row_sep := float((content_row as BoxContainer).get_theme_constant(&"separation")) if content_row is BoxContainer else 0.0
-	var pad := list_panel.get_combined_minimum_size() - list_scroll.get_combined_minimum_size()
-	var avail := content_row.size.x - used - row_sep * visible_count - pad.x
-	var sep := float(list_grid.get_theme_constant(&"h_separation"))
-	var cols := clampi(int((avail + sep) / (row_w + sep)), 1, 4)
+	var cols := 2 if QuizTheme.list_layout() == QuizTheme.LIST_GRID else 1
 	list_grid.columns = mini(cols, n)
 
 

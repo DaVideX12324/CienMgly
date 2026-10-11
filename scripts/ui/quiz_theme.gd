@@ -77,6 +77,10 @@ const QUESTION_IN_MENU := "menu"
 const SETTING_ANSWERS_LAYOUT := "ui_answers_layout"
 const ANSWERS_LIST := "list"
 const ANSWERS_GRID := "grid"
+## Umiejętności i przedmioty w walce: siatka 2 kolumny albo jedna przewijana lista.
+const SETTING_LIST_LAYOUT := "ui_list_layout"
+const LIST_GRID := "grid"
+const LIST_SCROLL := "list"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
@@ -85,6 +89,8 @@ const UI_OPTIONS: Array[Dictionary] = [
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
 	{"key": "ui_answers_layout", "label": "Odpowiedzi w walce", "type": "choice", "default": "list",
 		"choices": [{"id": "list", "name": "Lista"}, {"id": "grid", "name": "Siatka (2 kolumny)"}]},
+	{"key": "ui_list_layout", "label": "Umiejętności i przedmioty w walce", "type": "choice", "default": "grid",
+		"choices": [{"id": "grid", "name": "Siatka (2 kolumny)"}, {"id": "list", "name": "Lista przewijana"}]},
 ]
 const DEFAULT_BAR_STYLE := "klasyczny"
 ## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
@@ -308,6 +314,13 @@ static func answers_layout() -> String:
 	var settings := _settings_service()
 	var v := str(settings.call("get_module", MODULE_ID, SETTING_ANSWERS_LAYOUT, ANSWERS_LIST)) if settings else ANSWERS_LIST
 	return v if v == ANSWERS_GRID else ANSWERS_LIST
+
+
+## Układ list umiejętności / przedmiotów w walce (LIST_GRID / LIST_SCROLL).
+static func list_layout() -> String:
+	var settings := _settings_service()
+	var v := str(settings.call("get_module", MODULE_ID, SETTING_LIST_LAYOUT, LIST_GRID)) if settings else LIST_GRID
+	return v if v == LIST_SCROLL else LIST_GRID
 
 
 static func bar_style() -> String:
