@@ -315,7 +315,8 @@ static func spawn_entities(
 			regular_spawns += 1
 	var xp_scale := 1.0
 	if enemy_levels.has("ref_spawns") and regular_spawns > 0:
-		xp_scale = clampf(float(enemy_levels["ref_spawns"]) / float(regular_spawns), 0.25, 4.0)
+		# "xp_size_exponent" (domyślnie 1,0 = pełna normalizacja budżetu mapy; < 1 = większe mapy dają więcej łącznego XP, np. 0,75)
+		xp_scale = clampf(pow(float(enemy_levels["ref_spawns"]) / float(regular_spawns), float(enemy_levels.get("xp_size_exponent", 1.0))), 0.25, 4.0)
 
 	# 1. Spawns / Spawn
 	var spawns_node := target_node.get_node_or_null("Spawns")
