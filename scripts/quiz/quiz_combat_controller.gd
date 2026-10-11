@@ -833,7 +833,7 @@ func _scan_enemy(enemy_index: int) -> void:
 	if text.strip_edges() == "":
 		var skill_names: Array[String] = []
 		for sk in (src.get("battle_skills") if src != null and src.get("battle_skills") != null else []):
-			skill_names.append(sk.display_name)
+			skill_names.append(sk.localized_name())
 		text = "ATK %d · DEF %d · MAT %d · MDF %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0))]
 		if not skill_names.is_empty():
 			text += "\nUmiejętności: " + ", ".join(skill_names)
@@ -1629,9 +1629,9 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 ## (obrona: 1/4 po dobrej odpowiedzi, 1/2 po złej), status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
 func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: String, sk: QuizRpgEnemySkill) -> bool:
 	var text := sk.log_text if sk.log_text != "" else "{enemy} używa: {skill}!"
-	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.display_name)
+	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.localized_name())
 	if turn_label:
-		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.display_name]
+		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.localized_name()]
 	_push_log(text, sk.color)
 	result_label.text = text
 	result_label.add_theme_color_override("font_color", sk.color)

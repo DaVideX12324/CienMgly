@@ -10,7 +10,7 @@ enum Target { ONE_OPPONENT, ALL_OPPONENTS, RANDOM_OPPONENTS, SELF, ONE_ALLY, ALL
 enum HealMode { NONE, FIXED, PERCENT }
 enum PoisonMode { PERCENT, FIXED }
 
-@export var display_name: String = "Umiejętność"
+@export var display_name: String = "Umiejętność"  # zapasowa; nazwa w grze: localized_name() (resources/i18n)
 @export_multiline var description: String = ""
 @export var color: Color = Color(1.0, 0.55, 0.2)
 
@@ -83,3 +83,8 @@ func status_params() -> Dictionary:
 	if inflict_status == "poison":
 		return {"mode": "fixed" if poison_mode == PoisonMode.FIXED else "percent", "amount": poison_amount}
 	return {}
+
+
+## Nazwa w wybranym języku (klucz z nazwy pliku zasobu, tekst zapasowy = display_name).
+func localized_name() -> String:
+	return QuizRpgI18n.t(QuizRpgI18n.skill_name_key(self), display_name)

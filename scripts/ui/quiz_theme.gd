@@ -81,6 +81,8 @@ const ANSWERS_GRID := "grid"
 ## Animacja wejścia do walki (zrzut świata wiruje i zamyka się w czerń).
 const SETTING_COMBAT_INTRO := "ui_combat_intro"
 const SETTING_LIST_LAYOUT := "ui_list_layout"
+const SETTING_LANGUAGE := "ui_language"
+const LANGUAGES: Array[String] = ["pl", "en"]  # pliki resources/i18n/<id>.json
 const LIST_GRID := "grid"
 const LIST_SCROLL := "list"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
@@ -92,6 +94,8 @@ const UI_OPTIONS: Array[Dictionary] = [
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
 	{"key": "ui_answers_layout", "label": "Odpowiedzi w walce", "type": "choice", "default": "list",
 		"choices": [{"id": "list", "name": "Lista"}, {"id": "grid", "name": "Siatka (2 kolumny)"}]},
+	{"key": "ui_language", "label": "Język nazw (umiejętności)", "type": "choice", "default": "pl",
+		"choices": [{"id": "pl", "name": "Polski"}, {"id": "en", "name": "English"}]},
 	{"key": "ui_list_layout", "label": "Umiejętności i przedmioty w walce", "type": "choice", "default": "grid",
 		"choices": [{"id": "grid", "name": "Siatka (2 kolumny)"}, {"id": "list", "name": "Lista przewijana"}]},
 ]
@@ -329,6 +333,13 @@ static func list_layout() -> String:
 	var settings := _settings_service()
 	var v := str(settings.call("get_module", MODULE_ID, SETTING_LIST_LAYOUT, LIST_GRID)) if settings else LIST_GRID
 	return v if v == LIST_SCROLL else LIST_GRID
+
+
+## Język tekstów z resources/i18n (QuizRpgI18n).
+static func language() -> String:
+	var settings := _settings_service()
+	var v := str(settings.call("get_module", MODULE_ID, SETTING_LANGUAGE, "pl")) if settings else "pl"
+	return v if v in LANGUAGES else "pl"
 
 
 static func bar_style() -> String:

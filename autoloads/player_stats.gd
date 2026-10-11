@@ -281,7 +281,7 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 	user["tp"] = int(user.get("tp", 0)) - tp_cost
 	party[user_index] = user
 	party_changed.emit()
-	return {"success": true, "message": "%s: %s" % [skill.display_name, ", ".join(parts)]}
+	return {"success": true, "message": "%s: %s" % [skill.localized_name(), ", ".join(parts)]}
 
 
 ## Leczy członka drużyny o amount (najwyżej do maks. HP); nieprzytomnego tylko z allow_revive (wskrzeszenie).
@@ -311,8 +311,8 @@ func learn_level_skills() -> Array[String]:
 		for sk in get_member_skill_pool(i):
 			if sk.learn_level > 0 and sk.learn_level <= lvl and not unlocked.has(sk.skill_id):
 				unlocked.append(sk.skill_id)
-				out.append(sk.display_name)
-				skill_learned.emit(i, sk.display_name)
+				out.append(sk.localized_name())
+				skill_learned.emit(i, sk.localized_name())
 		member["skills"] = unlocked
 		party[i] = member
 	if not out.is_empty():
