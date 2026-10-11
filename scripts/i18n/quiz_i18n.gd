@@ -1,7 +1,7 @@
 class_name QuizRpgI18n
 extends RefCounted
 
-## Tłumaczenia tekstów gry: płaskie słowniki klucz -> tekst w resources/i18n/<język>.json (np. "skill.onslaught.name").
+## Tłumaczenia tekstów gry: płaskie słowniki klucz -> tekst w resources/i18n/<język>.json (np. "skill.onslaught.name", "skill.onslaught.desc").
 ## Język wybiera opcja „Język” w Motywie (QuizTheme.language()). Brak klucza w wybranym języku -> en -> tekst zapasowy
 ## (display_name z zasobu), więc nowe teksty można dopisywać stopniowo.
 
@@ -26,6 +26,11 @@ static func t(key: String, fallback: String = "") -> String:
 ## Klucz nazwy umiejętności z pliku zasobu: "skill.<nazwa pliku .tres bez rozszerzenia>.name".
 static func skill_name_key(res: Resource) -> String:
 	return "skill.%s.name" % res.resource_path.get_file().get_basename()
+
+
+## Klucz opisu umiejętności: "skill.<nazwa pliku .tres>.desc".
+static func skill_desc_key(res: Resource) -> String:
+	return "skill.%s.desc" % res.resource_path.get_file().get_basename()
 
 
 ## Wymusza ponowne wczytanie słowników (po edycji JSON w edytorze / w testach).

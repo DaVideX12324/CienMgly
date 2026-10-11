@@ -37,7 +37,7 @@ func to_entry(max_sp: int = 0) -> Dictionary:
 	return {
 		"skill_id": skill_id,
 		"name": localized_name(),
-		"description": description + (" Wymaga broni: %s%s." % [QuizRpgItemData.weapon_type_name(required_weapon_type), ", niszczy ją" if consumes_weapon else ""] if required_weapon_type != "none" else ""),
+		"description": localized_description() + (" Wymaga broni: %s%s." % [QuizRpgItemData.weapon_type_name(required_weapon_type), ", niszczy ją" if consumes_weapon else ""] if required_weapon_type != "none" else ""),
 		"required_weapon_type": required_weapon_type,
 		"consumes_weapon": consumes_weapon,
 		"sp_cost": sp_cost_for(max_sp),

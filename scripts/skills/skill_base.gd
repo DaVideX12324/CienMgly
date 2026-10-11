@@ -88,3 +88,8 @@ func status_params() -> Dictionary:
 ## Nazwa w wybranym języku (klucz z nazwy pliku zasobu, tekst zapasowy = display_name).
 func localized_name() -> String:
 	return QuizRpgI18n.t(QuizRpgI18n.skill_name_key(self), display_name)
+
+
+## Opis w wybranym języku (klucz "skill.<plik>.desc", tekst zapasowy = description).
+func localized_description() -> String:
+	return QuizRpgI18n.t(QuizRpgI18n.skill_desc_key(self), description)
