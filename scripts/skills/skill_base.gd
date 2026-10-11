@@ -32,6 +32,10 @@ enum PoisonMode { PERCENT, FIXED }
 @export_range(0.05, 2.0, 0.05) var hit_interval: float = 0.35
 ## Szansa trafienia każdego ciosu (jak „success rate” w RPG Makerze); u gracza mnożona z szansą z quizu.
 @export_range(0.0, 1.0, 0.01) var success_rate: float = 1.0
+## Losowy bonus do obrażeń tylko w górę: mnożnik 1 + bonus_roll_max × u^bonus_roll_curve, u z [0, 1]. Krzywa > 1 sprawia, że
+## wyższy bonus jest coraz rzadszy (np. Backup Bash z FNaFB: max +100 %, krzywa 2 -> średnio +33 %). 0 = bez bonusu.
+@export_range(0.0, 10.0, 0.05) var bonus_roll_max: float = 0.0
+@export_range(1.0, 6.0, 0.1) var bonus_roll_curve: float = 1.0
 ## Obrona z dobrą odpowiedzią blokuje (0), ze złą — połowa; false = obrona nie działa.
 @export var can_be_blocked: bool = true
 

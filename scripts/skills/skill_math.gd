@@ -16,14 +16,14 @@ static func damage(skill: QuizRpgSkillBase, user: Dictionary, target: Dictionary
 		QuizRpgSkillBase.DamageMode.NONE:
 			return 0
 		QuizRpgSkillBase.DamageMode.FIXED:
-			return maxi(roundi(skill.fixed_damage * _spread(skill.variance, rng)), 1)
+			return maxi(roundi(skill.fixed_damage * _spread(skill.variance, rng) * _bonus_roll(skill, rng)), 1)
 	var raw := float(skill.base_damage) \
 		+ float(user.get("atk", 0)) * skill.atk_coeff + float(user.get("mat", 0)) * skill.mat_coeff \
 		- float(target.get("def", 0)) * skill.def_coeff - float(target.get("mdf", 0)) * skill.mdf_coeff
 	var mult := skill.damage_multiplier
 	if skill.bonus_vs_status != "none" and (target.get("statuses", []) as Array).has(skill.bonus_vs_status):
 		mult *= skill.bonus_multiplier
-	return maxi(roundi(raw * mult * _spread(skill.variance, rng)), 1)
+	return maxi(roundi(raw * mult * _spread(skill.variance, rng) * _bonus_roll(skill, rng)), 1)
 
 
 static func basic_attack(user: Dictionary, target: Dictionary, rng: RandomNumberGenerator = null) -> int:
@@ -47,6 +47,14 @@ static func heal(skill: QuizRpgSkillBase, max_hp: int) -> int:
 static func roll_hit(skill: QuizRpgSkillBase, extra_chance: float = 1.0, rng: RandomNumberGenerator = null) -> bool:
 	var chance := extra_chance * (skill.success_rate if skill != null else 1.0)
 	return (rng.randf() if rng else randf()) < chance
+
+
+## Bonus tylko w górę (bonus_roll_max / bonus_roll_curve): 1 + max × u^curve.
+static func _bonus_roll(skill: QuizRpgSkillBase, rng: RandomNumberGenerator) -> float:
+	if skill.bonus_roll_max <= 0.0:
+		return 1.0
+	var u := rng.randf() if rng else randf()
+	return 1.0 + skill.bonus_roll_max * pow(u, skill.bonus_roll_curve)
 
 
 static func _spread(variance: float, rng: RandomNumberGenerator) -> float:
