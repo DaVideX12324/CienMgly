@@ -182,7 +182,6 @@ var _band_mode: Band = Band.PARTY_COMMAND
 @onready var _message_window: PanelContainer = $BattleWindow/WindowMargin/VBox/MessageWindow  # po bitwie
 @onready var _victory_label: Label = $BattleWindow/WindowMargin/VBox/MessageWindow/VictoryLog
 var _band_height := 250.0  # wysokość dolnego pasa ze sceny (BattleWindow.offset_top)
-var _band_peak := 0.0  # najwyższy pas w tej walce (treść wyższa niż zadana wysokość) — pas już nie maleje
 var _log_lines: Array[String] = []
 var _last_logged := ""
 
@@ -2418,11 +2417,11 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 
 
 ## Stała wysokość pasa (decyzja usera 2026-10-11: UI nie skacze) = najwyższy z trybów: pas ze sceny
-## (BattleWindow.offset_top) + dodatek quizu (poza siatką odpowiedzi), w skali UI; treść wyższa od tego (np. długie
-## pytanie) podnosi pas na resztę walki (_band_peak).
+## (BattleWindow.offset_top) + dodatek quizu (poza siatką odpowiedzi), w skali UI, albo najwyższe okno trybów.
+## Treść wyższa od tego (np. bardzo długie pytanie) podnosi pas tylko na ten czas (okno rośnie do treści i wraca).
 func _get_desired_battle_window_height() -> float:
 	var quiz_extra := quiz_band_extra_height if QuizTheme.answers_layout() != QuizTheme.ANSWERS_GRID else 0.0
-	return maxf(maxf((_band_height + quiz_extra) * _get_ui_scale_factor(), _band_peak), _band_content_min_height())
+	return maxf((_band_height + quiz_extra) * _get_ui_scale_factor(), _band_content_min_height())
 
 
 ## Najwyższe okno ze wszystkich trybów pasa (także ukrytych teraz) + ramki pasa — od początku walki, zanim się pokażą.
@@ -2437,22 +2436,25 @@ func _band_content_min_height() -> float:
 	return tallest + overhead
 
 
+## Okno urosło do treści (długie pytanie) albo wróciło — pole bitwy i cień za faktyczną wysokością pasa.
 func _on_battle_window_resized() -> void:
-	if battle_window.size.y > _get_desired_battle_window_height() + 0.5:
-		_band_peak = battle_window.size.y
-		_update_window_heights()
+	_fit_field_to_band(maxf(battle_window.size.y, _get_desired_battle_window_height()))
 
 
 func _update_window_heights() -> void:
 	var menu_h: float = _get_desired_battle_window_height()
 	if battle_window:
 		battle_window.offset_top = -menu_h
+	_fit_field_to_band(maxf(battle_window.size.y, menu_h) if battle_window else menu_h)
+
+
+func _fit_field_to_band(band_h: float) -> void:
 	var battlefield := get_node_or_null("Battlefield") as Control
 	if battlefield:
-		battlefield.offset_bottom = -menu_h
+		battlefield.offset_bottom = -band_h
 	if window_shadow:
 		window_shadow.offset_bottom = 0.0
-		window_shadow.offset_top = -menu_h - _shadow_height
+		window_shadow.offset_top = -band_h - _shadow_height
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
