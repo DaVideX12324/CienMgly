@@ -28,7 +28,9 @@ static func has_line(grid: Dictionary, a: Vector2, b: Vector2, cell: float = CEL
 	var c := ca
 	# Przejście odwiedza najwyżej |dx| + |dy| kolejnych kratek.
 	for _i in range(absi(cb.x - ca.x) + absi(cb.y - ca.y)):
-		if absf(t_max.x - t_max.y) < 1e-9:
+		# Tolerancja w parametrze t (0..1): 1e-9 było za ciasne — błąd zaokrąglenia na dokładnym narożniku dawał krok
+		# najpierw w jedną oś i fałszywą „zasłonę” przez ścianę stykającą się z narożnikiem.
+		if absf(t_max.x - t_max.y) < 1e-6:
 			# Dokładnie przez narożnik: szczelina między dwiema ścianami stykającymi się rogiem zasłania.
 			if not GridUtils.is_walkable(grid, c + Vector2i(step.x, 0)) and not GridUtils.is_walkable(grid, c + Vector2i(0, step.y)):
 				return false
