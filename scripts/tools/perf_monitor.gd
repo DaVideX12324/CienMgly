@@ -21,6 +21,10 @@ var _last_frame_msec: int = 0  # czytany przez wątek strażnika
 var _last_context: String = ""  # jw.; odświeżany co klatkę
 var _events_text: String = ""  # jw. (kopia tekstowa historii wejścia)
 var _stall_logged: bool = false
+var _t_process_us: int = 0  # początek _process bieżącej klatki
+var _t_postdraw_us: int = 0  # koniec rysowania poprzedniej klatki
+var _pre_draw_ms: float = 0.0  # _process -> frame_post_draw (skrypty + submit renderu)
+var _post_draw_ms: float = 0.0  # frame_post_draw -> następny _process (prezentacja / VSync / system)
 
 
 func _ready() -> void:
@@ -35,6 +39,8 @@ func _ready() -> void:
 	_label.visible = false
 	add_child(_label)
 	_last_us = Time.get_ticks_usec()
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
+	RenderingServer.frame_post_draw.connect(_on_post_draw)
 	_last_frame_msec = Time.get_ticks_msec()
 	_append("=== start sesji %s, log: %s ===" % [Time.get_datetime_string_from_system(), ProjectSettings.globalize_path(LOG_PATH)])
 	_watchdog = Thread.new()
@@ -65,8 +71,15 @@ func _input(event: InputEvent) -> void:
 		_events_text = " | ".join(_events)
 
 
+func _on_post_draw() -> void:
+	_t_postdraw_us = Time.get_ticks_usec()
+	_pre_draw_ms = (_t_postdraw_us - _t_process_us) / 1000.0
+
+
 func _process(delta: float) -> void:
 	var now := Time.get_ticks_usec()
+	_post_draw_ms = (now - _t_postdraw_us) / 1000.0
+	_t_process_us = now
 	var frame_ms := (now - _last_us) / 1000.0
 	_last_us = now
 	_last_frame_msec = Time.get_ticks_msec()
@@ -90,7 +103,10 @@ func _process(delta: float) -> void:
 
 
 func _metrics() -> String:
-	return "proces %.1f ms, fizyka %.1f ms, draw calli %d, węzłów %d, obiektów %d, VRAM %.0f MB, pamięć %.0f MB" % [
+	var rid := get_viewport().get_viewport_rid()
+	return "przed rysowaniem %.0f ms, po rysowaniu (prezentacja/system) %.0f ms, render CPU %.1f ms, GPU %.1f ms | proces %.1f ms, fizyka %.1f ms, draw calli %d, węzłów %d, obiektów %d, VRAM %.0f MB, pamięć %.0f MB" % [
+		_pre_draw_ms, _post_draw_ms, RenderingServer.viewport_get_measured_render_time_cpu(rid),
+		RenderingServer.viewport_get_measured_render_time_gpu(rid),
 		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
 		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
 		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
