@@ -39,6 +39,26 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 					vp.alternative_tile = parts[0].tile.alternative_tile
 			PlacementPriority.assign(vp, table)
 			placement_plan.queue(vp)
+	# Najwyższy stopień schodów portalu przy krawędzi mapy (gdzie schody zaczynają się od voidu na wejściu / wychodzą w void na wyjściu):
+	# wymazanie podłogi na warstwie Floor, żeby nie prześwitywała za krawędzią schodów (widoczne tylko schody).
+	for ps in ctx.portal_stairs:
+		var r: Rect2i = ps.get("rect", Rect2i())
+		var dir := String(ps.get("dir", ""))
+		var top_row := Rect2i()
+		match dir:
+			"N": top_row = Rect2i(r.position, Vector2i(r.size.x, 1))
+			"S": top_row = Rect2i(Vector2i(r.position.x, r.end.y - 1), Vector2i(r.size.x, 1))
+			"W": top_row = Rect2i(r.position, Vector2i(1, r.size.y))
+			"E": top_row = Rect2i(Vector2i(r.end.x - 1, r.position.y), Vector2i(1, r.size.y))
+		for y in range(top_row.position.y, top_row.end.y):
+			for x in range(top_row.position.x, top_row.end.x):
+				var fp := TilePlacement.new()
+				fp.pos = Vector2i(x, y)
+				fp.layer = &"Floor"
+				fp.atlas_coords = Vector2i(-1, -1)
+				fp.category = &"PORTAL_CLEAR"
+				PlacementPriority.assign(fp, table)
+				placement_plan.queue(fp)
 	for pos in portal_cells.keys():
 		# Dekoracja szczytu ściany (RIM_TIP — górna część rimu z korzeniami) wisi nad podłogą tuż nad rimem;
 		# nie zasłania portalu, więc zostaje (zgłoszenie usera 2026-10-03: portal ucinał TOP rimów z dekoracją).

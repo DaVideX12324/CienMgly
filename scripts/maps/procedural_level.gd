@@ -536,7 +536,7 @@ func _apply_job_async(job: GenJob) -> void:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
 		var tiles = job.plans.tiles
-		var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms"]
+		var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
 		var total := 0
 		for layer_name in order:
 			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()

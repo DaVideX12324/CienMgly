@@ -204,7 +204,7 @@ static func register_wall_portal(result: MapGeneratorBase.GenerationResult, data
 ## nakładką, decyzja usera). Wnęka stoi dość daleko od krawędzi mapy (carve_portal_alcove), gdy ściany mniej — krócej.
 ## Kratki schodów -> podłoga i strefa portalu (lico nad strefą nie powstaje, kafle ścian na niej wymazane), przejście na
 ## szczycie schodów (data.center), ostatni rząd przy krawędzi mapy -> result.portal_void (PortalClearPlacer wymazuje
-## kafle ścian). N / S: 5 kratek szerokości, E / W: 3 rzędy (moduł schodów bocznych).
+## kafle ścian). N / S: 5 kratek szerokości, E / W: 4 rzędy (o 1 więcej w dół, moduł schodów bocznych).
 static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, data: Dictionary, entrance: bool) -> void:
 	var c: Vector2i = data.get("center", Vector2i.ZERO)
 	var edge := int(data.get("edge", -1))
@@ -212,7 +212,7 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 		return
 	var d: Vector2i = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)][edge]
 	var side := Vector2i(absi(d.y), absi(d.x))          # w poprzek schodów
-	var half := 2 if d.x == 0 else 1                     # N / S: 5 kratek szerokości, E / W: 3 rzędy
+	var half := 2 if d.x == 0 else 1                     # N / S: 5 kratek podłogi, E / W: 3 rzędy podłogi
 	# Ile warstw ściany za wnęką zajmują schody (najwyżej ALCOVE_STAIRS_DEPTH); zawsze >= 1 warstwa ściany zostaje przed
 	# inną podłogą (void na końcu).
 	var max_depth := ALCOVE_STAIRS_DEPTH
@@ -238,8 +238,9 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 		depth += 1
 	# schody: od pierwszej warstwy ściany (linia podstawy lica) do warstwy `depth`; void: warstwa depth + 1. Bez ściany
 	# za wnęką (depth 0) — jak dawniej od środka wnęki.
+	# W E / W grafika schodów (rect) sięga o 1 kratkę w dół (t=2) pod dolną ścianę (chowa się pod nią, bez poszerzania ścian).
 	var a_cell: Vector2i = (end + d if depth >= 1 else c) - side * half
-	var b_cell: Vector2i = end + d * depth + side * half
+	var b_cell: Vector2i = end + d * depth + side * (half if d.x == 0 else 2)
 	var rect := Rect2i(Vector2i(mini(a_cell.x, b_cell.x), mini(a_cell.y, b_cell.y)), (a_cell - b_cell).abs() + Vector2i.ONE)
 	var top: Vector2i = end + d * depth
 	var dir: String = ["N", "E", "S", "W"][edge]
@@ -250,16 +251,18 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 	var have := {}
 	for q in cells:
 		have[q] = true
-	for y in range(rect.position.y, rect.end.y):
-		for x in range(rect.position.x, rect.end.x):
-			ctx.grid[Vector2i(x, y)] = CellType.FLOOR
+	# Podłogę drążymy tylko w obszarze użytkowym (-half..half) — dolna ściana w E/W (t=2) nie jest poszerzana.
+	for k in range(1 if depth >= 1 else 0, depth + 1):
+		for t in range(-half, half + 1):
+			var q: Vector2i = (end if depth >= 1 else c) + d * k + side * t
+			ctx.grid[q] = CellType.FLOOR
 	# Strefa portalu: kratki schodów poza tymi tuż pod ścianą (jak górny rząd wnęki) — tam stopa lica / krawędzi dołu.
 	var is_void := {}
 	for q in void_cells:
 		is_void[q] = true
-	for y in range(rect.position.y, rect.end.y):
-		for x in range(rect.position.x, rect.end.x):
-			var q := Vector2i(x, y)
+	for k in range(1 if depth >= 1 else 0, depth + 1):
+		for t in range(-half, half + 1):
+			var q: Vector2i = (end if depth >= 1 else c) + d * k + side * t
 			var up := q + Vector2i(0, -1)
 			if have.has(q) or (q != top and not is_void.has(up) and not GridUtils.is_walkable(ctx.grid, up)):
 				continue

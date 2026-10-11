@@ -248,6 +248,10 @@ static func apply_cave_tiles(
 
 
 ## Przygotowuje warstwy (FloorDecor / Platforms / Bridges / Rails jako rodzeństwo Floor, gdy brak) i czyści je.
+## z_index warstwy gradientu schodów portali — nad ścianami (0) i postaciami.
+const PORTAL_SHADE_Z := 10
+
+
 ## Główny wątek (operuje na węzłach). Zwraca {&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms"}.
 static func prepare_cave_layers(
 	floor_layer: TileMapLayer,
@@ -329,6 +333,20 @@ static func prepare_cave_layers(
 			if walls_layer.get_parent() == rparent:
 				rparent.move_child(rails_layer, walls_layer.get_index() + 1)
 
+	# Warstwa PortalShade (gradient na stopniu schodów portalu przy voidzie): na samej górze — nad ścianami i postaciami
+	# (decyzja usera), bez sortowania. Tylko przy schodach portali.
+	var shade_layer: TileMapLayer = null
+	if floor_layer.get_parent():
+		shade_layer = floor_layer.get_parent().get_node_or_null("PortalShade") as TileMapLayer
+		if shade_layer == null and not result.portal_stairs.is_empty():
+			shade_layer = TileMapLayer.new()
+			shade_layer.name = "PortalShade"
+			shade_layer.z_index = PORTAL_SHADE_Z
+			floor_layer.get_parent().add_child(shade_layer)
+		if shade_layer != null:
+			shade_layer.tile_set = floor_layer.tile_set
+			shade_layer.clear()
+
 	floor_layer.clear()
 	if rails_layer:
 		rails_layer.clear()
@@ -347,6 +365,7 @@ static func prepare_cave_layers(
 		&"FloorDecor": floor_decor_layer,
 		&"Curbs": curbs_layer,
 		&"Bridges": bridges_layer,
+		&"PortalShade": shade_layer,
 		&"Walls": walls_layer,
 		&"Rails": rails_layer,
 		&"Platforms": platforms_layer,
@@ -431,6 +450,7 @@ static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	TilePlacementExecutor.execute(layers[&"Walls"], plans.tiles, &"Walls")
 	TilePlacementExecutor.execute(layers.get(&"Rails"), plans.tiles, &"Rails")
 	TilePlacementExecutor.execute(layers.get(&"Platforms"), plans.tiles, &"Platforms")
+	TilePlacementExecutor.execute(layers.get(&"PortalShade"), plans.tiles, &"PortalShade")
 	GenProgress.end(&"paint")
 
 
