@@ -11,6 +11,9 @@ const LIST_COLUMNS := 2
 @export var tp_cost_color := Color(0.55, 0.95, 0.45)
 ## Miniaturka postaci: zbliżenie na głowę (true) albo cała sylwetka z pierwszej klatki idle (QuizRpgPartyPortrait).
 @export var portrait_head_only := true
+## Opcje -> Motyw: „Menu pauzy tylko na szerokość treści” — część ekranu zajmowana przez okna menu (reszta to puste tło).
+@export_range(0.4, 1.0, 0.01) var compact_width := 0.64
+@export_range(0.4, 1.0, 0.01) var compact_height := 0.78
 const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 static var HOST_OPTIONS_MENU_SCENE: String = QuizRpgPaths.host("res://scenes/ui/options_menu.tscn")
 
@@ -140,6 +143,13 @@ func _ready() -> void:
 	_cache_scene_rows()
 	_bind_mouse_interactions()
 	_apply_scaling()
+	_apply_compact_layout()
+	get_viewport().size_changed.connect(_apply_compact_layout)
+	var settings := get_node_or_null("/root/SettingsService")
+	if settings and settings.has_signal("module_setting_changed"):
+		settings.module_setting_changed.connect(func(module_id: String, key: String, _v: Variant) -> void:
+			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_PAUSE_COMPACT:
+				_apply_compact_layout())
 	_resolve_options_menu()
 	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
 	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
@@ -1530,6 +1540,23 @@ Seria x%d" % [int(_ps.points), int(_ps.streak)]
 
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:
 	_on_player_data_changed()
+
+
+## Zwykłe menu: okna na cały ekran (margines 28 px); kompaktowe (opcja): wyśrodkowane, compact_width × compact_height ekranu.
+func _apply_compact_layout() -> void:
+	var main_row := pause_root.get_node_or_null("MainRow") as Control
+	if main_row == null:
+		return
+	var margin_x := 28.0
+	var margin_y := 28.0
+	if QuizTheme.pause_ui_compact():
+		var vp := get_viewport().get_visible_rect().size
+		margin_x = vp.x * (1.0 - compact_width) * 0.5
+		margin_y = vp.y * (1.0 - compact_height) * 0.5
+	main_row.offset_left = margin_x
+	main_row.offset_right = -margin_x
+	main_row.offset_top = margin_y
+	main_row.offset_bottom = -margin_y
 
 
 func _apply_scaling() -> void:
