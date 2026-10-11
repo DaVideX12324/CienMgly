@@ -13,7 +13,7 @@ class_name QuizRpgItemData
 @export var usable_in_combat: bool = true
 @export var equip_slot: String = ""
 ## Rodzaj broni (slot "weapon"): umiejętności z required_weapon_type działają tylko z broniami tego rodzaju ("none" = bez rodzaju).
-@export_enum("none", "sword", "staff", "bow", "instrument") var weapon_type: String = "none"
+@export_enum("none", "sword", "staff", "bow") var weapon_type: String = "none"
 @export var heal_amount: int = 0
 @export var sp_restore: int = 0
 @export var tp_restore: int = 0
@@ -25,7 +25,7 @@ class_name QuizRpgItemData
 @export var mdf_bonus: int = 0
 
 
-const WEAPON_TYPE_NAMES := {"sword": "Miecz", "staff": "Laska", "bow": "Łuk", "instrument": "Instrument"}
+const WEAPON_TYPE_NAMES := {"sword": "Miecz", "staff": "Laska", "bow": "Łuk"}
 
 
 static func weapon_type_name(type_id: String) -> String:

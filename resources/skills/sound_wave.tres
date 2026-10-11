@@ -6,7 +6,7 @@
 script = ExtResource("1_skill")
 skill_id = "sound_wave"
 display_name = "Fala Dźwięku"
-description = "Silne wibracje instrumentu. Szansa na zatrucie wroga."
+description = "Silne wibracje. Szansa na zatrucie wroga."
 color = Color(0.6, 0.4, 0.9, 1)
 atk_coeff = 4.0
 def_coeff = 2.0
@@ -17,4 +17,3 @@ status_chance = 0.4
 sp_cost = 25
 tp_cost = 12
 learn_level = 10
-required_weapon_type = "instrument"

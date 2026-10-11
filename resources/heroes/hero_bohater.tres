@@ -15,7 +15,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/onslaught.tres" id="s_onslaught"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/hearty_meal.tres" id="s_hearty_meal"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/revive_tonic.tres" id="s_revive_tonic"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/instrument_smash.tres" id="s_instrument_smash"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/final_strike.tres" id="s_final_strike"]
 
 [resource]
 script = ExtResource("1_hero_data")
@@ -36,7 +36,7 @@ base_mat = 21
 base_mdf = 12
 mat_per_level = 1.95
 mdf_per_level = 1.1
-skills = Array[ExtResource("5_skill_script")]([ExtResource("3_heal"), ExtResource("4_strong"), ExtResource("s_double_throw"), ExtResource("s_piercing_shriek"), ExtResource("s_lullaby"), ExtResource("s_leap_series"), ExtResource("s_reckless_blow"), ExtResource("s_aerial_strike"), ExtResource("s_shove"), ExtResource("s_onslaught"), ExtResource("s_hearty_meal"), ExtResource("s_revive_tonic"), ExtResource("s_instrument_smash")])
+skills = Array[ExtResource("5_skill_script")]([ExtResource("3_heal"), ExtResource("4_strong"), ExtResource("s_double_throw"), ExtResource("s_piercing_shriek"), ExtResource("s_lullaby"), ExtResource("s_leap_series"), ExtResource("s_reckless_blow"), ExtResource("s_aerial_strike"), ExtResource("s_shove"), ExtResource("s_onslaught"), ExtResource("s_hearty_meal"), ExtResource("s_revive_tonic"), ExtResource("s_final_strike")])
 default_weapon_id = "training_sword"
 default_shield_id = "wooden_shield"
 default_head_id = "cloth_cap"

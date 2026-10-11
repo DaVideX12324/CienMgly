@@ -4,11 +4,11 @@
 
 [resource]
 script = ExtResource("1_skill")
-skill_id = "instrument_smash"
-display_name = "Rozbicie Instrumentu"
-description = "Miażdżący cios instrumentem (ATK × 8)."
+skill_id = "final_strike"
+display_name = "Ostatni Zamach"
+description = "Cały impet w jednym ciosie (ATK × 8)."
 color = Color(1, 0.5, 0.2, 1)
 atk_coeff = 8.0
 sp_cost = 100
-required_weapon_type = "instrument"
+required_weapon_type = "sword"
 consumes_weapon = true
