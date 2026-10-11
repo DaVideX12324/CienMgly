@@ -56,6 +56,7 @@ var flag_overrides: Dictionary = {}
 var _enemy_pool: Array = []
 var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [min, max] poziomu wroga
+var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -399,6 +400,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	# Słownik frakcja -> tiery: osobne pule (spawny z "faction", SpawnPlanner); pierwsza frakcja = pula domyślna.
 	_faction_pools = {}
 	_enemy_levels = cfg.raw.get("enemy_levels", {}) if cfg != null else {}
+	_chest_tier = clampi(int(cfg.raw.get("chest_tier", 1)) if cfg != null else 1, 1, 4)
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -591,6 +593,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 		GenProgress.begin(&"props")
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
 		GenProgress.end(&"props")
+		_apply_chest_tier()
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 	_setup_height_veil(job.result)
 
@@ -603,6 +606,13 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+
+
+## Ustawia tier ("chest_tier" z JSON mapy) na skrzyniach wygenerowanych na tej mapie (spawn_entities i generator obiektów).
+func _apply_chest_tier() -> void:
+	for node in get_tree().get_nodes_in_group("chests"):
+		if is_ancestor_of(node) and "tier" in node:
+			node.set("tier", _chest_tier)
 
 
 ## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.
