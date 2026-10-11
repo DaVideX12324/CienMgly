@@ -908,7 +908,7 @@ func _on_mouse_row_hover(role: String, row: Control) -> void:
 			if _mode != "equip_slots":
 				return
 			var row_index: int = _equip_slot_rows.find(row)
-			if row_index >= 0:
+			if row_index >= 0 and row_index != _equip_slot_index:
 				_equip_slot_index = row_index
 				_refresh_equipment_slot_rows()
 				_rebuild_equipment_item_rows()
@@ -1483,7 +1483,7 @@ func _get_equipped_item_name(item_id: String) -> String:
 func _get_equipment_delta_text(entry: Dictionary) -> String:
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
 	var equipment: Dictionary = member.get("equipment", {})
-	var current_item_id: String = str(equipment.get(_selected_slot_name, ""))
+	var current_item_id: String = str(equipment.get(_get_equipment_preview_slot_name(), ""))
 	var parts: Array[String] = []
 	for stat in ["atk", "def", "mat", "mdf"]:
 		var delta: int = int(entry.get(stat + "_bonus", 0)) - _get_item_stat(current_item_id, stat + "_bonus")
