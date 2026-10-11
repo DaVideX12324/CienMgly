@@ -763,7 +763,7 @@ func _show_equipment_panel() -> void:
 	_show_panel("equipment")
 	context_title_label.text = "Ekwipunek"
 	var member: Dictionary = _get_current_party_member()
-	_populate_actor_header(equipment_actor_header, member, false)
+	_populate_actor_header(equipment_actor_header, member, true)
 	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
 	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
 	var mat: int = _ps.get_member_total_mat(_selected_member_index) if _ps and _ps.has_method("get_member_total_mat") else 0
