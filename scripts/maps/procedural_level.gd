@@ -329,6 +329,25 @@ func _exit_tree() -> void:
 		GenProgress.stop()
 
 
+## Azyl przy punkcie pojawienia się gracza (QuizRpgSafeZone, tworzy level_manager): pokój z tym punktem,
+## przycięty do ±SAFE_ZONE_HALF_CELLS kratek (pokój wyjścia z bossem nie staje się w całości azylem przy
+## powrocie z następnej mapy). Poza pokojem — sam kwadrat. Współrzędne globalne; pusty Rect2 = brak danych.
+const SAFE_ZONE_HALF_CELLS := SpawnPlanner.START_SAFE_HALF
+const CELL_PX := 16
+
+
+func start_safe_zone_rect(spawn_global: Vector2) -> Rect2:
+	if last_result == null:
+		return Rect2()
+	var cell := Vector2i((to_local(spawn_global) / CELL_PX).floor())
+	var area := Rect2i(cell - Vector2i.ONE * SAFE_ZONE_HALF_CELLS, Vector2i.ONE * (SAFE_ZONE_HALF_CELLS * 2 + 1))
+	for room: Rect2i in last_result.rooms:
+		if room.has_point(cell):
+			area = area.intersection(room)
+			break
+	return Rect2(to_global(Vector2(area.position * CELL_PX)), Vector2(area.size * CELL_PX))
+
+
 ## Klucz mapy (loading_screen_key albo biom z typu poziomu) — ekran ładowania i tło walki.
 func get_map_key() -> String:
 	return loading_screen_key if not loading_screen_key.is_empty() else str(LOADING_SCREEN_KEYS.get(level_type, ""))

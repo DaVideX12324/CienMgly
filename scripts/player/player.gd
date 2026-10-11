@@ -49,6 +49,8 @@ var _is_moving: bool = false
 const ENCOUNTER_IMMUNITY_SEC := 5.0
 const IMMUNITY_BLINK_HZ := 8.0
 var _immunity_left: float = 0.0
+## Ochrona po wejściu na mapę / wczytaniu: wrogowie w ogóle nie widzą gracza (nie gonią), nie tylko nie zaczynają walki.
+var _ignored_left: float = 0.0
 
 
 func _ready() -> void:
@@ -281,8 +283,15 @@ func set_can_move(value: bool) -> void:
 
 
 ## Po wygranej walce: przez `seconds` wrogowie nie zaczynają walki (EnemyBase.start_combat), gracz miga.
-func grant_encounter_immunity(seconds: float = ENCOUNTER_IMMUNITY_SEC) -> void:
+## ignored_by_enemies (wejście na mapę / wczytanie): dodatkowo wrogowie gracza nie widzą — nie gonią go.
+func grant_encounter_immunity(seconds: float = ENCOUNTER_IMMUNITY_SEC, ignored_by_enemies: bool = false) -> void:
 	_immunity_left = maxf(_immunity_left, seconds)
+	if ignored_by_enemies:
+		_ignored_left = maxf(_ignored_left, seconds)
+
+
+func is_ignored_by_enemies() -> bool:
+	return _ignored_left > 0.0
 
 
 func is_encounter_immune() -> bool:
@@ -293,6 +302,7 @@ func is_encounter_immune() -> bool:
 ## walkę — wejście do obszaru interakcji już było, więc body_entered się nie powtórzy.
 func _tick_immunity(delta: float) -> void:
 	_immunity_left -= delta
+	_ignored_left = maxf(_ignored_left - delta, 0.0)
 	if _immunity_left > 0.0:
 		modulate.a = 0.4 if fmod(_immunity_left * IMMUNITY_BLINK_HZ, 1.0) < 0.5 else 1.0
 		return

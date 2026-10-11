@@ -13,6 +13,11 @@ const LOCATION_NAMES := {
 	"tutorial_area": "Starożytne Ruiny",
 }
 
+## Ochrona startu (decyzja usera 2026-10-11): po wejściu na mapę / wczytaniu wrogowie przez START_GRACE_SEC gracza
+## ignorują, a przy punkcie pojawienia się stoi azyl (QuizRpgSafeZone) — chyba że poziom ma już własny.
+const START_GRACE_SEC := 5.0
+const DEFAULT_SAFE_ZONE_PX := Vector2(192, 192)  # 12×12 kratek (mapy ręczne bez własnego azylu)
+
 var current_level: Node = null
 var current_level_path: String = ""
 var current_spawn_name: String = DEFAULT_SPAWN_NAME
@@ -81,7 +86,8 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		await current_level.generation_finished
 	if is_instance_valid(player):
 		player.process_mode = player_mode
-	_place_player_at_spawn(spawn_name)
+	var spawn_pos := _place_player_at_spawn(spawn_name)
+	_setup_start_safety(spawn_pos)
 	_play_level_music(level_path, current_level)
 	_close_loading_screen()
 
@@ -154,13 +160,39 @@ func _play_level_music(level_path: String, level_node: Node) -> void:
 	audio_service.call("play_music", track)
 
 
-func _place_player_at_spawn(spawn_name: String) -> void:
+func _place_player_at_spawn(spawn_name: String) -> Vector2:
 	var spawn_node := _pick_spawn_marker(current_level, spawn_name)
 	var spawn_pos := spawn_node.global_position if spawn_node else Vector2.ZERO
 	var player := _get_player()
 	if player:
 		player.global_position = spawn_pos
 	set_spawn.emit(spawn_pos)
+	return spawn_pos
+
+
+## Azyl przy punkcie pojawienia się (ProceduralLevel: pokój z tym punktem, przycięty) i chwila ochrony gracza.
+func _setup_start_safety(spawn_pos: Vector2) -> void:
+	if not is_instance_valid(current_level):
+		return
+	var has_zone := false
+	for z in get_tree().get_nodes_in_group(QuizRpgSafeZone.GROUP):
+		if current_level.is_ancestor_of(z):
+			has_zone = true
+			break
+	if not has_zone:
+		var rect := Rect2()
+		if current_level.has_method("start_safe_zone_rect"):
+			rect = current_level.start_safe_zone_rect(spawn_pos)
+		if not rect.has_area():
+			rect = Rect2(spawn_pos - DEFAULT_SAFE_ZONE_PX * 0.5, DEFAULT_SAFE_ZONE_PX)
+		var zone := QuizRpgSafeZone.new()
+		zone.name = "StartSafeZone"
+		zone.size = rect.size
+		current_level.add_child(zone)
+		zone.global_position = rect.get_center()
+	var player := _get_player()
+	if player and player.has_method("grant_encounter_immunity"):
+		player.grant_encounter_immunity(START_GRACE_SEC, true)
 
 
 func _pick_spawn_marker(level: Node, spawn_name: String) -> Node2D:

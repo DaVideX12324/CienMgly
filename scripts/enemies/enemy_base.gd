@@ -327,6 +327,10 @@ func _direction_name_from_velocity(vel: Vector2) -> String:
 func _has_line_of_sight_to_player() -> bool:
 	if not is_instance_valid(player_ref):
 		return false
+	if player_ref.has_method("is_ignored_by_enemies") and player_ref.is_ignored_by_enemies():
+		return false  # chwila ochrony po wejściu na mapę / wczytaniu
+	if QuizRpgSafeZone.contains(get_tree(), player_ref.global_position):
+		return false  # azyl przy starcie — wróg nie goni
 	var distance := global_position.distance_to(player_ref.global_position)
 	if distance > detection_radius:
 		return false
@@ -493,13 +497,16 @@ func _set_new_wander_target(bias_normal: Vector2 = Vector2.ZERO) -> void:
 		if bias_normal != Vector2.ZERO:
 			random_dir = (random_dir + bias_normal * 1.8).normalized()
 		var cand := global_position + random_dir * randf_range(30.0, wander_radius)
+		if QuizRpgSafeZone.contains(get_tree(), cand):
+			continue  # azyl przy starcie — wrogowie do niego nie wchodzą
 		if map.is_valid():
 			var path := NavigationServer2D.map_get_path(map, global_position, cand, true)
 			if not path.is_empty():
 				var length := 0.0
 				for k in range(path.size() - 1):
 					length += path[k].distance_to(path[k + 1])
-				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0:
+				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0 \
+						and not QuizRpgSafeZone.contains(get_tree(), path[path.size() - 1]):
 					wander_target = path[path.size() - 1]
 					return
 				continue
@@ -670,6 +677,8 @@ func interact(player: Node2D) -> void:
 func engage_from_player_interaction(player: Node2D) -> void:
 	if not is_instance_valid(player) or defeated or _are_enemies_disabled():
 		return
+	if QuizRpgSafeZone.contains(get_tree(), player.global_position):
+		return  # azyl przy starcie: wróg nie zaczyna walki (gracz może sam zaczepić — interact)
 	player_ref = player
 	last_seen_player_pos = player.global_position
 	memory_timer = memory_duration
