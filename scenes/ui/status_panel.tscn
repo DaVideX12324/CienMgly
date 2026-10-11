@@ -151,7 +151,7 @@ text = "50/100"
 
 [node name="StatusStatsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400012]
 layout_mode = 2
-theme_type_variation = &"QuizFrame"
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 script = ExtResource("frame_script")
 
 [node name="StatsRow" type="HBoxContainer" parent="StatusStatsVBoxFrame" unique_id=1771400111]
