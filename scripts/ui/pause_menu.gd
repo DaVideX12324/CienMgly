@@ -1184,7 +1184,7 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 		row.visible = slot_name != ""
 		if slot_name != "":
 			var slot_label: String = _ps.get_equipment_label(slot_name) if _ps and _ps.has_method("get_equipment_label") else slot_name
-			_set_simple_row(row, slot_label, _get_equipped_item_name(str(equipment.get(slot_name, ""))))
+			_set_simple_row(row, slot_label, _get_equipped_item_name(str(equipment.get(slot_name, ""))), false, true, _get_item_icon(str(equipment.get(slot_name, ""))))
 
 
 func _rebuild_confirm_rows() -> void:

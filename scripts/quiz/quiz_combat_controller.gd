@@ -929,7 +929,7 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 			cost = "×%s" % str(entry.get("display_count", count))
 			kind = row.Kind.COUNT
 			disabled = count <= 0 or not bool(entry.get("usable_in_combat", true))
-		row.setup(str(entry.get("name", "---")), cost, kind, disabled)
+		row.setup(str(entry.get("name", "---")), cost, kind, disabled, entry.get("icon") as Texture2D)
 		var row_index: int = _list_menu_rows.size()
 		row.pressed.connect(func(): _on_list_row_pressed(row_index))
 		row.mouse_entered.connect(func(): _on_list_row_hover(row_index))
