@@ -401,8 +401,9 @@ static func spawn_entities(
 
 	# 5. Wejscie / Wyjscie - trigger zony: wyjście -> następny poziom, wejście -> powrót do poprzedniego;
 	# przy wyjściu marker FromNext (tu trafia gracz wracający z następnego poziomu).
-	_setup_portal_trigger(target_node, LevelPortal.NEXT_AREA, result.exit_pos, cell_size)
-	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size)
+	# Schody we wnęce (alcove_stairs): obszar na całym najwyższym stopniu (rząd przy voidzie), nie tylko na środku.
+	_setup_portal_trigger(target_node, LevelPortal.NEXT_AREA, result.exit_pos, cell_size, _portal_top_row(result, false, result.exit_pos))
+	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size, _portal_top_row(result, true, result.entrance_pos))
 	if result.exit_pos != Vector2i.ZERO:
 		LevelPortal.place_from_next_marker(target_node, _cell_center(arrival_cell(result, result.exit_pos), cell_size))
 	# 6. Drabiny wejścia / wyjścia (portal_style "ladder") — scena na kratce przejścia, wysokość lica z generatora.
@@ -475,7 +476,8 @@ static func _cell_center(cell: Vector2i, cell_size: int) -> Vector2:
 	return Vector2(cell.x * cell_size + cell_size * 0.5, cell.y * cell_size + cell_size * 0.5)
 
 
-static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: Vector2i, cell_size: int) -> void:
+## Obszar przejścia na inny poziom: `cells` (kratki, np. najwyższy stopień schodów) albo kwadrat 1,5 kratki na `cell`.
+static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: Vector2i, cell_size: int, cells: Rect2i = Rect2i()) -> void:
 	if cell == Vector2i.ZERO:
 		return
 	var area := target_node.get_node_or_null(area_name) as Area2D
@@ -485,12 +487,40 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 		area.collision_layer = 0
 		area.collision_mask = 1
 		var col := CollisionShape2D.new()
-		var rect := RectangleShape2D.new()
-		rect.size = Vector2(cell_size * 1.5, cell_size * 1.5)
-		col.shape = rect
+		col.shape = RectangleShape2D.new()
 		area.add_child(col)
 		target_node.add_child(area)
-	area.position = _cell_center(cell, cell_size)
+	var shape: RectangleShape2D = null
+	for c in area.get_children():
+		if c is CollisionShape2D and (c as CollisionShape2D).shape is RectangleShape2D:
+			shape = (c as CollisionShape2D).shape
+			break
+	if shape == null:
+		return
+	if cells.has_area():
+		shape.size = Vector2(cells.size * cell_size)
+		area.position = Vector2(cells.position * cell_size) + shape.size * 0.5
+	else:
+		shape.size = Vector2(cell_size * 1.5, cell_size * 1.5)
+		area.position = _cell_center(cell, cell_size)
+
+
+## Najwyższy stopień schodów wnęki (portal_stairs z "entrance"): rząd / kolumna przy krawędzi mapy (dir), cały na
+## szerokość schodów. Pusty Rect2i, gdy brak schodów albo rząd nie zawiera punktu przejścia `cell`.
+static func _portal_top_row(result: GenerationResult, entrance: bool, cell: Vector2i) -> Rect2i:
+	for ps in result.portal_stairs:
+		if not ps.has("entrance") or bool(ps["entrance"]) != entrance:
+			continue
+		var r: Rect2i = ps["rect"]
+		var row := Rect2i()
+		match String(ps.get("dir", "")):
+			"N": row = Rect2i(r.position, Vector2i(r.size.x, 1))
+			"S": row = Rect2i(Vector2i(r.position.x, r.end.y - 1), Vector2i(r.size.x, 1))
+			"W": row = Rect2i(r.position, Vector2i(1, r.size.y))
+			"E": row = Rect2i(Vector2i(r.end.x - 1, r.position.y), Vector2i(1, r.size.y))
+		if row.has_point(cell):
+			return row
+	return Rect2i()
 
 
 # --- Automatyczne tworzenie NavigationRegion2D ---
