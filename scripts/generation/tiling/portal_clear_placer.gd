@@ -22,8 +22,15 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
 
 	var walls: Dictionary = placement_plan.get_placements(&"Walls")
-	# Koniec schodów portalu przy krawędzi mapy (alcove_stairs): void bez ściany, jak wyjście w tutorialu.
+	# Koniec schodów portalu przy krawędzi mapy (alcove_stairs): void bez ściany, jak wyjście w tutorialu. Także ściany
+	# ZA schodami (decyzja usera 2026-10-11): kolumna / rząd voidu i 2 warstwy ochronne, od lica nad schodami do rzędu pod
+	# nimi — bez kawałków lica i krawędzi ściany za ostatnim stopniem (tylko na kratkach niechodliwych).
+	var void_cells: Dictionary = {}
 	for pos in ctx.portal_void:
+		void_cells[pos] = true
+	for pos in behind_stairs_cells(ctx):
+		void_cells[pos] = true
+	for pos in void_cells:
 		for layer in [&"Walls", &"Floor", &"FloorDecor"]:
 			var vp := TilePlacement.new()
 			vp.pos = pos
@@ -72,3 +79,25 @@ static func plan(ctx: GenerationContext, placement_plan: TilePlacementPlan) -> v
 		placement.category = &"PORTAL_CLEAR"
 		PlacementPriority.assign(placement, table)
 		placement_plan.queue(placement)
+
+
+## Kratki ścian za schodami portalu (za ostatnim stopniem w stronę voidu): E / W — kolumny voidu + 2 ochronne, wiersze
+## od BEHIND_UP nad schodami do rzędu pod nimi; N / S — rzędy voidu + 2, kolumny schodów ± 1. Tylko niechodliwe.
+const BEHIND_UP := 4
+static func behind_stairs_cells(ctx: GenerationContext) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for ps in ctx.portal_stairs:
+		var r: Rect2i = ps.get("rect", Rect2i())
+		var box := Rect2i()
+		match String(ps.get("dir", "")):
+			"E": box = Rect2i(r.end.x, r.position.y - BEHIND_UP, 3, r.size.y + BEHIND_UP + 1)
+			"W": box = Rect2i(r.position.x - 3, r.position.y - BEHIND_UP, 3, r.size.y + BEHIND_UP + 1)
+			"N": box = Rect2i(r.position.x - 1, r.position.y - 3, r.size.x + 2, 3)
+			"S": box = Rect2i(r.position.x - 1, r.end.y, r.size.x + 2, 3)
+			_: continue
+		for y in range(box.position.y, box.end.y):
+			for x in range(box.position.x, box.end.x):
+				var c := Vector2i(x, y)
+				if x >= 0 and y >= 0 and x < ctx.width and y < ctx.height and not GridUtils.is_walkable(ctx.grid, c):
+					out.append(c)
+	return out

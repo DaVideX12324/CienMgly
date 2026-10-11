@@ -13,6 +13,8 @@ const SHADE_LAYER := &"PortalShade"
 ## Alternatywy kafla gradientu w caves.tres (ciemna strona kafla w arkuszu = E) — domyślne, gdy config nie poda
 ## portal_stairs_shade.alternatives: 1 flip_h (W), 2 transpose (S), 3 transpose + flip_v (N).
 const SHADE_ALTERNATIVES := {"E": 0, "W": 1, "S": 2, "N": 3}
+## Ile kratek lica nad ostatnim stopniem schodów E / W dostaje gradient.
+const SHADE_UP := 4
 
 
 static func plan(ctx: GenerationContext, tiles: TilePlacementPlan) -> void:
@@ -43,6 +45,12 @@ static func plan(ctx: GenerationContext, tiles: TilePlacementPlan) -> void:
 			var one: Array[Rect2i] = [r]
 			_plan_rects(ctx, tiles, one, mc, PORTAL_LAYER, void_side)
 		_plan_shade(ctx, tiles, r, void_side)
+	# Za schodami (PortalClearPlacer.behind_stairs_cells — kafel voidu na Walls) bez krawędzi płaskowyżu: PlateauPlacer
+	# planuje wcześniej i rysował rant na ścianach za ostatnim stopniem.
+	var plat: Dictionary = tiles.by_layer.get(LAYER, {})
+	if not plat.is_empty():
+		for c in PortalClearPlacer.behind_stairs_cells(ctx):
+			plat.erase(c)
 
 
 ## Schody boczne E / W. Z "middle": [kol, wiersz] (kolumna środków w arkuszu, tyle wierszy co moduł) — w poziomie
@@ -143,6 +151,21 @@ static func _plan_shade(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rec
 		"E":
 			for y in range(r.position.y, r.end.y):
 				cells.append(Vector2i(r.end.x - 1, y))
+	# Gradient wchodzi też na ściany (decyzja usera): E / W — lico nad ostatnim stopniem (SHADE_UP kratek w górę),
+	# N / S — po kratce ściany w bok od ostatniego rzędu. Tylko kratki niechodliwe (ściana).
+	var extra: Array[Vector2i] = []
+	match void_side:
+		"E", "W":
+			var vx := r.end.x - 1 if void_side == "E" else r.position.x
+			for k in range(1, SHADE_UP + 1):
+				extra.append(Vector2i(vx, r.position.y - k))
+		"N", "S":
+			var vy := r.position.y if void_side == "N" else r.end.y - 1
+			extra.append(Vector2i(r.position.x - 1, vy))
+			extra.append(Vector2i(r.end.x, vy))
+	for c in extra:
+		if not GridUtils.is_walkable(ctx.grid, c):
+			cells.append(c)
 	var table: Dictionary = ctx.priority_table
 	if table.is_empty():
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
