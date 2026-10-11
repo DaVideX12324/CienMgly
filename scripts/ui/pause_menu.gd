@@ -775,7 +775,7 @@ func _show_status_panel() -> void:
 	_show_panel("status")
 	context_title_label.text = "Status"
 	var member: Dictionary = _get_current_party_member()
-	_populate_actor_header(status_actor_header, member, false)
+	_populate_actor_header(status_actor_header, member, true)
 	_rebuild_status_panel(member)
 
 

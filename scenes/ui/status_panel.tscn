@@ -92,11 +92,13 @@ text = "50/100"
 layout_mode = 2
 
 [node name="StatusBarsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400011]
+visible = false
 layout_mode = 2
 theme_type_variation = &"QuizFrame"
 script = ExtResource("frame_script")
 
 [node name="StatusBarsVBox" type="VBoxContainer" parent="StatusBarsVBoxFrame" unique_id=911025984]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 6
 
