@@ -2,16 +2,24 @@
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/heavy_strike.tres" id="s_heavy_strike"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/decay_breath.tres" id="s_decay_breath"]
+
 [resource]
 script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_heavy_strike"), ExtResource("s_decay_breath")])
 enemy_name = "Ciężki Grzyb"
 quiz_id = "ogolne"
-max_hp = 100
-attack = 26
-defense = 30
-magic_attack = 26
-magic_defense = 30
-xp_reward = 400
+max_hp = 900
+attack = 90
+defense = 90
+magic_attack = 90
+magic_defense = 90
+xp_reward = 800
+encounter_tier = 3
+min_encounter_size = 1
+max_encounter_size = 1
 patrol_speed = 40.0
 detection_radius = 100.0
 metadata/_custom_type_script = "uid://c2e6oyqepnkc4"

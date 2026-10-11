@@ -20,7 +20,7 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 	# Boss w pokoju wyjściowym
 	result.enemy_spawns.append({
 		"pos": exit_room.get_center() + Vector2i(0, -2),
-		"tier": 3
+		"tier": 4  # boss końcowy; tier 3 = miniboss (pula "enemies" mapy: wpis o indeksie 2, spawny z tier3_chance)
 	})
 
 	# Skrzynie stawia generator obiektów, gdy jego katalog je ma (INTERACTIVE ze sceną "chest").

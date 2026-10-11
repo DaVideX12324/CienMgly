@@ -203,10 +203,8 @@ func _ensure_default_resources() -> void:
 		if level_type == LevelType.CAVE_DUNGEON:
 			enemy_paths = [
 				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_immature.tscn"),
-				[
-					QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
-					QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
-				],
+				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
+				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
 				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_old.tscn")
 			]
 		elif level_type == LevelType.FOREST_OVERWORLD:
