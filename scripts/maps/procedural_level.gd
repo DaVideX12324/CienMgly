@@ -87,6 +87,9 @@ var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies"
 @export var loading_screen_key: String = ""
 ## Nazwa lokacji na ekranie ładowania. Puste = nazwa z typu poziomu (LOCATION_NAMES).
 @export var location_name: String = ""
+## Tło ekranu ładowania przekazane przez level_manager przed add_child — to samo, co na jego ekranie sprzed
+## generowania (inaczej drugie losowanie podmieniało obraz w chwili ruszenia paska). null = losowe z folderu mapy.
+var loading_background: Texture2D = null
 
 var last_result: RefCounted = null
 var is_generating: bool = false
@@ -254,7 +257,10 @@ func generate_level_async(seed_val: int = 0) -> void:
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
 	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")
-	overlay.set_background_for(get_map_key())
+	if loading_background != null:
+		overlay.background = loading_background
+	else:
+		overlay.set_background_for(get_map_key())
 	add_child(overlay)
 	overlay.track(progress)
 	GenProgress.start(progress)

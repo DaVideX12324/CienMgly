@@ -65,6 +65,9 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		return
 
 	current_level = packed.instantiate()
+	# ProceduralLevel zastępuje ten ekran własnym (z postępem generowania) — niech pokaże to samo tło.
+	if is_instance_valid(_loading_screen) and _loading_screen.background != null and "loading_background" in current_level:
+		current_level.loading_background = _loading_screen.background
 	add_child(current_level)
 	current_level_path = level_path
 	current_spawn_name = spawn_name
