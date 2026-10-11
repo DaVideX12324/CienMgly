@@ -88,9 +88,6 @@ custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "50/100"
 
-[node name="StatusInfoLabel" type="Label" parent="." unique_id=1018390951]
-layout_mode = 2
-
 [node name="StatusBarsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400011]
 visible = false
 layout_mode = 2
@@ -157,147 +154,156 @@ layout_mode = 2
 theme_type_variation = &"QuizFrame"
 script = ExtResource("frame_script")
 
-[node name="StatusStatsVBox" type="GridContainer" parent="StatusStatsVBoxFrame" unique_id=1752907442]
+[node name="StatsRow" type="HBoxContainer" parent="StatusStatsVBoxFrame" unique_id=1771400111]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="StatusStatsVBox" type="GridContainer" parent="StatusStatsVBoxFrame/StatsRow" unique_id=1752907442]
 layout_mode = 2
 columns = 4
 theme_override_constants/h_separation = 24
 theme_override_constants/v_separation = 6
 
-[node name="StatusStatRow0" type="PanelContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox" unique_id=1654304888]
+[node name="StatusStatRow0" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1654304888]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow0" unique_id=489419686]
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0" unique_id=489419686]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow0/Control" unique_id=408945014]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Control" unique_id=408945014]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow0" unique_id=1486605893]
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0" unique_id=1486605893]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow0/Margin" unique_id=1482586924]
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Margin" unique_id=1482586924]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1674424260]
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1674424260]
 layout_mode = 2
 custom_minimum_size = Vector2(70, 0)
 
-[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1585974651]
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1585974651]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="StatusStatRow1" type="PanelContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox" unique_id=186821712]
+[node name="StatusStatRow1" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=186821712]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow1" unique_id=32636424]
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1" unique_id=32636424]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow1/Control" unique_id=579108228]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Control" unique_id=579108228]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow1" unique_id=907109541]
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1" unique_id=907109541]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow1/Margin" unique_id=2043758035]
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Margin" unique_id=2043758035]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1814879311]
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1814879311]
 layout_mode = 2
 custom_minimum_size = Vector2(70, 0)
 
-[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1729377861]
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1729377861]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="StatusStatRow2" type="PanelContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox" unique_id=1771200401]
+[node name="StatusStatRow2" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1771200401]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow2" unique_id=1771200402]
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2" unique_id=1771200402]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow2/Control" unique_id=1771200403]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Control" unique_id=1771200403]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow2" unique_id=1771200404]
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2" unique_id=1771200404]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow2/Margin" unique_id=1771200405]
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Margin" unique_id=1771200405]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200406]
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200406]
 layout_mode = 2
 custom_minimum_size = Vector2(70, 0)
 
-[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200407]
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200407]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="StatusStatRow3" type="PanelContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox" unique_id=1771200408]
+[node name="StatusStatRow3" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1771200408]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow3" unique_id=1771200409]
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3" unique_id=1771200409]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow3/Control" unique_id=1771200410]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Control" unique_id=1771200410]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow3" unique_id=1771200411]
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3" unique_id=1771200411]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow3/Margin" unique_id=1771200412]
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin" unique_id=1771200412]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200413]
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200413]
 layout_mode = 2
 custom_minimum_size = Vector2(70, 0)
 
-[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200414]
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200414]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="StatusInfoLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow" unique_id=1018390951]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 2
 
 [node name="StatusEquipVBoxFrame" type="PanelContainer" parent="." unique_id=1771400013]
 layout_mode = 2
