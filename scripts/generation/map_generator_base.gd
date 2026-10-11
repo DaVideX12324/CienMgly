@@ -506,8 +506,9 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 		area.position = _cell_center(cell, cell_size)
 
 
-## Najwyższy stopień schodów wnęki (portal_stairs z "entrance"): rząd / kolumna przy krawędzi mapy (dir), cały na
-## szerokość schodów. Pusty Rect2i, gdy brak schodów albo rząd nie zawiera punktu przejścia `cell`.
+## Kratki za gradientem na najwyższym stopniu schodów wnęki (portal_stairs z "entrance"): rząd / kolumna voidu tuż za
+## stopniem przy krawędzi mapy (dir), cały na szerokość schodów. Pusty Rect2i, gdy brak schodów albo najwyższy stopień
+## nie zawiera punktu przejścia `cell`.
 static func _portal_top_row(result: GenerationResult, entrance: bool, cell: Vector2i) -> Rect2i:
 	for ps in result.portal_stairs:
 		if not ps.has("entrance") or bool(ps["entrance"]) != entrance:
@@ -520,6 +521,7 @@ static func _portal_top_row(result: GenerationResult, entrance: bool, cell: Vect
 			"W": row = Rect2i(r.position, Vector2i(1, r.size.y))
 			"E": row = Rect2i(Vector2i(r.end.x - 1, r.position.y), Vector2i(1, r.size.y))
 		if row.has_point(cell):
+			row.position += {"N": Vector2i(0, -1), "S": Vector2i(0, 1), "W": Vector2i(-1, 0), "E": Vector2i(1, 0)}[String(ps["dir"])]
 			return row
 	return Rect2i()
 
