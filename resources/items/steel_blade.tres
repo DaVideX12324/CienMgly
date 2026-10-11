@@ -14,5 +14,5 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "weapon"
-weapon_type = "sword"
+weapon_type = "axe"
 atk_bonus = 40

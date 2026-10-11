@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "woodcutter_axe"
+display_name = "Topór Drwala"
+description = "Ciężki topór o szerokim ostrzu."
+category = "hand"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "weapon"
+weapon_type = "axe"
+atk_bonus = 10
