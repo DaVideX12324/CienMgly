@@ -15,3 +15,4 @@ status_chance = 1.0
 sp_cost = 30
 tp_cost = 20
 learn_level = 20
+required_weapon_type = "instrument"
