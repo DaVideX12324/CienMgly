@@ -61,7 +61,10 @@ func _refresh_selection() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Ekran zabiera całe wejście (menu pauzy i inne nasłuchujące _input nie reagują).
+	# Mysz idzie dalej do GUI (przyciski: najechanie / klik); to, co pod ekranem, zasłania pełnoekranowy Root
+	# (mouse_filter STOP). Resztę wejścia ekran zabiera (menu pauzy i inne nasłuchujące _input nie reagują).
+	if event is InputEventMouse:
+		return
 	get_viewport().set_input_as_handled()
 	if not _ready_for_input or _leaving:
 		return
