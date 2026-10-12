@@ -31,6 +31,8 @@ var _variant_ratio: Dictionary = {}  # stosunek statystyk wariantu do bazy tieru
 ## Opis dla Skanu (QuizRpgEnemyData.scan_text); pusty = statystyki.
 @export_multiline var scan_text: String = ""
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
+## Złoto za pokonanie (QuizRpgEnemyGold z poziomu i tieru; poziom 0 = jak poziom 1); liczone przy ustawianiu poziomu.
+var gold_reward: int = 0
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
@@ -200,6 +202,7 @@ func _apply_enemy_data() -> void:
 		encounter_tier = clampi(encounter_tier, 1, 5)
 		_ready_applied = true
 		_apply_spawn_level()
+		_update_gold_reward()
 		return
 	enemy_name = enemy_data.enemy_name
 	quiz_id = enemy_data.quiz_id
@@ -228,6 +231,7 @@ func _apply_enemy_data() -> void:
 		xp_reward = QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss)
 	_ready_applied = true
 	_apply_spawn_level()
+	_update_gold_reward()
 
 
 ## Poziom z mapy (spawn_entities, config "enemy_levels"): nagroda XP i statystyki z poziomu.
@@ -247,6 +251,13 @@ func _apply_spawn_level() -> void:
 	enemy_level = _spawn_level
 	xp_reward = maxi(roundi(QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss) * _spawn_xp_scale), 1)
 	_apply_level_stats()
+	_update_gold_reward()
+
+
+## Złoto z poziomu wroga (wróg bez poziomu, np. tutorial, liczony jak poziom 1); skala rozmiaru mapy jak przy XP.
+func _update_gold_reward() -> void:
+	var scale := _spawn_xp_scale if _spawn_level > 0 else 1.0
+	gold_reward = maxi(roundi(QuizRpgEnemyGold.kill_gold(maxi(enemy_level, 1), encounter_tier, is_boss) * scale), 1)
 
 
 ## Statystyki z poziomu (QuizRpgEnemyStats): baza tieru dla poziomu × stosunek wariantu (z danych sceny) do bazy tieru.

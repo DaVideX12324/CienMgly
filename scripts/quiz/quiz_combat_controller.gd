@@ -1851,10 +1851,14 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		var on_learned := func(_i: int, skill_name: String): learned.append(skill_name)
 		if _ps and _ps.has_signal("skill_learned"):
 			_ps.skill_learned.connect(on_learned)
+		var total_gold := _total_gold_reward()
 		if _ps:
 			_ps.add_xp(total_xp_reward)
+			_ps.add_gold(total_gold)
 		var lines: Array[String] = ["%s i drużyna wygrywają walkę!" % (_ps.player_name if _ps else "Bohater")]
 		lines.append("Zdobyto %d EXP!" % total_xp_reward)
+		if total_gold > 0:
+			lines.append("Zdobyto %d złota!" % total_gold)
 		if _ps and _ps.level > lvl_before:
 			lines.append("%s osiąga poziom %d!" % [_ps.player_name, _ps.level])
 		for skill_name in learned:
@@ -3356,7 +3360,17 @@ func _log_combat_end(player_won: bool, fled: bool) -> void:
 		names.append("%s%s t%d" % [str(u.get("name", "?")), " lv%d" % lv if lv > 0 else "", int(u.get("tier", 1))])
 	var outcome := "wygrana" if player_won else ("ucieczka" if fled else "porazka")
 	var xp := (int(enemy.xp_reward) + _bonus_xp_reward) if player_won else 0
-	QuizRpgProgressLog.combat_end(_ps, outcome, ", ".join(names), _is_boss_encounter(), xp, turn_number, float(Time.get_ticks_msec() - _combat_started_msec) / 1000.0)
+	var gold := _total_gold_reward() if player_won else 0
+	QuizRpgProgressLog.combat_end(_ps, outcome, ", ".join(names), _is_boss_encounter(), xp, turn_number, float(Time.get_ticks_msec() - _combat_started_msec) / 1000.0, gold)
+
+
+## Złoto z pokonanych jednostek walki: każda liczy się jak jej wróg-źródło (grupa ze świata) albo główny wróg (kopie).
+func _total_gold_reward() -> int:
+	var total := 0
+	for u in _enemy_units:
+		var src: Variant = u.get("source", enemy)
+		total += int(src.gold_reward) if is_instance_valid(src) and src.get("gold_reward") != null else int(enemy.gold_reward)
+	return total
 
 
 ## Klucz uniwersalny z pokonanych wrogów: każdy wróg osobno, szansa rośnie z tierem (boss = tier 4). Wytrychy wypadają
