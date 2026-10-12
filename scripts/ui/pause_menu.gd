@@ -171,6 +171,8 @@ func _ready() -> void:
 			_ps.hp_changed.connect(_on_player_hp_changed)
 		if _ps.has_signal("points_changed"):
 			_ps.points_changed.connect(func(_p: int) -> void: _refresh_score())
+		if _ps.has_signal("gold_changed"):
+			_ps.gold_changed.connect(func(_g: int) -> void: _refresh_score())
 
 
 func _cache_panel_nodes() -> void:
@@ -1573,7 +1575,8 @@ func _refresh_score() -> void:
 	score_label.visible = _ps != null
 	if _ps:
 		score_label.text = "Punkty %d
-Seria x%d" % [int(_ps.points), int(_ps.streak)]
+Seria x%d
+Złoto %d" % [int(_ps.points), int(_ps.streak), int(_ps.gold)]
 
 
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:

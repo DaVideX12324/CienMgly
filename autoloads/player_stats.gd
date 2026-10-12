@@ -8,6 +8,7 @@ signal hp_changed(new_hp: int, max_hp: int)
 signal xp_changed(new_xp: int, xp_to_next: int)
 signal level_up(new_level: int)
 signal points_changed(new_points: int)
+signal gold_changed(new_gold: int)
 signal reward_earned(reward_name: String)
 signal inventory_changed()
 signal party_changed()
@@ -54,6 +55,8 @@ var xp: int                = 0
 var hp: int                = BASE_HP
 var max_hp: int            = BASE_HP
 var points: int            = 0
+## Złoto z walk (QuizRpgEnemyGold); wydatki: mikstury, sprzęt, ulepszenia (sklep po odblokowaniu miasta). docs/kontekst/ekwipunek_szkic.md
+var gold: int              = 0
 var streak: int            = 0
 var best_streak: int       = 0
 var total_correct: int     = 0
@@ -129,6 +132,22 @@ func add_xp(amount: int) -> void:
 func add_points(amount: int) -> void:
 	points += amount
 	points_changed.emit(points)
+
+
+func add_gold(amount: int) -> void:
+	if amount == 0:
+		return
+	gold = maxi(gold + amount, 0)
+	gold_changed.emit(gold)
+
+
+## Wydatek: false (bez zmian), gdy brakuje złota.
+func spend_gold(amount: int) -> bool:
+	if amount < 0 or amount > gold:
+		return false
+	gold -= amount
+	gold_changed.emit(gold)
+	return true
 
 
 func on_correct_answer() -> void:
@@ -604,7 +623,7 @@ func _check_rewards() -> void:
 func get_save_data() -> Dictionary:
 	return {
 		"player_name": player_name, "level": level, "xp": xp,
-		"hp": hp, "max_hp": max_hp, "points": points,
+		"hp": hp, "max_hp": max_hp, "points": points, "gold": gold,
 		"streak": streak, "best_streak": best_streak,
 		"total_correct": total_correct, "total_wrong": total_wrong,
 		"rewards": rewards.duplicate(), "rng_bonus": rng_bonus,
@@ -624,6 +643,7 @@ func load_save_data(data: Dictionary) -> void:
 	_recalculate_max_hp()
 	hp = clampi(roundi(float(hp) * float(max_hp) / float(saved_max)), 0, max_hp)
 	points        = data.get("points", 0)
+	gold          = maxi(int(data.get("gold", 0)), 0)
 	streak        = data.get("streak", 0)
 	best_streak   = data.get("best_streak", 0)
 	total_correct = data.get("total_correct", 0)
@@ -641,7 +661,7 @@ func load_save_data(data: Dictionary) -> void:
 func reset() -> void:
 	player_name = "Bohater" ; level = 1 ; xp = 0
 	_recalculate_max_hp()
-	hp = max_hp ; points = 0 ; streak = 0
+	hp = max_hp ; points = 0 ; gold = 0 ; streak = 0
 	best_streak = 0 ; total_correct = 0 ; total_wrong = 0
 	rewards.clear() ; rng_bonus = 0.0
 	inventory = [
