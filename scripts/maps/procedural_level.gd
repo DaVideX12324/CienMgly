@@ -56,6 +56,8 @@ var flag_overrides: Dictionary = {}
 var _enemy_pool: Array = []
 var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [min, max] poziomu wroga
+var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga -> [{item_id, chance, count}]
+var _chest_loot: Array = []  # companion-JSON "chest_loot": [{item_id, weight, count}] (skrzynie wygenerowane na mapie)
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
@@ -401,6 +403,8 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_faction_pools = {}
 	_enemy_levels = cfg.raw.get("enemy_levels", {}) if cfg != null else {}
 	_chest_tier = clampi(int(cfg.raw.get("chest_tier", 1)) if cfg != null else 1, 1, 4)
+	_enemy_loot = cfg.raw.get("enemy_loot", {}) if cfg != null else {}
+	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -594,6 +598,7 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
 		GenProgress.end(&"props")
 		_apply_chest_tier()
+		_apply_loot_tables()
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 	_setup_height_veil(job.result)
 
@@ -613,6 +618,20 @@ func _apply_chest_tier() -> void:
 	for node in get_tree().get_nodes_in_group("chests"):
 		if is_ancestor_of(node) and "tier" in node:
 			node.set("tier", _chest_tier)
+
+
+## Tabele łupu z JSON mapy ("enemy_loot" po tierze wroga, "chest_loot" dla skrzyń) na wrogach i skrzyniach wygenerowanych na tej mapie.
+func _apply_loot_tables() -> void:
+	if not _enemy_loot.is_empty():
+		for node in get_tree().get_nodes_in_group("enemies"):
+			if is_ancestor_of(node) and "loot_table" in node and "encounter_tier" in node:
+				var table: Variant = _enemy_loot.get(str(int(node.get("encounter_tier"))))
+				if table is Array:
+					node.set("loot_table", table)
+	if not _chest_loot.is_empty():
+		for node in get_tree().get_nodes_in_group("chests"):
+			if is_ancestor_of(node) and "loot_table" in node:
+				node.set("loot_table", _chest_loot)
 
 
 ## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.

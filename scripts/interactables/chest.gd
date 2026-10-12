@@ -8,6 +8,8 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @export var unique_id: String = ""
 @export var chest_item_id: String = "potion"
 @export_range(1, 99, 1) var chest_item_count: int = 1
+## Tabela łupu z mapy ("chest_loot" w JSON: [{item_id, weight, count}]); niepusta = skrzynia losuje z niej zamiast chest_item_id.
+var loot_table: Array = []
 ## Poziom skrzyni: wyznacza trudność quizu przy otwieraniu wytrychem (pytań: 2 + tier, wymagane: o jedno mniej).
 @export_range(1, 4, 1) var tier: int = 1
 @export var quiz_id: String = "inf_podst"
@@ -164,22 +166,29 @@ func drop_item() -> void:
 	if audio:
 		audio.play_sfx_by_name("coin")
 
+	var item_id := chest_item_id
+	var item_count := chest_item_count
+	if not loot_table.is_empty():
+		var picked := QuizRpgLootTable.pick_weighted(loot_table)
+		if not picked.is_empty():
+			item_id = str(picked.get("item_id", chest_item_id))
+			item_count = maxi(int(picked.get("count", 1)), 1)
 	var player_stats := _get_module_singleton("PlayerStats")
 	if player_stats and player_stats.has_method("add_item"):
-		player_stats.call("add_item", chest_item_id, chest_item_count)
+		player_stats.call("add_item", item_id, item_count)
 
 	var loot_manager := _get_module_singleton("LootManager")
 	if loot_manager and loot_manager.has_method("show_loot_popup"):
-		var item_name := chest_item_id
+		var item_name := item_id
 		var inventory_service := _get_module_singleton("InventoryService")
 		if inventory_service and inventory_service.has_method("get_item"):
-			var item_data := inventory_service.call("get_item", chest_item_id) as QuizRpgItemData
+			var item_data := inventory_service.call("get_item", item_id) as QuizRpgItemData
 			if item_data != null:
 				item_name = item_data.display_name
 		loot_manager.call("show_loot_popup", {
 			"found": true,
 			"title": "Zawartosc skrzyni",
-			"message": "%s x%d trafia do ekwipunku." % [item_name, chest_item_count],
+			"message": "%s x%d trafia do ekwipunku." % [item_name, item_count],
 			"detail": "Nacisnij E albo Enter, aby kontynuowac.",
 		})
 

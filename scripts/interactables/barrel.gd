@@ -2,8 +2,8 @@ class_name Barrel
 extends CharacterBody2D
 
 @export var health: float = 5.0
-## Szansa 2. przedmiotu (kolejne: ×decay); ujemna = domyślna z LootManager (barrel_extra_chance). 1. przedmiot jest zawsze.
-@export_range(-1.0, 1.0, 0.01) var extra_item_chance: float = -1.0
+## Skala łupu beczki (n-te losowanie z szansą min(1, scale / n)); ujemna = domyślna z LootManager (barrel_scale). 1. przedmiot jest zawsze.
+@export_range(-1.0, 6.0, 0.1) var loot_scale: float = -1.0
 @export var remove_after_interaction: bool = true
 @export var unique_id: String = ""
 
@@ -66,15 +66,14 @@ func _interact() -> void:
 			level_state_manager.mark_barrel_destroyed(level_path, unique_id)
 
 	# Łup: 1 przedmiot gwarantowany, kolejne z malejącą szansą (LootManager.search_barrel); rodzic beczek może podać własne
-	# (metadane "barrel_loot" na węźle, np. Destructibles w tutorial_area: {extra_chance, decay, max_items}).
+	# (metadane "barrel_loot" na węźle, np. Destructibles w tutorial_area: {scale, max_items}).
 	var rolls: Dictionary = {}
 	if get_parent() != null and get_parent().has_meta("barrel_loot"):
 		rolls = get_parent().get_meta("barrel_loot") as Dictionary
 	var loot_result: Dictionary = {"found": false}
 	var loot_manager := _get_loot_manager()
 	if loot_manager and loot_manager.has_method("search_barrel"):
-		var raw_result: Variant = loot_manager.call("search_barrel", float(rolls.get("extra_chance", extra_item_chance)),
-				float(rolls.get("decay", -1.0)), int(rolls.get("max_items", -1)))
+		var raw_result: Variant = loot_manager.call("search_barrel", float(rolls.get("scale", loot_scale)), int(rolls.get("max_items", -1)))
 		if raw_result is Dictionary:
 			loot_result = raw_result
 

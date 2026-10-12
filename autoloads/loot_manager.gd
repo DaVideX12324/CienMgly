@@ -7,11 +7,11 @@ const BARREL_POPUP_HEIGHT := 228.0
 const TOAST_SECONDS := 3.0
 const MAX_TOASTS := 8
 
-## Beczka: 1. przedmiot gwarantowany, k-ty (k ≥ 2) wypada z szansą extra_chance × decay^(k−2), najwyżej max_items sztuk
-## (domyślnie 60 %, 30 %, 15 % — średnio ok. 2 przedmioty). Rodzic beczek może podać własne wartości (metadane "barrel_loot").
-var barrel_extra_chance: float = 0.6
-var barrel_decay: float = 0.5
-var barrel_max_items: int = 4
+## Beczka: n-te losowanie udaje się z szansą min(1, scale / n), o ile udały się poprzednie (wzór usera 3 / (2n), czyli scale 1,5):
+## 1. gwarantowane, 2. 75 %, 3. 50 %, 4. 37,5 %… (P(1 przedmiot) 25 %, 2: 37,5 %, 3: 23 %, 4: 10 %; średnio ≈ 2,3). Tail znika szybko,
+## max_items to tylko zabezpieczenie. Rodzic beczek może podać własne wartości (metadane "barrel_loot").
+var barrel_scale: float = 1.5
+var barrel_max_items: int = 8
 var _rng := RandomNumberGenerator.new()
 var _popup_layer: CanvasLayer
 var _popup_root: Control
@@ -29,23 +29,22 @@ func _ready() -> void:
 	_rng.randomize()
 
 
-## Liczba losowań z beczki: 1 + kolejne, k-te (k ≥ 2) z szansą first_extra × falloff^(k−2), bez przekroczenia max_rolls.
-func barrel_roll_count(first_extra: float, falloff: float, max_rolls: int) -> int:
+## Liczba losowań z beczki: n-te (n ≥ 2) wypada z szansą min(1, scale / n) pod warunkiem, że wypadły poprzednie; pierwsze zawsze
+## (dla scale ≥ 1). Bez przekroczenia max_rolls.
+func barrel_roll_count(scale: float, max_rolls: int) -> int:
 	var n := 1
-	while n < max_rolls and _rng.randf() < first_extra * pow(falloff, n - 1):
+	while n < max_rolls and _rng.randf() < minf(1.0, scale / float(n + 1)):
 		n += 1
 	return n
 
 
-## Przeszukanie beczki: pierwsze losowanie z tabeli jest gwarantowane, k-te (k ≥ 2) udaje się z szansą extra_chance × decay^(k−2)
-## (ujemne wartości = domyślne z menedżera), najwyżej max_items losowań. Powtórzone przedmioty sumują się w liczbę kopii.
-## found = coś wypadło; items = [{item_id, item_name, count}].
-func search_barrel(extra_chance: float = -1.0, decay: float = -1.0, max_items: int = -1) -> Dictionary:
-	var first_extra := barrel_extra_chance if extra_chance < 0.0 else clampf(extra_chance, 0.0, 1.0)
-	var falloff := barrel_decay if decay < 0.0 else clampf(decay, 0.0, 1.0)
+## Przeszukanie beczki: liczba losowań z tabeli wg barrel_roll_count (ujemne wartości = domyślne z menedżera). Powtórzone
+## przedmioty sumują się w liczbę kopii. found = coś wypadło; items = [{item_id, item_name, count}].
+func search_barrel(scale: float = -1.0, max_items: int = -1) -> Dictionary:
+	var s := barrel_scale if scale < 0.0 else scale
 	var rolls := maxi(barrel_max_items if max_items < 0 else max_items, 1)
 	var counts := {}
-	for _k in range(barrel_roll_count(first_extra, falloff, rolls)):
+	for _k in range(barrel_roll_count(s, rolls)):
 		var item_id := _roll_weighted_item_id(_get_barrel_loot_table())
 		if item_id != "":
 			counts[item_id] = int(counts.get(item_id, 0)) + _roll_item_count(item_id)
