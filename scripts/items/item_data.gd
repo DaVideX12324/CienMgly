@@ -28,8 +28,9 @@ class_name QuizRpgItemData
 const WEAPON_TYPE_NAMES := {"sword": "Miecz", "dagger": "Sztylet", "axe": "Topór", "spear": "Włócznia", "mace": "Buława", "staff": "Kostur", "bow": "Łuk"}
 
 
+## Nazwa rodzaju broni w wybranym języku (klucz weapon.<id>), zapasowo polska z WEAPON_TYPE_NAMES.
 static func weapon_type_name(type_id: String) -> String:
-	return str(WEAPON_TYPE_NAMES.get(type_id, type_id))
+	return QuizRpgI18n.t("weapon." + type_id, str(WEAPON_TYPE_NAMES.get(type_id, type_id)))
 
 
 func get_effect_summary() -> String:

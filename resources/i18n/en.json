@@ -122,5 +122,15 @@
   "status.spooked.name": "Spooked",
   "status.spooked.desc": "Reduces accuracy to 75% and lowers attack and magic defense by 15% for 2–4 turns.",
   "status.stun.name": "Stun",
-  "status.stun.desc": "Stuns the target, preventing any action for 1–2 turns."
+  "status.stun.desc": "Stuns the target, preventing any action for 1–2 turns.",
+  "weapon.sword": "Sword",
+  "weapon.dagger": "Dagger",
+  "weapon.axe": "Axe",
+  "weapon.spear": "Spear",
+  "weapon.mace": "Mace",
+  "weapon.staff": "Staff",
+  "weapon.bow": "Bow",
+  "skill.requires_weapon": "Requires weapon: %s%s.",
+  "skill.destroys_weapon": ", destroys it",
+  "combat.enemy_uses_skill": "{enemy} uses: {skill}!"
 }

@@ -122,5 +122,15 @@
   "status.spooked.name": "Przestrach",
   "status.spooked.desc": "Zmniejsza celność do 75% oraz siłę ataku i obronę magiczną o 15% na 2–4 tury.",
   "status.stun.name": "Ogłuszenie",
-  "status.stun.desc": "Ogłusza cel, pozbawiając go możliwości wykonania ruchu na 1–2 tury."
+  "status.stun.desc": "Ogłusza cel, pozbawiając go możliwości wykonania ruchu na 1–2 tury.",
+  "weapon.sword": "Miecz",
+  "weapon.dagger": "Sztylet",
+  "weapon.axe": "Topór",
+  "weapon.spear": "Włócznia",
+  "weapon.mace": "Buława",
+  "weapon.staff": "Kostur",
+  "weapon.bow": "Łuk",
+  "skill.requires_weapon": "Wymaga broni: %s%s.",
+  "skill.destroys_weapon": ", niszczy ją",
+  "combat.enemy_uses_skill": "{enemy} używa: {skill}!"
 }

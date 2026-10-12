@@ -23,6 +23,11 @@ static func t(key: String, fallback: String = "") -> String:
 	return fallback if fallback != "" else key
 
 
+## Czy klucz istnieje w wybranym języku albo w en (t() zwraca wtedy tłumaczenie, a nie klucz).
+static func has(key: String) -> bool:
+	return _dict(QuizTheme.language()).has(key) or _dict(FALLBACK_LANG).has(key)
+
+
 ## Klucz nazwy umiejętności z pliku zasobu: "skill.<nazwa pliku .tres bez rozszerzenia>.name".
 static func skill_name_key(res: Resource) -> String:
 	return "skill.%s.name" % res.resource_path.get_file().get_basename()
@@ -31,6 +36,11 @@ static func skill_name_key(res: Resource) -> String:
 ## Klucz opisu umiejętności: "skill.<nazwa pliku .tres>.desc".
 static func skill_desc_key(res: Resource) -> String:
 	return "skill.%s.desc" % res.resource_path.get_file().get_basename()
+
+
+## Klucz tekstu z logu walki użycia umiejętności wroga: "skill.<plik .tres>.log" ({enemy}, {skill} jak w log_text).
+static func skill_log_key(res: Resource) -> String:
+	return "skill.%s.log" % res.resource_path.get_file().get_basename()
 
 
 ## Klucze nazwy i opisu statusu z pliku zasobu: "status.<plik>.name" / "status.<plik>.desc".

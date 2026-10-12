@@ -1629,7 +1629,9 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 ## cel(e) z drużyny — szansa trafienia, obrażenia QuizRpgSkillMath (staty jednostki vs staty członka), obrona
 ## (obrona: 1/4 po dobrej odpowiedzi, 1/2 po złej), status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
 func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: String, sk: QuizRpgEnemySkill) -> bool:
-	var text := sk.log_text if sk.log_text != "" else "{enemy} używa: {skill}!"
+	var text := sk.localized_log_text()
+	if text == "":
+		text = QuizRpgI18n.t("combat.enemy_uses_skill", "{enemy} używa: {skill}!")
 	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.localized_name())
 	if turn_label:
 		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.localized_name()]

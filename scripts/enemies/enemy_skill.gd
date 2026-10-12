@@ -12,3 +12,9 @@ class_name QuizRpgEnemySkill
 @export_range(0, 20, 1) var cooldown_turns: int = 0
 ## Najwcześniejsza tura walki, w której wróg może jej użyć.
 @export_range(1, 50, 1) var first_turn: int = 1
+
+
+## Tekst logu w wybranym języku (klucz skill.<plik>.log), zapasowo log_text z zasobu (może być pusty).
+func localized_log_text() -> String:
+	var key := QuizRpgI18n.skill_log_key(self)
+	return QuizRpgI18n.t(key) if QuizRpgI18n.has(key) else log_text
