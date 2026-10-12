@@ -6,7 +6,8 @@ extends RefCounted
 ## Linia: [czas od startu sesji] Lv poziom (XP/do następnego) HP | zdarzenie | szczegóły. Cel: przy bossie odczytać poziom, liczbę walk,
 ## czas przejścia i odstępy między awansami (docs/kontekst/poziomy_i_xp.md „Status celu 120 %”).
 
-const LOG_PATH := "user://progress_log.txt"
+## Zmienialna tylko po to, żeby testy nie pisały do prawdziwego logu.
+static var log_path := "user://progress_log.txt"
 
 static var _started_msec := -1
 static var _fights := 0
@@ -68,7 +69,7 @@ static func _fmt(seconds: int) -> String:
 
 
 static func _write(line: String) -> void:
-	var f := FileAccess.open(LOG_PATH, FileAccess.READ_WRITE if FileAccess.file_exists(LOG_PATH) else FileAccess.WRITE)
+	var f := FileAccess.open(log_path, FileAccess.READ_WRITE if FileAccess.file_exists(log_path) else FileAccess.WRITE)
 	if f == null:
 		return
 	f.seek_end()
