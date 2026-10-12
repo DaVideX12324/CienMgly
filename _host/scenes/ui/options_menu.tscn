@@ -156,23 +156,26 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 
-[node name="SepQuiz" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ekran"]
+[node name="Ogolne" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
+visible = false
 layout_mode = 2
+theme_override_constants/separation = 12
+metadata/_tab_index = 1
 
-[node name="QuizlessMode" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
+[node name="QuizlessMode" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
 text = "Gra bez quizow (auto-zaliczanie)"
 
-[node name="SepLang" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ekran"]
+[node name="SepLang" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
 
-[node name="LangLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ekran"]
+[node name="LangLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
 text = "Język:"
 
-[node name="LangOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
+[node name="LangOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
@@ -181,7 +184,7 @@ theme_override_font_sizes/font_size = 16
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
-metadata/_tab_index = 1
+metadata/_tab_index = 2
 
 [node name="LblMaster" type="Label" parent="Panel/Margin/VBox/Tabs/Dzwiek"]
 layout_mode = 2
@@ -226,7 +229,7 @@ value = 1.0
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 14
-metadata/_tab_index = 2
+metadata/_tab_index = 3
 
 [node name="LblSkin" type="Label" parent="Panel/Margin/VBox/Tabs/Motyw"]
 layout_mode = 2
@@ -277,7 +280,7 @@ autowrap_mode = 3
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
-metadata/_tab_index = 3
+metadata/_tab_index = 4
 
 [node name="LblSets" type="Label" parent="Panel/Margin/VBox/Tabs/Pytania"]
 layout_mode = 2
@@ -306,7 +309,7 @@ autowrap_mode = 3
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
-metadata/_tab_index = 4
+metadata/_tab_index = 5
 
 [node name="LblInfo" type="Label" parent="Panel/Margin/VBox/Tabs/Sterowanie"]
 layout_mode = 2
