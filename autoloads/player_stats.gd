@@ -830,11 +830,25 @@ func get_member_total_mdf(member_index: int) -> int:
 	return get_member_total_stat(member_index, "mdf")
 
 
+## Klasa członka (starsze zapisy bez pola: z danych jego postaci).
+func get_member_class(member_index: int) -> String:
+	if member_index < 0 or member_index >= party.size():
+		return "warrior"
+	var member: Dictionary = party[member_index]
+	var c := str(member.get("character_class", ""))
+	return c if c != "" else hero_for_member(member).character_class
+
+
+## Czy członek może założyć przedmiot (allowed_classes pusta = każdy).
+func member_can_equip(member_index: int, allowed_classes: PackedStringArray) -> bool:
+	return allowed_classes.is_empty() or allowed_classes.has(get_member_class(member_index))
+
+
 func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Array[Dictionary]:
 	var inventory_entries: Array[Dictionary] = get_inventory_entries()
 	var options: Array[Dictionary] = []
 	for entry: Dictionary in inventory_entries:
-		if str(entry.get("equip_slot", "")) == slot_name:
+		if str(entry.get("equip_slot", "")) == slot_name and member_can_equip(member_index, entry.get("allowed_classes", PackedStringArray())):
 			options.append(entry)
 	if member_index >= 0 and member_index < party.size():
 		var member: Dictionary = party[member_index]
@@ -921,7 +935,7 @@ func set_member_equipment(member_index: int, slot_name: String, item_id: String)
 		if inventory_service == null or not inventory_service.has_method("get_item"):
 			return false
 		var item_data: QuizRpgItemData = inventory_service.call("get_item", item_id)
-		if item_data == null or item_data.equip_slot != slot_name:
+		if item_data == null or item_data.equip_slot != slot_name or not member_can_equip(member_index, item_data.allowed_classes):
 			return false
 		var consume_result: Dictionary = inventory_service.call("consume_item_from_inventory", inventory, item_id, 1)
 		if not bool(consume_result.get("success", false)):

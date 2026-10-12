@@ -132,5 +132,9 @@
   "weapon.bow": "Łuk",
   "skill.requires_weapon": "Wymaga broni: %s%s.",
   "skill.destroys_weapon": ", niszczy ją",
-  "combat.enemy_uses_skill": "{enemy} używa: {skill}!"
+  "combat.enemy_uses_skill": "{enemy} używa: {skill}!",
+  "class.warrior": "Wojownik",
+  "class.rogue": "Łotrzyk",
+  "class.mage": "Mag",
+  "class.priest": "Kapłan"
 }

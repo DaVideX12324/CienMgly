@@ -4,6 +4,8 @@ class_name QuizRpgHeroData
 @export_group("Identity")
 @export var hero_id: String = "hero"
 @export var display_name: String = "Bohater"
+## Klasa postaci (archetyp, docs/kontekst/klasy_postaci_i_bronie.md): ogranicza ekwipunek z `allowed_classes` i wyznacza styl walki.
+@export_enum("warrior", "rogue", "mage", "priest") var character_class: String = "warrior"
 @export var portrait: Texture2D
 @export var actor_scene: PackedScene
 @export_group("Visual")
@@ -106,10 +108,20 @@ static func linear_hp(hp_first: int, hp_last: int, lvl: int, max_level: int) -> 
 	return roundi(lerpf(float(hp_first), float(hp_last), t))
 
 
+const CHARACTER_CLASSES: Array[String] = ["warrior", "rogue", "mage", "priest"]
+const CLASS_LABELS := {"warrior": "Wojownik", "rogue": "Łotrzyk", "mage": "Mag", "priest": "Kapłan"}
+
+
+## Nazwa klasy w wybranym języku (klucz class.<id>), zapasowo polska z CLASS_LABELS.
+static func class_label(class_id: String) -> String:
+	return QuizRpgI18n.t("class." + class_id, str(CLASS_LABELS.get(class_id, class_id)))
+
+
 func build_member_data() -> Dictionary:
 	return {
 		"hero_id": hero_id,
 		"name": display_name,
+		"character_class": character_class,
 		"level": base_level,
 		"hp": base_hp,
 		"max_hp": base_hp,

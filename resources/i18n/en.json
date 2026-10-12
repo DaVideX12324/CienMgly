@@ -132,5 +132,9 @@
   "weapon.bow": "Bow",
   "skill.requires_weapon": "Requires weapon: %s%s.",
   "skill.destroys_weapon": ", destroys it",
-  "combat.enemy_uses_skill": "{enemy} uses: {skill}!"
+  "combat.enemy_uses_skill": "{enemy} uses: {skill}!",
+  "class.warrior": "Warrior",
+  "class.rogue": "Rogue",
+  "class.mage": "Mage",
+  "class.priest": "Priest"
 }

@@ -67,6 +67,7 @@ func get_menu_entries(raw_inventory: Array) -> Array[Dictionary]:
 			"tp_restore": item_data.tp_restore,
 			"icon": item_data.icon,
 			"weapon_type": item_data.weapon_type,
+			"allowed_classes": item_data.allowed_classes,
 			"atk_bonus": item_data.atk_bonus,
 			"def_bonus": item_data.def_bonus,
 			"mat_bonus": item_data.mat_bonus,
