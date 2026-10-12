@@ -7,13 +7,20 @@ albo jako samodzielny projekt.
 
 ## Co jest w grze
 
-- **Świat:** samouczek -> generowana jaskinia (pokoje, płaskowyże ze schodami, nisze, obiekty: grzyby,
-  stalagmity, kamienie, skrzynie). Mapy to sceny dziedziczone po `scenes/maps/procedural_level.tscn`
-  (`scenes/maps/levels/`); jeden seed na zapis, seed mapy liczony z niego i nazwy sceny. Można wracać do
-  poprzedniego poziomu; przejścia działają po wejściu w obszar albo pod klawiszem interakcji (E).
+- **Świat:** samouczek -> generowana jaskinia -> generowane ścieki (tymczasowo; docelowo jaskinia -> miasto ->
+  ścieki). Jaskinia: pokoje, płaskowyże ze schodami, nisze, obiekty (grzyby, stalagmity, kamienie, skrzynie, beczki);
+  ścieki: układ `structured` z kanałami, kładkami i platformami. Mapy to sceny dziedziczone po
+  `scenes/maps/procedural_level.tscn` (`scenes/maps/levels/`); jeden seed na zapis, seed mapy liczony z niego
+  i nazwy sceny. Można wracać do poprzedniego poziomu; przejścia działają po wejściu w obszar albo pod klawiszem
+  interakcji (E). Miasto (`town.tscn`) jest w przygotowaniu — mapa malowana ręcznie w LDtk (`town.ldtk`).
+- **Generator:** zachowanie biomu w JSON-ie obok TileSetu (`resources/maps/config/*.json`: flagi, tileset, obiekty);
+  kształt pokoi (`room_shape`: organic / rect / round / poly / mixed) i wejście na środku mapy (`entrance_mode: center`)
+  to flagi tego JSON-a.
 - **Walka:** turowa, z pytaniami (odpowiedzi 1–4), okna jak w RPG Makerze, motywy okien i style pasków
   do wyboru w opcjach, po wygranej chwila nietykalności.
-- **Postać i postęp:** statystyki i poziomy, przedmioty, umiejętności, ekwipunek, sloty zapisu, menu Esc.
+- **Postać i postęp:** statystyki i poziomy, klasy postaci, przedmioty, umiejętności i statusy, ekwipunek, złoto,
+  skrzynie i klucze wg tieru, sloty zapisu, menu Esc, ekran śmierci drużyny. Teksty w PL i EN (`resources/i18n`).
+  Drużyna z towarzyszami jest w budowie (dziś jeden bohater, `resources/heroes`).
 - **Wrogowie:** pościg po siatce nawigacji z generatora, wykrywanie gracza.
 - **Pytania:** zestawy w `resources/quizzes`, wybór aktywnych i edytor pytań (menu główne, Opcje -> Pytania).
 - **Sterowanie:** zmiana klawiszy, chód / bieg (domyślny ruch i tryb klawisza — przytrzymanie albo
@@ -50,7 +57,8 @@ Po zmianach w zasobach / autoloadach hosta, których moduł używa, odśwież ko
 autoloads/   GameManager, SaveManager, LevelStateManager, PlayerStats, InventoryService, LootManager, …
 scenes/      maps (poziomy, level_manager), player, enemies, objects, quiz (walka), ui (menu, HUD), tools
 scripts/     generation (generator map i obiektów, kafle), maps (poziomy, przejścia), quiz, ui, …
-resources/   maps (TileSety + config/*.json), quizzes, items, heroes, enemies, ui (motyw, skórki, paski)
+resources/   maps (TileSety + config/*.json), quizzes, items, heroes, skills, statuses, enemies, i18n, shaders,
+             ui (motyw, skórki, paski)
 tools/       sync_host_copies, make_standalone.sh, sync_object_catalogs, narzędzia migracji
 _host/       kopie zasobów hosta dla wersji samodzielnej
 standalone/  scena startowa wersji samodzielnej
