@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_heavy_strike")])
 enemy_name = "Posąg Starca"
+scan_text = "Stary, popękany posąg runiczny. Jego ciężkie kamienne ciosy niosą ryzyko paraliżu."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

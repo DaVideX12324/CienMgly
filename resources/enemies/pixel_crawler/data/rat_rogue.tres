@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_knockdown")])
 enemy_name = "Szczur Łotrzyk"
+scan_text = "Cień z rynsztoków polujący z zaskoczenia. Potrafi powalić bohatera i nałożyć ogłuszenie."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

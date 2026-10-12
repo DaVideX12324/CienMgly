@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_toxic_gaze")])
 enemy_name = "Ork Szaman"
+scan_text = "Praktyk mrocznych rytuałów klanowych. Rzuca trujące spojrzenie natychmiast zatruwające cel."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

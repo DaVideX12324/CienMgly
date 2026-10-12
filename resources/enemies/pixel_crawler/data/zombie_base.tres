@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Zombie"
+scan_text = "Powolny ożywieniec gnijący w podziemiach. Łatwy do wymanewrowania cel bez specjalnych ataków."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

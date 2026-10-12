@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Młody Grzyb"
+scan_text = "Niewielki, świeżo wyrosły grzyb podziemny. Kruchy i łatwy do wyeliminowania."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

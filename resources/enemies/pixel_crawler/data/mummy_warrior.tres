@@ -10,6 +10,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_triple_attack"), ExtResource("s_heavy_strike")])
 enemy_name = "Mumia Wojownik"
+scan_text = "Strażnik faraońskich krypt. Atakuje potrójnym ciosem i poraża salwą zdolną wywołać paraliż."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

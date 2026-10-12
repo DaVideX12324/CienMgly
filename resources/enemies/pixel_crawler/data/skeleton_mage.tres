@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_toxic_gaze")])
 enemy_name = "Szkielet Mag"
+scan_text = "Nieumarły adept czarnej magii. Spogląda jadowitym wzrokiem, nakładając pewne zatrucie."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

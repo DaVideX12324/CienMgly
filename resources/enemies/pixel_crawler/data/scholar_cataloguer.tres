@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Katalogista"
+scan_text = "Archiwista biblioteki wiedzy. W walce zdaje się całkowicie zagubiony i łatwo go zneutralizować."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Ork"
+scan_text = "Młody orkowy wojownik. Nadrabia brak finezji surową siłą, lecz łatwo go pokonać."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Rozbity Kamieniak"
+scan_text = "Uszkodzony skalny odłamek z trudem trzymający formę. Rozpada się błyskawicznie."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

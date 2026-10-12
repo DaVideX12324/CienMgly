@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_toxic_gaze")])
 enemy_name = "Szczur Mag"
+scan_text = "Spaczony magią ścieków gryzoń. Emanuje jadowitym spojrzeniem, które gwarantuje zatrucie."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

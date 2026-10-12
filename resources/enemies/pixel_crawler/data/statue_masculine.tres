@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Posąg Mężczyzny"
+scan_text = "Marmurowy monument wprawiony w ruch. Twardy, lecz pozbawiony zaawansowanych technik."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

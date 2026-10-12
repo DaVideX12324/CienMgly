@@ -10,6 +10,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_triple_attack"), ExtResource("s_knockdown")])
 enemy_name = "Elf Tropiciel"
+scan_text = "Elitarny zwiadowca głuszy. Wyprowadza serię trzech błyskawicznych ciosów i potrafi ogłuszyć."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

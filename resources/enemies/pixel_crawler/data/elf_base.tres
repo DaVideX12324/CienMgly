@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Elf"
+scan_text = "Młody leśny strażnik. Zwinny, lecz bez zaawansowanego przeszkolenia bojowego."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

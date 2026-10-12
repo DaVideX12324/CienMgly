@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Bandyta Zwiadowca"
+scan_text = "Lekkozbrojny zwiadowca bandytów. Słaby w bezpośrednim starciu, polega głównie na podstawowych atakach."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

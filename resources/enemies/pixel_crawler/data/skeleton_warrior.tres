@@ -10,6 +10,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_triple_attack"), ExtResource("s_heavy_strike")])
 enemy_name = "Szkielet Wojownik"
+scan_text = "Opancerzony szkielet wojenny. Nieustępliwie tnie potrójnym atakiem i poraża paraliżującym ciosem."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

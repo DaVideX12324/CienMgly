@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Posąg Kobiety"
+scan_text = "Ożywiona kamienna rzeźba. Ciężka i powolna, uderza wyłącznie podstawowym atakiem."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

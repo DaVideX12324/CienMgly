@@ -10,6 +10,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_heavy_strike"), ExtResource("s_decay_breath")])
 enemy_name = "Ciężki Grzyb"
+scan_text = "Masywny, zarodnikowy kolos. Poraża seriami ciosów i zieje trującym oddechem zgnilizny."
 quiz_id = "ogolne"
 max_hp = 900
 attack = 90

@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_knockdown")])
 enemy_name = "Bandyta Tropiciel"
+scan_text = "Czujny tropiciel polujący z ukrycia. Potrafi powalić bohatera i nałożyć groźne ogłuszenie."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

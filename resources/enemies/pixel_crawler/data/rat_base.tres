@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Szczur"
+scan_text = "Zwykły gryzoń z kanałów. Mało wytrzymały, lecz zwinny i kąśliwy."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

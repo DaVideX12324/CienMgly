@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_heavy_strike")])
 enemy_name = "Wysoki Grzyb"
+scan_text = "Smukły kapelusznik o sprężystym trzonie. Wyprowadza serie uderzeń grożące paraliżem."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

@@ -10,6 +10,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_triple_attack"), ExtResource("s_heavy_strike")])
 enemy_name = "Szczur Wojownik"
+scan_text = "Wielki szczurołak w rynsztunku z odpadków. Wyprowadza potrójne cięcia i poraża salwami z paraliżem."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

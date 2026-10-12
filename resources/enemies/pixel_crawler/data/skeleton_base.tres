@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Szkielet"
+scan_text = "Kruche kości splecione nekromancją. Rozpada się pod wpływem kilku celnych ciosów."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

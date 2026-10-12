@@ -9,6 +9,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_toxic_gaze")])
 enemy_name = "Elf Druid"
+scan_text = "Władający leśną magią druid. Poraża trującym spojrzeniem, które natychmiast zatruwa bohatera."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

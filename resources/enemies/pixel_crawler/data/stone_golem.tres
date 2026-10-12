@@ -10,6 +10,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_triple_attack"), ExtResource("s_heavy_strike")])
 enemy_name = "Kamienny Golem"
+scan_text = "Potężny konstrukt z litej skały. Miażdży serią trzech uderzeń i paraliżuje ciężką salwą."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false

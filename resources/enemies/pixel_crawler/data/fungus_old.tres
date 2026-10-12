@@ -11,6 +11,7 @@
 script = ExtResource("1_data")
 battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_whirling_slash"), ExtResource("s_timed_charge"), ExtResource("s_decay_breath")])
 enemy_name = "Stary Grzyb"
+scan_text = "Starożytny władca podziemi. Wywołuje falę wybuchową na całą drużynę, wiruje ostrzami i zatruwa zgnilizną."
 quiz_id = "ogolne"
 is_boss = true
 max_hp = 2500
