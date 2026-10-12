@@ -7,6 +7,10 @@ class_name EnemyBase
 const QuizRpgEnemyData = preload("enemy_data.gd")
 
 @export var enemy_data: QuizRpgEnemyData
+var _spawn_level := 0  # poziom z mapy (set_enemy_level), nakładany po wczytaniu enemy_data
+var _spawn_xp_scale := 1.0
+var _ready_applied := false  # enemy_data wczytane (_apply_enemy_data)
+var _variant_ratio: Dictionary = {}  # stosunek statystyk wariantu do bazy tieru (QuizRpgEnemyStats), liczony przy pierwszym skalowaniu
 @export_group("Identity")
 @export var enemy_name: String = "Przeciwnik"
 @export var quiz_id: String = "inf_podst"
@@ -194,6 +198,8 @@ func _apply_enemy_data() -> void:
 		max_hp = maxi(max_hp, 1)
 		hp = mini(hp, max_hp)
 		encounter_tier = clampi(encounter_tier, 1, 5)
+		_ready_applied = true
+		_apply_spawn_level()
 		return
 	enemy_name = enemy_data.enemy_name
 	quiz_id = enemy_data.quiz_id
@@ -220,14 +226,41 @@ func _apply_enemy_data() -> void:
 	shape_type = enemy_data.shape_type
 	if enemy_level > 0:
 		xp_reward = QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss)
+	_ready_applied = true
+	_apply_spawn_level()
 
 
-## Poziom z mapy (spawn_entities, config "enemy_levels"): przelicza nagrodę XP.
+## Poziom z mapy (spawn_entities, config "enemy_levels"): nagroda XP i statystyki z poziomu.
 ## xp_scale: korekta rozmiaru mapy (ile wrogów ma mapa względem wzorcowej) — budżet XP mapy nie zależy od jej wielkości.
+## Spawn woła to przed add_child, a _ready wczytuje enemy_data i nadpisałoby wynik — dlatego poziom jest zapamiętany
+## i nakładany po wczytaniu danych (tier, boss i statystyki wariantu pochodzą z danych).
 func set_enemy_level(level: int, xp_scale: float = 1.0) -> void:
-	enemy_level = level
-	if level > 0:
-		xp_reward = maxi(roundi(QuizRpgEnemyXp.kill_xp(level, encounter_tier, is_boss) * xp_scale), 1)
+	_spawn_level = level
+	_spawn_xp_scale = xp_scale
+	if _ready_applied:
+		_apply_spawn_level()
+
+
+func _apply_spawn_level() -> void:
+	if _spawn_level <= 0:
+		return
+	enemy_level = _spawn_level
+	xp_reward = maxi(roundi(QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss) * _spawn_xp_scale), 1)
+	_apply_level_stats()
+
+
+## Statystyki z poziomu (QuizRpgEnemyStats): baza tieru dla poziomu × stosunek wariantu (z danych sceny) do bazy tieru.
+## Stosunek liczony raz z wartości sprzed skalowania, więc ponowne wywołanie nie kumuluje zmian.
+func _apply_level_stats() -> void:
+	if _variant_ratio.is_empty():
+		_variant_ratio = QuizRpgEnemyStats.variant_ratio(encounter_tier, max_hp, attack, defense)
+	var s := QuizRpgEnemyStats.for_level(enemy_level, encounter_tier)
+	max_hp = maxi(roundi(s["hp"] * _variant_ratio["hp"]), 1)
+	hp = max_hp
+	attack = maxi(roundi(s["atk"] * _variant_ratio["atk"]), 1)
+	magic_attack = attack
+	defense = maxi(roundi(s["def"] * _variant_ratio["def"]), 0)
+	magic_defense = defense
 
 
 func _physics_process(delta: float) -> void:
