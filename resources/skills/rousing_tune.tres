@@ -12,6 +12,6 @@ damage_mode = 2
 target = 4
 inflict_status = "atk_up"
 status_chance = 1.0
-sp_cost = 30
+sp_cost = 60
 tp_cost = 20
 learn_level = 20

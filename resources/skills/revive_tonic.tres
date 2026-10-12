@@ -6,11 +6,12 @@
 script = ExtResource("1_skill")
 skill_id = "revive_tonic"
 display_name = "Tonik Ożywienia"
-description = "Wskrzesza nieprzytomnego sojusznika z 250 HP. Działa też w menu."
+description = "Wskrzesza nieprzytomnego sojusznika z 30 % maks. HP. Działa też w menu."
 color = Color(0.4, 1, 0.8, 1)
 damage_mode = 2
 target = 6
-heal_mode = 1
+heal_mode = 2
 heal_amount = 250
 sp_cost = 100
 occasion = 0
+heal_percent = 0.3

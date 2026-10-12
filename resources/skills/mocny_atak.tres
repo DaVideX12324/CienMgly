@@ -10,3 +10,4 @@ description = "Cięższy cios: 1,5 × zwykłe obrażenia."
 damage_multiplier = 1.5
 tp_cost = 25
 learn_level = 1
+sp_cost = 50

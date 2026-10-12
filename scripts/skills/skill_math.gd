@@ -31,13 +31,13 @@ static func basic_attack(user: Dictionary, target: Dictionary, rng: RandomNumber
 	return maxi(roundi(raw * _spread(BASIC_VARIANCE, rng)), 1)
 
 
-## Leczenie celu o maks. HP max_hp (0 = umiejętność nie leczy).
-static func heal(skill: QuizRpgSkillBase, max_hp: int) -> int:
+## Leczenie celu o maks. HP max_hp (0 = umiejętność nie leczy). user_mat: MAT użytkownika (heal_mat_coeff przy leczeniu stałym).
+static func heal(skill: QuizRpgSkillBase, max_hp: int, user_mat: int = 0) -> int:
 	if skill == null:
 		return 0
 	match skill.heal_mode:
 		QuizRpgSkillBase.HealMode.FIXED:
-			return skill.heal_amount
+			return skill.heal_amount + roundi(user_mat * skill.heal_mat_coeff)
 		QuizRpgSkillBase.HealMode.PERCENT:
 			return maxi(ceili(max_hp * skill.heal_percent), 1)
 	return 0

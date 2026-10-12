@@ -6,11 +6,12 @@
 script = ExtResource("1_skill")
 skill_id = "hearty_meal"
 display_name = "Pożywny Posiłek"
-description = "Leczy sojusznika o 1000 HP. Działa też w menu."
+description = "Leczy sojusznika o MAT × 4 HP. Działa też w menu."
 color = Color(0.4, 1, 0.5, 1)
 damage_mode = 2
 target = 4
 heal_mode = 1
-heal_amount = 1000
-sp_cost = 50
+heal_amount = 0
+sp_cost = 65
 occasion = 0
+heal_mat_coeff = 4.0

@@ -17,4 +17,4 @@ hits = 5
 inflict_status = "stun"
 status_chance = 0.04
 status_per_hit = true
-sp_cost = 10
+sp_cost = 20

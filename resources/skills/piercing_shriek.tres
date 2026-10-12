@@ -17,5 +17,5 @@ bonus_vs_status = "poison"
 bonus_multiplier = 2.1
 inflict_status = "poison"
 status_chance = 0.15
-sp_cost = 130
+sp_cost = 90
 learn_level = 10

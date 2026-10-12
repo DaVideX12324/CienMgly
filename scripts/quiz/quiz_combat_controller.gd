@@ -1311,7 +1311,7 @@ func _resolve_attack(correct: bool) -> void:
 			if int(_enemy_units[ti].get("hp", 0)) <= 0:
 				continue
 			_active_enemy_index = ti
-			var quiz_hit: bool = _ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance
+			var quiz_hit: bool = true if skill != null and skill.hit_ignores_quiz else (_ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance)
 			if not quiz_hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)):
 				_show_attack_miss(ti, correct)
 				continue
@@ -1417,6 +1417,7 @@ func _resolve_heal(correct: bool) -> void:
 	var factor := 1.0 if correct else WRONG_ANSWER_HEAL_FACTOR
 	var revive := skill != null and skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
 	var parts: Array[String] = []
+	var user_mat := int(_member_stats(_active_actor_index).get("mat", 0))
 	for t in _heal_targets(skill):
 		var member: Dictionary = _ps.get_party_member(t) if _ps.has_method("get_party_member") else {}
 		var max_hp: int = int(member.get("max_hp", _ps.max_hp))
@@ -1424,7 +1425,7 @@ func _resolve_heal(correct: bool) -> void:
 			parts.append("%s: %s" % [str(member.get("name", "Bohater")), QuizRpgStatusCatalog.name_of(skill.inflict_status)])
 		if skill != null and not skill.is_heal():
 			continue
-		var amount := maxi(roundi((QuizRpgSkillMath.heal(skill, max_hp) if skill else max_hp * 0.3) * factor), 1)
+		var amount := maxi(roundi((QuizRpgSkillMath.heal(skill, max_hp, user_mat) if skill else max_hp * 0.3) * factor), 1)
 		var healed: int = _ps.heal_member(t, amount, revive) if _ps.has_method("heal_member") else 0
 		if healed <= 0:
 			continue
@@ -1736,7 +1737,7 @@ func _enemy_heal(enemy_index: int, sk: QuizRpgSkillBase) -> void:
 		if sk.has_status() and randf() < sk.status_chance:
 			_unit_add_status(i, sk.inflict_status)
 			u = _enemy_units[i]
-		var healed := mini(QuizRpgSkillMath.heal(sk, max_hp), max_hp - int(u.get("hp", 0)))
+		var healed := mini(QuizRpgSkillMath.heal(sk, max_hp, int(_unit_stats(_enemy_units[enemy_index]).get("mat", 0))), max_hp - int(u.get("hp", 0)))
 		if healed <= 0:
 			continue
 		u["hp"] = int(u.get("hp", 0)) + healed

@@ -38,6 +38,8 @@ enum PoisonMode { PERCENT, FIXED }
 @export_range(1.0, 6.0, 0.1) var bonus_roll_curve: float = 1.0
 ## Obrona z dobrą odpowiedzią blokuje (0), ze złą — połowa; false = obrona nie działa.
 @export var can_be_blocked: bool = true
+## Trafienie zależy tylko od success_rate (bez szansy z odpowiedzi na quiz).
+@export var hit_ignores_quiz: bool = false
 
 @export_group("Cel")
 @export var target: Target = Target.ONE_OPPONENT
@@ -47,6 +49,8 @@ enum PoisonMode { PERCENT, FIXED }
 @export_group("Leczenie")
 @export var heal_mode: HealMode = HealMode.NONE
 @export_range(0, 99999, 1) var heal_amount: int = 0
+## Dodatek do leczenia stałego: MAT użytkownika × współczynnik (skaluje się z poziomem i ekwipunkiem).
+@export_range(0.0, 20.0, 0.1) var heal_mat_coeff: float = 0.0
 @export_range(0.0, 1.0, 0.05) var heal_percent: float = 0.3
 
 @export_group("Bonus na cel ze statusem")

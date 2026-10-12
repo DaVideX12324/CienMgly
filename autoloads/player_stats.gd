@@ -271,7 +271,7 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 		return {"success": false, "message": "Ta umiejętność wskrzesza tylko nieprzytomnych."}
 	var parts: Array[String] = []
 	for t in targets:
-		var healed := heal_member(t, QuizRpgSkillMath.heal(skill, _member_max_hp(t)), revive)
+		var healed := heal_member(t, QuizRpgSkillMath.heal(skill, _member_max_hp(t), int(get_member_total_stat(user_index, "mat"))), revive)
 		if healed > 0:
 			parts.append("%s +%d HP" % [str((party[t] as Dictionary).get("name", "Bohater")), healed])
 	if parts.is_empty():

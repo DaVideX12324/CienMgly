@@ -12,5 +12,5 @@ damage_mode = 2
 target = 0
 inflict_status = "silence"
 status_chance = 0.5
-tp_cost = 25
+tp_cost = 65
 learn_level = 20
