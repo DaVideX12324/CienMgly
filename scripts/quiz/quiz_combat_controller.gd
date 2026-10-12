@@ -410,8 +410,35 @@ func _process(delta: float) -> void:
 	_update_top_window()
 
 
+## Mysz nie działa w walce, gdy okno nie ma fokusu (np. po przełączeniu na Discorda), a kliknięcie, które tylko przywraca fokus
+## (przychodzi już po NOTIFICATION_APPLICATION_FOCUS_IN), jest ignorowane przez FOCUS_CLICK_GRACE_MSEC (feedback testów pre-alpha, pkt 6).
+const FOCUS_CLICK_GRACE_MSEC := 300
+var _window_focused := true  # tylko FOCUS_OUT ustawia false, więc brak powiadomień nie blokuje myszy
+var _focus_in_msec := -100000
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_window_focused = false
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		_window_focused = true
+		_focus_in_msec = Time.get_ticks_msec()
+
+
+## Zdarzenie myszy do zignorowania: okno bez fokusu albo kliknięcie tuż po odzyskaniu fokusu.
+func _is_focus_click(event: InputEvent) -> bool:
+	if not (event is InputEventMouseButton or event is InputEventMouseMotion):
+		return false
+	if not _window_focused:
+		return true
+	return event is InputEventMouseButton and event.pressed and Time.get_ticks_msec() - _focus_in_msec < FOCUS_CLICK_GRACE_MSEC
+
+
 func _input(event: InputEvent) -> void:
 	if _is_pause_menu_open():
+		return
+	if _is_focus_click(event):
+		get_viewport().set_input_as_handled()
 		return
 	if _handle_hovered_enemy_click(event) or _handle_actor_row_mouse(event):
 		get_viewport().set_input_as_handled()
@@ -424,7 +451,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var key_event := event as InputEventKey
 		var focus_owner := get_viewport().gui_get_focus_owner()
 		var is_typing := focus_owner is LineEdit or focus_owner is TextEdit
-		if key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K):
+		if OS.is_debug_build() and (key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K)):
 			trigger_instant_win()
 			get_viewport().set_input_as_handled()
 			return

@@ -5,6 +5,8 @@ extends Node
 ##   F9 lub K: Instant Win (natychmiastowe wygranie w walce lub rozwiązanie zagadki drzwi)
 ##   F10 lub O: Toggle Enemies (włączenie/wyłączenie przeciwników i pościgu na mapie)
 ##   F11 lub P: Toggle Quizzes (włączenie/wyłączenie quizów — auto-pass bez wyświetlania pytań)
+## Narzędzia deweloperskie (skróty, menu F1 / ~, przycisk DEV) działają tylko w buildzie debugowym (edytor, eksport debug);
+## w eksporcie wydaniowym (OS.is_debug_build() == false) są wyłączone (feedback testów pre-alpha 2026-10-04).
 
 signal enemies_toggled(disabled: bool)
 signal quizzes_toggled(quizless: bool)
@@ -29,11 +31,12 @@ var _dev_menu: CanvasLayer
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_setup_toast_ui()
-	_setup_dev_menu()
+	if OS.is_debug_build():
+		_setup_dev_menu()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey):
+	if not OS.is_debug_build() or not (event is InputEventKey):
 		return
 	var key_event := event as InputEventKey
 	if not key_event.pressed or key_event.echo:
