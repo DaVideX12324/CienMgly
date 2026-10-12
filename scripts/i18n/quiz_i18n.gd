@@ -33,6 +33,15 @@ static func skill_desc_key(res: Resource) -> String:
 	return "skill.%s.desc" % res.resource_path.get_file().get_basename()
 
 
+## Klucze nazwy i opisu statusu z pliku zasobu: "status.<plik>.name" / "status.<plik>.desc".
+static func status_name_key(res: Resource) -> String:
+	return "status.%s.name" % res.resource_path.get_file().get_basename()
+
+
+static func status_desc_key(res: Resource) -> String:
+	return "status.%s.desc" % res.resource_path.get_file().get_basename()
+
+
 ## Wymusza ponowne wczytanie słowników (po edycji JSON w edytorze / w testach).
 static func reload() -> void:
 	_cache.clear()

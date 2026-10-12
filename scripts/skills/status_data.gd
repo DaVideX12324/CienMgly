@@ -47,3 +47,12 @@ func stat_mult(stat: String) -> float:
 		"mat": return mat_mult
 		"mdf": return mdf_mult
 	return 1.0
+
+
+## Nazwa / opis w wybranym języku (klucze status.<plik>.name / .desc, tekst zapasowy = display_name; opis zapasowy pusty).
+func localized_name() -> String:
+	return QuizRpgI18n.t(QuizRpgI18n.status_name_key(self), display_name)
+
+
+func localized_description() -> String:
+	return QuizRpgI18n.t(QuizRpgI18n.status_desc_key(self), "")

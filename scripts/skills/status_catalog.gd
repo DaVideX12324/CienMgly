@@ -16,7 +16,7 @@ static func get_status(id: String) -> QuizRpgStatusData:
 
 static func name_of(id: String) -> String:
 	var st := get_status(id)
-	return st.display_name if st else id
+	return st.localized_name() if st else id
 
 
 static func color_of(id: String, fallback: Color = Color.WHITE) -> Color:

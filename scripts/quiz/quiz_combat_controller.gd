@@ -1483,7 +1483,7 @@ func _enemy_turn() -> void:
 		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
 		var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
 		if stop != null:
-			_push_log("%s: %s — traci turę." % [enemy_label, stop.display_name], stop.color)
+			_push_log("%s: %s — traci turę." % [enemy_label, stop.localized_name()], stop.color)
 			await get_tree().create_timer(0.6).timeout
 			continue
 		if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
@@ -1796,14 +1796,14 @@ func _apply_status_round() -> bool:
 				if delta != 0:
 					unit["hp"] = int(unit.get("hp", 0)) + delta
 					any = true
-					_push_log("%s: %s %+d HP" % [str(unit.get("name", enemy_name_str)), def.display_name, delta], def.color)
+					_push_log("%s: %s %+d HP" % [str(unit.get("name", enemy_name_str)), def.localized_name(), delta], def.color)
 			var data: Dictionary = st[sid] if st[sid] is Dictionary else {}
 			if int(data.get("turns", 0)) > 0:
 				data["turns"] = int(data["turns"]) - 1
 				if int(data["turns"]) <= 0:
 					st.erase(sid)
 					any = true
-					_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.display_name], def.color)
+					_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
 		unit["statuses"] = st
 		_enemy_units[ti] = unit
 	if not any:
@@ -2794,7 +2794,7 @@ func _unit_add_status(ti: int, status_id: String) -> bool:
 	st[status_id] = {"turns": def.roll_turns()}
 	unit["statuses"] = st
 	_enemy_units[ti] = unit
-	_push_log("%s: %s!" % [str(unit.get("name", enemy_name_str)), def.display_name], def.color)
+	_push_log("%s: %s!" % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
 	return true
 
 
@@ -2806,7 +2806,7 @@ func _unit_on_damaged(ti: int) -> void:
 		var def := QuizRpgStatusCatalog.get_status(String(sid))
 		if def and def.remove_on_damage_chance > 0.0 and randf() < def.remove_on_damage_chance:
 			st.erase(sid)
-			_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.display_name], def.color)
+			_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
 	unit["statuses"] = st
 	_enemy_units[ti] = unit
 
@@ -2881,7 +2881,7 @@ func _refresh_enemy_header() -> void:
 		var active_enemy := _enemy_units[_active_enemy_index]
 		var tags: Array[String] = []
 		for def: QuizRpgStatusData in _unit_status_defs(active_enemy):
-			tags.append(def.display_name)
+			tags.append(def.localized_name())
 		var suffix := "" if tags.is_empty() else "  [%s]" % ", ".join(tags)
 		enemy_name_label.text = "%s%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), suffix, living_count]
 	else:
