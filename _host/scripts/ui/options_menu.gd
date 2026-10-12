@@ -10,6 +10,8 @@ signal closed
 @onready var _monitor_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/MonitorOption
 @onready var _scale_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/ScaleOption
 @onready var _quizless_mode: CheckButton = $Panel/Margin/VBox/Tabs/Ekran/QuizlessMode
+@onready var _lang_label: Label = $Panel/Margin/VBox/Tabs/Ekran/LangLabel
+@onready var _lang_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/LangOption
 @onready var _mode_label: Label = $Panel/Margin/VBox/Tabs/Ekran/ModeLabel
 @onready var _monitor_label: Label = $Panel/Margin/VBox/Tabs/Ekran/MonitorLabel
 @onready var _res_label: Label = $Panel/Margin/VBox/Tabs/Ekran/ResLabel
@@ -344,11 +346,28 @@ func _populate_scale() -> void:
 		_scale_option.item_selected.connect(_on_scale_item_selected)
 	if not _quizless_mode.toggled.is_connected(_on_quizless_toggled):
 		_quizless_mode.toggled.connect(_on_quizless_toggled)
+	for l in SettingsService.LANGUAGES:
+		_lang_option.add_item(str(l["name"]))
+	_sync_language()
+	if not _lang_option.item_selected.is_connected(_on_language_selected):
+		_lang_option.item_selected.connect(_on_language_selected)
 
 
 func _on_scale_item_selected(index: int) -> void:
 	_sel_scale = index
 	_scale_manually_changed = true
+
+
+func _sync_language() -> void:
+	var current := SettingsService.get_language()
+	for i in range(SettingsService.LANGUAGES.size()):
+		if SettingsService.LANGUAGES[i]["id"] == current:
+			_lang_option.selected = i
+
+
+## Język to ustawienie globalne, nie wygląd — zapis od razu (teksty gry czytają go przy odświeżeniu widoków).
+func _on_language_selected(index: int) -> void:
+	SettingsService.set_language(str(SettingsService.LANGUAGES[index]["id"]))
 
 
 func _sync_quizless_mode() -> void:
@@ -825,6 +844,8 @@ func _on_scale_changed(_scale: float) -> void:
 	_res_note.add_theme_font_size_override("font_size", _fs(15))
 	_scale_label.add_theme_font_size_override("font_size", main_size)
 	_quizless_mode.add_theme_font_size_override("font_size", main_size)
+	_lang_label.add_theme_font_size_override("font_size", main_size)
+	_lang_option.add_theme_font_size_override("font_size", main_size)
 	_monitor_option.add_theme_font_size_override("font_size", main_size)
 	_res_option.add_theme_font_size_override("font_size", main_size)
 	_scale_option.add_theme_font_size_override("font_size", main_size)

@@ -10,6 +10,9 @@ const CONFIG_PATH := "user://artefakt_wiedzy_settings.cfg"
 const SEC_DISPLAY := "display"
 const SEC_AUDIO := "audio"
 const KEY_QUIZLESS_MODE := "quizless_mode"
+const KEY_LANGUAGE := "language"
+## Języki tekstów gry (id = nazwa pliku tłumaczeń modułów, np. resources/i18n/<id>.json).
+const LANGUAGES: Array[Dictionary] = [{"id": "pl", "name": "Polski"}, {"id": "en", "name": "English"}]
 
 var _cfg := ConfigFile.new()
 
@@ -98,6 +101,19 @@ func set_quizless_mode_enabled(enabled: bool, save_now: bool = true) -> void:
 	set_global(KEY_QUIZLESS_MODE, enabled, false)
 	if save_now:
 		save_settings()
+
+
+## Język tekstów gry (ustawienie globalne, wspólne dla modułów); nieznany zapis -> pierwszy z LANGUAGES.
+func get_language() -> String:
+	var id := str(get_global(KEY_LANGUAGE, LANGUAGES[0]["id"]))
+	for l in LANGUAGES:
+		if l["id"] == id:
+			return id
+	return str(LANGUAGES[0]["id"])
+
+
+func set_language(id: String, save_now: bool = true) -> void:
+	set_global(KEY_LANGUAGE, id, save_now)
 
 
 func get_module(module_id: String, key: String, default_value: Variant = null) -> Variant:
