@@ -66,10 +66,34 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_tabs")
 tab_alignment = 1
 current_tab = 0
 
-[node name="Ekran" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
+[node name="Ogolne" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 layout_mode = 2
 theme_override_constants/separation = 12
 metadata/_tab_index = 0
+
+[node name="QuizlessMode" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
+layout_mode = 2
+text = "Gra bez quizow (auto-zaliczanie)"
+
+[node name="SepLang" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ogolne"]
+layout_mode = 2
+
+[node name="LangLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ogolne"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "Język:"
+
+[node name="LangOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+
+[node name="Ekran" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+metadata/_tab_index = 1
 
 [node name="ModeLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ekran"]
 layout_mode = 2
@@ -152,30 +176,6 @@ theme_override_font_sizes/font_size = 16
 text = "Skalowanie interfejsu:"
 
 [node name="ScaleOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
-
-[node name="Ogolne" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
-visible = false
-layout_mode = 2
-theme_override_constants/separation = 12
-metadata/_tab_index = 1
-
-[node name="QuizlessMode" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
-layout_mode = 2
-text = "Gra bez quizow (auto-zaliczanie)"
-
-[node name="SepLang" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ogolne"]
-layout_mode = 2
-
-[node name="LangLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ogolne"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "Język:"
-
-[node name="LangOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
