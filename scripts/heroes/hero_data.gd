@@ -12,13 +12,16 @@ class_name QuizRpgHeroData
 
 @export_group("Progression")
 @export var base_level: int = 1
-## HP: poziom 1 -> liniowo do hp_at_knee na hp_knee_level (jak FNaFB1: 334 -> 1402 na lv 20), dalej krzywa potęgowa do hp_at_max_level
-## na MAX_LEVEL (PlayerStats.MAX_LEVEL; „chore liczby” późnej gry, decyzja usera 2026-10-12). Każda postać ma swoją pulę.
+## HP: jedna gładka krzywa przez trzy punkty: lv 1 = base_hp, lv hp_ref_level = hp_ref_value (jak FNaFB1: 334 -> 1402 na lv 20)
+## i MAX_LEVEL = hp_at_max_level („chore liczby” późnej gry, decyzja usera 2026-10-12); kształt w hero_data.curve_value. Każda postać ma swoją pulę.
 @export var base_hp: int = 334
-@export var hp_knee_level: int = 20
-@export var hp_at_knee: int = 1402
+@export var hp_ref_level: int = 20
+@export var hp_ref_value: int = 1402
 @export var hp_at_max_level: int = 50000
-## SP na poziomie 1 i na MAX_LEVEL — liniowo (FNaFB1 FM, Freddy: MP 139 -> 446); koszty umiejętności są w tej skali.
+## SP: ta sama krzywa przez lv 1, sp_ref_level i MAX_LEVEL (FNaFB1 FM, Freddy: MP 139 -> 446 na lv 20); koszty umiejętności są w tej skali.
+## Punkt kontrolny leży na prostej, więc dziś SP rośnie liniowo; niżej ustawiona sp_ref_value da krzywą wypukłą jak HP.
+@export var sp_ref_level: int = 20
+@export var sp_ref_value: int = 446
 ## Krzywa XP jak „exp params” klasy w RPG Makerze VX Ace / FNaFB1 (Freddy: 50, 40, 50, 39): lv 1->2 90 XP, 2->3 204, 5->6 943, 19->20 12 532.
 @export var xp_base: int = 50
 @export var xp_extra: int = 40
@@ -50,14 +53,32 @@ class_name QuizRpgHeroData
 @export var default_accessory_id: String = ""
 
 
-## Maks. HP na danym poziomie: do hp_knee_level liniowo (base_hp -> hp_at_knee), dalej hp_at_knee × (lvl / knee)^p tak,
-## żeby na max_level było hp_at_max_level.
+## Maks. HP na danym poziomie: jedna krzywa przez (1, base_hp), (hp_ref_level, hp_ref_value), (max_level, hp_at_max_level).
 func hp_for_level(lvl: int, max_level: int) -> int:
-	var knee := clampi(hp_knee_level, 2, maxi(max_level - 1, 2))
-	if lvl <= knee or max_level <= knee:
-		return QuizRpgHeroData.linear_hp(base_hp, hp_at_knee, lvl, knee)
-	var p := log(float(hp_at_max_level) / float(hp_at_knee)) / log(float(max_level) / float(knee))
-	return roundi(float(hp_at_knee) * pow(float(mini(lvl, max_level)) / float(knee), p))
+	return QuizRpgHeroData.curve_value(base_hp, hp_ref_level, hp_ref_value, hp_at_max_level, lvl, max_level)
+
+
+## Wartość krzywej first + B × (e^(k × (lvl − 1)) − 1) przechodzącej przez (1, first), (ref_level, ref_value) i (max_level, last); k z bisekcji.
+## Gdy punkt kontrolny leży na prostej (albo poniżej niej), wychodzi prosta first -> last. Rosnąca i gładka (bez załamania).
+static func curve_value(first: int, ref_level: int, ref_value: int, last: int, lvl: int, max_level: int) -> int:
+	var span_max := float(max_level - 1)
+	var span_ref := float(clampi(ref_level, 2, max_level) - 1)
+	var t := clampf(float(lvl - 1), 0.0, span_max)
+	var rise_ref := float(ref_value - first)
+	var rise_max := float(last - first)
+	if max_level <= 1 or rise_ref <= 0.0 or rise_max / rise_ref <= span_max / span_ref + 0.001:
+		return QuizRpgHeroData.linear_hp(first, last, lvl, max_level)
+	var need := rise_max / rise_ref
+	var lo := 1e-6
+	var hi := 2.0
+	for i in range(80):
+		var k := 0.5 * (lo + hi)
+		if (exp(k * span_max) - 1.0) / (exp(k * span_ref) - 1.0) < need:
+			lo = k
+		else:
+			hi = k
+	var kk := 0.5 * (lo + hi)
+	return roundi(float(first) + rise_ref / (exp(kk * span_ref) - 1.0) * (exp(kk * t) - 1.0))
 
 
 ## Łączna liczba XP potrzebna do osiągnięcia poziomu lvl (wzór EXP klasy z RPG Makera VX Ace).
@@ -75,7 +96,7 @@ func xp_to_next(lvl: int) -> int:
 
 ## Maks. SP na danym poziomie (jak hp_for_level).
 func sp_for_level(lvl: int, max_level: int) -> int:
-	return QuizRpgHeroData.linear_hp(base_sp, sp_at_max_level, lvl, max_level)
+	return QuizRpgHeroData.curve_value(base_sp, sp_ref_level, sp_ref_value, sp_at_max_level, lvl, max_level)
 
 
 static func linear_hp(hp_first: int, hp_last: int, lvl: int, max_level: int) -> int:
