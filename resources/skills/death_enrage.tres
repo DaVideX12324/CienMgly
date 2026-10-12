@@ -17,5 +17,4 @@ hit_interval = 0.12
 target = 1
 sp_cost = 450
 tp_cost = 100
-combo = true
 learn_level = 20

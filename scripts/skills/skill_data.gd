@@ -20,8 +20,6 @@ enum Occasion { ALWAYS, BATTLE, MENU, NEVER }
 ## Wymagany rodzaj broni w slocie "weapon" (QuizRpgItemData.weapon_type; "none" = bez wymagań) i czy użycie niszczy tę broń.
 @export_enum("none", "sword", "dagger", "axe", "spear", "mace", "staff", "bow") var required_weapon_type: String = "none"
 @export var consumes_weapon: bool = false
-## Umiejętność combo (5. slot, za TP — game_design „System skilli”).
-@export var combo: bool = false
 ## Skan (jak w FNaFB CC): bez quizu i bez zużywania tury — pokazuje HP, statystyki i opis wybranego wroga w logu.
 @export var scan: bool = false
 
@@ -43,7 +41,6 @@ func to_entry(max_sp: int = 0) -> Dictionary:
 		"sp_cost": sp_cost_for(max_sp),
 		"tp_cost": tp_cost,
 		"effect": "heal" if is_heal() else "attack",
-		"combo": combo,
 		"scan": scan,
 		"usable_in_battle": occasion == Occasion.ALWAYS or occasion == Occasion.BATTLE,
 		"usable_in_menu": occasion == Occasion.ALWAYS or occasion == Occasion.MENU,
