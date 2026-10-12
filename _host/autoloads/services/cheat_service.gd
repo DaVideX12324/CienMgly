@@ -2,11 +2,12 @@ extends Node
 
 ## CheatService — Globalny serwis kodów / ułatwień dla dewelopera i testów.
 ## Skróty klawiszowe:
-##   F9 lub K: Instant Win (natychmiastowe wygranie w walce lub rozwiązanie zagadki drzwi)
-##   F10 lub O: Toggle Enemies (włączenie/wyłączenie przeciwników i pościgu na mapie)
-##   F11 lub P: Toggle Quizzes (włączenie/wyłączenie quizów — auto-pass bez wyświetlania pytań)
+##   F9: Instant Win (natychmiastowe wygranie w walce lub rozwiązanie zagadki drzwi)
+##   F10: Toggle Enemies (włączenie/wyłączenie przeciwników i pościgu na mapie)
+##   F11: Toggle Quizzes (włączenie/wyłączenie quizów — auto-pass bez wyświetlania pytań)
 ## Narzędzia deweloperskie (skróty, menu F1 / ~, przycisk DEV) działają tylko w buildzie debugowym (edytor, eksport debug);
 ## w eksporcie wydaniowym (OS.is_debug_build() == false) są wyłączone (feedback testów pre-alpha 2026-10-04).
+## Pojedyncze litery (K / O / P) nie są skrótami — tylko klawisze funkcyjne (decyzja usera 2026-10-12), więc zwykłe wciśnięcie litery nic nie robi.
 
 signal enemies_toggled(disabled: bool)
 signal quizzes_toggled(quizless: bool)
@@ -48,24 +49,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# Nie przejmuj pojedynczych liter jeśli gracz wpisuje tekst w polu edycji
-	var focus_owner := get_viewport().gui_get_focus_owner()
-	var is_typing := focus_owner is LineEdit or focus_owner is TextEdit
-
-	# F9 lub K: Natychmiastowe zwycięstwo
-	if key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K):
+	# F9: Natychmiastowe zwycięstwo
+	if key_event.keycode == KEY_F9:
 		trigger_instant_win()
 		get_viewport().set_input_as_handled()
 		return
 
-	# F10 lub O: Włącz/Wyłącz wrogów
-	if key_event.keycode == KEY_F10 or (not is_typing and key_event.keycode == KEY_O):
+	# F10: Włącz/Wyłącz wrogów
+	if key_event.keycode == KEY_F10:
 		toggle_enemies()
 		get_viewport().set_input_as_handled()
 		return
 
-	# F11 lub P: Włącz/Wyłącz quizy
-	if key_event.keycode == KEY_F11 or (not is_typing and key_event.keycode == KEY_P):
+	# F11: Włącz/Wyłącz quizy
+	if key_event.keycode == KEY_F11:
 		toggle_quizzes()
 		get_viewport().set_input_as_handled()
 		return

@@ -106,9 +106,7 @@ func trigger_instant_win() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key_event := event as InputEventKey
-		var focus_owner := get_viewport().gui_get_focus_owner()
-		var is_typing := focus_owner is LineEdit or focus_owner is TextEdit
-		if OS.is_debug_build() and (key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K)):
+		if OS.is_debug_build() and key_event.keycode == KEY_F9:
 			trigger_instant_win()
 			get_viewport().set_input_as_handled()
 			return
