@@ -10,8 +10,14 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @export_range(1, 99, 1) var chest_item_count: int = 1
 ## Tabela łupu z mapy ("chest_loot" w JSON: [{item_id, weight, count}]); niepusta = skrzynia losuje z niej zamiast chest_item_id.
 var loot_table: Array = []
-## Poziom skrzyni: wyznacza trudność quizu przy otwieraniu wytrychem (pytań: 2 + tier, wymagane: o jedno mniej).
-@export_range(1, 4, 1) var tier: int = 1
+## Poziom skrzyni: wyznacza trudność quizu przy otwieraniu wytrychem (pytań: 2 + tier, wymagane: o jedno mniej), klucz
+## (KEY_ITEMS: klucz tieru ≥ tier skrzyni) i wygląd (tier_frames).
+@export_range(1, 4, 1) var tier: int = 1:
+	set(value):
+		tier = value
+		_apply_tier_look()
+## Wygląd skrzyni wg tieru (indeks = tier − 1; animacja "open"); pusta lista albo brak wpisu = bez zmiany (np. skrzynia ścieków).
+@export var tier_frames: Array[SpriteFrames] = []
 @export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 
@@ -22,7 +28,8 @@ var _player_in_interaction_range: bool = false
 var _picking: bool = false
 var door_name: String = "Zamknięta skrzynia"  # tytuł okna quizu (QuizPuzzleController czyta door_name)
 
-const KEY_ITEM := "universal_key"
+## Klucz tieru N otwiera skrzynie tieru ≤ N; najpierw zużywany jest najsłabszy wystarczający. Złoty = klucz uniwersalny.
+const KEY_ITEMS := {1: "key_tier1", 2: "key_tier2", 3: "key_tier3", 4: "universal_key"}
 const LOCKPICK_ITEM := "lockpick"
 ## Szansa złamania wytrycha po nieudanym quizie (po udanym wytrych zawsze się zużywa).
 const LOCKPICK_BREAK_CHANCE := 0.5
@@ -32,9 +39,22 @@ static var PUZZLE_UI_SCENE: String = QuizRpgPaths.path("scenes/quiz/quiz_puzzle_
 func _ready() -> void:
 	add_to_group("chests")
 	add_to_group("interactable")
+	_apply_tier_look()
 	if unique_id.is_empty():
 		unique_id = _generate_unique_id()
 	call_deferred("_check_if_opened")
+
+
+## Wygląd skrzyni z tier_frames (po zmianie tieru, np. z konfiguracji mapy); zachowuje klatkę, a otwartą pokazuje otwartą.
+func _apply_tier_look() -> void:
+	var i := clampi(tier, 1, 4) - 1
+	if i >= tier_frames.size() or tier_frames[i] == null or sprite_frames == tier_frames[i]:
+		return
+	var current_frame := frame
+	sprite_frames = tier_frames[i]
+	animation = &"open"
+	var last := sprite_frames.get_frame_count(&"open") - 1
+	frame = last if opened else clampi(current_frame, 0, last)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -73,8 +93,8 @@ func _generate_unique_id() -> String:
 	return "_".join(id_parts)
 
 
-## Otwarcie przez gracza: wytrych uruchamia quiz (tier skrzyni = trudność), klucz uniwersalny otwiera od razu; wytrych
-## jest używany przed kluczem (klucze są rzadsze). Bez jednego i drugiego skrzynia zostaje zamknięta.
+## Otwarcie przez gracza: wytrych uruchamia quiz (tier skrzyni = trudność), klucz tieru ≥ tier skrzyni otwiera od razu;
+## wytrych jest używany przed kluczem (klucze są rzadsze). Bez jednego i drugiego skrzynia zostaje zamknięta.
 func try_open() -> void:
 	if opened or _picking:
 		return
@@ -86,12 +106,23 @@ func try_open() -> void:
 		return
 	if int(ps.call("get_item_count", LOCKPICK_ITEM)) > 0:
 		_start_lockpicking(ps)
-	elif int(ps.call("get_item_count", KEY_ITEM)) > 0:
-		ps.call("consume_item", KEY_ITEM, 1)
-		_toast("Klucz otwiera skrzynię.")
-		unlock()
 	else:
-		_toast("Zamknięte. Potrzebny klucz albo wytrych.")
+		var key_id := _usable_key(ps)
+		if key_id != "":
+			ps.call("consume_item", key_id, 1)
+			_toast("Klucz otwiera skrzynię.")
+			unlock()
+		else:
+			_toast("Zamknięte. Potrzebny klucz tieru %d (lub wyższego) albo wytrych." % tier)
+
+
+## Najsłabszy klucz z plecaka, który otwiera tę skrzynię (tier klucza ≥ tier skrzyni); "" gdy brak.
+func _usable_key(ps: Node) -> String:
+	for t in range(clampi(tier, 1, 4), 5):
+		var id := str(KEY_ITEMS[t])
+		if int(ps.call("get_item_count", id)) > 0:
+			return id
+	return ""
 
 
 func _start_lockpicking(ps: Node) -> void:

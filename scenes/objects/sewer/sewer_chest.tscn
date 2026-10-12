@@ -39,4 +39,5 @@ shape = SubResource("RectangleShape2D_base")
 position = Vector2(0, -8)
 scale = Vector2(1, 1)
 sprite_frames = SubResource("SpriteFrames_sewer")
+tier_frames = Array[SpriteFrames]([])
 frame = 0

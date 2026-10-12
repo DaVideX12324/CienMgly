@@ -143,6 +143,20 @@
   },
   "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35, "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15, "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025},
   "chest_tier": 2,
+  "chest_loot": [
+    {"item_id": "potion", "weight": 36, "count": 2},
+    {"item_id": "ether", "weight": 18},
+    {"item_id": "focus_tonic", "weight": 10},
+    {"item_id": "antidote", "weight": 10},
+    {"item_id": "lockpick", "weight": 10},
+    {"item_id": "key_tier2", "weight": 6}
+  ],
+  "enemy_loot": {
+    "1": [{"item_id": "potion", "chance": 0.12}, {"item_id": "key_tier2", "chance": 0.04}],
+    "2": [{"item_id": "potion", "chance": 0.18}, {"item_id": "ether", "chance": 0.08}, {"item_id": "key_tier2", "chance": 0.07}],
+    "3": [{"item_id": "potion", "chance": 0.5, "count": 2}, {"item_id": "ether", "chance": 0.3}, {"item_id": "key_tier2", "chance": 0.11}],
+    "4": [{"item_id": "potion", "chance": 1.0, "count": 3}, {"item_id": "ether", "chance": 1.0, "count": 2}, {"item_id": "key_tier3", "chance": 0.3}]
+  },
   "enemies": {
     "beasts": [
       "scenes/enemies/pixel_crawler/rat_base.tscn",

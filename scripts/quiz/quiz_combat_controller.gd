@@ -3373,22 +3373,23 @@ func _total_gold_reward() -> int:
 	return total
 
 
-## Klucz uniwersalny z pokonanych wrogów: każdy wróg osobno, szansa rośnie z tierem (boss = tier 4). Wytrychy wypadają
-## z beczek (LootManager), nie z wrogów.
-const KEY_DROP_ITEM := "universal_key"
+## Klucz z pokonanych wrogów na mapach bez tabeli łupu ("enemy_loot" w JSON mapy, np. tutorial): każdy wróg osobno, szansa rośnie
+## z tierem (boss = tier 4); klucz tieru 1. Mapy z "enemy_loot" mają klucze w swojej tabeli. Wytrychy wypadają z beczek (LootManager).
+const KEY_DROP_ITEM := "key_tier1"
 const KEY_DROP_CHANCE_BY_TIER := {1: 0.04, 2: 0.07, 3: 0.11, 4: 0.3}
 
 
 func _roll_item_drops() -> Array[String]:
 	var dropped: Array[String] = []
 	for unit in _enemy_units:
-		var chance := float(KEY_DROP_CHANCE_BY_TIER.get(clampi(int(unit.get("tier", 1)), 1, 4), 0.04))
-		if randf() < chance and _ps and _ps.has_method("add_item"):
-			_ps.add_item(KEY_DROP_ITEM)
-			dropped.append(KEY_DROP_ITEM)
 		# Łup z tabeli wroga (mapa: "enemy_loot"): źródło jednostki (grupa ze świata) albo główny wróg (kopie).
 		var src: Variant = unit.get("source", enemy)
 		var table: Array = src.get("loot_table") if is_instance_valid(src) and src.get("loot_table") != null else enemy.loot_table
+		if table.is_empty():
+			var chance := float(KEY_DROP_CHANCE_BY_TIER.get(clampi(int(unit.get("tier", 1)), 1, 4), 0.04))
+			if randf() < chance and _ps and _ps.has_method("add_item"):
+				_ps.add_item(KEY_DROP_ITEM)
+				dropped.append(KEY_DROP_ITEM)
 		for e in QuizRpgLootTable.roll_chances(table):
 			var id := str(e.get("item_id", ""))
 			if id != "" and _ps and _ps.has_method("add_item"):
