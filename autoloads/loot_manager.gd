@@ -7,7 +7,11 @@ const BARREL_POPUP_HEIGHT := 228.0
 const TOAST_SECONDS := 3.0
 const MAX_TOASTS := 8
 
-var barrel_drop_chance: float = 0.45
+## Beczka: 1. przedmiot gwarantowany, k-ty (k ≥ 2) wypada z szansą extra_chance × decay^(k−2), najwyżej max_items sztuk
+## (domyślnie 60 %, 30 %, 15 % — średnio ok. 2 przedmioty). Rodzic beczek może podać własne wartości (metadane "barrel_loot").
+var barrel_extra_chance: float = 0.6
+var barrel_decay: float = 0.5
+var barrel_max_items: int = 4
 var _rng := RandomNumberGenerator.new()
 var _popup_layer: CanvasLayer
 var _popup_root: Control
@@ -25,14 +29,23 @@ func _ready() -> void:
 	_rng.randomize()
 
 
-## Przeszukanie beczki: `rolls_min..rolls_max` losowań z tabeli, każde z szansą `drop_chance` (powtórzone przedmioty
-## sumują się w liczbę kopii). found = coś wypadło; items = [{item_id, item_name, count}].
-func search_barrel(drop_chance: float = -1.0, rolls_min: int = 1, rolls_max: int = 1) -> Dictionary:
-	var chance := barrel_drop_chance if drop_chance < 0.0 else clampf(drop_chance, 0.0, 1.0)
+## Liczba losowań z beczki: 1 + kolejne, k-te (k ≥ 2) z szansą first_extra × falloff^(k−2), bez przekroczenia max_rolls.
+func barrel_roll_count(first_extra: float, falloff: float, max_rolls: int) -> int:
+	var n := 1
+	while n < max_rolls and _rng.randf() < first_extra * pow(falloff, n - 1):
+		n += 1
+	return n
+
+
+## Przeszukanie beczki: pierwsze losowanie z tabeli jest gwarantowane, k-te (k ≥ 2) udaje się z szansą extra_chance × decay^(k−2)
+## (ujemne wartości = domyślne z menedżera), najwyżej max_items losowań. Powtórzone przedmioty sumują się w liczbę kopii.
+## found = coś wypadło; items = [{item_id, item_name, count}].
+func search_barrel(extra_chance: float = -1.0, decay: float = -1.0, max_items: int = -1) -> Dictionary:
+	var first_extra := barrel_extra_chance if extra_chance < 0.0 else clampf(extra_chance, 0.0, 1.0)
+	var falloff := barrel_decay if decay < 0.0 else clampf(decay, 0.0, 1.0)
+	var rolls := maxi(barrel_max_items if max_items < 0 else max_items, 1)
 	var counts := {}
-	for _i in range(_rng.randi_range(maxi(rolls_min, 1), maxi(rolls_max, maxi(rolls_min, 1)))):
-		if _rng.randf() > chance:
-			continue
+	for _k in range(barrel_roll_count(first_extra, falloff, rolls)):
 		var item_id := _roll_weighted_item_id(_get_barrel_loot_table())
 		if item_id != "":
 			counts[item_id] = int(counts.get(item_id, 0)) + _roll_item_count(item_id)
