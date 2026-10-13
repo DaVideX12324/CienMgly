@@ -12,6 +12,7 @@ extends RefCounted
 ##   odcinka kompleksu;
 ## - R7 spójność: odcięte części łączone A*, awaryjnie prosty L (nie przez zakręt kanału).
 
+const GenProgress = preload("../core/gen_progress.gd")
 const State = preload("core/structured_state.gd")
 const Pathfinder = preload("structured_pathfinder.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
@@ -35,11 +36,14 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	state.build_water_axis()
 	# Czasy kroków (ms) w stats["t"] — diagnostyka wydajności (preprocess_stats["structured"]).
 	var times := {}
-	for step in [&"_service_corridors", &"_lane_gaps", &"_rooms", &"_room_links", &"_complex_loops",
-			&"_attached_rooms", &"_segment_bridges", &"_repair", &"_drop_redundant_bridges"]:
+	var steps: Array[StringName] = [&"_service_corridors", &"_lane_gaps", &"_rooms", &"_room_links", &"_complex_loops",
+			&"_attached_rooms", &"_segment_bridges", &"_repair", &"_drop_redundant_bridges"]
+	for idx in range(steps.size()):
+		var step: StringName = steps[idx]
 		var t0 := Time.get_ticks_usec()
 		p.call(step)
 		times[String(step).trim_prefix("_")] = (Time.get_ticks_usec() - t0) / 1000
+		GenProgress.sub((idx + 1.0) / float(steps.size()))
 	p.stats["t"] = times
 	return p.stats
 
@@ -222,6 +226,7 @@ func _carve_service(cx: Dictionary) -> bool:
 	for c in tgt_c:
 		tgt_m[c] = 1
 	pf.dt = st.distance_to(tgt_m)
+	pf.max_cost = 100
 	pf.has_bias = true
 	pf.bias_rect = Vector4i(canal.x - 16, canal.y - 18, canal.z + 16, canal.w + 18)
 	pf.bias_side = k
@@ -655,13 +660,13 @@ func _room_links() -> void:
 		pf.own_sub = State.LocalSum.from_cells(own_c, st.w)
 		pf.target = link_sum
 		pf.dt = link_dt
+		pf.max_cost = 120
 		var path := pf.find((r.x + r.z) / 2, (r.y + r.w) / 2)
 		if path.is_empty():
 			continue
 		corridors.append(_carve(_without(path, pf.own)))
 		linked += 1
 	# Część pokoi łączy się z drugim pokojem (pętle).
-	var room_dt: PackedInt32Array = st.distance_to(st.roomm)
 	var extra := 0
 	for r in free_rooms:
 		if rng.randf() >= float(cfg.get("loop_chance", 0.35)):
@@ -673,11 +678,15 @@ func _room_links() -> void:
 				others.append_array(_rect_cells(o))
 		if others.is_empty():
 			continue
+		var others_m := st.new_mask()
+		for c in others:
+			others_m[c] = 1
 		var pf := _pf()
 		pf.own = State.LocalSum.from_cells(own_c, st.w)
 		pf.own_sub = State.LocalSum.from_cells(own_c, st.w)
 		pf.target = State.LocalSum.from_cells(others, st.w)
-		pf.dt = room_dt
+		pf.dt = st.distance_to(others_m)
+		pf.max_cost = 70
 		var path := pf.find((r.x + r.z) / 2, (r.y + r.w) / 2)
 		if path.is_empty() or path.size() >= 70:
 			continue
@@ -742,13 +751,18 @@ func _complex_loops() -> void:
 				cand.append(c)
 		var order: Array = range(cand.size())
 		_shuffle(order)
-		var cx_dt: PackedInt32Array = st.distance_to(pm)
 		var done := false
-		for oi in order.slice(0, 40):
-			var c: int = cand[oi]
+		var attempts := 0
+		var max_cand: int = mini(10, order.size())
+		for oi in range(max_cand):
+			if done or attempts >= 12:
+				break
+			var c: int = cand[order[oi]]
 			var px: int = c % st.w
 			var py: int = c / st.w
 			for d in DIRS:
+				if attempts >= 12:
+					break
 				var L: int = (st.wall_h if d.y != 0 else st.wall_v) + 3
 				var sx: int = px + d.x * L
 				var sy: int = py + d.y * L
@@ -767,10 +781,15 @@ func _complex_loops() -> void:
 						far.append(q)
 				if far.is_empty():
 					continue
+				var far_m := st.new_mask()
+				for q in far:
+					far_m[q] = 1
 				var pf := _pf()
 				pf.target = State.LocalSum.from_cells(far, st.w)
-				pf.dt = cx_dt
+				pf.dt = st.distance_to(far_m)
+				pf.max_cost = 80
 				pf.start_ok = Vector4i(sx - 3, sy - 3, sx + 3, sy + 3)
+				attempts += 1
 				var p1 := pf.find(sx, sy)
 				if p1.is_empty() or p1.size() < 20:
 					continue
@@ -1089,14 +1108,24 @@ func _largest_component_cell() -> int:
 	for i in range(st.w * st.h):
 		if not walk[i] or seen[i]:
 			continue
-		var comp := _component(walk, i)
-		var n := 0
-		for j in range(comp.size()):
-			if comp[j]:
-				n += 1
-				seen[j] = 1
-		if n > best_n:
-			best_n = n
+		var q := PackedInt32Array([i])
+		seen[i] = 1
+		var head := 0
+		while head < q.size():
+			var c: int = q[head]
+			head += 1
+			var x: int = c % st.w
+			var y: int = c / st.w
+			for d in DIRS:
+				var nx: int = x + d.x
+				var ny: int = y + d.y
+				if st.in_map(nx, ny):
+					var n: int = ny * st.w + nx
+					if walk[n] and not seen[n]:
+						seen[n] = 1
+						q.append(n)
+		if q.size() > best_n:
+			best_n = q.size()
 			best = i
 	return best
 
@@ -1128,27 +1157,40 @@ func _repair() -> void:
 		var main := _component(walk, root)
 		# Największy odcięty kawałek najpierw (te z pokojami nie czekają za drobnymi strzępami).
 		var seen := st.new_mask()
-		var piece := PackedByteArray()
 		var piece_n := 0
+		var best_comp := PackedInt32Array()
 		var seed_c := -1
 		for i in range(st.w * st.h):
 			if walk[i] and not main[i] and not given_up[i] and not seen[i]:
-				var comp := _component(walk, i)
-				var n := 0
-				for k in range(comp.size()):
-					if comp[k]:
-						n += 1
-						seen[k] = 1
-				if n > piece_n:
-					piece_n = n
-					piece = comp
+				var q := PackedInt32Array([i])
+				seen[i] = 1
+				var head := 0
+				while head < q.size():
+					var c: int = q[head]
+					head += 1
+					var x: int = c % st.w
+					var y: int = c / st.w
+					for d in DIRS:
+						var nx: int = x + d.x
+						var ny: int = y + d.y
+						if st.in_map(nx, ny):
+							var n: int = ny * st.w + nx
+							if walk[n] and not main[n] and not given_up[n] and not seen[n]:
+								seen[n] = 1
+								q.append(n)
+				if q.size() > piece_n:
+					piece_n = q.size()
+					best_comp = q
 					seed_c = i
 		if seed_c < 0:
 			break
+		var piece := st.new_mask()
+		for c in best_comp:
+			piece[c] = 1
 		if _bridge_connect(piece, main):
 			bridged += 1
 			continue
-		var piece_c := _mask_cells(piece)
+		var piece_c := best_comp
 		var bb := Vector4i(1 << 30, 1 << 30, -1, -1)
 		for c in piece_c:
 			bb = Vector4i(mini(bb.x, c % st.w), mini(bb.y, c / st.w), maxi(bb.z, c % st.w), maxi(bb.w, c / st.w))
@@ -1162,6 +1204,7 @@ func _repair() -> void:
 		pf.own_sub = State.LocalSum.from_cells(_sub_cells(piece_c), st.w)
 		pf.target = State.LocalSum.from_mask(tgt, st.w)
 		pf.dt = st.distance_to(tgt)
+		pf.max_cost = 120
 		var path := pf.find(start % st.w, start / st.w)
 		if path.is_empty():
 			# Awaryjnie prosty L z kratki kawałka do najbliższej kratki głównej części.

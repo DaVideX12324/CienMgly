@@ -122,9 +122,11 @@ static func generate_layout(
 		StructuredRoomPackerScript.place_levers(st, ctx.entrance_pos)
 	canals.gates = st.gates
 	canals.levers = st.levers
+	GenProgress.end(&"portals")
 
 	# Przejścia czyszczące — układ ma już być z nimi zgodny (R7: < 1 % zmienionych kratek). Kanały, chodniki,
 	# korytarze i kładki chronione przed zamurowaniem (Wall3HPass potrafił zasypać przesmyk i odciąć część mapy).
+	GenProgress.begin(&"smoothing")
 	for i in range(width * height):
 		if st.water[i] or st.lanes[i] or st.corrm[i] or st.service[i] or st.bridge_m[i]:
 			ctx.protected_floor[Vector2i(i % width, i / width)] = true
@@ -152,7 +154,7 @@ static func generate_layout(
 	if flags.enable_1w_walls:
 		stats["walls_1w"] = _walls_1w(ctx, canals, seed_used, cfg)
 	stats["lost_post"] = _unreachable(ctx, canals)
-	GenProgress.end(&"portals")
+	GenProgress.end(&"smoothing")
 	ctx.preprocess_stats["structured"] = stats
 
 	# Korytarze-schody (przed platformami, kratownicami i obiektami — wszystkie ich unikają).

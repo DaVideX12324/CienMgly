@@ -238,10 +238,17 @@ func _ensure_default_resources() -> void:
 ## Generuje poziom synchronicznie (cała mapa w tej klatce).
 func generate_level(seed_val: int = 0) -> void:
 	var job := _prepare_job(seed_val)
+	var progress: GenProgress = null
+	if job.debug_report:
+		progress = GenProgress.new()
+		GenProgress.start(progress)
 	job.run()
 	_apply_job(job)
+	if progress != null:
+		progress.finish()
+		GenProgress.stop()
 	if job.debug_report:
-		print(map_report(job))
+		print(map_report(job, progress))
 	generation_finished.emit()
 
 
@@ -309,6 +316,20 @@ func map_report(job: GenJob, progress = null) -> String:
 		lines.append("  płaskowyże: maska %d kratek, poziomy %d..%d, schody S/N/E/W %d/%d/%d/%d, naprawa: +%d schodów, -%d płaskowyżów, %d kratek góry zablokowanych" % [
 			pl.mask.size(), pl.min_level, pl.max_level, pl.stairs.size(), pl.stairs_north.size(), pl.stairs_east.size(), pl.stairs_west.size(),
 			pl.connect_stairs, pl.dropped_pieces, pl.unreachable_top])
+	if r.preprocess_stats != null and r.preprocess_stats.has("structured"):
+		var st_stats: Dictionary = r.preprocess_stats["structured"]
+		lines.append("  ścieki: kanały %d (%d suchych), kompleksy %d, pokoje %d (dostawione %d), kładki %d, korytarze serwisowe %d, pętle %d, naprawy %d (zamurowane %d)" % [
+			st_stats.get("segs", 0), st_stats.get("dry_segs", 0), st_stats.get("complexes", 0),
+			st_stats.get("rooms", 0), st_stats.get("rooms_flush", 0),
+			st_stats.get("bridges", 0), st_stats.get("service", 0),
+			st_stats.get("loops", 0), st_stats.get("repairs", 0), st_stats.get("repair_walled", 0)
+		])
+		if st_stats.has("t") and st_stats["t"] is Dictionary:
+			var t_sub: Dictionary = st_stats["t"]
+			var sub_lines := PackedStringArray()
+			for k in t_sub.keys():
+				sub_lines.append("%s: %.1f ms" % [k, float(t_sub[k])])
+			lines.append("    pod-etapy korytarzy (structured): " + ", ".join(sub_lines))
 	if r.objects != null:
 		lines.append("  obiekty: %d (plan %.1f ms, zdjętych dla osiągalności %d) %s" % [r.objects.placements.size(), r.objects.time_usec / 1000.0, r.objects.removed_for_reach, r.objects.stats])
 	var chests: int = r.chest_spawns.size() + (r.objects.cells_with_scene("chest").size() if r.objects != null else 0)
