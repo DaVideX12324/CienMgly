@@ -1,0 +1,125 @@
+{
+    "activeFile": "town_test.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "Wszystkie pliki (*)",
+    "fileStates": {
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilemaps/Desert Town.tmx": {
+            "scale": 0.33,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1966.6666666666667,
+                "y": 919.6969696969696
+            }
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Animation_Door.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Animation_Flowers.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Animation_Waterfall.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Atlas_Building_Props_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Atlas_Buildings_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Atlas_Props_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Atlas_Rocks_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Atlas_Trees_Bushes_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Objects_Buildings_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Objects_Props_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Objects_Rocks_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Objects_Trees_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Fence.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Ground.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Road.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_RockSlope2.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Sand.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Shadow.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_TallGrass_Desert.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Wall.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilesets/Tileset_Water.tsx": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx": {
+            "scale": 3,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 854.6666666666666,
+                "y": 841.5
+            }
+        },
+        "town_test.tmx#Building_Props": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Floors_Full": {
+            "scaleInDock": 2
+        },
+        "town_test.tmx#Roofs": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Trees": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Vegetation": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Wall_Tiles": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Walls": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Znacznik_Kolizja": {
+            "scaleInDock": 1
+        },
+        "town_test.tmx#Znacznik_Wysokosc": {
+            "scaleInDock": 1
+        }
+    },
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "openFiles": [
+        "town_test.tmx"
+    ],
+    "project": "town.tiled-project",
+    "recentFiles": [
+        "town_test.tmx",
+        "C:/Users/admin/Documents/GitHub/Amon-Ra/amon-ra/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Tiled/Tilemaps/Desert Town.tmx"
+    ]
+}
