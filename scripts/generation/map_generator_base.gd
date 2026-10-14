@@ -492,6 +492,8 @@ static func _cell_center(cell: Vector2i, cell_size: int) -> Vector2:
 	return Vector2(cell.x * cell_size + cell_size * 0.5, cell.y * cell_size + cell_size * 0.5)
 
 
+const PORTAL_AREA_OVERLAP := 4.0
+
 ## Obszar przejścia na inny poziom: `cells` (kratki, np. najwyższy stopień schodów) albo kwadrat 1,5 kratki na `cell`.
 static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: Vector2i, cell_size: int, cells: Rect2i = Rect2i()) -> void:
 	if cell == Vector2i.ZERO:
@@ -514,8 +516,10 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 	if shape == null:
 		return
 	if cells.has_area():
-		shape.size = Vector2(cells.size * cell_size)
-		area.position = Vector2(cells.position * cell_size) + shape.size * 0.5
+		# Obszar wchodzi PORTAL_AREA_OVERLAP px w ostatni stopień (po obu stronach cienkiej osi): kolizja gradientu
+		# (ostatnie piksele kafla) zatrzymuje postać tuż przed voidem, więc bez zakładki nie dotykałaby obszaru.
+		shape.size = Vector2(cells.size * cell_size) + Vector2(PORTAL_AREA_OVERLAP * 2 if cells.size.x == 1 else 0, PORTAL_AREA_OVERLAP * 2 if cells.size.y == 1 else 0)
+		area.position = Vector2(cells.position * cell_size) + Vector2(cells.size * cell_size) * 0.5
 	else:
 		shape.size = Vector2(cell_size * 1.5, cell_size * 1.5)
 		area.position = _cell_center(cell, cell_size)
