@@ -1459,3 +1459,8 @@ visible = false
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 0
 autowrap_mode = 3
+
+[node name="MoreMarker" type="Polygon2D" parent="Root/BattleWindow/WindowMargin/VBox/MessageWindow"]
+visible = false
+color = Color(0.95, 0.95, 0.98, 1)
+polygon = PackedVector2Array(0, 0, 26, 0, 13, 16)

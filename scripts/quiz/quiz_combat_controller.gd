@@ -150,6 +150,7 @@ var _enemy_target_highlight_node: Control = null
 var _action_buttons: Array[Button] = []
 var _selected_action_idx: int = 0
 var _victory_skip := false
+var _more_marker_tween: Tween
 var _action_menu_open := false
 var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
 var _actor_selected_idx := 0
@@ -182,6 +183,7 @@ var _band_mode: Band = Band.PARTY_COMMAND
 @onready var _log_label: RichTextLabel = $TopWindow/VBox/BattleLog
 @onready var _message_window: PanelContainer = $BattleWindow/WindowMargin/VBox/MessageWindow  # po bitwie
 @onready var _victory_label: Label = $BattleWindow/WindowMargin/VBox/MessageWindow/VictoryLog
+@onready var _more_marker: Polygon2D = $BattleWindow/WindowMargin/VBox/MessageWindow/MoreMarker
 var _band_height := 250.0  # wysokość dolnego pasa ze sceny (BattleWindow.offset_top)
 var _log_lines: Array[String] = []
 var _last_logged := ""
@@ -3375,10 +3377,12 @@ func _show_message_sequence(lines: Array[String]) -> void:
 		var candidate := line if page == "" else page + "\n" + line
 		lbl.text = candidate
 		if page != "" and lbl.get_line_count() > capacity:
-			lbl.text = page + _victory_more_marker(lbl)
+			lbl.text = page
 			_victory_skip = false
+			_set_more_marker(true)
 			while not _victory_skip:
 				await get_tree().create_timer(0.05).timeout
+			_set_more_marker(false)
 			candidate = line
 			lbl.text = candidate
 		page = candidate
@@ -3401,8 +3405,21 @@ func _victory_page_capacity(lbl: Label) -> int:
 	return maxi(1, int(floor((avail + spacing) / (font_h + spacing))))
 
 
-func _victory_more_marker(lbl: Label) -> String:
-	return " ▼" if lbl.get_theme_font("font").has_char(0x25BC) else " >>"
+## Migający trójkąt „dalej” w prawym dolnym rogu okna komunikatów (czeka na zatwierdzenie).
+func _set_more_marker(on: bool) -> void:
+	if _more_marker == null:
+		return
+	if _more_marker_tween:
+		_more_marker_tween.kill()
+		_more_marker_tween = null
+	_more_marker.visible = on
+	if not on:
+		return
+	_more_marker.position = _message_window.size - Vector2(56, 50)
+	_more_marker.modulate.a = 1.0
+	_more_marker_tween = create_tween().set_loops()
+	_more_marker_tween.tween_property(_more_marker, "modulate:a", 0.25, 0.45)
+	_more_marker_tween.tween_property(_more_marker, "modulate:a", 1.0, 0.45)
 
 
 func _wait_for_victory_advance(max_wait: float) -> void:
