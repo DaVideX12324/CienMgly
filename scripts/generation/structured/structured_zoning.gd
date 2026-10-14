@@ -393,11 +393,8 @@ func _build_halls() -> void:
 				if not (o.x1 < s.x0 - 1 or o.x0 > s.x1 + 1 or o.y1 < s.y0 - 1 or o.y0 > s.y1 + 1):
 					st.fill(own, o.x0, o.y0, o.x1, o.y1)
 		var other_water := st.m_andnot(st.water, own)
-		var other_hall := st.new_mask()
-		for i in range(st.w * st.h):
-			if hall_any[i] and st.hall_cid[i] != cid:
-				other_hall[i] = 1
-		var foreign := st.m_or(st.dilate(other_water, 3, 3), st.dilate(other_hall, wv + 1, wh + 1))
+		# Sale wcześniejszych kompleksów (ten dopisuje swoje kratki do hall_any dopiero na końcu iteracji).
+		var foreign := st.m_or(st.dilate(other_water, 3, 3), st.dilate(hall_any, wv + 1, wh + 1))
 
 		# Zwężenie z korytarzem za ścianą: odcinek ≥ 18, środek bez brzegu po stronie k.
 		var pinch := {}
@@ -411,6 +408,7 @@ func _build_halls() -> void:
 			var hi: int = s.x1 if s.axis == "h" else s.y1
 			pinch = {"seg": s, "k": rng.randi() % 2, "p0": lo + 6, "p1": hi - 6}
 		var pm := st.new_mask()
+		var pb := Vector4i(st.w, st.h, -1, -1)   # prostokąt otaczający pm (pętle po masce tylko w nim)
 		var ext_max := int(cfg.get("complex_bank_max", 14))
 		var ext_start: Array = cfg.get("complex_bank_start", [5, 10])
 		var ext := [rng.randi_range(int(ext_start[0]), int(ext_start[1])), rng.randi_range(int(ext_start[0]), int(ext_start[1]))]
@@ -478,6 +476,12 @@ func _build_halls() -> void:
 					if got[k] > 0:
 						var r := _side_rect(s, t, t1, k, got[k])
 						st.fill(pm, r[0], r[1], r[2], r[3])
+						var rx0 := maxi(0, int(r[0]))
+						var ry0 := maxi(0, int(r[1]))
+						var rx1 := mini(st.w - 1, int(r[2]))
+						var ry1 := mini(st.h - 1, int(r[3]))
+						if rx0 <= rx1 and ry0 <= ry1:
+							pb = Vector4i(mini(pb.x, rx0), mini(pb.y, ry0), maxi(pb.z, rx1), maxi(pb.w, ry1))
 					side_chunks[k].append([t, t1, got[k]])
 				prev_ok = []
 				for k in [0, 1]:
@@ -487,19 +491,22 @@ func _build_halls() -> void:
 				t = t1 + 1
 			if rooms_mode:
 				_plan_partitions(s, side_chunks, pinch, walk, min_d, planned)
-		for i in range(st.w * st.h):
-			if st.water[i]:
-				pm[i] = 0
+		# Poza `pb` maska jest pusta — pętle tylko w nim (szczeliny leżą między kratkami pm, więc też w nim).
+		for y in range(pb.y, pb.w + 1):
+			for x in range(pb.x, pb.z + 1):
+				var i: int = y * st.w + x
+				if st.water[i]:
+					pm[i] = 0
 		# Najcieńsza ściana między fragmentami wielokąta = 2 kratki: szczeliny 1 kratki -> podłoga.
 		for _it in range(2):
 			var add := PackedInt32Array()
-			for y in range(st.h):
-				for x in range(1, st.w - 1):
+			for y in range(pb.y, pb.w + 1):
+				for x in range(maxi(1, pb.x), mini(st.w - 2, pb.z) + 1):
 					var i: int = y * st.w + x
 					if not pm[i] and not st.water[i] and pm[i - 1] and pm[i + 1]:
 						add.append(i)
-			for y in range(1, st.h - 1):
-				for x in range(st.w):
+			for y in range(maxi(1, pb.y), mini(st.h - 2, pb.w) + 1):
+				for x in range(pb.x, pb.z + 1):
 					var i: int = y * st.w + x
 					if not pm[i] and not st.water[i] and pm[i - st.w] and pm[i + st.w]:
 						add.append(i)
@@ -507,15 +514,15 @@ func _build_halls() -> void:
 				pm[i] = 1
 		var cells := PackedInt32Array()
 		var bb := Vector4i(1 << 30, 1 << 30, -1, -1)
-		for i in range(st.w * st.h):
-			if pm[i]:
-				cells.append(i)
-				st.hallm[i] = 1
-				hall_any[i] = 1
-				st.hall_cid[i] = cid
-				var x: int = i % st.w
-				var y: int = i / st.w
-				bb = Vector4i(mini(bb.x, x), mini(bb.y, y), maxi(bb.z, x), maxi(bb.w, y))
+		for y in range(pb.y, pb.w + 1):
+			for x in range(pb.x, pb.z + 1):
+				var i: int = y * st.w + x
+				if pm[i]:
+					cells.append(i)
+					st.hallm[i] = 1
+					hall_any[i] = 1
+					st.hall_cid[i] = cid
+					bb = Vector4i(mini(bb.x, x), mini(bb.y, y), maxi(bb.z, x), maxi(bb.w, y))
 		cx.cells = cells
 		cx.pinch = pinch
 		cx.partitions = planned
