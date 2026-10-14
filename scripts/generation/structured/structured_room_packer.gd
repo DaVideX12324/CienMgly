@@ -971,11 +971,14 @@ func _drop_redundant_bridges() -> void:
 	while changed:
 		changed = false
 		var cands: Array = []
+		var boxes: Array[Vector4i] = []
+		for b in st.bridges:
+			boxes.append(_cells_box(b.cells))
 		for bi in range(st.bridges.size()):
 			var b: Dictionary = st.bridges[bi]
 			if b.get("crossing", false) or b.get("exact", false):
 				continue
-			var near := _bridge_gap(bi)
+			var near := _bridge_gap(bi, boxes, sp)
 			if near < sp:
 				cands.append([near, bi])
 		cands.sort()
@@ -1045,17 +1048,30 @@ func _banks_connected(cells: Array) -> bool:
 	return false
 
 
-## Najmniejszy odstęp (Czebyszew) między kratkami kładki `bi` a kratkami innych kładek.
-func _bridge_gap(bi: int) -> int:
+## Najmniejszy odstęp (Czebyszew) między kratkami kładki `bi` a kratkami innych kładek — dokładny, gdy < `limit`
+## (inaczej jakaś wartość >= limit). Pary kładek, których prostokąty `boxes` są od siebie >= limit, pominięte
+## (odstęp kratek nie jest mniejszy niż odstęp prostokątów).
+func _bridge_gap(bi: int, boxes: Array[Vector4i], limit: int) -> int:
 	var best := 1 << 30
 	var mine: Array = st.bridges[bi].cells
+	var ra := boxes[bi]
 	for bj in range(st.bridges.size()):
 		if bj == bi:
+			continue
+		var rb := boxes[bj]
+		if maxi(maxi(ra.x - rb.z, rb.x - ra.z), maxi(ra.y - rb.w, rb.y - ra.w)) >= limit:
 			continue
 		for a in mine:
 			for b in st.bridges[bj].cells:
 				best = mini(best, maxi(absi(a.x - b.x), absi(a.y - b.y)))
 	return best
+
+
+static func _cells_box(cells: Array) -> Vector4i:
+	var r := Vector4i(1 << 30, 1 << 30, -(1 << 30), -(1 << 30))
+	for c: Vector2i in cells:
+		r = Vector4i(mini(r.x, c.x), mini(r.y, c.y), maxi(r.z, c.x), maxi(r.w, c.y))
+	return r
 
 
 func _count(m: PackedByteArray) -> int:
@@ -1068,34 +1084,54 @@ func _count(m: PackedByteArray) -> int:
 
 # --- R7: spójność ---
 
+## Podłoga bez wody (poza kładkami) — maski 0/1, po 8 kratek naraz.
 func _walkable() -> PackedByteArray:
-	var m := st.new_mask()
-	for i in range(st.w * st.h):
-		m[i] = 1 if st.floor_m[i] and not (st.water[i] and not st.bridge_m[i]) else 0
-	return m
+	const ONES := 0x0101010101010101
+	var f := State._q(st.floor_m)
+	var wa := State._q(st.water)
+	var br := State._q(st.bridge_m)
+	for i in range(f.size()):
+		f[i] &= ~(wa[i] & ~br[i]) & ONES
+	return State._unq(f, st.w * st.h)
 
 
 func _component(walk: PackedByteArray, start: int) -> PackedByteArray:
 	var seen := st.new_mask()
 	if not walk[start]:
 		return seen
+	_flood(walk, start, seen)
+	return seen
+
+
+## BFS po kratkach `m` (4-sąsiedzi w kolejności DIRS) od `start`, nieodwiedzonych w `seen` — oznacza je w `seen`,
+## zwraca kolejkę (kratki w kolejności odwiedzin, start pierwszy).
+func _flood(m: PackedByteArray, start: int, seen: PackedByteArray) -> PackedInt32Array:
+	var W: int = st.w
+	var N: int = W * st.h
 	var q := PackedInt32Array([start])
 	seen[start] = 1
 	var head := 0
 	while head < q.size():
 		var c: int = q[head]
 		head += 1
-		var x: int = c % st.w
-		var y: int = c / st.w
-		for d in DIRS:
-			var nx: int = x + d.x
-			var ny: int = y + d.y
-			if st.in_map(nx, ny):
-				var n: int = ny * st.w + nx
-				if walk[n] and not seen[n]:
-					seen[n] = 1
-					q.append(n)
-	return seen
+		var x: int = c % W
+		var n: int = c + 1
+		if x < W - 1 and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+		n = c - 1
+		if x > 0 and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+		n = c + W
+		if n < N and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+		n = c - W
+		if n >= 0 and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+	return q
 
 
 ## Kratka największej spójnej części chodliwej — korzeń spójności (kratka „najbliżej środka” potrafiła
@@ -1105,28 +1141,14 @@ func _largest_component_cell() -> int:
 	var seen := st.new_mask()
 	var best := -1
 	var best_n := 0
-	for i in range(st.w * st.h):
-		if not walk[i] or seen[i]:
-			continue
-		var q := PackedInt32Array([i])
-		seen[i] = 1
-		var head := 0
-		while head < q.size():
-			var c: int = q[head]
-			head += 1
-			var x: int = c % st.w
-			var y: int = c / st.w
-			for d in DIRS:
-				var nx: int = x + d.x
-				var ny: int = y + d.y
-				if st.in_map(nx, ny):
-					var n: int = ny * st.w + nx
-					if walk[n] and not seen[n]:
-						seen[n] = 1
-						q.append(n)
-		if q.size() > best_n:
-			best_n = q.size()
-			best = i
+	var i := walk.find(1)
+	while i >= 0:
+		if not seen[i]:
+			var q := _flood(walk, i, seen)
+			if q.size() > best_n:
+				best_n = q.size()
+				best = i
+		i = walk.find(1, i + 1)
 	return best
 
 
@@ -1160,28 +1182,16 @@ func _repair() -> void:
 		var piece_n := 0
 		var best_comp := PackedInt32Array()
 		var seed_c := -1
-		for i in range(st.w * st.h):
-			if walk[i] and not main[i] and not given_up[i] and not seen[i]:
-				var q := PackedInt32Array([i])
-				seen[i] = 1
-				var head := 0
-				while head < q.size():
-					var c: int = q[head]
-					head += 1
-					var x: int = c % st.w
-					var y: int = c / st.w
-					for d in DIRS:
-						var nx: int = x + d.x
-						var ny: int = y + d.y
-						if st.in_map(nx, ny):
-							var n: int = ny * st.w + nx
-							if walk[n] and not main[n] and not given_up[n] and not seen[n]:
-								seen[n] = 1
-								q.append(n)
+		var avail := st.m_andnot(st.m_andnot(walk, main), given_up)   # chodliwe poza główną częścią i porzuconymi
+		var pi := avail.find(1)
+		while pi >= 0:
+			if not seen[pi]:
+				var q := _flood(avail, pi, seen)
 				if q.size() > piece_n:
 					piece_n = q.size()
 					best_comp = q
-					seed_c = i
+					seed_c = pi
+			pi = avail.find(1, pi + 1)
 		if seed_c < 0:
 			break
 		var piece := st.new_mask()
@@ -1196,9 +1206,7 @@ func _repair() -> void:
 			bb = Vector4i(mini(bb.x, c % st.w), mini(bb.y, c / st.w), maxi(bb.z, c % st.w), maxi(bb.w, c / st.w))
 		var ctr := Vector2i((bb.x + bb.z) / 2, (bb.y + bb.w) / 2)
 		var start: int = ctr.y * st.w + ctr.x if piece[ctr.y * st.w + ctr.x] else seed_c
-		var tgt := st.new_mask()
-		for i in range(st.w * st.h):
-			tgt[i] = main[i] & (1 - st.service[i]) & (1 - st.water[i])
+		var tgt := st.m_andnot(st.m_andnot(main, st.service), st.water)
 		var pf := _pf()
 		pf.own = State.LocalSum.from_cells(piece_c, st.w)
 		pf.own_sub = State.LocalSum.from_cells(_sub_cells(piece_c), st.w)
