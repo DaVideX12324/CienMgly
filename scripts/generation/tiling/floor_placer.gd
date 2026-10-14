@@ -46,12 +46,13 @@ static func plan(
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
 
 	var canals = ctx.canals
+	var resolver := TileResolver.AnchorCache.new(ctx, TileModuleRole.Id.FLOOR)
 	for p in cells:
 		if canals != null and canals.water.has(p):
 			continue  # kanał: kwas / lico kładzie CanalPlacer
 		# Named TileSet System: moduł FLOOR (zwykle 1 część w (0,0)). Pusto/nieaktywny
 		# -> stała jak dotychczas (parzystość). Floor zawsze ląduje na warstwie Floor.
-		var parts := TileResolver.resolve_module_parts(ctx, p, TileModuleRole.Id.FLOOR)
+		var parts := resolver.parts_at(p)
 		if parts.is_empty():
 			var placement := TilePlacement.new()
 			placement.pos = p
