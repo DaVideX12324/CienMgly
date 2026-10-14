@@ -22,7 +22,7 @@ const TEXT_EXTS := ["gd", "tscn", "tres", "json", "cfg", "gdshader", "import", "
 const MAX_DIR_FILES := 200
 ## Zasoby hosta spoza odwołań w plikach modułu, a potrzebne wersji samodzielnej (np. arkusze, z których wycięto ikony
 ## przedmiotów — przy dalszym cięciu ikon źródło ma być pod ręką).
-const EXTRA_HOST_ASSETS := ["res://assets/textures/UI/Free - Raven Fantasy Icons"]
+const EXTRA_HOST_ASSETS: Array[String] = []
 ## Uruchomienie z repo modułu otwartego samodzielnie: główna scena i nazwa projektu.
 const STANDALONE_MAIN_SCENE := "res://modules/quiz_rpg/standalone/standalone_main.tscn"
 const STANDALONE_NAME := "Cień Mgły"
