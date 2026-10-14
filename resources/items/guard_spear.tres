@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
-[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/item_icons/guard_spear.png" id="2_icon"]
+[ext_resource type="Texture2D" uid="uid://dfndyu8vms7bh" path="res://assets/item_icons/guard_spear.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_qrpg_item")
