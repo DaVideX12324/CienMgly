@@ -30,7 +30,8 @@ albo jako samodzielny projekt.
 
 **W Artefakcie Wiedzy** (zalecane do pracy): sklonuj host z submodułami
 (`git clone --recurse-submodules …Artefakt-Wiedzy-modular`) i uruchom projekt hosta — Cień Mgły jest na
-liście modułów.
+liście modułów. Assety hosta (`assets/`) są w prywatnym submodule, więc bez dostępu do niego gra się nie uruchomi;
+w tym repo są tylko własne grafiki modułu (`assets/textures/battle_backgrounds`, `loading_screens`).
 
 **Samodzielnie:** moduł korzysta z usług hosta (ustawienia, okno, skala UI, quizy, audio). Ich kopie leżą
 w `_host/` (z `.gdignore`, więc w hoście są niewidoczne), konfiguracja projektu w `project.godot.off`.
@@ -42,6 +43,7 @@ godot --path <katalog_poza_artefaktem> --import
 
 Po zmianach w zasobach / autoloadach hosta, których moduł używa, odśwież kopie:
 `godot --headless --path <host> -s res://modules/quiz_rpg/tools/sync_host_copies.gd`.
+Kopie assetów (`_host/assets`) są poza gitem (assety są prywatne) — skrypt tworzy je z lokalnego `assets/` hosta.
 
 ## Konwencje
 
