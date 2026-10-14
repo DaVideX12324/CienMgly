@@ -446,3 +446,17 @@ class LocalSum:
 
 	func has(x: int, y: int) -> bool:
 		return count(x, y, x, y) > 0
+
+
+## Suma `all` bez `sub` (kratki sub ⊆ all, np. wszystkie pokoje bez jednego) — bez sum osobno dla każdego wariantu.
+class DiffSum extends LocalSum:
+	var all: LocalSum
+	var sub: LocalSum
+
+	func _init(a: LocalSum, b: LocalSum) -> void:
+		all = a
+		sub = b
+		empty = false
+
+	func count(ax0: int, ay0: int, ax1: int, ay1: int) -> int:
+		return all.count(ax0, ay0, ax1, ay1) - sub.count(ax0, ay0, ax1, ay1)

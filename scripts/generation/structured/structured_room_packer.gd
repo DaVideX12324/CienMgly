@@ -668,25 +668,50 @@ func _room_links() -> void:
 		linked += 1
 	# Część pokoi łączy się z drugim pokojem (pętle).
 	var extra := 0
-	for r in free_rooms:
+	# Pokoje rozłączne (zwykle): cel = suma wszystkich pokoi bez bieżącego (DiffSum), odległość do celu tylko w oknie
+	# A* (_rects_dt_window) — zamiast sum i transformaty całej mapy dla każdego pokoju. Inaczej jak dawniej.
+	var all_c := PackedInt32Array()
+	var rects: Array[Vector4i] = []   # pokoje przycięte do mapy (jak _rect_cells)
+	for o in free_rooms:
+		var oc := _rect_cells(o)
+		all_c.append_array(oc)
+		rects.append(Vector4i(maxi(0, o.x), maxi(0, o.y), mini(st.w - 1, o.z), mini(st.h - 1, o.w)))
+	var all_m := st.new_mask()
+	for c in all_c:
+		all_m[c] = 1
+	var disjoint := all_m.count(1) == all_c.size()
+	var all_sum: State.LocalSum = State.LocalSum.from_cells(all_c, st.w) if disjoint else null
+	for ri in range(free_rooms.size()):
+		var r: Vector4i = free_rooms[ri]
 		if rng.randf() >= float(cfg.get("loop_chance", 0.35)):
 			continue
 		var own_c := _rect_cells(r)
-		var others := PackedInt32Array()
-		for o in free_rooms:
-			if o != r:
-				others.append_array(_rect_cells(o))
-		if others.is_empty():
-			continue
-		var others_m := st.new_mask()
-		for c in others:
-			others_m[c] = 1
 		var pf := _pf()
 		pf.own = State.LocalSum.from_cells(own_c, st.w)
 		pf.own_sub = State.LocalSum.from_cells(own_c, st.w)
-		pf.target = State.LocalSum.from_cells(others, st.w)
-		pf.dt = st.distance_to(others_m)
 		pf.max_cost = 70
+		if disjoint:
+			if all_c.size() == own_c.size():
+				continue   # brak innych pokoi (kratek)
+			pf.target = State.DiffSum.new(all_sum, pf.own)
+			var other_rects: Array[Vector4i] = []
+			for oi in range(rects.size()):
+				var q := rects[oi]
+				if oi != ri and q.x <= q.z and q.y <= q.w:
+					other_rects.append(q)
+			pf.dt = _rects_dt_window(other_rects, (r.x + r.z) / 2, (r.y + r.w) / 2, pf.max_cost)
+		else:
+			var others := PackedInt32Array()
+			for o in free_rooms:
+				if o != r:
+					others.append_array(_rect_cells(o))
+			if others.is_empty():
+				continue
+			var others_m := st.new_mask()
+			for c in others:
+				others_m[c] = 1
+			pf.target = State.LocalSum.from_cells(others, st.w)
+			pf.dt = st.distance_to(others_m)
 		var path := pf.find((r.x + r.z) / 2, (r.y + r.w) / 2)
 		if path.is_empty() or path.size() >= 70:
 			continue
@@ -703,6 +728,75 @@ func _room_links() -> void:
 		extra += 1
 	stats["room_links"] = linked
 	stats["room_room"] = extra
+
+
+## Odległość Manhattana do sumy prostokątów `rects` — jak st.distance_to(maska prostokątów), ale policzona tylko
+## w oknie (sx, sy) ± r (poza nim duża liczba). A* z max_cost = r czyta ją tylko w tym oknie (każdy krok kosztuje
+## >= 1). Okno: chamfer jak distance_to, a kratki brzegu okna zaczynają od dokładnej odległości do najbliższego
+## prostokąta — najkrótsza droga do celu spoza okna przechodzi przez brzeg, więc wartości w oknie są dokładne.
+func _rects_dt_window(rects: Array[Vector4i], sx: int, sy: int, r: int) -> PackedInt32Array:
+	const BIG := 1 << 20
+	var W: int = st.w
+	var x0 := maxi(0, sx - r)
+	var y0 := maxi(0, sy - r)
+	var x1 := mini(W - 1, sx + r)
+	var y1 := mini(st.h - 1, sy + r)
+	var d := PackedInt32Array()
+	d.resize(W * st.h)
+	d.fill(BIG)
+	for q in rects:
+		for y in range(maxi(y0, q.y), mini(y1, q.w) + 1):
+			for x in range(maxi(x0, q.x), mini(x1, q.z) + 1):
+				d[y * W + x] = 0
+	# Prostokąty wg odległości od okna — dla kratki brzegu dalsze niż dotychczasowe minimum już nic nie dadzą.
+	var order: Array = []
+	for k in range(rects.size()):
+		var q := rects[k]
+		order.append([maxi(0, maxi(q.x - x1, x0 - q.z)) + maxi(0, maxi(q.y - y1, y0 - q.w)), k])
+	order.sort()
+	var border: Array[Vector2i] = []
+	for x in range(x0, x1 + 1):
+		border.append(Vector2i(x, y0))
+		if y1 != y0:
+			border.append(Vector2i(x, y1))
+	for y in range(y0 + 1, y1):
+		border.append(Vector2i(x0, y))
+		if x1 != x0:
+			border.append(Vector2i(x1, y))
+	for b in border:
+		var i := b.y * W + b.x
+		var best: int = d[i]
+		for e in order:
+			if int(e[0]) >= best:
+				break
+			var q := rects[int(e[1])]
+			best = mini(best, maxi(0, maxi(q.x - b.x, b.x - q.z)) + maxi(0, maxi(q.y - b.y, b.y - q.w)))
+		d[i] = best
+	for y in range(y0, y1 + 1):
+		var i := y * W + x0
+		var left := BIG
+		for x in range(x0, x1 + 1):
+			var v := d[i]
+			if y > y0 and d[i - W] + 1 < v:
+				v = d[i - W] + 1
+			if left + 1 < v:
+				v = left + 1
+			d[i] = v
+			left = v
+			i += 1
+	for y in range(y1, y0 - 1, -1):
+		var i := y * W + x1
+		var right := BIG
+		for x in range(x1, x0 - 1, -1):
+			var v := d[i]
+			if y < y1 and d[i + W] + 1 < v:
+				v = d[i + W] + 1
+			if right + 1 < v:
+				v = right + 1
+			d[i] = v
+			right = v
+			i -= 1
+	return d
 
 
 func _without(path: PackedInt32Array, own: State.LocalSum) -> PackedInt32Array:
