@@ -407,6 +407,15 @@ func cure_statuses(member_index: int, status_ids: Array) -> Array:
 	return out
 
 
+## Wszystkie znane statusy {id, name} posortowane po nazwie (menu deweloperskie).
+func get_status_catalog() -> Array:
+	var out: Array = []
+	for sid in QuizRpgStatusCatalog.all_ids():
+		out.append({"id": String(sid), "name": QuizRpgStatusCatalog.name_of(String(sid))})
+	out.sort_custom(func(a, b): return String(a["name"]) < String(b["name"]))
+	return out
+
+
 func any_status(status_id: String) -> bool:
 	for i in range(party.size()):
 		if has_status(i, status_id):

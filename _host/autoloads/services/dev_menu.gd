@@ -30,6 +30,8 @@ var _opt_quiz_layout: OptionButton
 var _opt_items: OptionButton
 var _spin_item_count: SpinBox
 var _btn_equip_item: Button
+var _opt_status_member: OptionButton
+var _opt_status_id: OptionButton
 var _lbl_fps: Label
 var _lbl_info: Label
 var _lbl_stats_details: Label
@@ -118,6 +120,7 @@ func toggle() -> void:
 	if new_vis:
 		_refresh_controls_state()
 		_refresh_item_cheats()
+		_refresh_status_cheats()
 		_center_panel()
 	menu_visibility_changed.emit(new_vis)
 
@@ -730,6 +733,7 @@ func _build_tab_gameplay() -> Control:
 	vbox.add_child(party_box)
 
 	vbox.add_child(_build_item_cheats())
+	vbox.add_child(_build_status_cheats())
 
 	return scroll
 
@@ -768,6 +772,112 @@ func _build_item_cheats() -> PanelContainer:
 	row.add_child(_btn_equip_item)
 	content.add_child(row)
 	return box
+
+
+## Statusy bohaterów (PlayerStats.add_status / cure_statuses): wybrany członek drużyny i status z katalogu modułu.
+func _build_status_cheats() -> PanelContainer:
+	var box := _create_card_container("Statusy bohaterów", "[ STATUS ]", "Nałóż albo zdejmij status wybranemu członkowi drużyny (czas trwania losowany z definicji statusu).")
+	var content: VBoxContainer = _get_card_content(box)
+	var pick_row := HBoxContainer.new()
+	pick_row.add_theme_constant_override("separation", 10)
+	_opt_status_member = OptionButton.new()
+	_opt_status_member.focus_mode = Control.FOCUS_NONE
+	_opt_status_member.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pick_row.add_child(_opt_status_member)
+	_opt_status_id = OptionButton.new()
+	_opt_status_id.focus_mode = Control.FOCUS_NONE
+	_opt_status_id.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pick_row.add_child(_opt_status_id)
+	content.add_child(pick_row)
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 10)
+	var specs := [
+		["☠️ Nałóż", _on_cheat_add_status],
+		["✨ Zdejmij wybrany", _on_cheat_cure_status],
+		["🧹 Zdejmij wszystkie", _on_cheat_clear_statuses],
+	]
+	for spec in specs:
+		var btn := Button.new()
+		btn.text = spec[0]
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_min_height(btn, 36)
+		btn.pressed.connect(spec[1])
+		btn_row.add_child(btn)
+	content.add_child(btn_row)
+	return box
+
+
+## Lista bohaterów i statusów odświeżana przy otwarciu menu (drużyna i katalog należą do modułu).
+func _refresh_status_cheats() -> void:
+	if _opt_status_member == null or _opt_status_id == null:
+		return
+	var prev_member := _opt_status_member.selected
+	var prev_status: String = str(_opt_status_id.get_item_metadata(_opt_status_id.selected)) if _opt_status_id.selected >= 0 else ""
+	_opt_status_member.clear()
+	_opt_status_id.clear()
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or not ps.has_method("get_status_catalog") or not ps.has_method("get_party_members"):
+		_opt_status_member.add_item("(brak drużyny — moduł nieaktywny)")
+		_opt_status_member.disabled = true
+		_opt_status_id.disabled = true
+		return
+	_opt_status_member.disabled = false
+	_opt_status_id.disabled = false
+	var members: Array = ps.get_party_members()
+	for i in range(members.size()):
+		var statuses: Array = ps.get_statuses(i)
+		var suffix := "  (%s)" % ", ".join(statuses) if not statuses.is_empty() else ""
+		_opt_status_member.add_item("%d. %s%s" % [i + 1, str((members[i] as Dictionary).get("name", "Bohater")), suffix])
+	if prev_member >= 0 and prev_member < _opt_status_member.item_count:
+		_opt_status_member.selected = prev_member
+	for entry in ps.get_status_catalog():
+		_opt_status_id.add_item(str(entry["name"]))
+		_opt_status_id.set_item_metadata(_opt_status_id.item_count - 1, str(entry["id"]))
+		if str(entry["id"]) == prev_status:
+			_opt_status_id.selected = _opt_status_id.item_count - 1
+
+
+func _status_cheat_target() -> Array:
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or _opt_status_member == null or _opt_status_member.disabled or _opt_status_member.selected < 0:
+		return []
+	var sid := str(_opt_status_id.get_item_metadata(_opt_status_id.selected)) if _opt_status_id.selected >= 0 else ""
+	return [ps, _opt_status_member.selected, sid]
+
+
+func _status_cheat_toast(text: String, color: Color) -> void:
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		cheat_service.show_toast(text, color)
+	_refresh_status_cheats()
+
+
+func _on_cheat_add_status() -> void:
+	var t := _status_cheat_target()
+	if t.is_empty() or t[2] == "":
+		return
+	var label: String = _opt_status_id.get_item_text(_opt_status_id.selected)
+	if t[0].add_status(t[1], t[2]):
+		_status_cheat_toast("☠️ Nałożono: %s" % label, Color(0.9, 0.5, 1.0))
+	else:
+		_status_cheat_toast("Status „%s” już jest nałożony" % label, Color(1.0, 0.7, 0.4))
+
+
+func _on_cheat_cure_status() -> void:
+	var t := _status_cheat_target()
+	if t.is_empty() or t[2] == "":
+		return
+	var removed: Array = t[0].cure_statuses(t[1], [t[2]])
+	_status_cheat_toast("✨ Zdjęto status" if not removed.is_empty() else "Ten status nie jest nałożony", Color(0.5, 1.0, 0.6) if not removed.is_empty() else Color(1.0, 0.7, 0.4))
+
+
+func _on_cheat_clear_statuses() -> void:
+	var t := _status_cheat_target()
+	if t.is_empty():
+		return
+	var removed: Array = t[0].cure_statuses(t[1], t[0].get_statuses(t[1]))
+	_status_cheat_toast("🧹 Zdjęto statusy: %d" % removed.size(), Color(0.5, 1.0, 0.6))
 
 
 func _module_singleton(singleton_name: String) -> Node:
