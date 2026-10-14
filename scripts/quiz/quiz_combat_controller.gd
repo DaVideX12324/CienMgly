@@ -3347,6 +3347,11 @@ func _get_or_create_victory_log() -> Label:
 	# Jak w RPG Makerze: komunikaty po bitwie zajmują cały dolny pas (MessageWindow ze sceny; okna
 	# statusu i komend znikają), log u góry gaśnie.
 	_fit_message_window_width()
+	# Okno komunikatów ma tę samą wysokość co zastępowane okna statusu i komend — więcej linii nie powiększa go,
+	# tylko dzieli się na strony (_show_message_sequence).
+	var fixed_h := content_row.size.y if content_row and content_row.visible else 0.0
+	if fixed_h > 0.0:
+		_message_window.custom_minimum_size.y = fixed_h
 	if content_row:
 		content_row.visible = false
 	_message_window.visible = true
@@ -3355,18 +3360,49 @@ func _get_or_create_victory_log() -> Label:
 	return _victory_label
 
 
+## Komunikaty po bitwie: linie dopisują się, aż okno jest pełne; wtedy czeka na zatwierdzenie (Enter) i zaczyna
+## następną stronę. Ostatnia strona znika sama po chwili albo po zatwierdzeniu.
 func _show_message_sequence(lines: Array[String]) -> void:
 	var lbl := _get_or_create_victory_log()
 	lbl.text = ""
 	lbl.visible = true
 	_victory_skip = false
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var capacity := _victory_page_capacity(lbl)
+	var page := ""
 	for line in lines:
-		lbl.text += line + "\n"
+		var candidate := line if page == "" else page + "\n" + line
+		lbl.text = candidate
+		if page != "" and lbl.get_line_count() > capacity:
+			lbl.text = page + _victory_more_marker(lbl)
+			_victory_skip = false
+			while not _victory_skip:
+				await get_tree().create_timer(0.05).timeout
+			candidate = line
+			lbl.text = candidate
+		page = candidate
 		if _victory_skip:
 			continue
 		await _wait_for_victory_advance(1.2)
 	if not _victory_skip:
 		await _wait_for_victory_advance(3.0)
+
+
+## Ile linii mieści okno komunikatów (po ustawieniu stałej wysokości); minimum 1.
+func _victory_page_capacity(lbl: Label) -> int:
+	var font := lbl.get_theme_font("font")
+	var font_h := font.get_height(lbl.get_theme_font_size("font_size"))
+	var spacing := lbl.get_theme_constant("line_spacing")
+	var panel := _message_window.get_theme_stylebox("panel")
+	var avail := _message_window.size.y - (panel.get_minimum_size().y if panel else 0.0)
+	if avail <= 0.0 or font_h <= 0.0:
+		return 4
+	return maxi(1, int(floor((avail + spacing) / (font_h + spacing))))
+
+
+func _victory_more_marker(lbl: Label) -> String:
+	return " ▼" if lbl.get_theme_font("font").has_char(0x25BC) else " >>"
 
 
 func _wait_for_victory_advance(max_wait: float) -> void:
