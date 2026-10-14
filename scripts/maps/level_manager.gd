@@ -11,6 +11,9 @@ const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 ## napisu (ProceduralLevel ma własną: location_name / typ poziomu).
 const LOCATION_NAMES := {
 	"tutorial_area": "Starożytne Ruiny",
+	"cave": "Jaskinia",
+	"sewer": "Ścieki",
+	"town": "Miasto",
 }
 
 ## Ochrona startu (decyzja usera 2026-10-11): po wejściu na mapę / wczytaniu wrogowie przez START_GRACE_SEC gracza
@@ -75,6 +78,9 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		return
 
 	current_level = packed.instantiate()
+	# Mapa spoza LOCATION_NAMES: nazwa z jej własnego location_name (jeśli ma), zanim ProceduralLevel pokaże swój ekran.
+	if is_instance_valid(_loading_screen) and _loading_screen.location.is_empty() and "location_name" in current_level:
+		_loading_screen.location = str(current_level.get("location_name"))
 	# ProceduralLevel zastępuje ten ekran własnym (z postępem generowania) — niech pokaże to samo tło.
 	if is_instance_valid(_loading_screen) and _loading_screen.background != null and "loading_background" in current_level:
 		current_level.loading_background = _loading_screen.background

@@ -5,7 +5,8 @@ extends CanvasLayer
 ## kolory, rozmiary); skrypt tylko wprowadza ekran (zaciemnienie i napisy od zera do wartości ze sceny) i obsługuje
 ## przyciski. Pauzuje grę (sam działa w pauzie) i ustawia stan GameManagera MENU — gracz się nie rusza, menu pauzy
 ## (Esc) się nie otwiera. „Wczytaj zapis”: bieżący slot, a bez niego najnowszy; nieaktywny bez zapisu. Postęp od
-## ostatniego zapisu przepada (zapis ręczny w menu pauzy).
+## ostatniego zapisu przepada (zapis ręczny w menu pauzy). „Wczytaj zapis” otwiera okno z listą zapisów (slotów) do wyboru;
+## Esc / „Wróć” wraca do przycisków.
 
 @export var fade_time := 1.2
 @export var leave_immunity := 3.0   ## s: żaden wróg nie zaczyna walki w czasie przejścia sceny
@@ -14,11 +15,17 @@ var _buttons: Array[Button] = []
 var _selected := 0
 var _ready_for_input := false
 var _leaving := false
+var _menu_buttons: Array[Button] = []
+var _in_slots := false
 
 @onready var _dim: ColorRect = %Dim
 @onready var _box: Control = %Box
 @onready var _load_button: Button = %LoadButton
 @onready var _menu_button: Button = %MenuButton
+@onready var _menu_panel: Control = %Panel
+@onready var _slots_panel: Control = %SlotsPanel
+@onready var _slot_list: VBoxContainer = %SlotList
+@onready var _back_button: Button = %BackButton
 
 
 func _ready() -> void:
@@ -27,7 +34,10 @@ func _ready() -> void:
 		gm.call("change_state", 0)   # GameState.MENU
 	get_tree().paused = true
 	_buttons = [_load_button, _menu_button]
-	_load_button.pressed.connect(_on_load)
+	_menu_buttons = _buttons.duplicate()
+	_load_button.pressed.connect(_open_slots)
+	_back_button.pressed.connect(_close_slots)
+	_back_button.mouse_entered.connect(_on_hover.bind(_back_button))
 	_menu_button.pressed.connect(_on_main_menu)
 	for b in _buttons:
 		b.mouse_entered.connect(_on_hover.bind(b))
@@ -68,6 +78,9 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 	if not _ready_for_input or _leaving:
 		return
+	if _in_slots and event.is_action_pressed("ui_cancel"):
+		_close_slots()
+		return
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 		var step := -1 if event.is_action_pressed("ui_up") else 1
 		for _i in range(_buttons.size()):
@@ -92,10 +105,58 @@ func _load_slot() -> int:
 	return int(sm.call("find_latest_save_slot"))
 
 
-func _on_load() -> void:
-	var slot := _load_slot()
+## Okno wyboru zapisu: przyciski istniejących slotów (bieżący zaznaczony) + „Wróć”.
+func _open_slots() -> void:
 	var gm := _singleton("GameManager")
-	if not _ready_for_input or _leaving or slot < 0 or gm == null:
+	if not _ready_for_input or _leaving or gm == null or _load_slot() < 0:
+		return
+	for child in _slot_list.get_children():
+		child.queue_free()
+	var rows: Array[Button] = []
+	var current := _load_slot()
+	var selected := 0
+	var summaries: Array = gm.call("get_save_slots_summary")
+	for summary in summaries:
+		if not bool(summary.get("exists", false)):
+			continue
+		var slot := int(summary.get("slot_index", 0))
+		var row := Button.new()
+		row.focus_mode = Control.FOCUS_NONE
+		row.theme_type_variation = &"QuizMenuItem"
+		row.custom_minimum_size = Vector2(600, 0)
+		row.text = "%s — %s
+%s  |  %s" % [summary.get("slot_name", "Slot"), summary.get("title", ""), summary.get("subtitle", ""), summary.get("detail", "")]
+		row.pressed.connect(_on_slot_chosen.bind(slot))
+		row.mouse_entered.connect(_on_hover.bind(row))
+		_slot_list.add_child(row)
+		if slot == current:
+			selected = rows.size()
+		rows.append(row)
+	_click()
+	_in_slots = true
+	_menu_panel.visible = false
+	_slots_panel.visible = true
+	_buttons = rows
+	_buttons.append(_back_button)
+	_selected = selected
+	_refresh_selection()
+
+
+func _close_slots() -> void:
+	if not _in_slots or _leaving:
+		return
+	_click()
+	_in_slots = false
+	_slots_panel.visible = false
+	_menu_panel.visible = true
+	_buttons = _menu_buttons
+	_selected = 0
+	_refresh_selection()
+
+
+func _on_slot_chosen(slot: int) -> void:
+	var gm := _singleton("GameManager")
+	if not _ready_for_input or _leaving or gm == null:
 		return
 	_leave()
 	gm.call("load_game", slot)

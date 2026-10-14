@@ -60,6 +60,7 @@ Postęp od ostatniego zapisu przepadnie."
 horizontal_alignment = 1
 
 [node name="Panel" type="PanelContainer" parent="Root/Center/Box"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 theme_type_variation = &"QuizWindow"
@@ -83,3 +84,38 @@ layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"QuizMenuItem"
 text = "Menu główne"
+
+[node name="SlotsPanel" type="PanelContainer" parent="Root/Center/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"QuizWindow"
+
+[node name="SlotsBox" type="VBoxContainer" parent="Root/Center/Box/SlotsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SlotsTitle" type="Label" parent="Root/Center/Box/SlotsPanel/SlotsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 27
+text = "Wybierz zapis"
+horizontal_alignment = 1
+
+[node name="SlotsScroll" type="ScrollContainer" parent="Root/Center/Box/SlotsPanel/SlotsBox"]
+custom_minimum_size = Vector2(620, 300)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="SlotList" type="VBoxContainer" parent="Root/Center/Box/SlotsPanel/SlotsBox/SlotsScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BackButton" type="Button" parent="Root/Center/Box/SlotsPanel/SlotsBox"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+text = "Wróć"
