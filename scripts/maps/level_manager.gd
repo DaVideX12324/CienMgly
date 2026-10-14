@@ -16,9 +16,9 @@ const LOCATION_NAMES := {
 	"town": "Miasto",
 }
 
-## Ochrona startu (decyzja usera 2026-10-11): po wejściu na mapę / wczytaniu wrogowie przez START_GRACE_SEC gracza
-## ignorują, a przy punkcie pojawienia się stoi azyl (QuizRpgSafeZone) — chyba że poziom ma już własny.
-const START_GRACE_SEC := 5.0
+## Ochrona startu: przy punkcie pojawienia się stoi azyl (QuizRpgSafeZone) — chyba że poziom ma już własny. Samej
+## nietykalności na starcie nie ma (decyzja usera 2026-10-14): generator nie daje wrogom nawigacji w pokoju wejścia /
+## wyjścia, pierwszym za wejściem i strefach portali, więc nikt tam nie dojdzie.
 const DEFAULT_SAFE_ZONE_PX := Vector2(192, 192)  # 12×12 kratek (mapy ręczne bez własnego azylu)
 
 var current_level: Node = null
@@ -202,9 +202,6 @@ func _setup_start_safety(spawn_pos: Vector2) -> void:
 		zone.size = rect.size
 		current_level.add_child(zone)
 		zone.global_position = rect.get_center()
-	var player := _get_player()
-	if player and player.has_method("grant_encounter_immunity"):
-		player.grant_encounter_immunity(START_GRACE_SEC, true)
 
 
 func _pick_spawn_marker(level: Node, spawn_name: String) -> Node2D:
