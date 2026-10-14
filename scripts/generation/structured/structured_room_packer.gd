@@ -968,6 +968,10 @@ func _drop_redundant_bridges() -> void:
 	var sp := int(cfg.get("bridge_min_spacing", 10))
 	var dropped := 0
 	var changed := true
+	var g := _bridge_graph()   # {} = nietypowy układ kładek — wtedy BFS po kratkach
+	var gid: Array[int] = []   # węzeł grafu kładki st.bridges[i] (indeksy przesuwają się przy remove_at)
+	for i in range(st.bridges.size()):
+		gid.append(i)
 	while changed:
 		changed = false
 		var cands: Array = []
@@ -987,40 +991,28 @@ func _drop_redundant_bridges() -> void:
 			var cells: Array = st.bridges[bi].cells
 			for q in cells:
 				st.bridge_m[q.y * st.w + q.x] = 0
-			if _banks_connected(cells):
+			if not g.is_empty():
+				_graph_bridge_set(g, gid[bi], 0)
+			var conn: bool = _banks_connected_graph(g, cells) if not g.is_empty() else _banks_connected(cells)
+			if conn:
 				st.bridges.remove_at(bi)
+				gid.remove_at(bi)
 				dropped += 1
 				changed = true
 				break
 			for q in cells:
 				st.bridge_m[q.y * st.w + q.x] = 1
+			if not g.is_empty():
+				_graph_bridge_set(g, gid[bi], 1)
 	stats["bridges_dropped"] = dropped
 
 
 ## Czy brzegi kładki (podłoga przy jej kratkach, po obu stronach kanału) łączy droga bez niej — BFS z jednego
 ## brzegu do pierwszej kratki drugiego (kładki kandydatki mają inną kładkę blisko, więc droga jest krótka).
 func _banks_connected(cells: Array) -> bool:
-	var horiz_canal := true   # kładka pionowa przez kanał poziomy: brzegi nad i pod nią
-	var mn: Vector2i = cells[0]
-	var mx: Vector2i = cells[0]
-	for q in cells:
-		mn = Vector2i(mini(mn.x, q.x), mini(mn.y, q.y))
-		mx = Vector2i(maxi(mx.x, q.x), maxi(mx.y, q.y))
-	horiz_canal = (mx.y - mn.y) >= (mx.x - mn.x)
-	var a: Array[int] = []
-	var b := {}
-	for q in cells:
-		var ends: Array = [q + Vector2i(0, -1), q + Vector2i(0, 1)] if horiz_canal else [q + Vector2i(-1, 0), q + Vector2i(1, 0)]
-		for e: Vector2i in ends:
-			if not st.in_map(e.x, e.y):
-				continue
-			var i: int = e.y * st.w + e.x
-			if not st.floor_m[i] or (st.water[i] and not st.bridge_m[i]):
-				continue
-			if (e.y < mn.y) if horiz_canal else (e.x < mn.x):
-				a.append(i)
-			else:
-				b[i] = true
+	var sides := _bank_sides(cells)
+	var a: Array[int] = sides[0]
+	var b: Dictionary = sides[1]
 	if a.is_empty() or b.is_empty():
 		return true   # kładka bez brzegu z którejś strony nic nie łączy
 	var seen := {}
@@ -1045,6 +1037,159 @@ func _banks_connected(cells: Array) -> bool:
 				continue
 			seen[n] = true
 			q.append(n)
+	return false
+
+
+## Kratki brzegów kładki: [a (po stronie mniejszych współrzędnych), b (słownik kratek po drugiej stronie)] — chodliwe
+## kratki tuż przy kratkach kładki w poprzek kanału (bridge_m kładki już wyzerowane przez wołającego).
+func _bank_sides(cells: Array) -> Array:
+	var horiz_canal := true   # kładka pionowa przez kanał poziomy: brzegi nad i pod nią
+	var mn: Vector2i = cells[0]
+	var mx: Vector2i = cells[0]
+	for q in cells:
+		mn = Vector2i(mini(mn.x, q.x), mini(mn.y, q.y))
+		mx = Vector2i(maxi(mx.x, q.x), maxi(mx.y, q.y))
+	horiz_canal = (mx.y - mn.y) >= (mx.x - mn.x)
+	var a: Array[int] = []
+	var b := {}
+	for q in cells:
+		var ends: Array = [q + Vector2i(0, -1), q + Vector2i(0, 1)] if horiz_canal else [q + Vector2i(-1, 0), q + Vector2i(1, 0)]
+		for e: Vector2i in ends:
+			if not st.in_map(e.x, e.y):
+				continue
+			var i: int = e.y * st.w + e.x
+			if not st.floor_m[i] or (st.water[i] and not st.bridge_m[i]):
+				continue
+			if (e.y < mn.y) if horiz_canal else (e.x < mn.x):
+				a.append(i)
+			else:
+				b[i] = true
+	return [a, b]
+
+
+## Graf spójności podłogi dla _drop_redundant_bridges. Ląd = chodliwe kratki poza wodą pod kładkami z listy
+## (nie zmienia się w pętli — przełączane jest tylko bridge_m kratek kładek). Kratki wody pod kładkami: węzeł =
+## spójna grupa kratek o tym samym zbiorze kładek (kratka bywa w dwóch); wszystkie kratki węzła mają zawsze to
+## samo bridge_m, więc węzeł ma flagę `alive` zapisywaną jak bridge_m (_graph_bridge_set). Węzły lądu: spójne
+## części. Spójność brzegów = BFS po grafie zamiast po kratkach. {} przy nietypowym układzie (kratka kładki poza
+## mapą albo bez bridge_m na starcie) — wtedy BFS po kratkach.
+func _bridge_graph() -> Dictionary:
+	var W: int = st.w
+	var N: int = W * st.h
+	var walk := _walkable()
+	var sets := {}   # kratka wody pod kładką -> Array[int] kładek (rosnąco)
+	for k in range(st.bridges.size()):
+		for q: Vector2i in st.bridges[k].cells:
+			if not st.in_map(q.x, q.y):
+				return {}
+			var i: int = q.y * W + q.x
+			if not st.bridge_m[i]:
+				return {}
+			if st.water[i] and walk[i]:
+				if not sets.has(i):
+					sets[i] = []
+				if not (sets[i] as Array).has(k):
+					(sets[i] as Array).append(k)
+	var land := walk.duplicate()
+	for i: int in sets:
+		land[i] = 0
+	var lab := PackedInt32Array()   # węzeł kratki: część lądu albo grupa kratek kładek
+	lab.resize(N)
+	lab.fill(-1)
+	var n_nodes := 0
+	var seen := st.new_mask()
+	var li := land.find(1)
+	while li >= 0:
+		if not seen[li]:
+			for c in _flood(land, li, seen):
+				lab[c] = n_nodes
+			n_nodes += 1
+		li = land.find(1, li + 1)
+	var bridge_nodes: Array = []   # kładka -> Array węzłów z jej kratkami
+	bridge_nodes.resize(st.bridges.size())
+	for k in range(st.bridges.size()):
+		bridge_nodes[k] = []
+	for i: int in sets:
+		if lab[i] >= 0:
+			continue
+		var key: Array = sets[i]
+		var nd := n_nodes
+		n_nodes += 1
+		lab[i] = nd
+		var q: Array[int] = [i]
+		var head := 0
+		while head < q.size():
+			var c: int = q[head]
+			head += 1
+			var x: int = c % W
+			for n: int in [c + 1 if x < W - 1 else -1, c - 1 if x > 0 else -1, c + W if c + W < N else -1, c - W]:
+				if n >= 0 and lab[n] < 0 and sets.has(n) and sets[n] == key:
+					lab[n] = nd
+					q.append(n)
+		for k: int in key:
+			(bridge_nodes[k] as Array).append(nd)
+	var adj: Array = []
+	adj.resize(n_nodes)
+	for n in range(n_nodes):
+		adj[n] = {}
+	for i: int in sets:
+		var a: int = lab[i]
+		var x: int = i % W
+		for n: int in [i + 1 if x < W - 1 else -1, i - 1 if x > 0 else -1, i + W if i + W < N else -1, i - W]:
+			if n >= 0 and lab[n] >= 0 and lab[n] != a:
+				adj[a][lab[n]] = true
+				adj[lab[n]][a] = true
+	var alive := PackedByteArray()
+	alive.resize(n_nodes)
+	alive.fill(1)
+	return {"lab": lab, "adj": adj, "alive": alive, "bridge_nodes": bridge_nodes}
+
+
+## Zapis bridge_m = v na kratkach kładki `k` (indeks z budowy grafu) — w grafie: flaga alive jej węzłów.
+func _graph_bridge_set(g: Dictionary, k: int, v: int) -> void:
+	var alive: PackedByteArray = g.alive
+	for nd: int in g.bridge_nodes[k]:
+		alive[nd] = v
+	g.alive = alive
+
+
+## Jak _banks_connected (bridge_m kładki już wyzerowane i alive jej węzłów też), ale BFS po grafie _bridge_graph.
+func _banks_connected_graph(g: Dictionary, cells: Array) -> bool:
+	var sides := _bank_sides(cells)
+	var a: Array[int] = sides[0]
+	var b: Dictionary = sides[1]
+	if a.is_empty() or b.is_empty():
+		return true
+	var lab: PackedInt32Array = g.lab
+	var alive: PackedByteArray = g.alive
+	var goal := {}
+	for c: int in b:
+		if lab[c] < 0:
+			return _banks_connected(cells)   # kratka spoza grafu (nie powinno się zdarzyć)
+		goal[lab[c]] = true
+	var seen := {}
+	var q: Array[int] = []
+	for c in a:
+		var na: int = lab[c]
+		if na < 0:
+			return _banks_connected(cells)
+		if goal.has(na):
+			return true
+		if not seen.has(na):
+			seen[na] = true
+			q.append(na)
+	var head := 0
+	var adj: Array = g.adj
+	while head < q.size():
+		var nd: int = q[head]
+		head += 1
+		for m: int in adj[nd]:
+			if seen.has(m) or not alive[m]:
+				continue
+			if goal.has(m):
+				return true
+			seen[m] = true
+			q.append(m)
 	return false
 
 
