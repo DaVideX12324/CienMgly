@@ -20,6 +20,9 @@ const SKIP_MODULE_DIRS := ["_host", "tests", "tools", ".godot"]
 const TEXT_EXTS := ["gd", "tscn", "tres", "json", "cfg", "gdshader", "import", "godot", "off", "txt", "md", "uid"]
 ## Folder wskazany ścieżką (np. res://resources/quizzes) kopiujemy cały — o ile jest mały.
 const MAX_DIR_FILES := 200
+## Zasoby hosta spoza odwołań w plikach modułu, a potrzebne wersji samodzielnej (np. arkusze, z których wycięto ikony
+## przedmiotów — przy dalszym cięciu ikon źródło ma być pod ręką).
+const EXTRA_HOST_ASSETS := ["res://assets/textures/UI/Free - Raven Fantasy Icons"]
 ## Uruchomienie z repo modułu otwartego samodzielnie: główna scena i nazwa projektu.
 const STANDALONE_MAIN_SCENE := "res://modules/quiz_rpg/standalone/standalone_main.tscn"
 const STANDALONE_NAME := "Cień Mgły"
@@ -47,6 +50,8 @@ func _initialize() -> void:
 	var queue: Array = []
 	_collect_refs(project_text, "res://project.godot", queue)
 	_scan_module(MODULE_DIR, queue)
+	for extra in EXTRA_HOST_ASSETS:
+		queue.append([extra, "EXTRA_HOST_ASSETS"])
 	_closure(queue)
 
 	var total_size := 0
