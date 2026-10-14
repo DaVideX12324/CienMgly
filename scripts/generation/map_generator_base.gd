@@ -299,12 +299,12 @@ static func spawn_entities(
 	chest_scene: PackedScene = null,
 	door_scene: PackedScene = null,
 	cell_size: int = 16,
-	per_frame: int = 0,
+	slicer = null,  # FrameSlicer: porcje między klatkami wg budżetu czasu; null = wszystko od razu
 	faction_pools: Dictionary = {},  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
 	enemy_levels: Dictionary = {}  # "1" / "2" / "3" (tier) -> [min, max] poziomu wroga (companion-JSON "enemy_levels")
 ) -> void:
-	# per_frame > 0: co tyle instancji czekamy klatkę (generowanie w tle — pasek ładowania żyje).
-	# 0 = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
+	# slicer: po przekroczeniu budżetu klatki czekamy klatkę (generowanie w tle — pasek ładowania żyje).
+	# null = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
 	var total: int = result.enemy_spawns.size() + result.chest_spawns.size() + (result.doors.size() if door_scene else 0)
 	var made := 0
 	# Skala XP wg rozmiaru mapy: wzorzec "ref_spawns" (wrogowie z miniebossami, bez bossa, na mapie wzorcowej 160x160) / ich liczba na tej
@@ -367,9 +367,9 @@ static func spawn_entities(
 						enemy_inst.call("set_enemy_level", int(band[0]) + absi(hash(pos)) % (int(band[1]) - int(band[0]) + 1), xp_scale if tier < 4 else 1.0)
 					enemies_node.add_child(enemy_inst)
 			made += 1
-			if per_frame > 0 and made % per_frame == 0:
+			if slicer != null and slicer.due():
 				GenProgressScript.sub(float(made) / total)
-				await target_node.get_tree().process_frame
+				await slicer.next_frame(target_node.get_tree())
 
 	# 3. Objects / Skrzynie
 	var objects_node := target_node.get_node_or_null("Objects")
@@ -389,9 +389,9 @@ static func spawn_entities(
 				chest_inst.position = Vector2(c_pos.x * cell_size + cell_size * 0.5, c_pos.y * cell_size + cell_size * 0.5)
 				objects_node.add_child(chest_inst)
 			made += 1
-			if per_frame > 0 and made % per_frame == 0:
+			if slicer != null and slicer.due():
 				GenProgressScript.sub(float(made) / total)
-				await target_node.get_tree().process_frame
+				await slicer.next_frame(target_node.get_tree())
 
 	# 4. Drzwi
 	if door_scene:
@@ -411,9 +411,9 @@ static func spawn_entities(
 				door_inst.position = Vector2(d_pos.x * cell_size + cell_size * 0.5, d_pos.y * cell_size + cell_size * 0.5)
 				doors_node.add_child(door_inst)
 			made += 1
-			if per_frame > 0 and made % per_frame == 0:
+			if slicer != null and slicer.due():
 				GenProgressScript.sub(float(made) / total)
-				await target_node.get_tree().process_frame
+				await slicer.next_frame(target_node.get_tree())
 
 	# 5. Wejscie / Wyjscie - trigger zony: wyjście -> następny poziom, wejście -> powrót do poprzedniego;
 	# przy wyjściu marker FromNext (tu trafia gracz wracający z następnego poziomu).

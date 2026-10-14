@@ -32,10 +32,10 @@ const WALL_SORT_DROP := ObjectDef.CELL * 0.5 - 1.0
 
 
 ## Czyści poprzednie obiekty i stawia nowe. `plan` == null -> tylko czyszczenie.
-## budget_ms > 0: po przekroczeniu tylu ms pracy czeka klatkę (wołać z await); 0 = od razu.
+## slicer (FrameSlicer): po przekroczeniu budżetu klatki czeka klatkę (wołać z await); null = od razu.
 ## Budżet czasu zamiast stałej liczby obiektów — obiekt kosztuje mikrosekundy (kafel/canvas item),
 ## a stała liczba na klatkę zamieniała ~10 tys. obiektów w ~1800 klatek czekania.
-static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: Dictionary = {}, budget_ms: int = 0) -> ObjectRuntime:
+static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: Dictionary = {}, slicer = null) -> ObjectRuntime:
 	var runtime := level.get_node_or_null(RUNTIME_NAME) as ObjectRuntime
 	if runtime == null:
 		runtime = ObjectRuntime.new()
@@ -64,8 +64,6 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 	var chunk_bodies := {}
 	var scene_cache := {}
 	var made := 0
-	var budget_us := budget_ms * 1000
-	var slice_start := Time.get_ticks_usec()
 	var stack_cells := {}   # kratki obiektów ze stack (skrzynia na skrzyni)
 	for pl in plan.placements:
 		if pl.def.stack:
@@ -99,10 +97,9 @@ static func realize(level: Node2D, plan: ObjectPlan, tileset: TileSet, scenes: D
 			if def.is_solid():
 				_add_shape(runtime, chunk_bodies, space, layer_bits, pl)
 		made += 1
-		if budget_us > 0 and (made & 15) == 0 and Time.get_ticks_usec() - slice_start >= budget_us:
+		if slicer != null and (made & 15) == 0 and slicer.due():
 			GenProgress.sub_in(&"props", float(made) / plan.placements.size())
-			await level.get_tree().process_frame
-			slice_start = Time.get_ticks_usec()
+			await slicer.next_frame(level.get_tree())
 	return runtime
 
 

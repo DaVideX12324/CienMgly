@@ -14,17 +14,14 @@ const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
 const CaveGeneratorScript = preload("../generation/cave_generator.gd")
 const TileSetFieldScript = preload("../generation/core/tileset_field.gd")
 const GenProgress = preload("../generation/core/gen_progress.gd")
+const FrameSlicer = preload("../generation/core/frame_slicer.gd")
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
 signal generation_finished
 
-## Kafli wstawianych na klatkę przy generowaniu w tle (reszta klatki zostaje na pasek ładowania).
-const PAINT_CHUNK := 6000
-## Encji (wrogów/skrzyń/drzwi) tworzonych na klatkę przy generowaniu w tle.
-const ENTITY_CHUNK := 6
-## Budżet pracy obiektów (ObjectRealizer) na klatkę, ms — reszta klatki dla paska ładowania.
-const PROPS_BUDGET_MS := 8
+## Kafli wstawianych między sprawdzeniami budżetu klatki (FrameSlicer) przy generowaniu w tle.
+const PAINT_STEP := 512
 
 enum LevelType {
 	FOREST_OVERWORLD,
@@ -555,10 +552,11 @@ func _apply_job(job: GenJob) -> void:
 	_finish_level(job)
 
 
-## Jak _apply_job, ale kafle jaskini porcjami (PAINT_CHUNK na klatkę) z postępem paska.
+## Jak _apply_job, ale kafle, encje i obiekty porcjami wg budżetu czasu klatki (FrameSlicer) z postępem paska.
 func _apply_job_async(job: GenJob) -> void:
 	last_result = job.result
 	var layers := _prepare_layers(job)
+	var slicer := FrameSlicer.new()
 	if level_type == LevelType.CAVE_DUNGEON:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
@@ -571,21 +569,22 @@ func _apply_job_async(job: GenJob) -> void:
 		for layer_name in order:
 			if layer_name == &"FloorDecor":
 				# Teren (błoto/trawa) między Floor a FloorDecor / Walls — jak execute_cave_tiles.
-				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), PAINT_CHUNK)
+				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), slicer)
 			var layer: TileMapLayer = layers.get(layer_name)
 			var cells: Dictionary = tiles.by_layer.get(layer_name, {})
 			if layer == null or cells.is_empty():
 				continue
 			var positions: Array = cells.keys()
-			for from in range(0, positions.size(), PAINT_CHUNK):
-				TilePlacementExecutor.place_range(layer, cells, positions, from, from + PAINT_CHUNK)
-				done += mini(PAINT_CHUNK, positions.size() - from)
-				GenProgress.sub(float(done) / maxf(total, 1))
-				await get_tree().process_frame
+			for from in range(0, positions.size(), PAINT_STEP):
+				TilePlacementExecutor.place_range(layer, cells, positions, from, from + PAINT_STEP)
+				done += mini(PAINT_STEP, positions.size() - from)
+				if slicer.due():
+					GenProgress.sub(float(done) / maxf(total, 1))
+					await slicer.next_frame(get_tree())
 		GenProgress.end(&"paint")
 	else:
 		_apply_grid_layers(job, layers)
-	await _finish_level(job, ENTITY_CHUNK)
+	await _finish_level(job, slicer)
 
 
 func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
@@ -605,18 +604,18 @@ func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
 	MapGeneratorBaseScript.apply_grid_to_layers(layers[&"Floor"], layers[&"Walls"], job.result, _palette(), job.rng)
 
 
-## Encje, nawigacja i wyjście — wspólne dla obu ścieżek. per_frame > 0: encje porcjami między
-## klatkami (wtedy wołać z await); 0 = od razu (wywołanie bez await jest synchroniczne).
-func _finish_level(job: GenJob, per_frame: int = 0) -> void:
+## Encje, nawigacja i wyjście — wspólne dla obu ścieżek. slicer (FrameSlicer): encje i obiekty porcjami
+## między klatkami (wtedy wołać z await); null = od razu (wywołanie bez await jest synchroniczne).
+func _finish_level(job: GenJob, slicer: FrameSlicer = null) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame, _faction_pools, _enemy_levels)
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, slicer, _faction_pools, _enemy_levels)
 		GenProgress.end(&"entities")
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
 		GenProgress.begin(&"props")
-		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
+		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, slicer)
 		GenProgress.end(&"props")
 		_apply_chest_tier()
 		_apply_loot_tables()
