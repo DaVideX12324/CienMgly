@@ -189,8 +189,10 @@ static func apply() -> void:
 	ThemeDB.fallback_font = f
 	th.default_font = f
 	th.default_font_size = src.default_font_size if src.default_font_size > 0 else PX
+	_begin_batch(th)
 	for t in CUSTOM_TYPES:
 		_copy_type(src, th, t)
+	_end_batch(th)
 
 
 static func restore() -> void:
@@ -242,6 +244,7 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 	for l in [bars, skin, _base]:
 		if l != null:
 			layers.append(l)
+	_begin_batch(th)
 	for t in CUSTOM_TYPES:
 		for n in _names(layers, t, Theme.DATA_TYPE_STYLEBOX):
 			var sb := _pick(layers, t, n, Theme.DATA_TYPE_STYLEBOX) as StyleBox
@@ -258,11 +261,14 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 					th.clear_theme_item(dt_kind, n, t)
 			for n in keep:
 				th.set_theme_item(dt_kind, n, t, _pick(layers, t, n, dt_kind))
+	_end_batch(th)
 	if _depth > 0:
 		var dt := ThemeDB.get_default_theme()
+		_begin_batch(dt)
 		for t in CUSTOM_TYPES:
 			dt.remove_type(t)
 			_copy_type(th, dt, t)
+		_end_batch(dt)
 	_sync_combat_theme()
 	# Zaznaczenie ma styl wstawiony jako nadpisanie — przepisać nowym.
 	for w in _selected_buttons.duplicate():
@@ -415,6 +421,17 @@ static func _apply_brightness(copy: StyleBox, orig: StyleBox, k: float) -> void:
 static func _settings_service() -> Node:
 	var tree := Engine.get_main_loop() as SceneTree
 	return tree.root.get_node_or_null("SettingsService") if tree else null
+
+
+## Każda zmiana elementu motywu wysyła `changed` i przelicza motyw w całym drzewie (~15–20 ms na jedną zmianę —
+## nałożenie motywu trwało ponad 800 ms). Paczka zmian: sygnały zablokowane, jedno `changed` na końcu.
+static func _begin_batch(th: Theme) -> void:
+	th.set_block_signals(true)
+
+
+static func _end_batch(th: Theme) -> void:
+	th.set_block_signals(false)
+	th.emit_changed()
 
 
 static func _copy_type(src: Theme, dst: Theme, t: StringName) -> void:
