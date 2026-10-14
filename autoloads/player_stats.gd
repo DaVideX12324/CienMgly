@@ -28,11 +28,10 @@ const BASE_HP          := 334
 ## 19->20 12 532; razem do lv 20 ~87 tys.). Wrogowie wyższych tierów dają wielokrotnie więcej XP — stroić przy kolejnych mapach.
 ## Statusy członków drużyny: member["statuses"] = {id: {turns, …parametry}} (zapisywane razem z drużyną; definicje
 ## w resources/statuses/ — QuizRpgStatusCatalog). turns 0 = do wyleczenia. Trucizna (decyzje usera 2026-10-09): trwa
-## także w eksploracji, dopóki nie użyje się przedmiotu leczącego statusy (cure_statuses); poza walką 1 HP co 3 s,
+## także w eksploracji, dopóki nie użyje się przedmiotu leczącego statusy (cure_statuses); poza walką co 3 s tyle HP co w rundzie walki,
 ## najwyżej do 1 HP; w walce co rundę część maks. HP (może zbić do 0). Inne statusy znikają z końcem walki.
 const STATUS_POISON := "poison"
 const POISON_WORLD_INTERVAL := 3.0
-const POISON_WORLD_DAMAGE := 1
 const EQUIPMENT_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 const EQUIPMENT_LABELS := {
 	"weapon": "Broń",
@@ -529,7 +528,7 @@ func _poison_combat_damage(i: int) -> int:
 
 
 ## Trucizna w eksploracji: co POISON_WORLD_INTERVAL s (tylko w stanie EXPLORING — pauza, walka, menu wstrzymują)
-## POISON_WORLD_DAMAGE HP, najwyżej do 1 HP (poza walką nie zabija).
+## tyle HP co w rundzie walki (_poison_combat_damage), najwyżej do 1 HP (poza walką nie zabija).
 func _process(delta: float) -> void:
 	if not any_status(STATUS_POISON) or not _is_exploring() or _god_mode():
 		return
@@ -541,7 +540,7 @@ func _process(delta: float) -> void:
 	for i in range(party.size()):
 		var cur := _member_hp(i)
 		if has_status(i, STATUS_POISON) and cur > 1:
-			var dmg := mini(POISON_WORLD_DAMAGE, cur - 1)
+			var dmg := mini(_poison_combat_damage(i), cur - 1)
 			_set_member_hp(i, cur - dmg)
 			status_tick.emit(i, STATUS_POISON, dmg)
 			hit = true

@@ -4,6 +4,7 @@ extends CharacterBody2D
 ## Programmer art: rysowany kodem jeśli brak AnimatedSprite2D/sprite frames.
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
+const PoisonVignetteScene = preload("../../scenes/ui/poison_vignette.tscn")
 
 ## Prędkość chodu; bieg = speed * run_speed_mult.
 @export var speed: float = 200.0
@@ -79,17 +80,18 @@ func _ready() -> void:
 		var ps: Node = CoreManager.get_singleton("PlayerStats")
 		if ps and ps.has_signal("status_tick"):
 			ps.status_tick.connect(_on_status_tick)
+		add_child(PoisonVignetteScene.instantiate())
 
 
-## Trucizna w eksploracji (PlayerStats co 3 s): HUD nie pokazuje HP, więc ubytek nad liderem na zielono.
+## Trucizna w eksploracji (PlayerStats co 3 s): HUD nie pokazuje HP, więc ubytek nad liderem na fioletowo (+ winieta zatrucia na całym ekranie).
 func _on_status_tick(member_index: int, status_id: String, amount: int) -> void:
 	if member_index != 0 or status_id != "poison" or not is_inside_tree() or not (_gm and _gm.is_exploring()):
 		return
-	FloatingText.create_at(self, global_position + Vector2(0, -20), "-%d" % amount, Color(0.55, 0.9, 0.3), 12)
+	FloatingText.create_at(self, global_position + Vector2(0, -20), "-%d" % amount, Color(0.78, 0.35, 0.95), 12)
 	var sprite := get_node_or_null("AnimatedSprite2D") as CanvasItem
 	if sprite:
 		var tw := create_tween()
-		tw.tween_property(sprite, "modulate", Color(0.6, 1.0, 0.5), 0.12)
+		tw.tween_property(sprite, "modulate", Color(0.85, 0.55, 1.0), 0.12)
 		tw.tween_property(sprite, "modulate", Color.WHITE, 0.25)
 
 

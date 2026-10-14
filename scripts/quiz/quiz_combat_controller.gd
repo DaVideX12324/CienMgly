@@ -13,7 +13,7 @@ enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY, LIST }
 ## Kontroler panelu pytań jest w hoście (w wersji samodzielnej kopia w _host/), więc load zamiast preload.
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
-const POISON_COLOR := Color(0.55, 0.9, 0.3)
+const POISON_COLOR := Color(0.78, 0.35, 0.95)
 const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
 const PARTY_SKILL_SP_MAX := 100
@@ -1243,7 +1243,7 @@ func _use_item(item_data: Dictionary) -> void:
 		effect_parts.append("+%d TP" % tp_restore)
 	if (use_result.get("cured_statuses", []) as Array).has("poison"):
 		effect_parts.append("zatrucie wyleczone")
-		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Wyleczono", POISON_COLOR, 12)
+		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Wyleczono", Color.GREEN, 12)
 	if effect_parts.is_empty():
 		result_label.text = str(use_result.get("message", "Użyto: %s" % item_name))
 		result_label.add_theme_color_override("font_color", Color.WHITE)
