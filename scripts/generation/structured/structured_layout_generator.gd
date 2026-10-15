@@ -787,13 +787,13 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 					continue
 				for r in run:
 					ctx.grid[r] = CellType.WALL
-				if _connected(ctx, canals, a, b, ctx.width * ctx.height):
+					_raster_set(walk, r, W, ctx.height, 0)
+				if _connected_both(walk, wat, W, ctx.height, a, b):
 					filled += run.size()
-					for r in run:
-						_raster_set(walk, r, W, ctx.height, 0)
 				else:
 					for r in run:
 						ctx.grid[r] = CellType.FLOOR
+						_raster_set(walk, r, W, ctx.height, 1)
 	return filled
 
 
@@ -828,12 +828,6 @@ static func _raise_facade_protrusions(ctx: GenerationContext, canals) -> int:
 		return not GridUtils.is_walkable(ctx.grid, c) and not canals.water.has(c)
 	var floor_ok := func(c: Vector2i) -> bool:
 		return GridUtils.is_walkable(ctx.grid, c) and not canals.water.has(c) and not canals.bridge_cells.has(c) 				and not ctx.portal_zone.has(c) and not canals.cells.has(c)
-	var in_band := func(c: Vector2i) -> bool:   # c w pasie lica: pod nim podłoga w odległości 1..FACADE_BAND
-		for k in range(1, FACADE_BAND + 1):
-			var b := c + Vector2i(0, k)
-			if not wall.call(b):
-				return GridUtils.is_walkable(ctx.grid, b)
-		return false
 	# Raster chodliwości / wody (aktualizowany przy zapisach) — szybkie odrzucenie kratek przed warunkiem niżej.
 	var W := ctx.width
 	var H := ctx.height
@@ -858,11 +852,14 @@ static func _raise_facade_protrusions(ctx: GenerationContext, canals) -> int:
 						break
 				if not band:
 					continue
+				# c i kratka nad nią to mur, c w pasie lica (pod nią podłoga w odległości 1..FACADE_BAND) — wszystko
+				# sprawdzone z rastra wyżej.
 				var c := Vector2i(x, y)
-				if not wall.call(c) or not wall.call(c + Vector2i(0, -1)) or not in_band.call(c):
-					continue
 				for side in [Vector2i(-1, 0), Vector2i(1, 0)]:
 					# szczyt wystającej ściany obok c: ściana w rzędzie y, podłoga nad nią
+					var si: int = i + side.x
+					if walk[si] or wat[si] or not walk[si - W] or wat[si - W]:
+						continue   # warunek konieczny pierwszego kroku pętli niżej (z rastra)
 					var run: Array[Vector2i] = []
 					var q: Vector2i = c + side
 					while run.size() <= MAX_PROTRUSION and wall.call(q) and floor_ok.call(q + Vector2i(0, -1)):
@@ -878,18 +875,18 @@ static func _raise_facade_protrusions(ctx: GenerationContext, canals) -> int:
 								nb.append(n)
 					for f in run:
 						ctx.grid[f] = CellType.WALL
+						_raster_set(walk, f, W, H, 0)
 					var ok := true
 					for j in range(1, nb.size()):
-						if not _connected(ctx, canals, nb[0], nb[j], 4000):
+						if not _connected(walk, wat, W, H, nb[0], nb[j], 4000):
 							ok = false
 							break
 					if ok:
 						changed += run.size()
-						for f in run:
-							_raster_set(walk, f, W, H, 0)
 					else:
 						for f in run:
 							ctx.grid[f] = CellType.FLOOR
+							_raster_set(walk, f, W, H, 1)
 		filled += changed
 		if changed == 0:
 			break
@@ -902,21 +899,53 @@ static func _sliver(ctx: GenerationContext, canals, c: Vector2i, side: Vector2i)
 	return wall.call(c + side) and wall.call(c - side)
 
 
-## Czy `b` osiągalne z `a` (4-sąsiedzi po podłodze i wodzie), najwyżej `limit` kratek.
-static func _connected(ctx: GenerationContext, canals, a: Vector2i, b: Vector2i, limit: int) -> bool:
-	var seen := {a: true}
-	var q: Array[Vector2i] = [a]
+## Czy `b` osiągalne z `a` (4-sąsiedzi po podłodze i wodzie: raster walk / wat, W × H), najwyżej `limit` kratek
+## zdjętych z kolejki (BFS w kolejności E, W, S, N — limit decyduje o wyniku, więc kolejność jest stała).
+static func _connected(walk: PackedByteArray, wat: PackedByteArray, W: int, H: int, a: Vector2i, b: Vector2i, limit: int) -> bool:
+	var seen := {a.y * W + a.x: true}
+	var q := PackedInt32Array([a.y * W + a.x])
+	var target := b.y * W + b.x
 	var h := 0
 	while h < q.size() and h < limit:
-		var c := q[h]
+		var c: int = q[h]
 		h += 1
-		if c == b:
+		if c == target:
 			return true
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var n: Vector2i = c + d
-			if not seen.has(n) and (GridUtils.is_walkable(ctx.grid, n) or canals.water.has(n)):
+		var x := c % W
+		for n: int in [c + 1 if x < W - 1 else -1, c - 1 if x > 0 else -1, c + W if c + W < W * H else -1, c - W]:
+			if n >= 0 and not seen.has(n) and (walk[n] == 1 or wat[n] == 1):
 				seen[n] = true
 				q.append(n)
+	return false
+
+
+## Czy `a` i `b` są w jednej spójnej części (4-sąsiedzi po podłodze i wodzie, bez limitu). BFS z obu końców na
+## zmianę po jednej kratce — przy braku połączenia kończy się po wyczerpaniu mniejszej części (ślepy zaułek), nie
+## całej mapy.
+static func _connected_both(walk: PackedByteArray, wat: PackedByteArray, W: int, H: int, a: Vector2i, b: Vector2i) -> bool:
+	var ia := a.y * W + a.x
+	var ib := b.y * W + b.x
+	if ia == ib:
+		return true
+	var side := {ia: 1, ib: 2}   # kratka -> strona, z której ją osiągnięto
+	var qs: Array[PackedInt32Array] = [PackedInt32Array([ia]), PackedInt32Array([ib])]
+	var heads: Array[int] = [0, 0]
+	while heads[0] < qs[0].size() and heads[1] < qs[1].size():
+		for k in 2:
+			var c: int = qs[k][heads[k]]
+			heads[k] += 1
+			var x := c % W
+			for n: int in [c + 1 if x < W - 1 else -1, c - 1 if x > 0 else -1, c + W if c + W < W * H else -1, c - W]:
+				if n < 0 or not (walk[n] == 1 or wat[n] == 1):
+					continue
+				var sn: int = side.get(n, 0)
+				if sn == 0:
+					side[n] = k + 1
+					qs[k].append(n)
+				elif sn != k + 1:
+					return true
+			if heads[k] >= qs[k].size():
+				return false
 	return false
 
 
