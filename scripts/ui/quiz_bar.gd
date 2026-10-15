@@ -10,7 +10,10 @@ extends ProgressBar
 ## powiększenie pikseli grafiki (domyślnie 2); `bar_tile` = 1 — środek powtarzany zamiast rozciągany
 ## (paski modułowe: początek + segment + koniec; szerokość dociągana do pełnych segmentów);
 ## `bar_cap_left` / `bar_cap_right` — szerokość początku / końca w px grafiki (bez nich: z kształtu);
-## `bar_center` = 1 — wypełnienie symetryczne od środka (ubywa z obu końców, pasek dwustronny).
+## `bar_center` = 1 — wypełnienie symetryczne od środka (ubywa z obu końców, pasek dwustronny);
+## `bar_outline` = rzędy obrysu u góry i u dołu grafiki (domyślnie 1). Węzeł ma wysokość samego środka paska
+## (bez obrysu), obrys rysuje się poza nim — jak ramka gładkiego paska, więc odstęp od tekstu w układzie liczy
+## się od środka paska w każdym stylu.
 
 const _SHADER_CODE := """
 shader_type canvas_item;
@@ -76,7 +79,7 @@ func _refresh_mode() -> void:
 		# wysokość grafiki (minimalny rozmiar ProgressBar liczy się natywnie ze stylów) — przeliczana
 		# przy każdej zmianie motywu (inny styl pasków = inna wysokość).
 		var under := get_theme_icon(&"bar_under")
-		var h := float(under.get_height() * _scale()) if under else 0.0
+		var h := float((under.get_height() - 2 * _outline()) * _scale()) if under else 0.0
 		var bg := get_theme_stylebox(&"background") as StyleBoxEmpty if has_theme_stylebox_override(&"background") else null
 		if bg == null or bg.get_minimum_size().y != h:
 			bg = StyleBoxEmpty.new()
@@ -103,6 +106,10 @@ func _refresh_mode() -> void:
 
 func _scale() -> int:
 	return maxi(1, get_theme_constant(&"bar_scale") if has_theme_constant(&"bar_scale") else 2)
+
+
+func _outline() -> int:
+	return maxi(0, get_theme_constant(&"bar_outline") if has_theme_constant(&"bar_outline") else 1)
 
 
 func _draw() -> void:
@@ -141,7 +148,8 @@ func _draw() -> void:
 	var span := max_value - min_value
 	m.set_shader_parameter(&"ratio", clampf((value - min_value) / span, 0.0, 1.0) if span > 0.0 else 0.0)
 	var h := src.y * k
-	draw_texture_rect(under, Rect2(Vector2(0, roundf((size.y - h) * 0.5)), Vector2(dst_w * k, h)), false)
+	var fill_h := (src.y - 2 * _outline()) * k
+	draw_texture_rect(under, Rect2(Vector2(0, roundf((size.y - fill_h) * 0.5) - _outline() * k), Vector2(dst_w * k, h)), false)
 
 
 ## Zasięg kształtu w każdym wierszu grafiki (do przycinania wypełnienia po skosie).
