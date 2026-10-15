@@ -292,7 +292,8 @@ func get_question_display_text(question: Dictionary) -> String:
 		"fill_text":
 			return str(question.get("prompt", ""))
 		"fill_tiles":
-			return str(question.get("text_with_gaps", ""))
+			# Zdanie z lukami stoi już w wierszu luk pod pytaniem — tu tylko polecenie (albo własna treść pytania).
+			return str(question.get("question", question.get("prompt", "Uzupełnij luki kafelkami")))
 		"matching":
 			# Pary zwykle bez treści pytania — bez niej nad parami zostawał pusty pas.
 			return str(question.get("question", question.get("prompt", "Połącz w pary")))
