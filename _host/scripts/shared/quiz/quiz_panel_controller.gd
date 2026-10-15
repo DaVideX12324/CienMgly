@@ -17,6 +17,8 @@ const MATCH_COLORS: Array[Color] = [
 	Color(0.58, 0.64, 0.96),
 ]
 const MATCH_TAGS: Array[String] = ["[A]", "[B]", "[C]", "[D]", "[E]", "[F]"]
+## Najszersza lewa kolumna par (część szerokości ekranu) — dłuższe lewe pozycje się zawijają.
+const MATCH_LEFT_MAX_SHARE := 0.35
 
 var command_vbox: VBoxContainer
 var quiz_panel: VBoxContainer
@@ -812,13 +814,26 @@ func _measure_flow_container_width(container: HFlowContainer) -> float:
 	return width
 
 
+## Szerokość lewej kolumny par: najdłuższa lewa pozycja w wersji z zaznaczeniem („[A] ▶ tekst”), najwyżej
+## MATCH_LEFT_MAX_SHARE ekranu (dłuższa się zawija).
+func _match_left_width() -> float:
+	var left_items: Array = _current_question.get("left_items", [])
+	var w := 0.0
+	for i in range(mini(left_items.size(), _match_left_buttons.size())):
+		var btn: Button = _match_left_buttons[i]
+		var font := btn.get_theme_font("font")
+		if font == null:
+			continue
+		var text := "%s ▶ %s" % [MATCH_TAGS[i % MATCH_TAGS.size()], str(left_items[i])]
+		w = maxf(w, font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, btn.get_theme_font_size("font_size")).x + 28.0)
+	var vp := quiz_panel.get_viewport_rect().size.x if quiz_panel and quiz_panel.is_inside_tree() else 1920.0
+	return minf(w, vp * MATCH_LEFT_MAX_SHARE)
+
+
 func _measure_matching_width() -> float:
 	if match_left == null or match_right == null:
 		return 0.0
-	var left_width := 0.0
-	for child in match_left.get_children():
-		if child is Button and (child as Button).visible:
-			left_width = maxf(left_width, _measure_button_width(child as Button))
+	var left_width := _match_left_width()
 	var right_width := 0.0
 	for child in match_right.get_children():
 		if child is Button and (child as Button).visible:
@@ -914,20 +929,9 @@ func _refresh_matching_display() -> void:
 		var is_matched: bool = _match_pairs.has(i)
 		var is_selected: bool = (i == _match_selected)
 
-		if is_matched:
-			var right_idx: int = int(_match_pairs[i])
-			var right_text: String = str(right_items[right_idx]) if right_idx < right_items.size() else ""
-			var right_preview := right_text
-			if right_preview.length() > 24:
-				right_preview = right_preview.substr(0, 22) + "…"
-			btn.text = "%s  %s   ➔   %s  %s" % [tag, raw_left, tag, right_preview]
-			_apply_match_card_style(btn, pair_color, true, is_selected)
-		elif is_selected:
-			btn.text = "%s ▶ %s   ➔   [ ? ]" % [tag, raw_left]
-			_apply_match_card_style(btn, pair_color, false, true)
-		else:
-			btn.text = "%s  %s" % [tag, raw_left]
-			_apply_match_card_style(btn, pair_color, false, false)
+		# Para widoczna po tej samej literze i kolorze po obu stronach — bez dopisywania prawej pozycji do lewej.
+		btn.text = ("%s ▶ %s" if is_selected else "%s  %s") % [tag, raw_left]
+		_apply_match_card_style(btn, pair_color, is_matched, is_selected)
 
 	var reverse_map: Dictionary = {}
 	for left_idx in _match_pairs.keys():
@@ -946,6 +950,14 @@ func _refresh_matching_display() -> void:
 		else:
 			btn.text = "[ — ]  %s" % [raw_right]
 			_apply_match_card_style(btn, Color(0.4, 0.45, 0.55), false, false)
+
+	# Lewa kolumna na szerokość najdłuższej pozycji (bez rozciągania), prawa bierze resztę — GridContainer dzieli
+	# rozciągane kolumny po równo, a prawe pozycje są zwykle dużo dłuższe.
+	var left_w := _match_left_width()
+	match_left.size_flags_horizontal = Control.SIZE_FILL
+	match_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for btn in _match_left_buttons:
+		btn.custom_minimum_size.x = left_w
 
 
 func _apply_match_card_style(btn: Button, color: Color, is_matched: bool, is_selected: bool) -> void:

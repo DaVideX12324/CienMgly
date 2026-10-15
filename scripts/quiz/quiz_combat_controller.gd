@@ -175,6 +175,7 @@ var _ps: Node
 var _dm: Node
 var _gm: Node
 var _quiz_panel_controller
+var _field_band_h := 0.0   # wysokość zwykłego pasa pod polem bitwy (bez chwilowego wzrostu okna przy dużym pytaniu)
 var _band_mode: Band = Band.PARTY_COMMAND
 @onready var _corner_label: Label = (party_panel_container.get_node_or_null("CornerInfo") if party_panel_container else null) as Label
 @onready var _top_window: PanelContainer = $TopWindow           # u góry: pytanie quizu + czas albo log bitwy
@@ -2555,7 +2556,8 @@ func _band_content_min_height() -> float:
 	return tallest + overhead
 
 
-## Okno urosło do treści (długie pytanie) albo wróciło — pole bitwy i cień za faktyczną wysokością pasa.
+## Okno urosło do treści (duże pytanie) albo wróciło — cień za faktyczną wysokością pasa; pole bitwy zostaje
+## (okno wchodzi na dół pola, potwory stoją w miejscu).
 func _on_battle_window_resized() -> void:
 	_fit_field_to_band(maxf(battle_window.size.y, _get_desired_battle_window_height()))
 
@@ -2564,13 +2566,17 @@ func _update_window_heights() -> void:
 	var menu_h: float = _get_desired_battle_window_height()
 	if battle_window:
 		battle_window.offset_top = -menu_h
+	# Pas pod polem bitwy: zwykły pas (poza pytaniem — w pytaniu okno pasa mierzy też treść quizu).
+	if phase != Phase.QUIZ or _field_band_h <= 0.0:
+		_field_band_h = menu_h
 	_fit_field_to_band(maxf(battle_window.size.y, menu_h) if battle_window else menu_h)
 
 
+## band_h = faktyczna wysokość pasa (cień okna); pole bitwy kończy się nad zwykłym pasem (_field_band_h).
 func _fit_field_to_band(band_h: float) -> void:
 	var battlefield := get_node_or_null("Battlefield") as Control
 	if battlefield:
-		battlefield.offset_bottom = -band_h
+		battlefield.offset_bottom = -(_field_band_h if _field_band_h > 0.0 else band_h)
 	if window_shadow:
 		window_shadow.offset_bottom = 0.0
 		window_shadow.offset_top = -band_h - _shadow_height

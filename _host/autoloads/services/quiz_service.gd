@@ -293,6 +293,9 @@ func get_question_display_text(question: Dictionary) -> String:
 			return str(question.get("prompt", ""))
 		"fill_tiles":
 			return str(question.get("text_with_gaps", ""))
+		"matching":
+			# Pary zwykle bez treści pytania — bez niej nad parami zostawał pusty pas.
+			return str(question.get("question", question.get("prompt", "Połącz w pary")))
 		_:
 			return str(question.get("question", question.get("prompt", "")))
 
