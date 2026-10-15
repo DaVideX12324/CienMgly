@@ -14,6 +14,7 @@ enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY, LIST }
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
 const POISON_COLOR := Color(0.78, 0.35, 0.95)
+const PARTY_CURSOR_MIN_PAD := 8.0  ## kursor wiersza drużyny: odstęp ramki od tekstu w poziomie (px)
 const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
 const PARTY_SKILL_SP_MAX := 100
@@ -3327,7 +3328,8 @@ func _refresh_actor_selection() -> void:
 		row.queue_redraw()
 
 
-## Kursor na wierszu drużyny: ten sam styl „selected” co pozycje menu (pasek pod wierszem).
+## Kursor na wierszu drużyny: ten sam styl „selected” co pozycje menu (pasek pod wierszem). Ramka szersza od
+## wiersza o margines treści stylu (jak tło przycisku menu wokół tekstu) — inaczej nazwa i liczby leżą na krawędzi.
 func _draw_party_row_cursor(index: int) -> void:
 	var at := _actor_selected_idx if _actor_select_open else (_active_actor_index if phase == Phase.ACTION_SELECT or phase == Phase.TARGET_SELECT else -1)
 	if index != at or index >= party_rows.size():
@@ -3336,7 +3338,9 @@ func _draw_party_row_cursor(index: int) -> void:
 	var sb := row.get_theme_stylebox(&"selected", QuizTheme.MENU_ITEM)
 	if sb == null:
 		return
-	row.draw_style_box(sb, Rect2(Vector2.ZERO, row.size))
+	var pad_l := maxf(sb.get_margin(SIDE_LEFT), PARTY_CURSOR_MIN_PAD)
+	var pad_r := maxf(sb.get_margin(SIDE_RIGHT), PARTY_CURSOR_MIN_PAD)
+	row.draw_style_box(sb, Rect2(-pad_l, 0.0, row.size.x + pad_l + pad_r, row.size.y))
 
 
 ## Mysz na liście drużyny w czasie wyboru postaci: najechanie przesuwa kursor, klik zatwierdza.
