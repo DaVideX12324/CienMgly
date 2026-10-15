@@ -195,10 +195,25 @@ theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
 text = "Limit FPS (przy wylaczonym V-Sync):"
 
-[node name="FpsOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
+[node name="FpsRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Ekran"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FpsSlider" type="HSlider" parent="Panel/Margin/VBox/Tabs/Ekran/FpsRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
+size_flags_vertical = 4
+max_value = 360.0
+step = 10.0
+tick_count = 37
+ticks_on_borders = true
+
+[node name="FpsSpin" type="SpinBox" parent="Panel/Margin/VBox/Tabs/Ekran/FpsRow"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+max_value = 1000.0
+alignment = 1
+suffix = "FPS"
 
 [node name="Dzwiek" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 visible = false

@@ -42,7 +42,7 @@ func load_settings() -> void:
 		WindowService.resolution = Vector2i(width, height)
 		WindowService.window_maximized = bool(_cfg.get_value(SEC_DISPLAY, "window_maximized", false))
 		WindowService.vsync_enabled = bool(_cfg.get_value(SEC_DISPLAY, "vsync", true))
-		WindowService.max_fps = maxi(int(_cfg.get_value(SEC_DISPLAY, "max_fps", 0)), 0)
+		WindowService.max_fps = WindowService.clamp_fps(int(_cfg.get_value(SEC_DISPLAY, "max_fps", 0)))
 	WindowService.monitor_idx = clampi(WindowService.monitor_idx, 0, maxi(0, DisplayServer.get_screen_count() - 1))
 	settings_loaded.emit()
 

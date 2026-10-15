@@ -22,8 +22,10 @@ var window_maximized := false
 ## V-Sync (synchronizacja z odświeżaniem monitora) i limit klatek, gdy V-Sync wyłączony (0 = bez limitu).
 var vsync_enabled := true
 var max_fps := 0
-## Limity do wyboru w opcjach (0 = bez limitu).
-const FPS_LIMITS: Array[int] = [30, 60, 75, 90, 120, 144, 165, 240, 0]
+## Najmniejszy limit klatek (1..9 -> MIN_FPS) i największy z suwaka w opcjach (pole wpisu przyjmuje do MAX_FPS_INPUT).
+const MIN_FPS := 10
+const MAX_FPS_SLIDER := 360
+const MAX_FPS_INPUT := 1000
 ## Ramka zmierzona na oknie z dekoracjami (ZERO = jeszcze nie).
 var _frame := Vector2i.ZERO
 ## apply_settings w toku — zmiany rozmiaru okna to nie ręczna zmiana użytkownika.
@@ -47,7 +49,12 @@ func _ready() -> void:
 ## V-Sync włączony: tempo klatek z monitora (Engine.max_fps bez limitu); wyłączony: limit max_fps (0 = bez limitu).
 func apply_frame_pacing() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync_enabled else DisplayServer.VSYNC_DISABLED)
-	Engine.max_fps = 0 if vsync_enabled else maxi(max_fps, 0)
+	Engine.max_fps = 0 if vsync_enabled else clamp_fps(max_fps)
+
+
+## Limit klatek: 0 = bez limitu, inaczej MIN_FPS..MAX_FPS_INPUT.
+static func clamp_fps(fps: int) -> int:
+	return 0 if fps <= 0 else clampi(fps, MIN_FPS, MAX_FPS_INPUT)
 
 
 ## Ustawia tryb okna, rozdzielczość i monitor. Okno ląduje zawsze na wybranym monitorze:

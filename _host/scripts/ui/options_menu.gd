@@ -11,7 +11,8 @@ signal closed
 @onready var _scale_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/ScaleOption
 @onready var _vsync_check: CheckButton = $Panel/Margin/VBox/Tabs/Ekran/VSyncCheck
 @onready var _fps_label: Label = $Panel/Margin/VBox/Tabs/Ekran/FpsLabel
-@onready var _fps_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/FpsOption
+@onready var _fps_slider: HSlider = $Panel/Margin/VBox/Tabs/Ekran/FpsRow/FpsSlider
+@onready var _fps_spin: SpinBox = $Panel/Margin/VBox/Tabs/Ekran/FpsRow/FpsSpin
 @onready var _quizless_mode: CheckButton = $Panel/Margin/VBox/Tabs/Ogolne/QuizlessMode
 @onready var _lang_label: Label = $Panel/Margin/VBox/Tabs/Ogolne/LangLabel
 @onready var _lang_option: OptionButton = $Panel/Margin/VBox/Tabs/Ogolne/LangOption
@@ -131,9 +132,11 @@ func _ready() -> void:
 	_monitor_option.item_selected.connect(_on_monitor_changed)
 	_populate_resolutions(_monitor_option.selected)
 	_populate_scale()
-	_populate_fps_limits()
+	_fps_slider.max_value = WindowService.MAX_FPS_SLIDER
+	_fps_spin.max_value = WindowService.MAX_FPS_INPUT
 	_vsync_check.toggled.connect(_on_vsync_toggled)
-	_fps_option.item_selected.connect(_on_fps_limit_selected)
+	_fps_slider.value_changed.connect(func(v: float) -> void: _set_fps_limit(roundi(v)))
+	_fps_spin.value_changed.connect(func(v: float) -> void: _set_fps_limit(roundi(v)))
 	_setup_audio_sliders()
 	_skin_option.item_selected.connect(_on_skin_selected)
 	_bars_option.item_selected.connect(_on_bar_style_selected)
@@ -366,19 +369,21 @@ func _on_scale_item_selected(index: int) -> void:
 	_scale_manually_changed = true
 
 
-## V-Sync i limit FPS działają od razu (bez „Zastosuj”) i od razu się zapisują, jak głośność.
-func _populate_fps_limits() -> void:
-	_fps_option.clear()
-	for fps in WindowService.FPS_LIMITS:
-		_fps_option.add_item("Bez limitu" if fps == 0 else "%d FPS" % fps)
-
-
+## V-Sync i limit FPS działają od razu (bez „Zastosuj”); limit: suwak co 10 (0 = bez limitu) albo dowolna wartość
+## wpisana w pole obok — zapis po chwili spokoju, jak jasność.
 func _sync_frame_pacing() -> void:
 	_vsync_check.set_pressed_no_signal(WindowService.vsync_enabled)
-	var idx := WindowService.FPS_LIMITS.find(WindowService.max_fps)
-	_fps_option.selected = idx if idx >= 0 else WindowService.FPS_LIMITS.size() - 1
-	_fps_option.disabled = WindowService.vsync_enabled
+	_fps_slider.set_value_no_signal(mini(WindowService.max_fps, WindowService.MAX_FPS_SLIDER))
+	_fps_spin.set_value_no_signal(WindowService.max_fps)
+	for c: Control in [_fps_slider, _fps_spin]:
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE if WindowService.vsync_enabled else Control.MOUSE_FILTER_STOP
+		c.focus_mode = Control.FOCUS_NONE if WindowService.vsync_enabled else Control.FOCUS_ALL
+	_fps_spin.editable = not WindowService.vsync_enabled
+	_fps_slider.editable = not WindowService.vsync_enabled
+	_fps_slider.get_parent().modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
 	_fps_label.modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
+	var limit := "bez limitu" if WindowService.max_fps <= 0 else "%d FPS" % WindowService.max_fps
+	_fps_label.text = "Limit FPS (przy wylaczonym V-Sync): %s" % limit
 
 
 func _on_vsync_toggled(on: bool) -> void:
@@ -389,13 +394,24 @@ func _on_vsync_toggled(on: bool) -> void:
 	_sync_frame_pacing()
 
 
-func _on_fps_limit_selected(index: int) -> void:
-	if index < 0 or index >= WindowService.FPS_LIMITS.size():
+func _set_fps_limit(fps: int) -> void:
+	if WindowService.vsync_enabled:
 		return
-	_play_click()
-	WindowService.max_fps = WindowService.FPS_LIMITS[index]
+	WindowService.max_fps = WindowService.clamp_fps(fps)
 	WindowService.apply_frame_pacing()
-	SettingsService.save_settings()
+	_sync_frame_pacing()
+	_save_settings_soon()
+
+
+## Zapis na dysk po chwili spokoju (suwaki: zapis przy każdym ruchu ciął grę).
+func _save_settings_soon() -> void:
+	if _save_timer == null:
+		_save_timer = Timer.new()
+		_save_timer.one_shot = true
+		_save_timer.wait_time = 0.4
+		_save_timer.timeout.connect(SettingsService.save_settings)
+		add_child(_save_timer)
+	_save_timer.start()
 
 
 func _sync_language() -> void:
@@ -581,13 +597,7 @@ func _on_brightness_changed(value: float) -> void:
 	if _syncing_skin or _skin_module_id == "":
 		return
 	SettingsService.set_module(_skin_module_id, BRIGHTNESS_KEY, value / 100.0, false)
-	if _save_timer == null:
-		_save_timer = Timer.new()
-		_save_timer.one_shot = true
-		_save_timer.wait_time = 0.4
-		_save_timer.timeout.connect(SettingsService.save_settings)
-		add_child(_save_timer)
-	_save_timer.start()
+	_save_settings_soon()
 
 
 func _update_brightness_label() -> void:
@@ -907,8 +917,7 @@ func _on_scale_changed(_scale: float) -> void:
 	_scale_label.add_theme_font_size_override("font_size", main_size)
 	_vsync_check.add_theme_font_size_override("font_size", main_size)
 	_fps_label.add_theme_font_size_override("font_size", main_size)
-	_fps_option.add_theme_font_size_override("font_size", main_size)
-	_scale_popup_font(_fps_option, main_size)
+	_fps_spin.get_line_edit().add_theme_font_size_override("font_size", main_size)
 	_quizless_mode.add_theme_font_size_override("font_size", main_size)
 	_lang_label.add_theme_font_size_override("font_size", main_size)
 	_lang_option.add_theme_font_size_override("font_size", main_size)
@@ -954,7 +963,8 @@ func _on_scale_changed(_scale: float) -> void:
 	for button in _mode_btns:
 		button.add_theme_font_size_override("font_size", mode_font_size)
 		button.custom_minimum_size = UIScaleService.sz2(BASE_BTN_MODE_SIZE.x, maxf(BASE_BTN_MODE_SIZE.y, float(btn_min_h)))
-	for opt in [_monitor_option, _res_option, _scale_option, _fps_option, _skin_option, _bars_option, _bind_game_option]:
+	_fps_spin.custom_minimum_size = Vector2(UIScaleService.px(110), float(btn_min_h))
+	for opt in [_monitor_option, _res_option, _scale_option, _skin_option, _bars_option, _bind_game_option]:
 		if opt:
 			opt.custom_minimum_size = Vector2(opt.custom_minimum_size.x, float(btn_min_h))
 	_btn_apply.custom_minimum_size = UIScaleService.sz2(BASE_BTN_ACTION_SIZE.x, maxf(BASE_BTN_ACTION_SIZE.y, float(btn_min_h)))
