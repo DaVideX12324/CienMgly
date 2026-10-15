@@ -11,7 +11,9 @@ extends RefCounted
 ## rytm oddawania klatek.
 
 const MIN_MS := 8.0
-const MAX_MS := 100.0
+## Górny limit kawałka: po dużej porcji set_cell silnik przebudowuje warstwy w tej samej klatce (500x500 przy 100 ms
+## dawało klatki 200-350 ms, przy 33 ~130 ms); niżej przy wolnych klatkach znów rośnie zależność od FPS.
+const MAX_MS := 33.0
 
 var _budget_us := int(MIN_MS * 1000.0)
 var _slice_start := 0
