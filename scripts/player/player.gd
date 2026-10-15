@@ -326,6 +326,8 @@ func apply_hero_data(hero_data: Dictionary) -> void:
 		sprite.sprite_frames = custom_frames
 		sprite.visible = true
 		_use_programmer_art = false
+		if hero_data.get("sprite_offset") is Vector2:
+			sprite.offset = hero_data["sprite_offset"]
 	_body_color = hero_data.get("body_color", _body_color)
 	queue_redraw()
 

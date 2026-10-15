@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="QuizRpgHeroData" format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="1_2cya6"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/heroes/hero_data.gd" id="2_bu3x7"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="3_e5lx1"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/scan.tres" id="4_1an4x"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/mocny_atak.tres" id="5_c04b2"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/sound_wave.tres" id="6_6b6q5"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/piercing_shriek.tres" id="7_s74gh"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/lullaby.tres" id="8_slttj"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/sea_chant.tres" id="9_ltc6l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/aerial_strike.tres" id="10_0l0ee"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/mag_frames.tres" id="11_lt2o8"]
+
+[resource]
+script = ExtResource("2_bu3x7")
+hero_id = "mag"
+display_name = "Mag"
+character_class = "mage"
+actor_scene = ExtResource("1_2cya6")
+sprite_frames = ExtResource("11_lt2o8")
+sprite_offset = Vector2(1, -24)
+base_hp = 240
+hp_ref_value = 1000
+hp_at_max_level = 36000
+sp_ref_value = 580
+base_sp = 180
+sp_at_max_level = 2250
+base_atk = 12
+base_def = 8
+base_mat = 27
+base_mdf = 16
+atk_per_level = 1.0
+def_per_level = 0.8
+mat_per_level = 2.5
+mdf_per_level = 1.4
+skills = Array[ExtResource("3_e5lx1")]([ExtResource("4_1an4x"), ExtResource("5_c04b2"), ExtResource("6_6b6q5"), ExtResource("7_s74gh"), ExtResource("8_slttj"), ExtResource("9_ltc6l"), ExtResource("10_0l0ee")])
+default_weapon_id = "apprentice_staff"
+default_head_id = "cloth_cap"
+default_body_id = "adventurer_tunic"

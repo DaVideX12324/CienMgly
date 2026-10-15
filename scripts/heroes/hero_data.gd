@@ -10,6 +10,8 @@ class_name QuizRpgHeroData
 @export var actor_scene: PackedScene
 @export_group("Visual")
 @export var sprite_frames: SpriteFrames
+## Przesunięcie sprite'a na mapie (AnimatedSprite2D.offset) — klatki Pixel Crawlera 64×64 mają stopy przy dolnej krawędzi.
+@export var sprite_offset: Vector2 = Vector2.ZERO
 @export var body_color: Color = Color(0.2, 0.6, 1.0)
 
 @export_group("Progression")
@@ -141,6 +143,7 @@ func build_member_data() -> Dictionary:
 		"portrait": portrait,
 		"actor_scene": actor_scene,
 		"sprite_frames": sprite_frames,
+		"sprite_offset": sprite_offset,
 		"body_color": body_color,
 		"equipment": {
 			"weapon": default_weapon_id,
