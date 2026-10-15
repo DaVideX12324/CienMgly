@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="QuizRpgHeroData" format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="1_untre"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/heroes/hero_data.gd" id="2_g6gsc"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="3_up32r"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/leczenie.tres" id="4_hmpse"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/hearty_meal.tres" id="5_7ct4q"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/revive_tonic.tres" id="6_bb07p"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/rousing_tune.tres" id="7_x8ynh"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/nurturing_care.tres" id="8_v1us2"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/share_tempo.tres" id="9_6mxb2"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_priest.tres" id="10_j7utp"]
+
+[resource]
+script = ExtResource("2_g6gsc")
+hero_id = "kaplan"
+display_name = "Kapłan"
+character_class = "priest"
+actor_scene = ExtResource("1_untre")
+sprite_frames = ExtResource("10_j7utp")
+sprite_offset = Vector2(1, -24)
+base_hp = 300
+hp_ref_value = 1260
+hp_at_max_level = 45000
+sp_ref_value = 530
+base_sp = 165
+sp_at_max_level = 2080
+base_atk = 15
+base_mat = 20
+base_mdf = 18
+atk_per_level = 1.3
+mat_per_level = 1.8
+mdf_per_level = 1.6
+base_agi = 12
+agi_per_level = 0.9
+skills = Array[ExtResource("3_up32r")]([ExtResource("4_hmpse"), ExtResource("5_7ct4q"), ExtResource("6_bb07p"), ExtResource("7_x8ynh"), ExtResource("8_v1us2"), ExtResource("9_6mxb2")])
+default_weapon_id = "priest_mace"
+default_head_id = "cloth_cap"
+default_body_id = "adventurer_tunic"

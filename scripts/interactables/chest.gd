@@ -2,31 +2,66 @@ extends AnimatedSprite2D
 class_name Chest
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 @export var lock_id: String = "dungeon_1"
 @export var unique_id: String = ""
 @export var chest_item_id: String = "potion"
 @export_range(1, 99, 1) var chest_item_count: int = 1
+## Tabela łupu z mapy ("chest_loot" w JSON: [{item_id, weight, count}]); niepusta = skrzynia losuje z niej zamiast chest_item_id.
+var loot_table: Array = []
+## Poziom skrzyni: wyznacza trudność quizu przy otwieraniu wytrychem (pytań: 2 + tier, wymagane: o jedno mniej), klucz
+## (KEY_ITEMS: klucz tieru ≥ tier skrzyni) i wygląd (tier_frames).
+@export_range(1, 4, 1) var tier: int = 1:
+	set(value):
+		tier = value
+		_apply_tier_look()
+## Wygląd skrzyni wg tieru (indeks = tier − 1; animacja "open"); pusta lista albo brak wpisu = bez zmiany (np. skrzynia ścieków).
+@export var tier_frames: Array[SpriteFrames] = []
+@export var quiz_id: String = "inf_podst"
+@export var quiz_category: String = "ogolne"
 
 var is_locked: bool = true
 var opened: bool = false
 var was_already_opened: bool = false
 var _player_in_interaction_range: bool = false
+var _picking: bool = false
+var door_name: String = "Zamknięta skrzynia"  # tytuł okna quizu (QuizPuzzleController czyta door_name)
+
+## Klucz tieru N otwiera skrzynie tieru ≤ N; najpierw zużywany jest najsłabszy wystarczający. Złoty = klucz uniwersalny.
+const KEY_ITEMS := {1: "key_tier1", 2: "key_tier2", 3: "key_tier3", 4: "universal_key"}
+const LOCKPICK_ITEM := "lockpick"
+## Szansa złamania wytrycha po nieudanym quizie (po udanym wytrych zawsze się zużywa).
+const LOCKPICK_BREAK_CHANCE := 0.5
+static var PUZZLE_UI_SCENE: String = QuizRpgPaths.path("scenes/quiz/quiz_puzzle_ui.tscn")
 
 
 func _ready() -> void:
 	add_to_group("chests")
 	add_to_group("interactable")
+	_apply_tier_look()
 	if unique_id.is_empty():
 		unique_id = _generate_unique_id()
 	call_deferred("_check_if_opened")
+
+
+## Wygląd skrzyni z tier_frames (po zmianie tieru, np. z konfiguracji mapy); zachowuje klatkę, a otwartą pokazuje otwartą.
+func _apply_tier_look() -> void:
+	var i := clampi(tier, 1, 4) - 1
+	if i >= tier_frames.size() or tier_frames[i] == null or sprite_frames == tier_frames[i]:
+		return
+	var current_frame := frame
+	sprite_frames = tier_frames[i]
+	animation = &"open"
+	var last := sprite_frames.get_frame_count(&"open") - 1
+	frame = last if opened else clampi(current_frame, 0, last)
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if opened or not _player_in_interaction_range:
 		return
 	if event.is_action_pressed("interact"):
-		unlock()
+		try_open()
 		get_viewport().set_input_as_handled()
 
 
@@ -56,6 +91,79 @@ func _generate_unique_id() -> String:
 	if not lock_id.is_empty() and lock_id != "dungeon_1":
 		id_parts.append(lock_id)
 	return "_".join(id_parts)
+
+
+## Otwarcie przez gracza: wytrych uruchamia quiz (tier skrzyni = trudność), klucz tieru ≥ tier skrzyni otwiera od razu;
+## wytrych jest używany przed kluczem (klucze są rzadsze). Bez jednego i drugiego skrzynia zostaje zamknięta.
+func try_open() -> void:
+	if opened or _picking:
+		return
+	if not is_locked:
+		unlock()
+		return
+	var ps := _get_module_singleton("PlayerStats")
+	if ps == null:
+		return
+	if int(ps.call("get_item_count", LOCKPICK_ITEM)) > 0:
+		_start_lockpicking(ps)
+	else:
+		var key_id := _usable_key(ps)
+		if key_id != "":
+			ps.call("consume_item", key_id, 1)
+			_toast("Klucz otwiera skrzynię.")
+			unlock()
+		else:
+			_toast("Zamknięte. Potrzebny klucz tieru %d (lub wyższego) albo wytrych." % tier)
+
+
+## Najsłabszy klucz z plecaka, który otwiera tę skrzynię (tier klucza ≥ tier skrzyni); "" gdy brak.
+func _usable_key(ps: Node) -> String:
+	for t in range(clampi(tier, 1, 4), 5):
+		var id := str(KEY_ITEMS[t])
+		if int(ps.call("get_item_count", id)) > 0:
+			return id
+	return ""
+
+
+func _start_lockpicking(ps: Node) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if not ResourceLoader.exists(PUZZLE_UI_SCENE):
+		push_error("chest: brak sceny: " + PUZZLE_UI_SCENE)
+		return
+	_picking = true
+	var gm := _get_module_singleton("GameManager")
+	if player and player.has_method("set_can_move"):
+		player.set_can_move(false)
+	if gm:
+		gm.change_state(gm.GameState.QUIZ_PUZZLE)
+	var canvas = load(PUZZLE_UI_SCENE).instantiate()
+	var ui = canvas.get_node("Root")
+	var total := 2 + tier
+	ui.setup(self, player, quiz_id, quiz_category, total, total - 1)
+	ui.puzzle_finished.connect(_on_lockpick_finished.bind(ps, player, gm))
+	get_tree().current_scene.add_child(canvas)
+
+
+func _on_lockpick_finished(success: bool, ps: Node, player: Node2D, gm: Node) -> void:
+	_picking = false
+	if player and is_instance_valid(player) and player.has_method("set_can_move"):
+		player.set_can_move(true)
+	if gm:
+		gm.change_state(gm.GameState.EXPLORING)
+	if success:
+		ps.call("consume_item", LOCKPICK_ITEM, 1)
+		unlock()
+	elif randf() < LOCKPICK_BREAK_CHANCE:
+		ps.call("consume_item", LOCKPICK_ITEM, 1)
+		_toast("Wytrych się złamał!")
+	else:
+		_toast("Nie udało się. Wytrych wytrzymał.")
+
+
+func _toast(text: String) -> void:
+	var loot := _get_module_singleton("LootManager")
+	if loot and loot.has_method("show_message_toast"):
+		loot.call("show_message_toast", text)
 
 
 func unlock() -> void:
@@ -89,22 +197,29 @@ func drop_item() -> void:
 	if audio:
 		audio.play_sfx_by_name("coin")
 
+	var item_id := chest_item_id
+	var item_count := chest_item_count
+	if not loot_table.is_empty():
+		var picked := QuizRpgLootTable.pick_weighted(loot_table)
+		if not picked.is_empty():
+			item_id = str(picked.get("item_id", chest_item_id))
+			item_count = maxi(int(picked.get("count", 1)), 1)
 	var player_stats := _get_module_singleton("PlayerStats")
 	if player_stats and player_stats.has_method("add_item"):
-		player_stats.call("add_item", chest_item_id, chest_item_count)
+		player_stats.call("add_item", item_id, item_count)
 
 	var loot_manager := _get_module_singleton("LootManager")
 	if loot_manager and loot_manager.has_method("show_loot_popup"):
-		var item_name := chest_item_id
+		var item_name := item_id
 		var inventory_service := _get_module_singleton("InventoryService")
 		if inventory_service and inventory_service.has_method("get_item"):
-			var item_data := inventory_service.call("get_item", chest_item_id) as QuizRpgItemData
+			var item_data := inventory_service.call("get_item", item_id) as QuizRpgItemData
 			if item_data != null:
 				item_name = item_data.display_name
 		loot_manager.call("show_loot_popup", {
 			"found": true,
 			"title": "Zawartosc skrzyni",
-			"message": "%s x%d trafia do ekwipunku." % [item_name, chest_item_count],
+			"message": "%s x%d trafia do ekwipunku." % [item_name, item_count],
 			"detail": "Nacisnij E albo Enter, aby kontynuowac.",
 		})
 
@@ -149,7 +264,7 @@ func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_in_interaction_range = true
 		if not opened:
-			InteractPromptScript.request(self, "Otwórz")
+			InteractPromptScript.request(self, "Otwórz" if not is_locked else "Otwórz (klucz / wytrych)")
 
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:

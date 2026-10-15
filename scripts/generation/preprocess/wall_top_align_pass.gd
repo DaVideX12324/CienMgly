@@ -8,6 +8,10 @@ extends "grid_pass.gd"
 const MIN_DEPTH := 3
 const MAX_STEP := 2
 const MAX_ROUNDS := 400
+## Wykrycie uskoku w rzędzie y czyta rzędy y - 1 .. y + MAX_STEP + MIN_DEPTH (+1 przy facade_base_on_wall),
+## naprawa zmienia rzędy y .. y + MAX_STEP - 1 — po naprawie w rzędzie Y wyżej niż Y - RESCAN nic się nie
+## zmienia, więc kolejne szukanie wznawia się od tego rzędu zamiast od góry mapy (wynik ten sam).
+const RESCAN := MAX_STEP + MIN_DEPTH + 1
 
 
 func get_id() -> StringName:
@@ -16,13 +20,15 @@ func get_id() -> StringName:
 
 func apply(ctx: GenerationContext) -> int:
 	var changed := 0
+	var from_y := 1
 	for _i in MAX_ROUNDS:
-		var fix := _find_fix(ctx)
+		var fix := _find_fix(ctx, from_y)
 		if fix.is_empty():
 			break
 		for p: Vector2i in fix.cells:
 			ctx.grid[p] = fix.type
 		changed += (fix.cells as Array).size()
+		from_y = maxi(1, int(fix.y) - RESCAN)
 	return changed
 
 
@@ -41,10 +47,11 @@ func _run(grid: Dictionary, p: Vector2i) -> Vector2i:
 	return Vector2i(x0, x1)
 
 
-## Pierwszy uskok i jego naprawa: {cells: Array[Vector2i], type: CellType} albo {}.
-func _find_fix(ctx: GenerationContext) -> Dictionary:
+## Pierwszy uskok (od rzędu from_y; wyżej go nie ma) i jego naprawa: {cells: Array[Vector2i], type: CellType,
+## y: rząd} albo {}.
+func _find_fix(ctx: GenerationContext, from_y: int) -> Dictionary:
 	var grid := ctx.grid
-	for y in range(1, ctx.height - 1):
+	for y in range(from_y, ctx.height - 1):
 		var x := 0
 		while x < ctx.width:
 			if not _is_top(grid, Vector2i(x, y)):
@@ -62,6 +69,7 @@ func _find_fix(ctx: GenerationContext) -> Dictionary:
 					var nr := _run(grid, nb)
 					var fix := _choose(ctx, r, y, nr, y + d)
 					if not fix.is_empty():
+						fix["y"] = y
 						return fix
 					break
 	return {}

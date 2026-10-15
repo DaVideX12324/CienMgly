@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemySkill" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+display_name = "Rozpędzony Taran"
+log_text = "{enemy} z impetem taranuje cel!"
+use_chance = 0.35
+cooldown_turns = 1
+atk_coeff = 4.0
+def_coeff = 2.0
+damage_multiplier = 1.5
+color = Color(0.8, 0.5, 0.2, 1)

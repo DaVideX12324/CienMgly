@@ -10,6 +10,9 @@ const CONFIG_PATH := "user://artefakt_wiedzy_settings.cfg"
 const SEC_DISPLAY := "display"
 const SEC_AUDIO := "audio"
 const KEY_QUIZLESS_MODE := "quizless_mode"
+const KEY_LANGUAGE := "language"
+## Języki tekstów gry (id = nazwa pliku tłumaczeń modułów, np. resources/i18n/<id>.json).
+const LANGUAGES: Array[Dictionary] = [{"id": "pl", "name": "Polski"}, {"id": "en", "name": "English"}]
 
 var _cfg := ConfigFile.new()
 
@@ -23,6 +26,7 @@ func _ready() -> void:
 	_load_audio()
 	# Okno na zapisanym monitorze (wcześniej centrowanie pod kursorem nadpisywało wybór z opcji).
 	WindowService.apply_settings(WindowService.window_mode_idx, WindowService.resolution, WindowService.monitor_idx, false)
+	WindowService.apply_frame_pacing()
 
 
 func load_settings() -> void:
@@ -37,6 +41,8 @@ func load_settings() -> void:
 		var height: int = _cfg.get_value(SEC_DISPLAY, "resolution_y", default_screen.y)
 		WindowService.resolution = Vector2i(width, height)
 		WindowService.window_maximized = bool(_cfg.get_value(SEC_DISPLAY, "window_maximized", false))
+		WindowService.vsync_enabled = bool(_cfg.get_value(SEC_DISPLAY, "vsync", true))
+		WindowService.max_fps = maxi(int(_cfg.get_value(SEC_DISPLAY, "max_fps", 0)), 0)
 	WindowService.monitor_idx = clampi(WindowService.monitor_idx, 0, maxi(0, DisplayServer.get_screen_count() - 1))
 	settings_loaded.emit()
 
@@ -54,6 +60,8 @@ func save_settings() -> void:
 	_cfg.set_value(SEC_DISPLAY, "resolution_y", WindowService.resolution.y)
 	_cfg.set_value(SEC_DISPLAY, "monitor_idx", WindowService.monitor_idx)
 	_cfg.set_value(SEC_DISPLAY, "window_maximized", WindowService.window_maximized)
+	_cfg.set_value(SEC_DISPLAY, "vsync", WindowService.vsync_enabled)
+	_cfg.set_value(SEC_DISPLAY, "max_fps", WindowService.max_fps)
 	UIScaleService.save_to_cfg(_cfg)
 	_save_audio_to_cfg()
 	_cfg.save(CONFIG_PATH)
@@ -98,6 +106,19 @@ func set_quizless_mode_enabled(enabled: bool, save_now: bool = true) -> void:
 	set_global(KEY_QUIZLESS_MODE, enabled, false)
 	if save_now:
 		save_settings()
+
+
+## Język tekstów gry (ustawienie globalne, wspólne dla modułów); nieznany zapis -> pierwszy z LANGUAGES.
+func get_language() -> String:
+	var id := str(get_global(KEY_LANGUAGE, LANGUAGES[0]["id"]))
+	for l in LANGUAGES:
+		if l["id"] == id:
+			return id
+	return str(LANGUAGES[0]["id"])
+
+
+func set_language(id: String, save_now: bool = true) -> void:
+	set_global(KEY_LANGUAGE, id, save_now)
 
 
 func get_module(module_id: String, key: String, default_value: Variant = null) -> Variant:

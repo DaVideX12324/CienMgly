@@ -8,12 +8,12 @@ enum Phase { ACTION_SELECT, TARGET_SELECT, QUIZ, PLAYER_RESULT, ENEMY_TURN, COMB
 enum Action { ATTACK, DEFEND, HEAL, FLEE }
 ## Dolny pas jak w RPG Makerze: komendy drużyny po lewej (Walcz / Uciekaj), komendy postaci po prawej
 ## (status wtedy po lewej), sam status wyśrodkowany (tura wroga, komunikaty).
-enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY }
+enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY, LIST }
 
 ## Kontroler panelu pytań jest w hoście (w wersji samodzielnej kopia w _host/), więc load zamiast preload.
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
-const POISON_COLOR := Color(0.55, 0.9, 0.3)
+const POISON_COLOR := Color(0.78, 0.35, 0.95)
 const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
 const PARTY_SKILL_SP_MAX := 100
@@ -47,13 +47,12 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
 @export_range(1, 6) var log_lines := 3                        ## log bitwy u góry: ostatnie komunikaty
 @export var quiz_band_extra_height := 60.0                    ## dolny pas w czasie quizu: tyle px wyżej
+@export_range(0.2, 0.8, 0.01) var list_party_width := 0.4  ## lista umiejętności / przedmiotów: okno drużyny obok (reszta pasa = lista)
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
 @export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
-var quiz_correct := false
-var defending := false
 
 var enemy: Node2D
 var player: Node2D
@@ -66,9 +65,20 @@ var _joined: Array = []   # wrogowie ze świata dołączeni do walki (grupa) —
 var enemy_hp := 50
 var enemy_max_hp := 50
 var enemy_name_str := "Przeciwnik"
-var enemy_base_damage := 15
-var player_base_damage := 20
+var enemy_base_attack := 24
+var enemy_base_defense := 12
+var enemy_base_magic_attack := 24
+var enemy_base_magic_defense := 12
+var enemy_base_agility := 15
+## Leczenie umiejętności po złej odpowiedzi w quizie: tyle efektu po dobrej (dawne 30 % / 10 % HP).
+const WRONG_ANSWER_HEAL_FACTOR := 1.0 / 3.0
+## Obrona: część obrażeń, która przechodzi (jak Guard w FNaFB — tam połowa): 1/4 po dobrej odpowiedzi, 1/2 po złej.
+const GUARD_DAMAGE_FACTOR_CORRECT := 0.25
+const GUARD_DAMAGE_FACTOR_WRONG := 0.5
+## Broniąca się postać ma o połowę mniejszą szansę na status od umiejętności wroga (jak Guard w FNaFB).
+const GUARD_STATUS_CHANCE_FACTOR := 0.5
 var turn_number := 0
+var _combat_started_msec := Time.get_ticks_msec()  # początek walki (log progresji)
 
 @onready var battle_window: PanelContainer = $BattleWindow
 @onready var window_shadow: Control = get_node_or_null("WindowShadow") as Control
@@ -98,18 +108,17 @@ var _shadow_height := 35.0
 @onready var enemy_target_home_slot: Control = get_node_or_null("Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0") as Control
 @onready var player_sprite_node: Control = $Battlefield/FieldContent/PlayerSection/PlayerSprite
 @onready var battle_background: Control = $Background if has_node("Background") else $Battlefield/Background
-@onready var battle_menu_overlay: Control = $Battlefield/FieldContent/BattleMenuOverlay
-@onready var skills_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel
-@onready var skills_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/DescriptionLabel
-@onready var skills_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/SkillsPanel/Margin/VBox/ListVBox
-@onready var items_panel: PanelContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel
-@onready var items_description_label: Label = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/DescriptionLabel
-@onready var items_list_vbox: VBoxContainer = $Battlefield/FieldContent/BattleMenuOverlay/ItemsPanel/Margin/VBox/ListVBox
+## Lista umiejętności / przedmiotów w dolnym pasie (jak okna RPG Makera), opis w górnym oknie (HelpLabel).
+@onready var list_panel: PanelContainer = $BattleWindow/WindowMargin/VBox/ContentRow/ListPanel
+@onready var list_scroll: ScrollContainer = $BattleWindow/WindowMargin/VBox/ContentRow/ListPanel/ListMargin/ListScroll
+@onready var list_grid: GridContainer = $BattleWindow/WindowMargin/VBox/ContentRow/ListPanel/ListMargin/ListScroll/ListGrid
+@onready var help_label: Label = $TopWindow/VBox/HelpLabel
+const ListRowScene := preload("res://modules/quiz_rpg/scenes/quiz/combat_list_row.tscn")
 @onready var turn_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/TurnLabel") as Label
 @onready var streak_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/StreakLabel") as Label
 @onready var target_panel: VBoxContainer = (party_panel_container.get_node_or_null("PartyMargin/TargetPanel") if party_panel_container else null) as VBoxContainer
 @onready var target_label: Label = (target_panel.get_node_or_null("TargetLabel") if target_panel else null) as Label
-@onready var target_list_vbox: VBoxContainer = (target_panel.get_node_or_null("TargetListVBox") if target_panel else null) as VBoxContainer
+@onready var target_list_vbox: GridContainer = (target_panel.get_node_or_null("TargetListVBox") if target_panel else null) as GridContainer
 @onready var party_rows : Array[HBoxContainer] = [
 		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow0") if party_panel_container else null) as HBoxContainer,
 		(party_panel_container.get_node_or_null("PartyMargin/PartyVBox/PartyRow1") if party_panel_container else null) as HBoxContainer,
@@ -140,11 +149,16 @@ var _enemy_target_highlight_node: Control = null
 var _action_buttons: Array[Button] = []
 var _selected_action_idx: int = 0
 var _victory_skip := false
+var _more_marker_tween: Tween
 var _action_menu_open := false
 var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
 var _actor_selected_idx := 0
 var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
-var _defender_index := 0         # postać, która wybrała Obronę w tej turze (blok umiejętności wrogów)
+var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY)
+## Kursor drużyny wybiera cel leczenia zamiast postaci: 0 — nie, 1 — żywy sojusznik, 2 — nieprzytomny (wskrzeszenie).
+var _ally_pick := 0
+var _guard := {}                 # członek drużyny -> dobra odpowiedź przy Obronie (trwa do jego następnego ruchu)
+var _turn_queue: Array[Dictionary] = []   # reszta rundy: {"party": bool, "index": int}, od najszybszego
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
 var _list_menu_entries: Array[Dictionary] = []
@@ -169,6 +183,7 @@ var _band_mode: Band = Band.PARTY_COMMAND
 @onready var _log_label: RichTextLabel = $TopWindow/VBox/BattleLog
 @onready var _message_window: PanelContainer = $BattleWindow/WindowMargin/VBox/MessageWindow  # po bitwie
 @onready var _victory_label: Label = $BattleWindow/WindowMargin/VBox/MessageWindow/VictoryLog
+@onready var _more_marker: Polygon2D = $BattleWindow/WindowMargin/VBox/MessageWindow/MoreMarker
 var _band_height := 250.0  # wysokość dolnego pasa ze sceny (BattleWindow.offset_top)
 var _log_lines: Array[String] = []
 var _last_logged := ""
@@ -193,8 +208,11 @@ func setup(
 	enemy_hp = p_enemy.hp
 	enemy_max_hp = p_enemy.max_hp
 	enemy_name_str = p_enemy.enemy_name
-	enemy_base_damage = p_enemy.damage_on_wrong
-	player_base_damage = _get_player_attack_power()
+	enemy_base_attack = p_enemy.attack
+	enemy_base_defense = p_enemy.defense
+	enemy_base_magic_attack = p_enemy.magic_attack
+	enemy_base_magic_defense = p_enemy.magic_defense
+	enemy_base_agility = int(p_enemy.get("agility")) if p_enemy.get("agility") != null else 15
 	_roll_enemy_party()
 	if is_node_ready():
 		_setup_enemy_display()
@@ -212,6 +230,34 @@ func _exit_tree() -> void:
 		get_tree().paused = false
 
 
+## Animacja wejścia do walki (combat_intro.tscn): nakłada się na gotowy ekran walki i odsłania go po zamknięciu źrenicy.
+func play_entry_transition(snapshot: Image) -> void:
+	if snapshot == null or not QuizTheme.combat_intro_enabled():
+		return
+	var intro := preload("../../scenes/quiz/combat_intro.tscn").instantiate() as Control
+	add_child(intro)
+	intro.call("play", snapshot)
+
+
+## Animacja wyjścia z walki: ta sama „źrenica” co przy wejściu, ale na zrzucie ekranu walki i na warstwie ponad wszystkim
+## (przeżywa usunięcie ekranu walki). Wraca, gdy ekran jest czarny — dalej można zwolnić walkę; świat odsłania się sam.
+func _play_exit_transition() -> void:
+	if not QuizTheme.combat_intro_enabled() or get_viewport() == null:
+		return
+	var snapshot := get_viewport().get_texture().get_image()
+	if snapshot == null:
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	get_tree().root.add_child(layer)
+	var outro := preload("../../scenes/quiz/combat_intro.tscn").instantiate() as Control
+	layer.add_child(outro)
+	outro.finished.connect(layer.queue_free)
+	outro.call("play", snapshot)
+	await outro.covered
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	theme = QuizTheme.combat_theme()  # większy tekst w walce (QuizTheme.COMBAT_FONT_SIZE), ten sam motyw
@@ -221,7 +267,9 @@ func _ready() -> void:
 			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_COMBAT_COMPACT:
 				_set_band_mode(_band_mode)
 			elif module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_QUESTION_POSITION:
-				_apply_question_position())
+				_apply_question_position()
+			elif module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_LIST_LAYOUT:
+				_fit_list_columns())
 	_apply_question_position.call_deferred()
 	var parent_canvas: CanvasLayer = get_parent() as CanvasLayer
 	if parent_canvas != null:
@@ -280,6 +328,7 @@ func _ready() -> void:
 	_setup_party_layout()
 	if battle_window:
 		_band_height = -battle_window.offset_top
+		battle_window.resized.connect(_on_battle_window_resized)
 	if window_shadow:
 		window_shadow.anchor_left = 0.0
 		window_shadow.anchor_right = 1.0
@@ -340,7 +389,7 @@ func _ready() -> void:
 		else:
 			audio.play_music("battle")
 
-	_start_player_turn()
+	_start_round()
 
 
 func trigger_instant_win() -> void:
@@ -364,8 +413,35 @@ func _process(delta: float) -> void:
 	_update_top_window()
 
 
+## Mysz nie działa w walce, gdy okno nie ma fokusu (np. po przełączeniu na Discorda), a kliknięcie, które tylko przywraca fokus
+## (przychodzi już po NOTIFICATION_APPLICATION_FOCUS_IN), jest ignorowane przez FOCUS_CLICK_GRACE_MSEC (feedback testów pre-alpha, pkt 6).
+const FOCUS_CLICK_GRACE_MSEC := 300
+var _window_focused := true  # tylko FOCUS_OUT ustawia false, więc brak powiadomień nie blokuje myszy
+var _focus_in_msec := -100000
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_window_focused = false
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		_window_focused = true
+		_focus_in_msec = Time.get_ticks_msec()
+
+
+## Zdarzenie myszy do zignorowania: okno bez fokusu albo kliknięcie tuż po odzyskaniu fokusu.
+func _is_focus_click(event: InputEvent) -> bool:
+	if not (event is InputEventMouseButton or event is InputEventMouseMotion):
+		return false
+	if not _window_focused:
+		return true
+	return event is InputEventMouseButton and event.pressed and Time.get_ticks_msec() - _focus_in_msec < FOCUS_CLICK_GRACE_MSEC
+
+
 func _input(event: InputEvent) -> void:
 	if _is_pause_menu_open():
+		return
+	if _is_focus_click(event):
+		get_viewport().set_input_as_handled()
 		return
 	if _handle_hovered_enemy_click(event) or _handle_actor_row_mouse(event):
 		get_viewport().set_input_as_handled()
@@ -376,9 +452,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key_event := event as InputEventKey
-		var focus_owner := get_viewport().gui_get_focus_owner()
-		var is_typing := focus_owner is LineEdit or focus_owner is TextEdit
-		if key_event.keycode == KEY_F9 or (not is_typing and key_event.keycode == KEY_K):
+		if OS.is_debug_build() and key_event.keycode == KEY_F9:
 			trigger_instant_win()
 			get_viewport().set_input_as_handled()
 			return
@@ -387,11 +461,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if _list_menu_mode != "":
+		var cols: int = maxi(list_grid.columns, 1)
 		if _is_menu_down(event):
-			_navigate_list(1)
+			_navigate_list(cols)
 			get_viewport().set_input_as_handled()
 			return
 		if _is_menu_up(event):
+			_navigate_list(-cols)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D]):
+			_navigate_list(1)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A]):
 			_navigate_list(-1)
 			get_viewport().set_input_as_handled()
 			return
@@ -404,11 +487,20 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if phase == Phase.TARGET_SELECT:
+		# Siatka 2 kolumn: góra / dół o wiersz, lewo / prawo o jedną pozycję.
 		if _is_menu_down(event):
-			_navigate_target_list(1)
+			_navigate_target_list(maxi(target_list_vbox.columns, 1))
 			get_viewport().set_input_as_handled()
 			return
 		if _is_menu_up(event):
+			_navigate_target_list(-maxi(target_list_vbox.columns, 1))
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D]):
+			_navigate_target_list(1)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A]):
 			_navigate_target_list(-1)
 			get_viewport().set_input_as_handled()
 			return
@@ -450,8 +542,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if _action_menu_open and _is_menu_cancel(event):
-			_show_primary_menu()
-			_open_actor_select()  # jak w RPG Makerze: anulowanie komend postaci wraca do wyboru postaci
+			_show_primary_menu()   # anulowanie komend postaci: Walcz / Uciekaj
+			_highlight_action(0)
 			get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("ui_accept"):
@@ -489,28 +581,88 @@ func _handle_hovered_enemy_click(event: InputEvent) -> bool:
 	return true
 
 
-func _start_player_turn() -> void:
+## Runda: każdy przytomny (drużyna i wrogowie) działa raz, po kolei wg prędkości = AGI + losowo 0..AGI / 4
+## (jak RPG Maker VX Ace — wyższe AGI zwykle pierwsze, przy zbliżonych bywa różnie). Na koniec rundy statusy.
+func _start_round() -> void:
 	turn_number += 1
-	defending = false
+	_turn_queue = _roll_turn_order()
+	_next_turn()
+
+
+func _roll_turn_order() -> Array[Dictionary]:
+	var order: Array[Dictionary] = []
+	for i in _party_indices(false):
+		if i < party_rows.size():
+			order.append({"party": true, "index": i, "speed": _roll_speed(int(_member_stats(i)["agi"]))})
+	for i in range(_enemy_units.size()):
+		if int(_enemy_units[i].get("hp", 0)) > 0:
+			order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"]))})
+	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["speed"]) > int(b["speed"]))
+	return order
+
+
+static func _roll_speed(agi: int) -> int:
+	return agi + randi_range(0, floori(maxi(agi, 1) / 4.0))
+
+
+## Następny w kolejce rundy: członek drużyny dostaje komendy (dalej po jego akcji — znów _next_turn), wróg działa od
+## razu. Pusta kolejka = koniec rundy.
+func _next_turn() -> void:
+	while true:
+		if _all_enemies_defeated():
+			_end_combat(true)
+			return
+		if _ps and _ps.is_party_defeated():
+			_end_combat(false)
+			return
+		if _turn_queue.is_empty():
+			break
+		var entry: Dictionary = _turn_queue.pop_front()
+		var i := int(entry["index"])
+		if bool(entry["party"]):
+			if _member_hp(i) > 0:
+				_start_member_turn(i)
+				return
+			continue
+		if int(_enemy_units[i].get("hp", 0)) > 0 and await _enemy_act(i):
+			return
+	if await _apply_status_round():
+		return
+	_start_round()
+
+
+## Ruch członka drużyny: od razu jego komendy (anulowanie -> Walcz / Uciekaj); sen / ogłuszenie / paraliż — traci ruch.
+func _start_member_turn(i: int) -> void:
+	_active_actor_index = i
+	_guard.erase(i)
 	_selected_skill_data.clear()
 	_selected_item_data.clear()
 	_pending_skill_data.clear()
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false)
-	phase = Phase.ACTION_SELECT
 	_clear_battle_log()
 	if turn_label:
-		turn_label.text = "Tura %d - Twój ruch" % turn_number
-	player_base_damage = _get_player_attack_power()
+		turn_label.text = "Tura %d - ruch: %s" % [turn_number, _member_name(i)]
 	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
-	action_panel.visible = true
 	result_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
+	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(i, QuizRpgStatusData.Restriction.SKIP_TURN):
+		phase = Phase.PLAYER_RESULT
+		_set_band_mode(Band.STATUS_ONLY)
+		result_label.visible = true
+		result_label.text = "%s nie może się ruszyć!" % _member_name(i)
+		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.9))
+		await get_tree().create_timer(1.2).timeout
+		_next_turn()
+		return
+	phase = Phase.ACTION_SELECT
+	action_panel.visible = true
 	_set_action_buttons_enabled(true)
-	_show_primary_menu()
+	_show_action_menu()
 	_highlight_action(0)
+	_refresh_actor_selection()
 
 
 func _on_action(action: Action) -> void:
@@ -530,61 +682,47 @@ func _on_action(action: Action) -> void:
 
 
 func _open_skills_menu() -> void:
-	var audio := get_node_or_null("/root/AudioService")
-	if audio:
-		audio.play_sfx_by_name("click")
-	_list_menu_mode = "skills"
+	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(_active_actor_index, QuizRpgStatusData.Restriction.SILENCED):
+		result_label.visible = true
+		result_label.text = "%s: cisza — umiejętności zablokowane." % _member_name(_active_actor_index)
+		result_label.add_theme_color_override("font_color", QuizRpgStatusCatalog.color_of("silence"))
+		return
 	var entries: Array[Dictionary] = []
-	if _ps and _ps.get("skills") is Array:
-		for s in _ps.skills:
-			if s is Dictionary:
-				entries.append(s)
-	_list_menu_entries = entries
-	_list_selected_idx = 0
-	_build_list_menu(skills_list_vbox, _list_menu_entries, true)
-	skills_panel.visible = true
-	items_panel.visible = false
-	battle_menu_overlay.visible = true
-	battle_background.visible = false
-	if action_panel:
-		action_panel.visible = false
-	if actor_command_panel:
-		actor_command_panel.visible = false
-	_update_list_description()
+	if _ps and _ps.has_method("get_member_skills"):
+		entries = _ps.get_member_skills(_active_actor_index)
+	_open_list_menu("skills", entries)
 
 
 func _open_items_menu() -> void:
-	var audio := get_node_or_null("/root/AudioService")
-	if audio:
-		audio.play_sfx_by_name("click")
-	_list_menu_mode = "items"
 	var entries: Array[Dictionary] = []
 	if _ps and _ps.has_method("get_inventory_entries"):
 		for it in _ps.get_inventory_entries():
-			if it is Dictionary:
+			if it is Dictionary and str(it.get("category", "item")) == "item":
 				entries.append(it)
+	_open_list_menu("items", entries)
+
+
+## Lista w dolnym pasie zamiast okna komend postaci (okno drużyny zostaje obok); pole bitwy widoczne.
+func _open_list_menu(mode: String, entries: Array[Dictionary]) -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("click")
+	_list_menu_mode = mode
 	_list_menu_entries = entries
 	_list_selected_idx = 0
-	_build_list_menu(items_list_vbox, _list_menu_entries, false)
-	items_panel.visible = true
-	skills_panel.visible = false
-	battle_menu_overlay.visible = true
-	battle_background.visible = false
-	if action_panel:
-		action_panel.visible = false
-	if actor_command_panel:
-		actor_command_panel.visible = false
-	_update_list_description()
+	_build_list_menu(entries, mode == "skills")
+	_set_band_mode(Band.LIST)
+	_refresh_list_selection()
 
 
 func _close_list_menu() -> void:
 	_list_menu_mode = ""
 	_list_menu_entries.clear()
 	_list_menu_rows.clear()
-	skills_panel.visible = false
-	items_panel.visible = false
-	battle_menu_overlay.visible = false
-	battle_background.visible = true
+	if list_panel:
+		list_panel.visible = false
+	if help_label:
+		help_label.visible = false
 	if action_panel:
 		action_panel.visible = true
 	_show_action_menu()
@@ -609,6 +747,7 @@ func _open_target_menu() -> void:
 			"max_hp": int(enemy_unit.get("max_hp", 1)),
 		})
 	_target_selected_idx = 0
+	target_list_vbox.columns = mini(2, maxi(_target_entries.size(), 1))
 	_build_target_menu()
 	party_panel_container.visible = true
 	_show_target_panel()
@@ -635,14 +774,7 @@ func _build_target_menu() -> void:
 		name_text.text = str(entry.get("name", enemy_name_str))
 		name_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		name_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
-		var hp_text: Label = Label.new()
-		hp_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hp_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		hp_text.text = "%d/%d HP" % [int(entry.get("hp", 0)), int(entry.get("max_hp", 1))]
-		hp_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		hp_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
-		row_content.add_child(name_text)
-		row_content.add_child(hp_text)
+		row_content.add_child(name_text)  # HP wroga pokazuje umiejętność Skan, nie lista celów
 		row_margin.add_child(row_content)
 		row.add_child(row_margin)
 		var row_index: int = _target_rows.size()
@@ -683,7 +815,7 @@ func _hide_target_panel() -> void:
 func _navigate_target_list(delta: int) -> void:
 	if _target_rows.is_empty():
 		return
-	_target_selected_idx = (_target_selected_idx + delta + _target_rows.size()) % _target_rows.size()
+	_target_selected_idx = posmod(_target_selected_idx + delta, _target_rows.size())
 	_refresh_target_selection()
 	_refresh_enemy_slot_highlight()
 
@@ -746,6 +878,9 @@ func _confirm_target_selection() -> void:
 	if audio:
 		audio.play_sfx_by_name("click")
 	var entry: Dictionary = _target_entries[_target_selected_idx]
+	if bool(_pending_skill_data.get("scan", false)):
+		_scan_enemy(int(entry.get("enemy_index", 0)))
+		return
 	_active_enemy_index = int(entry.get("enemy_index", 0))
 	if not _pending_skill_data.is_empty():
 		_selected_skill_data = _pending_skill_data.duplicate(true)
@@ -755,6 +890,32 @@ func _confirm_target_selection() -> void:
 		_selected_skill_data.clear()
 	_hide_target_panel()
 	_begin_action_quiz()
+
+
+## Skan (jak w FNaFB CC): nazwa i HP wroga oraz jego opis (scan_text) albo statystyki i umiejętności — w logu u góry.
+## Nie zużywa tury ani kosztu: wraca do menu postaci.
+func _scan_enemy(enemy_index: int) -> void:
+	var unit: Dictionary = _enemy_units[enemy_index]
+	var src: Variant = unit.get("source", enemy)
+	var text := str(src.get("scan_text")) if src != null and src.get("scan_text") != null else ""
+	if text.strip_edges() == "":
+		var skill_names: Array[String] = []
+		for sk in (src.get("battle_skills") if src != null and src.get("battle_skills") != null else []):
+			skill_names.append(sk.localized_name())
+		text = "ATK %d · DEF %d · MAT %d · MDF %d · AGI %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0)), int(unit.get("agi", 0))]
+		if not skill_names.is_empty():
+			text += "\nUmiejętności: " + ", ".join(skill_names)
+	var level: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
+	_push_log("%s%s — HP %d/%d" % [str(unit.get("name", "?")), " (lv %d)" % level if level > 0 else "", int(unit.get("hp", 0)), int(unit.get("max_hp", 1))], Color(0.55, 0.85, 1.0))
+	_push_log(text, Color.WHITE)
+	_pending_skill_data.clear()
+	_selected_skill_data.clear()
+	_hide_target_panel()
+	phase = Phase.ACTION_SELECT
+	_refresh_stats_panel()
+	action_panel.visible = true
+	_show_action_menu()
+	_highlight_action(0)
 
 
 func _cancel_target_selection() -> void:
@@ -845,23 +1006,19 @@ func _read_quizless_flag(settings_service: Node, module_scope: bool) -> bool:
 	return false
 
 
+## Ruch kursora po siatce listy (delta: ±1 w poziomie, ±kolumny w pionie), z zawijaniem.
 func _navigate_list(delta: int) -> void:
-	if _list_menu_rows.is_empty():
+	var n := _list_menu_rows.size()
+	if n == 0:
 		return
-	var next_idx: int = _list_selected_idx
-	for _step in range(_list_menu_rows.size()):
-		next_idx = (next_idx + delta + _list_menu_rows.size()) % _list_menu_rows.size()
-		if not _list_menu_rows[next_idx].get_meta("disabled", false):
-			_list_selected_idx = next_idx
-			_refresh_list_selection()
-			return
+	_list_selected_idx = posmod(_list_selected_idx + delta, n)
+	_refresh_list_selection()
 
 
 func _confirm_list_selection() -> void:
 	if _list_selected_idx < 0 or _list_selected_idx >= _list_menu_entries.size():
 		return
-	var row: Control = _list_menu_rows[_list_selected_idx]
-	if row.get_meta("disabled", false):
+	if (_list_menu_rows[_list_selected_idx] as Button).disabled:
 		return
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
@@ -873,128 +1030,92 @@ func _confirm_list_selection() -> void:
 		_use_item(entry)
 
 
-func _build_list_menu(list_box: VBoxContainer, entries: Array[Dictionary], is_skill_menu: bool) -> void:
-	for child in list_box.get_children():
+func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
+	for child in list_grid.get_children():
+		list_grid.remove_child(child)
 		child.queue_free()
 	_list_menu_rows.clear()
+	var actor: Dictionary = _party_state[_active_actor_index] if _has_active_actor() else {}
 	for entry in entries:
-		var row: PanelContainer = PanelContainer.new()
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		row.custom_minimum_size = Vector2(0.0, _ui_scale_px(38))
-		var margin: MarginContainer = MarginContainer.new()
-		margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		margin.mouse_filter = Control.MOUSE_FILTER_STOP
-		margin.add_theme_constant_override("margin_left", _ui_scale_px(8))
-		margin.add_theme_constant_override("margin_top", _ui_scale_px(6))
-		margin.add_theme_constant_override("margin_right", _ui_scale_px(8))
-		margin.add_theme_constant_override("margin_bottom", _ui_scale_px(6))
-		var content: HBoxContainer = HBoxContainer.new()
-		content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		content.add_theme_constant_override("separation", _ui_scale_px(12))
-		var name_label: Label = Label.new()
-		name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_label.text = str(entry.get("name", "---"))
-		name_label.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		var value_label: Label = Label.new()
-		value_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		value_label.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		var disabled: bool = false
+		var row := ListRowScene.instantiate() as Button
+		list_grid.add_child(row)
+		var kind: int = row.Kind.NONE
+		var cost := ""
+		var disabled := false
 		if is_skill_menu:
 			var sp_cost: int = int(entry.get("sp_cost", 0))
 			var tp_cost: int = int(entry.get("tp_cost", 0))
 			if sp_cost > 0:
-				value_label.text = "SP %d" % sp_cost
-				disabled = not _has_active_actor() or int(_party_state[_active_actor_index].get("sp", 0)) < sp_cost
-			elif tp_cost > 0:
-				value_label.text = "TP %d" % tp_cost
-				disabled = not _has_active_actor() or int(_party_state[_active_actor_index].get("tp", 0)) < tp_cost
-			else:
-				value_label.text = "-"
+				cost = "%d SP" % sp_cost
+				kind = row.Kind.SP
+				disabled = int(actor.get("sp", 0)) < sp_cost
+			if tp_cost > 0:
+				cost = (cost + "  " if cost != "" else "") + "%d TP" % tp_cost
+				kind = row.Kind.TP if sp_cost <= 0 else kind
+				disabled = disabled or int(actor.get("tp", 0)) < tp_cost
+			disabled = disabled or not bool(entry.get("usable_in_battle", true))
+			disabled = disabled or (_ps != null and not _ps.member_meets_weapon_requirement(_active_actor_index, entry))
 		else:
 			var count: int = int(entry.get("count", 0))
-			var display_count: String = str(entry.get("display_count", count))
-			value_label.text = "X" if display_count == "X" else "x%s" % display_count
+			cost = "×%s" % str(entry.get("display_count", count))
+			kind = row.Kind.COUNT
 			disabled = count <= 0 or not bool(entry.get("usable_in_combat", true))
-		if disabled:
-			name_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
-			value_label.add_theme_color_override("font_color", Color(0.55, 0.55, 0.6))
-		row.set_meta("disabled", disabled)
-		content.add_child(name_label)
-		content.add_child(value_label)
-		margin.add_child(content)
-		row.add_child(margin)
+		row.setup(str(entry.get("name", "---")), cost, kind, disabled, entry.get("icon") as Texture2D)
 		var row_index: int = _list_menu_rows.size()
-		row.gui_input.connect(func(event: InputEvent): _on_list_row_gui_input(event, row_index))
+		row.pressed.connect(func(): _on_list_row_pressed(row_index))
 		row.mouse_entered.connect(func(): _on_list_row_hover(row_index))
-		margin.gui_input.connect(func(event: InputEvent): _on_list_row_gui_input(event, row_index))
-		margin.mouse_entered.connect(func(): _on_list_row_hover(row_index))
-		list_box.add_child(row)
 		_list_menu_rows.append(row)
-	_refresh_list_selection()
+	if entries.is_empty():
+		var empty := ListRowScene.instantiate() as Button
+		list_grid.add_child(empty)
+		empty.setup("Brak umiejętności" if is_skill_menu else "Brak przedmiotów", "", 0, true)
+	_fit_list_columns()
+
+
+## Opcje -> Motyw „Umiejętności i przedmioty w walce”: siatka 2 kolumny albo jedna przewijana lista (QuizTheme.list_layout).
+## Okno listy ma szerokość najszerszego wiersza (CombatListRow: minimum ze sceny albo nazwa + koszt), wysokość — cały pas
+## (nadmiar przewijany); okna paska wyśrodkowane (ContentRow), po bokach widać tło bitwy.
+func _fit_list_columns() -> void:
+	var n := list_grid.get_child_count()
+	if n == 0:
+		return
+	var cols := 2 if QuizTheme.list_layout() == QuizTheme.LIST_GRID else 1
+	list_grid.columns = mini(cols, n)
 
 
 func _on_list_row_hover(index: int) -> void:
 	if index < 0 or index >= _list_menu_rows.size():
 		return
-	if _list_menu_rows[index].get_meta("disabled", false):
-		return
 	_list_selected_idx = index
 	_refresh_list_selection()
 
 
-func _on_list_row_gui_input(event: InputEvent, index: int) -> void:
-	if not (event is InputEventMouseButton):
-		return
-	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
-		return
+func _on_list_row_pressed(index: int) -> void:
 	if index < 0 or index >= _list_menu_rows.size():
-		return
-	if _list_menu_rows[index].get_meta("disabled", false):
 		return
 	_list_selected_idx = index
 	_refresh_list_selection()
 	_confirm_list_selection()
 
 
+## Kursor (styl „selected” z motywu) także na pozycjach niedostępnych — opis widać, wybór blokuje _confirm_list_selection.
 func _refresh_list_selection() -> void:
-	var active_style: StyleBoxFlat = StyleBoxFlat.new()
-	active_style.bg_color = Color(0, 0, 0, 0)
-	active_style.border_width_bottom = 2
-	active_style.border_color = UI_ACCENT
-	var selected_color: Color = UI_TEXT_PRIMARY
-	var idle_color: Color = Color(0.7, 0.7, 0.76)
-	var disabled_color: Color = Color(0.55, 0.55, 0.6)
 	for i in range(_list_menu_rows.size()):
-		var row: Control = _list_menu_rows[i]
-		var is_selected: bool = i == _list_selected_idx
-		var target_color: Color = selected_color if is_selected else idle_color
-		if bool(row.get_meta("disabled", false)):
-			target_color = disabled_color
-		if i == _list_selected_idx:
-			row.add_theme_stylebox_override("panel", active_style)
-		else:
-			row.remove_theme_stylebox_override("panel")
-		var labels: Array = row.find_children("*", "Label", true, false)
-		for label_value: Variant in labels:
-			var label: Label = label_value as Label
-			if label:
-				label.self_modulate = target_color
+		QuizTheme.set_menu_item_selected(_list_menu_rows[i] as Button, i == _list_selected_idx)
+	if _list_selected_idx >= 0 and _list_selected_idx < _list_menu_rows.size():
+		list_scroll.ensure_control_visible(_list_menu_rows[_list_selected_idx])
 	_update_list_description()
 
 
 func _update_list_description() -> void:
-	var label: Label = skills_description_label if _list_menu_mode == "skills" else items_description_label
-	if label == null:
+	if help_label == null:
 		return
+	help_label.visible = _list_menu_mode != ""
 	if _list_selected_idx < 0 or _list_selected_idx >= _list_menu_entries.size():
-		label.text = ""
-		return
-	label.text = str(_list_menu_entries[_list_selected_idx].get("description", ""))
+		help_label.text = ""
+	else:
+		help_label.text = str(_list_menu_entries[_list_selected_idx].get("description", ""))
+	_update_top_window()
 
 
 func _is_menu_up(event: InputEvent) -> bool:
@@ -1055,24 +1176,74 @@ func _ui_scale_px(base_size: int) -> int:
 	return base_size
 
 
+## Umiejętność z listy: leczenie (cel: ja / sojusznik — kursor drużyny, gdy jest wybór / drużyna / nieprzytomny)
+## albo atak (jeden przeciwnik — wybór celu; wszyscy / losowi — bez wyboru). Koszt pobierany po wyborze celu.
 func _use_skill(skill_data: Dictionary) -> void:
-	var effect: String = str(skill_data.get("effect", "heal"))
-	chosen_action = Action.HEAL
-	if effect == "attack":
-		chosen_action = Action.ATTACK
-	elif effect == "defend":
-		chosen_action = Action.DEFEND
+	var skill := skill_data.get("resource") as QuizRpgSkillBase
 	_close_list_menu()
-	if chosen_action == Action.ATTACK:
-		_pending_skill_data = skill_data.duplicate(true)
+	if skill != null and skill.targets_allies():
+		chosen_action = Action.HEAL
+		if skill.target == QuizRpgSkillBase.Target.ONE_ALLY or skill.target == QuizRpgSkillBase.Target.DEAD_ALLY:
+			var dead := skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
+			var valid := _party_indices(dead)
+			if valid.is_empty():
+				result_label.visible = true
+				result_label.text = "Brak nieprzytomnych sojuszników." if dead else "Brak celu."
+				return
+			_pending_skill_data = skill_data.duplicate()
+			if valid.size() == 1:
+				_heal_target_index = valid[0]
+				_start_pending_skill()
+			else:
+				_open_ally_pick(dead)
+			return
+		_selected_skill_data = skill_data.duplicate()
+		_consume_skill_cost(_selected_skill_data)
+		_begin_action_quiz()
+		return
+	chosen_action = Action.ATTACK
+	if skill == null or skill.target == QuizRpgSkillBase.Target.ONE_OPPONENT:
+		_pending_skill_data = skill_data.duplicate()
 		_open_target_menu()
 		return
-	_selected_skill_data = skill_data.duplicate(true)
+	_selected_skill_data = skill_data.duplicate()
 	_consume_skill_cost(_selected_skill_data)
 	_begin_action_quiz()
 
 
+func _start_pending_skill() -> void:
+	_selected_skill_data = _pending_skill_data.duplicate()
+	_pending_skill_data.clear()
+	_consume_skill_cost(_selected_skill_data)
+	_begin_action_quiz()
+
+
+## Wybór celu leczenia kursorem na liście drużyny (jak wybór postaci), żywy albo nieprzytomny sojusznik.
+func _open_ally_pick(dead: bool) -> void:
+	_ally_pick = 2 if dead else 1
+	_actor_select_open = true
+	_actor_selected_idx = _find_selectable_actor(0, 1)
+	_set_band_mode(Band.STATUS_ONLY)
+	_refresh_actor_selection()
+
+
+func _confirm_ally_pick() -> void:
+	_heal_target_index = _actor_selected_idx
+	_ally_pick = 0
+	_close_actor_select()
+	_start_pending_skill()
+
+
+func _cancel_ally_pick() -> void:
+	_ally_pick = 0
+	_pending_skill_data.clear()
+	_close_actor_select()
+	_open_skills_menu()
+
+
 func _consume_skill_cost(skill_data: Dictionary) -> void:
+	if bool(skill_data.get("consumes_weapon", false)) and _ps != null:
+		_ps.consume_member_weapon(_active_actor_index)
 	var sp_cost: int = int(skill_data.get("sp_cost", 0))
 	var tp_cost: int = int(skill_data.get("tp_cost", 0))
 	if sp_cost > 0:
@@ -1091,7 +1262,7 @@ func _use_item(item_data: Dictionary) -> void:
 		return
 	if not _ps.has_method("use_item"):
 		return
-	var use_result: Dictionary = _ps.use_item(item_id)
+	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index)
 	if not bool(use_result.get("success", false)):
 		return
 	var item_name: String = str(use_result.get("name", item_data.get("name", "Przedmiot")))
@@ -1115,7 +1286,7 @@ func _use_item(item_data: Dictionary) -> void:
 		effect_parts.append("+%d TP" % tp_restore)
 	if (use_result.get("cured_statuses", []) as Array).has("poison"):
 		effect_parts.append("zatrucie wyleczone")
-		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Wyleczono", POISON_COLOR, 12)
+		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Wyleczono", Color.GREEN, 12)
 	if effect_parts.is_empty():
 		result_label.text = str(use_result.get("message", "Użyto: %s" % item_name))
 		result_label.add_theme_color_override("font_color", Color.WHITE)
@@ -1125,10 +1296,7 @@ func _use_item(item_data: Dictionary) -> void:
 	_refresh_stats_panel()
 	_update_hp_bars()
 	await get_tree().create_timer(1.0).timeout
-	if _all_enemies_defeated():
-		_end_combat(true)
-		return
-	_enemy_turn()
+	_next_turn()
 
 
 func _show_question(q: Dictionary) -> void:
@@ -1162,7 +1330,6 @@ func _show_quiz_feedback(result: Dictionary, submitted_answer: Dictionary) -> vo
 
 
 func _resolve_action(correct: bool) -> void:
-	quiz_correct = correct
 	phase = Phase.PLAYER_RESULT
 	_set_quiz_layout_active(false)
 	_set_band_mode(Band.STATUS_ONLY)  # wykonanie akcji: sam status, komunikaty w logu u góry
@@ -1170,7 +1337,7 @@ func _resolve_action(correct: bool) -> void:
 	result_label.visible = true
 	match chosen_action:
 		Action.ATTACK:
-			_resolve_attack(correct)
+			await _resolve_attack(correct)
 		Action.DEFEND:
 			_resolve_defend(correct)
 		Action.HEAL:
@@ -1181,67 +1348,116 @@ func _resolve_action(correct: bool) -> void:
 	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	await get_tree().create_timer(1.5).timeout
-	if _all_enemies_defeated():
-		_end_combat(true)
-		return
-	_enemy_turn()
+	_next_turn()
 
 
+## Atak gracza (zwykły albo umiejętność): cele wg umiejętności, `hits` trafień, każde trafienie — szansa z quizu ×
+## success_rate, obrażenia QuizRpgSkillMath (staty aktywnej postaci vs staty jednostki), krytyk 15 % (×1,8).
 func _resolve_attack(correct: bool) -> void:
-	var target_index := _active_enemy_index
-	if target_index < 0 or target_index >= _enemy_units.size() or int(_enemy_units[target_index].get("hp", 0)) <= 0:
-		target_index = _find_next_alive_enemy_index(_active_enemy_index)
-	if target_index < 0:
+	var skill := _selected_skill_data.get("resource") as QuizRpgSkillBase
+	var targets := _offense_targets(skill)
+	if targets.is_empty():
 		return
-	_active_enemy_index = target_index
 	_gain_party_tp(_active_actor_index, TP_PER_ATTACK)
-	var target := _enemy_units[_active_enemy_index]
-	var target_name_str := str(target.get("name", enemy_name_str))
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
-	var hit_success: bool = _ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance
+	if _ps and _ps.has_method("member_hit_mult"):
+		hit_chance *= _ps.member_hit_mult(_active_actor_index)
+	var hits: int = skill.hits if skill else 1
+	var user := _member_stats(_active_actor_index)
+	var touched := {}
+	for h in range(hits):
+		if h > 0:
+			await get_tree().create_timer(skill.hit_interval).timeout
+		for ti in targets:
+			if int(_enemy_units[ti].get("hp", 0)) <= 0:
+				continue
+			_active_enemy_index = ti
+			var quiz_hit: bool = true if skill != null and skill.hit_ignores_quiz else (_ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance)
+			if not quiz_hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)):
+				_show_attack_miss(ti, correct)
+				continue
+			_apply_player_hit(ti, QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti])))
+			_unit_on_damaged(ti)
+			touched[ti] = true
+			if skill != null and skill.has_status() and skill.status_per_hit and randf() < skill.status_chance:
+				_unit_add_status(ti, skill.inflict_status)
+	if skill != null and skill.has_status() and not skill.status_per_hit:
+		for ti: int in touched:
+			if int(_enemy_units[ti].get("hp", 0)) > 0 and randf() < skill.status_chance:
+				_unit_add_status(ti, skill.inflict_status)
+
+
+## Cele ataku gracza: jeden (wybrany), wszyscy żywi albo N losowych (z powtórzeniami, jak w RPG Makerze).
+func _offense_targets(skill: QuizRpgSkillBase) -> Array[int]:
+	var alive: Array[int] = []
+	for i in range(_enemy_units.size()):
+		if int(_enemy_units[i].get("hp", 0)) > 0:
+			alive.append(i)
+	if alive.is_empty():
+		return alive
+	if skill != null and skill.target == QuizRpgSkillBase.Target.ALL_OPPONENTS:
+		return alive
+	var confused: bool = _ps != null and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(_active_actor_index, QuizRpgStatusData.Restriction.CONFUSED)
+	if confused or (skill != null and skill.target == QuizRpgSkillBase.Target.RANDOM_OPPONENTS):
+		var out: Array[int] = []
+		for k in range(skill.random_count if skill else 1):
+			out.append(alive.pick_random())
+		return out
+	var t := _active_enemy_index
+	if not alive.has(t):
+		t = _find_next_alive_enemy_index(_active_enemy_index)
+	var one: Array[int] = []
+	if t >= 0:
+		one.append(t)
+	return one
+
+
+func _apply_player_hit(ti: int, base_dmg: int) -> void:
 	var audio := get_node_or_null("/root/AudioService")
-	if hit_success:
-		if audio:
-			audio.play_sfx_by_name("hit")
-		var damage_multiplier: float = float(_selected_skill_data.get("damage_multiplier", 1.0))
-		var dmg: int = int(player_base_damage * damage_multiplier)
-		var crit := false
-		if _ps and _ps.roll_with_bonus(0.15):
-			dmg = int(dmg * 1.8)
-			crit = true
-		target["hp"] = maxi(int(target.get("hp", 0)) - dmg, 0)
-		if int(target.get("hp", 0)) <= 0 and audio:
-			audio.play_sfx_by_name("enemy_death")
-		_enemy_units[_active_enemy_index] = target
-		_refresh_enemy_cache()
-		_sync_enemy_display_hit(_active_enemy_index)
-		if crit:
-			result_label.text = "%s: krytyk! -%d HP" % [target_name_str, dmg]
-			result_label.add_theme_color_override("font_color", Color.GOLD)
-			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "KRYT -%d" % dmg, Color.GOLD, 16)
-		else:
-			result_label.text = "%s: trafienie! -%d HP" % [target_name_str, dmg]
-			result_label.add_theme_color_override("font_color", Color.GREEN)
-			FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
-		HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
+	if audio:
+		audio.play_sfx_by_name("hit")
+	var target := _enemy_units[ti]
+	var target_name_str := str(target.get("name", enemy_name_str))
+	var dmg := base_dmg
+	var crit := false
+	if _ps and _ps.roll_with_bonus(0.15):
+		dmg = int(dmg * 1.8)
+		crit = true
+	target["hp"] = maxi(int(target.get("hp", 0)) - dmg, 0)
+	if int(target.get("hp", 0)) <= 0 and audio:
+		audio.play_sfx_by_name("enemy_death")
+	_enemy_units[ti] = target
+	_refresh_enemy_cache()
+	_sync_enemy_display_hit(ti)
+	if crit:
+		result_label.text = "%s: krytyk! -%d HP" % [target_name_str, dmg]
+		result_label.add_theme_color_override("font_color", Color.GOLD)
+		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "KRYT -%d" % dmg, Color.GOLD, 16)
 	else:
-		if audio:
-			audio.play_sfx_by_name("attack")
-		var fail_type: String = ["Pudło!", "Unik wroga!", "Blok wroga!"][randi() % 3]
-		result_label.text = fail_type
-		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
-		_dodge_enemy_display(_active_enemy_index)
-		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), fail_type, Color(0.8, 0.8, 0.8) if correct else Color(0.9, 0.7, 0.45), 12)
+		result_label.text = "%s: trafienie! -%d HP" % [target_name_str, dmg]
+		result_label.add_theme_color_override("font_color", Color.GREEN)
+		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
+	HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
+
+
+func _show_attack_miss(ti: int, correct: bool) -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio:
+		audio.play_sfx_by_name("attack")
+	var fail_type: String = ["Pudło!", "Unik wroga!", "Blok wroga!"][randi() % 3]
+	result_label.text = fail_type
+	result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
+	_dodge_enemy_display(ti)
+	FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), fail_type, Color(0.8, 0.8, 0.8) if correct else Color(0.9, 0.7, 0.45), 12)
 
 
 func _resolve_defend(correct: bool) -> void:
-	defending = true
-	_defender_index = _active_actor_index
+	_guard[_active_actor_index] = correct
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("magic")
 	if correct:
-		result_label.text = "Pełna obrona!"
+		result_label.text = "Dobra obrona!"
 		result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
 		_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 	else:
@@ -1249,25 +1465,49 @@ func _resolve_defend(correct: bool) -> void:
 		result_label.add_theme_color_override("font_color", Color(0.5, 0.6, 0.8))
 
 
+## Leczenie umiejętnością: cele wg umiejętności (ja / wybrany sojusznik / drużyna / nieprzytomny — wskrzeszenie),
+## ilość QuizRpgSkillMath.heal; po złej odpowiedzi WRONG_ANSWER_HEAL_FACTOR tego.
 func _resolve_heal(correct: bool) -> void:
 	if not _ps:
 		return
+	var skill := _selected_skill_data.get("resource") as QuizRpgSkillBase
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("magic")
-	var heal_pct: float = 0.30 if correct else 0.10
-	if not _selected_skill_data.is_empty():
-		heal_pct = float(_selected_skill_data.get("heal_ratio_correct", 0.30)) if correct else float(_selected_skill_data.get("heal_ratio_wrong", 0.10))
-	var heal_amount := int(_ps.max_hp * heal_pct)
-	_ps.heal(heal_amount)
-	_flash_sprite(player_sprite_node, Color.GREEN)
-	if correct:
-		result_label.text = "Leczenie +%d HP" % heal_amount
-		result_label.add_theme_color_override("font_color", Color.GREEN)
+	var factor := 1.0 if correct else WRONG_ANSWER_HEAL_FACTOR
+	var revive := skill != null and skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
+	var parts: Array[String] = []
+	var user_mat := int(_member_stats(_active_actor_index).get("mat", 0))
+	for t in _heal_targets(skill):
+		var member: Dictionary = _ps.get_party_member(t) if _ps.has_method("get_party_member") else {}
+		var max_hp: int = int(member.get("max_hp", _ps.max_hp))
+		if skill != null and skill.has_status() and randf() < skill.status_chance and _ps.add_status(t, skill.inflict_status, skill.status_params()):
+			parts.append("%s: %s" % [str(member.get("name", "Bohater")), QuizRpgStatusCatalog.name_of(skill.inflict_status)])
+		if skill != null and not skill.is_heal():
+			continue
+		var amount := maxi(roundi((QuizRpgSkillMath.heal(skill, max_hp, user_mat) if skill else max_hp * 0.3) * factor), 1)
+		var healed: int = _ps.heal_member(t, amount, revive) if _ps.has_method("heal_member") else 0
+		if healed <= 0:
+			continue
+		parts.append("%s +%d HP" % [str(member.get("name", "Bohater")), healed])
+		if t == 0:
+			_flash_sprite(player_sprite_node, Color.GREEN)
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % healed, Color.GREEN, 14)
+	var title: String = str(_selected_skill_data.get("name", "Leczenie"))
+	if parts.is_empty():
+		result_label.text = "%s: bez efektu." % title
+		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 	else:
-		result_label.text = "Słabe leczenie +%d HP" % heal_amount
-		result_label.add_theme_color_override("font_color", Color(0.6, 0.8, 0.5))
-	FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % heal_amount, Color.GREEN, 14)
+		result_label.text = "%s%s: %s" % [title, "" if correct else " (słabiej)", ", ".join(parts)]
+		result_label.add_theme_color_override("font_color", Color.GREEN if correct else Color(0.6, 0.8, 0.5))
+
+
+func _heal_targets(skill: QuizRpgSkillBase) -> Array[int]:
+	var out: Array[int] = []
+	if skill != null and skill.target == QuizRpgSkillBase.Target.ALL_ALLIES:
+		return _party_indices(false)
+	out.append(_active_actor_index if skill == null or skill.target == QuizRpgSkillBase.Target.SELF else _heal_target_index)
+	return out
 
 
 func _try_flee() -> void:
@@ -1286,97 +1526,96 @@ func _try_flee() -> void:
 		if party_command_panel:
 			party_command_panel.visible = false
 		await get_tree().create_timer(1.0).timeout
-		_enemy_turn()
+		_next_turn()
 
 
-func _enemy_turn() -> void:
-	if _all_enemies_defeated():
-		_end_combat(true)
-		return
+## Ruch wroga (jedna jednostka): umiejętność albo zwykły atak w losowego przytomnego członka drużyny.
+## true = walka zakończona (drużyna padła).
+func _enemy_act(enemy_index: int) -> bool:
 	phase = Phase.ENEMY_TURN
 	_set_band_mode(Band.STATUS_ONLY)
 	result_label.visible = true
-	for enemy_index in range(_enemy_units.size()):
-		var enemy_unit := _enemy_units[enemy_index]
-		if int(enemy_unit.get("hp", 0)) <= 0:
-			continue
-		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
-		var skill := _pick_enemy_skill(enemy_unit)
-		if skill != null:
-			if await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill):
-				return
-			continue
-		if turn_label:
-			turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
-		_push_log("%s atakuje!" % enemy_label, Color.WHITE)
-		_active_enemy_index = enemy_index
-		_refresh_enemy_header()
-		if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
-			var active_display: Node2D = _enemy_displays[enemy_index]
-			if active_display.has_method("play_attack"):
-				active_display.call("play_attack")
-		await get_tree().create_timer(0.5).timeout
-		var raw_damage := int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8
-		var enemy_tier: int = int(enemy_unit.get("tier", _get_encounter_tier()))
-		var actual_damage: int
-		_gain_party_tp(0, _tp_from_damage(raw_damage, enemy_tier))
-		if defending and quiz_correct:
-			actual_damage = 0
-			var audio := get_node_or_null("/root/AudioService")
+	var enemy_unit := _enemy_units[enemy_index]
+	var enemy_label := str(enemy_unit.get("name", enemy_name_str))
+	var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
+	if stop != null:
+		_push_log("%s: %s — traci turę." % [enemy_label, stop.localized_name()], stop.color)
+		await get_tree().create_timer(0.6).timeout
+		return false
+	if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
+		return false
+	var skill := _pick_enemy_skill(enemy_unit)
+	if skill != null:
+		return await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill)
+	if turn_label:
+		turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
+	_push_log("%s atakuje!" % enemy_label, Color.WHITE)
+	_active_enemy_index = enemy_index
+	_refresh_enemy_header()
+	if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
+		var active_display: Node2D = _enemy_displays[enemy_index]
+		if active_display.has_method("play_attack"):
+			active_display.call("play_attack")
+	await get_tree().create_timer(0.5).timeout
+	# Cel: losowy przytomny członek drużyny (sam lider, gdy drużyna jednoosobowa).
+	var alive := _party_indices(false)
+	var t: int = alive[randi() % alive.size()] if not alive.is_empty() else 0
+	var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
+	var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
+	if randf() >= _unit_hit_mult(enemy_unit):
+		_push_log("%s pudłuje!" % enemy_label, Color(0.75, 0.75, 0.82))
+		FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
+		await get_tree().create_timer(0.8).timeout
+		return false
+	var actual_damage: int
+	_gain_party_tp(t, _tp_from_damage(full_damage))
+	if _guard.has(t):
+		actual_damage = maxi(floori(full_damage * _guard_factor(t)), 1)
+		if _ps:
+			_ps.damage_member(t, actual_damage)
+		var audio := get_node_or_null("/root/AudioService")
+		if actual_damage <= 0:
 			if audio:
 				audio.play_sfx_by_name("hit")
-			result_label.text = "%s trafia w blok! 0 obrażeń." % enemy_label
-			result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
-			_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
-		elif defending and not quiz_correct:
-			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier, 0.5)
-			if _ps:
-				_ps.take_damage(actual_damage)
-			var audio := get_node_or_null("/root/AudioService")
-			if actual_damage <= 0:
-				if audio:
-					audio.play_sfx_by_name("hit")
-				result_label.text = "%s odbija się od obrony!" % enemy_label
-				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
-				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
-			else:
-				if audio:
-					audio.play_sfx_by_name("player_damage")
-				result_label.text = "%s zadaje %d HP" % [enemy_label, actual_damage]
-				result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
-				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
+			result_label.text = "%s odbija się od obrony!" % enemy_label
+			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+			_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
 		else:
-			actual_damage = _calculate_player_damage_taken(raw_damage, enemy_tier)
-			if _ps:
-				_ps.take_damage(actual_damage)
-			var audio := get_node_or_null("/root/AudioService")
-			if actual_damage <= 0:
-				if audio:
-					audio.play_sfx_by_name("hit")
-				result_label.text = "%s nie przebija pancerza!" % enemy_label
-				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
-				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
-			else:
-				if audio:
-					audio.play_sfx_by_name("player_damage")
-				result_label.text = "%s atakuje! -%d HP" % [enemy_label, actual_damage]
-				result_label.add_theme_color_override("font_color", Color.RED)
-				_flash_sprite(player_sprite_node, Color.RED)
-				HitParticles.create_at(player, player.global_position, Color.RED, 6)
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
-		_update_hp_bars()
-		_refresh_stats_panel()
-		await get_tree().create_timer(1.0).timeout
-		if _ps and not _ps.is_alive():
-			_end_combat(false)
-			return
-	if await _apply_poison_round():
-		return
-	_start_player_turn()
+			if audio:
+				audio.play_sfx_by_name("player_damage")
+			result_label.text = "%s zadaje %d HP%s" % [enemy_label, actual_damage, target_suffix]
+			result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
+			_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
+	else:
+		actual_damage = full_damage
+		if _ps:
+			_ps.damage_member(t, actual_damage)
+			_member_damaged(t)
+		var audio := get_node_or_null("/root/AudioService")
+		if actual_damage <= 0:
+			if audio:
+				audio.play_sfx_by_name("hit")
+			result_label.text = "%s nie przebija pancerza!" % enemy_label
+			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+			_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
+		else:
+			if audio:
+				audio.play_sfx_by_name("player_damage")
+			result_label.text = "%s atakuje%s! -%d HP" % [enemy_label, target_suffix, actual_damage]
+			result_label.add_theme_color_override("font_color", Color.RED)
+			_flash_sprite(player_sprite_node, Color.RED)
+			HitParticles.create_at(player, player.global_position, Color.RED, 6)
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
+	_update_hp_bars()
+	_refresh_stats_panel()
+	await get_tree().create_timer(1.0).timeout
+	if _ps and _ps.is_party_defeated():
+		_end_combat(false)
+		return true
+	return false
 
 
 ## Umiejętność wroga na tę turę: pierwsza z battle_skills dostępna (cooldown, first_turn) i wylosowana z use_chance;
@@ -1385,6 +1624,35 @@ func _enemy_turn() -> void:
 func _unit_source(unit: Dictionary) -> Node2D:
 	var src: Variant = unit.get("source", null)
 	return src if src is Node2D and is_instance_valid(src) else enemy
+
+
+## Zamroczony wróg bije losowego innego wroga (zwykły atak). false = brak innego celu (atakuje normalnie).
+func _confused_unit_strike(enemy_index: int) -> bool:
+	var others: Array[int] = []
+	for i in range(_enemy_units.size()):
+		if i != enemy_index and int(_enemy_units[i].get("hp", 0)) > 0:
+			others.append(i)
+	if others.is_empty():
+		return false
+	var ti: int = others.pick_random()
+	var attacker := _enemy_units[enemy_index]
+	var victim := _enemy_units[ti]
+	var dmg := QuizRpgSkillMath.basic_attack(_unit_stats(attacker), _unit_stats(victim))
+	victim["hp"] = maxi(int(victim.get("hp", 0)) - dmg, 0)
+	_enemy_units[ti] = victim
+	_push_log("%s w zamroczeniu atakuje: %s -%d HP" % [str(attacker.get("name", enemy_name_str)), str(victim.get("name", enemy_name_str)), dmg], QuizRpgStatusCatalog.color_of("confusion"))
+	_unit_on_damaged(ti)
+	_refresh_enemy_cache()
+	_refresh_enemy_header()
+	await get_tree().create_timer(0.8).timeout
+	return true
+
+
+func _enemy_side_wounded() -> bool:
+	for u in _enemy_units:
+		if int(u.get("hp", 0)) > 0 and int(u.get("hp", 0)) < int(u.get("max_hp", 1)):
+			return true
+	return false
 
 
 func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
@@ -1404,6 +1672,8 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 		var sk := skills[i] as QuizRpgEnemySkill
 		if sk == null or cds.has(i) or turn_number < sk.first_turn:
 			continue
+		if sk.is_heal() and not _enemy_side_wounded():
+			continue
 		if randf() < sk.use_chance:
 			if sk.cooldown_turns > 0:
 				cds[i] = sk.cooldown_turns + 1   # odliczanie zaczyna się od następnej tury wroga
@@ -1411,20 +1681,24 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 	return null
 
 
-## Użycie umiejętności: `hits` ataków w serii na cel(e) — obrona lidera (blok / połowa) i pancerz wg ustawień
-## umiejętności, status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
+## Użycie umiejętności wroga: leczenie (siebie / sojusznika / wszystkich wrogów) albo `hits` ataków w serii na
+## cel(e) z drużyny — szansa trafienia, obrażenia QuizRpgSkillMath (staty jednostki vs staty członka), obrona
+## (obrona: 1/4 po dobrej odpowiedzi, 1/2 po złej), status z szansą przy każdym trafieniu albo raz po serii. true = lider padł (walka zakończona).
 func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: String, sk: QuizRpgEnemySkill) -> bool:
-	var text := sk.log_text if sk.log_text != "" else "{enemy} używa: {skill}!"
-	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.skill_name)
+	var text := sk.localized_log_text()
+	if text == "":
+		text = QuizRpgI18n.t("combat.enemy_uses_skill", "{enemy} używa: {skill}!")
+	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.localized_name())
 	if turn_label:
-		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.skill_name]
+		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.localized_name()]
 	_push_log(text, sk.color)
 	result_label.text = text
 	result_label.add_theme_color_override("font_color", sk.color)
 	_active_enemy_index = enemy_index
 	_refresh_enemy_header()
-	var tier := int(enemy_unit.get("tier", _get_encounter_tier()))
-	var party_n := maxi(_ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1, 1)
+	if sk.targets_allies():
+		await _enemy_heal(enemy_index, sk)
+		return false
 	var audio := get_node_or_null("/root/AudioService")
 	var touched := {}   # cele trafione (albo dosięgnięte przez umiejętność bez obrażeń)
 	for h in range(sk.hits):
@@ -1433,66 +1707,103 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			if disp.has_method("play_attack"):
 				disp.call("play_attack")
 		await get_tree().create_timer(0.5 if h == 0 else sk.hit_interval).timeout
-		var targets: Array[int] = [0]
-		if sk.target == QuizRpgEnemySkill.Target.RANDOM_MEMBER:
-			targets = [randi() % party_n]
-		elif sk.target == QuizRpgEnemySkill.Target.ALL_PARTY:
-			targets.clear()
-			for i in range(party_n):
-				targets.append(i)
-		var raw := 0
-		if sk.damage_mode == QuizRpgEnemySkill.DamageMode.MULTIPLIER:
-			raw = roundi((int(enemy_unit.get("damage", enemy_base_damage)) + randi() % 8) * sk.damage_multiplier)
-		elif sk.damage_mode == QuizRpgEnemySkill.DamageMode.FIXED:
-			raw = sk.fixed_damage
+		var targets := _enemy_skill_targets(sk)
+		if targets.is_empty():
+			break
 		for t in targets:
-			if raw > 0:
-				_gain_party_tp(t, _tp_from_damage(raw, tier))
-			var mult := 1.0
-			var blocked := false
-			if t == _defender_index and defending and sk.can_be_blocked:
-				if quiz_correct:
-					blocked = true
-				else:
-					mult = 0.5
-			var dmg := 0
-			if raw > 0 and not blocked:
-				if sk.ignore_armor:
-					dmg = roundi(raw * mult)
-				elif _ps and _ps.has_method("calculate_incoming_damage"):
-					dmg = int(_ps.calculate_incoming_damage(raw, tier, mult, t))
-				else:
-					dmg = roundi(raw * mult)
-			if blocked:
-				if audio:
-					audio.play_sfx_by_name("hit")
-				_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "BLOK!", Color(0.3, 0.7, 1.0), 14)
+			if not QuizRpgSkillMath.roll_hit(sk, _unit_hit_mult(enemy_unit)):
+				if t == 0:
+					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
 				continue
+			var full := QuizRpgSkillMath.damage(sk, _unit_stats(enemy_unit), _member_stats(t))
+			if full > 0:
+				_gain_party_tp(t, _tp_from_damage(full))
+			var mult := 1.0
+			if _guard.has(t) and sk.can_be_blocked:
+				mult = _guard_factor(t)
+			var dmg := maxi(floori(full * mult), 1) if full > 0 else 0
 			if dmg > 0 and _ps:
 				_ps.damage_member(t, dmg)
+				_member_damaged(t)
 				if t == 0:
 					if audio:
 						audio.play_sfx_by_name("player_damage")
 					_flash_sprite(player_sprite_node, sk.color)
 					HitParticles.create_at(player, player.global_position, sk.color, 6)
 					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % dmg, sk.color, 14)
-			if dmg > 0 or sk.damage_mode == QuizRpgEnemySkill.DamageMode.NONE:
+			if dmg > 0 or sk.damage_mode == QuizRpgSkillBase.DamageMode.NONE:
 				touched[t] = true
-				if sk.has_status() and sk.status_per_hit and randf() < sk.status_chance:
+				if sk.has_status() and sk.status_per_hit and randf() < _guarded_status_chance(t, sk):
 					_inflict_status(t, sk)
 		_update_hp_bars()
 		_refresh_stats_panel()
-		if _ps and not _ps.is_alive():
+		if _ps and _ps.is_party_defeated():
 			await get_tree().create_timer(0.6).timeout
 			_end_combat(false)
 			return true
 	if sk.has_status() and not sk.status_per_hit:
 		for t: int in touched:
-			if randf() < sk.status_chance:
+			if randf() < _guarded_status_chance(t, sk):
 				_inflict_status(t, sk)
 	await get_tree().create_timer(0.8).timeout
 	return false
+
+
+## Cele umiejętności wroga w drużynie (żywi): jeden — lider (inaczej pierwszy żywy), wszyscy albo N losowych.
+func _enemy_skill_targets(sk: QuizRpgSkillBase) -> Array[int]:
+	var alive := _party_indices(false)
+	if alive.is_empty():
+		return alive
+	match sk.target:
+		QuizRpgSkillBase.Target.ALL_OPPONENTS:
+			return alive
+		QuizRpgSkillBase.Target.RANDOM_OPPONENTS:
+			var out: Array[int] = []
+			for k in range(sk.random_count):
+				out.append(alive.pick_random())
+			return out
+	var lead: Array[int] = [0 if alive.has(0) else alive[0]]
+	return lead
+
+
+## Leczenie wroga: siebie (SELF), najbardziej rannego sojusznika (ONE_ALLY) albo wszystkich żywych wrogów (ALL_ALLIES).
+func _enemy_heal(enemy_index: int, sk: QuizRpgSkillBase) -> void:
+	await get_tree().create_timer(0.5).timeout
+	var targets: Array[int] = []
+	match sk.target:
+		QuizRpgSkillBase.Target.ALL_ALLIES:
+			for i in range(_enemy_units.size()):
+				if int(_enemy_units[i].get("hp", 0)) > 0:
+					targets.append(i)
+		QuizRpgSkillBase.Target.ONE_ALLY:
+			var best := -1
+			var best_ratio := 2.0
+			for i in range(_enemy_units.size()):
+				var u := _enemy_units[i]
+				var hp := int(u.get("hp", 0))
+				var ratio := float(hp) / float(maxi(int(u.get("max_hp", 1)), 1))
+				if hp > 0 and ratio < best_ratio:
+					best = i
+					best_ratio = ratio
+			if best >= 0:
+				targets.append(best)
+		_:
+			targets.append(enemy_index)
+	for i in targets:
+		var u := _enemy_units[i]
+		var max_hp := int(u.get("max_hp", 1))
+		if sk.has_status() and randf() < sk.status_chance:
+			_unit_add_status(i, sk.inflict_status)
+			u = _enemy_units[i]
+		var healed := mini(QuizRpgSkillMath.heal(sk, max_hp, int(_unit_stats(_enemy_units[enemy_index]).get("mat", 0))), max_hp - int(u.get("hp", 0)))
+		if healed <= 0:
+			continue
+		u["hp"] = int(u.get("hp", 0)) + healed
+		_enemy_units[i] = u
+		_push_log("%s odzyskuje %d HP." % [str(u.get("name", enemy_name_str)), healed], sk.color)
+	_refresh_enemy_cache()
+	_refresh_enemy_header()
+	await get_tree().create_timer(0.8).timeout
 
 
 func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
@@ -1500,37 +1811,80 @@ func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
 		return
 	var member: Dictionary = _ps.get_party_member(member_index) if _ps.has_method("get_party_member") else {}
 	var st_name: String = _ps.status_name(sk.inflict_status) if _ps.has_method("status_name") else sk.inflict_status
-	var col := POISON_COLOR if sk.inflict_status == "poison" else sk.color
+	var col := QuizRpgStatusCatalog.color_of(sk.inflict_status, sk.color)
 	_push_log("%s: %s!" % [str(member.get("name", "Bohater")), st_name], col)
 	if member_index == 0:
 		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "%s!" % st_name, col, 12)
 
 
-## Koniec rundy wrogów: trucizna zabiera zatrutym część maks. HP (w walce może zbić do 0 — decyzja usera).
-## true = drużyna padła, walka zakończona.
-func _apply_poison_round() -> bool:
-	if _ps == null or not _ps.has_method("tick_poison_combat"):
+## Koniec rundy: statusy drużyny (PlayerStats.tick_statuses_combat — trucizna może zbić do 0, regeneracja, wygasanie)
+## i wrogów (to samo w jednostkach). true = walka zakończona (drużyna padła albo wrogowie zginęli).
+func _apply_status_round() -> bool:
+	var any := false
+	if _ps and _ps.has_method("tick_statuses_combat"):
+		for ev in _ps.tick_statuses_combat():
+			any = true
+			var i := int(ev["member"])
+			var sid := String(ev["status"])
+			var col := QuizRpgStatusCatalog.color_of(sid, POISON_COLOR)
+			if ev.get("expired", false):
+				_push_log("%s: koniec — %s." % [_member_name(i), QuizRpgStatusCatalog.name_of(sid)], col)
+				continue
+			var delta := int(ev["hp"])
+			if delta < 0:
+				_push_log("%s: %s -%d HP" % [_member_name(i), QuizRpgStatusCatalog.name_of(sid), -delta], col)
+			else:
+				_push_log("%s: %s +%d HP" % [_member_name(i), QuizRpgStatusCatalog.name_of(sid), delta], col)
+			if i == 0:
+				_flash_sprite(player_sprite_node, col)
+				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "%+d" % delta, col, 14)
+	for ti in range(_enemy_units.size()):
+		var unit := _enemy_units[ti]
+		if int(unit.get("hp", 0)) <= 0:
+			continue
+		var st: Dictionary = unit.get("statuses", {})
+		for sid in st.keys():
+			var def := QuizRpgStatusCatalog.get_status(String(sid))
+			if def == null:
+				continue
+			if def.turn_hp_percent != 0.0:
+				var max_hp := int(unit.get("max_hp", 1))
+				var amount := maxi(ceili(max_hp * absf(def.turn_hp_percent)), 1)
+				var delta := -mini(amount, int(unit.get("hp", 0))) if def.turn_hp_percent < 0.0 else mini(amount, max_hp - int(unit.get("hp", 0)))
+				if delta != 0:
+					unit["hp"] = int(unit.get("hp", 0)) + delta
+					any = true
+					_push_log("%s: %s %+d HP" % [str(unit.get("name", enemy_name_str)), def.localized_name(), delta], def.color)
+			var data: Dictionary = st[sid] if st[sid] is Dictionary else {}
+			if int(data.get("turns", 0)) > 0:
+				data["turns"] = int(data["turns"]) - 1
+				if int(data["turns"]) <= 0:
+					st.erase(sid)
+					any = true
+					_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
+		unit["statuses"] = st
+		_enemy_units[ti] = unit
+	if not any:
 		return false
-	var hits: Array = _ps.tick_poison_combat()
-	if hits.is_empty():
-		return false
-	for h in hits:
-		var member: Dictionary = _ps.get_party_member(int(h[0])) if _ps.has_method("get_party_member") else {}
-		_push_log("%s cierpi od trucizny: -%d HP" % [str(member.get("name", "Bohater")), int(h[1])], POISON_COLOR)
-		if int(h[0]) == 0:
-			_flash_sprite(player_sprite_node, POISON_COLOR)
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % int(h[1]), POISON_COLOR, 14)
+	_refresh_enemy_cache()
+	_refresh_enemy_header()
 	_update_hp_bars()
 	_refresh_stats_panel()
 	await get_tree().create_timer(0.8).timeout
-	if not _ps.is_alive():
+	if _ps and _ps.is_party_defeated():
 		_end_combat(false)
+		return true
+	if _all_enemies_defeated():
+		_end_combat(true)
 		return true
 	return false
 
 
 func _end_combat(player_won: bool, fled: bool = false) -> void:
 	phase = Phase.COMBAT_END
+	_log_combat_end(player_won, fled)
+	if _ps and _ps.has_method("clear_battle_statuses"):
+		_ps.clear_battle_statuses()
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false, false)
 	_victory_skip = false
@@ -1549,15 +1903,35 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 			audio.play_sfx_by_name("victory")
 		var total_xp_reward :int= enemy.xp_reward + _bonus_xp_reward
 		var lvl_before :int= _ps.level if _ps else 1
+		var learned: Array[String] = []
+		var on_learned := func(i: int, skill_name: String):
+			learned.append(skill_name if _ps.is_hero(i) else "%s (%s)" % [skill_name, _member_name(i)])
+		if _ps and _ps.has_signal("skill_learned"):
+			_ps.skill_learned.connect(on_learned)
+		var member_levels := {}   # członek -> najwyższy nowy poziom
+		var on_member_level := func(i: int, lvl: int): member_levels[i] = maxi(int(member_levels.get(i, 0)), lvl)
+		if _ps and _ps.has_signal("member_level_up"):
+			_ps.member_level_up.connect(on_member_level)
+		var total_gold := _total_gold_reward()
 		if _ps:
 			_ps.add_xp(total_xp_reward)
+			_ps.add_gold(total_gold)
 		var lines: Array[String] = ["%s i drużyna wygrywają walkę!" % (_ps.player_name if _ps else "Bohater")]
 		lines.append("Zdobyto %d EXP!" % total_xp_reward)
+		if total_gold > 0:
+			lines.append("Zdobyto %d złota!" % total_gold)
 		if _ps and _ps.level > lvl_before:
 			lines.append("%s osiąga poziom %d!" % [_ps.player_name, _ps.level])
-		var item_name := _roll_item_drop()
-		if item_name != "":
-			lines.append("Zdobyto: %s!" % item_name)
+		for i: int in member_levels:
+			lines.append("%s osiąga poziom %d!" % [_member_name(i), int(member_levels[i])])
+		if _ps and _ps.has_signal("member_level_up") and _ps.member_level_up.is_connected(on_member_level):
+			_ps.member_level_up.disconnect(on_member_level)
+		for skill_name in learned:
+			lines.append("Nowa umiejętność: %s!" % skill_name)
+		if _ps and _ps.has_signal("skill_learned") and _ps.skill_learned.is_connected(on_learned):
+			_ps.skill_learned.disconnect(on_learned)
+		for item_id in _roll_item_drops():
+			lines.append("Zdobyto: %s!" % _item_display_name(item_id))
 		_refresh_stats_panel()
 		await _show_message_sequence(lines)
 	elif fled:
@@ -1569,6 +1943,8 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 			audio.play_sfx_by_name("defeat")
 		await _show_message_sequence(["Porażka..."])
 	_refresh_stats_panel()
+	if player_won or fled or not (_ps and _ps.is_party_defeated()):
+		await _play_exit_transition()  # przy śmierci drużyny zamiast tego ekran śmierci
 	enemy.hp = 0 if player_won else enemy.max_hp
 	_clear_enemy_display()
 	if get_tree() and get_tree().paused:
@@ -2040,14 +2416,10 @@ func _is_pause_menu_open() -> bool:
 	return false
 
 
+## Menu pauzy z grupy (pause_menu.gd dodaje się w _enter_tree) — wołane co klatkę i przy każdym zdarzeniu wejścia,
+## więc bez find_child po całym drzewie (rosło z wielkością poziomu).
 func _find_pause_menu_node() -> Node:
-	if get_tree() and get_tree().current_scene:
-		var pm: Node = get_tree().current_scene.get_node_or_null("PauseMenu")
-		if pm:
-			return pm
-	if get_tree() and get_tree().root:
-		return get_tree().root.find_child("PauseMenu", true, false)
-	return null
+	return get_tree().get_first_node_in_group(&"quiz_pause_menu") if get_tree() else null
 
 
 func _open_pause_menu(start_in_exit_confirm: bool = false) -> void:
@@ -2163,24 +2535,45 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 	pass
 
 
-func _get_desired_battle_window_height(is_quiz: bool) -> float:
-	# Wysokość pasa jak w scenie (BattleWindow.offset_top), przeskalowana skalą UI; quiz — wyżej, poza
-	# siatką odpowiedzi (2 wiersze zamiast 4; gdy pytanie stoi w menu, okno i tak rośnie do treści).
+## Stała wysokość pasa (decyzja usera 2026-10-11: UI nie skacze) = najwyższy z trybów: pas ze sceny
+## (BattleWindow.offset_top) + dodatek quizu (poza siatką odpowiedzi), w skali UI, albo najwyższe okno trybów.
+## Treść wyższa od tego (np. bardzo długie pytanie) podnosi pas tylko na ten czas (okno rośnie do treści i wraca).
+func _get_desired_battle_window_height() -> float:
 	var quiz_extra := quiz_band_extra_height if QuizTheme.answers_layout() != QuizTheme.ANSWERS_GRID else 0.0
-	var h: float = _band_height + (quiz_extra if is_quiz else 0.0)
-	return h * _get_ui_scale_factor()
+	return maxf((_band_height + quiz_extra) * _get_ui_scale_factor(), _band_content_min_height())
 
 
-func _update_window_heights(is_quiz: bool = false) -> void:
-	var menu_h: float = _get_desired_battle_window_height(is_quiz)
+## Najwyższe okno ze wszystkich trybów pasa (także ukrytych teraz) + ramki pasa — od początku walki, zanim się pokażą.
+func _band_content_min_height() -> float:
+	if battle_window == null or content_row == null:
+		return 0.0
+	var overhead := battle_window.get_combined_minimum_size().y - content_row.get_combined_minimum_size().y
+	var tallest := 0.0
+	for p: Control in [party_command_panel, actor_command_panel, party_panel_container, list_panel]:
+		if p:
+			tallest = maxf(tallest, p.get_combined_minimum_size().y)
+	return tallest + overhead
+
+
+## Okno urosło do treści (długie pytanie) albo wróciło — pole bitwy i cień za faktyczną wysokością pasa.
+func _on_battle_window_resized() -> void:
+	_fit_field_to_band(maxf(battle_window.size.y, _get_desired_battle_window_height()))
+
+
+func _update_window_heights() -> void:
+	var menu_h: float = _get_desired_battle_window_height()
 	if battle_window:
 		battle_window.offset_top = -menu_h
+	_fit_field_to_band(maxf(battle_window.size.y, menu_h) if battle_window else menu_h)
+
+
+func _fit_field_to_band(band_h: float) -> void:
 	var battlefield := get_node_or_null("Battlefield") as Control
 	if battlefield:
-		battlefield.offset_bottom = -menu_h
+		battlefield.offset_bottom = -band_h
 	if window_shadow:
 		window_shadow.offset_bottom = 0.0
-		window_shadow.offset_top = -menu_h - _shadow_height
+		window_shadow.offset_top = -band_h - _shadow_height
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
@@ -2192,6 +2585,8 @@ func _set_band_mode(mode: Band) -> void:
 		return  # quiz zajmuje pas (_set_quiz_layout_active)
 	var vp_w: float = get_viewport_rect().size.x
 	party_panel_container.visible = true
+	if list_panel:
+		list_panel.visible = mode == Band.LIST
 	content_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	# Opcje -> Motyw: „UI walki na szerokość treści” — okno drużyny o stałej szerokości, okna wyśrodkowane
 	# (inaczej rozciągnięte na cały ekran).
@@ -2215,6 +2610,12 @@ func _set_band_mode(mode: Band) -> void:
 				actor_command_panel.custom_minimum_size = Vector2(vp_w * actor_command_width, 0)
 			party_panel_container.size_flags_horizontal = party_flags
 			party_panel_container.custom_minimum_size = party_min
+		Band.LIST:
+			party_command_panel.visible = false
+			if actor_command_panel:
+				actor_command_panel.visible = false
+			party_panel_container.size_flags_horizontal = Control.SIZE_FILL
+			party_panel_container.custom_minimum_size = Vector2(vp_w * list_party_width, 0)
 		Band.STATUS_ONLY:
 			party_command_panel.visible = false
 			if actor_command_panel:
@@ -2232,12 +2633,12 @@ func _update_corner_label() -> void:
 
 
 func _apply_responsive_layout() -> void:
-	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
-	_update_window_heights(is_quiz)
+	_update_window_heights()
 
 	# Przyciski, wiersze drużyny, czcionki: wygląd ze sceny i motywu (bez nadpisań z kodu).
 	# Rozmieszczenie potworków i ich odstępów:
 	_apply_responsive_enemy_layout()
+	var is_quiz: bool = (phase == Phase.QUIZ and party_panel_container and not party_panel_container.visible)
 	if not is_quiz:
 		_set_band_mode(_band_mode)
 
@@ -2326,9 +2727,15 @@ func _fallback_actor_label(actor: Node) -> String:
 
 func _roll_enemy_party() -> void:
 	_enemy_units.clear()
+	var min_count := maxi(1, _encounter_size_range.x)
+	var max_count := maxi(min_count, _encounter_size_range.y)
 	if not _joined.is_empty():
-		# Grupa ze świata: główny wróg + dołączeni, każdy z własnymi statystykami, grafiką i umiejętnościami.
+		# Grupa ze świata: główny wróg + dołączeni, każdy z własnymi statystykami, grafiką i umiejętnościami. Liczba
+		# jednostek i tak losowana z zakresu (grupa to minimum) — brakujące miejsca to kopie głównego wroga.
 		var sources: Array = [enemy] + _joined
+		var extra := maxi(0, randi_range(min_count, maxi(max_count, sources.size())) - sources.size())
+		for _i in range(extra):
+			sources.append(enemy)
 		var names := {}
 		for src in sources:
 			names[src.enemy_name] = int(names.get(src.enemy_name, 0)) + 1
@@ -2339,32 +2746,38 @@ func _roll_enemy_party() -> void:
 			if int(names[nm]) > 1:
 				seen[nm] = int(seen.get(nm, 0)) + 1
 				nm = "%s %d" % [nm, seen[nm]]
-			var hp_u := maxi(1, int(src.max_hp) + randi_range(-6, 10))
+			var hp_u := maxi(1, roundi(int(src.max_hp) * randf_range(0.92, 1.08)))
 			_enemy_units.append({
 				"name": nm,
 				"hp": hp_u,
 				"max_hp": hp_u,
-				"damage": maxi(1, int(src.damage_on_wrong) + randi_range(-2, 3)),
+				"atk": maxi(1, int(src.attack)),
+				"def": maxi(0, int(src.defense)),
+				"mat": maxi(0, int(src.magic_attack)),
+				"mdf": maxi(0, int(src.magic_defense)),
+				"agi": maxi(1, int(src.get("agility")) if src.get("agility") != null else enemy_base_agility),
 				"tier": _get_encounter_tier(src),
 				"source": src,
 			})
 			if src != enemy:
 				_bonus_xp_reward += int(src.xp_reward)
+		_bonus_xp_reward += extra * int(enemy.xp_reward)  # kopie głównego wroga jak w walce bez grupy
 		_active_enemy_index = 0
 		_refresh_enemy_cache()
 		return
-	var min_count := maxi(1, _encounter_size_range.x)
-	var max_count := maxi(min_count, _encounter_size_range.y)
 	var encounter_count := randi_range(min_count, max_count)
 	for enemy_index in range(encounter_count):
 		var unit_name := enemy_name_str if encounter_count == 1 else "%s %d" % [enemy_name_str, enemy_index + 1]
-		var unit_hp := maxi(1, enemy_max_hp + randi_range(-6, 10))
-		var unit_damage := maxi(1, enemy_base_damage + randi_range(-2, 3))
+		var unit_hp := maxi(1, roundi(enemy_max_hp * randf_range(0.92, 1.08)))
 		_enemy_units.append({
 			"name": unit_name,
 			"hp": unit_hp,
 			"max_hp": unit_hp,
-			"damage": unit_damage,
+			"atk": maxi(1, enemy_base_attack),
+			"def": maxi(0, enemy_base_defense),
+			"mat": maxi(0, enemy_base_magic_attack),
+			"mdf": maxi(0, enemy_base_magic_defense),
+			"agi": maxi(1, enemy_base_agility),
 			"tier": _get_encounter_tier(),
 		})
 	_active_enemy_index = 0
@@ -2384,23 +2797,119 @@ func _refresh_enemy_cache() -> void:
 	_sync_enemy_displays()
 
 
-func _get_player_attack_power() -> int:
-	if _ps and _ps.has_method("get_member_total_atk"):
-		return maxi(int(_ps.get_member_total_atk(0)), 1)
-	return player_base_damage
-
-
-## TP za cios wroga: część max HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
-func _tp_from_damage(raw_damage: int, enemy_tier: int) -> int:
-	var undefended := _calculate_player_damage_taken(raw_damage, enemy_tier)
+## TP za cios wroga: część maks. HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
+func _tp_from_damage(undefended_damage: int) -> int:
 	var max_hp: int = maxi(_ps.max_hp, 1) if _ps else 100
-	return roundi(TP_PER_FULL_HP_LOST * float(undefended) / float(max_hp))
+	return roundi(TP_PER_FULL_HP_LOST * float(undefended_damage) / float(max_hp))
 
 
-func _calculate_player_damage_taken(raw_damage: int, enemy_tier: int, defending_multiplier: float = 1.0) -> int:
-	if _ps and _ps.has_method("calculate_incoming_damage"):
-		return int(_ps.calculate_incoming_damage(raw_damage, enemy_tier, defending_multiplier, 0))
-	return maxi(0, int(round(float(raw_damage) * maxf(defending_multiplier, 0.0))))
+## Staty członka drużyny / jednostki wroga dla QuizRpgSkillMath ({atk, def, mat, mdf}).
+func _member_stats(i: int) -> Dictionary:
+	if _ps == null or not _ps.has_method("get_member_total_stat"):
+		return {"atk": 20, "def": 0, "mat": 20, "mdf": 0, "agi": 15}
+	var out := {}
+	for stat in ["atk", "def", "mat", "mdf", "agi"]:
+		out[stat] = roundi(_ps.get_member_total_stat(i, stat) * _ps.member_status_mult(i, stat))
+	out["statuses"] = _ps.get_statuses(i)
+	return out
+
+
+func _unit_stats(unit: Dictionary) -> Dictionary:
+	var base := {"atk": int(unit.get("atk", enemy_base_attack)), "def": int(unit.get("def", enemy_base_defense)),
+		"mat": int(unit.get("mat", enemy_base_magic_attack)), "mdf": int(unit.get("mdf", enemy_base_magic_defense)),
+		"agi": int(unit.get("agi", enemy_base_agility))}
+	for stat in base:
+		base[stat] = roundi(base[stat] * _unit_status_mult(unit, stat))
+	base["statuses"] = (unit.get("statuses", {}) as Dictionary).keys()
+	return base
+
+
+# --- Statusy wrogów: unit["statuses"] = {id: {turns}} (definicje — QuizRpgStatusCatalog) ---
+
+func _unit_status_defs(unit: Dictionary) -> Array:
+	var out: Array = []
+	for sid in (unit.get("statuses", {}) as Dictionary).keys():
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def:
+			out.append(def)
+	return out
+
+
+func _unit_status_mult(unit: Dictionary, stat: String) -> float:
+	var m := 1.0
+	for def: QuizRpgStatusData in _unit_status_defs(unit):
+		m *= def.stat_mult(stat)
+	return m
+
+
+func _unit_hit_mult(unit: Dictionary) -> float:
+	var m := 1.0
+	for def: QuizRpgStatusData in _unit_status_defs(unit):
+		m *= def.hit_mult
+	return m
+
+
+func _unit_restriction(unit: Dictionary, restriction: int) -> QuizRpgStatusData:
+	for def: QuizRpgStatusData in _unit_status_defs(unit):
+		if def.restriction == restriction:
+			return def
+	return null
+
+
+## Nadaje wrogowi status (już nałożony — bez zmian). true = nowy.
+func _unit_add_status(ti: int, status_id: String) -> bool:
+	var def := QuizRpgStatusCatalog.get_status(status_id)
+	if def == null or ti < 0 or ti >= _enemy_units.size():
+		return false
+	var unit := _enemy_units[ti]
+	var st: Dictionary = unit.get("statuses", {})
+	if st.has(status_id):
+		return false
+	st[status_id] = {"turns": def.roll_turns()}
+	unit["statuses"] = st
+	_enemy_units[ti] = unit
+	_push_log("%s: %s!" % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
+	return true
+
+
+## Obrażenia mogą zdjąć wrogowi status (sen, zamroczenie).
+func _unit_on_damaged(ti: int) -> void:
+	var unit := _enemy_units[ti]
+	var st: Dictionary = unit.get("statuses", {})
+	for sid in st.keys():
+		var def := QuizRpgStatusCatalog.get_status(String(sid))
+		if def and def.remove_on_damage_chance > 0.0 and randf() < def.remove_on_damage_chance:
+			st.erase(sid)
+			_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
+	unit["statuses"] = st
+	_enemy_units[ti] = unit
+
+
+func _member_name(i: int) -> String:
+	var member: Dictionary = _ps.get_party_member(i) if _ps and _ps.has_method("get_party_member") else {}
+	return str(member.get("name", "Bohater"))
+
+
+## Obrażenia członka drużyny mogą zdjąć status (sen budzi).
+func _member_damaged(t: int) -> void:
+	if _ps == null or not _ps.has_method("on_member_damaged"):
+		return
+	for sid in _ps.on_member_damaged(t):
+		_push_log("%s: koniec — %s." % [_member_name(t), QuizRpgStatusCatalog.name_of(String(sid))], QuizRpgStatusCatalog.color_of(String(sid)))
+
+
+## HP członka drużyny w walce (bohater z PlayerStats.hp, reszta z danych drużyny).
+func _member_hp(i: int) -> int:
+	return int(_ps.member_hp(i)) if _ps and _ps.has_method("member_hp") else 0
+
+
+func _party_indices(dead: bool) -> Array[int]:
+	var out: Array[int] = []
+	var n: int = _ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1
+	for i in range(n):
+		if (_member_hp(i) <= 0) == dead:
+			out.append(i)
+	return out
 
 
 func _get_encounter_tier(src: Node = null) -> int:
@@ -2440,7 +2949,11 @@ func _refresh_enemy_header() -> void:
 		return
 	if _active_enemy_index >= 0 and _active_enemy_index < _enemy_units.size():
 		var active_enemy := _enemy_units[_active_enemy_index]
-		enemy_name_label.text = "%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), living_count]
+		var tags: Array[String] = []
+		for def: QuizRpgStatusData in _unit_status_defs(active_enemy):
+			tags.append(def.localized_name())
+		var suffix := "" if tags.is_empty() else "  [%s]" % ", ".join(tags)
+		enemy_name_label.text = "%s%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), suffix, living_count]
 	else:
 		enemy_name_label.text = "Wrogowie  (%d pozostało)" % living_count
 	if _enemy_name_label:
@@ -2450,13 +2963,15 @@ func _refresh_enemy_header() -> void:
 func _refresh_stats_panel() -> void:
 	if party_rows.is_empty():
 		return
-	_sync_party_member_from_player()
+	for i in range(_party_state.size()):
+		_sync_party_member_from_player(i)
 	for i in range(party_rows.size()):
 		var row := party_rows[i]
 		if i < _party_state.size():
 			row.visible = true
 			var member := _party_state[i]
 			_set_party_row_name(row, str(member.get("name", "Bohater")))
+			_set_party_row_statuses(row, i)
 			_set_party_stat(row, "StatLP", int(member.get("lp", 0)), int(member.get("lp_max", 1)), "%d/%d" % [int(member.get("lp", 0)), int(member.get("lp_max", 1))])
 			_set_party_stat(row, "StatSP", int(member.get("sp", 0)), int(member.get("sp_max", 1)), "%d/%d" % [int(member.get("sp", 0)), int(member.get("sp_max", 1))])
 			_set_party_stat(row, "StatTP", int(member.get("tp", 0)), int(member.get("tp_max", 1)), "%d/%d" % [int(member.get("tp", 0)), int(member.get("tp_max", 1))])
@@ -2490,6 +3005,30 @@ func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, c
 	bg.corner_radius_bottom_left = corner
 	bg.corner_radius_bottom_right = corner
 	bar.add_theme_stylebox_override("background", bg)
+
+
+## Mnożnik obrażeń bronionego członka: 1/4 po dobrej odpowiedzi, 1/2 po złej.
+func _guard_factor(member_index: int) -> float:
+	return GUARD_DAMAGE_FACTOR_CORRECT if bool(_guard.get(member_index, false)) else GUARD_DAMAGE_FACTOR_WRONG
+
+
+## Szansa statusu od umiejętności wroga na członka drużyny: połowa, gdy właśnie się broni.
+func _guarded_status_chance(member_index: int, sk: QuizRpgSkillBase) -> float:
+	if _guard.has(member_index) and sk.can_be_blocked:
+		return sk.status_chance * GUARD_STATUS_CHANCE_FACTOR
+	return sk.status_chance
+
+
+## Statusy postaci w wierszu drużyny: nazwy w kolorach statusów (QuizRpgStatusCatalog), puste = brak.
+func _set_party_row_statuses(row: HBoxContainer, member_index: int) -> void:
+	var label := row.get_node_or_null("StatusLabel") as RichTextLabel
+	if label == null:
+		return
+	var parts: Array[String] = []
+	if _ps and _ps.has_method("get_statuses"):
+		for sid in _ps.get_statuses(member_index):
+			parts.append("[color=#%s]%s[/color]" % [QuizRpgStatusCatalog.color_of(String(sid)).to_html(false), QuizRpgStatusCatalog.name_of(String(sid))])
+	label.text = ", ".join(parts)
 
 
 func _set_party_row_name(row: HBoxContainer, value: String) -> void:
@@ -2586,29 +3125,32 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 		_set_band_mode(_band_mode)
 
 
+## Stan walki każdego członka drużyny (PlayerStats.party): HP z PlayerStats, pula SP / TP na walkę (jak u lidera).
 func _init_party_state() -> void:
 	_party_state.clear()
-	var hero_name : String = _ps.player_name if _ps and str(_ps.player_name) != "" else "Bohater"
-	var hero_hp : int = _ps.hp if _ps else 0
-	var hero_hp_max : int = _ps.max_hp if _ps else 1
-	_party_state.append({
-		"name": hero_name,
-		"lp": hero_hp,
-		"lp_max": hero_hp_max,
-		"sp": PARTY_SKILL_SP_MAX,
-		"sp_max": PARTY_SKILL_SP_MAX,
-		"tp": 0,
-		"tp_max": PARTY_TP_MAX,
-	})
+	var n: int = _ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1
+	for i in range(maxi(n, 1)):
+		_party_state.append({
+			"name": "",
+			"lp": 0,
+			"lp_max": 1,
+			"sp": PARTY_SKILL_SP_MAX,
+			"sp_max": PARTY_SKILL_SP_MAX,
+			"tp": 0,
+			"tp_max": PARTY_TP_MAX,
+		})
+		_sync_party_member_from_player(i)
 
 
+## Imię i HP członka z PlayerStats (lider: player_name / hp / max_hp, reszta: dane drużyny).
 func _sync_party_member_from_player(index: int = 0) -> void:
 	if _ps == null or index < 0 or index >= _party_state.size():
 		return
 	var member := _party_state[index]
-	member["name"] = _ps.player_name if str(_ps.player_name) != "" else "Bohater"
-	member["lp"] = _ps.hp
-	member["lp_max"] = _ps.max_hp
+	var m: Dictionary = _ps.get_party_member(index) if _ps.has_method("get_party_member") else {}
+	member["name"] = str(m.get("name", "?"))
+	member["lp"] = _member_hp(index)
+	member["lp_max"] = maxi(int(m.get("max_hp", 1)), 1)
 	_party_state[index] = member
 
 
@@ -2689,7 +3231,8 @@ func _on_engage_pressed() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
-	_open_actor_select()
+	_show_action_menu()
+	_highlight_action(0)
 
 
 func _on_run_pressed() -> void:
@@ -2727,6 +3270,10 @@ func _close_actor_select() -> void:
 func _is_actor_selectable(index: int) -> bool:
 	if index < 0 or index >= _party_state.size() or index >= party_rows.size():
 		return false
+	if _ally_pick == 2:
+		return int(_party_state[index].get("lp", 0)) <= 0  # wskrzeszenie: tylko nieprzytomni
+	if _ally_pick == 0 and _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(index, QuizRpgStatusData.Restriction.SKIP_TURN):
+		return false  # sen / ogłuszenie / paraliż — postać traci turę
 	return int(_party_state[index].get("lp", 0)) > 0
 
 
@@ -2757,6 +3304,9 @@ func _navigate_actor_list(delta: int) -> void:
 func _confirm_actor_selection() -> void:
 	if not _is_actor_selectable(_actor_selected_idx):
 		return
+	if _ally_pick != 0:
+		_confirm_ally_pick()
+		return
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
@@ -2767,6 +3317,9 @@ func _confirm_actor_selection() -> void:
 
 
 func _cancel_actor_selection() -> void:
+	if _ally_pick != 0:
+		_cancel_ally_pick()
+		return
 	_close_actor_select()
 	_show_primary_menu()
 	_highlight_action(0)
@@ -2779,7 +3332,8 @@ func _refresh_actor_selection() -> void:
 
 ## Kursor na wierszu drużyny: ten sam styl „selected” co pozycje menu (pasek pod wierszem).
 func _draw_party_row_cursor(index: int) -> void:
-	if not _actor_select_open or index != _actor_selected_idx or index >= party_rows.size():
+	var at := _actor_selected_idx if _actor_select_open else (_active_actor_index if phase == Phase.ACTION_SELECT or phase == Phase.TARGET_SELECT else -1)
+	if index != at or index >= party_rows.size():
 		return
 	var row := party_rows[index]
 	var sb := row.get_theme_stylebox(&"selected", QuizTheme.MENU_ITEM)
@@ -2823,9 +3377,31 @@ func _on_exit_pressed() -> void:
 	_open_pause_menu(true)
 
 
+## Okno komunikatów po bitwie ma szerokość UI walki (wyśrodkowane): zakres widocznych okien paska tuż przed ich ukryciem,
+## nie mniej niż status_only_width.
+func _fit_message_window_width() -> void:
+	var vp_w := get_viewport_rect().size.x
+	var left := INF
+	var right := -INF
+	if content_row:
+		for c in content_row.get_children():
+			if c is Control and (c as Control).visible:
+				left = minf(left, (c as Control).global_position.x)
+				right = maxf(right, (c as Control).global_position.x + (c as Control).size.x)
+	var width := maxf(right - left, vp_w * status_only_width) if right > left else vp_w * status_only_width
+	_message_window.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_message_window.custom_minimum_size.x = minf(width, vp_w)
+
+
 func _get_or_create_victory_log() -> Label:
 	# Jak w RPG Makerze: komunikaty po bitwie zajmują cały dolny pas (MessageWindow ze sceny; okna
 	# statusu i komend znikają), log u góry gaśnie.
+	_fit_message_window_width()
+	# Okno komunikatów ma tę samą wysokość co zastępowane okna statusu i komend — więcej linii nie powiększa go,
+	# tylko dzieli się na strony (_show_message_sequence).
+	var fixed_h := content_row.size.y if content_row and content_row.visible else 0.0
+	if fixed_h > 0.0:
+		_message_window.custom_minimum_size.y = fixed_h
 	if content_row:
 		content_row.visible = false
 	_message_window.visible = true
@@ -2834,18 +3410,64 @@ func _get_or_create_victory_log() -> Label:
 	return _victory_label
 
 
+## Komunikaty po bitwie: linie dopisują się, aż okno jest pełne; wtedy czeka na zatwierdzenie (Enter) i zaczyna
+## następną stronę. Ostatnia strona znika sama po chwili albo po zatwierdzeniu.
 func _show_message_sequence(lines: Array[String]) -> void:
 	var lbl := _get_or_create_victory_log()
 	lbl.text = ""
 	lbl.visible = true
 	_victory_skip = false
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var capacity := _victory_page_capacity(lbl)
+	var page := ""
 	for line in lines:
-		lbl.text += line + "\n"
+		var candidate := line if page == "" else page + "\n" + line
+		lbl.text = candidate
+		if page != "" and lbl.get_line_count() > capacity:
+			lbl.text = page
+			_victory_skip = false
+			_set_more_marker(true)
+			while not _victory_skip:
+				await get_tree().create_timer(0.05).timeout
+			_set_more_marker(false)
+			candidate = line
+			lbl.text = candidate
+		page = candidate
 		if _victory_skip:
 			continue
 		await _wait_for_victory_advance(1.2)
 	if not _victory_skip:
 		await _wait_for_victory_advance(3.0)
+
+
+## Ile linii mieści okno komunikatów (po ustawieniu stałej wysokości); minimum 1.
+func _victory_page_capacity(lbl: Label) -> int:
+	var font := lbl.get_theme_font("font")
+	var font_h := font.get_height(lbl.get_theme_font_size("font_size"))
+	var spacing := lbl.get_theme_constant("line_spacing")
+	var panel := _message_window.get_theme_stylebox("panel")
+	var avail := _message_window.size.y - (panel.get_minimum_size().y if panel else 0.0)
+	if avail <= 0.0 or font_h <= 0.0:
+		return 4
+	return maxi(1, int(floor((avail + spacing) / (font_h + spacing))))
+
+
+## Migający trójkąt „dalej” w prawym dolnym rogu okna komunikatów (czeka na zatwierdzenie).
+func _set_more_marker(on: bool) -> void:
+	if _more_marker == null:
+		return
+	if _more_marker_tween:
+		_more_marker_tween.kill()
+		_more_marker_tween = null
+	_more_marker.visible = on
+	if not on:
+		return
+	_more_marker.position = _message_window.size - Vector2(56, 50)
+	_more_marker.modulate.a = 1.0
+	_more_marker_tween = create_tween().set_loops()
+	_more_marker_tween.tween_property(_more_marker, "modulate:a", 0.25, 0.45)
+	_more_marker_tween.tween_property(_more_marker, "modulate:a", 1.0, 0.45)
 
 
 func _wait_for_victory_advance(max_wait: float) -> void:
@@ -2855,17 +3477,58 @@ func _wait_for_victory_advance(max_wait: float) -> void:
 		elapsed += 0.05
 
 
-func _roll_item_drop() -> String:
-	if enemy == null or not enemy.has_method("get_drop_table"):
-		return ""
-	var drops: Array = enemy.call("get_drop_table")
-	for drop in drops:
-		if randf() < float(drop.get("chance", 0.0)):
-			var item_name := str(drop.get("item", ""))
-			if item_name != "" and _ps and _ps.has_method("add_item"):
-				_ps.add_item(item_name)
-			return item_name
-	return ""
+## Wpis do logu progresji (QuizRpgProgressLog): wynik, wrogowie z poziomami, XP, tury, czas walki.
+func _log_combat_end(player_won: bool, fled: bool) -> void:
+	var names: Array[String] = []
+	for u in _enemy_units:
+		var src: Variant = u.get("source", enemy)
+		var lv: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
+		names.append("%s%s t%d" % [str(u.get("name", "?")), " lv%d" % lv if lv > 0 else "", int(u.get("tier", 1))])
+	var outcome := "wygrana" if player_won else ("ucieczka" if fled else "porazka")
+	var xp := (int(enemy.xp_reward) + _bonus_xp_reward) if player_won else 0
+	var gold := _total_gold_reward() if player_won else 0
+	QuizRpgProgressLog.combat_end(_ps, outcome, ", ".join(names), _is_boss_encounter(), xp, turn_number, float(Time.get_ticks_msec() - _combat_started_msec) / 1000.0, gold)
+
+
+## Złoto z pokonanych jednostek walki: każda liczy się jak jej wróg-źródło (grupa ze świata) albo główny wróg (kopie).
+func _total_gold_reward() -> int:
+	var total := 0
+	for u in _enemy_units:
+		var src: Variant = u.get("source", enemy)
+		total += int(src.gold_reward) if is_instance_valid(src) and src.get("gold_reward") != null else int(enemy.gold_reward)
+	return total
+
+
+## Klucz z pokonanych wrogów na mapach bez tabeli łupu ("enemy_loot" w JSON mapy, np. tutorial): każdy wróg osobno, szansa rośnie
+## z tierem (boss = tier 4); klucz tieru 1. Mapy z "enemy_loot" mają klucze w swojej tabeli. Wytrychy wypadają z beczek (LootManager).
+const KEY_DROP_ITEM := "key_tier1"
+const KEY_DROP_CHANCE_BY_TIER := {1: 0.04, 2: 0.07, 3: 0.11, 4: 0.3}
+
+
+func _roll_item_drops() -> Array[String]:
+	var dropped: Array[String] = []
+	for unit in _enemy_units:
+		# Łup z tabeli wroga (mapa: "enemy_loot"): źródło jednostki (grupa ze świata) albo główny wróg (kopie).
+		var src: Variant = unit.get("source", enemy)
+		var table: Array = src.get("loot_table") if is_instance_valid(src) and src.get("loot_table") != null else enemy.loot_table
+		if table.is_empty():
+			var chance := float(KEY_DROP_CHANCE_BY_TIER.get(clampi(int(unit.get("tier", 1)), 1, 4), 0.04))
+			if randf() < chance and _ps and _ps.has_method("add_item"):
+				_ps.add_item(KEY_DROP_ITEM)
+				dropped.append(KEY_DROP_ITEM)
+		for e in QuizRpgLootTable.roll_chances(table):
+			var id := str(e.get("item_id", ""))
+			if id != "" and _ps and _ps.has_method("add_item"):
+				_ps.add_item(id, maxi(int(e.get("count", 1)), 1))
+				dropped.append(id)
+	return dropped
+
+
+func _item_display_name(item_id: String) -> String:
+	var inv := get_node_or_null("/root/CoreManager")
+	var svc: Variant = inv.call("get_singleton", "InventoryService") if inv else null
+	var data: QuizRpgItemData = svc.call("get_item", item_id) if svc is Node else null
+	return data.display_name if data != null else item_id
 
 
 func _find_current_map_node() -> Node:
@@ -2960,6 +3623,7 @@ func _update_top_window() -> void:
 	var quiz_on: bool = qpc != null and qpc.quiz_panel.visible and not (quiz_modal_overlay and quiz_modal_overlay.visible)
 	qpc.question_label.visible = quiz_on
 	_timer_row.visible = quiz_on
-	_log_label.visible = not _log_lines.is_empty()
+	var help_on: bool = help_label != null and help_label.visible
+	_log_label.visible = not _log_lines.is_empty() and not help_on
 	var question_in_log: bool = qpc.question_label.get_parent() == _top_vbox  # opcja „Pytanie w walce”
-	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or qpc.correct_answer_label.visible
+	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or qpc.correct_answer_label.visible or help_on

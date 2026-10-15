@@ -12,6 +12,7 @@ extends RefCounted
 ##   odcinka kompleksu;
 ## - R7 spójność: odcięte części łączone A*, awaryjnie prosty L (nie przez zakręt kanału).
 
+const GenProgress = preload("../core/gen_progress.gd")
 const State = preload("core/structured_state.gd")
 const Pathfinder = preload("structured_pathfinder.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
@@ -35,11 +36,14 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	state.build_water_axis()
 	# Czasy kroków (ms) w stats["t"] — diagnostyka wydajności (preprocess_stats["structured"]).
 	var times := {}
-	for step in [&"_service_corridors", &"_lane_gaps", &"_rooms", &"_room_links", &"_complex_loops",
-			&"_attached_rooms", &"_segment_bridges", &"_repair", &"_drop_redundant_bridges"]:
+	var steps: Array[StringName] = [&"_service_corridors", &"_lane_gaps", &"_rooms", &"_room_links", &"_complex_loops",
+			&"_attached_rooms", &"_segment_bridges", &"_repair", &"_drop_redundant_bridges"]
+	for idx in range(steps.size()):
+		var step: StringName = steps[idx]
 		var t0 := Time.get_ticks_usec()
 		p.call(step)
 		times[String(step).trim_prefix("_")] = (Time.get_ticks_usec() - t0) / 1000
+		GenProgress.sub((idx + 1.0) / float(steps.size()))
 	p.stats["t"] = times
 	return p.stats
 
@@ -222,6 +226,7 @@ func _carve_service(cx: Dictionary) -> bool:
 	for c in tgt_c:
 		tgt_m[c] = 1
 	pf.dt = st.distance_to(tgt_m)
+	pf.max_cost = 100
 	pf.has_bias = true
 	pf.bias_rect = Vector4i(canal.x - 16, canal.y - 18, canal.z + 16, canal.w + 18)
 	pf.bias_side = k
@@ -655,29 +660,58 @@ func _room_links() -> void:
 		pf.own_sub = State.LocalSum.from_cells(own_c, st.w)
 		pf.target = link_sum
 		pf.dt = link_dt
+		pf.max_cost = 120
 		var path := pf.find((r.x + r.z) / 2, (r.y + r.w) / 2)
 		if path.is_empty():
 			continue
 		corridors.append(_carve(_without(path, pf.own)))
 		linked += 1
 	# Część pokoi łączy się z drugim pokojem (pętle).
-	var room_dt: PackedInt32Array = st.distance_to(st.roomm)
 	var extra := 0
-	for r in free_rooms:
+	# Pokoje rozłączne (zwykle): cel = suma wszystkich pokoi bez bieżącego (DiffSum), odległość do celu tylko w oknie
+	# A* (_rects_dt_window) — zamiast sum i transformaty całej mapy dla każdego pokoju. Inaczej jak dawniej.
+	var all_c := PackedInt32Array()
+	var rects: Array[Vector4i] = []   # pokoje przycięte do mapy (jak _rect_cells)
+	for o in free_rooms:
+		var oc := _rect_cells(o)
+		all_c.append_array(oc)
+		rects.append(Vector4i(maxi(0, o.x), maxi(0, o.y), mini(st.w - 1, o.z), mini(st.h - 1, o.w)))
+	var all_m := st.new_mask()
+	for c in all_c:
+		all_m[c] = 1
+	var disjoint := all_m.count(1) == all_c.size()
+	var all_sum: State.LocalSum = State.LocalSum.from_cells(all_c, st.w) if disjoint else null
+	for ri in range(free_rooms.size()):
+		var r: Vector4i = free_rooms[ri]
 		if rng.randf() >= float(cfg.get("loop_chance", 0.35)):
 			continue
 		var own_c := _rect_cells(r)
-		var others := PackedInt32Array()
-		for o in free_rooms:
-			if o != r:
-				others.append_array(_rect_cells(o))
-		if others.is_empty():
-			continue
 		var pf := _pf()
 		pf.own = State.LocalSum.from_cells(own_c, st.w)
 		pf.own_sub = State.LocalSum.from_cells(own_c, st.w)
-		pf.target = State.LocalSum.from_cells(others, st.w)
-		pf.dt = room_dt
+		pf.max_cost = 70
+		if disjoint:
+			if all_c.size() == own_c.size():
+				continue   # brak innych pokoi (kratek)
+			pf.target = State.DiffSum.new(all_sum, pf.own)
+			var other_rects: Array[Vector4i] = []
+			for oi in range(rects.size()):
+				var q := rects[oi]
+				if oi != ri and q.x <= q.z and q.y <= q.w:
+					other_rects.append(q)
+			pf.dt = _rects_dt_window(other_rects, (r.x + r.z) / 2, (r.y + r.w) / 2, pf.max_cost)
+		else:
+			var others := PackedInt32Array()
+			for o in free_rooms:
+				if o != r:
+					others.append_array(_rect_cells(o))
+			if others.is_empty():
+				continue
+			var others_m := st.new_mask()
+			for c in others:
+				others_m[c] = 1
+			pf.target = State.LocalSum.from_cells(others, st.w)
+			pf.dt = st.distance_to(others_m)
 		var path := pf.find((r.x + r.z) / 2, (r.y + r.w) / 2)
 		if path.is_empty() or path.size() >= 70:
 			continue
@@ -694,6 +728,75 @@ func _room_links() -> void:
 		extra += 1
 	stats["room_links"] = linked
 	stats["room_room"] = extra
+
+
+## Odległość Manhattana do sumy prostokątów `rects` — jak st.distance_to(maska prostokątów), ale policzona tylko
+## w oknie (sx, sy) ± r (poza nim duża liczba). A* z max_cost = r czyta ją tylko w tym oknie (każdy krok kosztuje
+## >= 1). Okno: chamfer jak distance_to, a kratki brzegu okna zaczynają od dokładnej odległości do najbliższego
+## prostokąta — najkrótsza droga do celu spoza okna przechodzi przez brzeg, więc wartości w oknie są dokładne.
+func _rects_dt_window(rects: Array[Vector4i], sx: int, sy: int, r: int) -> PackedInt32Array:
+	const BIG := 1 << 20
+	var W: int = st.w
+	var x0 := maxi(0, sx - r)
+	var y0 := maxi(0, sy - r)
+	var x1 := mini(W - 1, sx + r)
+	var y1 := mini(st.h - 1, sy + r)
+	var d := PackedInt32Array()
+	d.resize(W * st.h)
+	d.fill(BIG)
+	for q in rects:
+		for y in range(maxi(y0, q.y), mini(y1, q.w) + 1):
+			for x in range(maxi(x0, q.x), mini(x1, q.z) + 1):
+				d[y * W + x] = 0
+	# Prostokąty wg odległości od okna — dla kratki brzegu dalsze niż dotychczasowe minimum już nic nie dadzą.
+	var order: Array = []
+	for k in range(rects.size()):
+		var q := rects[k]
+		order.append([maxi(0, maxi(q.x - x1, x0 - q.z)) + maxi(0, maxi(q.y - y1, y0 - q.w)), k])
+	order.sort()
+	var border: Array[Vector2i] = []
+	for x in range(x0, x1 + 1):
+		border.append(Vector2i(x, y0))
+		if y1 != y0:
+			border.append(Vector2i(x, y1))
+	for y in range(y0 + 1, y1):
+		border.append(Vector2i(x0, y))
+		if x1 != x0:
+			border.append(Vector2i(x1, y))
+	for b in border:
+		var i := b.y * W + b.x
+		var best: int = d[i]
+		for e in order:
+			if int(e[0]) >= best:
+				break
+			var q := rects[int(e[1])]
+			best = mini(best, maxi(0, maxi(q.x - b.x, b.x - q.z)) + maxi(0, maxi(q.y - b.y, b.y - q.w)))
+		d[i] = best
+	for y in range(y0, y1 + 1):
+		var i := y * W + x0
+		var left := BIG
+		for x in range(x0, x1 + 1):
+			var v := d[i]
+			if y > y0 and d[i - W] + 1 < v:
+				v = d[i - W] + 1
+			if left + 1 < v:
+				v = left + 1
+			d[i] = v
+			left = v
+			i += 1
+	for y in range(y1, y0 - 1, -1):
+		var i := y * W + x1
+		var right := BIG
+		for x in range(x1, x0 - 1, -1):
+			var v := d[i]
+			if y < y1 and d[i + W] + 1 < v:
+				v = d[i + W] + 1
+			if right + 1 < v:
+				v = right + 1
+			d[i] = v
+			right = v
+			i -= 1
+	return d
 
 
 func _without(path: PackedInt32Array, own: State.LocalSum) -> PackedInt32Array:
@@ -742,13 +845,18 @@ func _complex_loops() -> void:
 				cand.append(c)
 		var order: Array = range(cand.size())
 		_shuffle(order)
-		var cx_dt: PackedInt32Array = st.distance_to(pm)
 		var done := false
-		for oi in order.slice(0, 40):
-			var c: int = cand[oi]
+		var attempts := 0
+		var max_cand: int = mini(10, order.size())
+		for oi in range(max_cand):
+			if done or attempts >= 12:
+				break
+			var c: int = cand[order[oi]]
 			var px: int = c % st.w
 			var py: int = c / st.w
 			for d in DIRS:
+				if attempts >= 12:
+					break
 				var L: int = (st.wall_h if d.y != 0 else st.wall_v) + 3
 				var sx: int = px + d.x * L
 				var sy: int = py + d.y * L
@@ -767,10 +875,15 @@ func _complex_loops() -> void:
 						far.append(q)
 				if far.is_empty():
 					continue
+				var far_m := st.new_mask()
+				for q in far:
+					far_m[q] = 1
 				var pf := _pf()
 				pf.target = State.LocalSum.from_cells(far, st.w)
-				pf.dt = cx_dt
+				pf.dt = st.distance_to(far_m)
+				pf.max_cost = 80
 				pf.start_ok = Vector4i(sx - 3, sy - 3, sx + 3, sy + 3)
+				attempts += 1
 				var p1 := pf.find(sx, sy)
 				if p1.is_empty() or p1.size() < 20:
 					continue
@@ -949,14 +1062,21 @@ func _drop_redundant_bridges() -> void:
 	var sp := int(cfg.get("bridge_min_spacing", 10))
 	var dropped := 0
 	var changed := true
+	var g := _bridge_graph()   # {} = nietypowy układ kładek — wtedy BFS po kratkach
+	var gid: Array[int] = []   # węzeł grafu kładki st.bridges[i] (indeksy przesuwają się przy remove_at)
+	for i in range(st.bridges.size()):
+		gid.append(i)
 	while changed:
 		changed = false
 		var cands: Array = []
+		var boxes: Array[Vector4i] = []
+		for b in st.bridges:
+			boxes.append(_cells_box(b.cells))
 		for bi in range(st.bridges.size()):
 			var b: Dictionary = st.bridges[bi]
 			if b.get("crossing", false) or b.get("exact", false):
 				continue
-			var near := _bridge_gap(bi)
+			var near := _bridge_gap(bi, boxes, sp)
 			if near < sp:
 				cands.append([near, bi])
 		cands.sort()
@@ -965,40 +1085,28 @@ func _drop_redundant_bridges() -> void:
 			var cells: Array = st.bridges[bi].cells
 			for q in cells:
 				st.bridge_m[q.y * st.w + q.x] = 0
-			if _banks_connected(cells):
+			if not g.is_empty():
+				_graph_bridge_set(g, gid[bi], 0)
+			var conn: bool = _banks_connected_graph(g, cells) if not g.is_empty() else _banks_connected(cells)
+			if conn:
 				st.bridges.remove_at(bi)
+				gid.remove_at(bi)
 				dropped += 1
 				changed = true
 				break
 			for q in cells:
 				st.bridge_m[q.y * st.w + q.x] = 1
+			if not g.is_empty():
+				_graph_bridge_set(g, gid[bi], 1)
 	stats["bridges_dropped"] = dropped
 
 
 ## Czy brzegi kładki (podłoga przy jej kratkach, po obu stronach kanału) łączy droga bez niej — BFS z jednego
 ## brzegu do pierwszej kratki drugiego (kładki kandydatki mają inną kładkę blisko, więc droga jest krótka).
 func _banks_connected(cells: Array) -> bool:
-	var horiz_canal := true   # kładka pionowa przez kanał poziomy: brzegi nad i pod nią
-	var mn: Vector2i = cells[0]
-	var mx: Vector2i = cells[0]
-	for q in cells:
-		mn = Vector2i(mini(mn.x, q.x), mini(mn.y, q.y))
-		mx = Vector2i(maxi(mx.x, q.x), maxi(mx.y, q.y))
-	horiz_canal = (mx.y - mn.y) >= (mx.x - mn.x)
-	var a: Array[int] = []
-	var b := {}
-	for q in cells:
-		var ends: Array = [q + Vector2i(0, -1), q + Vector2i(0, 1)] if horiz_canal else [q + Vector2i(-1, 0), q + Vector2i(1, 0)]
-		for e: Vector2i in ends:
-			if not st.in_map(e.x, e.y):
-				continue
-			var i: int = e.y * st.w + e.x
-			if not st.floor_m[i] or (st.water[i] and not st.bridge_m[i]):
-				continue
-			if (e.y < mn.y) if horiz_canal else (e.x < mn.x):
-				a.append(i)
-			else:
-				b[i] = true
+	var sides := _bank_sides(cells)
+	var a: Array[int] = sides[0]
+	var b: Dictionary = sides[1]
 	if a.is_empty() or b.is_empty():
 		return true   # kładka bez brzegu z którejś strony nic nie łączy
 	var seen := {}
@@ -1026,17 +1134,183 @@ func _banks_connected(cells: Array) -> bool:
 	return false
 
 
-## Najmniejszy odstęp (Czebyszew) między kratkami kładki `bi` a kratkami innych kładek.
-func _bridge_gap(bi: int) -> int:
+## Kratki brzegów kładki: [a (po stronie mniejszych współrzędnych), b (słownik kratek po drugiej stronie)] — chodliwe
+## kratki tuż przy kratkach kładki w poprzek kanału (bridge_m kładki już wyzerowane przez wołającego).
+func _bank_sides(cells: Array) -> Array:
+	var horiz_canal := true   # kładka pionowa przez kanał poziomy: brzegi nad i pod nią
+	var mn: Vector2i = cells[0]
+	var mx: Vector2i = cells[0]
+	for q in cells:
+		mn = Vector2i(mini(mn.x, q.x), mini(mn.y, q.y))
+		mx = Vector2i(maxi(mx.x, q.x), maxi(mx.y, q.y))
+	horiz_canal = (mx.y - mn.y) >= (mx.x - mn.x)
+	var a: Array[int] = []
+	var b := {}
+	for q in cells:
+		var ends: Array = [q + Vector2i(0, -1), q + Vector2i(0, 1)] if horiz_canal else [q + Vector2i(-1, 0), q + Vector2i(1, 0)]
+		for e: Vector2i in ends:
+			if not st.in_map(e.x, e.y):
+				continue
+			var i: int = e.y * st.w + e.x
+			if not st.floor_m[i] or (st.water[i] and not st.bridge_m[i]):
+				continue
+			if (e.y < mn.y) if horiz_canal else (e.x < mn.x):
+				a.append(i)
+			else:
+				b[i] = true
+	return [a, b]
+
+
+## Graf spójności podłogi dla _drop_redundant_bridges. Ląd = chodliwe kratki poza wodą pod kładkami z listy
+## (nie zmienia się w pętli — przełączane jest tylko bridge_m kratek kładek). Kratki wody pod kładkami: węzeł =
+## spójna grupa kratek o tym samym zbiorze kładek (kratka bywa w dwóch); wszystkie kratki węzła mają zawsze to
+## samo bridge_m, więc węzeł ma flagę `alive` zapisywaną jak bridge_m (_graph_bridge_set). Węzły lądu: spójne
+## części. Spójność brzegów = BFS po grafie zamiast po kratkach. {} przy nietypowym układzie (kratka kładki poza
+## mapą albo bez bridge_m na starcie) — wtedy BFS po kratkach.
+func _bridge_graph() -> Dictionary:
+	var W: int = st.w
+	var N: int = W * st.h
+	var walk := _walkable()
+	var sets := {}   # kratka wody pod kładką -> Array[int] kładek (rosnąco)
+	for k in range(st.bridges.size()):
+		for q: Vector2i in st.bridges[k].cells:
+			if not st.in_map(q.x, q.y):
+				return {}
+			var i: int = q.y * W + q.x
+			if not st.bridge_m[i]:
+				return {}
+			if st.water[i] and walk[i]:
+				if not sets.has(i):
+					sets[i] = []
+				if not (sets[i] as Array).has(k):
+					(sets[i] as Array).append(k)
+	var land := walk.duplicate()
+	for i: int in sets:
+		land[i] = 0
+	var lab := PackedInt32Array()   # węzeł kratki: część lądu albo grupa kratek kładek
+	lab.resize(N)
+	lab.fill(-1)
+	var n_nodes := 0
+	var seen := st.new_mask()
+	var li := land.find(1)
+	while li >= 0:
+		if not seen[li]:
+			for c in _flood(land, li, seen):
+				lab[c] = n_nodes
+			n_nodes += 1
+		li = land.find(1, li + 1)
+	var bridge_nodes: Array = []   # kładka -> Array węzłów z jej kratkami
+	bridge_nodes.resize(st.bridges.size())
+	for k in range(st.bridges.size()):
+		bridge_nodes[k] = []
+	for i: int in sets:
+		if lab[i] >= 0:
+			continue
+		var key: Array = sets[i]
+		var nd := n_nodes
+		n_nodes += 1
+		lab[i] = nd
+		var q: Array[int] = [i]
+		var head := 0
+		while head < q.size():
+			var c: int = q[head]
+			head += 1
+			var x: int = c % W
+			for n: int in [c + 1 if x < W - 1 else -1, c - 1 if x > 0 else -1, c + W if c + W < N else -1, c - W]:
+				if n >= 0 and lab[n] < 0 and sets.has(n) and sets[n] == key:
+					lab[n] = nd
+					q.append(n)
+		for k: int in key:
+			(bridge_nodes[k] as Array).append(nd)
+	var adj: Array = []
+	adj.resize(n_nodes)
+	for n in range(n_nodes):
+		adj[n] = {}
+	for i: int in sets:
+		var a: int = lab[i]
+		var x: int = i % W
+		for n: int in [i + 1 if x < W - 1 else -1, i - 1 if x > 0 else -1, i + W if i + W < N else -1, i - W]:
+			if n >= 0 and lab[n] >= 0 and lab[n] != a:
+				adj[a][lab[n]] = true
+				adj[lab[n]][a] = true
+	var alive := PackedByteArray()
+	alive.resize(n_nodes)
+	alive.fill(1)
+	return {"lab": lab, "adj": adj, "alive": alive, "bridge_nodes": bridge_nodes}
+
+
+## Zapis bridge_m = v na kratkach kładki `k` (indeks z budowy grafu) — w grafie: flaga alive jej węzłów.
+func _graph_bridge_set(g: Dictionary, k: int, v: int) -> void:
+	var alive: PackedByteArray = g.alive
+	for nd: int in g.bridge_nodes[k]:
+		alive[nd] = v
+	g.alive = alive
+
+
+## Jak _banks_connected (bridge_m kładki już wyzerowane i alive jej węzłów też), ale BFS po grafie _bridge_graph.
+func _banks_connected_graph(g: Dictionary, cells: Array) -> bool:
+	var sides := _bank_sides(cells)
+	var a: Array[int] = sides[0]
+	var b: Dictionary = sides[1]
+	if a.is_empty() or b.is_empty():
+		return true
+	var lab: PackedInt32Array = g.lab
+	var alive: PackedByteArray = g.alive
+	var goal := {}
+	for c: int in b:
+		if lab[c] < 0:
+			return _banks_connected(cells)   # kratka spoza grafu (nie powinno się zdarzyć)
+		goal[lab[c]] = true
+	var seen := {}
+	var q: Array[int] = []
+	for c in a:
+		var na: int = lab[c]
+		if na < 0:
+			return _banks_connected(cells)
+		if goal.has(na):
+			return true
+		if not seen.has(na):
+			seen[na] = true
+			q.append(na)
+	var head := 0
+	var adj: Array = g.adj
+	while head < q.size():
+		var nd: int = q[head]
+		head += 1
+		for m: int in adj[nd]:
+			if seen.has(m) or not alive[m]:
+				continue
+			if goal.has(m):
+				return true
+			seen[m] = true
+			q.append(m)
+	return false
+
+
+## Najmniejszy odstęp (Czebyszew) między kratkami kładki `bi` a kratkami innych kładek — dokładny, gdy < `limit`
+## (inaczej jakaś wartość >= limit). Pary kładek, których prostokąty `boxes` są od siebie >= limit, pominięte
+## (odstęp kratek nie jest mniejszy niż odstęp prostokątów).
+func _bridge_gap(bi: int, boxes: Array[Vector4i], limit: int) -> int:
 	var best := 1 << 30
 	var mine: Array = st.bridges[bi].cells
+	var ra := boxes[bi]
 	for bj in range(st.bridges.size()):
 		if bj == bi:
+			continue
+		var rb := boxes[bj]
+		if maxi(maxi(ra.x - rb.z, rb.x - ra.z), maxi(ra.y - rb.w, rb.y - ra.w)) >= limit:
 			continue
 		for a in mine:
 			for b in st.bridges[bj].cells:
 				best = mini(best, maxi(absi(a.x - b.x), absi(a.y - b.y)))
 	return best
+
+
+static func _cells_box(cells: Array) -> Vector4i:
+	var r := Vector4i(1 << 30, 1 << 30, -(1 << 30), -(1 << 30))
+	for c: Vector2i in cells:
+		r = Vector4i(mini(r.x, c.x), mini(r.y, c.y), maxi(r.z, c.x), maxi(r.w, c.y))
+	return r
 
 
 func _count(m: PackedByteArray) -> int:
@@ -1049,34 +1323,54 @@ func _count(m: PackedByteArray) -> int:
 
 # --- R7: spójność ---
 
+## Podłoga bez wody (poza kładkami) — maski 0/1, po 8 kratek naraz.
 func _walkable() -> PackedByteArray:
-	var m := st.new_mask()
-	for i in range(st.w * st.h):
-		m[i] = 1 if st.floor_m[i] and not (st.water[i] and not st.bridge_m[i]) else 0
-	return m
+	const ONES := 0x0101010101010101
+	var f := State._q(st.floor_m)
+	var wa := State._q(st.water)
+	var br := State._q(st.bridge_m)
+	for i in range(f.size()):
+		f[i] &= ~(wa[i] & ~br[i]) & ONES
+	return State._unq(f, st.w * st.h)
 
 
 func _component(walk: PackedByteArray, start: int) -> PackedByteArray:
 	var seen := st.new_mask()
 	if not walk[start]:
 		return seen
+	_flood(walk, start, seen)
+	return seen
+
+
+## BFS po kratkach `m` (4-sąsiedzi w kolejności DIRS) od `start`, nieodwiedzonych w `seen` — oznacza je w `seen`,
+## zwraca kolejkę (kratki w kolejności odwiedzin, start pierwszy).
+func _flood(m: PackedByteArray, start: int, seen: PackedByteArray) -> PackedInt32Array:
+	var W: int = st.w
+	var N: int = W * st.h
 	var q := PackedInt32Array([start])
 	seen[start] = 1
 	var head := 0
 	while head < q.size():
 		var c: int = q[head]
 		head += 1
-		var x: int = c % st.w
-		var y: int = c / st.w
-		for d in DIRS:
-			var nx: int = x + d.x
-			var ny: int = y + d.y
-			if st.in_map(nx, ny):
-				var n: int = ny * st.w + nx
-				if walk[n] and not seen[n]:
-					seen[n] = 1
-					q.append(n)
-	return seen
+		var x: int = c % W
+		var n: int = c + 1
+		if x < W - 1 and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+		n = c - 1
+		if x > 0 and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+		n = c + W
+		if n < N and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+		n = c - W
+		if n >= 0 and m[n] and not seen[n]:
+			seen[n] = 1
+			q.append(n)
+	return q
 
 
 ## Kratka największej spójnej części chodliwej — korzeń spójności (kratka „najbliżej środka” potrafiła
@@ -1086,18 +1380,14 @@ func _largest_component_cell() -> int:
 	var seen := st.new_mask()
 	var best := -1
 	var best_n := 0
-	for i in range(st.w * st.h):
-		if not walk[i] or seen[i]:
-			continue
-		var comp := _component(walk, i)
-		var n := 0
-		for j in range(comp.size()):
-			if comp[j]:
-				n += 1
-				seen[j] = 1
-		if n > best_n:
-			best_n = n
-			best = i
+	var i := walk.find(1)
+	while i >= 0:
+		if not seen[i]:
+			var q := _flood(walk, i, seen)
+			if q.size() > best_n:
+				best_n = q.size()
+				best = i
+		i = walk.find(1, i + 1)
 	return best
 
 
@@ -1128,40 +1418,40 @@ func _repair() -> void:
 		var main := _component(walk, root)
 		# Największy odcięty kawałek najpierw (te z pokojami nie czekają za drobnymi strzępami).
 		var seen := st.new_mask()
-		var piece := PackedByteArray()
 		var piece_n := 0
+		var best_comp := PackedInt32Array()
 		var seed_c := -1
-		for i in range(st.w * st.h):
-			if walk[i] and not main[i] and not given_up[i] and not seen[i]:
-				var comp := _component(walk, i)
-				var n := 0
-				for k in range(comp.size()):
-					if comp[k]:
-						n += 1
-						seen[k] = 1
-				if n > piece_n:
-					piece_n = n
-					piece = comp
-					seed_c = i
+		var avail := st.m_andnot(st.m_andnot(walk, main), given_up)   # chodliwe poza główną częścią i porzuconymi
+		var pi := avail.find(1)
+		while pi >= 0:
+			if not seen[pi]:
+				var q := _flood(avail, pi, seen)
+				if q.size() > piece_n:
+					piece_n = q.size()
+					best_comp = q
+					seed_c = pi
+			pi = avail.find(1, pi + 1)
 		if seed_c < 0:
 			break
+		var piece := st.new_mask()
+		for c in best_comp:
+			piece[c] = 1
 		if _bridge_connect(piece, main):
 			bridged += 1
 			continue
-		var piece_c := _mask_cells(piece)
+		var piece_c := best_comp
 		var bb := Vector4i(1 << 30, 1 << 30, -1, -1)
 		for c in piece_c:
 			bb = Vector4i(mini(bb.x, c % st.w), mini(bb.y, c / st.w), maxi(bb.z, c % st.w), maxi(bb.w, c / st.w))
 		var ctr := Vector2i((bb.x + bb.z) / 2, (bb.y + bb.w) / 2)
 		var start: int = ctr.y * st.w + ctr.x if piece[ctr.y * st.w + ctr.x] else seed_c
-		var tgt := st.new_mask()
-		for i in range(st.w * st.h):
-			tgt[i] = main[i] & (1 - st.service[i]) & (1 - st.water[i])
+		var tgt := st.m_andnot(st.m_andnot(main, st.service), st.water)
 		var pf := _pf()
 		pf.own = State.LocalSum.from_cells(piece_c, st.w)
 		pf.own_sub = State.LocalSum.from_cells(_sub_cells(piece_c), st.w)
 		pf.target = State.LocalSum.from_mask(tgt, st.w)
 		pf.dt = st.distance_to(tgt)
+		pf.max_cost = 120
 		var path := pf.find(start % st.w, start / st.w)
 		if path.is_empty():
 			# Awaryjnie prosty L z kratki kawałka do najbliższej kratki głównej części.

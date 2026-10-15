@@ -50,6 +50,7 @@ class GenerationResult:
 	var objects: RefCounted = null  # ObjectPlan — obiekty statyczne/interaktywne (null = wyłączone)
 	var nav_polygons: Array[NavigationPolygon] = []  # siatka nawigacji z NavOutlines w kawałkach (puste = prostokąt mapy)
 	var nav_chunk_keys: Array[Vector2i] = []  # indeksy kawałków nav_polygons (NavOutlines.CHUNK_CELLS) — przebudowa po otwarciu bramy
+	var nav_excluded: Dictionary = {}  # Vector2i -> true: bez nawigacji wrogów (pokoje wejścia / wyjścia, pierwszy za wejściem, portale)
 	var canals: RefCounted = null  # CanalLayout — kanały ścieków jako nakładka (komórki zostają FLOOR)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
 
@@ -298,13 +299,24 @@ static func spawn_entities(
 	chest_scene: PackedScene = null,
 	door_scene: PackedScene = null,
 	cell_size: int = 16,
-	per_frame: int = 0,
-	faction_pools: Dictionary = {}  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
+	slicer = null,  # FrameSlicer: porcje między klatkami wg budżetu czasu; null = wszystko od razu
+	faction_pools: Dictionary = {},  # frakcja -> pula (jak enemy_scenes); spawn z "faction" bierze swoją
+	enemy_levels: Dictionary = {}  # "1" / "2" / "3" (tier) -> [min, max] poziomu wroga (companion-JSON "enemy_levels")
 ) -> void:
-	# per_frame > 0: co tyle instancji czekamy klatkę (generowanie w tle — pasek ładowania żyje).
-	# 0 = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
+	# slicer: po przekroczeniu budżetu klatki czekamy klatkę (generowanie w tle — pasek ładowania żyje).
+	# null = wszystko od razu (synchronicznie; wywołanie bez await działa jak dawniej).
 	var total: int = result.enemy_spawns.size() + result.chest_spawns.size() + (result.doors.size() if door_scene else 0)
 	var made := 0
+	# Skala XP wg rozmiaru mapy: wzorzec "ref_spawns" (wrogowie z miniebossami, bez bossa, na mapie wzorcowej 160x160) / ich liczba na tej
+	# mapie, żeby wyczyszczenie mapy dawało ten sam budżet XP (poziomów) niezależnie od jej wielkości.
+	var regular_spawns := 0
+	for sp in result.enemy_spawns:
+		if int(sp.get("tier", 1)) < 4:
+			regular_spawns += 1
+	var xp_scale := 1.0
+	if enemy_levels.has("ref_spawns") and regular_spawns > 0:
+		# "xp_size_exponent" (domyślnie 1,0 = pełna normalizacja budżetu mapy; < 1 = większe mapy dają więcej łącznego XP, np. 0,75)
+		xp_scale = clampf(pow(float(enemy_levels["ref_spawns"]) / float(regular_spawns), float(enemy_levels.get("xp_size_exponent", 1.0))), 0.25, 4.0)
 
 	# 1. Spawns / Spawn
 	var spawns_node := target_node.get_node_or_null("Spawns")
@@ -349,11 +361,15 @@ static func spawn_entities(
 					enemy_inst.position = Vector2(pos.x * cell_size + cell_size * 0.5, pos.y * cell_size + cell_size * 0.5)
 					if "faction" in enemy_inst:
 						enemy_inst.set("faction", StringName(faction))
+					var band: Variant = enemy_levels.get(str(scene_idx + 1))
+					if band is Array and band.size() == 2 and enemy_inst.has_method("set_enemy_level"):
+						# poziom z przedziału tieru, deterministycznie z pozycji (ten sam seed = te same poziomy)
+						enemy_inst.call("set_enemy_level", int(band[0]) + absi(hash(pos)) % (int(band[1]) - int(band[0]) + 1), xp_scale if tier < 4 else 1.0)
 					enemies_node.add_child(enemy_inst)
 			made += 1
-			if per_frame > 0 and made % per_frame == 0:
+			if slicer != null and slicer.due():
 				GenProgressScript.sub(float(made) / total)
-				await target_node.get_tree().process_frame
+				await slicer.next_frame(target_node.get_tree())
 
 	# 3. Objects / Skrzynie
 	var objects_node := target_node.get_node_or_null("Objects")
@@ -373,9 +389,9 @@ static func spawn_entities(
 				chest_inst.position = Vector2(c_pos.x * cell_size + cell_size * 0.5, c_pos.y * cell_size + cell_size * 0.5)
 				objects_node.add_child(chest_inst)
 			made += 1
-			if per_frame > 0 and made % per_frame == 0:
+			if slicer != null and slicer.due():
 				GenProgressScript.sub(float(made) / total)
-				await target_node.get_tree().process_frame
+				await slicer.next_frame(target_node.get_tree())
 
 	# 4. Drzwi
 	if door_scene:
@@ -395,14 +411,15 @@ static func spawn_entities(
 				door_inst.position = Vector2(d_pos.x * cell_size + cell_size * 0.5, d_pos.y * cell_size + cell_size * 0.5)
 				doors_node.add_child(door_inst)
 			made += 1
-			if per_frame > 0 and made % per_frame == 0:
+			if slicer != null and slicer.due():
 				GenProgressScript.sub(float(made) / total)
-				await target_node.get_tree().process_frame
+				await slicer.next_frame(target_node.get_tree())
 
 	# 5. Wejscie / Wyjscie - trigger zony: wyjście -> następny poziom, wejście -> powrót do poprzedniego;
 	# przy wyjściu marker FromNext (tu trafia gracz wracający z następnego poziomu).
-	_setup_portal_trigger(target_node, LevelPortal.NEXT_AREA, result.exit_pos, cell_size)
-	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size)
+	# Schody we wnęce (alcove_stairs): obszar na całym najwyższym stopniu (rząd przy voidzie), nie tylko na środku.
+	_setup_portal_trigger(target_node, LevelPortal.NEXT_AREA, result.exit_pos, cell_size, _portal_top_row(result, false, result.exit_pos))
+	_setup_portal_trigger(target_node, LevelPortal.PREVIOUS_AREA, result.entrance_pos, cell_size, _portal_top_row(result, true, result.entrance_pos))
 	if result.exit_pos != Vector2i.ZERO:
 		LevelPortal.place_from_next_marker(target_node, _cell_center(arrival_cell(result, result.exit_pos), cell_size))
 	# 6. Drabiny wejścia / wyjścia (portal_style "ladder") — scena na kratce przejścia, wysokość lica z generatora.
@@ -475,7 +492,10 @@ static func _cell_center(cell: Vector2i, cell_size: int) -> Vector2:
 	return Vector2(cell.x * cell_size + cell_size * 0.5, cell.y * cell_size + cell_size * 0.5)
 
 
-static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: Vector2i, cell_size: int) -> void:
+const PORTAL_AREA_OVERLAP := 4.0
+
+## Obszar przejścia na inny poziom: `cells` (kratki, np. najwyższy stopień schodów) albo kwadrat 1,5 kratki na `cell`.
+static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: Vector2i, cell_size: int, cells: Rect2i = Rect2i()) -> void:
 	if cell == Vector2i.ZERO:
 		return
 	var area := target_node.get_node_or_null(area_name) as Area2D
@@ -485,12 +505,44 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 		area.collision_layer = 0
 		area.collision_mask = 1
 		var col := CollisionShape2D.new()
-		var rect := RectangleShape2D.new()
-		rect.size = Vector2(cell_size * 1.5, cell_size * 1.5)
-		col.shape = rect
+		col.shape = RectangleShape2D.new()
 		area.add_child(col)
 		target_node.add_child(area)
-	area.position = _cell_center(cell, cell_size)
+	var shape: RectangleShape2D = null
+	for c in area.get_children():
+		if c is CollisionShape2D and (c as CollisionShape2D).shape is RectangleShape2D:
+			shape = (c as CollisionShape2D).shape
+			break
+	if shape == null:
+		return
+	if cells.has_area():
+		# Obszar wchodzi PORTAL_AREA_OVERLAP px w ostatni stopień (po obu stronach cienkiej osi): kolizja gradientu
+		# (ostatnie piksele kafla) zatrzymuje postać tuż przed voidem, więc bez zakładki nie dotykałaby obszaru.
+		shape.size = Vector2(cells.size * cell_size) + Vector2(PORTAL_AREA_OVERLAP * 2 if cells.size.x == 1 else 0, PORTAL_AREA_OVERLAP * 2 if cells.size.y == 1 else 0)
+		area.position = Vector2(cells.position * cell_size) + Vector2(cells.size * cell_size) * 0.5
+	else:
+		shape.size = Vector2(cell_size * 1.5, cell_size * 1.5)
+		area.position = _cell_center(cell, cell_size)
+
+
+## Kratki za gradientem na najwyższym stopniu schodów wnęki (portal_stairs z "entrance"): rząd / kolumna voidu tuż za
+## stopniem przy krawędzi mapy (dir), cały na szerokość schodów. Pusty Rect2i, gdy brak schodów albo najwyższy stopień
+## nie zawiera punktu przejścia `cell`.
+static func _portal_top_row(result: GenerationResult, entrance: bool, cell: Vector2i) -> Rect2i:
+	for ps in result.portal_stairs:
+		if not ps.has("entrance") or bool(ps["entrance"]) != entrance:
+			continue
+		var r: Rect2i = ps["rect"]
+		var row := Rect2i()
+		match String(ps.get("dir", "")):
+			"N": row = Rect2i(r.position, Vector2i(r.size.x, 1))
+			"S": row = Rect2i(Vector2i(r.position.x, r.end.y - 1), Vector2i(r.size.x, 1))
+			"W": row = Rect2i(r.position, Vector2i(1, r.size.y))
+			"E": row = Rect2i(Vector2i(r.end.x - 1, r.position.y), Vector2i(1, r.size.y))
+		if row.has_point(cell):
+			row.position += {"N": Vector2i(0, -1), "S": Vector2i(0, 1), "W": Vector2i(-1, 0), "E": Vector2i(1, 0)}[String(ps["dir"])]
+			return row
+	return Rect2i()
 
 
 # --- Automatyczne tworzenie NavigationRegion2D ---

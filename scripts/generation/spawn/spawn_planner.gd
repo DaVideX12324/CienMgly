@@ -3,6 +3,11 @@ extends RefCounted
 
 
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+## Azyl przy punkcie pojawienia się gracza (QuizRpgSafeZone, ProceduralLevel.start_safe_zone_rect): ±tyle kratek
+## wokół kratki przybycia. Wrogowie (spread) nie stoją w kwadracie ±(START_SAFE_HALF + ARRIVAL_DIST) od wejścia
+## i wyjścia — kratka przybycia leży do ARRIVAL_DIST od przejścia; inaczej wróg stał 2–3 kratki od gracza
+## zaraz po wejściu / wczytaniu (entrance_clear liczy się po ścieżce od samego wejścia).
+const START_SAFE_HALF := 6
 
 static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, entrance_room_idx: int, exit_room_idx: int) -> void:
 	var rooms := ctx.rooms
@@ -15,7 +20,7 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 	# Boss w pokoju wyjściowym
 	result.enemy_spawns.append({
 		"pos": exit_room.get_center() + Vector2i(0, -2),
-		"tier": 3
+		"tier": 4  # boss końcowy; tier 3 = miniboss (pula "enemies" mapy: wpis o indeksie 2, spawny z tier3_chance)
 	})
 
 	# Skrzynie stawia generator obiektów, gdy jego katalog je ma (INTERACTIVE ze sceną "chest").
@@ -100,11 +105,12 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 		max_d = maxi(max_d, int(dist[p]))
 	var clear := int(cfg.get("entrance_clear", 7))
 	var no_room := entrance_room.grow(1)
+	var safe := _start_safe_cells(ctx, result)
 	var stairs: Dictionary = result.canals.stair_cells if result.canals != null and "stair_cells" in result.canals else {}
 	var cands: Array[Vector2i] = []
 	for p in queue:
 		if int(dist[p]) < clear or no_room.has_point(p) or exit_room.has_point(p) or covered.has(p) \
-				or ctx.portal_zone.has(p) or stairs.has(p):
+				or ctx.portal_zone.has(p) or stairs.has(p) or safe.has(p) or result.nav_excluded.has(p):
 			continue
 		cands.append(p)
 	cands.sort()
@@ -138,6 +144,8 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 	noise.frequency = float(cfg.get("faction_frequency", 0.025))
 	var picked: Array[Vector2i] = []
 	var taken := covered.duplicate()
+	taken.merge(safe)  # członkowie grupki też poza azylem
+	taken.merge(result.nav_excluded)  # i poza kratkami bez nawigacji wrogów
 	var placed := 0
 	for p in cands:
 		if placed >= target:
@@ -164,6 +172,20 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 			taken[cell] = true
 			placed += 1
 			cell = _nearest_free(ctx, cell, taken)
+
+
+## Kratki azylu przy wejściu i wyjściu (Chebyshev ≤ START_SAFE_HALF + ARRIVAL_DIST od przejścia).
+static func _start_safe_cells(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult) -> Dictionary:
+	var out := {}
+	var r := START_SAFE_HALF + MapGeneratorBase.ARRIVAL_DIST
+	var exit_pos: Vector2i = result.exit_pos if result.exit_pos != Vector2i.ZERO else ctx.exit_pos
+	for c in [ctx.entrance_pos, exit_pos]:
+		if c == Vector2i.ZERO:
+			continue
+		for y in range(c.y - r, c.y + r + 1):
+			for x in range(c.x - r, c.x + r + 1):
+				out[Vector2i(x, y)] = true
+	return out
 
 
 ## Każdy wróg i każda skrzynia na własnej kratce. Dwa ciała w tym samym punkcie nie mają kierunku

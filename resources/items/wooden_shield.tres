@@ -2,11 +2,14 @@
 
 [ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
+[ext_resource type="Texture2D" uid="uid://bntb33rt4fhk8" path="res://assets/item_icons/wooden_shield.png" id="2_icon"]
+
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "wooden_shield"
+icon = ExtResource("2_icon")
 display_name = "Drewniana Tarcza"
-description = "Lekka tarcza, ale lepsza niz nic."
+description = "Lekka tarcza, ale lepsza niż nic."
 category = "hand"
 stackable = false
 max_stack = 1
@@ -14,4 +17,4 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "shield"
-def_bonus = 3
+def_bonus = 4

@@ -13,6 +13,14 @@ var _scene_root: Node
 var _current_scene: Node
 
 
+## Log progresji do testów balansu (QuizRpgProgressLog): sesja + awanse.
+func _start_progress_log() -> void:
+	var ps: Node = CoreManager.get_singleton("PlayerStats") if get_node_or_null("/root/CoreManager") else null
+	QuizRpgProgressLog.session_begin(ps)
+	if ps != null and ps.has_signal("level_up"):
+		ps.level_up.connect(func(l: int) -> void: QuizRpgProgressLog.level_up(ps, l))
+
+
 func _ready() -> void:
 	_scene_root = get_node_or_null("SceneRoot")
 	if _scene_root == null:
@@ -20,7 +28,11 @@ func _ready() -> void:
 		_scene_root.name = "SceneRoot"
 		add_child(_scene_root)
 	_register_singletons()
+	if OS.is_debug_build():
+		add_child(preload("scripts/tools/perf_monitor.gd").new())  # F3 = nakładka, zacięcia w user://perf_log.txt
+	_start_progress_log()
 	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania (z motywem z ustawień)
+	ProceduralLevel.warm_enemy_scenes()  # sceny wrogów z pul map wczytywane w tle (bez zacięcia przed mapą)
 	var settings := get_node_or_null("/root/SettingsService")
 	if settings and settings.has_signal("module_setting_changed"):
 		settings.module_setting_changed.connect(_on_module_setting_changed)
@@ -51,6 +63,13 @@ func get_ui_options() -> Array[Dictionary]:
 ## Style pasków dla zakładki „Motyw” (klucz ui_bar_style).
 func get_ui_bar_styles() -> Array[Dictionary]:
 	return QuizTheme.BAR_STYLES
+
+
+## Siatka kafelków z podglądem stylów pasków (zamiast listy w opcjach hosta); sygnał style_selected(id).
+func create_bar_style_picker(current: String, font_size: int = 16) -> Control:
+	var picker := (load(QuizRpgPaths.path("scenes/ui/bar_style_picker.tscn")) as PackedScene).instantiate() as Control
+	picker.call("setup", QuizTheme.BAR_STYLES, current, font_size)
+	return picker
 
 
 func _on_module_setting_changed(module_id: String, key: String, value: Variant) -> void:

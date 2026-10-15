@@ -12,13 +12,14 @@ extends RefCounted
 const State = preload("core/structured_state.gd")
 const DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 const INF := 1 << 30
-const MAX_POPS := 600000
+const MAX_POPS := 25000
 
 var st: State
 var own: State.LocalSum
 var own_sub: State.LocalSum
 var target: State.LocalSum
 var dt := PackedInt32Array()
+var max_cost: int = INF
 var has_bias := false
 var bias_rect := Vector4i()       # kratki w nim: 0, poza: +3
 var bias_side := -1               # 0 / 1 = strona kanału bez kary (poza nią +50)
@@ -109,11 +110,11 @@ func find(sx: int, sy: int) -> PackedInt32Array:
 		if pops > MAX_POPS:
 			return PackedInt32Array()
 		var top := _pop(heap)
-		var s: int = top & 0xFFFFF
+		var s: int = top & 0xFFFFFF
 		var i: int = s / 5
 		var dI: int = s % 5
 		var g: int = best[s]
-		if (top >> 20) != g + _h(i, hr):
+		if (top >> 24) != g + _h(i, hr):
 			continue   # nieaktualny wpis
 		var x: int = i % W
 		var y: int = i / W
@@ -161,6 +162,8 @@ func find(sx: int, sy: int) -> PackedInt32Array:
 					if zv and d.y != 0:
 						continue
 			var ng := g + 1 + (4 if dI != 4 and dI != ni else 0) + (_bias(nx, ny) if has_bias else 0)
+			if ng > max_cost:
+				continue
 			var ns := n * 5 + ni
 			if ng < best[ns]:
 				best[ns] = ng
@@ -203,7 +206,7 @@ func _entry(x: int, y: int) -> PackedInt32Array:
 
 
 static func _push(heap: PackedInt64Array, key: int, s: int) -> void:
-	heap.append((key << 20) | s)
+	heap.append((key << 24) | s)
 	var i := heap.size() - 1
 	while i > 0:
 		var p := (i - 1) >> 1

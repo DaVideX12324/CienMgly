@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+[ext_resource type="Texture2D" uid="uid://c4yx6jk8aorj3" path="res://assets/item_icons/lockpick.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "lockpick"
+icon = ExtResource("2_icon")
+display_name = "Wytrych"
+description = "Otwiera zamkniętą skrzynię po rozwiązaniu quizu (im lepsza skrzynia, tym trudniej). Po nieudanej próbie może się złamać."
+category = "key"
+stackable = true
+max_stack = 99
+consumable = false
+usable_in_menu = false
+usable_in_combat = false

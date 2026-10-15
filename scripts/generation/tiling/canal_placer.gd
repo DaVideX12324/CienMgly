@@ -379,7 +379,7 @@ static func _bank_variant(ctx: GenerationContext, water0: Dictionary, q: Vector2
 ## Kafle modułu roli `role` (wariant `variant`) od kotwicy; false, gdy profil nie ma tej roli / wariantu.
 static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vector2i, role: int, variant: StringName, layer: StringName, table: Dictionary,
 		upper_layer: StringName = &"", only_upper: bool = false, force_layer: StringName = &"") -> bool:
-	var parts := TileResolver.resolve_module_parts(ctx, anchor, role, [], -1, variant)
+	var parts := _parts(ctx, anchor, role, variant)
 	for rp in parts:
 		if only_upper and rp.offset.y >= 0:
 			continue
@@ -398,3 +398,20 @@ static func _place(ctx: GenerationContext, plan: TilePlacementPlan, anchor: Vect
 		PlacementPriority.assign(p, table)
 		plan.queue(p)
 	return not parts.is_empty()
+
+
+## Części modułu z wymuszonym wariantem — bez sąsiadów i hasha pozycji wynik resolvera zależy tylko od zestawu
+## kratki (pole / MIXED), roli i wariantu: liczone raz na (zestaw, rola, wariant) dla kontekstu (meta).
+static func _parts(ctx: GenerationContext, anchor: Vector2i, role: int, variant: StringName) -> Array:
+	if not TileResolver.is_active(ctx):
+		return []
+	var cache: Dictionary
+	if ctx.has_meta(&"canal_parts"):
+		cache = ctx.get_meta(&"canal_parts")
+	else:
+		cache = {}
+		ctx.set_meta(&"canal_parts", cache)
+	var key := [TileResolver.own_tileset_id(ctx, anchor), role, variant]
+	if not cache.has(key):
+		cache[key] = TileResolver.resolve_module_parts(ctx, anchor, role, [], -1, variant)
+	return cache[key]

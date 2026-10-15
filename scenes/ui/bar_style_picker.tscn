@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/bar_style_picker.gd" id="1_picker"]
+
+[node name="BarStylePicker" type="GridContainer"]
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 5
+script = ExtResource("1_picker")

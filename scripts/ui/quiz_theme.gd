@@ -35,15 +35,16 @@ const COMBAT_FONT_SIZE := 36
 ## Typy motywu (theme_type_variation) w stylu RPG Makera.
 const WINDOW := &"QuizWindow"          # PanelContainer: okno (status, komendy, komunikaty)
 const LOG := &"QuizLog"                # PanelContainer: pasek u góry (log bitwy / pytanie)
+const FRAME := &"QuizFrame"            # PanelContainer: ramka sekcji wewnątrz okna (menu pauzy) — styl okna, mniejsze marginesy
 const MENU_ITEM := &"QuizMenuItem"     # Button: pozycja menu bez tła; zaznaczona = styl „selected”
 const BAR_LP := &"QuizBarLP"           # ProgressBar: paski drużyny, czasu odpowiedzi, HP wrogów
 const BAR_SP := &"QuizBarSP"
 const BAR_TP := &"QuizBarTP"
 const BAR_TIMER := &"QuizBarTimer"
 const BAR_ENEMY := &"QuizBarEnemy"
-const CUSTOM_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM, BAR_LP, BAR_SP, BAR_TP, BAR_TIMER, BAR_ENEMY]
+const CUSTOM_TYPES: Array[StringName] = [WINDOW, LOG, FRAME, MENU_ITEM, BAR_LP, BAR_SP, BAR_TP, BAR_TIMER, BAR_ENEMY]
 ## Typy, których kolor zmienia suwak jasności (okna i zaznaczenie; paski zostają w swoich kolorach).
-const BRIGHTNESS_TYPES: Array[StringName] = [WINDOW, LOG, MENU_ITEM]
+const BRIGHTNESS_TYPES: Array[StringName] = [WINDOW, LOG, FRAME, MENU_ITEM]
 
 const MODULE_ID := "quiz_rpg"
 const SETTING_SKIN := "ui_skin"
@@ -66,6 +67,8 @@ const SKINS: Array[Dictionary] = [
 const SETTING_BAR_STYLE := "ui_bar_style"
 ## UI walki tylko na szerokość treści (okna wyśrodkowane) zamiast na cały ekran.
 const SETTING_COMBAT_COMPACT := "ui_combat_compact"
+## Menu pauzy tylko na szerokość treści (wyśrodkowane okno zamiast całego ekranu).
+const SETTING_PAUSE_COMPACT := "ui_pause_compact"
 ## Pytanie i pasek czasu w walce: w oknie logu u góry albo w menu walki, tuż nad odpowiedziami.
 const SETTING_QUESTION_POSITION := "ui_question_position"
 const QUESTION_IN_LOG := "log"
@@ -74,13 +77,23 @@ const QUESTION_IN_MENU := "menu"
 const SETTING_ANSWERS_LAYOUT := "ui_answers_layout"
 const ANSWERS_LIST := "list"
 const ANSWERS_GRID := "grid"
+## Umiejętności i przedmioty w walce: siatka 2 kolumny albo jedna przewijana lista.
+## Animacja wejścia do walki (zrzut świata wiruje i zamyka się w czerń).
+const SETTING_COMBAT_INTRO := "ui_combat_intro"
+const SETTING_LIST_LAYOUT := "ui_list_layout"
+const LIST_GRID := "grid"
+const LIST_SCROLL := "list"
 ## Dodatkowe przełączniki wyglądu w zakładce „Motyw” opcji hosta (module_root.get_ui_options).
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
+	{"key": "ui_combat_intro", "label": "Animacja wejścia do walki", "type": "bool", "default": true},
+	{"key": "ui_pause_compact", "label": "Menu pauzy tylko na szerokość treści", "type": "bool", "default": false},
 	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "log",
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
 	{"key": "ui_answers_layout", "label": "Odpowiedzi w walce", "type": "choice", "default": "list",
 		"choices": [{"id": "list", "name": "Lista"}, {"id": "grid", "name": "Siatka (2 kolumny)"}]},
+	{"key": "ui_list_layout", "label": "Umiejętności i przedmioty w walce", "type": "choice", "default": "grid",
+		"choices": [{"id": "grid", "name": "Siatka (2 kolumny)"}, {"id": "list", "name": "Lista przewijana"}]},
 ]
 const DEFAULT_BAR_STYLE := "klasyczny"
 ## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
@@ -138,8 +151,12 @@ static func snap(size: int) -> int:
 
 
 ## Zaznaczenie pozycji menu: styl „selected” z motywu (linia pod tekstem) na stanach normal / hover /
-## pressed; odznaczenie zdejmuje nadpisania (wraca wygląd z motywu).
-static func set_menu_item_selected(btn: Button, selected: bool) -> void:
+## pressed; odznaczenie zdejmuje nadpisania (wraca wygląd z motywu). Bez zmiany stanu nic nie robi
+## (każde nadpisanie motywu przelicza układ — przy hoverze 7 przycisków kosztowało ~1 ms); force wymusza
+## ponowne nałożenie (zmiana motywu).
+static func set_menu_item_selected(btn: Button, selected: bool, force: bool = false) -> void:
+	if not force and bool(btn.get_meta(&"quiz_menu_selected", false)) == selected:
+		return
 	for st in ["normal", "hover", "pressed", "hover_pressed"]:
 		btn.remove_theme_stylebox_override(st)
 	btn.remove_theme_color_override("font_color")
@@ -172,8 +189,10 @@ static func apply() -> void:
 	ThemeDB.fallback_font = f
 	th.default_font = f
 	th.default_font_size = src.default_font_size if src.default_font_size > 0 else PX
+	_begin_batch(th)
 	for t in CUSTOM_TYPES:
 		_copy_type(src, th, t)
+	_end_batch(th)
 
 
 static func restore() -> void:
@@ -225,6 +244,7 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 	for l in [bars, skin, _base]:
 		if l != null:
 			layers.append(l)
+	_begin_batch(th)
 	for t in CUSTOM_TYPES:
 		for n in _names(layers, t, Theme.DATA_TYPE_STYLEBOX):
 			var sb := _pick(layers, t, n, Theme.DATA_TYPE_STYLEBOX) as StyleBox
@@ -241,18 +261,44 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 					th.clear_theme_item(dt_kind, n, t)
 			for n in keep:
 				th.set_theme_item(dt_kind, n, t, _pick(layers, t, n, dt_kind))
+	_end_batch(th)
 	if _depth > 0:
 		var dt := ThemeDB.get_default_theme()
+		_begin_batch(dt)
 		for t in CUSTOM_TYPES:
 			dt.remove_type(t)
 			_copy_type(th, dt, t)
+		_end_batch(dt)
 	_sync_combat_theme()
 	# Zaznaczenie ma styl wstawiony jako nadpisanie — przepisać nowym.
 	for w in _selected_buttons.duplicate():
 		var btn := w.get_ref() as Button
 		if btn and bool(btn.get_meta(&"quiz_menu_selected", false)):
-			set_menu_item_selected(btn, true)
+			set_menu_item_selected(btn, true, true)
 	_selected_buttons = _selected_buttons.filter(func(w: WeakRef) -> bool: return w.get_ref() != null and bool((w.get_ref() as Button).get_meta(&"quiz_menu_selected", false)))
+
+
+## Motyw do podglądu stylu pasków `style_id` (kafelki w opcjach): typy pasków drużyny z warstw styl pasków ->
+## bieżący motyw okien -> baza. Gładki styl dostaje stałą bar_plain = 1 — QuizBar pomija wtedy tekstury
+## z motywu wyżej w drzewie (bieżący styl).
+static func bar_preview_theme(style_id: String) -> Theme:
+	var t := Theme.new()
+	var bars := _load_layer(style_id, DEFAULT_BAR_STYLE, "bars_")
+	var layers: Array[Theme] = []
+	for l in [bars, _load_layer(_skin_id, DEFAULT_SKIN, ""), _base if _base != null else theme()]:
+		if l != null:
+			layers.append(l)
+	for ty: StringName in [BAR_LP, BAR_SP, BAR_TP]:
+		t.set_type_variation(ty, &"ProgressBar")
+		for n in _names(layers, ty, Theme.DATA_TYPE_STYLEBOX):
+			t.set_stylebox(n, ty, _pick(layers, ty, n, Theme.DATA_TYPE_STYLEBOX))
+		if bars == null:
+			t.set_constant(&"bar_plain", ty, 1)
+			continue
+		for kind: Theme.DataType in [Theme.DATA_TYPE_ICON, Theme.DATA_TYPE_CONSTANT]:
+			for n in bars.get_theme_item_list(kind, ty):
+				t.set_theme_item(kind, n, ty, bars.get_theme_item(kind, n, ty))
+	return t
 
 
 static func _load_layer(id: String, default_id: String, prefix: String) -> Theme:
@@ -278,6 +324,16 @@ static func _pick(layers: Array[Theme], t: StringName, n: StringName, kind: Them
 	return null
 
 
+static func pause_ui_compact() -> bool:
+	var settings := _settings_service()
+	return bool(settings.call("get_module", MODULE_ID, SETTING_PAUSE_COMPACT, false)) if settings else false
+
+
+static func combat_intro_enabled() -> bool:
+	var settings := _settings_service()
+	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_INTRO, true)) if settings else true
+
+
 static func combat_ui_compact() -> bool:
 	var settings := _settings_service()
 	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_COMPACT, false)) if settings else false
@@ -295,6 +351,19 @@ static func answers_layout() -> String:
 	var settings := _settings_service()
 	var v := str(settings.call("get_module", MODULE_ID, SETTING_ANSWERS_LAYOUT, ANSWERS_LIST)) if settings else ANSWERS_LIST
 	return v if v == ANSWERS_GRID else ANSWERS_LIST
+
+
+## Układ list umiejętności / przedmiotów w walce (LIST_GRID / LIST_SCROLL).
+static func list_layout() -> String:
+	var settings := _settings_service()
+	var v := str(settings.call("get_module", MODULE_ID, SETTING_LIST_LAYOUT, LIST_GRID)) if settings else LIST_GRID
+	return v if v == LIST_SCROLL else LIST_GRID
+
+
+## Język tekstów z resources/i18n (QuizRpgI18n): globalne ustawienie hosta (opcje -> Ekran -> Język).
+static func language() -> String:
+	var settings := _settings_service()
+	return str(settings.call("get_language")) if settings else "pl"
 
 
 static func bar_style() -> String:
@@ -377,6 +446,17 @@ static func _settings_service() -> Node:
 	return tree.root.get_node_or_null("SettingsService") if tree else null
 
 
+## Każda zmiana elementu motywu wysyła `changed` i przelicza motyw w całym drzewie (~15–20 ms na jedną zmianę —
+## nałożenie motywu trwało ponad 800 ms). Paczka zmian: sygnały zablokowane, jedno `changed` na końcu.
+static func _begin_batch(th: Theme) -> void:
+	th.set_block_signals(true)
+
+
+static func _end_batch(th: Theme) -> void:
+	th.set_block_signals(false)
+	th.emit_changed()
+
+
 static func _copy_type(src: Theme, dst: Theme, t: StringName) -> void:
 	var base := src.get_type_variation_base(t)
 	if base != &"":
@@ -424,6 +504,12 @@ static func build_default_theme(font_res: Font = null) -> Theme:
 	win.set_border_width_all(2)
 	win.set_content_margin_all(18)
 	th.set_stylebox(&"panel", WINDOW, win)
+	# Ramka sekcji w oknie (menu pauzy): jak okno, ale ciaśniejsza i z wyraźniejszym obrysem.
+	th.set_type_variation(FRAME, &"PanelContainer")
+	var frame := win.duplicate() as StyleBoxFlat
+	frame.set_content_margin_all(12)
+	frame.border_color = Color(0.45, 0.47, 0.62, 1.0)
+	th.set_stylebox(&"panel", FRAME, frame)
 	# Pasek u góry (log bitwy / pytanie): ciemny, półprzezroczysty, bez ramki.
 	th.set_type_variation(LOG, &"PanelContainer")
 	var lg := StyleBoxFlat.new()

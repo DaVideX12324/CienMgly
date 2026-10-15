@@ -5,6 +5,7 @@ extends Node
 ## Dostępny przez: CoreManager.get_singleton("GameManager")
 
 const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
+const MenuTransition = preload("../scripts/ui/menu_transition.gd")
 
 enum GameState { MENU, EXPLORING, QUIZ_COMBAT, QUIZ_PUZZLE, PAUSED, CUTSCENE }
 
@@ -212,9 +213,12 @@ func new_game(slot_index: int = 0) -> void:
 	transition_to_scene(GAME_SCENE_PATH)
 
 
+## Powrót do menu głównego (ekran śmierci, menu pauzy): ekran ładowania przykrywa przełączenie sceny.
 func return_to_main_menu() -> void:
 	change_state(GameState.MENU)
-	transition_to_scene(QuizRpgPaths.path("scenes/ui/main_menu.tscn"))
+	var overlay := MenuTransition.cover(get_tree(), "Ładowanie…", "Menu główne", 0.2, "Powrót do menu")
+	await transition_to_scene(QuizRpgPaths.path("scenes/ui/main_menu.tscn"))
+	MenuTransition.uncover(get_tree(), overlay, MenuTransition.MENU_HOLD_SEC, "Menu główne")
 
 
 func log_debug(message: Variant, category: String = "GENERAL") -> void:

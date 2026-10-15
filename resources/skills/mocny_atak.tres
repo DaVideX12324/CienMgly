@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "mocny_atak"
+display_name = "Mocny Atak"
+description = "Cięższy cios: 1,5 × zwykłe obrażenia."
+damage_multiplier = 1.5
+tp_cost = 25
+learn_level = 1
+sp_cost = 50

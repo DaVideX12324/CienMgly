@@ -4,6 +4,7 @@ extends CharacterBody2D
 ## Programmer art: rysowany kodem jeśli brak AnimatedSprite2D/sprite frames.
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
+const PoisonVignetteScene = preload("../../scenes/ui/poison_vignette.tscn")
 
 ## Prędkość chodu; bieg = speed * run_speed_mult.
 @export var speed: float = 200.0
@@ -40,6 +41,8 @@ var _sprint_toggled := false
 const BODY_SIZE := Vector2(16, 20)
 const TRAIL_RECORD_DISTANCE := 4.0
 const MAX_TRAIL_POINTS := 96
+## Towarzysz dalej od swojego punktu na śladzie niż tyle px przeskakuje na niego.
+const FOLLOW_CATCH_UP_DISTANCE := 96.0
 
 # Bobbing animation
 var _bob_time: float = 0.0
@@ -49,6 +52,8 @@ var _is_moving: bool = false
 const ENCOUNTER_IMMUNITY_SEC := 5.0
 const IMMUNITY_BLINK_HZ := 8.0
 var _immunity_left: float = 0.0
+## Ochrona po wejściu na mapę / wczytaniu: wrogowie w ogóle nie widzą gracza (nie gonią), nie tylko nie zaczynają walki.
+var _ignored_left: float = 0.0
 
 
 func _ready() -> void:
@@ -77,17 +82,18 @@ func _ready() -> void:
 		var ps: Node = CoreManager.get_singleton("PlayerStats")
 		if ps and ps.has_signal("status_tick"):
 			ps.status_tick.connect(_on_status_tick)
+		add_child(PoisonVignetteScene.instantiate())
 
 
-## Trucizna w eksploracji (PlayerStats co 3 s): HUD nie pokazuje HP, więc ubytek nad liderem na zielono.
+## Trucizna w eksploracji (PlayerStats co 3 s): HUD nie pokazuje HP, więc ubytek nad liderem na fioletowo (+ winieta zatrucia na całym ekranie).
 func _on_status_tick(member_index: int, status_id: String, amount: int) -> void:
 	if member_index != 0 or status_id != "poison" or not is_inside_tree() or not (_gm and _gm.is_exploring()):
 		return
-	FloatingText.create_at(self, global_position + Vector2(0, -20), "-%d" % amount, Color(0.55, 0.9, 0.3), 12)
+	FloatingText.create_at(self, global_position + Vector2(0, -20), "-%d" % amount, Color(0.78, 0.35, 0.95), 12)
 	var sprite := get_node_or_null("AnimatedSprite2D") as CanvasItem
 	if sprite:
 		var tw := create_tween()
-		tw.tween_property(sprite, "modulate", Color(0.6, 1.0, 0.5), 0.12)
+		tw.tween_property(sprite, "modulate", Color(0.85, 0.55, 1.0), 0.12)
 		tw.tween_property(sprite, "modulate", Color.WHITE, 0.25)
 
 
@@ -254,6 +260,9 @@ func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
 		sprite.play(anim_name)
 	elif sprite.sprite_frames.has_animation(state):
 		sprite.play(state)
+		# Animacje bez kierunku (klatki Pixel Crawlera patrzą w prawo) — w lewo lustrzane odbicie.
+		if absf(facing_direction.x) > 0.01:
+			sprite.flip_h = facing_direction.x < 0.0
 
 
 func _direction_name() -> String:
@@ -281,8 +290,15 @@ func set_can_move(value: bool) -> void:
 
 
 ## Po wygranej walce: przez `seconds` wrogowie nie zaczynają walki (EnemyBase.start_combat), gracz miga.
-func grant_encounter_immunity(seconds: float = ENCOUNTER_IMMUNITY_SEC) -> void:
+## ignored_by_enemies (wejście na mapę / wczytanie): dodatkowo wrogowie gracza nie widzą — nie gonią go.
+func grant_encounter_immunity(seconds: float = ENCOUNTER_IMMUNITY_SEC, ignored_by_enemies: bool = false) -> void:
 	_immunity_left = maxf(_immunity_left, seconds)
+	if ignored_by_enemies:
+		_ignored_left = maxf(_ignored_left, seconds)
+
+
+func is_ignored_by_enemies() -> bool:
+	return _ignored_left > 0.0
 
 
 func is_encounter_immune() -> bool:
@@ -293,6 +309,7 @@ func is_encounter_immune() -> bool:
 ## walkę — wejście do obszaru interakcji już było, więc body_entered się nie powtórzy.
 func _tick_immunity(delta: float) -> void:
 	_immunity_left -= delta
+	_ignored_left = maxf(_ignored_left - delta, 0.0)
 	if _immunity_left > 0.0:
 		modulate.a = 0.4 if fmod(_immunity_left * IMMUNITY_BLINK_HZ, 1.0) < 0.5 else 1.0
 		return
@@ -314,6 +331,8 @@ func apply_hero_data(hero_data: Dictionary) -> void:
 		sprite.sprite_frames = custom_frames
 		sprite.visible = true
 		_use_programmer_art = false
+		if hero_data.get("sprite_offset") is Vector2:
+			sprite.offset = hero_data["sprite_offset"]
 	_body_color = hero_data.get("body_color", _body_color)
 	queue_redraw()
 
@@ -323,6 +342,12 @@ func set_follow_target(target: CharacterBody2D, spacing: float = 28.0) -> void:
 	follow_spacing = spacing
 	is_party_follower = true
 	_setup_as_follower()
+
+
+## Czyści ślad (po przeniesieniu na spawn — towarzysze nie idą starą trasą przez mapę).
+func reset_trail() -> void:
+	_trail_points.clear()
+	_trail_points.append(global_position)
 
 
 func get_trail_position(distance_back: float) -> Vector2:
@@ -341,6 +366,11 @@ func get_trail_position(distance_back: float) -> Vector2:
 
 
 func _setup_as_follower() -> void:
+	# Nie „gracz” dla reszty gry (wrogowie, portale, kamera szukają grupy player) i bez warstwy kolizji —
+	# nie wchodzi w obszary przejść ani walk; ściany (maska) dalej go zatrzymują.
+	if is_in_group("player"):
+		remove_from_group("player")
+	collision_layer = 0
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera:
 		camera.enabled = false
@@ -365,12 +395,16 @@ func _connect_interaction_area() -> void:
 
 
 func _get_follow_input() -> Vector2:
-	if _follow_target == null:
+	if _follow_target == null or not is_instance_valid(_follow_target):
 		return Vector2.ZERO
 	var target_position: Vector2 = _follow_target.global_position
 	if _follow_target.has_method("get_trail_position"):
 		target_position = _follow_target.call("get_trail_position", follow_spacing)
 	var delta: Vector2 = target_position - global_position
+	if delta.length() > FOLLOW_CATCH_UP_DISTANCE:
+		global_position = target_position   # utknął na rogu albo został daleko — dogania skokiem
+		_trail_points.clear()
+		return Vector2.ZERO
 	if delta.length() <= follow_stop_distance:
 		return Vector2.ZERO
 	return delta.normalized()

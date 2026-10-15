@@ -14,17 +14,14 @@ const DungeonGeneratorScript = preload("../generation/dungeon_generator.gd")
 const CaveGeneratorScript = preload("../generation/cave_generator.gd")
 const TileSetFieldScript = preload("../generation/core/tileset_field.gd")
 const GenProgress = preload("../generation/core/gen_progress.gd")
+const FrameSlicer = preload("../generation/core/frame_slicer.gd")
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
 signal generation_finished
 
-## Kafli wstawianych na klatkę przy generowaniu w tle (reszta klatki zostaje na pasek ładowania).
-const PAINT_CHUNK := 6000
-## Encji (wrogów/skrzyń/drzwi) tworzonych na klatkę przy generowaniu w tle.
-const ENTITY_CHUNK := 6
-## Budżet pracy obiektów (ObjectRealizer) na klatkę, ms — reszta klatki dla paska ładowania.
-const PROPS_BUDGET_MS := 8
+## Kafli wstawianych między sprawdzeniami budżetu klatki (FrameSlicer) przy generowaniu w tle.
+const PAINT_STEP := 512
 
 enum LevelType {
 	FOREST_OVERWORLD,
@@ -55,6 +52,10 @@ var flag_overrides: Dictionary = {}
 ## w której tier może mieć kilka wariantów (tablica scen).
 var _enemy_pool: Array = []
 var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
+var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [min, max] poziomu wroga
+var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga -> [{item_id, chance, count}]
+var _chest_loot: Array = []  # companion-JSON "chest_loot": [{item_id, weight, count}] (skrzynie wygenerowane na mapie)
+var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -87,6 +88,9 @@ var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies"
 @export var loading_screen_key: String = ""
 ## Nazwa lokacji na ekranie ładowania. Puste = nazwa z typu poziomu (LOCATION_NAMES).
 @export var location_name: String = ""
+## Tło ekranu ładowania przekazane przez level_manager przed add_child — to samo, co na jego ekranie sprzed
+## generowania (inaczej drugie losowanie podmieniało obraz w chwili ruszenia paska). null = losowe z folderu mapy.
+var loading_background: Texture2D = null
 
 var last_result: RefCounted = null
 var is_generating: bool = false
@@ -191,33 +195,9 @@ func _ready() -> void:
 
 
 func _ensure_default_resources() -> void:
-	if not enemy_scenes.is_empty():
-		_enemy_pool = enemy_scenes.duplicate()
-	else:
-		_enemy_pool = []
-		var enemy_paths: Array = []  # element: ścieżka albo tablica ścieżek (warianty tieru)
-		if level_type == LevelType.CAVE_DUNGEON:
-			enemy_paths = [
-				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_immature.tscn"),
-				[
-					QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
-					QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
-				],
-				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_old.tscn")
-			]
-		elif level_type == LevelType.FOREST_OVERWORLD:
-			enemy_paths = [
-				QuizRpgPaths.path("scenes/enemies/slime_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/plant_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/warhog.tscn")
-			]
-		else:
-			enemy_paths = [
-				QuizRpgPaths.path("scenes/enemies/bandit_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
-			]
-		_enemy_pool = _pool_from_paths(enemy_paths)
+	# Pula domyślna typu poziomu ładowana dopiero w _prepare_job, gdy companion-JSON nie poda własnej
+	# (ładowanie jej zawsze kosztowało ~0,3 s na głównym wątku przed ekranem ładowania — i tak była podmieniana).
+	_enemy_pool = enemy_scenes.duplicate() if not enemy_scenes.is_empty() else []
 
 	if chest_scene == null:
 		var cp := QuizRpgPaths.path("scenes/objects/closed_chest_tutorial.tscn")
@@ -230,13 +210,42 @@ func _ensure_default_resources() -> void:
 			door_scene = load(dp) as PackedScene
 
 
+## Domyślna pula wrogów typu poziomu (bez puli z companion-JSON); element: ścieżka albo tablica wariantów tieru.
+func _default_enemy_paths() -> Array:
+	if level_type == LevelType.CAVE_DUNGEON:
+		return [
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_immature.tscn"),
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_old.tscn")
+		]
+	if level_type == LevelType.FOREST_OVERWORLD:
+		return [
+			QuizRpgPaths.path("scenes/enemies/slime_1.tscn"),
+			QuizRpgPaths.path("scenes/enemies/plant_1.tscn"),
+			QuizRpgPaths.path("scenes/enemies/warhog.tscn")
+		]
+	return [
+		QuizRpgPaths.path("scenes/enemies/bandit_1.tscn"),
+		QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
+		QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
+	]
+
+
 ## Generuje poziom synchronicznie (cała mapa w tej klatce).
 func generate_level(seed_val: int = 0) -> void:
 	var job := _prepare_job(seed_val)
+	var progress: GenProgress = null
+	if job.debug_report:
+		progress = GenProgress.new()
+		GenProgress.start(progress)
 	job.run()
 	_apply_job(job)
+	if progress != null:
+		progress.finish()
+		GenProgress.stop()
 	if job.debug_report:
-		print(map_report(job))
+		print(map_report(job, progress))
 	generation_finished.emit()
 
 
@@ -254,7 +263,10 @@ func generate_level_async(seed_val: int = 0) -> void:
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
 	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")
-	overlay.set_background_for(get_map_key())
+	if loading_background != null:
+		overlay.background = loading_background
+	else:
+		overlay.set_background_for(get_map_key())
 	add_child(overlay)
 	overlay.track(progress)
 	GenProgress.start(progress)
@@ -301,6 +313,20 @@ func map_report(job: GenJob, progress = null) -> String:
 		lines.append("  płaskowyże: maska %d kratek, poziomy %d..%d, schody S/N/E/W %d/%d/%d/%d, naprawa: +%d schodów, -%d płaskowyżów, %d kratek góry zablokowanych" % [
 			pl.mask.size(), pl.min_level, pl.max_level, pl.stairs.size(), pl.stairs_north.size(), pl.stairs_east.size(), pl.stairs_west.size(),
 			pl.connect_stairs, pl.dropped_pieces, pl.unreachable_top])
+	if r.preprocess_stats != null and r.preprocess_stats.has("structured"):
+		var st_stats: Dictionary = r.preprocess_stats["structured"]
+		lines.append("  ścieki: kanały %d (%d suchych), kompleksy %d, pokoje %d (dostawione %d), kładki %d, korytarze serwisowe %d, pętle %d, naprawy %d (zamurowane %d)" % [
+			st_stats.get("segs", 0), st_stats.get("dry_segs", 0), st_stats.get("complexes", 0),
+			st_stats.get("rooms", 0), st_stats.get("rooms_flush", 0),
+			st_stats.get("bridges", 0), st_stats.get("service", 0),
+			st_stats.get("loops", 0), st_stats.get("repairs", 0), st_stats.get("repair_walled", 0)
+		])
+		if st_stats.has("t") and st_stats["t"] is Dictionary:
+			var t_sub: Dictionary = st_stats["t"]
+			var sub_lines := PackedStringArray()
+			for k in t_sub.keys():
+				sub_lines.append("%s: %.1f ms" % [k, float(t_sub[k])])
+			lines.append("    pod-etapy korytarzy (structured): " + ", ".join(sub_lines))
 	if r.objects != null:
 		lines.append("  obiekty: %d (plan %.1f ms, zdjętych dla osiągalności %d) %s" % [r.objects.placements.size(), r.objects.time_usec / 1000.0, r.objects.removed_for_reach, r.objects.stats])
 	var chests: int = r.chest_spawns.size() + (r.objects.cells_with_scene("chest").size() if r.objects != null else 0)
@@ -323,6 +349,25 @@ func _exit_tree() -> void:
 		GenProgress.stop()
 
 
+## Azyl przy punkcie pojawienia się gracza (QuizRpgSafeZone, tworzy level_manager): pokój z tym punktem,
+## przycięty do ±SAFE_ZONE_HALF_CELLS kratek (pokój wyjścia z bossem nie staje się w całości azylem przy
+## powrocie z następnej mapy). Poza pokojem — sam kwadrat. Współrzędne globalne; pusty Rect2 = brak danych.
+const SAFE_ZONE_HALF_CELLS := SpawnPlanner.START_SAFE_HALF
+const CELL_PX := 16
+
+
+func start_safe_zone_rect(spawn_global: Vector2) -> Rect2:
+	if last_result == null:
+		return Rect2()
+	var cell := Vector2i((to_local(spawn_global) / CELL_PX).floor())
+	var area := Rect2i(cell - Vector2i.ONE * SAFE_ZONE_HALF_CELLS, Vector2i.ONE * (SAFE_ZONE_HALF_CELLS * 2 + 1))
+	for room: Rect2i in last_result.rooms:
+		if room.has_point(cell):
+			area = area.intersection(room)
+			break
+	return Rect2(to_global(Vector2(area.position * CELL_PX)), Vector2(area.size * CELL_PX))
+
+
 ## Klucz mapy (loading_screen_key albo biom z typu poziomu) — ekran ładowania i tło walki.
 func get_map_key() -> String:
 	return loading_screen_key if not loading_screen_key.is_empty() else str(LOADING_SCREEN_KEYS.get(level_type, ""))
@@ -343,15 +388,58 @@ func _pool_from_paths(enemy_paths: Array) -> Array:
 	for entry in enemy_paths:
 		var variants: Array[PackedScene] = []
 		for ep in (entry if entry is Array else [entry]):
-			if ResourceLoader.exists(ep):
-				var p := load(ep) as PackedScene
-				if p:
-					variants.append(p)
+			var p := enemy_scene(String(ep))
+			if p:
+				variants.append(p)
 		if variants.size() == 1:
 			pool.append(variants[0])
 		elif variants.size() > 1:
 			pool.append(variants)
 	return pool
+
+
+## Sceny wrogów z pul map trzymane przez całą sesję modułu — wczytanie (~0,4 s) nie wypada na główny wątek
+## przed ekranem ładowania każdej mapy. warm_enemy_scenes() (start modułu) zleca wczytanie w tle.
+static var _enemy_scenes := {}      # ścieżka -> PackedScene (null = brak)
+static var _enemy_requested := {}   # ścieżki wczytywane w tle (load_threaded_request)
+
+
+static func enemy_scene(path: String) -> PackedScene:
+	if _enemy_scenes.has(path):
+		return _enemy_scenes[path]
+	var p: PackedScene = null
+	if _enemy_requested.has(path):
+		_enemy_requested.erase(path)
+		p = ResourceLoader.load_threaded_get(path) as PackedScene   # czeka, jeśli jeszcze się wczytuje
+	elif ResourceLoader.exists(path):
+		p = load(path) as PackedScene
+	_enemy_scenes[path] = p
+	return p
+
+
+## Zleca wczytanie w tle scen wrogów ze wszystkich companion-JSON map ("enemies": tiery albo frakcje -> tiery).
+static func warm_enemy_scenes() -> void:
+	var dir := QuizRpgPaths.path("resources/maps/config")
+	for f in DirAccess.get_files_at(dir):
+		if not f.ends_with(".json"):
+			continue
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join(f)))
+		if not data is Dictionary:
+			continue
+		var en: Variant = (data as Dictionary).get("enemies")
+		var tier_lists: Array = []
+		if en is Array:
+			tier_lists.append(en)
+		elif en is Dictionary:
+			tier_lists.append_array((en as Dictionary).values())
+		for tiers in tier_lists:
+			if not tiers is Array:
+				continue
+			for entry in tiers:
+				for e in (entry if entry is Array else [entry]):
+					var path := QuizRpgPaths.path(String(e))
+					if not _enemy_scenes.has(path) and not _enemy_requested.has(path) and ResourceLoader.exists(path) 							and ResourceLoader.load_threaded_request(path) == OK:
+						_enemy_requested[path] = true
 
 
 ## Tiery puli ze ścieżek względem modułu (tier = ścieżka albo lista wariantów) -> ścieżki res://.
@@ -374,6 +462,10 @@ func _prepare_job(seed_val: int) -> GenJob:
 	# wariantów) — gdy scena nie ma własnej (enemy_scenes); inaczej domyślna typu poziomu.
 	# Słownik frakcja -> tiery: osobne pule (spawny z "faction", SpawnPlanner); pierwsza frakcja = pula domyślna.
 	_faction_pools = {}
+	_enemy_levels = cfg.raw.get("enemy_levels", {}) if cfg != null else {}
+	_chest_tier = clampi(int(cfg.raw.get("chest_tier", 1)) if cfg != null else 1, 1, 4)
+	_enemy_loot = cfg.raw.get("enemy_loot", {}) if cfg != null else {}
+	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -387,6 +479,8 @@ func _prepare_job(seed_val: int) -> GenJob:
 					_faction_pools[String(k)] = fp
 					if _faction_pools.size() == 1:
 						_enemy_pool = fp
+	if _enemy_pool.is_empty():
+		_enemy_pool = _pool_from_paths(_default_enemy_paths())
 	var level_key := _level_key()
 	var lsm = _get_level_state_manager()
 
@@ -503,15 +597,16 @@ func _apply_job(job: GenJob) -> void:
 	_finish_level(job)
 
 
-## Jak _apply_job, ale kafle jaskini porcjami (PAINT_CHUNK na klatkę) z postępem paska.
+## Jak _apply_job, ale kafle, encje i obiekty porcjami wg budżetu czasu klatki (FrameSlicer) z postępem paska.
 func _apply_job_async(job: GenJob) -> void:
 	last_result = job.result
 	var layers := _prepare_layers(job)
+	var slicer := FrameSlicer.new()
 	if level_type == LevelType.CAVE_DUNGEON:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
 		var tiles = job.plans.tiles
-		var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms"]
+		var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
 		var total := 0
 		for layer_name in order:
 			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
@@ -519,21 +614,22 @@ func _apply_job_async(job: GenJob) -> void:
 		for layer_name in order:
 			if layer_name == &"FloorDecor":
 				# Teren (błoto/trawa) między Floor a FloorDecor / Walls — jak execute_cave_tiles.
-				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), PAINT_CHUNK)
+				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), slicer)
 			var layer: TileMapLayer = layers.get(layer_name)
 			var cells: Dictionary = tiles.by_layer.get(layer_name, {})
 			if layer == null or cells.is_empty():
 				continue
 			var positions: Array = cells.keys()
-			for from in range(0, positions.size(), PAINT_CHUNK):
-				TilePlacementExecutor.place_range(layer, cells, positions, from, from + PAINT_CHUNK)
-				done += mini(PAINT_CHUNK, positions.size() - from)
-				GenProgress.sub(float(done) / maxf(total, 1))
-				await get_tree().process_frame
+			for from in range(0, positions.size(), PAINT_STEP):
+				TilePlacementExecutor.place_range(layer, cells, positions, from, from + PAINT_STEP)
+				done += mini(PAINT_STEP, positions.size() - from)
+				if slicer.due():
+					GenProgress.sub(float(done) / maxf(total, 1))
+					await slicer.next_frame(get_tree())
 		GenProgress.end(&"paint")
 	else:
 		_apply_grid_layers(job, layers)
-	await _finish_level(job, ENTITY_CHUNK)
+	await _finish_level(job, slicer)
 
 
 func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
@@ -553,19 +649,21 @@ func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
 	MapGeneratorBaseScript.apply_grid_to_layers(layers[&"Floor"], layers[&"Walls"], job.result, _palette(), job.rng)
 
 
-## Encje, nawigacja i wyjście — wspólne dla obu ścieżek. per_frame > 0: encje porcjami między
-## klatkami (wtedy wołać z await); 0 = od razu (wywołanie bez await jest synchroniczne).
-func _finish_level(job: GenJob, per_frame: int = 0) -> void:
+## Encje, nawigacja i wyjście — wspólne dla obu ścieżek. slicer (FrameSlicer): encje i obiekty porcjami
+## między klatkami (wtedy wołać z await); null = od razu (wywołanie bez await jest synchroniczne).
+func _finish_level(job: GenJob, slicer: FrameSlicer = null) -> void:
 	# 3. Encje (gracz, wrogowie, skrzynie)
 	GenProgress.begin(&"entities")
 	if spawn_entities_enabled:
-		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, per_frame, _faction_pools)
+		await MapGeneratorBaseScript.spawn_entities(self, job.result, _enemy_pool, job.chest_scene if job.chest_scene != null else chest_scene, door_scene, 16, slicer, _faction_pools, _enemy_levels)
 		GenProgress.end(&"entities")
 		# Obiekty z generatora obiektów (po encjach — spawn_entities czyści węzeł Objects).
 		var walls := get_node_or_null("Walls") as TileMapLayer
 		GenProgress.begin(&"props")
-		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, PROPS_BUDGET_MS if per_frame > 0 else 0)
+		await ObjectRealizer.realize(self, job.result.objects as ObjectPlan, walls.tile_set if walls else null, {&"chest": job.chest_scene if job.chest_scene != null else chest_scene}, slicer)
 		GenProgress.end(&"props")
+		_apply_chest_tier()
+		_apply_loot_tables()
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 	_setup_height_veil(job.result)
 
@@ -578,6 +676,27 @@ func _finish_level(job: GenJob, per_frame: int = 0) -> void:
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+
+
+## Ustawia tier ("chest_tier" z JSON mapy) na skrzyniach wygenerowanych na tej mapie (spawn_entities i generator obiektów).
+func _apply_chest_tier() -> void:
+	for node in get_tree().get_nodes_in_group("chests"):
+		if is_ancestor_of(node) and "tier" in node:
+			node.set("tier", _chest_tier)
+
+
+## Tabele łupu z JSON mapy ("enemy_loot" po tierze wroga, "chest_loot" dla skrzyń) na wrogach i skrzyniach wygenerowanych na tej mapie.
+func _apply_loot_tables() -> void:
+	if not _enemy_loot.is_empty():
+		for node in get_tree().get_nodes_in_group("enemies"):
+			if is_ancestor_of(node) and "loot_table" in node and "encounter_tier" in node:
+				var table: Variant = _enemy_loot.get(str(int(node.get("encounter_tier"))))
+				if table is Array:
+					node.set("loot_table", table)
+	if not _chest_loot.is_empty():
+		for node in get_tree().get_nodes_in_group("chests"):
+			if is_ancestor_of(node) and "loot_table" in node:
+				node.set("loot_table", _chest_loot)
 
 
 ## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.

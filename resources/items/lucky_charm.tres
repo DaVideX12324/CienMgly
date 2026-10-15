@@ -2,11 +2,14 @@
 
 [ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
+[ext_resource type="Texture2D" uid="uid://bg7tjdbc7bgh6" path="res://assets/item_icons/lucky_charm.png" id="2_icon"]
+
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "lucky_charm"
-display_name = "Szczesliwy Urok"
-description = "Drobny talizman dodajacy otuchy."
+icon = ExtResource("2_icon")
+display_name = "Szczęśliwy Urok"
+description = "Drobny talizman dodający otuchy."
 category = "key"
 stackable = false
 max_stack = 1
@@ -14,5 +17,5 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "accessory"
-atk_bonus = 1
-def_bonus = 1
+atk_bonus = 2
+def_bonus = 2

@@ -6,13 +6,24 @@ class_name QuizRpgEnemyData
 @export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export var is_boss: bool = false
+## Opis pokazywany przez umiejętność Skan (puste = statystyki i umiejętności wroga).
+@export_multiline var scan_text: String = ""
 
 @export_group("Combat")
 @export var question_count: int = 3
-@export var max_hp: int = 50
-@export var damage_on_wrong: int = 15
+@export var max_hp: int = 200
+## Staty walki jak w FNAfB: obrażenia = ATK × 4 − DEF celu × 2 (× mnożnik umiejętności).
+@export var attack: int = 24
+@export var defense: int = 12
+## Magia (MAT / MDF) — umiejętności z wzorem magicznym (jak w FNaFB).
+@export var magic_attack: int = 24
+@export var magic_defense: int = 12
+## AGI — kolejność w turze (bohater na lv 1: 15). Wróg z poziomem: AGI wzorcowego bohatera × agility / 15.
+@export var agility: int = 15
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
-@export var xp_reward: int = 50
+## Poziom wroga (QuizRpgEnemyXp): > 0 = XP z poziomu i tieru (mapa nadpisuje poziomem z "enemy_levels"), 0 = stałe xp_reward.
+@export_range(0, 100) var enemy_level: int = 0
+@export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3

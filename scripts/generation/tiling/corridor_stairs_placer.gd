@@ -7,6 +7,14 @@ extends RefCounted
 
 const LAYER := &"Platforms"
 const PORTAL_LAYER := &"FloorDecor"  # schody portali: Platforms należy do płaskowyżów (testy jaskiń, renderer)
+## Gradient na stopniu przy voidzie (generator_behaviour.portal_stairs_shade): osobna warstwa na samej górze
+## (nad ścianami i postaciami — decyzja usera), tworzona przez prepare_cave_layers tylko przy schodach portali.
+const SHADE_LAYER := &"PortalShade"
+## Alternatywy kafla gradientu w caves.tres (ciemna strona kafla w arkuszu = E) — domyślne, gdy config nie poda
+## portal_stairs_shade.alternatives: 1 flip_h (W), 2 transpose (S), 3 transpose + flip_v (N).
+const SHADE_ALTERNATIVES := {"E": 0, "W": 1, "S": 2, "N": 3}
+## Ile kratek lica nad ostatnim stopniem schodów E / W dostaje gradient.
+const SHADE_UP := 4
 
 
 static func plan(ctx: GenerationContext, tiles: TilePlacementPlan) -> void:
@@ -22,28 +30,39 @@ static func plan(ctx: GenerationContext, tiles: TilePlacementPlan) -> void:
 	var pst: Dictionary = ctx.generator_behaviour.get("portal_stairs_tiles", {})
 	for ps in ctx.portal_stairs:
 		var dir := String(ps.get("dir", "N"))
-		# wejście: schody w dół do jaskini — kafle przeciwnego kierunku niż na wyjściu (w górę)
-		if ps.get("entrance", false):
+		# wyjście: schody poza jaskinię — kafle przeciwnego kierunku niż na wejściu
+		if not ps.get("entrance", false):
 			dir = {"N": "S", "S": "N", "E": "W", "W": "E"}.get(dir, dir)
 		var r: Rect2i = ps.rect
+		var void_side := String(ps.get("dir", "N"))  # strona voidu = kierunek krawędzi (bez zamiany kafli wejścia)
 		var mc: Dictionary = pst.get(dir, ctx.generator_behaviour.get("platform_tiles", {}).get("stairs", {}) if dir == "N" else {})
 		if mc.is_empty():
 			push_warning("CorridorStairsPlacer: brak portal_stairs_tiles.%s — schody portalu bez kafli" % dir)
 			continue
 		if dir == "E" or dir == "W":
-			_plan_copy(ctx, tiles, r, mc, PORTAL_LAYER)
+			_plan_copy(ctx, tiles, r, mc, PORTAL_LAYER, void_side)
 		else:
 			var one: Array[Rect2i] = [r]
-			_plan_rects(ctx, tiles, one, mc, PORTAL_LAYER)
+			_plan_rects(ctx, tiles, one, mc, PORTAL_LAYER, void_side)
+		_plan_shade(ctx, tiles, r, void_side)
+	# Za schodami (PortalClearPlacer.behind_stairs_cells — kafel voidu na Walls) bez krawędzi płaskowyżu: PlateauPlacer
+	# planuje wcześniej i rysował rant na ścianach za ostatnim stopniem.
+	var plat: Dictionary = tiles.by_layer.get(LAYER, {})
+	if not plat.is_empty():
+		for c in PortalClearPlacer.behind_stairs_cells(ctx):
+			plat.erase(c)
 
 
-## Kafle modułu 1:1 na prostokąt, moduł powtarzany (size) — schody boczne E / W.
-static func _plan_copy(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect2i, cfg: Dictionary, layer: StringName) -> void:
+## Schody boczne E / W. Z "middle": [kol, wiersz] (kolumna środków w arkuszu, tyle wierszy co moduł) — w poziomie
+## lewy łącznik (kolumna 0 modułu), środki powtarzane, prawy łącznik (ostatnia kolumna); w pionie górny wiersz,
+## powtarzany środkowy, dolny. Bez "middle": moduł 1:1 powtarzany (size) jak dawniej.
+static func _plan_copy(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect2i, cfg: Dictionary, layer: StringName, void_side: String = "") -> void:
 	var src := int(cfg.get("source", 0))
 	var org: Array = cfg.get("origin", [0, 0])
 	var o := Vector2i(int(org[0]), int(org[1]))
 	var sz: Array = cfg.get("size", [r.size.x, r.size.y])
 	var ms := Vector2i(maxi(int(sz[0]), 1), maxi(int(sz[1]), 1))
+	var mid: Array = cfg.get("middle", [])
 	var table: Dictionary = ctx.priority_table
 	if table.is_empty():
 		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
@@ -53,8 +72,19 @@ static func _plan_copy(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect
 			p.pos = Vector2i(x, y)
 			p.layer = layer
 			p.source_id = src
-			# moduł powtarzany (schody dłuższe niż moduł)
-			p.atlas_coords = o + Vector2i(posmod(x - r.position.x, ms.x), posmod(y - r.position.y, ms.y))
+			if mid.size() >= 2 and ms.y >= 2:
+				var row := 0 if y == r.position.y else (ms.y - 1 if y == r.end.y - 1 else mini(1, ms.y - 1))
+				# stopień przy voidzie (W: lewy, E: prawy koniec) — dalej środek, nie łącznik (gradient na nim)
+				var at_void := (void_side == "W" and x == r.position.x) or (void_side == "E" and x == r.end.x - 1)
+				if x == r.position.x and not at_void:
+					p.atlas_coords = o + Vector2i(0, row)
+				elif x == r.end.x - 1 and not at_void:
+					p.atlas_coords = o + Vector2i(ms.x - 1, row)
+				else:
+					p.atlas_coords = Vector2i(int(mid[0]), int(mid[1])) + Vector2i(0, row)
+			else:
+				# moduł powtarzany (schody dłuższe niż moduł)
+				p.atlas_coords = o + Vector2i(posmod(x - r.position.x, ms.x), posmod(y - r.position.y, ms.y))
 			p.category = &"STAIR"
 			p.origin = r.position
 			p.tie_breaker = 10
@@ -62,7 +92,7 @@ static func _plan_copy(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect
 			tiles.queue(p)
 
 
-static func _plan_rects(ctx: GenerationContext, tiles: TilePlacementPlan, rects: Array[Rect2i], cfg: Dictionary, layer: StringName = LAYER) -> void:
+static func _plan_rects(ctx: GenerationContext, tiles: TilePlacementPlan, rects: Array[Rect2i], cfg: Dictionary, layer: StringName = LAYER, void_side: String = "") -> void:
 	if cfg.is_empty():
 		push_warning("CorridorStairsPlacer: brak modułu schodów (platform_tiles.stairs / portal_stairs_tiles) — schody bez kafli")
 		return
@@ -78,6 +108,9 @@ static func _plan_rects(ctx: GenerationContext, tiles: TilePlacementPlan, rects:
 	for r in rects:
 		for y in range(r.position.y, r.end.y):
 			var row := 0 if y == r.position.y else (last_row if y == r.end.y - 1 else mini(1, last_row))
+			# stopień przy voidzie (N: górny, S: dolny rząd) — dalej środek modułu (gradient na nim)
+			if (void_side == "N" and y == r.position.y) or (void_side == "S" and y == r.end.y - 1):
+				row = mini(1, last_row)
 			for x in range(r.position.x, r.end.x):
 				var col := 2
 				if r.size.x >= 2 and x == r.position.x:
@@ -94,3 +127,57 @@ static func _plan_rects(ctx: GenerationContext, tiles: TilePlacementPlan, rects:
 				p.tie_breaker = 10
 				PlacementPriority.assign(p, table)
 				tiles.queue(p)
+
+
+## Gradient w stronę voidu na stopniu przy voidzie (rząd / kolumna schodów od strony krawędzi) — kafel
+## generator_behaviour.portal_stairs_shade {source, coords} (ciemna strona kafla = E), alternatywa wg strony voidu (alternatives).
+static func _plan_shade(ctx: GenerationContext, tiles: TilePlacementPlan, r: Rect2i, void_side: String) -> void:
+	var cfg: Dictionary = ctx.generator_behaviour.get("portal_stairs_shade", {})
+	var alts: Dictionary = cfg.get("alternatives", SHADE_ALTERNATIVES)
+	if cfg.is_empty() or not alts.has(void_side):
+		return
+	var co: Array = cfg.get("coords", [0, 0])
+	var cells: Array[Vector2i] = []
+	match void_side:
+		"N":
+			for x in range(r.position.x, r.end.x):
+				cells.append(Vector2i(x, r.position.y))
+		"S":
+			for x in range(r.position.x, r.end.x):
+				cells.append(Vector2i(x, r.end.y - 1))
+		"W":
+			for y in range(r.position.y, r.end.y):
+				cells.append(Vector2i(r.position.x, y))
+		"E":
+			for y in range(r.position.y, r.end.y):
+				cells.append(Vector2i(r.end.x - 1, y))
+	# Gradient wchodzi też na ściany (decyzja usera): E / W — lico nad ostatnim stopniem (SHADE_UP kratek w górę),
+	# N / S — po kratce ściany w bok od ostatniego rzędu. Tylko kratki niechodliwe (ściana).
+	var extra: Array[Vector2i] = []
+	match void_side:
+		"E", "W":
+			var vx := r.end.x - 1 if void_side == "E" else r.position.x
+			for k in range(1, SHADE_UP + 1):
+				extra.append(Vector2i(vx, r.position.y - k))
+		"N", "S":
+			var vy := r.position.y if void_side == "N" else r.end.y - 1
+			extra.append(Vector2i(r.position.x - 1, vy))
+			extra.append(Vector2i(r.end.x, vy))
+	for c in extra:
+		if not GridUtils.is_walkable(ctx.grid, c):
+			cells.append(c)
+	var table: Dictionary = ctx.priority_table
+	if table.is_empty():
+		table = PlacementPriority.get_table(&"legacy_facade_wins", {})
+	for c in cells:
+		var p := TilePlacement.new()
+		p.pos = c
+		p.layer = SHADE_LAYER
+		p.source_id = int(cfg.get("source", 0))
+		p.atlas_coords = Vector2i(int(co[0]), int(co[1]))
+		p.alternative_tile = int(alts[void_side])
+		p.category = &"STAIR"
+		p.origin = r.position
+		p.tie_breaker = 10
+		PlacementPriority.assign(p, table)
+		tiles.queue(p)

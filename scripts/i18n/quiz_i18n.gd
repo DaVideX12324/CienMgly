@@ -1,0 +1,72 @@
+class_name QuizRpgI18n
+extends RefCounted
+
+## Tłumaczenia tekstów gry: płaskie słowniki klucz -> tekst w resources/i18n/<język>.json (np. "skill.onslaught.name", "skill.onslaught.desc").
+## Język wybiera opcja „Język” w Motywie (QuizTheme.language()). Brak klucza w wybranym języku -> en -> tekst zapasowy
+## (display_name z zasobu), więc nowe teksty można dopisywać stopniowo.
+
+const DIR := "res://modules/quiz_rpg/resources/i18n/"
+const FALLBACK_LANG := "en"
+
+static var _cache: Dictionary = {}  # język -> słownik
+
+
+static func t(key: String, fallback: String = "") -> String:
+	var lang := QuizTheme.language()
+	var dict := _dict(lang)
+	if dict.has(key):
+		return str(dict[key])
+	if lang != FALLBACK_LANG:
+		var en := _dict(FALLBACK_LANG)
+		if en.has(key):
+			return str(en[key])
+	return fallback if fallback != "" else key
+
+
+## Czy klucz istnieje w wybranym języku albo w en (t() zwraca wtedy tłumaczenie, a nie klucz).
+static func has(key: String) -> bool:
+	return _dict(QuizTheme.language()).has(key) or _dict(FALLBACK_LANG).has(key)
+
+
+## Klucz nazwy umiejętności z pliku zasobu: "skill.<nazwa pliku .tres bez rozszerzenia>.name".
+static func skill_name_key(res: Resource) -> String:
+	return "skill.%s.name" % res.resource_path.get_file().get_basename()
+
+
+## Klucz opisu umiejętności: "skill.<nazwa pliku .tres>.desc".
+static func skill_desc_key(res: Resource) -> String:
+	return "skill.%s.desc" % res.resource_path.get_file().get_basename()
+
+
+## Klucz tekstu z logu walki użycia umiejętności wroga: "skill.<plik .tres>.log" ({enemy}, {skill} jak w log_text).
+static func skill_log_key(res: Resource) -> String:
+	return "skill.%s.log" % res.resource_path.get_file().get_basename()
+
+
+## Klucze nazwy i opisu statusu z pliku zasobu: "status.<plik>.name" / "status.<plik>.desc".
+static func status_name_key(res: Resource) -> String:
+	return "status.%s.name" % res.resource_path.get_file().get_basename()
+
+
+static func status_desc_key(res: Resource) -> String:
+	return "status.%s.desc" % res.resource_path.get_file().get_basename()
+
+
+## Wymusza ponowne wczytanie słowników (po edycji JSON w edytorze / w testach).
+static func reload() -> void:
+	_cache.clear()
+
+
+static func _dict(lang: String) -> Dictionary:
+	if _cache.has(lang):
+		return _cache[lang]
+	var d := {}
+	var path := DIR + lang + ".json"
+	if FileAccess.file_exists(path):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if parsed is Dictionary:
+			d = parsed
+		else:
+			push_warning("QuizRpgI18n: nieprawidłowy JSON: " + path)
+	_cache[lang] = d
+	return d

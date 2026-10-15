@@ -2,11 +2,14 @@
 
 [ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
+[ext_resource type="Texture2D" uid="uid://ba5g804ggjn87" path="res://assets/item_icons/cloth_cap.png" id="2_icon"]
+
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "cloth_cap"
-display_name = "Czapka Materialowa"
-description = "Skromna ochrona glowy."
+icon = ExtResource("2_icon")
+display_name = "Czapka Materiałowa"
+description = "Skromna ochrona głowy."
 category = "part"
 stackable = false
 max_stack = 1
@@ -14,4 +17,4 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "head"
-def_bonus = 2
+def_bonus = 4

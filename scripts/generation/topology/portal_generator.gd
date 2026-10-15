@@ -7,8 +7,9 @@ extends RefCounted
 ## carve_portal_alcove; "edge" = -1 (wyjście może wtedy wybrać dowolną krawędź).
 const PORTAL_RADIUS := 2
 const CENTER_ENTRANCE_MIN_SIDE := 10
-const ALCOVE_WALL_DEPTH_N := 3  # schody wnęki w ścianie północnej: lico + krawędź
-const ALCOVE_WALL_DEPTH := 2    # S / E / W: krawędź ściany
+## Schody wnęki (alcove_stairs, decyzja usera 2026-10-11): od linii ściany (tam, gdzie stałaby podstawa lica / ściana
+## za wnęką) tyle kratek w głąb, za nimi void.
+const ALCOVE_STAIRS_DEPTH := 4
 
 
 ## Wybiera pokoje wejścia i wyjścia, rzeźbi portale i rejestruje je w ctx i result.
@@ -65,33 +66,44 @@ static func place_portals_in_rooms(
 	else:
 		entrance_data = carve_portal_in_room(ctx, entrance_room) if center_entrance else carve_portal_alcove(ctx, entrance_room)
 	register_wall_portal(result, entrance_data, flags)
-	if flags.portal_style == "alcove_stairs":
-		register_alcove_stairs(ctx, result, entrance_data, true)
-	ctx.entrance_pos = entrance_data["center"] as Vector2i
-	result.entrance_pos = ctx.entrance_pos
-	result.player_spawn = ctx.entrance_pos
-	result.entrance_zone = entrance_data["cells"] as Array[Vector2i]
-	for p in result.entrance_zone:
-		ctx.grid[p] = CellType.ENTRANCE
-		ctx.portal_zone[p] = true
+	_apply_portal(ctx, result, entrance_data, true)
 
 	var exit_room := rooms[exit_room_idx]
 	var exit_data: Dictionary = carve_portal_at_wall(ctx, exit_room, wall_style) if wall_style != "" \
 		else carve_portal_alcove(ctx, exit_room, int(entrance_data["edge"]))
 	register_wall_portal(result, exit_data, flags)
-	if flags.portal_style == "alcove_stairs":
-		register_alcove_stairs(ctx, result, exit_data, false)
-	ctx.exit_pos = exit_data["center"] as Vector2i
-	result.exit_pos = ctx.exit_pos
-	result.exit_zone = exit_data["cells"] as Array[Vector2i]
-	for p in result.exit_zone:
-		ctx.grid[p] = CellType.EXIT
-		ctx.portal_zone[p] = true
+	_apply_portal(ctx, result, exit_data, false)
 
 	# Dodatkowa gwarancja spójności po wycięciu portali
 	ConnectivityRepair.repair(ctx, corridor_width)
 
+	# Schody wnęk dopiero po naprawie spójności: jej korytarze potrafiły wejść w pas ściany za schodami (void stykał się
+	# z nową salą); głębokość schodów liczona na siatce po naprawie.
+	if flags.portal_style == "alcove_stairs":
+		register_alcove_stairs(ctx, result, entrance_data, true)
+		_apply_portal(ctx, result, entrance_data, true)
+		register_alcove_stairs(ctx, result, exit_data, false)
+		_apply_portal(ctx, result, exit_data, false)
+
 	return {"entrance_room_idx": entrance_room_idx, "exit_room_idx": exit_room_idx}
+
+
+## Punkt i strefa portalu z danych wnęki / ściany (po register_alcove_stairs — szczyt schodów i strefa ze schodami).
+static func _apply_portal(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, data: Dictionary, entrance: bool) -> void:
+	var cells := data["cells"] as Array[Vector2i]
+	var kind := CellType.ENTRANCE if entrance else CellType.EXIT
+	if entrance:
+		ctx.entrance_pos = data["center"] as Vector2i
+		result.entrance_pos = ctx.entrance_pos
+		result.player_spawn = ctx.entrance_pos
+		result.entrance_zone = cells
+	else:
+		ctx.exit_pos = data["center"] as Vector2i
+		result.exit_pos = ctx.exit_pos
+		result.exit_zone = cells
+	for q in cells:
+		ctx.grid[q] = kind
+		ctx.portal_zone[q] = true
 
 
 static func carve_portal_in_room(ctx: GenerationContext, room: Rect2i) -> Dictionary:
@@ -187,12 +199,12 @@ static func register_wall_portal(result: MapGeneratorBase.GenerationResult, data
 			result.portal_scene = flags.portal_scene
 
 
-## Schody we wnęce portalu (portal_style "alcove_stairs", wnęka carve_portal_alcove 5 × 5) jak wyjście w tutorialu: od
-## połowy wnęki przez jej tylną ścianę aż do szczytu ściany (ALCOVE_WALL_DEPTH_N / ALCOVE_WALL_DEPTH warstw), na końcu void
-## bez ściany (końcowy stopień — ręcznie albo nakładką, decyzja usera).
+## Schody we wnęce portalu (portal_style "alcove_stairs", wnęka carve_portal_alcove 5 × 5): od pierwszej warstwy ściany za
+## wnęką (linia podstawy lica) ALCOVE_STAIRS_DEPTH kratek w głąb, na końcu void bez ściany (końcowy stopień — ręcznie albo
+## nakładką, decyzja usera). Wnęka stoi dość daleko od krawędzi mapy (carve_portal_alcove), gdy ściany mniej — krócej.
 ## Kratki schodów -> podłoga i strefa portalu (lico nad strefą nie powstaje, kafle ścian na niej wymazane), przejście na
 ## szczycie schodów (data.center), ostatni rząd przy krawędzi mapy -> result.portal_void (PortalClearPlacer wymazuje
-## kafle ścian). N / S: 5 kratek szerokości, E / W: 3 rzędy (moduł schodów bocznych).
+## kafle ścian). N / S: 5 kratek szerokości, E / W: 4 rzędy (o 1 więcej w dół, moduł schodów bocznych).
 static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, data: Dictionary, entrance: bool) -> void:
 	var c: Vector2i = data.get("center", Vector2i.ZERO)
 	var edge := int(data.get("edge", -1))
@@ -200,10 +212,10 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 		return
 	var d: Vector2i = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)][edge]
 	var side := Vector2i(absi(d.y), absi(d.x))          # w poprzek schodów
-	var half := 2 if d.x == 0 else 1                     # N / S: 5 kratek szerokości, E / W: 3 rzędy
-	# Ile warstw ściany za wnęką przebijają schody: do szczytu ściany (N: lico + krawędź), zawsze >= 1 warstwa ściany
-	# zostaje przed inną podłogą (void na końcu).
-	var max_depth := ALCOVE_WALL_DEPTH_N if edge == 0 else ALCOVE_WALL_DEPTH
+	var half := 2 if d.x == 0 else 1                     # N / S: 5 kratek podłogi, E / W: 3 rzędy podłogi
+	# Ile warstw ściany za wnęką zajmują schody (najwyżej ALCOVE_STAIRS_DEPTH); zawsze >= 1 warstwa ściany zostaje przed
+	# inną podłogą (void na końcu).
+	var max_depth := ALCOVE_STAIRS_DEPTH
 	var end := c + d * 2                                 # ostatnia kratka wnęki w kierunku krawędzi
 	var layer_wall := func(k: int) -> bool:
 		for t in range(-half, half + 1):
@@ -211,12 +223,24 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 			if q.x < 0 or q.y < 0 or q.x >= ctx.width or q.y >= ctx.height or GridUtils.is_walkable(ctx.grid, q):
 				return false
 		return true
+	# Za voidem (warstwa depth + 1) dwie warstwy ochronne: ściana albo koniec mapy — void nie styka się z podłogą innej
+	# sali (wcześniej sprawdzane tylko stopień + void); pas void + 2 ma grubość 3, więc późniejsze przejścia ścian
+	# (cienkie ściany, 3H) go nie przebijają.
+	var layer_shield := func(k: int) -> bool:
+		for t in range(-half, half + 1):
+			var q: Vector2i = end + d * k + side * t
+			if q.x >= 0 and q.y >= 0 and q.x < ctx.width and q.y < ctx.height and GridUtils.is_walkable(ctx.grid, q):
+				return false
+		return true
 	var depth := 0
-	while depth < max_depth and layer_wall.call(depth + 1) and layer_wall.call(depth + 2):
+	while depth < max_depth and layer_wall.call(depth + 1) and layer_wall.call(depth + 2) and layer_shield.call(depth + 3) \
+			and layer_shield.call(depth + 4):
 		depth += 1
-	# schody: od środka wnęki (połowa) do warstwy `depth` za nią; void: warstwa depth + 1
-	var a_cell: Vector2i = c - side * half
-	var b_cell: Vector2i = end + d * depth + side * half
+	# schody: od pierwszej warstwy ściany (linia podstawy lica) do warstwy `depth`; void: warstwa depth + 1. Bez ściany
+	# za wnęką (depth 0) — jak dawniej od środka wnęki.
+	# W E / W grafika schodów (rect) sięga o 1 kratkę w dół (t=2) pod dolną ścianę (chowa się pod nią, bez poszerzania ścian).
+	var a_cell: Vector2i = (end + d if depth >= 1 else c) - side * half
+	var b_cell: Vector2i = end + d * depth + side * (half if d.x == 0 else 2)
 	var rect := Rect2i(Vector2i(mini(a_cell.x, b_cell.x), mini(a_cell.y, b_cell.y)), (a_cell - b_cell).abs() + Vector2i.ONE)
 	var top: Vector2i = end + d * depth
 	var dir: String = ["N", "E", "S", "W"][edge]
@@ -227,21 +251,31 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 	var have := {}
 	for q in cells:
 		have[q] = true
-	for y in range(rect.position.y, rect.end.y):
-		for x in range(rect.position.x, rect.end.x):
-			ctx.grid[Vector2i(x, y)] = CellType.FLOOR
+	# Podłogę drążymy tylko w obszarze użytkowym (-half..half) — dolna ściana w E/W (t=2) nie jest poszerzana.
+	for k in range(1 if depth >= 1 else 0, depth + 1):
+		for t in range(-half, half + 1):
+			var q: Vector2i = (end if depth >= 1 else c) + d * k + side * t
+			ctx.grid[q] = CellType.FLOOR
 	# Strefa portalu: kratki schodów poza tymi tuż pod ścianą (jak górny rząd wnęki) — tam stopa lica / krawędzi dołu.
 	var is_void := {}
 	for q in void_cells:
 		is_void[q] = true
-	for y in range(rect.position.y, rect.end.y):
-		for x in range(rect.position.x, rect.end.x):
-			var q := Vector2i(x, y)
+	for k in range(1 if depth >= 1 else 0, depth + 1):
+		for t in range(-half, half + 1):
+			var q: Vector2i = (end if depth >= 1 else c) + d * k + side * t
 			var up := q + Vector2i(0, -1)
 			if have.has(q) or (q != top and not is_void.has(up) and not GridUtils.is_walkable(ctx.grid, up)):
 				continue
 			cells.append(q)
 			have[q] = true
+	# Ostatni rząd wnęki (pod linią ściany) wnęka pomija (stopa lica) — nad nim są teraz schody, więc należy do strefy:
+	# łączy wnękę ze schodami w jedną strefę portalu (płaskowyże trzymają ją na jednej wysokości).
+	if depth >= 1:
+		for t in range(-half, half + 1):
+			var q: Vector2i = end + side * t
+			if not have.has(q) and GridUtils.is_walkable(ctx.grid, q):
+				cells.append(q)
+				have[q] = true
 	data["cells"] = cells
 	data["center"] = top
 	result.portal_stairs.append({"rect": rect, "dir": dir, "entrance": entrance})
@@ -250,12 +284,47 @@ static func register_alcove_stairs(ctx: GenerationContext, result: MapGeneratorB
 
 
 ## Wyrzeźbi dedykowany tunel portalowy z komory ku krawędzi mapy, zakończony niszą wejściową/wyjściową.
+## Długość tunelu wnęki (alcove_stairs) i liczba warstw litej ściany (albo końca mapy) za wnęką (5 × 5, środek =
+## start + dir * długość), najwyżej ALCOVE_STAIRS_DEPTH schodów + void + 2 warstwy ochronne. Najpierw losowa 5–7, potem
+## pozostałe od najdłuższej do 3; pierwsza z pełnym zapasem wygrywa, inaczej ta z największym. [długość, warstwy].
+static func _stairs_tunnel_length(ctx: GenerationContext, start: Vector2i, dir: Vector2i, perp: Vector2i, max_length: int, rng: RandomNumberGenerator) -> Array:
+	var need := ALCOVE_STAIRS_DEPTH + 3
+	var first := mini(rng.randi_range(5, 7), max_length)
+	var order: Array[int] = [first]
+	for n in range(mini(7, max_length), 2, -1):
+		if n != first:
+			order.append(n)
+	var best := [-1, -1]
+	for n in order:
+		var end := start + dir * n + dir * 2   # ostatni rząd wnęki w kierunku krawędzi
+		var layers := 0
+		for k in range(1, need + 1):
+			var solid := true
+			for w in range(-2, 3):
+				var q: Vector2i = end + dir * k + perp * w
+				if q.x >= 0 and q.y >= 0 and q.x < ctx.width and q.y < ctx.height and GridUtils.is_walkable(ctx.grid, q):
+					solid = false
+					break
+			if not solid:
+				break
+			layers += 1
+		if layers >= need:
+			return [n, layers]
+		if layers > int(best[1]):
+			best = [n, layers]
+	return best
+
+
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge: int = -1) -> Dictionary:
 	const ALCOVE_RADIUS := 2
 	const MAP_BORDER := 2
 	const MIN_TUNNEL_LENGTH := 5
-	const ALCOVE_CENTER_MARGIN := ALCOVE_RADIUS + MAP_BORDER
+	# Środek wnęki od krawędzi mapy: promień + ramka; przy schodach wnęki dodatkowo miejsce na ALCOVE_STAIRS_DEPTH
+	# warstw ściany i void za nimi.
+	var alcove_center_margin := ALCOVE_RADIUS + MAP_BORDER
+	if ctx.flags != null and ctx.flags.portal_style == "alcove_stairs":
+		alcove_center_margin = maxi(alcove_center_margin, ALCOVE_RADIUS + ALCOVE_STAIRS_DEPTH + 1)
 
 	var grid := ctx.grid
 	var map_w := ctx.width
@@ -277,53 +346,80 @@ static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge
 	var chosen_perp := Vector2i.ZERO
 	var chosen_max_length := 0
 	var chosen_room_bridge_steps := 0
+	var chosen_tunnel_length := -1  # alcove_stairs: długość z miejscem na schody za wnęką (-1 = losowa)
+	var stairs_style := ctx.flags != null and ctx.flags.portal_style == "alcove_stairs"
+	var fallback: Dictionary = {}   # krawędź z największym zapasem ściany, gdy żadna nie ma miejsca na pełne schody
 
-	for edge_data in edge_dists:
-		var edge := int(edge_data["edge"])
-		if edge == avoid_edge:
-			continue
-
-		var dir := Vector2i.ZERO
-		var tunnel_start := Vector2i.ZERO
-		var perp := Vector2i.ZERO
-		var max_length := 0
-
-		var bridge_steps := 0
-		match edge:
-			0:
-				dir = Vector2i(0, -1)
-				tunnel_start = Vector2i(center.x, room.position.y - 1)
-				perp = Vector2i(1, 0)
-				max_length = tunnel_start.y - ALCOVE_CENTER_MARGIN
-				bridge_steps = center.y - tunnel_start.y
-			1:
-				dir = Vector2i(1, 0)
-				tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
-				perp = Vector2i(0, 1)
-				max_length = map_w - 1 - ALCOVE_CENTER_MARGIN - tunnel_start.x
-				bridge_steps = tunnel_start.x - center.x
-			2:
-				dir = Vector2i(0, 1)
-				tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
-				perp = Vector2i(1, 0)
-				max_length = map_h - 1 - ALCOVE_CENTER_MARGIN - tunnel_start.y
-				bridge_steps = tunnel_start.y - center.y
-			3:
-				dir = Vector2i(-1, 0)
-				tunnel_start = Vector2i(room.position.x - 1, center.y)
-				perp = Vector2i(0, 1)
-				max_length = tunnel_start.x - ALCOVE_CENTER_MARGIN
-				bridge_steps = center.x - tunnel_start.x
-
-		if max_length >= MIN_TUNNEL_LENGTH:
-			chosen_edge = edge
-			chosen_dir = dir
-			chosen_start = tunnel_start
-			chosen_perp = perp
-			chosen_max_length = max_length
-			chosen_room_bridge_steps = bridge_steps
+	# Runda 0: zwykłe zasady. Runda 1 (tylko schody wnęki, gdy żadna krawędź nie mieści choć 1 schodka + void + 2 warstw
+	# ochronnych): także krawędź wejścia i krótszy tunel (od 3) — inaczej void schodów lądował na podłodze sali obok.
+	for pass_i in range(2 if stairs_style else 1):
+		if pass_i == 1 and (chosen_edge != -1 or int(fallback.get("layers", -1)) >= 4):
 			break
+		for edge_data in edge_dists:
+			var edge := int(edge_data["edge"])
+			if edge == avoid_edge and pass_i == 0:
+				continue
 
+			var dir := Vector2i.ZERO
+			var tunnel_start := Vector2i.ZERO
+			var perp := Vector2i.ZERO
+			var max_length := 0
+
+			var bridge_steps := 0
+			match edge:
+				0:
+					dir = Vector2i(0, -1)
+					tunnel_start = Vector2i(center.x, room.position.y - 1)
+					perp = Vector2i(1, 0)
+					max_length = tunnel_start.y - alcove_center_margin
+					bridge_steps = center.y - tunnel_start.y
+				1:
+					dir = Vector2i(1, 0)
+					tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
+					perp = Vector2i(0, 1)
+					max_length = map_w - 1 - alcove_center_margin - tunnel_start.x
+					bridge_steps = tunnel_start.x - center.x
+				2:
+					dir = Vector2i(0, 1)
+					tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
+					perp = Vector2i(1, 0)
+					max_length = map_h - 1 - alcove_center_margin - tunnel_start.y
+					bridge_steps = tunnel_start.y - center.y
+				3:
+					dir = Vector2i(-1, 0)
+					tunnel_start = Vector2i(room.position.x - 1, center.y)
+					perp = Vector2i(0, 1)
+					max_length = tunnel_start.x - alcove_center_margin
+					bridge_steps = center.x - tunnel_start.x
+
+			if max_length >= (MIN_TUNNEL_LENGTH if pass_i == 0 else 3):
+				var cand := {"edge": edge, "dir": dir, "start": tunnel_start, "perp": perp, "max": max_length, "bridge": bridge_steps}
+				if stairs_style:
+					var fit: Array = _stairs_tunnel_length(ctx, tunnel_start, dir, perp, max_length, rng)
+					if int(fit[1]) < ALCOVE_STAIRS_DEPTH + 3:
+						cand["len"] = int(fit[0])
+						cand["layers"] = int(fit[1])
+						if fallback.is_empty() or int(fit[1]) > int(fallback.get("layers", -1)):
+							fallback = cand
+						continue
+					chosen_tunnel_length = int(fit[0])
+				chosen_edge = edge
+				chosen_dir = dir
+				chosen_start = tunnel_start
+				chosen_perp = perp
+				chosen_max_length = max_length
+				chosen_room_bridge_steps = bridge_steps
+				break
+
+	if chosen_edge == -1 and not fallback.is_empty():
+		if int(fallback.get("layers", -1)) >= 4:   # co najmniej 1 schodek + void + 2 ochronne
+			chosen_tunnel_length = int(fallback["len"])
+		chosen_edge = int(fallback["edge"])
+		chosen_dir = fallback["dir"]
+		chosen_start = fallback["start"]
+		chosen_perp = fallback["perp"]
+		chosen_max_length = int(fallback["max"])
+		chosen_room_bridge_steps = int(fallback["bridge"])
 	if chosen_edge == -1:
 		push_error("PortalGenerator: no safe edge for portal alcove.")
 		return {"center": center, "edge": -1, "cells": []}
@@ -338,7 +434,7 @@ static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge
 		bridge_pos += chosen_dir
 
 	# 2. Tunel portalowy ku krawędzi mapy
-	var tunnel_length := mini(rng.randi_range(5, 7), chosen_max_length)
+	var tunnel_length := chosen_tunnel_length if chosen_tunnel_length >= 0 else mini(rng.randi_range(5, 7), chosen_max_length)
 	var current := chosen_start
 	for i in range(tunnel_length):
 		for w in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):

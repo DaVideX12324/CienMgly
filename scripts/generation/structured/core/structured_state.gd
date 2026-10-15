@@ -115,14 +115,16 @@ func prefix(m: PackedByteArray) -> PackedInt32Array:
 	var W1 := w + 1
 	var p := PackedInt32Array()
 	p.resize(W1 * (h + 1))
+	var i := 0
+	var o := W1 + 1
 	for y in range(h):
 		var run := 0
-		var row := y * w
-		var o := (y + 1) * W1
-		var o0 := y * W1
 		for x in range(w):
-			run += m[row + x]
-			p[o + x + 1] = p[o0 + x + 1] + run
+			run += m[i]
+			p[o] = p[o - W1] + run
+			i += 1
+			o += 1
+		o += 1
 	return p
 
 
@@ -135,39 +137,121 @@ func box(p: PackedInt32Array, x0: int, y0: int, x1: int, y1: int) -> int:
 	return p[(y1 + 1) * W1 + x1 + 1] - p[y0 * W1 + x1 + 1] - p[(y1 + 1) * W1 + x0] + p[y0 * W1 + x0]
 
 
-## Dylatacja prostokątem (2rx + 1) × (2ry + 1).
+## Dylatacja prostokątem (2rx + 1) × (2ry + 1): 1 tam, gdzie w oknie (przyciętym do mapy) jest niezerowa
+## kratka. Bez sum na kratkę — przesunięcia całej maski (slice w silniku) i OR po 8 kratek naraz
+## (_or_window); okno wierszy liczone na płaskiej tablicy, więc kolumny przy brzegach (rx od krawędzi),
+## które złapały kratki sąsiedniego wiersza, liczone osobno wprost.
 func dilate(m: PackedByteArray, rx: int, ry: int) -> PackedByteArray:
 	if rx == 0 and ry == 0:
 		return m.duplicate()
-	var p := prefix(m)
-	var out := new_mask()
-	for y in range(h):
-		var row := y * w
-		for x in range(w):
-			if box(p, x - rx, y - ry, x + rx, y + ry) > 0:
-				out[row + x] = 1
+	var n := w * h
+	var src := m
+	if m.count(0) + m.count(1) != n:   # wartości > 1 (np. bity osi) -> 0/1
+		src = new_mask()
+		for i in range(n):
+			if m[i]:
+				src[i] = 1
+	var out := src
+	if rx > 0:
+		out = _or_window(src, rx, 1)
+		# Brzegi wierszy: okno nie wychodzi poza wiersz.
+		var e := mini(rx, w)
+		for y in range(h):
+			var row := y * w
+			for x in range(e):
+				out[row + x] = 1 if _row_any(src, row, 0, mini(w - 1, x + rx)) else 0
+			for x in range(maxi(e, w - rx), w):
+				out[row + x] = 1 if _row_any(src, row, maxi(0, x - rx), w - 1) else 0
+	if ry > 0:
+		out = _or_window(out, ry, w)
 	return out
+
+
+## OR okna [-r, r] kroków `step` bajtów (1 = w wierszu, w = w kolumnie) na płaskiej masce 0/1; poza tablicą 0.
+## Okno 2r + 1 z podwajania (okna 1, 2, 4, …) — log2 przebiegów OR zamiast 2r.
+func _or_window(m: PackedByteArray, r: int, step: int) -> PackedByteArray:
+	var L := 2 * r + 1
+	# win[i] = OR m[i - r .. i - r + (p - 1)] (kroki `step`): maska z r * step zerami z przodu (bez obcinania
+	# końca — okno kratek przy końcu sięga za nią), wynik = pierwsze n bajtów.
+	var win := PackedByteArray()
+	win.resize(r * step)
+	win.append_array(m)
+	var p := 1
+	while p * 2 <= L:
+		win = _or_bytes(win, _shift(win, p * step))
+		p *= 2
+	if p < L:
+		win = _or_bytes(win, _shift(win, (L - p) * step))
+	return win.slice(0, m.size())
+
+
+## out[i] = m[i + k] (poza tablicą 0).
+static func _shift(m: PackedByteArray, k: int) -> PackedByteArray:
+	var n := m.size()
+	if k == 0:
+		return m
+	var z := PackedByteArray()
+	z.resize(mini(absi(k), n))
+	if k > 0:
+		var out := m.slice(mini(k, n))
+		out.append_array(z)
+		return out
+	var out2 := z
+	out2.append_array(m.slice(0, maxi(0, n + k)))
+	return out2
+
+
+func _row_any(m: PackedByteArray, row: int, x0: int, x1: int) -> bool:
+	for x in range(x0, x1 + 1):
+		if m[row + x]:
+			return true
+	return false
+
+
+## Maska jako int64 po 8 bajtów (dopełniona zerami).
+static func _q(m: PackedByteArray) -> PackedInt64Array:
+	var pad := (8 - m.size() % 8) % 8
+	if pad == 0:
+		return m.to_int64_array()
+	var b := m.duplicate()
+	b.resize(m.size() + pad)
+	return b.to_int64_array()
+
+
+static func _unq(q: PackedInt64Array, n: int) -> PackedByteArray:
+	var b := q.to_byte_array()
+	b.resize(n)
+	return b
+
+
+static func _or_bytes(a: PackedByteArray, b: PackedByteArray) -> PackedByteArray:
+	var qa := _q(a)
+	var qb := _q(b)
+	for i in range(qa.size()):
+		qa[i] |= qb[i]
+	return _unq(qa, a.size())
 
 
 func m_and(a: PackedByteArray, b: PackedByteArray) -> PackedByteArray:
-	var out := new_mask()
-	for i in range(w * h):
-		out[i] = a[i] & b[i]
-	return out
+	var qa := _q(a)
+	var qb := _q(b)
+	for i in range(qa.size()):
+		qa[i] &= qb[i]
+	return _unq(qa, w * h)
 
 
 func m_or(a: PackedByteArray, b: PackedByteArray) -> PackedByteArray:
-	var out := new_mask()
-	for i in range(w * h):
-		out[i] = a[i] | b[i]
-	return out
+	return _or_bytes(a, b)
 
 
+## a i nie b; `a` to maska 0/1 (wynik jak a & (1 - b) na kratkę).
 func m_andnot(a: PackedByteArray, b: PackedByteArray) -> PackedByteArray:
-	var out := new_mask()
-	for i in range(w * h):
-		out[i] = a[i] & (1 - b[i])
-	return out
+	const ONES := 0x0101010101010101
+	var qa := _q(a)
+	var qb := _q(b)
+	for i in range(qa.size()):
+		qa[i] &= ~qb[i] & ONES
+	return _unq(qa, w * h)
 
 
 func m_any(a: PackedByteArray) -> bool:
@@ -177,24 +261,58 @@ func m_any(a: PackedByteArray) -> bool:
 ## Odległość Manhattana do najbliższej kratki maski (dwa przebiegi); brak maski = duża liczba.
 func distance_to(m: PackedByteArray) -> PackedInt32Array:
 	const BIG := 1 << 20
+	var n := w * h
 	var d := PackedInt32Array()
-	d.resize(w * h)
-	for i in range(w * h):
-		d[i] = 0 if m[i] else BIG
+	d.resize(n)
+	d.fill(BIG)
+	var i := m.find(1)
+	while i >= 0:
+		d[i] = 0
+		i = m.find(1, i + 1)
+	if m.count(0) + m.count(1) != n:   # wartości > 1 — rzadkie, wprost
+		for j in range(n):
+			if m[j]:
+				d[j] = 0
+	# Przebieg w przód: min(sam, lewy + 1, górny + 1); `left` = już poprawiony lewy sąsiad.
+	i = 0
 	for y in range(h):
-		for x in range(w):
-			var i := y * w + x
-			var v := d[i]
-			if x > 0 and d[i - 1] + 1 < v: v = d[i - 1] + 1
-			if y > 0 and d[i - w] + 1 < v: v = d[i - w] + 1
-			d[i] = v
+		var left := BIG
+		if y == 0:
+			for x in range(w):
+				var v := d[i]
+				if left + 1 < v: v = left + 1
+				d[i] = v
+				left = v
+				i += 1
+		else:
+			for x in range(w):
+				var v := d[i]
+				var u := d[i - w] + 1
+				if u < v: v = u
+				if left + 1 < v: v = left + 1
+				d[i] = v
+				left = v
+				i += 1
+	# Przebieg wstecz: min(sam, prawy + 1, dolny + 1).
+	i = n - 1
 	for y in range(h - 1, -1, -1):
-		for x in range(w - 1, -1, -1):
-			var i := y * w + x
-			var v := d[i]
-			if x < w - 1 and d[i + 1] + 1 < v: v = d[i + 1] + 1
-			if y < h - 1 and d[i + w] + 1 < v: v = d[i + w] + 1
-			d[i] = v
+		var right := BIG
+		if y == h - 1:
+			for x in range(w):
+				var v := d[i]
+				if right + 1 < v: v = right + 1
+				d[i] = v
+				right = v
+				i -= 1
+		else:
+			for x in range(w):
+				var v := d[i]
+				var u := d[i + w] + 1
+				if u < v: v = u
+				if right + 1 < v: v = right + 1
+				d[i] = v
+				right = v
+				i -= 1
 	return d
 
 
@@ -328,3 +446,17 @@ class LocalSum:
 
 	func has(x: int, y: int) -> bool:
 		return count(x, y, x, y) > 0
+
+
+## Suma `all` bez `sub` (kratki sub ⊆ all, np. wszystkie pokoje bez jednego) — bez sum osobno dla każdego wariantu.
+class DiffSum extends LocalSum:
+	var all: LocalSum
+	var sub: LocalSum
+
+	func _init(a: LocalSum, b: LocalSum) -> void:
+		all = a
+		sub = b
+		empty = false
+
+	func count(ax0: int, ay0: int, ax1: int, ay1: int) -> int:
+		return all.count(ax0, ay0, ax1, ay1) - sub.count(ax0, ay0, ax1, ay1)

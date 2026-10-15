@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bpuxary8ukqnd"]
 
 [ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_frame.gd" id="frame_script"]
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="StatusPanel" type="VBoxContainer" unique_id=1379284490]
@@ -12,366 +13,502 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="ActorHeader" type="HBoxContainer" parent="." unique_id=266585672]
+[node name="ActorHeaderFrame" type="PanelContainer" parent="." unique_id=1771400010]
+layout_mode = 2
+theme_type_variation = &"QuizFrame"
+script = ExtResource("frame_script")
+
+[node name="ActorHeader" type="HBoxContainer" parent="ActorHeaderFrame" unique_id=266585672]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Portrait" type="TextureRect" parent="ActorHeader" unique_id=1207230364]
+[node name="Portrait" type="TextureRect" parent="ActorHeaderFrame/ActorHeader" unique_id=1207230364]
+texture_filter = 1
 custom_minimum_size = Vector2(128, 128)
 layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="InfoVBox" type="VBoxContainer" parent="ActorHeader" unique_id=1423273209]
+[node name="InfoVBox" type="VBoxContainer" parent="ActorHeaderFrame/ActorHeader" unique_id=1423273209]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="NameLabel" type="Label" parent="ActorHeader/InfoVBox" unique_id=1602100319]
+[node name="NameLabel" type="Label" parent="ActorHeaderFrame/ActorHeader/InfoVBox" unique_id=1602100319]
 layout_mode = 2
 text = "Bohater LV 1"
 
-[node name="HPRow" type="HBoxContainer" parent="ActorHeader/InfoVBox" unique_id=348814972]
+[node name="HPRow" type="HBoxContainer" parent="ActorHeaderFrame/ActorHeader/InfoVBox" unique_id=348814972]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=1849313518]
+[node name="BarLabel" type="Label" parent="ActorHeaderFrame/ActorHeader/InfoVBox/HPRow" unique_id=1849313518]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Zycie"
+text = "HP"
 
-[node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/HPRow" unique_id=1867729771]
+[node name="BarProgress" type="ProgressBar" parent="ActorHeaderFrame/ActorHeader/InfoVBox/HPRow" unique_id=1867729771]
 theme_type_variation = &"QuizBarLP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/HPRow" unique_id=169374251]
+[node name="BarValue" type="Label" parent="ActorHeaderFrame/ActorHeader/InfoVBox/HPRow" unique_id=169374251]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "50/100"
 
-[node name="SPRow" type="HBoxContainer" parent="ActorHeader/InfoVBox" unique_id=145424124]
+[node name="SPRow" type="HBoxContainer" parent="ActorHeaderFrame/ActorHeader/InfoVBox" unique_id=145424124]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="BarLabel" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=245359012]
+[node name="BarLabel" type="Label" parent="ActorHeaderFrame/ActorHeader/InfoVBox/SPRow" unique_id=245359012]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Mana"
+text = "SP"
 
-[node name="BarProgress" type="ProgressBar" parent="ActorHeader/InfoVBox/SPRow" unique_id=462122799]
+[node name="BarProgress" type="ProgressBar" parent="ActorHeaderFrame/ActorHeader/InfoVBox/SPRow" unique_id=462122799]
 theme_type_variation = &"QuizBarSP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="BarValue" type="Label" parent="ActorHeader/InfoVBox/SPRow" unique_id=1721609964]
+[node name="BarValue" type="Label" parent="ActorHeaderFrame/ActorHeader/InfoVBox/SPRow" unique_id=1721609964]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "50/100"
 
-[node name="StatusInfoLabel" type="Label" parent="." unique_id=1018390951]
+[node name="StatusBarsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400011]
+visible = false
 layout_mode = 2
+theme_type_variation = &"QuizFrame"
+script = ExtResource("frame_script")
 
-[node name="StatusBarsVBox" type="VBoxContainer" parent="." unique_id=911025984]
+[node name="StatusBarsVBox" type="VBoxContainer" parent="StatusBarsVBoxFrame" unique_id=911025984]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="StatusHPRow" type="HBoxContainer" parent="StatusBarsVBox" unique_id=1740829769]
+[node name="StatusHPRow" type="HBoxContainer" parent="StatusBarsVBoxFrame/StatusBarsVBox" unique_id=1740829769]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="BarLabel" type="Label" parent="StatusBarsVBox/StatusHPRow" unique_id=2106338664]
+[node name="BarLabel" type="Label" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusHPRow" unique_id=2106338664]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Zycie"
+text = "HP"
 
-[node name="BarProgress" type="ProgressBar" parent="StatusBarsVBox/StatusHPRow" unique_id=477757530]
+[node name="BarProgress" type="ProgressBar" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusHPRow" unique_id=477757530]
 theme_type_variation = &"QuizBarLP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="BarValue" type="Label" parent="StatusBarsVBox/StatusHPRow" unique_id=2043001169]
+[node name="BarValue" type="Label" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusHPRow" unique_id=2043001169]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "50/100"
 
-[node name="StatusSPRow" type="HBoxContainer" parent="StatusBarsVBox" unique_id=1554990472]
+[node name="StatusSPRow" type="HBoxContainer" parent="StatusBarsVBoxFrame/StatusBarsVBox" unique_id=1554990472]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="BarLabel" type="Label" parent="StatusBarsVBox/StatusSPRow" unique_id=2114113368]
+[node name="BarLabel" type="Label" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusSPRow" unique_id=2114113368]
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
-text = "Mana"
+text = "SP"
 
-[node name="BarProgress" type="ProgressBar" parent="StatusBarsVBox/StatusSPRow" unique_id=1411324527]
+[node name="BarProgress" type="ProgressBar" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusSPRow" unique_id=1411324527]
 theme_type_variation = &"QuizBarSP"
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
+size_flags_vertical = 4
 size_flags_horizontal = 3
 value = 50.0
 show_percentage = false
 script = ExtResource("quiz_bar")
 
-[node name="BarValue" type="Label" parent="StatusBarsVBox/StatusSPRow" unique_id=351755002]
+[node name="BarValue" type="Label" parent="StatusBarsVBoxFrame/StatusBarsVBox/StatusSPRow" unique_id=351755002]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "50/100"
 
-[node name="StatusStatsVBox" type="VBoxContainer" parent="." unique_id=1752907442]
+[node name="StatusStatsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400012]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+script = ExtResource("frame_script")
+
+[node name="StatsRow" type="HBoxContainer" parent="StatusStatsVBoxFrame" unique_id=1771400111]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="StatusStatsVBox" type="GridContainer" parent="StatusStatsVBoxFrame/StatsRow" unique_id=1752907442]
+layout_mode = 2
+columns = 5
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 6
+
+[node name="StatusStatRow0" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1654304888]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0" unique_id=489419686]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Control" unique_id=408945014]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0" unique_id=1486605893]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Margin" unique_id=1482586924]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1674424260]
+layout_mode = 2
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1585974651]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusStatRow1" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=186821712]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1" unique_id=32636424]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Control" unique_id=579108228]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1" unique_id=907109541]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Margin" unique_id=2043758035]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1814879311]
+layout_mode = 2
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1729377861]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusStatRow2" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1771200401]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2" unique_id=1771200402]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Control" unique_id=1771200403]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2" unique_id=1771200404]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Margin" unique_id=1771200405]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200406]
+layout_mode = 2
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow2/Margin/ContentRow" unique_id=1771200407]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusStatRow3" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1771200408]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3" unique_id=1771200409]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Control" unique_id=1771200410]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3" unique_id=1771200411]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin" unique_id=1771200412]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200413]
+layout_mode = 2
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200414]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusStatRow4" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1771200500]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4" unique_id=1771200501]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Control" unique_id=1771200502]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4" unique_id=1771200503]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Margin" unique_id=1771200504]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Margin/ContentRow" unique_id=1771200505]
+layout_mode = 2
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Margin/ContentRow" unique_id=1771200506]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusInfoLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow" unique_id=1018390951]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="StatusEquipVBoxFrame" type="PanelContainer" parent="." unique_id=1771400013]
+layout_mode = 2
+theme_type_variation = &"QuizFrame"
+script = ExtResource("frame_script")
+
+[node name="StatusEquipVBox" type="VBoxContainer" parent="StatusEquipVBoxFrame" unique_id=1623688138]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="StatusStatRow0" type="PanelContainer" parent="StatusStatsVBox" unique_id=1654304888]
+[node name="StatusEquipRow0" type="PanelContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox" unique_id=537629289]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusStatsVBox/StatusStatRow0" unique_id=489419686]
+[node name="Control" type="Control" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow0" unique_id=810597247]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBox/StatusStatRow0/Control" unique_id=408945014]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow0/Control" unique_id=1425712345]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusStatsVBox/StatusStatRow0" unique_id=1486605893]
+[node name="Margin" type="MarginContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow0" unique_id=848761379]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBox/StatusStatRow0/Margin" unique_id=1482586924]
+[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow0/Margin" unique_id=599243761]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1674424260]
+[node name="LeftLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow0/Margin/ContentRow" unique_id=575268675]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightLabel" type="Label" parent="StatusStatsVBox/StatusStatRow0/Margin/ContentRow" unique_id=1585974651]
+[node name="RightLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow0/Margin/ContentRow" unique_id=784088471]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="StatusStatRow1" type="PanelContainer" parent="StatusStatsVBox" unique_id=186821712]
+[node name="StatusEquipRow1" type="PanelContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox" unique_id=1234180169]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusStatsVBox/StatusStatRow1" unique_id=32636424]
+[node name="Control" type="Control" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow1" unique_id=818902856]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBox/StatusStatRow1/Control" unique_id=579108228]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow1/Control" unique_id=222777157]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusStatsVBox/StatusStatRow1" unique_id=907109541]
+[node name="Margin" type="MarginContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow1" unique_id=1439915435]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBox/StatusStatRow1/Margin" unique_id=2043758035]
+[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow1/Margin" unique_id=1918810152]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1814879311]
+[node name="LeftLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow1/Margin/ContentRow" unique_id=1753503487]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightLabel" type="Label" parent="StatusStatsVBox/StatusStatRow1/Margin/ContentRow" unique_id=1729377861]
+[node name="RightLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow1/Margin/ContentRow" unique_id=843414406]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="StatusEquipVBox" type="VBoxContainer" parent="." unique_id=1623688138]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="StatusEquipRow0" type="PanelContainer" parent="StatusEquipVBox" unique_id=537629289]
+[node name="StatusEquipRow2" type="PanelContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox" unique_id=2061420414]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusEquipVBox/StatusEquipRow0" unique_id=810597247]
+[node name="Control" type="Control" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow2" unique_id=591213827]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBox/StatusEquipRow0/Control" unique_id=1425712345]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow2/Control" unique_id=51946587]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusEquipVBox/StatusEquipRow0" unique_id=848761379]
+[node name="Margin" type="MarginContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow2" unique_id=1316576010]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBox/StatusEquipRow0/Margin" unique_id=599243761]
+[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow2/Margin" unique_id=1928338250]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow0/Margin/ContentRow" unique_id=575268675]
+[node name="LeftLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow2/Margin/ContentRow" unique_id=478054739]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow0/Margin/ContentRow" unique_id=784088471]
+[node name="RightLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow2/Margin/ContentRow" unique_id=1157955955]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="StatusEquipRow1" type="PanelContainer" parent="StatusEquipVBox" unique_id=1234180169]
+[node name="StatusEquipRow3" type="PanelContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox" unique_id=1915968704]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusEquipVBox/StatusEquipRow1" unique_id=818902856]
+[node name="Control" type="Control" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow3" unique_id=2095891518]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBox/StatusEquipRow1/Control" unique_id=222777157]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow3/Control" unique_id=2038392720]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusEquipVBox/StatusEquipRow1" unique_id=1439915435]
+[node name="Margin" type="MarginContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow3" unique_id=1449053435]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBox/StatusEquipRow1/Margin" unique_id=1918810152]
+[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow3/Margin" unique_id=1214562644]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow1/Margin/ContentRow" unique_id=1753503487]
+[node name="LeftLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow3/Margin/ContentRow" unique_id=1565978735]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow1/Margin/ContentRow" unique_id=843414406]
+[node name="RightLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow3/Margin/ContentRow" unique_id=1503265789]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="StatusEquipRow2" type="PanelContainer" parent="StatusEquipVBox" unique_id=2061420414]
+[node name="StatusEquipRow4" type="PanelContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox" unique_id=993560133]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="StatusEquipVBox/StatusEquipRow2" unique_id=591213827]
+[node name="Control" type="Control" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow4" unique_id=2030424144]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBox/StatusEquipRow2/Control" unique_id=51946587]
+[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow4/Control" unique_id=2035846625]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="StatusEquipVBox/StatusEquipRow2" unique_id=1316576010]
+[node name="Margin" type="MarginContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow4" unique_id=540342929]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBox/StatusEquipRow2/Margin" unique_id=1928338250]
+[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow4/Margin" unique_id=738418602]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow2/Margin/ContentRow" unique_id=478054739]
+[node name="LeftLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow4/Margin/ContentRow" unique_id=1187877893]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RightLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow2/Margin/ContentRow" unique_id=1157955955]
-layout_mode = 2
-horizontal_alignment = 2
-
-[node name="StatusEquipRow3" type="PanelContainer" parent="StatusEquipVBox" unique_id=1915968704]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
-
-[node name="Control" type="Control" parent="StatusEquipVBox/StatusEquipRow3" unique_id=2095891518]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBox/StatusEquipRow3/Control" unique_id=2038392720]
-visible = false
-layout_mode = 0
-
-[node name="Margin" type="MarginContainer" parent="StatusEquipVBox/StatusEquipRow3" unique_id=1449053435]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 6
-
-[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBox/StatusEquipRow3/Margin" unique_id=1214562644]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
-
-[node name="LeftLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow3/Margin/ContentRow" unique_id=1565978735]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="RightLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow3/Margin/ContentRow" unique_id=1503265789]
-layout_mode = 2
-horizontal_alignment = 2
-
-[node name="StatusEquipRow4" type="PanelContainer" parent="StatusEquipVBox" unique_id=993560133]
-custom_minimum_size = Vector2(0, 38)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
-
-[node name="Control" type="Control" parent="StatusEquipVBox/StatusEquipRow4" unique_id=2030424144]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="SelectionUnderline" type="ColorRect" parent="StatusEquipVBox/StatusEquipRow4/Control" unique_id=2035846625]
-visible = false
-layout_mode = 0
-
-[node name="Margin" type="MarginContainer" parent="StatusEquipVBox/StatusEquipRow4" unique_id=540342929]
-layout_mode = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 6
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 6
-
-[node name="ContentRow" type="HBoxContainer" parent="StatusEquipVBox/StatusEquipRow4/Margin" unique_id=738418602]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
-
-[node name="LeftLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow4/Margin/ContentRow" unique_id=1187877893]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="RightLabel" type="Label" parent="StatusEquipVBox/StatusEquipRow4/Margin/ContentRow" unique_id=1823318130]
+[node name="RightLabel" type="Label" parent="StatusEquipVBoxFrame/StatusEquipVBox/StatusEquipRow4/Margin/ContentRow" unique_id=1823318130]
 layout_mode = 2
 horizontal_alignment = 2

@@ -5,9 +5,13 @@
 [resource]
 script = ExtResource("1_jfa6g")
 enemy_name = "Włochaty Nietoperz"
+scan_text = "Drapieżny nietoperz o gęstym futrze. Nie posiada specjalnych technik, ale atakuje bez wahania."
 quiz_id = "ogolne"
-max_hp = 80
-damage_on_wrong = 16
-xp_reward = 65
+max_hp = 100
+attack = 26
+defense = 30
+magic_attack = 26
+magic_defense = 30
+xp_reward = 400
 patrol_speed = 75.0
 detection_radius = 100.0

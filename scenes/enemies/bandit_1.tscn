@@ -10,10 +10,15 @@ height = 14.0
 
 [node name="Enemy" unique_id=1071891148 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
+hp = 100
+max_hp = 100
 enemy_name = "Bandit 1"
 quiz_id = "ogolne"
-damage_on_wrong = 12
-xp_reward = 45
+attack = 26
+defense = 30
+magic_attack = 26
+magic_defense = 30
+xp_reward = 200
 encounter_tier = 1
 patrol_speed = 60.0
 

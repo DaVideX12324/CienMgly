@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemySkill" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+display_name = "Nieustępliwy Szturm"
+log_text = "{enemy} wykonuje serię 6 gwałtownych natarć!"
+use_chance = 0.3
+cooldown_turns = 2
+base_damage = 200
+atk_coeff = 1.6
+def_coeff = 0.8
+hits = 6
+hit_interval = 0.2
+damage_multiplier = 0.45
+variance = 0.2
+color = Color(0.9, 0.2, 0.5, 1)

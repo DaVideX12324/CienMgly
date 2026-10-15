@@ -5,10 +5,14 @@
 [resource]
 script = ExtResource("1_mflys")
 enemy_name = "Mały Nietoperz"
+scan_text = "Płochliwy jaskiniowy szkodnik. Ma niewiele zdrowia, lecz bywa uciążliwy w większych grupach."
 quiz_id = "ogolne"
-max_hp = 40
-damage_on_wrong = 10
-xp_reward = 35
+max_hp = 100
+attack = 26
+defense = 30
+magic_attack = 26
+magic_defense = 30
+xp_reward = 200
 encounter_tier = 1
 patrol_speed = 85.0
 detection_radius = 100.0

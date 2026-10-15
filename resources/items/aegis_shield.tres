@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[ext_resource type="Texture2D" uid="uid://dafy2e60gogd5" path="res://assets/item_icons/aegis_shield.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "aegis_shield"
+icon = ExtResource("2_icon")
+display_name = "Egida Ochronna"
+description = "Mistyczny puklerz otoczony polem ochronnym odpierającym każdą grozę."
+category = "hand"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "shield"
+def_bonus = 64

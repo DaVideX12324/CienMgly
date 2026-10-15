@@ -7,18 +7,35 @@ class_name EnemyBase
 const QuizRpgEnemyData = preload("enemy_data.gd")
 
 @export var enemy_data: QuizRpgEnemyData
+var _spawn_level := 0  # poziom z mapy (set_enemy_level), nakładany po wczytaniu enemy_data
+var _spawn_xp_scale := 1.0
+var _ready_applied := false  # enemy_data wczytane (_apply_enemy_data)
+var _variant_ratio: Dictionary = {}  # stosunek statystyk wariantu do bazy tieru (QuizRpgEnemyStats), liczony przy pierwszym skalowaniu
 @export_group("Identity")
 @export var enemy_name: String = "Przeciwnik"
 @export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
 @export_group("Combat")
 @export var question_count: int = 3
-@export var hp: int = 50
-@export var max_hp: int = 50
-@export var damage_on_wrong: int = 15
+@export var hp: int = 200
+@export var max_hp: int = 200
+## ATK / DEF wroga: obrażenia = ATK × 4 − DEF celu × 2 (× mnożnik umiejętności).
+@export var attack: int = 24
+@export var defense: int = 12
+@export var magic_attack: int = 24
+@export var magic_defense: int = 12
+@export var agility: int = 15
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
-@export var xp_reward: int = 50
+## Poziom wroga: > 0 = XP z poziomu (QuizRpgEnemyXp.kill_xp), 0 = stałe xp_reward. Ustawia dane albo mapa (set_enemy_level).
+@export_range(0, 100) var enemy_level: int = 0
+## Opis dla Skanu (QuizRpgEnemyData.scan_text); pusty = statystyki.
+@export_multiline var scan_text: String = ""
+@export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
+## Złoto za pokonanie (QuizRpgEnemyGold z poziomu i tieru; poziom 0 = jak poziom 1); liczone przy ustawianiu poziomu.
+var gold_reward: int = 0
+## Łup przedmiotów po wygranej: [{item_id, chance, count}] z mapy ("enemy_loot" w JSON, klucz = tier wroga); każdy wpis losowany osobno.
+var loot_table: Array = []
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
@@ -186,6 +203,9 @@ func _apply_enemy_data() -> void:
 		max_hp = maxi(max_hp, 1)
 		hp = mini(hp, max_hp)
 		encounter_tier = clampi(encounter_tier, 1, 5)
+		_ready_applied = true
+		_apply_spawn_level()
+		_update_gold_reward()
 		return
 	enemy_name = enemy_data.enemy_name
 	quiz_id = enemy_data.quiz_id
@@ -193,10 +213,16 @@ func _apply_enemy_data() -> void:
 	question_count = enemy_data.question_count
 	max_hp = maxi(enemy_data.max_hp, 1)
 	hp = max_hp
-	damage_on_wrong = maxi(enemy_data.damage_on_wrong, 0)
+	attack = maxi(enemy_data.attack, 0)
+	defense = maxi(enemy_data.defense, 0)
+	magic_attack = maxi(enemy_data.magic_attack, 0)
+	magic_defense = maxi(enemy_data.magic_defense, 0)
+	agility = maxi(enemy_data.agility, 1)
 	if not enemy_data.battle_skills.is_empty():
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)
+	scan_text = enemy_data.scan_text
+	enemy_level = enemy_data.enemy_level
 	encounter_tier = clampi(enemy_data.encounter_tier, 1, 5)
 	min_encounter_size = maxi(enemy_data.min_encounter_size, 1)
 	max_encounter_size = maxi(enemy_data.max_encounter_size, min_encounter_size)
@@ -205,6 +231,52 @@ func _apply_enemy_data() -> void:
 	detection_radius = enemy_data.detection_radius
 	body_color = enemy_data.body_color
 	shape_type = enemy_data.shape_type
+	if enemy_level > 0:
+		xp_reward = QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss)
+	_ready_applied = true
+	_apply_spawn_level()
+	_update_gold_reward()
+
+
+## Poziom z mapy (spawn_entities, config "enemy_levels"): nagroda XP i statystyki z poziomu.
+## xp_scale: korekta rozmiaru mapy (ile wrogów ma mapa względem wzorcowej) — budżet XP mapy nie zależy od jej wielkości.
+## Spawn woła to przed add_child, a _ready wczytuje enemy_data i nadpisałoby wynik — dlatego poziom jest zapamiętany
+## i nakładany po wczytaniu danych (tier, boss i statystyki wariantu pochodzą z danych).
+func set_enemy_level(level: int, xp_scale: float = 1.0) -> void:
+	_spawn_level = level
+	_spawn_xp_scale = xp_scale
+	if _ready_applied:
+		_apply_spawn_level()
+
+
+func _apply_spawn_level() -> void:
+	if _spawn_level <= 0:
+		return
+	enemy_level = _spawn_level
+	xp_reward = maxi(roundi(QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss) * _spawn_xp_scale), 1)
+	_apply_level_stats()
+	_update_gold_reward()
+
+
+## Złoto z poziomu wroga (wróg bez poziomu, np. tutorial, liczony jak poziom 1); skala rozmiaru mapy jak przy XP.
+func _update_gold_reward() -> void:
+	var scale := _spawn_xp_scale if _spawn_level > 0 else 1.0
+	gold_reward = maxi(roundi(QuizRpgEnemyGold.kill_gold(maxi(enemy_level, 1), encounter_tier, is_boss) * scale), 1)
+
+
+## Statystyki z poziomu (QuizRpgEnemyStats): baza tieru dla poziomu × stosunek wariantu (z danych sceny) do bazy tieru.
+## Stosunek liczony raz z wartości sprzed skalowania, więc ponowne wywołanie nie kumuluje zmian.
+func _apply_level_stats() -> void:
+	if _variant_ratio.is_empty():
+		_variant_ratio = QuizRpgEnemyStats.variant_ratio(encounter_tier, max_hp, attack, defense, agility)
+	var s := QuizRpgEnemyStats.for_level(enemy_level, encounter_tier)
+	max_hp = maxi(roundi(s["hp"] * _variant_ratio["hp"]), 1)
+	hp = max_hp
+	attack = maxi(roundi(s["atk"] * _variant_ratio["atk"]), 1)
+	magic_attack = attack
+	defense = maxi(roundi(s["def"] * _variant_ratio["def"]), 0)
+	magic_defense = defense
+	agility = maxi(roundi(s["agi"] * _variant_ratio["agi"]), 1)
 
 
 func _physics_process(delta: float) -> void:
@@ -319,6 +391,10 @@ func _direction_name_from_velocity(vel: Vector2) -> String:
 func _has_line_of_sight_to_player() -> bool:
 	if not is_instance_valid(player_ref):
 		return false
+	if player_ref.has_method("is_ignored_by_enemies") and player_ref.is_ignored_by_enemies():
+		return false  # chwila ochrony po wejściu na mapę / wczytaniu
+	if QuizRpgSafeZone.contains(get_tree(), player_ref.global_position):
+		return false  # azyl przy starcie — wróg nie goni
 	var distance := global_position.distance_to(player_ref.global_position)
 	if distance > detection_radius:
 		return false
@@ -466,6 +542,21 @@ func _idle_wander(delta: float) -> void:
 
 	if is_on_wall() and not _has_nav_path():
 		_set_new_wander_target(get_wall_normal())
+		return
+	_bounce_off_enemies()
+
+
+## Zderzenie z innym wrogiem podczas wałęsania (np. dwóch idących na siebie): odbicie jak od ściany — nowy cel w stronę
+## normalnej zderzenia, bieżący kierunek zawrócony od drugiego wroga, ścieżka do przeliczenia.
+func _bounce_off_enemies() -> void:
+	for i in range(get_slide_collision_count()):
+		var col := get_slide_collision(i)
+		if col.get_collider() is EnemyBase:
+			var n := col.get_normal()
+			_set_new_wander_target(n)
+			_move_dir = n
+			_repath_timer = 0.0
+			return
 
 
 ## Nowy cel wałęsania w promieniu `wander_radius`. Z siatką nawigacji: punkt przyciągnięty do siatki,
@@ -485,13 +576,16 @@ func _set_new_wander_target(bias_normal: Vector2 = Vector2.ZERO) -> void:
 		if bias_normal != Vector2.ZERO:
 			random_dir = (random_dir + bias_normal * 1.8).normalized()
 		var cand := global_position + random_dir * randf_range(30.0, wander_radius)
+		if QuizRpgSafeZone.contains(get_tree(), cand):
+			continue  # azyl przy starcie — wrogowie do niego nie wchodzą
 		if map.is_valid():
 			var path := NavigationServer2D.map_get_path(map, global_position, cand, true)
 			if not path.is_empty():
 				var length := 0.0
 				for k in range(path.size() - 1):
 					length += path[k].distance_to(path[k + 1])
-				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0:
+				if length <= wander_radius * WANDER_PATH_FACTOR and path[path.size() - 1].distance_to(global_position) > ARRIVE_DISTANCE * 2.0 \
+						and not QuizRpgSafeZone.contains(get_tree(), path[path.size() - 1]):
 					wander_target = path[path.size() - 1]
 					return
 				continue
@@ -662,6 +756,8 @@ func interact(player: Node2D) -> void:
 func engage_from_player_interaction(player: Node2D) -> void:
 	if not is_instance_valid(player) or defeated or _are_enemies_disabled():
 		return
+	if QuizRpgSafeZone.contains(get_tree(), player.global_position):
+		return  # azyl przy starcie: wróg nie zaczyna walki (gracz może sam zaczepić — interact)
 	player_ref = player
 	last_seen_player_pos = player.global_position
 	memory_timer = memory_duration
@@ -697,8 +793,13 @@ func start_combat(player: Node2D) -> void:
 	var diff_range: Vector2i = Vector2i(1, 3)
 	if _dm:
 		diff_range = _dm.get_difficulty_range(quiz_category)
-	var encounter_size_range: Vector2i = Vector2i(maxi(1, min_encounter_size), maxi(maxi(1, min_encounter_size), max_encounter_size))
+	# Liczba przeciwników zawsze losowana z zakresu tego wroga (najwyżej GROUP_MAX); grupa ze świata to minimum —
+	# walka dokłada kopie tego wroga do wylosowanej liczby (QuizCombatController._roll_enemy_party).
+	var lo := clampi(min_encounter_size, 1, GROUP_MAX)
+	var encounter_size_range := Vector2i(lo, clampi(max_encounter_size, lo, GROUP_MAX))
 
+	# Zrzut świata do animacji wejścia (przed dodaniem ekranu walki i pauzą).
+	var snapshot: Image = get_viewport().get_texture().get_image() if get_viewport() else null
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
 	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners)
@@ -706,10 +807,13 @@ func start_combat(player: Node2D) -> void:
 	if target_parent:
 		target_parent.add_child(combat_canvas)
 	get_tree().paused = true
+	combat_ui.call("play_entry_transition", snapshot)
 
 
-## Grupowanie walk: wrogowie tej samej frakcji (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego, z czystą
-## linią (ściany i obiekty z kolizją zasłaniają), najbliżsi pierwsi — razem z tym najwyżej GROUP_MAX jednostek.
+## Grupowanie walk (decyzja usera 2026-10-11: zawsze działa): do walki dołączają WSZYSCY wrogowie tej samej frakcji
+## (nie bossowie, nie w walce, nie pokonani) najwyżej GROUP_RADIUS px od tego, z czystą linią (ściany i obiekty z kolizją
+## zasłaniają) — najbliżsi pierwsi, razem z tym wrogiem najwyżej GROUP_MAX. Liczba przeciwników w walce jest losowana
+## niezależnie od grupy (start_combat: zakres min..max_encounter_size), grupa jest jej minimum.
 func _group_joiners() -> Array:
 	var out: Array = []
 	if is_boss or not is_inside_tree():
@@ -723,7 +827,7 @@ func _group_joiners() -> Array:
 		var d := global_position.distance_to((n as Node2D).global_position)
 		if d <= GROUP_RADIUS and _clear_line_to(n as Node2D):
 			cands.append([d, n])
-	cands.sort_custom(func(a, b) -> bool: return a[0] < b[0])
+	cands.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
 	for c in cands:
 		if out.size() + 1 >= GROUP_MAX:
 			break
@@ -768,13 +872,15 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		await tween.finished
 		queue_free()
 		return
-	else:
-		state = State.IDLE
-		await get_tree().create_timer(2.0).timeout
-		state = State.PATROL
-
+	# Ucieczka / porażka: świat rusza od razu (jak po wygranej), wróg tylko stoi 2 s, a gracz ma nietykalność —
+	# wcześniej stan EXPLORING wracał dopiero po tych 2 s (freeze świata).
 	if _gm:
 		_gm.change_state(_gm.GameState.EXPLORING)
+	if player.has_method("grant_encounter_immunity"):
+		player.grant_encounter_immunity()
+	state = State.IDLE
+	await get_tree().create_timer(2.0).timeout
+	state = State.PATROL
 
 
 func take_quiz_damage(amount: int) -> void:

@@ -2,11 +2,14 @@
 
 [ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
+[ext_resource type="Texture2D" uid="uid://del31fxf8tpuq" path="res://assets/item_icons/training_sword.png" id="2_icon"]
+
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "training_sword"
+icon = ExtResource("2_icon")
 display_name = "Miecz Treningowy"
-description = "Prosty miecz dla poczatkujacego bohatera."
+description = "Prosty miecz dla początkującego bohatera."
 category = "hand"
 stackable = false
 max_stack = 1
@@ -14,4 +17,5 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "weapon"
-atk_bonus = 4
+weapon_type = "sword"
+atk_bonus = 10

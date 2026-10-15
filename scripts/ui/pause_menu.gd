@@ -3,6 +3,20 @@ extends CanvasLayer
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 const ITEM_TAB_CATEGORIES: Array[String] = ["item", "hand", "part", "key"]
+## Kolumny list umiejętności / przedmiotów (siatka ListVBox w scenach paneli).
+const LIST_COLUMNS := 2
+const ITEM_ICON_SIZE := 32
+## Grupa, po której walka znajduje menu pauzy bez przeszukiwania drzewa (sprawdzane co klatkę i przy każdym zdarzeniu).
+const GROUP := &"quiz_pause_menu"
+
+## Koszty w listach umiejętności (jak w walce: combat_list_row.tscn).
+@export var sp_cost_color := Color(0.45, 0.75, 1.0)
+@export var tp_cost_color := Color(0.55, 0.95, 0.45)
+## Miniaturka postaci: zbliżenie na głowę (true) albo cała sylwetka z pierwszej klatki idle (QuizRpgPartyPortrait).
+@export var portrait_head_only := true
+## Opcje -> Motyw: „Menu pauzy tylko na szerokość treści” — część ekranu zajmowana przez okna menu (reszta to puste tło).
+@export_range(0.4, 1.0, 0.01) var compact_width := 0.64
+@export_range(0.4, 1.0, 0.01) var compact_height := 0.78
 const STATUS_EQUIP_SLOTS: Array[String] = ["weapon", "shield", "head", "body", "accessory"]
 static var HOST_OPTIONS_MENU_SCENE: String = QuizRpgPaths.host("res://scenes/ui/options_menu.tscn")
 
@@ -18,11 +32,11 @@ var party_hint_label: Label
 var party_list_vbox: VBoxContainer
 var items_panel: VBoxContainer
 var items_tabs_row: HBoxContainer
-var items_list_vbox: VBoxContainer
+var items_list_vbox: Container
 var items_footer_label: Label
 var skills_panel: VBoxContainer
 var skills_actor_header: HBoxContainer
-var skills_list_vbox: VBoxContainer
+var skills_list_vbox: Container
 var skills_footer_label: Label
 var equipment_panel: VBoxContainer
 var equipment_actor_header: HBoxContainer
@@ -35,7 +49,7 @@ var status_panel: VBoxContainer
 var status_actor_header: HBoxContainer
 var status_info_label: Label
 var status_bars_vbox: VBoxContainer
-var status_stats_vbox: VBoxContainer
+var status_stats_vbox: Container
 var status_equip_vbox: VBoxContainer
 var confirm_panel: VBoxContainer
 var confirm_label: Label
@@ -61,6 +75,7 @@ var _confirm_index: int = 0
 var _selected_member_index: int = 0
 var _selected_slot_name: String = ""
 var _pending_item_id: String = ""
+var _pending_skill_id: String = ""
 var _menu_rows: Array[Control] = []
 var _party_rows: Array[Control] = []
 var _item_tab_rows: Array[Control] = []
@@ -81,6 +96,7 @@ var _save_slot_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
+var _formation_pick: int = -1   # szyk: pierwsza wybrana postać (-1 = jeszcze nie wybrano)
 var _state_before_pause: int = -1
 var _opened_direct_exit: bool = false
 var _options_menu: CanvasLayer = null
@@ -123,6 +139,10 @@ func _is_in_combat() -> bool:
 	return false
 
 
+func _enter_tree() -> void:
+	add_to_group(GROUP)
+
+
 func _ready() -> void:
 	_gm = CoreManager.get_singleton("GameManager")
 	_ps = CoreManager.get_singleton("PlayerStats")
@@ -131,6 +151,13 @@ func _ready() -> void:
 	_cache_scene_rows()
 	_bind_mouse_interactions()
 	_apply_scaling()
+	_apply_compact_layout()
+	get_viewport().size_changed.connect(_apply_compact_layout)
+	var settings := get_node_or_null("/root/SettingsService")
+	if settings and settings.has_signal("module_setting_changed"):
+		settings.module_setting_changed.connect(func(module_id: String, key: String, _v: Variant) -> void:
+			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_PAUSE_COMPACT:
+				_apply_compact_layout())
 	_resolve_options_menu()
 	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
 	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
@@ -145,6 +172,8 @@ func _ready() -> void:
 			_ps.hp_changed.connect(_on_player_hp_changed)
 		if _ps.has_signal("points_changed"):
 			_ps.points_changed.connect(func(_p: int) -> void: _refresh_score())
+		if _ps.has_signal("gold_changed"):
+			_ps.gold_changed.connect(func(_g: int) -> void: _refresh_score())
 
 
 func _cache_panel_nodes() -> void:
@@ -159,11 +188,11 @@ func _cache_panel_nodes() -> void:
 	party_hint_label = party_panel.find_child("PartyHintLabel", true, false) as Label if party_panel else null
 	party_list_vbox = party_panel.find_child("PartyListVBox", true, false) as VBoxContainer if party_panel else null
 	items_tabs_row = items_panel.find_child("TabsRow", true, false) as HBoxContainer if items_panel else null
-	items_list_vbox = items_panel.find_child("ListVBox", true, false) as VBoxContainer if items_panel else null
-	items_footer_label = items_panel.find_child("FooterLabel", true, false) as Label if items_panel else null
+	items_list_vbox = items_panel.find_child("ListVBox", true, false) as Container if items_panel else null
+	items_footer_label = items_panel.find_child("HelpLabel", true, false) as Label if items_panel else null
 	skills_actor_header = skills_panel.find_child("ActorHeader", true, false) as HBoxContainer if skills_panel else null
-	skills_list_vbox = skills_panel.find_child("ListVBox", true, false) as VBoxContainer if skills_panel else null
-	skills_footer_label = skills_panel.find_child("FooterLabel", true, false) as Label if skills_panel else null
+	skills_list_vbox = skills_panel.find_child("ListVBox", true, false) as Container if skills_panel else null
+	skills_footer_label = skills_panel.find_child("HelpLabel", true, false) as Label if skills_panel else null
 	equipment_actor_header = equipment_panel.find_child("ActorHeader", true, false) as HBoxContainer if equipment_panel else null
 	equipment_stats_label = equipment_panel.find_child("EquipStatsLabel", true, false) as Label if equipment_panel else null
 	equip_actions_row = equipment_panel.find_child("EquipActionRow", true, false) as HBoxContainer if equipment_panel else null
@@ -173,7 +202,7 @@ func _cache_panel_nodes() -> void:
 	status_actor_header = status_panel.find_child("ActorHeader", true, false) as HBoxContainer if status_panel else null
 	status_info_label = status_panel.find_child("StatusInfoLabel", true, false) as Label if status_panel else null
 	status_bars_vbox = status_panel.find_child("StatusBarsVBox", true, false) as VBoxContainer if status_panel else null
-	status_stats_vbox = status_panel.find_child("StatusStatsVBox", true, false) as VBoxContainer if status_panel else null
+	status_stats_vbox = status_panel.find_child("StatusStatsVBox", true, false) as Container if status_panel else null
 	status_equip_vbox = status_panel.find_child("StatusEquipVBox", true, false) as VBoxContainer if status_panel else null
 	confirm_label = confirm_panel.find_child("ConfirmLabel", true, false) as Label if confirm_panel else null
 	confirm_options_vbox = confirm_panel.find_child("OptionsVBox", true, false) as VBoxContainer if confirm_panel else null
@@ -207,12 +236,17 @@ func _input(event: InputEvent) -> void:
 		_play_click()
 		get_viewport().set_input_as_handled()
 		return
+	var grid_list: bool = _mode == "items_list" or _mode == "skills_list"
 	if _is_nav_up(event):
-		_move_selection(-1)
+		_move_selection(-LIST_COLUMNS if grid_list else -1)
 		get_viewport().set_input_as_handled()
 		return
 	if _is_nav_down(event):
-		_move_selection(1)
+		_move_selection(LIST_COLUMNS if grid_list else 1)
+		get_viewport().set_input_as_handled()
+		return
+	if grid_list and (_is_nav_left(event) or _is_nav_right(event)):
+		_move_selection(-1 if _is_nav_left(event) else 1)
 		get_viewport().set_input_as_handled()
 		return
 	if _mode == "equip_actions":
@@ -284,9 +318,20 @@ func _handle_close_input(event: InputEvent) -> bool:
 		"skills_party_select", "equip_party_select", "status_party_select":
 			_mode = "left_menu"
 			_show_default_party_panel()
+		"formation_select":
+			if _formation_pick >= 0:
+				_formation_pick = -1
+				_show_formation_panel()
+			else:
+				_mode = "left_menu"
+				_show_default_party_panel()
 		"skills_list":
 			_mode = "skills_party_select"
-			_show_party_select_panel("Wybierz postac dla umiejetnosci")
+			_show_party_select_panel("Wybierz postać dla umiejętności")
+		"skill_target_select":
+			_pending_skill_id = ""
+			_mode = "skills_list"
+			_show_skills_panel()
 		"equip_actions", "equip_slots", "equip_item_list":
 			if _mode == "equip_item_list":
 				_mode = "equip_slots"
@@ -296,10 +341,10 @@ func _handle_close_input(event: InputEvent) -> bool:
 				_show_equipment_panel()
 			else:
 				_mode = "equip_party_select"
-				_show_party_select_panel("Wybierz postac do ekwipunku")
+				_show_party_select_panel("Wybierz postać do ekwipunku")
 		"status_view":
 			_mode = "status_party_select"
-			_show_party_select_panel("Wybierz postac do statusu")
+			_show_party_select_panel("Wybierz postać do statusu")
 		"confirm_exit":
 			if _opened_direct_exit:
 				_opened_direct_exit = false
@@ -394,7 +439,7 @@ func _move_selection(delta: int) -> void:
 				return
 			_items_index = wrapi(_items_index + delta, 0, _current_item_entries.size())
 			_refresh_item_rows()
-		"item_target_select", "skills_party_select", "equip_party_select", "status_party_select":
+		"item_target_select", "skill_target_select", "skills_party_select", "equip_party_select", "status_party_select", "formation_select":
 			var visible_party_count: int = _get_visible_row_count(_party_rows)
 			if visible_party_count <= 0:
 				return
@@ -408,7 +453,7 @@ func _move_selection(delta: int) -> void:
 		"skills_list":
 			if _current_skill_entries.is_empty():
 				return
-			_skills_index = _find_next_enabled_skill_index(_skills_index, delta)
+			_skills_index = wrapi(_skills_index + delta, 0, _current_skill_entries.size())
 			_refresh_skill_rows()
 		"equip_slots":
 			if _equip_slot_rows.is_empty():
@@ -436,6 +481,8 @@ func _accept_current() -> void:
 			_accept_items_list()
 		"item_target_select":
 			_use_pending_item_on_member()
+		"skill_target_select":
+			_use_pending_skill_on_member()
 		"skills_party_select":
 			_selected_member_index = _party_index
 			_mode = "skills_list"
@@ -461,6 +508,8 @@ func _accept_current() -> void:
 			_selected_member_index = _party_index
 			_mode = "status_view"
 			_show_status_panel()
+		"formation_select":
+			_accept_formation()
 		"confirm_exit":
 			_confirm_exit_choice()
 		"save_slots":
@@ -481,30 +530,36 @@ func _accept_left_menu() -> void:
 			_show_confirm_panel()
 			return
 
-	match _left_menu_index:
-		0:
+	var row_name := String(_menu_rows[_left_menu_index].name) if _left_menu_index >= 0 and _left_menu_index < _menu_rows.size() else ""
+	match row_name:
+		"MenuRow0":
 			_mode = "items_list"
 			_items_index = 0
 			_show_items_panel()
-		1:
+		"MenuRow1":
 			_mode = "skills_party_select"
 			_party_index = 0
-			_show_party_select_panel("Wybierz postac dla umiejetnosci")
-		2:
+			_show_party_select_panel("Wybierz postać dla umiejętności")
+		"MenuRow2":
 			_mode = "equip_party_select"
 			_party_index = 0
-			_show_party_select_panel("Wybierz postac do ekwipunku")
-		3:
+			_show_party_select_panel("Wybierz postać do ekwipunku")
+		"MenuRow3":
 			_mode = "status_party_select"
 			_party_index = 0
-			_show_party_select_panel("Wybierz postac do statusu")
-		4:
+			_show_party_select_panel("Wybierz postać do statusu")
+		"MenuRowFormation":
+			_mode = "formation_select"
+			_party_index = 0
+			_formation_pick = -1
+			_show_formation_panel()
+		"MenuRow4":
 			_mode = "save_slots"
 			_save_slot_index = 0
 			_show_save_panel()
-		5:
+		"MenuRow5":
 			_open_options_menu()
-		6:
+		"MenuRow6":
 			_mode = "confirm_exit"
 			_confirm_index = 0
 			_show_confirm_panel()
@@ -530,7 +585,7 @@ func _resolve_options_menu() -> CanvasLayer:
 func _open_options_menu() -> void:
 	var opt_menu: CanvasLayer = _resolve_options_menu()
 	if opt_menu == null:
-		_show_toast("Nie udalo sie otworzyc opcji.")
+		_show_toast("Nie udało się otworzyć opcji.")
 		return
 	_mode = "options"
 	if opt_menu.has_signal("closed") and not opt_menu.closed.is_connected(_on_options_menu_closed):
@@ -557,12 +612,12 @@ func _accept_items_list() -> void:
 		return
 	var entry: Dictionary = _current_item_entries[_items_index]
 	if not bool(entry.get("usable_in_menu", true)) or int(entry.get("count", 0)) <= 0:
-		_show_toast("Nie mozna uzyc tego przedmiotu.")
+		_show_toast("Nie można użyć tego przedmiotu.")
 		return
 	_pending_item_id = str(entry.get("item_id", ""))
 	_mode = "item_target_select"
 	_party_index = 0
-	_show_party_select_panel("Wybierz postac dla przedmiotu")
+	_show_party_select_panel("Wybierz postać dla przedmiotu")
 
 
 func _use_pending_item_on_member() -> void:
@@ -572,16 +627,46 @@ func _use_pending_item_on_member() -> void:
 	_pending_item_id = ""
 	_mode = "items_list"
 	_show_items_panel()
-	_show_toast(str(result.get("message", "Uzyto przedmiotu.")))
+	_show_toast(str(result.get("message", "Użyto przedmiotu.")))
 
 
 func _use_selected_skill() -> void:
 	if _skills_index < 0 or _skills_index >= _current_skill_entries.size():
 		return
 	var entry: Dictionary = _current_skill_entries[_skills_index]
-	if bool(entry.get("disabled", false)):
+	if not bool(entry.get("usable_in_menu", false)):
+		_show_toast("%s — tylko w walce." % str(entry.get("name", "Umiejętność")))
 		return
-	_show_toast("Umiejetnosc %s jest na razie tylko pokazowa." % str(entry.get("name", "umiejetnosc")))
+	if bool(entry.get("disabled", false)):
+		_show_toast("Za mało SP / TP.")
+		return
+	_pending_skill_id = str(entry.get("skill_id", ""))
+	var res := entry.get("resource") as QuizRpgSkillBase
+	if res != null and (res.target == QuizRpgSkillBase.Target.SELF or res.target == QuizRpgSkillBase.Target.ALL_ALLIES):
+		_party_index = _selected_member_index  # bez wyboru celu: ja / cała drużyna
+		_use_pending_skill_on_member()
+		return
+	_mode = "skill_target_select"
+	_party_index = 0
+	_show_party_select_panel("Na kogo użyć: %s" % str(entry.get("name", "")))
+
+
+func _use_pending_skill_on_member() -> void:
+	if _ps == null or not _ps.has_method("use_skill_on_member"):
+		return
+	var result: Dictionary = _ps.use_skill_on_member(_selected_member_index, _pending_skill_id, _party_index)
+	_show_toast(str(result.get("message", "")))
+	if bool(result.get("success", false)):
+		_play_skill_sfx()
+	_pending_skill_id = ""
+	_mode = "skills_list"
+	_show_skills_panel()
+
+
+func _play_skill_sfx() -> void:
+	var audio := get_node_or_null("/root/AudioService")
+	if audio and audio.has_method("play_sfx_by_name"):
+		audio.play_sfx_by_name("magic")
 
 
 func _accept_equip_action() -> void:
@@ -599,7 +684,7 @@ func _accept_equip_action() -> void:
 			if _ps and _ps.has_method("clear_member_equipment"):
 				_ps.clear_member_equipment(_selected_member_index)
 			_show_equipment_panel()
-			_show_toast("Przywrocono domyslny ekwipunek.")
+			_show_toast("Zdjęto cały ekwipunek.")
 
 
 func _accept_equip_item() -> void:
@@ -613,7 +698,7 @@ func _accept_equip_item() -> void:
 	if success:
 		_mode = "equip_slots"
 		_show_equipment_panel()
-		_show_toast("Zmieniono wyposazenie.")
+		_show_toast("Zmieniono wyposażenie.")
 
 
 func _cleanup_combat_ui() -> void:
@@ -654,8 +739,11 @@ func _confirm_exit_choice() -> void:
 
 
 func _show_default_party_panel() -> void:
+	_formation_pick = -1
+	for row in _party_rows:
+		row.modulate = Color.WHITE
 	_show_panel("party")
-	context_title_label.text = "Druzyna"
+	context_title_label.text = "Drużyna"
 	party_hint_label.text = ""
 	_party_rows_selectable = false
 	_refresh_left_menu_rows()
@@ -665,9 +753,31 @@ func _show_default_party_panel() -> void:
 func _show_party_select_panel(title_text: String) -> void:
 	_show_panel("party")
 	context_title_label.text = title_text
-	party_hint_label.text = "Enter/Z: potwierdz    X/Esc: wroc"
+	party_hint_label.text = "Enter/Z: potwierdź    X/Esc: wróć"
 	_party_rows_selectable = true
 	_rebuild_party_rows(true)
+
+
+## Szyk (jak „Formation” w RPG Makerze): pierwsza postać -> druga, zamiana miejsc; pierwsza w drużynie prowadzi na mapie.
+func _show_formation_panel() -> void:
+	if _formation_pick >= 0:
+		var picked: Dictionary = _ps.get_party_member(_formation_pick) if _ps else {}
+		_show_party_select_panel("Szyk: z kim zamienić — %s?" % str(picked.get("name", "?")))
+	else:
+		_show_party_select_panel("Szyk: wybierz postać (pierwsza prowadzi drużynę)")
+	for i in range(_party_rows.size()):
+		_party_rows[i].modulate = Color(1.0, 0.85, 0.45) if i == _formation_pick else Color.WHITE
+
+
+func _accept_formation() -> void:
+	if _formation_pick < 0:
+		_formation_pick = _party_index
+	else:
+		if _ps and _ps.has_method("swap_members"):
+			_ps.swap_members(_formation_pick, _party_index)
+		_formation_pick = -1
+	_play_click()
+	_show_formation_panel()
 
 
 func _show_items_panel() -> void:
@@ -687,7 +797,7 @@ func _get_current_party_member() -> Dictionary:
 
 func _show_skills_panel() -> void:
 	_show_panel("skills")
-	context_title_label.text = "Umiejetnosci"
+	context_title_label.text = "Umiejętności"
 	_populate_actor_header(skills_actor_header, _get_current_party_member(), true)
 	_rebuild_skill_rows()
 
@@ -696,31 +806,34 @@ func _show_equipment_panel() -> void:
 	_show_panel("equipment")
 	context_title_label.text = "Ekwipunek"
 	var member: Dictionary = _get_current_party_member()
-	_populate_actor_header(equipment_actor_header, member, false)
+	_populate_actor_header(equipment_actor_header, member, true)
 	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
 	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
-	equipment_stats_label.text = "ATK %d   DEF %d" % [atk, def]
+	var mat: int = _ps.get_member_total_mat(_selected_member_index) if _ps and _ps.has_method("get_member_total_mat") else 0
+	var mdf: int = _ps.get_member_total_mdf(_selected_member_index) if _ps and _ps.has_method("get_member_total_mdf") else 0
+	var agi: int = _ps.get_member_total_agi(_selected_member_index) if _ps and _ps.has_method("get_member_total_agi") else 0
+	equipment_stats_label.text = "ATK %d   DEF %d   MAT %d   MDF %d   AGI %d" % [atk, def, mat, mdf, agi]
 	_rebuild_equip_action_rows()
 	_rebuild_equipment_slots()
 	_rebuild_equipment_item_rows()
 	if _mode == "equip_item_list":
 		equipment_footer_label.text = str(_current_equip_entries[_equip_item_index].get("description", "")) if _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size() else ""
 	else:
-		equipment_footer_label.text = "Enter/Z: wybierz    X/Esc: wroc"
+		equipment_footer_label.text = "Enter/Z: wybierz    X/Esc: wróć"
 
 
 func _show_status_panel() -> void:
 	_show_panel("status")
 	context_title_label.text = "Status"
 	var member: Dictionary = _get_current_party_member()
-	_populate_actor_header(status_actor_header, member, false)
+	_populate_actor_header(status_actor_header, member, true)
 	_rebuild_status_panel(member)
 
 
 func _show_confirm_panel() -> void:
 	_show_panel("confirm")
 	context_title_label.text = "Wyjscie"
-	confirm_label.text = "Co chcesz zrobic?"
+	confirm_label.text = "Co chcesz zrobić?"
 	_rebuild_confirm_rows()
 
 
@@ -728,9 +841,9 @@ func _show_save_panel() -> void:
 	_show_panel("save")
 	context_title_label.text = "Zapis gry"
 	if _is_in_combat():
-		save_hint_label.text = "Zapisywanie jest niedostepne w trakcie walki.    X/Esc: wroc"
+		save_hint_label.text = "Zapisywanie jest niedostępne w trakcie walki.    X/Esc: wróć"
 	else:
-		save_hint_label.text = "Enter/Z: zapisz    A/Left: usun slot    D/Right: dodaj slot    X/Esc: wroc"
+		save_hint_label.text = "Enter/Z: zapisz    A/Left: usuń slot    D/Right: dodaj slot    X/Esc: wróć"
 	_rebuild_save_slots()
 
 
@@ -845,7 +958,7 @@ func _on_mouse_row_hover(role: String, row: Control) -> void:
 			if _mode != "equip_slots":
 				return
 			var row_index: int = _equip_slot_rows.find(row)
-			if row_index >= 0:
+			if row_index >= 0 and row_index != _equip_slot_index:
 				_equip_slot_index = row_index
 				_refresh_equipment_slot_rows()
 				_rebuild_equipment_item_rows()
@@ -920,7 +1033,7 @@ func _on_mouse_row_input(event: InputEvent, role: String, row: Control) -> void:
 
 
 func _is_party_selection_mode() -> bool:
-	return _mode == "item_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select"
+	return _mode == "item_target_select" or _mode == "skill_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select" or _mode == "formation_select"
 
 
 func _refresh_left_menu_rows() -> void:
@@ -972,10 +1085,10 @@ func _rebuild_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), ":%s" % str(entry.get("display_count", int(entry.get("count", 0)))), false)
+			_set_simple_row(row, str(entry.get("name", "---")), "×%s" % str(entry.get("display_count", int(entry.get("count", 0)))), false, true, entry.get("icon") as Texture2D)
 			_current_item_entries.append(entry)
 	if _current_item_entries.is_empty():
-		items_footer_label.text = "Brak przedmiotow w tej zakladce."
+		items_footer_label.text = "Brak przedmiotów w tej zakładce."
 	else:
 		_items_index = clampi(_items_index, 0, _current_item_entries.size() - 1)
 		_refresh_item_rows()
@@ -992,29 +1105,36 @@ func _rebuild_skill_rows() -> void:
 	var member: Dictionary = _get_current_party_member()
 	var member_sp: int = int(member.get("sp", 0))
 	var member_tp: int = int(member.get("tp", 0))
-	var skills: Array = _ps.skills if _ps and _ps.get("skills") is Array else []
+	var skills: Array = _ps.get_member_skills(_selected_member_index) if _ps and _ps.has_method("get_member_skills") else []
 	for index: int in range(_skill_rows.size()):
 		var row: Control = _skill_rows[index]
 		var has_skill: bool = index < skills.size()
 		row.visible = has_skill
 		if has_skill:
 			var skill: Dictionary = skills[index]
-			var cost_text: String = "-"
+			var cost_text: String = ""
+			var cost_color: Color = sp_cost_color
 			var disabled: bool = false
-			if int(skill.get("sp_cost", 0)) > 0:
-				cost_text = "SP %d" % int(skill.get("sp_cost", 0))
-				disabled = member_sp < int(skill.get("sp_cost", 0))
-			elif int(skill.get("tp_cost", 0)) > 0:
-				cost_text = "TP %d" % int(skill.get("tp_cost", 0))
-				disabled = member_tp < int(skill.get("tp_cost", 0))
-			_set_simple_row(row, "[*] %s" % str(skill.get("name", "---")), cost_text, disabled)
+			var sp_cost: int = int(skill.get("sp_cost", 0))
+			var tp_cost: int = int(skill.get("tp_cost", 0))
+			if sp_cost > 0:
+				cost_text = "%d SP" % sp_cost
+				disabled = member_sp < sp_cost
+			if tp_cost > 0:
+				cost_text = (cost_text + "  " if cost_text != "" else "") + "%d TP" % tp_cost
+				cost_color = tp_cost_color if sp_cost <= 0 else cost_color
+				disabled = disabled or member_tp < tp_cost
+			disabled = disabled or not bool(skill.get("usable_in_menu", false))  # tylko walka -> przygaszona
+			disabled = disabled or (_ps != null and not _ps.member_meets_weapon_requirement(_selected_member_index, skill))
+			_set_simple_row(row, str(skill.get("name", "---")), cost_text, disabled)
+			(row.get_node("Margin/ContentRow/RightLabel") as Label).add_theme_color_override("font_color", cost_color)
 			var skill_copy: Dictionary = skill.duplicate(true)
 			skill_copy["disabled"] = disabled
 			_current_skill_entries.append(skill_copy)
 	if _current_skill_entries.is_empty():
-		skills_footer_label.text = "Brak umiejetnosci."
+		skills_footer_label.text = "Brak umiejętności."
 		return
-	_skills_index = _find_next_enabled_skill_index(clampi(_skills_index, 0, _current_skill_entries.size() - 1), 1, true)
+	_skills_index = clampi(_skills_index, 0, _current_skill_entries.size() - 1)
 	_refresh_skill_rows()
 
 
@@ -1022,20 +1142,6 @@ func _refresh_skill_rows() -> void:
 	_set_row_selection(_skill_rows, _skills_index)
 	if _skills_index >= 0 and _skills_index < _current_skill_entries.size():
 		skills_footer_label.text = str(_current_skill_entries[_skills_index].get("description", ""))
-
-
-func _find_next_enabled_skill_index(start_index: int, delta: int, allow_current: bool = false) -> int:
-	if _current_skill_entries.is_empty():
-		return -1
-	var next_index: int = start_index
-	if not allow_current:
-		next_index = wrapi(start_index + delta, 0, _current_skill_entries.size())
-	for _step: int in range(_current_skill_entries.size()):
-		var entry: Dictionary = _current_skill_entries[next_index]
-		if not bool(entry.get("disabled", false)):
-			return next_index
-		next_index = wrapi(next_index + delta, 0, _current_skill_entries.size())
-	return start_index
 
 
 func _rebuild_equip_action_rows() -> void:
@@ -1059,7 +1165,7 @@ func _rebuild_equipment_slots() -> void:
 			var slot_name: String = str(slots[index])
 			var equipped_name: String = _get_equipped_item_name(str(equipment.get(slot_name, "")))
 			var slot_label: String = _ps.get_equipment_label(slot_name) if _ps and _ps.has_method("get_equipment_label") else slot_name
-			_set_simple_row(row, slot_label, equipped_name)
+			_set_simple_row(row, slot_label, equipped_name, false, true, _get_item_icon(str(equipment.get(slot_name, ""))))
 	_refresh_equipment_slot_rows()
 
 
@@ -1080,7 +1186,7 @@ func _rebuild_equipment_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = _current_equip_entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry), not items_selectable)
+			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry), not items_selectable, true, entry.get("icon") as Texture2D)
 	_refresh_equipment_item_rows()
 
 
@@ -1105,17 +1211,17 @@ func _get_equipment_preview_slot_name() -> String:
 
 
 func _rebuild_status_panel(member: Dictionary) -> void:
-	var exp_to_next: int = _ps.xp_to_next_level() if _ps and _ps.has_method("xp_to_next_level") and _selected_member_index == 0 else 0
-	var current_xp: int = _ps.xp if _selected_member_index == 0 and _ps and ("xp" in _ps) else 0
-	status_info_label.text = "LV %d   Exp %d   Do nastepnego poziomu %d" % [int(member.get("level", 1)), current_xp, exp_to_next]
+	var is_hero: bool = _ps != null and _ps.has_method("is_hero") and _ps.is_hero(_selected_member_index)
+	var exp_to_next: int = _ps.xp_to_next_level() if is_hero else 0
+	var current_xp: int = _ps.xp if is_hero else 0
+	status_info_label.text = "LV %d   Exp %d   Do następnego poziomu %d" % [int(member.get("level", 1)), current_xp, exp_to_next]
 	if _status_bar_rows.size() >= 2:
-		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
-		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
-	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
-	if _status_stat_rows.size() >= 2:
-		_set_simple_row(_status_stat_rows[0], "ATK", str(atk))
-		_set_simple_row(_status_stat_rows[1], "DEF", str(def))
+		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "SP", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	var stat_names := ["ATK", "DEF", "MAT", "MDF", "AGI"]
+	for i in range(mini(_status_stat_rows.size(), stat_names.size())):
+		var value: int = _ps.get_member_total_stat(_selected_member_index, stat_names[i].to_lower()) if _ps and _ps.has_method("get_member_total_stat") else 0
+		_set_simple_row(_status_stat_rows[i], stat_names[i] + ":", str(value))
 	var equipment: Dictionary = member.get("equipment", {})
 	for index: int in range(_status_equip_rows.size()):
 		var slot_name: String = STATUS_EQUIP_SLOTS[index] if index < STATUS_EQUIP_SLOTS.size() else ""
@@ -1123,14 +1229,14 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 		row.visible = slot_name != ""
 		if slot_name != "":
 			var slot_label: String = _ps.get_equipment_label(slot_name) if _ps and _ps.has_method("get_equipment_label") else slot_name
-			_set_simple_row(row, slot_label, _get_equipped_item_name(str(equipment.get(slot_name, ""))))
+			_set_simple_row(row, slot_label, _get_equipped_item_name(str(equipment.get(slot_name, ""))), false, true, _get_item_icon(str(equipment.get(slot_name, ""))))
 
 
 func _rebuild_confirm_rows() -> void:
 	if _confirm_rows.size() > 0:
-		_set_simple_row(_confirm_rows[0], "M Do menu glownego", "")
+		_set_simple_row(_confirm_rows[0], "M Do menu głównego", "")
 	if _confirm_rows.size() > 1:
-		_set_simple_row(_confirm_rows[1], "Q Wyjscie z gry", "")
+		_set_simple_row(_confirm_rows[1], "Q Wyjście z gry", "")
 	if _confirm_rows.size() > 2:
 		_set_simple_row(_confirm_rows[2], "N Anuluj", "")
 	_refresh_confirm_rows()
@@ -1169,7 +1275,7 @@ func _refresh_save_slot_rows() -> void:
 			str(slot_entry.get("detail", "")),
 		]
 	else:
-		save_footer_label.text = "Pusty slot. Enter/Z zapisze aktualna gre do tego miejsca."
+		save_footer_label.text = "Pusty slot. Enter/Z zapisze aktualną grę do tego miejsca."
 
 
 func _populate_save_slot_row(row: Control, slot_entry: Dictionary) -> void:
@@ -1185,7 +1291,7 @@ func _populate_save_slot_row(row: Control, slot_entry: Dictionary) -> void:
 
 func _save_to_selected_slot() -> void:
 	if _is_in_combat():
-		_show_toast("Nie mozna zapisac gry w trakcie walki.")
+		_show_toast("Nie można zapisać gry w trakcie walki.")
 		return
 	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
 		return
@@ -1196,7 +1302,7 @@ func _save_to_selected_slot() -> void:
 
 func _add_save_slot() -> void:
 	if _is_in_combat():
-		_show_toast("Nie mozna modyfikowac slotow w trakcie walki.")
+		_show_toast("Nie można modyfikować slotów w trakcie walki.")
 		return
 	if _gm == null or not _gm.has_method("add_save_slot"):
 		return
@@ -1207,16 +1313,16 @@ func _add_save_slot() -> void:
 
 func _delete_selected_save_slot() -> void:
 	if _is_in_combat():
-		_show_toast("Nie mozna modyfikowac slotow w trakcie walki.")
+		_show_toast("Nie można modyfikować slotów w trakcie walki.")
 		return
 	if _gm == null or not _gm.has_method("delete_save_slot"):
 		return
 	if _gm.delete_save_slot(_save_slot_index):
 		_save_slot_index = maxi(0, _save_slot_index - 1)
 		_show_save_panel()
-		_show_toast("Usunieto slot.")
+		_show_toast("Usunięto slot.")
 	else:
-		_show_toast("Nie mozna usunac tego slotu.")
+		_show_toast("Nie można usunąć tego slotu.")
 
 
 func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars: bool) -> void:
@@ -1226,17 +1332,20 @@ func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars
 	var sp_row: HBoxContainer = target.get_node("InfoVBox/SPRow") as HBoxContainer
 	var hp_progress: Range = hp_row.get_node("BarProgress") as Range
 	var sp_progress: Range = sp_row.get_node("BarProgress") as Range
-	portrait.texture = member.get("portrait") as Texture2D
+	portrait.texture = _portrait_for(member)
 	name_label.text = "%s  LV %d%s" % [str(member.get("name", "Bohater")), int(member.get("level", 1)), _status_suffix(member)]
-	_populate_bar_row(hp_row, "Zycie", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
-	_populate_bar_row(sp_row, "Mana", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	_populate_bar_row(hp_row, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+	_populate_bar_row(sp_row, "SP", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	var tp_row := target.get_node_or_null("InfoVBox/TPRow") as HBoxContainer  # tylko panel umiejętności
+	if tp_row:
+		_populate_bar_row(tp_row, "TP", int(member.get("tp", 0)), int(member.get("max_tp", 100)))
 	if hp_progress:
 		(hp_progress as Control).visible = show_bars
 	if sp_progress:
 		(sp_progress as Control).visible = show_bars
 
 
-## Statusy członka po nazwie, np. „  [Zatrucie]” (PlayerStats.STATUS_NAMES).
+## Statusy członka po nazwie, np. „  [Zatrucie]” (resources/statuses/).
 func _status_suffix(member: Dictionary) -> String:
 	var names: Array[String] = []
 	for sid in (member.get("statuses", {}) as Dictionary).keys():
@@ -1250,19 +1359,55 @@ func _populate_party_row(row: Control, member: Dictionary) -> void:
 	var level_label: Label = row.get_node("Margin/ContentRow/LevelLabel") as Label
 	var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
 	var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
-	portrait.texture = member.get("portrait") as Texture2D
+	portrait.texture = _portrait_for(member)
 	name_label.text = str(member.get("name", "Bohater")) + _status_suffix(member)
 	level_label.text = "LV %d" % int(member.get("level", 1))
-	_populate_bar_row(hp_row, "ZYCIE", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
-	_populate_bar_row(sp_row, "MANA", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
+	_populate_bar_row(hp_row, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
+	_populate_bar_row(sp_row, "SP", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
 
 
-func _set_simple_row(row: Control, left_text: String, right_text: String, disabled: bool = false) -> void:
+## Miniaturka członka: portret postaci albo pierwsza klatka idle (QuizRpgPartyPortrait, portrait_head_only).
+func _portrait_for(member: Dictionary) -> Texture2D:
+	var hero: QuizRpgHeroData = _ps.hero_for_member(member) if _ps and _ps.has_method("hero_for_member") else null
+	return QuizRpgPartyPortrait.for_member(member, hero, portrait_head_only)
+
+
+## show_icon: wiersz rezerwuje po lewej kwadrat na ikonę przedmiotu (pusty, gdy icon == null), żeby nazwy w liście były wyrównane.
+func _set_simple_row(row: Control, left_text: String, right_text: String, disabled: bool = false, show_icon: bool = false, icon: Texture2D = null) -> void:
 	var left_label: Label = row.get_node("Margin/ContentRow/LeftLabel") as Label
 	var right_label: Label = row.get_node("Margin/ContentRow/RightLabel") as Label
 	left_label.text = left_text
 	right_label.text = right_text
 	row.set_meta("disabled", disabled)
+	if show_icon:
+		_ensure_row_icon(row).texture = icon
+
+
+func _ensure_row_icon(row: Control) -> TextureRect:
+	var content: Node = row.get_node("Margin/ContentRow")
+	var icon_rect := content.get_node_or_null("ItemIcon") as TextureRect
+	if icon_rect == null:
+		icon_rect = TextureRect.new()
+		icon_rect.name = "ItemIcon"
+		icon_rect.custom_minimum_size = Vector2(ITEM_ICON_SIZE, ITEM_ICON_SIZE)
+		icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		content.add_child(icon_rect)
+		content.move_child(icon_rect, 0)
+	return icon_rect
+
+
+func _get_item_icon(item_id: String) -> Texture2D:
+	if item_id == "":
+		return null
+	var inventory_service: Node = _get_inventory_service()
+	if inventory_service == null or not inventory_service.has_method("get_item"):
+		return null
+	var item_data: QuizRpgItemData = inventory_service.call("get_item", item_id)
+	return item_data.icon if item_data else null
 
 
 func _set_row_selection(rows: Array[Control], selected_index: int) -> void:
@@ -1389,14 +1534,13 @@ func _get_equipped_item_name(item_id: String) -> String:
 func _get_equipment_delta_text(entry: Dictionary) -> String:
 	var member: Dictionary = _ps.get_party_member(_selected_member_index)
 	var equipment: Dictionary = member.get("equipment", {})
-	var current_item_id: String = str(equipment.get(_selected_slot_name, ""))
-	var current_atk: int = _get_item_stat(current_item_id, "atk_bonus")
-	var current_def: int = _get_item_stat(current_item_id, "def_bonus")
-	var next_atk: int = int(entry.get("atk_bonus", 0))
-	var next_def: int = int(entry.get("def_bonus", 0))
-	var delta_atk: int = next_atk - current_atk
-	var delta_def: int = next_def - current_def
-	return "ATK %s%d  DEF %s%d" % [_delta_sign(delta_atk), delta_atk, _delta_sign(delta_def), delta_def]
+	var current_item_id: String = str(equipment.get(_get_equipment_preview_slot_name(), ""))
+	var parts: Array[String] = []
+	for stat in ["atk", "def", "mat", "mdf", "agi"]:
+		var delta: int = int(entry.get(stat + "_bonus", 0)) - _get_item_stat(current_item_id, stat + "_bonus")
+		if delta != 0 or stat in ["atk", "def"]:
+			parts.append("%s %s%d" % [stat.to_upper(), _delta_sign(delta), delta])
+	return "  ".join(parts)
 
 
 func _get_item_stat(item_id: String, stat_name: String) -> int:
@@ -1447,22 +1591,22 @@ func _on_player_data_changed() -> void:
 			if _mode == "items_list":
 				_show_items_panel()
 			else:
-				_show_party_select_panel("Wybierz postac dla przedmiotu")
+				_show_party_select_panel("Wybierz postać dla przedmiotu")
 		"skills_party_select", "skills_list":
 			if _mode == "skills_list":
 				_show_skills_panel()
 			else:
-				_show_party_select_panel("Wybierz postac dla umiejetnosci")
+				_show_party_select_panel("Wybierz postać dla umiejętności")
 		"equip_party_select", "equip_actions", "equip_slots", "equip_item_list":
 			if _mode == "equip_party_select":
-				_show_party_select_panel("Wybierz postac do ekwipunku")
+				_show_party_select_panel("Wybierz postać do ekwipunku")
 			else:
 				_show_equipment_panel()
 		"status_party_select", "status_view":
 			if _mode == "status_view":
 				_show_status_panel()
 			else:
-				_show_party_select_panel("Wybierz postac do statusu")
+				_show_party_select_panel("Wybierz postać do statusu")
 		"save_slots":
 			_show_save_panel()
 
@@ -1474,11 +1618,29 @@ func _refresh_score() -> void:
 	score_label.visible = _ps != null
 	if _ps:
 		score_label.text = "Punkty %d
-Seria x%d" % [int(_ps.points), int(_ps.streak)]
+Seria x%d
+Złoto %d" % [int(_ps.points), int(_ps.streak), int(_ps.gold)]
 
 
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:
 	_on_player_data_changed()
+
+
+## Zwykłe menu: okna na cały ekran (margines 28 px); kompaktowe (opcja): wyśrodkowane, compact_width × compact_height ekranu.
+func _apply_compact_layout() -> void:
+	var main_row := pause_root.get_node_or_null("MainRow") as Control
+	if main_row == null:
+		return
+	var margin_x := 28.0
+	var margin_y := 28.0
+	if QuizTheme.pause_ui_compact():
+		var vp := get_viewport().get_visible_rect().size
+		margin_x = vp.x * (1.0 - compact_width) * 0.5
+		margin_y = vp.y * (1.0 - compact_height) * 0.5
+	main_row.offset_left = margin_x
+	main_row.offset_right = -margin_x
+	main_row.offset_top = margin_y
+	main_row.offset_bottom = -margin_y
 
 
 func _apply_scaling() -> void:
@@ -1643,6 +1805,9 @@ func _apply_actor_header_scaling(header: HBoxContainer) -> void:
 	name_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(22)))
 	_apply_bar_row_scaling(hp_row)
 	_apply_bar_row_scaling(sp_row)
+	var tp_row := header.get_node_or_null("InfoVBox/TPRow") as HBoxContainer
+	if tp_row:
+		_apply_bar_row_scaling(tp_row)
 
 
 func _populate_bar_row(row: HBoxContainer, label_text: String, value: int, max_value: int) -> void:

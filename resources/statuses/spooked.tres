@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuizRpgStatusData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/status_data.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status_id = "spooked"
+display_name = "Przestrach"
+color = Color(0.4, 0.7, 0.85, 1)
+min_turns = 2
+max_turns = 4
+hit_mult = 0.75
+atk_mult = 0.85
+mdf_mult = 0.85

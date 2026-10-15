@@ -15,14 +15,20 @@ func get_id() -> StringName:
 func apply(ctx: GenerationContext) -> int:
 	var grid := ctx.grid
 	var carve := {}
+	var w := ctx.width
+	var r := walk_raster(ctx)   # siatka zmienia się dopiero po skanie (carve)
 	for dn in DIRS:
 		var d: Vector2i = DIRS[dn]
+		var off := d.y * w + d.x
 		var along := Vector2i(absi(d.y), absi(d.x))
 		var seen := {}
 		for y in range(2, ctx.height - 2):
 			for x in range(2, ctx.width - 2):
+				var i := y * w + x
+				if r[i] or not r[i + off] or r[i - off]:
+					continue   # nie: ściana, przed nią podłoga, za nią ściana
 				var p := Vector2i(x, y)
-				if seen.has(p) or not _wall(grid, p) or _wall(grid, p + d) or not _wall(grid, p - d):
+				if seen.has(p):
 					continue
 				var a := p
 				while _edge(grid, a - along, d):

@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="QuizRpgHeroData" format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/player/player.tscn" id="1_3pxth"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/heroes/hero_data.gd" id="2_l4it0"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="3_d4qwo"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/mocny_atak.tres" id="4_0bmdm"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/double_throw.tres" id="5_3hgc0"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/coin_barrage.tres" id="6_22lo6"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/dive_attack.tres" id="7_78yoh"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/smoke_cloud.tres" id="8_qea7k"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/onslaught.tres" id="9_o2bvm"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/leap_series.tres" id="10_16s2b"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/shove.tres" id="11_5elo5"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/lotrzyk_frames.tres" id="12_k3lrj"]
+
+[resource]
+script = ExtResource("2_l4it0")
+hero_id = "lotrzyk"
+display_name = "Łotrzyk"
+character_class = "rogue"
+actor_scene = ExtResource("1_3pxth")
+sprite_frames = ExtResource("12_k3lrj")
+sprite_offset = Vector2(1, -24)
+base_hp = 290
+hp_ref_value = 1220
+hp_at_max_level = 43500
+sp_ref_value = 400
+base_sp = 125
+sp_at_max_level = 1560
+base_atk = 24
+base_def = 9
+base_mat = 12
+base_mdf = 10
+atk_per_level = 2.2
+def_per_level = 0.9
+mat_per_level = 1.0
+mdf_per_level = 0.9
+base_agi = 21
+agi_per_level = 1.6
+skills = Array[ExtResource("3_d4qwo")]([ExtResource("4_0bmdm"), ExtResource("5_3hgc0"), ExtResource("6_22lo6"), ExtResource("7_78yoh"), ExtResource("8_qea7k"), ExtResource("9_o2bvm"), ExtResource("10_16s2b"), ExtResource("11_5elo5")])
+default_weapon_id = "scout_dagger"
+default_head_id = "leather_hood"
+default_body_id = "adventurer_tunic"

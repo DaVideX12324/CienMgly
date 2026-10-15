@@ -1,5 +1,7 @@
 extends Node2D
 
+const PartyFollowers = preload("../player/party_followers.gd")
+
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 signal set_spawn(spawn: Vector2)
@@ -11,7 +13,15 @@ const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 ## napisu (ProceduralLevel ma własną: location_name / typ poziomu).
 const LOCATION_NAMES := {
 	"tutorial_area": "Starożytne Ruiny",
+	"cave": "Jaskinia",
+	"sewer": "Ścieki",
+	"town": "Miasto",
 }
+
+## Ochrona startu: przy punkcie pojawienia się stoi azyl (QuizRpgSafeZone) — chyba że poziom ma już własny. Samej
+## nietykalności na starcie nie ma (decyzja usera 2026-10-14): generator nie daje wrogom nawigacji w pokoju wejścia /
+## wyjścia, pierwszym za wejściem i strefach portali, więc nikt tam nie dojdzie.
+const DEFAULT_SAFE_ZONE_PX := Vector2(192, 192)  # 12×12 kratek (mapy ręczne bez własnego azylu)
 
 var current_level: Node = null
 var current_level_path: String = ""
@@ -35,6 +45,11 @@ func _ready() -> void:
 
 func change_level(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -> void:
 	await load_level_direct(level_path, spawn_name)
+
+
+func _progress_ps() -> Node:
+	var core := get_node_or_null("/root/CoreManager")
+	return core.call("get_singleton", "PlayerStats") as Node if core else null
 
 
 func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NAME) -> void:
@@ -65,6 +80,12 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		return
 
 	current_level = packed.instantiate()
+	# Mapa spoza LOCATION_NAMES: nazwa z jej własnego location_name (jeśli ma), zanim ProceduralLevel pokaże swój ekran.
+	if is_instance_valid(_loading_screen) and _loading_screen.location.is_empty() and "location_name" in current_level:
+		_loading_screen.location = str(current_level.get("location_name"))
+	# ProceduralLevel zastępuje ten ekran własnym (z postępem generowania) — niech pokaże to samo tło.
+	if is_instance_valid(_loading_screen) and _loading_screen.background != null and "loading_background" in current_level:
+		current_level.loading_background = _loading_screen.background
 	add_child(current_level)
 	current_level_path = level_path
 	current_spawn_name = spawn_name
@@ -78,8 +99,11 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		await current_level.generation_finished
 	if is_instance_valid(player):
 		player.process_mode = player_mode
-	_place_player_at_spawn(spawn_name)
+	var spawn_pos := _place_player_at_spawn(spawn_name)
+	_sync_party_followers(true)
+	_setup_start_safety(spawn_pos)
 	_play_level_music(level_path, current_level)
+	QuizRpgProgressLog.map_entered(_progress_ps(), level_path)
 	_close_loading_screen()
 
 
@@ -151,13 +175,63 @@ func _play_level_music(level_path: String, level_node: Node) -> void:
 	audio_service.call("play_music", track)
 
 
-func _place_player_at_spawn(spawn_name: String) -> void:
+## Towarzysze drużyny za graczem (PartyFollowers); snap = ustawieni na graczu (nowa mapa / spawn).
+## Zmiana składu (PlayerStats.party_changed) przebudowuje ich na bieżąco.
+func _sync_party_followers(snap: bool) -> void:
+	var player := _get_player() as CharacterBody2D
+	var ps := _player_stats()
+	if player == null or ps == null:
+		return
+	PartyFollowers.sync(player, ps)
+	if snap:
+		PartyFollowers.snap_to_leader(player)
+	if ps.has_signal("party_changed") and not ps.party_changed.is_connected(_on_party_changed):
+		ps.party_changed.connect(_on_party_changed)
+
+
+func _on_party_changed() -> void:
+	_sync_party_followers(false)
+
+
+func _player_stats() -> Node:
+	var cm := get_node_or_null("/root/CoreManager")
+	if cm and cm.has_method("get_singleton"):
+		var s: Variant = cm.call("get_singleton", "PlayerStats")
+		if s is Node:
+			return s
+	return get_node_or_null("/root/PlayerStats")
+
+
+func _place_player_at_spawn(spawn_name: String) -> Vector2:
 	var spawn_node := _pick_spawn_marker(current_level, spawn_name)
 	var spawn_pos := spawn_node.global_position if spawn_node else Vector2.ZERO
 	var player := _get_player()
 	if player:
 		player.global_position = spawn_pos
 	set_spawn.emit(spawn_pos)
+	return spawn_pos
+
+
+## Azyl przy punkcie pojawienia się (ProceduralLevel: pokój z tym punktem, przycięty) i chwila ochrony gracza.
+func _setup_start_safety(spawn_pos: Vector2) -> void:
+	if not is_instance_valid(current_level):
+		return
+	var has_zone := false
+	for z in get_tree().get_nodes_in_group(QuizRpgSafeZone.GROUP):
+		if current_level.is_ancestor_of(z):
+			has_zone = true
+			break
+	if not has_zone:
+		var rect := Rect2()
+		if current_level.has_method("start_safe_zone_rect"):
+			rect = current_level.start_safe_zone_rect(spawn_pos)
+		if not rect.has_area():
+			rect = Rect2(spawn_pos - DEFAULT_SAFE_ZONE_PX * 0.5, DEFAULT_SAFE_ZONE_PX)
+		var zone := QuizRpgSafeZone.new()
+		zone.name = "StartSafeZone"
+		zone.size = rect.size
+		current_level.add_child(zone)
+		zone.global_position = rect.get_center()
 
 
 func _pick_spawn_marker(level: Node, spawn_name: String) -> Node2D:

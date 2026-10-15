@@ -2,16 +2,25 @@
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/triple_attack.tres" id="s_triple_attack"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/heavy_strike.tres" id="s_heavy_strike"]
+
 [resource]
 script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_triple_attack"), ExtResource("s_heavy_strike")])
 enemy_name = "Kamienny Golem"
+scan_text = "Potężny konstrukt z litej skały. Miażdży serią trzech uderzeń i paraliżuje ciężką salwą."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false
 question_count = 3
-max_hp = 120
-damage_on_wrong = 18
-xp_reward = 85
+max_hp = 900
+attack = 90
+defense = 90
+magic_attack = 90
+magic_defense = 90
+xp_reward = 800
 encounter_tier = 3
 min_encounter_size = 1
 max_encounter_size = 3

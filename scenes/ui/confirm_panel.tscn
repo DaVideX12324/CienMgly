@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://c4mhyedx4g1d2"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_frame.gd" id="frame_script"]
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
 
 [node name="ConfirmPanel" type="VBoxContainer" unique_id=1250960308]
@@ -13,113 +15,118 @@ theme_override_constants/separation = 12
 
 [node name="ConfirmLabel" type="Label" parent="." unique_id=153808172]
 layout_mode = 2
-text = "Zakonczyc gre?"
+text = "Zakończyć grę?"
 
-[node name="OptionsVBox" type="VBoxContainer" parent="." unique_id=920138329]
+[node name="OptionsVBoxFrame" type="PanelContainer" parent="." unique_id=1771400014]
+layout_mode = 2
+theme_type_variation = &"QuizFrame"
+script = ExtResource("frame_script")
+
+[node name="OptionsVBox" type="VBoxContainer" parent="OptionsVBoxFrame" unique_id=920138329]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ConfirmRow0" type="PanelContainer" parent="OptionsVBox" unique_id=2093508448]
+[node name="ConfirmRow0" type="PanelContainer" parent="OptionsVBoxFrame/OptionsVBox" unique_id=2093508448]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="OptionsVBox/ConfirmRow0" unique_id=1866903008]
+[node name="Control" type="Control" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow0" unique_id=1866903008]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBox/ConfirmRow0/Control" unique_id=1604702890]
+[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow0/Control" unique_id=1604702890]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="OptionsVBox/ConfirmRow0" unique_id=605378637]
+[node name="Margin" type="MarginContainer" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow0" unique_id=605378637]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="OptionsVBox/ConfirmRow0/Margin" unique_id=722719515]
+[node name="ContentRow" type="HBoxContainer" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow0/Margin" unique_id=722719515]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="OptionsVBox/ConfirmRow0/Margin/ContentRow" unique_id=703578371]
+[node name="LeftLabel" type="Label" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow0/Margin/ContentRow" unique_id=703578371]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "M Do menu glownego"
+text = "M Do menu głównego"
 
-[node name="RightLabel" type="Label" parent="OptionsVBox/ConfirmRow0/Margin/ContentRow" unique_id=1620646605]
+[node name="RightLabel" type="Label" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow0/Margin/ContentRow" unique_id=1620646605]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="ConfirmRow1" type="PanelContainer" parent="OptionsVBox" unique_id=720875122]
+[node name="ConfirmRow1" type="PanelContainer" parent="OptionsVBoxFrame/OptionsVBox" unique_id=720875122]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="OptionsVBox/ConfirmRow1" unique_id=1219917244]
+[node name="Control" type="Control" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow1" unique_id=1219917244]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBox/ConfirmRow1/Control" unique_id=1885901334]
+[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow1/Control" unique_id=1885901334]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="OptionsVBox/ConfirmRow1" unique_id=2046400099]
+[node name="Margin" type="MarginContainer" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow1" unique_id=2046400099]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="OptionsVBox/ConfirmRow1/Margin" unique_id=1195302532]
+[node name="ContentRow" type="HBoxContainer" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow1/Margin" unique_id=1195302532]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=1792823979]
+[node name="LeftLabel" type="Label" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=1792823979]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Q Wyjscie z gry"
+text = "Q Wyjście z gry"
 
-[node name="RightLabel" type="Label" parent="OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=510624011]
+[node name="RightLabel" type="Label" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow1/Margin/ContentRow" unique_id=510624011]
 layout_mode = 2
 horizontal_alignment = 2
 
-[node name="ConfirmRow2" type="PanelContainer" parent="OptionsVBox" unique_id=720875123]
+[node name="ConfirmRow2" type="PanelContainer" parent="OptionsVBoxFrame/OptionsVBox" unique_id=720875123]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
 
-[node name="Control" type="Control" parent="OptionsVBox/ConfirmRow2" unique_id=1219917245]
+[node name="Control" type="Control" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow2" unique_id=1219917245]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBox/ConfirmRow2/Control" unique_id=1885901335]
+[node name="SelectionUnderline" type="ColorRect" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow2/Control" unique_id=1885901335]
 visible = false
 layout_mode = 0
 
-[node name="Margin" type="MarginContainer" parent="OptionsVBox/ConfirmRow2" unique_id=2046400100]
+[node name="Margin" type="MarginContainer" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow2" unique_id=2046400100]
 layout_mode = 2
 theme_override_constants/margin_left = 8
 theme_override_constants/margin_top = 6
 theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 6
 
-[node name="ContentRow" type="HBoxContainer" parent="OptionsVBox/ConfirmRow2/Margin" unique_id=1195302533]
+[node name="ContentRow" type="HBoxContainer" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow2/Margin" unique_id=1195302533]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
-[node name="LeftLabel" type="Label" parent="OptionsVBox/ConfirmRow2/Margin/ContentRow" unique_id=1792823980]
+[node name="LeftLabel" type="Label" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow2/Margin/ContentRow" unique_id=1792823980]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "N Anuluj"
 
-[node name="RightLabel" type="Label" parent="OptionsVBox/ConfirmRow2/Margin/ContentRow" unique_id=510624012]
+[node name="RightLabel" type="Label" parent="OptionsVBoxFrame/OptionsVBox/ConfirmRow2/Margin/ContentRow" unique_id=510624012]
 layout_mode = 2
 horizontal_alignment = 2

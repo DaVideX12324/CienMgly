@@ -18,24 +18,25 @@ func get_id() -> StringName:
 
 func apply(ctx: GenerationContext) -> int:
 	var total := 0
+	var r := walk_raster(ctx)   # aktualizowany przy zasypaniu (wszystkie rundy)
 	for _round in MAX_ROUNDS:
-		var changed := _pass(ctx)
+		var changed := _pass(ctx, r)
 		total += changed
 		if changed == 0:
 			break
 	return total
 
 
-func _pass(ctx: GenerationContext) -> int:
+func _pass(ctx: GenerationContext, r: PackedByteArray) -> int:
 	var grid := ctx.grid
 	var changed := 0
+	var w := ctx.width
 	for y in range(1, ctx.height - 1):
 		for x in range(1, ctx.width - 1):
-			var p := Vector2i(x, y)
-			if GridUtils.is_walkable(grid, p) or GridUtils.is_walkable(grid, p + Vector2i(0, -1)) \
-					or GridUtils.is_walkable(grid, p + Vector2i(0, 1)) or GridUtils.is_walkable(grid, p + Vector2i(-1, 0)) \
-					or GridUtils.is_walkable(grid, p + Vector2i(1, 0)):
+			var i := y * w + x
+			if r[i] or r[i - w] or r[i + w] or r[i - 1] or r[i + 1]:
 				continue
+			var p := Vector2i(x, y)
 			var nw := GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
 			var ne := GridUtils.is_walkable(grid, p + Vector2i(1, -1))
 			var sw := GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
@@ -50,6 +51,7 @@ func _pass(ctx: GenerationContext) -> int:
 			for c in pair:
 				if _can_fill(grid, c, p):
 					grid[c] = CellType.WALL
+					raster_set(r, w, ctx.height, c, false)
 					changed += 1
 					break
 	return changed

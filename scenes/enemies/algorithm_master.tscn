@@ -9,10 +9,13 @@ enemy_name = "Mistrz Algorytmów"
 quiz_id = "informatyka"
 quiz_category = "informatyka"
 question_count = 4
-hp = 80
-max_hp = 80
-damage_on_wrong = 20
-xp_reward = 75
+hp = 700
+max_hp = 700
+attack = 44
+defense = 40
+magic_attack = 44
+magic_defense = 40
+xp_reward = 400
 body_color = Color(0.6, 0.2, 0.8, 1)
 shape_type = 2
 

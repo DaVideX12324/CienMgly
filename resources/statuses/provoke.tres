@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="QuizRpgStatusData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/status_data.gd" id="1_status"]
+
+[resource]
+script = ExtResource("1_status")
+status_id = "provoke"
+display_name = "Prowokacja"
+color = Color(1.0, 0.45, 0.1, 1)
+min_turns = 2
+max_turns = 3
+atk_mult = 1.2
+def_mult = 0.8

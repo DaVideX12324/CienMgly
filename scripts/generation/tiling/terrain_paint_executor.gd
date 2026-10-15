@@ -1,6 +1,9 @@
 class_name TerrainPaintExecutor
 extends RefCounted
 
+## Kratek między sprawdzeniami budżetu klatki w execute_chunked.
+const SLICE_STEP := 256
+
 
 ## Wykonuje zaplanowane batche autotilingu terenu na warstwach.
 ## Używa własnego solvera (TerrainAutotileSolver) zamiast set_cells_terrain_connect,
@@ -22,8 +25,9 @@ static func execute(layers: Dictionary, plan: TerrainPaintPlan) -> void:
 			TerrainAutotileSolver.paint(layer, batch.cells, batch.terrain_set, batch.terrain, batch.mask_cells)
 
 
-## Jak execute, ale porcjami po `chunk` kratek z klatką przerwy (ekran ładowania nie zamarza).
-static func execute_chunked(layers: Dictionary, plan: TerrainPaintPlan, tree: SceneTree, chunk: int) -> void:
+## Jak execute, ale z klatką przerwy, gdy kawałek przekroczy budżet `slicer` (FrameSlicer) —
+## ekran ładowania nie zamarza, a czas nie zależy od FPS.
+static func execute_chunked(layers: Dictionary, plan: TerrainPaintPlan, tree: SceneTree, slicer) -> void:
 	if plan == null or plan.batches.is_empty():
 		return
 	for batch in plan.batches:
@@ -33,6 +37,7 @@ static func execute_chunked(layers: Dictionary, plan: TerrainPaintPlan, tree: Sc
 		var prep := TerrainAutotileSolver.prepare(layer, batch.cells, batch.terrain_set, batch.terrain, batch.mask_cells)
 		if prep.is_empty():
 			continue
-		for from in range(0, batch.cells.size(), chunk):
-			TerrainAutotileSolver.paint_range(layer, batch.cells, prep, from, from + chunk)
-			await tree.process_frame
+		for from in range(0, batch.cells.size(), SLICE_STEP):
+			TerrainAutotileSolver.paint_range(layer, batch.cells, prep, from, from + SLICE_STEP)
+			if slicer.due():
+				await slicer.next_frame(tree)

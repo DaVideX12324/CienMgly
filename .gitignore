@@ -2,3 +2,6 @@
 /tests/
 /project.godot
 /assets/textures/battle_backgrounds/pixel_crawler/cave_reference
+
+# _host/assets: kopia assetow hosta generowana przez tools/sync_host_copies.gd - assety sa w prywatnym repo
+/_host/assets/

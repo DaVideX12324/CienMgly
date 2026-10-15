@@ -2,14 +2,24 @@
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/whirling_slash.tres" id="s_whirling_slash"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/timed_charge.tres" id="s_timed_charge"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/decay_breath.tres" id="s_decay_breath"]
+
 [resource]
 script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_whirling_slash"), ExtResource("s_timed_charge"), ExtResource("s_decay_breath")])
 enemy_name = "Stary Grzyb"
+scan_text = "Starożytny władca podziemi. Wywołuje falę wybuchową na całą drużynę, wiruje ostrzami i zatruwa zgnilizną."
 quiz_id = "ogolne"
 is_boss = true
-max_hp = 270
-damage_on_wrong = 24
-xp_reward = 388
+max_hp = 2500
+attack = 155
+defense = 140
+magic_attack = 155
+magic_defense = 140
+xp_reward = 8000
 encounter_tier = 4
 patrol_speed = 50.0
 detection_radius = 100.0

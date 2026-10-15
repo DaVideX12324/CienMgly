@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/companion_npc.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_feet"]
+size = Vector2(12, 8)
+
+[node name="CompanionNpc" type="StaticBody2D" groups=["interactable"]]
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+offset = Vector2(1, -24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_feet")

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+
+[ext_resource type="Texture2D" uid="uid://cb3lnb5l6nh7o" path="res://assets/item_icons/warden_cuirass.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "warden_cuirass"
+icon = ExtResource("2_icon")
+display_name = "Kirys Strażnika"
+description = "Zbroja nasycona starożytną magią ochronną, nieprzenikniona dla mroku."
+category = "part"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "body"
+def_bonus = 64

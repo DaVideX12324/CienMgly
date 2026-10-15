@@ -2,16 +2,24 @@
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/heavy_strike.tres" id="s_heavy_strike"]
+
 [resource]
 script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_heavy_strike")])
 enemy_name = "Posąg Starca"
+scan_text = "Stary, popękany posąg runiczny. Jego ciężkie kamienne ciosy niosą ryzyko paraliżu."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false
 question_count = 3
-max_hp = 90
-damage_on_wrong = 14
-xp_reward = 60
+max_hp = 400
+attack = 60
+defense = 61
+magic_attack = 60
+magic_defense = 61
+xp_reward = 400
 encounter_tier = 2
 min_encounter_size = 1
 max_encounter_size = 3

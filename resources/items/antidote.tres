@@ -2,9 +2,12 @@
 
 [ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
 
+[ext_resource type="Texture2D" uid="uid://dsaof4vd013wi" path="res://assets/item_icons/antidote.png" id="2_icon"]
+
 [resource]
 script = ExtResource("1_qrpg_item")
 item_id = "antidote"
+icon = ExtResource("2_icon")
 display_name = "Odtrutka"
 description = "Leczy zatrucie."
 stackable = true

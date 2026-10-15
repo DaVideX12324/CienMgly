@@ -122,9 +122,11 @@ static func generate_layout(
 		StructuredRoomPackerScript.place_levers(st, ctx.entrance_pos)
 	canals.gates = st.gates
 	canals.levers = st.levers
+	GenProgress.end(&"portals")
 
 	# Przejścia czyszczące — układ ma już być z nimi zgodny (R7: < 1 % zmienionych kratek). Kanały, chodniki,
 	# korytarze i kładki chronione przed zamurowaniem (Wall3HPass potrafił zasypać przesmyk i odciąć część mapy).
+	GenProgress.begin(&"smoothing")
 	for i in range(width * height):
 		if st.water[i] or st.lanes[i] or st.corrm[i] or st.service[i] or st.bridge_m[i]:
 			ctx.protected_floor[Vector2i(i % width, i / width)] = true
@@ -152,7 +154,7 @@ static func generate_layout(
 	if flags.enable_1w_walls:
 		stats["walls_1w"] = _walls_1w(ctx, canals, seed_used, cfg)
 	stats["lost_post"] = _unreachable(ctx, canals)
-	GenProgress.end(&"portals")
+	GenProgress.end(&"smoothing")
 	ctx.preprocess_stats["structured"] = stats
 
 	# Korytarze-schody (przed platformami, kratownicami i obiektami — wszystkie ich unikają).
@@ -708,14 +710,28 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 	var dirs: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 	var open := func(c: Vector2i) -> bool:
 		return GridUtils.is_walkable(ctx.grid, c) or canals.water.has(c)
+	# Raster chodliwości / wody (W × H, 1 = tak) do szybkiego odrzucania kratek — aktualizowany przy każdym zapisie
+	# do siatki w tej funkcji; warunki jak wyżej (poza mapą: nie chodliwe, bez wody).
+	var W := ctx.width
+	var walk := _walk_raster(ctx)
+	var wat := _cells_raster(canals.water, W, ctx.height)
 	var cand: Array[Vector2i] = []
 	for y in range(1, ctx.height - 1):
 		for x in range(1, ctx.width - 1):
 			cand.append(Vector2i(x, y))
 	var filled := 0
+	var first := true
 	while not cand.is_empty():
 		var next: Array[Vector2i] = []
 		for c in cand:
+			if first:   # pierwsza runda: kratki wnętrza mapy — odrzucenie z rastra (mur / woda / < 3 ściany)
+				var i := c.y * W + c.x
+				if not walk[i] or wat[i]:
+					continue
+				var open_n := int(walk[i - 1] or wat[i - 1]) + int(walk[i + 1] or wat[i + 1]) \
+						+ int(walk[i - W] or wat[i - W]) + int(walk[i + W] or wat[i + W])
+				if open_n > 1:
+					continue
 			if not GridUtils.is_walkable(ctx.grid, c) or canals.water.has(c) or canals.bridge_cells.has(c) or ctx.portal_zone.has(c):
 				continue
 			var walls := 0
@@ -724,18 +740,24 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 					walls += 1
 			if walls >= 3:
 				ctx.grid[c] = CellType.WALL
+				_raster_set(walk, c, W, ctx.height, 0)
 				filled += 1
 				for d in dirs:
 					next.append(c + d)
 		cand = next
+		first = false
 	# przesmyki otwarte z obu stron (ciąg kratek z murem po obu bokach): zasypane, gdy końce łączą się inną drogą
 	var blocked_cell := func(c: Vector2i) -> bool:
 		return canals.water.has(c) or canals.bridge_cells.has(c) or ctx.portal_zone.has(c)
 	for axis: Vector2i in [Vector2i(1, 0), Vector2i(0, 1)]:
 		var side := Vector2i(axis.y, axis.x)
 		var seen := {}
+		var so := side.y * W + side.x
 		for y in range(1, ctx.height - 1):
 			for x in range(1, ctx.width - 1):
+				var i := y * W + x
+				if not walk[i] or walk[i + so] or wat[i + so] or walk[i - so] or wat[i - so]:
+					continue   # część warunku niżej z rastra (kratka przy brzegu mapy: sąsiad w mapie)
 				var c := Vector2i(x, y)
 				if seen.has(c) or not GridUtils.is_walkable(ctx.grid, c) or blocked_cell.call(c) 						or open.call(c + side) or open.call(c - side) or (open.call(c - axis) and _sliver(ctx, canals, c - axis, side)):
 					continue
@@ -753,10 +775,37 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 					ctx.grid[r] = CellType.WALL
 				if _connected(ctx, canals, a, b, ctx.width * ctx.height):
 					filled += run.size()
+					for r in run:
+						_raster_set(walk, r, W, ctx.height, 0)
 				else:
 					for r in run:
 						ctx.grid[r] = CellType.FLOOR
 	return filled
+
+
+## Raster chodliwości siatki (W × H, 1 = GridUtils.is_walkable).
+static func _walk_raster(ctx: GenerationContext) -> PackedByteArray:
+	var out := PackedByteArray()
+	out.resize(ctx.width * ctx.height)
+	for p: Vector2i in ctx.grid:
+		if p.x >= 0 and p.y >= 0 and p.x < ctx.width and p.y < ctx.height and GridUtils.is_walkable(ctx.grid, p):
+			out[p.y * ctx.width + p.x] = 1
+	return out
+
+
+## Raster kluczy słownika kratek (W × H, 1 = jest).
+static func _cells_raster(cells: Dictionary, w: int, h: int) -> PackedByteArray:
+	var out := PackedByteArray()
+	out.resize(w * h)
+	for p: Vector2i in cells:
+		if p.x >= 0 and p.y >= 0 and p.x < w and p.y < h:
+			out[p.y * w + p.x] = 1
+	return out
+
+
+static func _raster_set(r: PackedByteArray, p: Vector2i, w: int, h: int, v: int) -> void:
+	if p.x >= 0 and p.y >= 0 and p.x < w and p.y < h:
+		r[p.y * w + p.x] = v
 
 
 ## Wystająca ściana (szer. <= MAX_PROTRUSION) przyklejona bokiem do lica innej ściany, ze szczytem w rzędzie pasa
@@ -776,11 +825,30 @@ static func _raise_facade_protrusions(ctx: GenerationContext, canals) -> int:
 			if not wall.call(b):
 				return GridUtils.is_walkable(ctx.grid, b)
 		return false
+	# Raster chodliwości / wody (aktualizowany przy zapisach) — szybkie odrzucenie kratek przed warunkiem niżej.
+	var W := ctx.width
+	var H := ctx.height
+	var walk := _walk_raster(ctx)
+	var wat := _cells_raster(canals.water, W, H)
 	var filled := 0
 	for _round in range(FACADE_BAND + 1):
 		var changed := 0
 		for y in range(2, ctx.height - 1):
 			for x in range(1, ctx.width - 1):
+				var i := y * W + x
+				if walk[i] or wat[i] or walk[i - W] or wat[i - W]:
+					continue   # c albo kratka nad nią nie jest murem
+				# in_band z rastra: pierwsza kratka poniżej, która nie jest murem, ma być chodliwa (poza mapą = mur)
+				var band := false
+				for k in range(1, FACADE_BAND + 1):
+					if y + k >= H:
+						continue
+					var b := i + k * W
+					if walk[b] or wat[b]:
+						band = walk[b] == 1
+						break
+				if not band:
+					continue
 				var c := Vector2i(x, y)
 				if not wall.call(c) or not wall.call(c + Vector2i(0, -1)) or not in_band.call(c):
 					continue
@@ -802,12 +870,14 @@ static func _raise_facade_protrusions(ctx: GenerationContext, canals) -> int:
 					for f in run:
 						ctx.grid[f] = CellType.WALL
 					var ok := true
-					for i in range(1, nb.size()):
-						if not _connected(ctx, canals, nb[0], nb[i], 4000):
+					for j in range(1, nb.size()):
+						if not _connected(ctx, canals, nb[0], nb[j], 4000):
 							ok = false
 							break
 					if ok:
 						changed += run.size()
+						for f in run:
+							_raster_set(walk, f, W, H, 0)
 					else:
 						for f in run:
 							ctx.grid[f] = CellType.FLOOR

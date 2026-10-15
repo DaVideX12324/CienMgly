@@ -22,15 +22,21 @@ func is_enabled(ctx: GenerationContext) -> bool:
 
 func apply(ctx: GenerationContext) -> int:
 	var total := 0
+	var w := ctx.width
+	var r := walk_raster(ctx)   # zasypania po skanie rundy dopisywane do rastra
 	for _round in MAX_ROUNDS:
 		var fills: Array[Vector2i] = []
 		for y in range(5, ctx.height - 1):
 			for x in range(1, ctx.width - 1):
+				var i := y * w + x
+				if not r[i] or r[i - w] or r[i - 2 * w]:
+					continue   # nie stopa fasady (_is_foot)
 				var top := _thin_step_top(ctx.grid, Vector2i(x, y))
 				if top != Vector2i(-1, -1):
 					fills.append(top)
 		for c in fills:
 			ctx.grid[c] = CellType.WALL
+			raster_set(r, w, ctx.height, c, false)
 		total += fills.size()
 		if fills.is_empty():
 			break

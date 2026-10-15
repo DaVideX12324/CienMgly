@@ -27,6 +27,12 @@ var _btn_add_streak: Button
 var _opt_speed: OptionButton
 var _opt_quizzes: OptionButton
 var _opt_quiz_layout: OptionButton
+var _opt_items: OptionButton
+var _spin_item_count: SpinBox
+var _btn_equip_item: Button
+var _opt_status_member: OptionButton
+var _opt_party_hero: OptionButton
+var _opt_status_id: OptionButton
 var _lbl_fps: Label
 var _lbl_info: Label
 var _lbl_stats_details: Label
@@ -114,6 +120,9 @@ func toggle() -> void:
 	_modal_root.visible = new_vis
 	if new_vis:
 		_refresh_controls_state()
+		_refresh_item_cheats()
+		_refresh_status_cheats()
+		_refresh_party_cheats()
 		_center_panel()
 	menu_visibility_changed.emit(new_vis)
 
@@ -725,7 +734,273 @@ func _build_tab_gameplay() -> Control:
 	party_content.add_child(party_grid)
 	vbox.add_child(party_box)
 
+	vbox.add_child(_build_item_cheats())
+	vbox.add_child(_build_status_cheats())
+	vbox.add_child(_build_party_cheats())
+
 	return scroll
+
+
+## Dowolny przedmiot / ekwipunek z katalogu modułu (InventoryService.get_all_items): dodanie do plecaka
+## albo od razu założenie bohaterowi (PlayerStats.set_member_equipment, członek 0).
+func _build_item_cheats() -> PanelContainer:
+	var box := _create_card_container("Przedmioty i ekwipunek", "[ ITEM ]", "Dowolny przedmiot z katalogu: dodaj do plecaka albo załóż bohaterowi (ekwipunek).")
+	var content: VBoxContainer = _get_card_content(box)
+	_opt_items = OptionButton.new()
+	_opt_items.focus_mode = Control.FOCUS_NONE
+	_opt_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_opt_items.item_selected.connect(func(_idx): _update_item_cheat_buttons())
+	content.add_child(_opt_items)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_spin_item_count = SpinBox.new()
+	_spin_item_count.min_value = 1
+	_spin_item_count.max_value = 99
+	_spin_item_count.value = 1
+	_spin_item_count.prefix = "×"
+	row.add_child(_spin_item_count)
+	var add_btn := Button.new()
+	add_btn.text = "➕ Dodaj do plecaka"
+	add_btn.focus_mode = Control.FOCUS_NONE
+	add_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_min_height(add_btn, 36)
+	add_btn.pressed.connect(_on_cheat_add_item)
+	row.add_child(add_btn)
+	_btn_equip_item = Button.new()
+	_btn_equip_item.text = "🛡️ Załóż bohaterowi"
+	_btn_equip_item.focus_mode = Control.FOCUS_NONE
+	_btn_equip_item.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_min_height(_btn_equip_item, 36)
+	_btn_equip_item.pressed.connect(_on_cheat_equip_item)
+	row.add_child(_btn_equip_item)
+	content.add_child(row)
+	return box
+
+
+## Statusy bohaterów (PlayerStats.add_status / cure_statuses): wybrany członek drużyny i status z katalogu modułu.
+func _build_status_cheats() -> PanelContainer:
+	var box := _create_card_container("Statusy bohaterów", "[ STATUS ]", "Nałóż albo zdejmij status wybranemu członkowi drużyny (czas trwania losowany z definicji statusu).")
+	var content: VBoxContainer = _get_card_content(box)
+	var pick_row := HBoxContainer.new()
+	pick_row.add_theme_constant_override("separation", 10)
+	_opt_status_member = OptionButton.new()
+	_opt_status_member.focus_mode = Control.FOCUS_NONE
+	_opt_status_member.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pick_row.add_child(_opt_status_member)
+	_opt_status_id = OptionButton.new()
+	_opt_status_id.focus_mode = Control.FOCUS_NONE
+	_opt_status_id.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pick_row.add_child(_opt_status_id)
+	content.add_child(pick_row)
+	var btn_row := HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 10)
+	var specs := [
+		["☠️ Nałóż", _on_cheat_add_status],
+		["✨ Zdejmij wybrany", _on_cheat_cure_status],
+		["🧹 Zdejmij wszystkie", _on_cheat_clear_statuses],
+	]
+	for spec in specs:
+		var btn := Button.new()
+		btn.text = spec[0]
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_min_height(btn, 36)
+		btn.pressed.connect(spec[1])
+		btn_row.add_child(btn)
+	content.add_child(btn_row)
+	return box
+
+
+## Lista bohaterów i statusów odświeżana przy otwarciu menu (drużyna i katalog należą do modułu).
+func _refresh_status_cheats() -> void:
+	if _opt_status_member == null or _opt_status_id == null:
+		return
+	var prev_member := _opt_status_member.selected
+	var prev_status: String = str(_opt_status_id.get_item_metadata(_opt_status_id.selected)) if _opt_status_id.selected >= 0 else ""
+	_opt_status_member.clear()
+	_opt_status_id.clear()
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or not ps.has_method("get_status_catalog") or not ps.has_method("get_party_members"):
+		_opt_status_member.add_item("(brak drużyny — moduł nieaktywny)")
+		_opt_status_member.disabled = true
+		_opt_status_id.disabled = true
+		return
+	_opt_status_member.disabled = false
+	_opt_status_id.disabled = false
+	var members: Array = ps.get_party_members()
+	for i in range(members.size()):
+		var statuses: Array = ps.get_statuses(i)
+		var suffix := "  (%s)" % ", ".join(statuses) if not statuses.is_empty() else ""
+		_opt_status_member.add_item("%d. %s%s" % [i + 1, str((members[i] as Dictionary).get("name", "Bohater")), suffix])
+	if prev_member >= 0 and prev_member < _opt_status_member.item_count:
+		_opt_status_member.selected = prev_member
+	for entry in ps.get_status_catalog():
+		_opt_status_id.add_item(str(entry["name"]))
+		_opt_status_id.set_item_metadata(_opt_status_id.item_count - 1, str(entry["id"]))
+		if str(entry["id"]) == prev_status:
+			_opt_status_id.selected = _opt_status_id.item_count - 1
+
+
+func _status_cheat_target() -> Array:
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or _opt_status_member == null or _opt_status_member.disabled or _opt_status_member.selected < 0:
+		return []
+	var sid := str(_opt_status_id.get_item_metadata(_opt_status_id.selected)) if _opt_status_id.selected >= 0 else ""
+	return [ps, _opt_status_member.selected, sid]
+
+
+func _status_cheat_toast(text: String, color: Color) -> void:
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		cheat_service.show_toast(text, color)
+	_refresh_status_cheats()
+
+
+func _on_cheat_add_status() -> void:
+	var t := _status_cheat_target()
+	if t.is_empty() or t[2] == "":
+		return
+	var label: String = _opt_status_id.get_item_text(_opt_status_id.selected)
+	if t[0].add_status(t[1], t[2]):
+		_status_cheat_toast("☠️ Nałożono: %s" % label, Color(0.9, 0.5, 1.0))
+	else:
+		_status_cheat_toast("Status „%s” już jest nałożony" % label, Color(1.0, 0.7, 0.4))
+
+
+func _on_cheat_cure_status() -> void:
+	var t := _status_cheat_target()
+	if t.is_empty() or t[2] == "":
+		return
+	var removed: Array = t[0].cure_statuses(t[1], [t[2]])
+	_status_cheat_toast("✨ Zdjęto status" if not removed.is_empty() else "Ten status nie jest nałożony", Color(0.5, 1.0, 0.6) if not removed.is_empty() else Color(1.0, 0.7, 0.4))
+
+
+func _on_cheat_clear_statuses() -> void:
+	var t := _status_cheat_target()
+	if t.is_empty():
+		return
+	var removed: Array = t[0].cure_statuses(t[1], t[0].get_statuses(t[1]))
+	_status_cheat_toast("🧹 Zdjęto statusy: %d" % removed.size(), Color(0.5, 1.0, 0.6))
+
+
+func _build_party_cheats() -> PanelContainer:
+	var box := _create_card_container("Drużyna", "[ PARTY ]", "Dołącz towarzysza do drużyny (poziom: najwyższy w drużynie − 1, pełne HP / SP, ekwipunek startowy).")
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_opt_party_hero = OptionButton.new()
+	_opt_party_hero.focus_mode = Control.FOCUS_NONE
+	_opt_party_hero.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_opt_party_hero)
+	var btn := Button.new()
+	btn.text = "➕ Dołącz"
+	btn.focus_mode = Control.FOCUS_NONE
+	_min_height(btn, 36)
+	btn.pressed.connect(_on_cheat_recruit)
+	row.add_child(btn)
+	_get_card_content(box).add_child(row)
+	return box
+
+
+## Lista postaci spoza drużyny (PlayerStats.recruitable_heroes) odświeżana przy otwarciu menu.
+func _refresh_party_cheats() -> void:
+	if _opt_party_hero == null:
+		return
+	_opt_party_hero.clear()
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or not ps.has_method("recruitable_heroes"):
+		_opt_party_hero.add_item("(brak drużyny — moduł nieaktywny)")
+		_opt_party_hero.disabled = true
+		return
+	for id: String in ps.recruitable_heroes():
+		var hero = ps.hero_by_id(id)
+		_opt_party_hero.add_item("%s (%s)" % [hero.display_name, hero.class_label(hero.character_class)])
+		_opt_party_hero.set_item_metadata(_opt_party_hero.item_count - 1, id)
+	_opt_party_hero.disabled = _opt_party_hero.item_count == 0
+	if _opt_party_hero.item_count == 0:
+		_opt_party_hero.add_item("(wszyscy są już w drużynie)")
+
+
+func _on_cheat_recruit() -> void:
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or _opt_party_hero == null or _opt_party_hero.disabled or _opt_party_hero.selected < 0:
+		return
+	var id := str(_opt_party_hero.get_item_metadata(_opt_party_hero.selected))
+	var label := _opt_party_hero.get_item_text(_opt_party_hero.selected)
+	var cheat_service = _get_service("CheatService")
+	if ps.recruit(id) and cheat_service:
+		cheat_service.show_toast("➕ Dołącza: %s" % label, Color(0.5, 1.0, 0.6))
+	_refresh_party_cheats()
+	_refresh_status_cheats()
+
+
+func _module_singleton(singleton_name: String) -> Node:
+	var core_mgr = _get_service("CoreManager")
+	var node: Variant = core_mgr.get_singleton(singleton_name) if core_mgr and core_mgr.has_method("get_singleton") else null
+	return node as Node
+
+
+## Lista przedmiotów odświeżana przy otwarciu menu (katalog ładuje moduł, nie host).
+func _refresh_item_cheats() -> void:
+	if _opt_items == null:
+		return
+	var prev: String = str(_opt_items.get_item_metadata(_opt_items.selected)) if _opt_items.selected >= 0 else ""
+	_opt_items.clear()
+	var inv := _module_singleton("InventoryService")
+	if inv == null or not inv.has_method("get_all_items"):
+		_opt_items.add_item("(brak katalogu przedmiotów — moduł nieaktywny)")
+		_opt_items.disabled = true
+		_update_item_cheat_buttons()
+		return
+	_opt_items.disabled = false
+	for item in inv.get_all_items():
+		var kind: String = str(item.equip_slot) if str(item.equip_slot) != "" else str(item.category)
+		_opt_items.add_item("%s  [%s]" % [item.display_name, kind])
+		_opt_items.set_item_metadata(_opt_items.item_count - 1, item.item_id)
+		if item.item_id == prev:
+			_opt_items.selected = _opt_items.item_count - 1
+	_update_item_cheat_buttons()
+
+
+func _selected_cheat_item() -> Resource:
+	if _opt_items == null or _opt_items.disabled or _opt_items.selected < 0:
+		return null
+	var inv := _module_singleton("InventoryService")
+	return inv.get_item(str(_opt_items.get_item_metadata(_opt_items.selected))) if inv else null
+
+
+func _update_item_cheat_buttons() -> void:
+	if _btn_equip_item == null:
+		return
+	var item := _selected_cheat_item()
+	_btn_equip_item.disabled = item == null or str(item.get("equip_slot")) == ""
+
+
+func _on_cheat_add_item() -> void:
+	var item := _selected_cheat_item()
+	var ps := _module_singleton("PlayerStats")
+	if item == null or ps == null or not ps.has_method("add_item"):
+		return
+	var count := int(_spin_item_count.value)
+	ps.add_item(str(item.get("item_id")), count)
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		cheat_service.show_toast("➕ Dodano: %s ×%d" % [item.get("display_name"), count], Color(0.5, 0.9, 1.0))
+
+
+func _on_cheat_equip_item() -> void:
+	var item := _selected_cheat_item()
+	var ps := _module_singleton("PlayerStats")
+	if item == null or ps == null or not ps.has_method("set_member_equipment"):
+		return
+	var item_id := str(item.get("item_id"))
+	ps.add_item(item_id, 1)
+	var ok: bool = ps.set_member_equipment(0, str(item.get("equip_slot")), item_id)
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		if ok:
+			cheat_service.show_toast("🛡️ Założono: %s" % item.get("display_name"), Color(0.5, 1.0, 0.6))
+		else:
+			cheat_service.show_toast("Nie udało się założyć: %s" % item.get("display_name"), Color(1.0, 0.5, 0.4))
 
 
 func _create_card_container(title: String, badge: String, description: String) -> PanelContainer:

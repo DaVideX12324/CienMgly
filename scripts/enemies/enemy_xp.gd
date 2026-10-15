@@ -1,0 +1,21 @@
+class_name QuizRpgEnemyXp
+extends RefCounted
+
+## XP za pokonanie wroga z jego poziomu (decyzja usera 2026-10-12: 15 map, wyczyszczenie 120 % wrogów z każdej mapy ma
+## dać razem poziom 100). Wróg o poziomie L daje KILL_FRACTION × XP potrzebne bohaterowi z poziomu L na następny,
+## razy waga tieru (tier 1 słabszy, 3 mocniejszy); boss — BOSS_MULT razy więcej. KILL_FRACTION ≈ 0,09 wychodzi z
+## budżetu: ok. 72 zabić na mapę (120 %), każda mapa ≈ 1/15 drogi do lv 100 (jaskinie do lv 8–9). Wróg z poziomem 0
+## ma stałe xp_reward z danych (tutorial). Tabela budżetów: docs/kontekst/poziomy_i_xp.md.
+
+const KILL_FRACTION := 0.08
+const TIER_WEIGHT := {1: 0.6, 2: 1.0, 3: 1.6}
+const BOSS_MULT := 6.0
+
+static var _hero: QuizRpgHeroData = null
+
+
+static func kill_xp(level: int, tier: int, is_boss: bool = false) -> int:
+	if _hero == null:
+		_hero = QuizRpgHeroData.new()
+	var base := float(_hero.xp_to_next(clampi(level, 1, 99))) * KILL_FRACTION * float(TIER_WEIGHT.get(clampi(tier, 1, 3), 1.0))
+	return maxi(roundi(base * (BOSS_MULT if is_boss else 1.0)), 1)

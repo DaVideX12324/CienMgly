@@ -20,6 +20,16 @@ func get_item(item_ref: String) -> QuizRpgItemData:
 	return item_value as QuizRpgItemData
 
 
+## Wszystkie przedmioty z katalogu (resources/items), posortowane: kategoria, slot, nazwa — menu kodów.
+func get_all_items() -> Array[QuizRpgItemData]:
+	var out: Array[QuizRpgItemData] = []
+	for v in _items_by_id.values():
+		out.append(v as QuizRpgItemData)
+	out.sort_custom(func(a: QuizRpgItemData, b: QuizRpgItemData) -> bool:
+		return [a.category, a.equip_slot, a.display_name] < [b.category, b.equip_slot, b.display_name])
+	return out
+
+
 func has_item(item_ref: String) -> bool:
 	return resolve_item_id(item_ref) != ""
 
@@ -55,8 +65,13 @@ func get_menu_entries(raw_inventory: Array) -> Array[Dictionary]:
 			"heal_amount": item_data.heal_amount,
 			"sp_restore": item_data.sp_restore,
 			"tp_restore": item_data.tp_restore,
+			"icon": item_data.icon,
+			"weapon_type": item_data.weapon_type,
+			"allowed_classes": item_data.allowed_classes,
 			"atk_bonus": item_data.atk_bonus,
 			"def_bonus": item_data.def_bonus,
+			"mat_bonus": item_data.mat_bonus,
+			"mdf_bonus": item_data.mdf_bonus,
 			"usable_in_menu": item_data.usable_in_menu,
 			"usable_in_combat": item_data.usable_in_combat,
 			"effect_summary": item_data.get_effect_summary(),
@@ -155,7 +170,7 @@ func use_item(user: Node, raw_inventory: Array, item_ref: String) -> Dictionary:
 func _build_use_message(item_data: QuizRpgItemData) -> String:
 	var summary: String = item_data.get_effect_summary()
 	if summary == "":
-		return "Uzyto %s." % item_data.display_name
+		return "Użyto %s." % item_data.display_name
 	return "%s: %s" % [item_data.display_name, summary]
 
 

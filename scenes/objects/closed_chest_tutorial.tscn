@@ -45,6 +45,114 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_t2_0"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t2_1"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(32, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t2_2"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(32, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t2_3"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(32, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tier2"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t2_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t2_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t2_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t2_3")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t3_0"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t3_1"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(128, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t3_2"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(128, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t3_3"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(128, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tier3"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t3_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t3_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t3_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t3_3")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4_0"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(224, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4_1"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(224, 32, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4_2"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(224, 64, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t4_3"]
+atlas = ExtResource("1_udnj4")
+region = Rect2(224, 96, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_tier4"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t4_3")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
 [node name="ClosedChest" type="StaticBody2D"]
 y_sort_enabled = true
 scale = Vector2(1.25, 1.25)
@@ -60,6 +168,7 @@ sprite_frames = SubResource("SpriteFrames_5qwxn")
 animation = &"open"
 frame = 1
 script = ExtResource("2_egk45")
+tier_frames = Array[SpriteFrames]([SubResource("SpriteFrames_5qwxn"), SubResource("SpriteFrames_tier2"), SubResource("SpriteFrames_tier3"), SubResource("SpriteFrames_tier4")])
 lock_id = "tutorial_1"
 chest_item_id = "potion"
 chest_item_count = 1

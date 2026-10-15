@@ -170,6 +170,91 @@ static func resolve_module_parts(
 	return []
 
 
+## Pamięć podręczna resolve_module_parts(ctx, pos, role) bez sąsiadów, rolla i wymuszeń — dla placerów wołających
+## resolver na każdą kratkę (podłoga). Wynik zależy wtedy tylko od zestawu kratki (pole / MIXED) i wariantu
+## wybranego z hasza pozycji: części budowane raz na (zestaw, wariant), hasz i wybór wariantu liczone tak samo
+## jak VariantSelector.choose_variant_for_anchor. Zestaw, którego wynik mógłby spaść do kafla legacy albo zestawu
+## domyślnego (brak / nieznany zestaw, brak aktywnych wariantów, wariant bez części) -> zwykłe resolve_module_parts.
+class AnchorCache:
+	var ctx: GenerationContext
+	var role: int
+	var storage_role: int
+	var active := false
+	var seed_h := 0          # stan hasza FNV po world_seed
+	var sets := {}           # own_id -> [active warianty, total, części na wariant, hash id zestawu] albo null (wolna ścieżka)
+
+	func _init(c: GenerationContext, module_role: TileModuleRole.Id) -> void:
+		ctx = c
+		role = module_role
+		active = TileResolver.is_active(c)
+		if active:
+			storage_role = TileModuleRole.to_storage_role(module_role)
+			seed_h = AnchorCache._fnv(2166136261, c.seed_value)
+
+	func parts_at(pos: Vector2i) -> Array:
+		if not active:
+			return []
+		var profile: MapTileProfile = ctx.map_tile_profile
+		var field_id: StringName = ctx.tileset_field.get_tileset_id(pos, profile.default_tileset_id)
+		var own_id: StringName = TileResolver._own_id_for_field(ctx, field_id, pos, &"")
+		if not sets.has(own_id):
+			sets[own_id] = _prepare(own_id)
+		var sd = sets[own_id]
+		if sd == null:
+			return TileResolver.resolve_module_parts(ctx, pos, role)
+		var h := AnchorCache._fnv(AnchorCache._fnv(AnchorCache._fnv(AnchorCache._fnv(AnchorCache._fnv(seed_h, pos.x), pos.y), sd[3]), role), 0)
+		var vars: Array = sd[0]
+		var total: float = sd[1]
+		var r: float = (float(h) / 4294967296.0) * total
+		var acc: float = 0.0
+		for k in range(vars.size()):
+			acc += (vars[k] as TileVariant).weight
+			if r < acc:
+				return sd[2][k]
+		return sd[2][vars.size() - 1]
+
+	func _prepare(own_id: StringName):
+		var own_set: NamedTileSetDefinition = ctx.map_tile_profile.get_tileset(own_id)
+		if own_set == null:
+			return null
+		var entry: TileRoleEntry = own_set.get_entry(storage_role)
+		if entry == null or not entry.has_variants():
+			return null
+		var vars: Array = []
+		var total: float = 0.0
+		for v in entry.variants:
+			if v == null or not (v as TileVariant).is_active():
+				continue
+			vars.append(v)
+			total += (v as TileVariant).weight
+		if vars.is_empty() or total <= 0.0:
+			return null
+		var parts_by: Array = []
+		for v: TileVariant in vars:
+			var out: Array = []
+			for p in v.valid_parts():
+				var rp := ResolvedTileModulePart.new()
+				rp.offset = p.offset
+				rp.tile = p.tile
+				rp.layer = p.layer
+				rp.variant_id = v.variant_id
+				rp.source_tileset_id = own_id
+				out.append(rp)
+			if out.is_empty():
+				return null
+			parts_by.append(out)
+		return [vars, total, parts_by, int(String(own_id).hash())]
+
+	## Krok FNV-1a VariantSelector._stable_hash dla jednej wartości (4 bajty).
+	static func _fnv(h: int, value: int) -> int:
+		var v := value & 0xffffffff
+		h = ((h ^ (v & 0xff)) * 16777619) & 0xffffffff
+		h = ((h ^ ((v >> 8) & 0xff)) * 16777619) & 0xffffffff
+		h = ((h ^ ((v >> 16) & 0xff)) * 16777619) & 0xffffffff
+		h = ((h ^ ((v >> 24) & 0xff)) * 16777619) & 0xffffffff
+		return h
+
+
 ## Zestaw, z którego resolve_module_parts bierze kafel w anchor_pos: MIXED z pola (losowane
 ## źródło puli) > force_tileset_id > zestaw pola. Przy variant_roll >= 0 i bez sąsiadów/wymuszeń
 ## wynik resolve_module_parts zależy tylko od (ten zestaw, roll) — placery mogą go cache'ować.

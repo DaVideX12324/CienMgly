@@ -5,13 +5,17 @@
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Kamieniak"
+scan_text = "Prymitywne stworzenie ze skały i mchu. Powolne i podatne na rozbicie."
 quiz_id = "ogolne"
 quiz_category = "ogolne"
 is_boss = false
 question_count = 3
-max_hp = 60
-damage_on_wrong = 10
-xp_reward = 40
+max_hp = 100
+attack = 26
+defense = 30
+magic_attack = 26
+magic_defense = 30
+xp_reward = 200
 encounter_tier = 1
 min_encounter_size = 1
 max_encounter_size = 3
