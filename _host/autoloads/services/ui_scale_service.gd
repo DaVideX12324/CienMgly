@@ -45,7 +45,16 @@ func set_mode(mode: int) -> void:
 
 func reset_to_auto() -> void:
 	user_picked = false
-	current_mode = _detect_mode()
+	current_mode = max_mode_for_height(_screen_height())
+
+
+## Największa skala, przy której UI mieści się na ekranie tej wysokości (tabela MIN_SCREEN_H) — wybór automatyczny
+## i po każdej zmianie rozdzielczości; w opcjach większe pozycje są wyszarzone.
+func max_mode_for_height(height: int) -> int:
+	var result: int = ScaleMode.XLARGE
+	while result > ScaleMode.XSMALL and height < int(MIN_SCREEN_H[result]):
+		result -= 1
+	return result
 
 
 func get_mode_labels() -> Array[String]:
@@ -79,7 +88,7 @@ func load_from_cfg(cfg: ConfigFile) -> void:
 			current_mode = _clamp_mode_to_screen(saved)
 			return
 	user_picked = false
-	current_mode = _detect_mode()
+	current_mode = max_mode_for_height(_screen_height())
 
 
 func save_to_cfg(cfg: ConfigFile) -> void:
@@ -87,33 +96,17 @@ func save_to_cfg(cfg: ConfigFile) -> void:
 	cfg.set_value("ui", "ui_scale_auto", not user_picked)
 
 
+## Nowa rozdzielczość (opcje, przeciągnięte okno): największa skala, jaka się mieści — także po ręcznym wyborze
+## (prośba usera 2026-10-16). Ręczny wybór razem ze zmianą rozdzielczości opcje ustawiają po niej (set_mode).
 func on_resolution_changed(_new_resolution: Vector2i) -> void:
-	if user_picked:
-		current_mode = _clamp_mode_to_screen(current_mode)
-		return
-	current_mode = _detect_mode()
+	user_picked = false
+	current_mode = max_mode_for_height(_screen_height())
 
 
-func _detect_mode() -> int:
+func _screen_height() -> int:
 	var height: int = WindowService.resolution.y
-	if height <= 0:
-		height = DisplayServer.window_get_size().y
-	if height >= 2160:
-		return ScaleMode.XLARGE
-	if height > 1080:
-		return ScaleMode.LARGE
-	if height > 900:
-		return ScaleMode.NORMAL
-	if height >= 720:
-		return ScaleMode.SMALL
-	return ScaleMode.XSMALL
+	return height if height > 0 else DisplayServer.window_get_size().y
 
 
 func _clamp_mode_to_screen(mode: int) -> int:
-	var result := clampi(mode, ScaleMode.XSMALL, ScaleMode.XLARGE)
-	var height: int = WindowService.resolution.y
-	if height <= 0:
-		height = DisplayServer.window_get_size().y
-	while result > ScaleMode.XSMALL and height < int(MIN_SCREEN_H[result]):
-		result -= 1
-	return result
+	return mini(clampi(mode, ScaleMode.XSMALL, ScaleMode.XLARGE), max_mode_for_height(_screen_height()))

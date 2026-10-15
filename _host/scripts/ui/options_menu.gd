@@ -130,6 +130,7 @@ func _ready() -> void:
 		_mode_btns[index].pressed.connect(func(): _select_mode(mode))
 	_populate_monitors()
 	_monitor_option.item_selected.connect(_on_monitor_changed)
+	_res_option.item_selected.connect(func(_i: int) -> void: _on_display_target_changed())
 	_populate_resolutions(_monitor_option.selected)
 	_populate_scale()
 	_fps_slider.max_value = WindowService.MAX_FPS_SLIDER
@@ -270,6 +271,7 @@ func _select_mode(mode: int) -> void:
 	_populate_resolutions(_monitor_option.selected)
 	var index := _resolutions.find(picked)
 	_res_option.selected = index if index >= 0 else _resolutions.size() - 1
+	_on_display_target_changed()
 
 
 func _sync_mode_buttons() -> void:
@@ -294,6 +296,29 @@ func _sync_resolution() -> void:
 
 func _sync_scale() -> void:
 	_scale_option.selected = UIScaleService.current_mode
+	_refresh_scale_items(_pending_height())
+
+
+## Wysokość ekranu dla wybranej (jeszcze niezastosowanej) rozdzielczości.
+func _pending_height() -> int:
+	var index := _res_option.selected
+	return _resolutions[index].y if index >= 0 and index < _resolutions.size() else WindowService.resolution.y
+
+
+## Skale za duże dla tej wysokości (UI wyszłoby poza ekran) — wyszarzone.
+func _refresh_scale_items(height: int) -> void:
+	var max_mode: int = UIScaleService.max_mode_for_height(height)
+	for index in range(_scale_option.item_count):
+		_scale_option.set_item_disabled(index, index > max_mode)
+
+
+## Inna rozdzielczość / tryb / monitor w opcjach: skala od razu na największą, jaka się zmieści (można zmniejszyć).
+func _on_display_target_changed() -> void:
+	var height := _pending_height()
+	_sel_scale = UIScaleService.max_mode_for_height(height)
+	_scale_manually_changed = false
+	_scale_option.selected = _sel_scale
+	_refresh_scale_items(height)
 
 
 func _populate_monitors() -> void:
@@ -309,6 +334,7 @@ func _populate_monitors() -> void:
 func _on_monitor_changed(index: int) -> void:
 	_populate_resolutions(index)
 	_res_option.selected = max(0, _resolutions.size() - 1)
+	_on_display_target_changed()
 
 
 func _populate_resolutions(screen: int) -> void:
@@ -346,6 +372,7 @@ func _on_window_resized_by_user(_size: Vector2i) -> void:
 		_populate_resolutions(WindowService.monitor_idx)
 		_sync_resolution()
 		_remember_display_selection()
+	_sync_scale()  # skala już przeliczona na największą dla nowego okna
 
 
 func _populate_scale() -> void:
@@ -854,12 +881,14 @@ func _on_apply() -> void:
 		or _res_option.selected != _open_res_index or _sel_scale != _prev_scale
 	if not display_changed:
 		return
+	# Najpierw okno (nowa rozdzielczość ustawia największą skalę), potem ręczny wybór skali — inaczej zmiana
+	# rozdzielczości nadpisałaby wybór.
+	SettingsService.apply_settings(_sel_mode, resolution, _monitor_option.selected)
 	if _scale_manually_changed:
 		UIScaleService.set_mode(_sel_scale)
-	else:
-		if not _prev_scale_user_picked:
-			UIScaleService.reset_to_auto()
-	SettingsService.apply_settings(_sel_mode, resolution, _monitor_option.selected)
+	elif not _prev_scale_user_picked:
+		UIScaleService.reset_to_auto()
+	_sync_scale()
 	_start_confirm()
 
 
@@ -881,6 +910,7 @@ func _on_confirm() -> void:
 	_prev_scale = UIScaleService.current_mode
 	_prev_scale_user_picked = UIScaleService.user_picked
 	_sel_scale = _prev_scale
+	_scale_manually_changed = false
 	_remember_display_selection()
 
 
@@ -889,11 +919,11 @@ func _on_revert() -> void:
 	_confirming = false
 	_confirm_popup.visible = false
 	_scale_manually_changed = false
+	SettingsService.apply_settings(_prev_mode, _prev_res, _prev_monitor)
 	if _prev_scale_user_picked:
 		UIScaleService.set_mode(_prev_scale)
 	else:
 		UIScaleService.reset_to_auto()
-	SettingsService.apply_settings(_prev_mode, _prev_res, _prev_monitor)
 	_sel_mode = _prev_mode
 	_sel_scale = _prev_scale
 	_sync_mode_buttons()
