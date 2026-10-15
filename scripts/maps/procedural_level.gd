@@ -195,31 +195,9 @@ func _ready() -> void:
 
 
 func _ensure_default_resources() -> void:
-	if not enemy_scenes.is_empty():
-		_enemy_pool = enemy_scenes.duplicate()
-	else:
-		_enemy_pool = []
-		var enemy_paths: Array = []  # element: ścieżka albo tablica ścieżek (warianty tieru)
-		if level_type == LevelType.CAVE_DUNGEON:
-			enemy_paths = [
-				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_immature.tscn"),
-				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
-				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
-				QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_old.tscn")
-			]
-		elif level_type == LevelType.FOREST_OVERWORLD:
-			enemy_paths = [
-				QuizRpgPaths.path("scenes/enemies/slime_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/plant_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/warhog.tscn")
-			]
-		else:
-			enemy_paths = [
-				QuizRpgPaths.path("scenes/enemies/bandit_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
-				QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
-			]
-		_enemy_pool = _pool_from_paths(enemy_paths)
+	# Pula domyślna typu poziomu ładowana dopiero w _prepare_job, gdy companion-JSON nie poda własnej
+	# (ładowanie jej zawsze kosztowało ~0,3 s na głównym wątku przed ekranem ładowania — i tak była podmieniana).
+	_enemy_pool = enemy_scenes.duplicate() if not enemy_scenes.is_empty() else []
 
 	if chest_scene == null:
 		var cp := QuizRpgPaths.path("scenes/objects/closed_chest_tutorial.tscn")
@@ -230,6 +208,28 @@ func _ensure_default_resources() -> void:
 		var dp := QuizRpgPaths.path("scenes/objects/tutorial_area/door_horizontal.tscn")
 		if ResourceLoader.exists(dp):
 			door_scene = load(dp) as PackedScene
+
+
+## Domyślna pula wrogów typu poziomu (bez puli z companion-JSON); element: ścieżka albo tablica wariantów tieru.
+func _default_enemy_paths() -> Array:
+	if level_type == LevelType.CAVE_DUNGEON:
+		return [
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_immature.tscn"),
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_long.tscn"),
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_heavy.tscn"),
+			QuizRpgPaths.path("scenes/enemies/pixel_crawler/fungus_old.tscn")
+		]
+	if level_type == LevelType.FOREST_OVERWORLD:
+		return [
+			QuizRpgPaths.path("scenes/enemies/slime_1.tscn"),
+			QuizRpgPaths.path("scenes/enemies/plant_1.tscn"),
+			QuizRpgPaths.path("scenes/enemies/warhog.tscn")
+		]
+	return [
+		QuizRpgPaths.path("scenes/enemies/bandit_1.tscn"),
+		QuizRpgPaths.path("scenes/enemies/ork_1.tscn"),
+		QuizRpgPaths.path("scenes/enemies/knowledge_guardian.tscn")
+	]
 
 
 ## Generuje poziom synchronicznie (cała mapa w tej klatce).
@@ -479,6 +479,8 @@ func _prepare_job(seed_val: int) -> GenJob:
 					_faction_pools[String(k)] = fp
 					if _faction_pools.size() == 1:
 						_enemy_pool = fp
+	if _enemy_pool.is_empty():
+		_enemy_pool = _pool_from_paths(_default_enemy_paths())
 	var level_key := _level_key()
 	var lsm = _get_level_state_manager()
 
