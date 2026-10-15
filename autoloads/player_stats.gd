@@ -106,6 +106,8 @@ var inventory: Array[Dictionary] = [
 	},
 ]
 var party: Array[Dictionary] = []
+## Zadania towarzyszy (NPC rekrutacji): hero_id -> {"state": "active" / "done", "start": licznik przy przyjęciu}.
+var companion_quests: Dictionary = {}
 
 
 func _ready() -> void:
@@ -755,6 +757,7 @@ func get_save_data() -> Dictionary:
 		"rewards": rewards.duplicate(), "rng_bonus": rng_bonus,
 		"inventory": inventory.duplicate(true),
 		"party": party.duplicate(true),
+		"companion_quests": companion_quests.duplicate(true),
 	}
 
 
@@ -778,6 +781,8 @@ func load_save_data(data: Dictionary) -> void:
 	rng_bonus     = data.get("rng_bonus", 0.0)
 	inventory = _to_dictionary_array(data.get("inventory", inventory.duplicate(true)))
 	party = _to_dictionary_array(data.get("party", party.duplicate(true)))
+	var cq: Variant = data.get("companion_quests", {})
+	companion_quests = (cq as Dictionary).duplicate(true) if cq is Dictionary else {}
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
@@ -796,6 +801,7 @@ func reset() -> void:
 		{"item_id": "antidote", "count": 1},
 	]
 	party.clear()
+	companion_quests.clear()
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
