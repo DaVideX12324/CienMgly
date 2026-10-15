@@ -63,34 +63,27 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 		covered = covered.duplicate()
 		covered.merge(ctx.portal_zone)
 	if not spread.is_empty():
-		_plan_spread(ctx, result, rooms[entrance_room_idx] if entrance_room_idx >= 0 else Rect2i(), exit_room, spread, covered)
+		var entrance_room: Rect2i = rooms[entrance_room_idx] if entrance_room_idx >= 0 else Rect2i()
+		var dist := _floor_dist(ctx, result, ctx.entrance_pos)
+		var entrance_area := _entrance_area(dist, entrance_room)
+		_plan_spread(ctx, result, entrance_room, exit_room, spread, covered, dist, entrance_area)
+		# przesunięcia (nudge, rozsunięcie duplikatów) też nie wchodzą do strefy wejścia
+		covered = covered.duplicate()
+		covered.merge(entrance_area)
 	if not covered.is_empty():
 		_nudge_off(ctx, result, covered)
 	_separate(ctx, result, covered)
 
 
-## Wrogowie rozproszeni po całej osiągalnej podłodze (korytarze, hale, pokoje), także zaraz za pokojem wejścia:
-## liczba = per_1000 na 1000 kratek, punkty co najmniej `spacing` kratek od siebie (Chebyshev), w punkcie pojedynczy wróg
-## albo z szansą group_chance grupka group_size (stoją obok siebie — w walce łączą się w jedną). Bez pokoju wejścia
-## (+1), bez kratek bliżej wejścia niż entrance_clear (po ścieżce) i bez pokoju wyjścia (boss). Tier z odległości od
-## wejścia: do tier2_from (część najdalszej odległości) 1, dalej 2, a z szansą tier3_chance za tier3_from 3.
-## Osiągalność bez obiektów (kolce bram też są obiektem — za bramami też ma być kogo spotkać).
-## Najpierw near_entrance punktów najbliżej wejścia (pierwsze korytarze za pokojem startowym), potem losowo.
-## Frakcje ("factions": nazwa -> waga): terytoria z szumu o częstotliwości faction_frequency (spójne obszary mapy),
-## grupka zawsze z jednej frakcji; spawn dostaje "faction" (pula wrogów frakcji, grupowanie walk tylko w frakcji).
-## JSON "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35,
-##   "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15,
-##   "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025}
-static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, entrance_room: Rect2i,
-		exit_room: Rect2i, cfg: Dictionary, covered: Dictionary) -> void:
+## Odległość po podłodze od kratki (BFS), bez barier płaskowyżów i kanałów.
+static func _floor_dist(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, from: Vector2i) -> Dictionary:
 	var blocked := {}
 	if ctx.plateau != null and not ctx.plateau.is_empty():
 		blocked.merge(ctx.plateau.blocked)
 	if result.canals != null and not result.canals.is_empty():
 		blocked.merge(result.canals.blocked)
-	# odległość po podłodze od wejścia
-	var dist := {ctx.entrance_pos: 0}
-	var queue: Array[Vector2i] = [ctx.entrance_pos]
+	var dist := {from: 0}
+	var queue: Array[Vector2i] = [from]
 	var head := 0
 	while head < queue.size():
 		var p := queue[head]
@@ -100,6 +93,44 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 			if not dist.has(n) and GridUtils.is_walkable(ctx.grid, n) and not blocked.has(n):
 				dist[n] = int(dist[p]) + 1
 				queue.append(n)
+	return dist
+
+
+## Strefa wejścia (decyzja usera 2026-10-16: wrogowie dopiero za pierwszym pokojem): kratki nie dalej po ścieżce niż
+## najdalsza kratka pokoju wejścia (prostokąt +1) — wnęka portalu, korytarz do pokoju i cały pokój (też jego
+## nieregularny brzeg).
+static func _entrance_area(dist: Dictionary, entrance_room: Rect2i) -> Dictionary:
+	var area := {}
+	if entrance_room.size == Vector2i.ZERO:
+		return area
+	var room := entrance_room.grow(1)
+	var reach := 0
+	for p in dist:
+		if room.has_point(p):
+			reach = maxi(reach, int(dist[p]))
+	for p in dist:
+		if int(dist[p]) <= reach:
+			area[p] = true
+	return area
+
+
+## Wrogowie rozproszeni po całej osiągalnej podłodze (korytarze, hale, pokoje), także zaraz za pokojem wejścia:
+## liczba = per_1000 na 1000 kratek, punkty co najmniej `spacing` kratek od siebie (Chebyshev), w punkcie pojedynczy wróg
+## albo z szansą group_chance grupka group_size (stoją obok siebie — w walce łączą się w jedną). Bez pokoju wejścia
+## (+1), bez kratek bliżej wejścia niż entrance_clear (po ścieżce) i bez pokoju wyjścia (boss). Tier z odległości od
+## wejścia: do tier2_from (część najdalszej odległości) 1, dalej 2, a z szansą tier3_chance za tier3_from 3.
+## Osiągalność bez obiektów (kolce bram też są obiektem — za bramami też ma być kogo spotkać).
+## Najpierw near_entrance punktów najbliżej wejścia (pierwsze korytarze za pokojem startowym), potem losowo.
+## Nic w strefie wejścia (_entrance_area: wnęka portalu, korytarz do pierwszego pokoju i sam pokój).
+## Frakcje ("factions": nazwa -> waga): terytoria z szumu o częstotliwości faction_frequency (spójne obszary mapy),
+## grupka zawsze z jednej frakcji; spawn dostaje "faction" (pula wrogów frakcji, grupowanie walk tylko w frakcji).
+## JSON "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35,
+##   "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15,
+##   "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025}
+static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.GenerationResult, entrance_room: Rect2i,
+		exit_room: Rect2i, cfg: Dictionary, covered: Dictionary, dist: Dictionary, entrance_area: Dictionary) -> void:
+	var queue: Array[Vector2i] = []
+	queue.assign(dist.keys())  # kolejność BFS (słownik zachowuje kolejność wstawiania)
 	var max_d := 1
 	for p in queue:
 		max_d = maxi(max_d, int(dist[p]))
@@ -109,7 +140,7 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 	var stairs: Dictionary = result.canals.stair_cells if result.canals != null and "stair_cells" in result.canals else {}
 	var cands: Array[Vector2i] = []
 	for p in queue:
-		if int(dist[p]) < clear or no_room.has_point(p) or exit_room.has_point(p) or covered.has(p) \
+		if int(dist[p]) < clear or no_room.has_point(p) or exit_room.has_point(p) or covered.has(p) or entrance_area.has(p) \
 				or ctx.portal_zone.has(p) or stairs.has(p) or safe.has(p) or result.nav_excluded.has(p):
 			continue
 		cands.append(p)
@@ -146,6 +177,7 @@ static func _plan_spread(ctx: GenerationContext, result: MapGeneratorBase.Genera
 	var taken := covered.duplicate()
 	taken.merge(safe)  # członkowie grupki też poza azylem
 	taken.merge(result.nav_excluded)  # i poza kratkami bez nawigacji wrogów
+	taken.merge(entrance_area)  # i poza strefą wejścia (członek grupki obok lidera wchodził na brzeg pokoju startowego)
 	var placed := 0
 	for p in cands:
 		if placed >= target:
