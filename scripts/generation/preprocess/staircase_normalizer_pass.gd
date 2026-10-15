@@ -5,6 +5,11 @@ func get_id() -> StringName:
 	return &"staircase_normalizer"
 
 
+## Każda reguła poniżej wymaga podłogi na W albo E (wall_cardinal <= 1 też).
+func carve_needs_side_floor() -> bool:
+	return true
+
+
 func should_carve_wall(ctx: GenerationContext, pos: Vector2i, _w_n: bool, w_s: bool, w_w: bool, w_e: bool, _wall_cardinal: int) -> bool:
 	# REGUŁA 3B: Anomalia grubości 2H vs 3H od północy
 	if not w_w and not w_e:

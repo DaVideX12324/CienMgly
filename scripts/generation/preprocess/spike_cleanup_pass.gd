@@ -5,6 +5,11 @@ func get_id() -> StringName:
 	return &"spike_cleanup"
 
 
+## Każda reguła poniżej wymaga podłogi na W albo E (wall_cardinal <= 1 też).
+func carve_needs_side_floor() -> bool:
+	return true
+
+
 func should_carve_wall(_ctx: GenerationContext, _pos: Vector2i, _w_n: bool, w_s: bool, w_w: bool, w_e: bool, wall_cardinal: int) -> bool:
 	# REGUŁA 1: Wiszący ząbek / pojedyncza wypustka
 	if wall_cardinal <= 1:

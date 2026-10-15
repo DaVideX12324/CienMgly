@@ -24,12 +24,23 @@ static func run_convergent(ctx: GenerationContext, passes: Array[GridPass], max_
 	if active_passes.is_empty():
 		return
 
+	var carvers: Array[GridPass] = []
+	var side_floor_only := true
+	for p in active_passes:
+		if p.has_method("should_carve_wall"):
+			carvers.append(p)
+			side_floor_only = side_floor_only and p.carve_needs_side_floor()
+
 	var grid := ctx.grid
 	var width := ctx.width
 	var height := ctx.height
 	var changed := true
 	var pass_count := 0
 	var total_changed := 0
+	# Raster typów (aktualizowany przy wycinaniu): „ściana” = grid.get(p, WALL) == WALL, sąsiad = GridUtils.is_walkable.
+	var t := GridPass.type_raster(ctx)
+	var wk := GridPass.WALK_LUT
+	var sl := GridPass.WALL_LUT
 
 	while changed and pass_count < max_passes:
 		changed = false
@@ -38,30 +49,27 @@ static func run_convergent(ctx: GenerationContext, passes: Array[GridPass], max_
 
 		for y in range(1, height - 1):
 			for x in range(1, width - 1):
-				var pos := Vector2i(x, y)
-				if grid.get(pos, CellType.WALL) != CellType.WALL:
+				var i := y * width + x
+				if sl[t[i]] == 0:
 					continue
+				var w_w: bool = wk[t[i - 1]] == 0
+				var w_e: bool = wk[t[i + 1]] == 0
+				if side_floor_only and w_w and w_e:
+					continue
+				var w_n: bool = wk[t[i - width]] == 0
+				var w_s: bool = wk[t[i + width]] == 0
+				var wall_cardinal := int(w_n) + int(w_s) + int(w_w) + int(w_e)
 
-				var w_n := not GridUtils.is_walkable(grid, pos + Vector2i(0, -1))
-				var w_s := not GridUtils.is_walkable(grid, pos + Vector2i(0, 1))
-				var w_w := not GridUtils.is_walkable(grid, pos + Vector2i(-1, 0))
-				var w_e := not GridUtils.is_walkable(grid, pos + Vector2i(1, 0))
-
-				var wall_cardinal := 0
-				if w_n: wall_cardinal += 1
-				if w_s: wall_cardinal += 1
-				if w_w: wall_cardinal += 1
-				if w_e: wall_cardinal += 1
-
-				for p in active_passes:
-					if p.has_method("should_carve_wall"):
-						if p.should_carve_wall(ctx, pos, w_n, w_s, w_w, w_e, wall_cardinal):
-							to_carve.append(pos)
-							break
+				var pos := Vector2i(x, y)
+				for p in carvers:
+					if p.should_carve_wall(ctx, pos, w_n, w_s, w_w, w_e, wall_cardinal):
+						to_carve.append(pos)
+						break
 
 		if not to_carve.is_empty():
 			for p in to_carve:
 				grid[p] = CellType.FLOOR
+				t[p.y * width + p.x] = CellType.FLOOR
 				total_changed += 1
 			changed = true
 

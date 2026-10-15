@@ -16,6 +16,12 @@ func apply(_ctx: GenerationContext) -> int:
 	return 0
 
 
+## Pass czyszczący (GridPreprocessor.run_convergent, should_carve_wall): true = wycina ścianę tylko wtedy, gdy
+## z lewej albo z prawej jest podłoga — pętla pomija wtedy kratki ze ścianą po obu bokach bez wywołania reguły.
+func carve_needs_side_floor() -> bool:
+	return false
+
+
 ## Raster chodliwości siatki (W × H, 1 = GridUtils.is_walkable) do szybkiego odrzucania kratek w pętlach po całej
 ## mapie. Pass, który pisze do ctx.grid, aktualizuje go (raster_set) albo buduje od nowa.
 static func walk_raster(ctx: GenerationContext) -> PackedByteArray:

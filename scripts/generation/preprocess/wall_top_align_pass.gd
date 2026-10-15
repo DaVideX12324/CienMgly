@@ -21,12 +21,14 @@ func get_id() -> StringName:
 func apply(ctx: GenerationContext) -> int:
 	var changed := 0
 	var from_y := 1
+	var r := walk_raster(ctx)   # aktualizowany przy każdej naprawie
 	for _i in MAX_ROUNDS:
-		var fix := _find_fix(ctx, from_y)
+		var fix := _find_fix(ctx, from_y, r)
 		if fix.is_empty():
 			break
 		for p: Vector2i in fix.cells:
 			ctx.grid[p] = fix.type
+			raster_set(r, ctx.width, ctx.height, p, GridUtils.is_walkable(ctx.grid, p))
 		changed += (fix.cells as Array).size()
 		from_y = maxi(1, int(fix.y) - RESCAN)
 	return changed
@@ -49,12 +51,14 @@ func _run(grid: Dictionary, p: Vector2i) -> Vector2i:
 
 ## Pierwszy uskok (od rzędu from_y; wyżej go nie ma) i jego naprawa: {cells: Array[Vector2i], type: CellType,
 ## y: rząd} albo {}.
-func _find_fix(ctx: GenerationContext, from_y: int) -> Dictionary:
+func _find_fix(ctx: GenerationContext, from_y: int, walk: PackedByteArray) -> Dictionary:
 	var grid := ctx.grid
+	var w := ctx.width
 	for y in range(from_y, ctx.height - 1):
 		var x := 0
-		while x < ctx.width:
-			if not _is_top(grid, Vector2i(x, y)):
+		var row := y * w
+		while x < w:
+			if walk[row + x] == 1 or walk[row + x - w] == 0:   # _is_top z rastra (y >= 1)
 				x += 1
 				continue
 			var r := _run(grid, Vector2i(x, y))
