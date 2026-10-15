@@ -4,7 +4,8 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 ## Towarzysze drużyny idący za liderem na mapie: instancje sceny aktora członka (player.tscn) w trybie
 ## is_party_follower, w węźle PartyFollowers obok gracza (ten sam rodzic — to samo sortowanie). Każdy idzie po
-## śladzie poprzedniego. Przebudowa tylko przy zmianie składu (hero_id członków 1..n).
+## śladzie poprzedniego. Lider (party[0], szyk) dostaje grafikę swojej postaci na węźle gracza. Przebudowa tylko przy
+## zmianie składu albo szyku (hero_id członków w kolejności).
 
 const HOLDER_NAME := "PartyFollowers"
 const FOLLOW_SPACING := 28.0
@@ -17,11 +18,13 @@ static func sync(leader: CharacterBody2D, ps: Node) -> void:
 		return
 	var members: Array[Dictionary] = ps.get_party_members()
 	var ids := PackedStringArray()
-	for i in range(1, members.size()):
-		ids.append(str(members[i].get("hero_id", "")))
+	for m in members:
+		ids.append(str(m.get("hero_id", "")))
 	var holder := _holder(leader)
 	if holder.get_meta(&"hero_ids", PackedStringArray()) == ids:
 		return
+	if not members.is_empty() and leader.has_method("apply_hero_data"):
+		leader.call("apply_hero_data", members[0])
 	for child in holder.get_children():
 		holder.remove_child(child)   # od razu z drzewa — nowe dostają te same nazwy
 		child.queue_free()

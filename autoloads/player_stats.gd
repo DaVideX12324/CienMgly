@@ -126,17 +126,20 @@ func xp_to_next_level() -> int:
 
 
 ## XP dla całej drużyny: każdy członek dostaje pełną kwotę do własnej puli (jak FNaFB, bez dzielenia), członek bez
-## przytomności DOWNED_XP_SHARE. Lider: PlayerStats.level / xp (sygnał level_up), pozostali: member["level"] / ["xp"]
+## przytomności DOWNED_XP_SHARE. Bohater: PlayerStats.level / xp (sygnał level_up), pozostali: member["level"] / ["xp"]
 ## (sygnał member_level_up).
 func add_xp(amount: int) -> void:
-	for i in range(1, party.size()):
+	var hi := hero_index()
+	for i in range(party.size()):
+		if i == hi:
+			continue
 		var m: Dictionary = party[i]
 		var share := amount if int(m.get("hp", 0)) > 0 else int(amount * DOWNED_XP_SHARE)
 		_add_member_xp(i, share)
-	_add_leader_xp(amount if hp > 0 else int(amount * DOWNED_XP_SHARE))
+	_add_hero_xp(amount if hp > 0 else int(amount * DOWNED_XP_SHARE))
 
 
-func _add_leader_xp(amount: int) -> void:
+func _add_hero_xp(amount: int) -> void:
 	if level >= mini(MAX_LEVEL, LEVEL_CAP):
 		xp = 0
 		xp_changed.emit(xp, xp_to_next_level())
@@ -154,10 +157,10 @@ func _add_leader_xp(amount: int) -> void:
 	xp_changed.emit(xp, xp_to_next_level())
 
 
-## XP członka (nie lidera) do jego puli; awanse wg krzywej jego postaci: maks. HP i SP rosną, bieżące HP / SP bez zmian
-## (jak u lidera), nowe umiejętności z poziomu.
+## XP członka (nie bohatera) do jego puli; awanse wg krzywej jego postaci: maks. HP i SP rosną, bieżące HP / SP bez
+## zmian (jak u bohatera), nowe umiejętności z poziomu.
 func _add_member_xp(member_index: int, amount: int) -> void:
-	if member_index <= 0 or member_index >= party.size() or amount <= 0:
+	if member_index < 0 or member_index >= party.size() or member_index == hero_index() or amount <= 0:
 		return
 	var m: Dictionary = party[member_index]
 	var hero := hero_for_member(m)
@@ -187,9 +190,42 @@ func _add_member_xp(member_index: int, amount: int) -> void:
 ## Najwyższy poziom w drużynie — poziom odniesienia (np. start nowego członka; docs/kontekst/druzyna_szkic.md).
 func highest_level() -> int:
 	var best := level
-	for i in range(1, party.size()):
-		best = maxi(best, int((party[i] as Dictionary).get("level", 1)))
+	for i in range(party.size()):
+		if i != hero_index():
+			best = maxi(best, int((party[i] as Dictionary).get("level", 1)))
 	return best
+
+
+## Indeks głównego bohatera (hero_party_data[0]) w drużynie. Jego HP / poziom / XP / imię są też w polach hp / level /
+## xp / player_name. Szyk (kolejność drużyny) jest dowolny — party[0] to lider (postać na mapie, cel ataków w lidera).
+func hero_index() -> int:
+	_ensure_default_hero()
+	var pid: String = hero_party_data[0].hero_id if hero_party_data[0] != null else ""
+	for i in range(party.size()):
+		if str((party[i] as Dictionary).get("hero_id", "")) == pid:
+			return i
+	return 0
+
+
+func is_hero(member_index: int) -> bool:
+	return member_index == hero_index()
+
+
+## HP członka (bohater z pola hp).
+func member_hp(member_index: int) -> int:
+	return _member_hp(member_index) if member_index >= 0 and member_index < party.size() else 0
+
+
+## Zamienia miejscami dwóch członków drużyny (szyk; party[0] = lider). false = zły indeks albo ten sam.
+func swap_members(a: int, b: int) -> bool:
+	if a == b or a < 0 or b < 0 or a >= party.size() or b >= party.size():
+		return false
+	_sync_primary_party_member()
+	var tmp: Dictionary = party[a]
+	party[a] = party[b]
+	party[b] = tmp
+	party_changed.emit()
+	return true
 
 
 ## Postacie z HERO_PATHS, których nie ma w drużynie (menu deweloperskie, przyszłe zadania towarzyszy).
@@ -296,7 +332,10 @@ func damage_party_percent(fraction: float, keep_alive := true) -> void:
 	var floor_hp := 1 if keep_alive else 0
 	var lead_dmg := maxi(ceili(max_hp * fraction), 1)
 	hp = maxi(hp - lead_dmg, mini(floor_hp, hp))
-	for i in range(1, party.size()):
+	var hi := hero_index()
+	for i in range(party.size()):
+		if i == hi:
+			continue
 		var m: Dictionary = party[i]
 		var mx := int(m.get("max_hp", 1))
 		var cur := int(m.get("hp", mx))
@@ -679,15 +718,15 @@ func status_name(id: String) -> String:
 
 
 func _member_hp(i: int) -> int:
-	return hp if i == 0 else int((party[i] as Dictionary).get("hp", 0))
+	return hp if i == hero_index() else int((party[i] as Dictionary).get("hp", 0))
 
 
 func _member_max_hp(i: int) -> int:
-	return max_hp if i == 0 else int((party[i] as Dictionary).get("max_hp", 1))
+	return max_hp if i == hero_index() else int((party[i] as Dictionary).get("max_hp", 1))
 
 
 func _set_member_hp(i: int, v: int) -> void:
-	if i == 0:
+	if i == hero_index():
 		hp = v
 		hp_changed.emit(hp, max_hp)
 		_sync_primary_party_member()
@@ -707,9 +746,9 @@ func _is_exploring() -> bool:
 	return gm is Node and (gm as Node).has_method("is_exploring") and bool((gm as Node).call("is_exploring"))
 
 
-## Obrażenia członka drużyny (umiejętności wrogów celujące w drużynę); lider przez take_damage (tryb boga).
+## Obrażenia członka drużyny (umiejętności wrogów celujące w drużynę); bohater przez take_damage (tryb boga).
 func damage_member(member_index: int, amount: int) -> void:
-	if member_index == 0:
+	if member_index == hero_index():
 		take_damage(amount)
 		return
 	if member_index < 0 or member_index >= party.size():
@@ -722,8 +761,9 @@ func damage_member(member_index: int, amount: int) -> void:
 func is_party_defeated() -> bool:
 	if hp > 0:
 		return false
-	for i in range(1, party.size()):
-		if int((party[i] as Dictionary).get("hp", 0)) > 0:
+	var hi := hero_index()
+	for i in range(party.size()):
+		if i != hi and int((party[i] as Dictionary).get("hp", 0)) > 0:
 			return false
 	return true
 
@@ -868,7 +908,7 @@ func consume_item(item_ref: String, count: int = 1) -> bool:
 
 
 func use_item(item_ref: String) -> Dictionary:
-	return use_item_on_member(item_ref, 0)
+	return use_item_on_member(item_ref, hero_index())
 
 
 func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
@@ -900,7 +940,7 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 				cured.append(String(sid))
 		member["statuses"] = st
 	party[member_index] = member
-	if member_index == 0:
+	if member_index == hero_index():
 		hp = int(member.get("hp", hp))
 		max_hp = int(member.get("max_hp", max_hp))
 		hp_changed.emit(hp, max_hp)
@@ -1190,13 +1230,14 @@ func _sync_primary_party_member() -> void:
 	_ensure_party_defaults()
 	if party.is_empty():
 		return
-	var member: Dictionary = party[0]
+	var hi := hero_index()
+	var member: Dictionary = party[hi]
 	member["name"] = player_name
 	member["level"] = level
 	member["hp"] = hp
 	member["max_hp"] = max_hp
-	party[0] = member
-	_sync_member_max_sp(0)
+	party[hi] = member
+	_sync_member_max_sp(hi)
 
 
 ## Maks. SP członka z krzywej postaci (hero.sp_for_level); awans zwiększa tylko maksimum (bieżące SP bez zmian).

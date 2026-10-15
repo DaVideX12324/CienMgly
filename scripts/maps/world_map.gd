@@ -277,9 +277,6 @@ func _setup_party_followers() -> void:
 	var leader := _get_player_node()
 	if leader == null or _ps == null:
 		return
-	var members: Array[Dictionary] = _ps.get_party_members() if _ps.has_method("get_party_members") else []
-	if not members.is_empty() and leader.has_method("apply_hero_data"):
-		leader.call("apply_hero_data", members[0])
 	PartyFollowers.sync(leader, _ps)
 
 

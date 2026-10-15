@@ -1262,7 +1262,7 @@ func _use_item(item_data: Dictionary) -> void:
 		return
 	if not _ps.has_method("use_item"):
 		return
-	var use_result: Dictionary = _ps.use_item(item_id)
+	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index)
 	if not bool(use_result.get("success", false)):
 		return
 	var item_name: String = str(use_result.get("name", item_data.get("name", "Przedmiot")))
@@ -1905,7 +1905,7 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		var lvl_before :int= _ps.level if _ps else 1
 		var learned: Array[String] = []
 		var on_learned := func(i: int, skill_name: String):
-			learned.append(skill_name if i == 0 else "%s (%s)" % [skill_name, _member_name(i)])
+			learned.append(skill_name if _ps.is_hero(i) else "%s (%s)" % [skill_name, _member_name(i)])
 		if _ps and _ps.has_signal("skill_learned"):
 			_ps.skill_learned.connect(on_learned)
 		var member_levels := {}   # członek -> najwyższy nowy poziom
@@ -2898,13 +2898,9 @@ func _member_damaged(t: int) -> void:
 		_push_log("%s: koniec — %s." % [_member_name(t), QuizRpgStatusCatalog.name_of(String(sid))], QuizRpgStatusCatalog.color_of(String(sid)))
 
 
-## HP członka drużyny w walce (lider z PlayerStats.hp, reszta z danych drużyny).
+## HP członka drużyny w walce (bohater z PlayerStats.hp, reszta z danych drużyny).
 func _member_hp(i: int) -> int:
-	if _ps == null:
-		return 0
-	if i == 0:
-		return int(_ps.hp)
-	return int((_ps.get_party_member(i) as Dictionary).get("hp", 0)) if _ps.has_method("get_party_member") else 0
+	return int(_ps.member_hp(i)) if _ps and _ps.has_method("member_hp") else 0
 
 
 func _party_indices(dead: bool) -> Array[int]:
@@ -3151,15 +3147,10 @@ func _sync_party_member_from_player(index: int = 0) -> void:
 	if _ps == null or index < 0 or index >= _party_state.size():
 		return
 	var member := _party_state[index]
-	if index == 0:
-		member["name"] = _ps.player_name if str(_ps.player_name) != "" else "Bohater"
-		member["lp"] = _ps.hp
-		member["lp_max"] = _ps.max_hp
-	else:
-		var m: Dictionary = _ps.get_party_member(index) if _ps.has_method("get_party_member") else {}
-		member["name"] = str(m.get("name", "?"))
-		member["lp"] = int(m.get("hp", 0))
-		member["lp_max"] = maxi(int(m.get("max_hp", 1)), 1)
+	var m: Dictionary = _ps.get_party_member(index) if _ps.has_method("get_party_member") else {}
+	member["name"] = str(m.get("name", "?"))
+	member["lp"] = _member_hp(index)
+	member["lp_max"] = maxi(int(m.get("max_hp", 1)), 1)
 	_party_state[index] = member
 
 

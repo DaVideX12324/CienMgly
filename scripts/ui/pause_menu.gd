@@ -96,6 +96,7 @@ var _save_slot_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
+var _formation_pick: int = -1   # szyk: pierwsza wybrana postać (-1 = jeszcze nie wybrano)
 var _state_before_pause: int = -1
 var _opened_direct_exit: bool = false
 var _options_menu: CanvasLayer = null
@@ -317,6 +318,13 @@ func _handle_close_input(event: InputEvent) -> bool:
 		"skills_party_select", "equip_party_select", "status_party_select":
 			_mode = "left_menu"
 			_show_default_party_panel()
+		"formation_select":
+			if _formation_pick >= 0:
+				_formation_pick = -1
+				_show_formation_panel()
+			else:
+				_mode = "left_menu"
+				_show_default_party_panel()
 		"skills_list":
 			_mode = "skills_party_select"
 			_show_party_select_panel("Wybierz postać dla umiejętności")
@@ -431,7 +439,7 @@ func _move_selection(delta: int) -> void:
 				return
 			_items_index = wrapi(_items_index + delta, 0, _current_item_entries.size())
 			_refresh_item_rows()
-		"item_target_select", "skill_target_select", "skills_party_select", "equip_party_select", "status_party_select":
+		"item_target_select", "skill_target_select", "skills_party_select", "equip_party_select", "status_party_select", "formation_select":
 			var visible_party_count: int = _get_visible_row_count(_party_rows)
 			if visible_party_count <= 0:
 				return
@@ -500,6 +508,8 @@ func _accept_current() -> void:
 			_selected_member_index = _party_index
 			_mode = "status_view"
 			_show_status_panel()
+		"formation_select":
+			_accept_formation()
 		"confirm_exit":
 			_confirm_exit_choice()
 		"save_slots":
@@ -520,30 +530,36 @@ func _accept_left_menu() -> void:
 			_show_confirm_panel()
 			return
 
-	match _left_menu_index:
-		0:
+	var row_name := String(_menu_rows[_left_menu_index].name) if _left_menu_index >= 0 and _left_menu_index < _menu_rows.size() else ""
+	match row_name:
+		"MenuRow0":
 			_mode = "items_list"
 			_items_index = 0
 			_show_items_panel()
-		1:
+		"MenuRow1":
 			_mode = "skills_party_select"
 			_party_index = 0
 			_show_party_select_panel("Wybierz postać dla umiejętności")
-		2:
+		"MenuRow2":
 			_mode = "equip_party_select"
 			_party_index = 0
 			_show_party_select_panel("Wybierz postać do ekwipunku")
-		3:
+		"MenuRow3":
 			_mode = "status_party_select"
 			_party_index = 0
 			_show_party_select_panel("Wybierz postać do statusu")
-		4:
+		"MenuRowFormation":
+			_mode = "formation_select"
+			_party_index = 0
+			_formation_pick = -1
+			_show_formation_panel()
+		"MenuRow4":
 			_mode = "save_slots"
 			_save_slot_index = 0
 			_show_save_panel()
-		5:
+		"MenuRow5":
 			_open_options_menu()
-		6:
+		"MenuRow6":
 			_mode = "confirm_exit"
 			_confirm_index = 0
 			_show_confirm_panel()
@@ -723,6 +739,9 @@ func _confirm_exit_choice() -> void:
 
 
 func _show_default_party_panel() -> void:
+	_formation_pick = -1
+	for row in _party_rows:
+		row.modulate = Color.WHITE
 	_show_panel("party")
 	context_title_label.text = "Drużyna"
 	party_hint_label.text = ""
@@ -737,6 +756,28 @@ func _show_party_select_panel(title_text: String) -> void:
 	party_hint_label.text = "Enter/Z: potwierdź    X/Esc: wróć"
 	_party_rows_selectable = true
 	_rebuild_party_rows(true)
+
+
+## Szyk (jak „Formation” w RPG Makerze): pierwsza postać -> druga, zamiana miejsc; pierwsza w drużynie prowadzi na mapie.
+func _show_formation_panel() -> void:
+	if _formation_pick >= 0:
+		var picked: Dictionary = _ps.get_party_member(_formation_pick) if _ps else {}
+		_show_party_select_panel("Szyk: z kim zamienić — %s?" % str(picked.get("name", "?")))
+	else:
+		_show_party_select_panel("Szyk: wybierz postać (pierwsza prowadzi drużynę)")
+	for i in range(_party_rows.size()):
+		_party_rows[i].modulate = Color(1.0, 0.85, 0.45) if i == _formation_pick else Color.WHITE
+
+
+func _accept_formation() -> void:
+	if _formation_pick < 0:
+		_formation_pick = _party_index
+	else:
+		if _ps and _ps.has_method("swap_members"):
+			_ps.swap_members(_formation_pick, _party_index)
+		_formation_pick = -1
+	_play_click()
+	_show_formation_panel()
 
 
 func _show_items_panel() -> void:
@@ -992,7 +1033,7 @@ func _on_mouse_row_input(event: InputEvent, role: String, row: Control) -> void:
 
 
 func _is_party_selection_mode() -> bool:
-	return _mode == "item_target_select" or _mode == "skill_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select"
+	return _mode == "item_target_select" or _mode == "skill_target_select" or _mode == "skills_party_select" or _mode == "equip_party_select" or _mode == "status_party_select" or _mode == "formation_select"
 
 
 func _refresh_left_menu_rows() -> void:
@@ -1170,8 +1211,9 @@ func _get_equipment_preview_slot_name() -> String:
 
 
 func _rebuild_status_panel(member: Dictionary) -> void:
-	var exp_to_next: int = _ps.xp_to_next_level() if _ps and _ps.has_method("xp_to_next_level") and _selected_member_index == 0 else 0
-	var current_xp: int = _ps.xp if _selected_member_index == 0 and _ps and ("xp" in _ps) else 0
+	var is_hero: bool = _ps != null and _ps.has_method("is_hero") and _ps.is_hero(_selected_member_index)
+	var exp_to_next: int = _ps.xp_to_next_level() if is_hero else 0
+	var current_xp: int = _ps.xp if is_hero else 0
 	status_info_label.text = "LV %d   Exp %d   Do następnego poziomu %d" % [int(member.get("level", 1)), current_xp, exp_to_next]
 	if _status_bar_rows.size() >= 2:
 		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
