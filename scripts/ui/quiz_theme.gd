@@ -278,6 +278,29 @@ static func apply_skin(id: String, brightness: float = 1.0, bar_style: String = 
 	_selected_buttons = _selected_buttons.filter(func(w: WeakRef) -> bool: return w.get_ref() != null and bool((w.get_ref() as Button).get_meta(&"quiz_menu_selected", false)))
 
 
+## Motyw do podglądu stylu pasków `style_id` (kafelki w opcjach): typy pasków drużyny z warstw styl pasków ->
+## bieżący motyw okien -> baza. Gładki styl dostaje stałą bar_plain = 1 — QuizBar pomija wtedy tekstury
+## z motywu wyżej w drzewie (bieżący styl).
+static func bar_preview_theme(style_id: String) -> Theme:
+	var t := Theme.new()
+	var bars := _load_layer(style_id, DEFAULT_BAR_STYLE, "bars_")
+	var layers: Array[Theme] = []
+	for l in [bars, _load_layer(_skin_id, DEFAULT_SKIN, ""), _base if _base != null else theme()]:
+		if l != null:
+			layers.append(l)
+	for ty: StringName in [BAR_LP, BAR_SP, BAR_TP]:
+		t.set_type_variation(ty, &"ProgressBar")
+		for n in _names(layers, ty, Theme.DATA_TYPE_STYLEBOX):
+			t.set_stylebox(n, ty, _pick(layers, ty, n, Theme.DATA_TYPE_STYLEBOX))
+		if bars == null:
+			t.set_constant(&"bar_plain", ty, 1)
+			continue
+		for kind: Theme.DataType in [Theme.DATA_TYPE_ICON, Theme.DATA_TYPE_CONSTANT]:
+			for n in bars.get_theme_item_list(kind, ty):
+				t.set_theme_item(kind, n, ty, bars.get_theme_item(kind, n, ty))
+	return t
+
+
 static func _load_layer(id: String, default_id: String, prefix: String) -> Theme:
 	var path := SKIN_DIR + prefix + id + ".tres"
 	if id == default_id or not ResourceLoader.exists(path):

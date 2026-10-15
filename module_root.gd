@@ -65,6 +65,13 @@ func get_ui_bar_styles() -> Array[Dictionary]:
 	return QuizTheme.BAR_STYLES
 
 
+## Siatka kafelków z podglądem stylów pasków (zamiast listy w opcjach hosta); sygnał style_selected(id).
+func create_bar_style_picker(current: String, font_size: int = 16) -> Control:
+	var picker := (load(QuizRpgPaths.path("scenes/ui/bar_style_picker.tscn")) as PackedScene).instantiate() as Control
+	picker.call("setup", QuizTheme.BAR_STYLES, current, font_size)
+	return picker
+
+
 func _on_module_setting_changed(module_id: String, key: String, value: Variant) -> void:
 	if module_id != QuizTheme.MODULE_ID:
 		return

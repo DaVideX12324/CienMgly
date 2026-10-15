@@ -71,7 +71,8 @@ func _notification(what: int) -> void:
 func _refresh_mode() -> void:
 	if _switching:
 		return
-	var textured := has_theme_icon(&"bar_under") and has_theme_icon(&"bar_progress")
+	var plain := has_theme_constant(&"bar_plain") and get_theme_constant(&"bar_plain") != 0   # podgląd gładkiego stylu
+	var textured := not plain and has_theme_icon(&"bar_under") and has_theme_icon(&"bar_progress")
 	_switching = true
 	_textured = textured
 	if textured:

@@ -1,0 +1,90 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="1_bar"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.16, 0.2, 0.32, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.82, 0.4, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="BarStyleCell" type="Button"]
+custom_minimum_size = Vector2(0, 64)
+size_flags_horizontal = 3
+focus_mode = 2
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_selected")
+toggle_mode = true
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Name" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Styl"
+text_overrun_behavior = 3
+
+[node name="Bars" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 6
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="BarLP" type="ProgressBar" parent="Margin/VBox/Bars"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"QuizBarLP"
+value = 70.0
+show_percentage = false
+script = ExtResource("1_bar")
+
+[node name="BarSP" type="ProgressBar" parent="Margin/VBox/Bars"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"QuizBarSP"
+value = 45.0
+show_percentage = false
+script = ExtResource("1_bar")
+
+[node name="BarTP" type="ProgressBar" parent="Margin/VBox/Bars"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"QuizBarTP"
+value = 25.0
+show_percentage = false
+script = ExtResource("1_bar")

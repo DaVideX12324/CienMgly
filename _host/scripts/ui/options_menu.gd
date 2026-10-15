@@ -97,6 +97,7 @@ var _open_res_index := -1
 
 var _skins: Array = []          # [{id, name}] z aktywnego modułu (get_ui_skins)
 var _bar_styles: Array = []     # [{id, name}] z aktywnego modułu (get_ui_bar_styles), opcjonalnie
+var _bar_picker: Control = null  # siatka z podglądem pasków modułu (create_bar_style_picker) zamiast listy
 var _skin_module_id := ""
 ## Przechwytywanie klawisza w zakładce „Sterowanie”: {module, action, slot, button, text}; puste = nie.
 var _capture: Dictionary = {}
@@ -422,10 +423,12 @@ func _sync_skin_tab() -> void:
 	for n: Control in [_lbl_skin, _skin_option, _lbl_brightness, _slider_brightness]:
 		n.visible = has_skins
 	_lbl_bars.visible = has_skins and not _bar_styles.is_empty()
-	_bars_option.visible = _lbl_bars.visible
+	var use_picker := _lbl_bars.visible and module.has_method("create_bar_style_picker")
+	_bars_option.visible = _lbl_bars.visible and not use_picker
 	_lbl_no_skins.visible = not has_skins
 	_fill_option(_skin_option, _skins, SKIN_KEY)
 	_fill_option(_bars_option, _bar_styles, BAR_STYLE_KEY)
+	_sync_bar_picker(module if use_picker else null)
 	_build_extra_options(module if has_skins else null)
 	var brightness := float(SettingsService.get_module(_skin_module_id, BRIGHTNESS_KEY, 1.0)) if has_skins else 1.0
 	_slider_brightness.value = roundf(brightness * 100.0)
@@ -499,6 +502,24 @@ func _fill_option(option: OptionButton, entries: Array, key: String) -> void:
 		option.selected = 0
 
 
+## Siatka stylów pasków od modułu (kafelki z podglądem) w miejscu listy BarsOption; null = bez siatki.
+func _sync_bar_picker(module: Node) -> void:
+	if _bar_picker != null and is_instance_valid(_bar_picker):
+		_bar_picker.queue_free()
+	_bar_picker = null
+	if module == null:
+		return
+	var current := str(SettingsService.get_module(_skin_module_id, BAR_STYLE_KEY, ""))
+	_bar_picker = module.create_bar_style_picker(current, _fs(16)) as Control
+	if _bar_picker == null:
+		return
+	_bar_picker.name = "BarStylePicker"
+	_bars_option.add_sibling(_bar_picker)
+	_bar_picker.connect("style_selected", func(style_id: String) -> void:
+		_play_click()
+		SettingsService.set_module(_skin_module_id, BAR_STYLE_KEY, style_id))
+
+
 func _on_bar_style_selected(index: int) -> void:
 	if _syncing_skin or index < 0 or index >= _bar_styles.size():
 		return
@@ -511,6 +532,8 @@ func _on_skin_selected(index: int) -> void:
 		return
 	_play_click()
 	SettingsService.set_module(_skin_module_id, SKIN_KEY, str(_skins[index].get("id", "")))
+	if _bar_picker != null and _bar_picker.has_method("refresh_previews"):
+		_bar_picker.call("refresh_previews")   # ramka gładkich pasków zależy od motywu okien
 
 
 ## Suwak: zmiana od razu, zapis na dysk dopiero po chwili spokoju (zapis przy każdym ruchu suwaka ciął grę).
