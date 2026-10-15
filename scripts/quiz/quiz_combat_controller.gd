@@ -167,7 +167,12 @@ var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
 var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY)
 ## Kursor drużyny wybiera cel leczenia zamiast postaci: 0 — nie, 1 — żywy sojusznik, 2 — nieprzytomny (wskrzeszenie).
 var _ally_pick := 0
-var _guard := {}                 # członek drużyny -> dobra odpowiedź przy Obronie (trwa do jego następnego ruchu)
+var _guard := {}                 # członek drużyny -> dobra odpowiedź przy Obronie (do końca rundy)
+## Runda jak w RPG Makerze / FNaFB: najpierw komendy wszystkich postaci po kolei (faza wyboru), potem wykonanie wg AGI.
+var _plans: Array[Dictionary] = []   # wybrane akcje rundy: {member, action, skill, enemy, heal[, item]}
+var _input_queue: Array[int] = []    # postacie wybierające komendy w tej rundzie (kolejność drużyny)
+var _input_pos := -1                 # która z nich wybiera teraz (-1 = Walcz / Uciekaj)
+var _executing := false              # faza wykonania (akcje z _plans) — inaczej wybór akcji tylko ją zapisuje
 var _turn_queue: Array[Dictionary] = []   # reszta rundy: {"party": bool, "index": int}, od najszybszego
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
@@ -558,8 +563,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if _action_menu_open and _is_menu_cancel(event):
-			_show_primary_menu()   # anulowanie komend postaci: Walcz / Uciekaj
-			_highlight_action(0)
+			_prior_input()   # poprzednia postać albo Walcz / Uciekaj
 			get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("ui_accept"):
@@ -597,14 +601,124 @@ func _handle_hovered_enemy_click(event: InputEvent) -> bool:
 	return true
 
 
-## Runda: każdy przytomny (drużyna i wrogowie) działa raz, po kolei wg AGI — bez losowania (decyzja usera 2026-10-16:
-## AGI 26 zawsze przed 25); przy równym AGI drużyna przed wrogami, dalej wg kolejności. 1. runda: przy zaskoczeniu
+## Runda jak w RPG Makerze / FNaFB (decyzja usera 2026-10-16): faza wyboru — Walcz / Uciekaj, potem komendy każdej
+## postaci po kolei (kolejność drużyny; Esc wraca do poprzedniej), potem faza wykonania — wszyscy (drużyna i wrogowie)
+## raz, po kolei wg prędkości = AGI + losowo 0..4 + AGI / 4 (jak FNaFB / RPG Maker VX Ace, losowana co rundę);
+## Obrona przed wszystkimi (jak Guard w RPG Makerze), przy równej prędkości drużyna przed wrogami. Pytanie quizu i koszt akcji — w ruchu postaci. 1. runda: przy zaskoczeniu
 ## najpierw wszyscy wrogowie, przy przewadze wrogowie ją pomijają. Na koniec rundy statusy.
 func _start_round() -> void:
 	turn_number += 1
-	_turn_queue = _turn_order()
+	_begin_input()
+
+
+## Faza wyboru: Walcz / Uciekaj; postacie zdolne do ruchu (bez snu / ogłuszenia / paraliżu) w kolejności drużyny.
+func _begin_input() -> void:
+	_executing = false
+	_plans.clear()
+	_guard.clear()
+	_input_queue.clear()
+	for i in _party_indices(false):
+		if i < party_rows.size() and not _member_cannot_act(i):
+			_input_queue.append(i)
+	_input_pos = -1
+	_selected_skill_data.clear()
+	_selected_item_data.clear()
+	_pending_skill_data.clear()
+	_quiz_panel_controller.reset_question()
+	_set_quiz_layout_active(false)
+	_clear_battle_log()
 	if turn_number == 1:
 		_push_initiative_notice()
+	if turn_label:
+		turn_label.text = "Tura %d" % turn_number
+	if streak_label and _ps:
+		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
+	result_label.visible = false
+	_refresh_enemy_header()
+	_refresh_stats_panel()
+	if _input_queue.is_empty():
+		_execute_round()
+		return
+	phase = Phase.ACTION_SELECT
+	action_panel.visible = true
+	_set_action_buttons_enabled(true)
+	_show_primary_menu()
+	_highlight_action(0)
+	_refresh_actor_selection()
+
+
+func _member_cannot_act(i: int) -> bool:
+	return _ps != null and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(i, QuizRpgStatusData.Restriction.SKIP_TURN)
+
+
+## Komendy następnej postaci; po ostatniej — wykonanie rundy.
+func _next_input() -> void:
+	_input_pos += 1
+	if _input_pos >= _input_queue.size():
+		_execute_round()
+		return
+	_open_member_commands(_input_queue[_input_pos])
+
+
+## Esc w komendach postaci: poprzednia postać (jej wybór kasowany) albo, przy pierwszej, Walcz / Uciekaj.
+func _prior_input() -> void:
+	if _input_pos > 0:
+		_input_pos -= 1
+		var m := _input_queue[_input_pos]
+		for k in range(_plans.size() - 1, -1, -1):
+			if int(_plans[k]["member"]) == m:
+				_plans.remove_at(k)
+		_open_member_commands(m)
+		return
+	_input_pos = -1
+	_show_primary_menu()
+	_highlight_action(0)
+	_refresh_actor_selection()
+
+
+func _open_member_commands(m: int) -> void:
+	_active_actor_index = m
+	_selected_skill_data.clear()
+	_selected_item_data.clear()
+	_pending_skill_data.clear()
+	phase = Phase.ACTION_SELECT
+	if turn_label:
+		turn_label.text = "Tura %d - %s" % [turn_number, _member_name(m)]
+	action_panel.visible = true
+	_set_action_buttons_enabled(true)
+	_show_action_menu()
+	_highlight_action(0)
+	_refresh_actor_selection()
+
+
+## Wybór akcji w fazie wyboru (zamiast pytania): zapis do _plans, dalej następna postać.
+func _commit_plan(extra: Dictionary = {}) -> void:
+	var plan := {"member": _active_actor_index, "action": chosen_action, "skill": _selected_skill_data.duplicate(true),
+		"enemy": _active_enemy_index, "heal": _heal_target_index}
+	plan.merge(extra, true)
+	_plans.append(plan)
+	_selected_skill_data.clear()
+	_pending_skill_data.clear()
+	_selected_item_data.clear()
+	_hide_target_panel()
+	_next_input()
+
+
+func _plan_for(member: int) -> Dictionary:
+	for plan in _plans:
+		if int(plan["member"]) == member:
+			return plan
+	return {}
+
+
+## Faza wykonania: kolejka wg AGI z wybranymi akcjami.
+func _execute_round() -> void:
+	_executing = true
+	_close_actor_select()
+	phase = Phase.ENEMY_TURN
+	_set_band_mode(Band.STATUS_ONLY)
+	_refresh_actor_selection()
+	_turn_queue = _turn_order()
 	_next_turn()
 
 
@@ -613,21 +727,29 @@ func _turn_order() -> Array[Dictionary]:
 	var order: Array[Dictionary] = []
 	for i in _party_indices(false):
 		if i < party_rows.size():
-			order.append({"party": true, "index": i, "agi": int(_member_stats(i)["agi"])})
+			var guard := int(_plan_for(i).get("action", -1)) == Action.DEFEND
+			order.append({"party": true, "index": i, "speed": _roll_speed(int(_member_stats(i)["agi"])), "guard": guard})
 	if not (first_round and _initiative == Initiative.PREEMPTIVE):
 		for i in range(_enemy_units.size()):
 			if int(_enemy_units[i].get("hp", 0)) > 0:
-				order.append({"party": false, "index": i, "agi": int(_unit_stats(_enemy_units[i])["agi"])})
+				order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"])), "guard": false})
 	var enemies_first := first_round and _initiative == Initiative.SURPRISE
 	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if enemies_first and bool(a["party"]) != bool(b["party"]):
 			return not bool(a["party"])
-		if int(a["agi"]) != int(b["agi"]):
-			return int(a["agi"]) > int(b["agi"])
+		if bool(a["guard"]) != bool(b["guard"]):
+			return bool(a["guard"])
+		if int(a["speed"]) != int(b["speed"]):
+			return int(a["speed"]) > int(b["speed"])
 		if bool(a["party"]) != bool(b["party"]):
 			return bool(a["party"])
 		return int(a["index"]) < int(b["index"]))
 	return order
+
+
+## Prędkość w rundzie jak w FNaFB (RPG Maker VX Ace Game_Action#speed): AGI + rand(5 + AGI / 4).
+static func _roll_speed(agi: int) -> int:
+	return agi + randi_range(0, 4 + maxi(agi, 0) / 4)
 
 
 ## Przewaga / zaskoczenie na start walki z sytuacji na mapie; szansa rośnie ze stosunkiem średniego AGI.
@@ -685,8 +807,9 @@ func _next_turn() -> void:
 		var entry: Dictionary = _turn_queue.pop_front()
 		var i := int(entry["index"])
 		if bool(entry["party"]):
-			if _member_hp(i) > 0:
-				_start_member_turn(i)
+			var plan := _plan_for(i)
+			if _member_hp(i) > 0 and not plan.is_empty():
+				_start_member_action(i, plan)
 				return
 			continue
 		if int(_enemy_units[i].get("hp", 0)) > 0 and await _enemy_act(i):
@@ -696,13 +819,10 @@ func _next_turn() -> void:
 	_start_round()
 
 
-## Ruch członka drużyny: od razu jego komendy (anulowanie -> Walcz / Uciekaj); sen / ogłuszenie / paraliż — traci ruch.
-func _start_member_turn(i: int) -> void:
+## Ruch członka drużyny w fazie wykonania: akcja wybrana w fazie wyboru — koszt, pytanie i wynik; sen / ogłuszenie /
+## paraliż (np. nałożony w tej rundzie) — traci ruch.
+func _start_member_action(i: int, plan: Dictionary) -> void:
 	_active_actor_index = i
-	_guard.erase(i)
-	_selected_skill_data.clear()
-	_selected_item_data.clear()
-	_pending_skill_data.clear()
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false)
 	_clear_battle_log()
@@ -710,26 +830,28 @@ func _start_member_turn(i: int) -> void:
 		_push_initiative_notice()
 	if turn_label:
 		turn_label.text = "Tura %d - ruch: %s" % [turn_number, _member_name(i)]
-	if streak_label and _ps:
-		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	result_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
-	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(i, QuizRpgStatusData.Restriction.SKIP_TURN):
-		phase = Phase.PLAYER_RESULT
-		_set_band_mode(Band.STATUS_ONLY)
+	phase = Phase.PLAYER_RESULT
+	_set_band_mode(Band.STATUS_ONLY)
+	if _member_cannot_act(i):
 		result_label.visible = true
 		result_label.text = "%s nie może się ruszyć!" % _member_name(i)
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.9))
 		await get_tree().create_timer(1.2).timeout
 		_next_turn()
 		return
-	phase = Phase.ACTION_SELECT
-	action_panel.visible = true
-	_set_action_buttons_enabled(true)
-	_show_action_menu()
-	_highlight_action(0)
-	_refresh_actor_selection()
+	chosen_action = plan["action"]
+	_selected_skill_data = (plan["skill"] as Dictionary).duplicate(true)
+	_active_enemy_index = int(plan["enemy"])
+	_heal_target_index = int(plan["heal"])
+	if plan.has("item"):
+		_use_item(plan["item"])
+		return
+	if not _selected_skill_data.is_empty():
+		_consume_skill_cost(_selected_skill_data)
+	_begin_action_quiz()
 
 
 func _on_action(action: Action) -> void:
@@ -1004,6 +1126,9 @@ func _get_quiz_manager() -> Node:
 
 
 func _begin_action_quiz() -> void:
+	if not _executing:
+		_commit_plan()  # faza wyboru: akcja zapisana, pytanie w ruchu postaci
+		return
 	_hide_target_panel()
 	phase = Phase.QUIZ
 	_set_action_buttons_enabled(false)
@@ -1282,6 +1407,8 @@ func _cancel_ally_pick() -> void:
 
 
 func _consume_skill_cost(skill_data: Dictionary) -> void:
+	if not _executing:
+		return  # koszt w ruchu postaci (_start_member_action)
 	if bool(skill_data.get("consumes_weapon", false)) and _ps != null:
 		_ps.consume_member_weapon(_active_actor_index)
 	var sp_cost: int = int(skill_data.get("sp_cost", 0))
@@ -1302,12 +1429,20 @@ func _use_item(item_data: Dictionary) -> void:
 		return
 	if not _ps.has_method("use_item"):
 		return
-	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index)
-	if not bool(use_result.get("success", false)):
+	if not _executing:
+		_close_list_menu()
+		_commit_plan({"item": item_data.duplicate(true)})  # przedmiot zużywany w ruchu postaci
 		return
+	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index)
 	var item_name: String = str(use_result.get("name", item_data.get("name", "Przedmiot")))
+	if not bool(use_result.get("success", false)):
+		result_label.visible = true
+		result_label.text = "%s: brak przedmiotu — %s." % [_member_name(_active_actor_index), item_name]
+		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+		await get_tree().create_timer(1.0).timeout
+		_next_turn()
+		return
 	_selected_item_data = item_data.duplicate(true)
-	_close_list_menu()
 	phase = Phase.PLAYER_RESULT
 	var heal_amount: int = int(use_result.get("heal_amount", 0))
 	var sp_restore: int = int(use_result.get("sp_restore", 0))
@@ -1566,7 +1701,8 @@ func _try_flee() -> void:
 		if party_command_panel:
 			party_command_panel.visible = false
 		await get_tree().create_timer(1.0).timeout
-		_next_turn()
+		_plans.clear()  # nieudana ucieczka: drużyna traci rundę (jak w RPG Makerze)
+		_execute_round()
 
 
 ## Ruch wroga (jedna jednostka): umiejętność albo zwykły atak w losowego przytomnego członka drużyny.
@@ -3291,8 +3427,8 @@ func _on_engage_pressed() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
-	_show_action_menu()
-	_highlight_action(0)
+	_input_pos = -1
+	_next_input()
 
 
 func _on_run_pressed() -> void:
@@ -3303,21 +3439,6 @@ func _on_run_pressed() -> void:
 		audio.play_sfx_by_name("click")
 	_close_actor_select()
 	_try_flee()
-
-
-## Wybór postaci po „Walcz”: komendy drużyny zostają po lewej, kursor (pasek) przechodzi na listę
-## drużyny w prawym oknie; zatwierdzenie otwiera komendy wybranej postaci.
-func _open_actor_select() -> void:
-	if _party_state.is_empty():
-		_show_action_menu()
-		_highlight_action(0)
-		return
-	for btn: Button in [engage_btn, run_btn, exit_btn]:
-		if btn:
-			QuizTheme.set_menu_item_selected(btn, false)
-	_actor_select_open = true
-	_actor_selected_idx = _active_actor_index if _is_actor_selectable(_active_actor_index) else _find_selectable_actor(0, 1)
-	_refresh_actor_selection()
 
 
 func _close_actor_select() -> void:
@@ -3332,8 +3453,6 @@ func _is_actor_selectable(index: int) -> bool:
 		return false
 	if _ally_pick == 2:
 		return int(_party_state[index].get("lp", 0)) <= 0  # wskrzeszenie: tylko nieprzytomni
-	if _ally_pick == 0 and _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(index, QuizRpgStatusData.Restriction.SKIP_TURN):
-		return false  # sen / ogłuszenie / paraliż — postać traci turę
 	return int(_party_state[index].get("lp", 0)) > 0
 
 
@@ -3361,28 +3480,14 @@ func _navigate_actor_list(delta: int) -> void:
 	_refresh_actor_selection()
 
 
+## Kursor na liście drużyny służy tylko do wyboru sojusznika (leczenie / wskrzeszenie) — komendy postaci idą po kolei.
 func _confirm_actor_selection() -> void:
-	if not _is_actor_selectable(_actor_selected_idx):
-		return
-	if _ally_pick != 0:
+	if _is_actor_selectable(_actor_selected_idx):
 		_confirm_ally_pick()
-		return
-	var audio := get_node_or_null("/root/AudioService")
-	if audio:
-		audio.play_sfx_by_name("click")
-	_active_actor_index = _actor_selected_idx
-	_close_actor_select()
-	_show_action_menu()
-	_highlight_action(0)
 
 
 func _cancel_actor_selection() -> void:
-	if _ally_pick != 0:
-		_cancel_ally_pick()
-		return
-	_close_actor_select()
-	_show_primary_menu()
-	_highlight_action(0)
+	_cancel_ally_pick()
 
 
 func _refresh_actor_selection() -> void:
@@ -3393,7 +3498,7 @@ func _refresh_actor_selection() -> void:
 ## Kursor na wierszu drużyny: ten sam styl „selected” co pozycje menu (pasek pod wierszem). Ramka szersza od
 ## wiersza o margines treści stylu (jak tło przycisku menu wokół tekstu) — inaczej nazwa i liczby leżą na krawędzi.
 func _draw_party_row_cursor(index: int) -> void:
-	var at := _actor_selected_idx if _actor_select_open else (_active_actor_index if phase == Phase.ACTION_SELECT or phase == Phase.TARGET_SELECT else -1)
+	var at := _actor_selected_idx if _actor_select_open else (_active_actor_index if (phase == Phase.ACTION_SELECT and _action_menu_open) or phase == Phase.TARGET_SELECT else -1)
 	if index != at or index >= party_rows.size():
 		return
 	var row := party_rows[index]
