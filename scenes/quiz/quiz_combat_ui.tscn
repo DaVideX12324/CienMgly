@@ -780,7 +780,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP" unique_id=15336201]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatLP/Col" unique_id=126655424]
 z_index = 1
@@ -816,7 +816,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP" unique_id=1377668286]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatSP/Col" unique_id=1455262068]
 z_index = 1
@@ -851,7 +851,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP" unique_id=2142681038]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0/StatTP/Col" unique_id=145039608]
 z_index = 1
@@ -906,7 +906,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP" unique_id=290913717]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatLP/Col" unique_id=537021004]
 z_index = 1
@@ -942,7 +942,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP" unique_id=324353606]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatSP/Col" unique_id=579299541]
 z_index = 1
@@ -977,7 +977,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP" unique_id=1080513625]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1/StatTP/Col" unique_id=513504676]
 z_index = 1
@@ -1032,7 +1032,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP" unique_id=2038882003]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatLP/Col" unique_id=955911478]
 z_index = 1
@@ -1068,7 +1068,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP" unique_id=1669083707]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatSP/Col" unique_id=1567572391]
 z_index = 1
@@ -1103,7 +1103,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP" unique_id=210591099]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2/StatTP/Col" unique_id=1863529714]
 z_index = 1
@@ -1158,7 +1158,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP" unique_id=1345203183]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatLP/Col" unique_id=1349429555]
 z_index = 1
@@ -1194,7 +1194,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP" unique_id=597400109]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatSP/Col" unique_id=1687535793]
 z_index = 1
@@ -1229,7 +1229,7 @@ theme_override_constants/separation = 8
 [node name="Col" type="VBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP" unique_id=2026107407]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = -10
+theme_override_constants/separation = -13
 
 [node name="Line" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3/StatTP/Col" unique_id=195375525]
 z_index = 1
