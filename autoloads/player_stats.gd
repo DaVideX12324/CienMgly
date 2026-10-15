@@ -12,6 +12,10 @@ signal gold_changed(new_gold: int)
 signal reward_earned(reward_name: String)
 signal inventory_changed()
 signal party_changed()
+## Awans członka drużyny poza liderem (lider: level_up).
+signal member_level_up(member_index: int, new_level: int)
+## Nowy członek drużyny (recruit).
+signal member_recruited(member_index: int, hero_id: String)
 ## Członek drużyny poznał umiejętność z poziomu (learn_level) — komunikat w walce po awansie.
 signal skill_learned(member_index: int, skill_name: String)
 ## Obrażenia od statusu (trucizna): członek drużyny, status, utracone HP — świat (co POISON_WORLD_INTERVAL) i walka.
@@ -44,6 +48,15 @@ const EQUIPMENT_LABELS := {
 @export var hero_party_data: Array[QuizRpgHeroData] = []
 ## Bohater, gdy hero_party_data puste (autoload bez module_root.tscn — testy).
 const DEFAULT_HERO_PATH := "resources/heroes/hero_bohater.tres"
+## Postacie drużyny: hero_id -> plik danych (względem modułu). Towarzysze dołączają przez recruit().
+const HERO_PATHS := {
+	"bohater": DEFAULT_HERO_PATH,
+	"lotrzyk": "resources/heroes/hero_lotrzyk.tres",
+	"mag": "resources/heroes/hero_mag.tres",
+	"kaplan": "resources/heroes/hero_kaplan.tres",
+}
+## Udział w XP członka bez przytomności na koniec walki (decyzja usera: 50 %).
+const DOWNED_XP_SHARE := 0.5
 const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
 
 var _status_clock := 0.0
@@ -110,7 +123,18 @@ func xp_to_next_level() -> int:
 	return QuizRpgHeroData.new().xp_to_next(level)
 
 
+## XP dla całej drużyny: każdy członek dostaje pełną kwotę do własnej puli (jak FNaFB, bez dzielenia), członek bez
+## przytomności DOWNED_XP_SHARE. Lider: PlayerStats.level / xp (sygnał level_up), pozostali: member["level"] / ["xp"]
+## (sygnał member_level_up).
 func add_xp(amount: int) -> void:
+	for i in range(1, party.size()):
+		var m: Dictionary = party[i]
+		var share := amount if int(m.get("hp", 0)) > 0 else int(amount * DOWNED_XP_SHARE)
+		_add_member_xp(i, share)
+	_add_leader_xp(amount if hp > 0 else int(amount * DOWNED_XP_SHARE))
+
+
+func _add_leader_xp(amount: int) -> void:
 	if level >= mini(MAX_LEVEL, LEVEL_CAP):
 		xp = 0
 		xp_changed.emit(xp, xp_to_next_level())
@@ -126,6 +150,79 @@ func add_xp(amount: int) -> void:
 	if level >= mini(MAX_LEVEL, LEVEL_CAP):
 		xp = 0
 	xp_changed.emit(xp, xp_to_next_level())
+
+
+## XP członka (nie lidera) do jego puli; awanse wg krzywej jego postaci: maks. HP i SP rosną, bieżące HP / SP bez zmian
+## (jak u lidera), nowe umiejętności z poziomu.
+func _add_member_xp(member_index: int, amount: int) -> void:
+	if member_index <= 0 or member_index >= party.size() or amount <= 0:
+		return
+	var m: Dictionary = party[member_index]
+	var hero := hero_for_member(m)
+	var cap := mini(MAX_LEVEL, LEVEL_CAP)
+	var lvl := int(m.get("level", 1))
+	var x := int(m.get("xp", 0)) + amount
+	var gained: Array[int] = []
+	while lvl < cap and x >= hero.xp_to_next(lvl):
+		x -= hero.xp_to_next(lvl)
+		lvl += 1
+		gained.append(lvl)
+	if lvl >= cap:
+		x = 0
+	m["xp"] = x
+	m["level"] = lvl
+	if not gained.is_empty():
+		m["max_hp"] = hero.hp_for_level(lvl, MAX_LEVEL)
+	party[member_index] = m
+	if not gained.is_empty():
+		_sync_member_max_sp(member_index)
+		learn_level_skills()
+		for g in gained:
+			member_level_up.emit(member_index, g)
+		party_changed.emit()
+
+
+## Najwyższy poziom w drużynie — poziom odniesienia (np. start nowego członka; docs/kontekst/druzyna_szkic.md).
+func highest_level() -> int:
+	var best := level
+	for i in range(1, party.size()):
+		best = maxi(best, int((party[i] as Dictionary).get("level", 1)))
+	return best
+
+
+func has_member(hero_id: String) -> bool:
+	for m: Dictionary in party:
+		if str(m.get("hero_id", "")) == hero_id:
+			return true
+	return false
+
+
+## Dołącza postać do drużyny (zadanie towarzysza, menu deweloperskie). at_level <= 0: najwyższy poziom w drużynie − 1
+## (co najmniej 1). Pełne HP / SP, ekwipunek startowy postaci założony, umiejętności z poziomu. false = już w drużynie
+## albo nieznana postać.
+func recruit(hero_id: String, at_level: int = 0) -> bool:
+	if has_member(hero_id):
+		return false
+	var hero := hero_by_id(hero_id)
+	if hero == null:
+		return false
+	var m := hero.build_member_data()
+	var lvl := clampi(at_level if at_level > 0 else highest_level() - 1, 1, mini(MAX_LEVEL, LEVEL_CAP))
+	m["level"] = lvl
+	m["xp"] = 0
+	m["max_hp"] = hero.hp_for_level(lvl, MAX_LEVEL)
+	m["hp"] = m["max_hp"]
+	party.append(m)
+	var idx := party.size() - 1
+	_ensure_party_defaults()
+	_sync_member_max_sp(idx)
+	var mm: Dictionary = party[idx]
+	mm["sp"] = int(mm.get("max_sp", 0))
+	party[idx] = mm
+	learn_level_skills()
+	member_recruited.emit(idx, hero_id)
+	party_changed.emit()
+	return true
 
 
 func add_points(amount: int) -> void:
@@ -215,11 +312,23 @@ func is_alive() -> bool:
 ## Dane postaci członka drużyny (hero_id), inaczej pierwsza z hero_party_data (miniaturki, umiejętności).
 func hero_for_member(member: Dictionary) -> QuizRpgHeroData:
 	_ensure_default_hero()
-	var hid := str(member.get("hero_id", ""))
+	var h := hero_by_id(str(member.get("hero_id", "")))
+	return h if h != null else hero_party_data[0]
+
+
+var _hero_cache := {}  # hero_id -> QuizRpgHeroData (null = brak)
+
+
+## Dane postaci po hero_id: hero_party_data, potem HERO_PATHS.
+func hero_by_id(hero_id: String) -> QuizRpgHeroData:
 	for h: QuizRpgHeroData in hero_party_data:
-		if h != null and h.hero_id == hid:
+		if h != null and h.hero_id == hero_id:
 			return h
-	return hero_party_data[0]
+	if not _hero_cache.has(hero_id):
+		var p := str(HERO_PATHS.get(hero_id, ""))
+		var full := QuizRpgPaths.path(p) if p != "" else ""
+		_hero_cache[hero_id] = load(full) as QuizRpgHeroData if full != "" and ResourceLoader.exists(full) else null
+	return _hero_cache[hero_id]
 
 
 ## Odblokowane umiejętności członka w kolejności puli postaci — słowniki QuizRpgSkillData.to_entry().
@@ -1041,14 +1150,19 @@ func _ensure_party_defaults() -> void:
 				member["base_" + stat] = int(hero.get("base_" + stat))
 			if not member.has(stat + "_per_level") and hero:
 				member[stat + "_per_level"] = float(hero.get(stat + "_per_level"))
-		if not member.has("portrait"):
-			member["portrait"] = null
-		if not member.has("actor_scene"):
-			member["actor_scene"] = null
-		if not member.has("sprite_frames"):
-			member["sprite_frames"] = null
-		if not member.has("body_color"):
-			member["body_color"] = Color(0.2, 0.6, 1.0)
+		# Pola wizualne z danych postaci — zapis (JSON) zamienia zasoby i Vector2 na napisy.
+		if not (member.get("portrait") is Texture2D):
+			member["portrait"] = hero.portrait if hero else null
+		if not (member.get("actor_scene") is PackedScene):
+			member["actor_scene"] = hero.actor_scene if hero else null
+		if not (member.get("sprite_frames") is SpriteFrames):
+			member["sprite_frames"] = hero.sprite_frames if hero else null
+		if not (member.get("sprite_offset") is Vector2):
+			member["sprite_offset"] = hero.sprite_offset if hero else Vector2.ZERO
+		if not member.has("xp"):
+			member["xp"] = 0
+		if not (member.get("body_color") is Color):
+			member["body_color"] = hero.body_color if hero else Color(0.2, 0.6, 1.0)
 		party[index] = member
 		_sync_member_max_sp(index)
 
