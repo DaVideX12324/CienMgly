@@ -606,8 +606,9 @@ func _handle_hovered_enemy_click(event: InputEvent) -> bool:
 ## Runda jak w RPG Makerze / FNaFB (decyzja usera 2026-10-16): faza wyboru — Walcz / Uciekaj, potem komendy każdej
 ## postaci po kolei (kolejność drużyny; Esc wraca do poprzedniej), potem faza wykonania — wszyscy (drużyna i wrogowie)
 ## raz, po kolei wg prędkości = AGI + losowo 0..4 + AGI / 4 (jak FNaFB / RPG Maker VX Ace, losowana co rundę);
-## Obrona przed wszystkimi (jak Guard w RPG Makerze), przy równej prędkości drużyna przed wrogami. Pytanie quizu i koszt akcji — w ruchu postaci. 1. runda: przy zaskoczeniu
-## najpierw wszyscy wrogowie, przy przewadze wrogowie ją pomijają. Na koniec rundy statusy.
+## Obrona przed wszystkimi (jak Guard w RPG Makerze), przy równej prędkości drużyna przed wrogami. Pytanie quizu
+## i koszt akcji — w ruchu postaci. 1. runda jak w FNaFB: przy zaskoczeniu drużyna ją traci (bez wyboru komend),
+## przy przewadze tracą ją wrogowie. Na koniec rundy statusy.
 func _start_round() -> void:
 	turn_number += 1
 	_begin_input()
@@ -619,8 +620,9 @@ func _begin_input() -> void:
 	_plans.clear()
 	_guard.clear()
 	_input_queue.clear()
+	var surprised := turn_number == 1 and _initiative == Initiative.SURPRISE  # zaskoczenie: drużyna traci 1. rundę
 	for i in _party_indices(false):
-		if i < party_rows.size() and not _member_cannot_act(i):
+		if i < party_rows.size() and not _member_cannot_act(i) and not surprised:
 			_input_queue.append(i)
 	_input_pos = -1
 	_selected_skill_data.clear()
@@ -735,10 +737,7 @@ func _turn_order() -> Array[Dictionary]:
 		for i in range(_enemy_units.size()):
 			if int(_enemy_units[i].get("hp", 0)) > 0:
 				order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"])), "guard": false})
-	var enemies_first := first_round and _initiative == Initiative.SURPRISE
 	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if enemies_first and bool(a["party"]) != bool(b["party"]):
-			return not bool(a["party"])
 		if bool(a["guard"]) != bool(b["guard"]):
 			return bool(a["guard"])
 		if int(a["speed"]) != int(b["speed"]):
@@ -791,7 +790,7 @@ func _push_initiative_notice() -> void:
 		Initiative.PREEMPTIVE:
 			_push_log("Przewaga! Potwory nie zdążą zareagować w tej turze.", Color(0.55, 0.95, 0.55))
 		Initiative.SURPRISE:
-			_push_log("Zaskoczenie! Potwory atakują pierwsze.", Color(1.0, 0.55, 0.35))
+			_push_log("Zaskoczenie! Drużyna traci pierwszą turę.", Color(1.0, 0.55, 0.35))
 
 
 ## Następny w kolejce rundy: członek drużyny dostaje komendy (dalej po jego akcji — znów _next_turn), wróg działa od
