@@ -1,3 +1,4 @@
+@tool
 extends StaticBody2D
 
 ## Postać do zwerbowania (scena scenes/npc/companion_npc.tscn): rozmowa w oknie DialogBox, zadanie, po jego wykonaniu
@@ -6,16 +7,26 @@ extends StaticBody2D
 ## {left} — ile jeszcze, {item} — nazwa przedmiotu.
 
 const DialogBox = preload("../ui/dialog_box.gd")
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const PlayerStatsScript = preload("../../autoloads/player_stats.gd")
 
 enum Quest { NONE, ANSWER_CORRECT, BRING_ITEM }
 
-@export var hero_id: String = "lotrzyk"
+@export var hero_id: String = "lotrzyk":
+	set(v):
+		hero_id = v
+		if is_node_ready():
+			_apply_look()
 ## NONE — dołącza po pierwszej rozmowie; ANSWER_CORRECT — poprawne odpowiedzi w quizach od przyjęcia zadania;
 ## BRING_ITEM — przedmiot quest_item_id w ekwipunku (zabierany przy oddaniu).
 @export var quest: Quest = Quest.ANSWER_CORRECT
 @export var quest_count: int = 5
 @export var quest_item_id: String = ""
-@export var face_left: bool = false
+@export var face_left: bool = false:
+	set(v):
+		face_left = v
+		if is_node_ready():
+			_apply_look()
 @export var intro_lines: PackedStringArray = [
 	"Hej, wędrowcze. Ta mgła odebrała mi pamięć — ale nie rozum.",
 	"Odpowiedz poprawnie na {count} pytań, a uwierzę, że warto z tobą iść.",
@@ -27,17 +38,34 @@ var _busy := false
 
 
 func _ready() -> void:
+	_apply_look()
+	if Engine.is_editor_hint():
+		return
 	var ps := _ps()
 	if ps and ps.has_member(hero_id):
 		queue_free()   # już w drużynie — idzie za bohaterem
+
+
+## Wygląd z danych postaci (także w edytorze — scena WYSIWYG).
+func _apply_look() -> void:
+	var hero := _hero()
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite == null or hero == null or hero.sprite_frames == null:
 		return
-	var hero: QuizRpgHeroData = ps.hero_by_id(hero_id) if ps else null
-	var sprite := $AnimatedSprite2D as AnimatedSprite2D
-	if hero and hero.sprite_frames:
-		sprite.sprite_frames = hero.sprite_frames
-		sprite.offset = hero.sprite_offset
-		sprite.flip_h = face_left
-		sprite.play(&"idle")
+	sprite.sprite_frames = hero.sprite_frames
+	sprite.offset = hero.sprite_offset
+	sprite.flip_h = face_left
+	sprite.play(&"idle")
+
+
+## Dane postaci: z PlayerStats w grze, inaczej wprost z pliku (HERO_PATHS) — edytor, render sceny.
+func _hero() -> QuizRpgHeroData:
+	var ps := _ps() if not Engine.is_editor_hint() else null
+	if ps:
+		return ps.hero_by_id(hero_id)
+	var p := str(PlayerStatsScript.HERO_PATHS.get(hero_id, ""))
+	var full := QuizRpgPaths.path(p) if p != "" else ""
+	return load(full) as QuizRpgHeroData if full != "" and ResourceLoader.exists(full) else null
 
 
 func can_interact() -> bool:
@@ -70,7 +98,7 @@ func interact(_player: Node2D) -> void:
 		join = true
 	else:
 		lines = progress_lines
-	var hero: QuizRpgHeroData = ps.hero_by_id(hero_id)
+	var hero := _hero()
 	var box := DialogBox.open(self, hero.display_name if hero else "", _fill(lines, ps, st))
 	await box.finished
 	if join:
