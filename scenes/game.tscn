@@ -12,6 +12,7 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="PartyFollowers" type="Node2D" parent="." unique_id=1794385668]
+y_sort_enabled = true
 
 [node name="Player" parent="." unique_id=444877758 instance=ExtResource("2_player")]
 

@@ -70,6 +70,6 @@ static func _holder(leader: CharacterBody2D) -> Node2D:
 	if holder == null:
 		holder = Node2D.new()
 		holder.name = HOLDER_NAME
-		holder.y_sort_enabled = true
 		parent.add_child(holder)
+	holder.y_sort_enabled = true   # towarzysze sortowani z graczem i ścianami (bez tego cała grupa w jednym miejscu)
 	return holder
