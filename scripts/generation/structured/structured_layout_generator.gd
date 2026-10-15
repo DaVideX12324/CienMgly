@@ -77,7 +77,8 @@ static func generate_layout(
 	stats["partition_walls"] = 0
 	for cid in st.complexes:
 		stats["partition_walls"] += int(st.complexes[cid].get("partition_walls", 0))
-	GenProgress.end(&"corridors")
+	# Bez GenProgress.end — siatka i kanały poniżej to jeszcze korytarze (pasek nie staje między etapami);
+	# begin() następnego etapu zamyka bieżący.
 
 	# Siatka: podłoga (z wodą — kanał to nakładka na podłogę) i ściana.
 	for y in range(height):
@@ -171,7 +172,6 @@ static func generate_layout(
 	stats["lost_post"] = _unreachable(ctx, canals)
 	t0 = _lap(ts, "lost_post", t0)
 	stats["t_smooth"] = ts
-	GenProgress.end(&"smoothing")
 	ctx.preprocess_stats["structured"] = stats
 
 	# Korytarze-schody (przed platformami, kratownicami i obiektami — wszystkie ich unikają).
@@ -187,7 +187,6 @@ static func generate_layout(
 		else:
 			ctx.plateau = PlateauPass.run(ctx, flags)
 		result.plateau = ctx.plateau
-		GenProgress.end()
 
 	result.portal_zone = ctx.portal_zone
 	# Kratownice po platformach i maskach terenu: z dala od platform, foliage (maska grass) najwyżej na ich skraju.
@@ -210,7 +209,6 @@ static func generate_layout(
 			if not catalog.wall_defs.is_empty():
 				result.objects = WallDecorPlannerScript.plan(result, catalog.wall_defs, result.seed_used, flags, result.objects, catalog.defs)
 			GatePlannerScript.emit(result, catalog.gates, result.objects)
-		GenProgress.end()
 	# Drabiny wejścia / wyjścia: wysokość lica nad przejściem (4H jak FacadePlacer, inaczej 3H).
 	if not result.portal_ladders.is_empty():
 		var bases_4h: Dictionary = WallDecorPlannerScript._bases_4h(result, result.seed_used, flags)
@@ -220,7 +218,6 @@ static func generate_layout(
 	GenProgress.begin(&"spawns")
 	if not rooms.is_empty() and entrance_room_idx >= 0:
 		SpawnPlanner.plan_spawns(ctx, result, entrance_room_idx, exit_room_idx)
-	GenProgress.end(&"spawns")
 
 	result.portal_zone = ctx.portal_zone
 	result.preprocess_stats = ctx.preprocess_stats

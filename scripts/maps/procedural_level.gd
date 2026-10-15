@@ -258,8 +258,8 @@ func generate_level_async(seed_val: int = 0) -> void:
 	is_generating = true
 	var job := _prepare_job(seed_val)
 	var progress := GenProgress.new()
-	# Wagi etapów są dla 250×250 — oczekiwany czas etapu rośnie z polem mapy (pasek płynie między kotwicami).
-	progress.ms_per_weight = 10.0 * float(job.width * job.height) / (250.0 * 250.0)
+	# Wagi etapów zależą od układu mapy (jaskinia / ścieki) i rosną z jej polem (pasek płynie między kotwicami).
+	progress.configure(str(job.flags.layout) if job.flags != null else "interior", job.width, job.height)
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
 	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")

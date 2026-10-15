@@ -12,45 +12,73 @@ extends RefCounted
 ##
 ## Bezpieczne wątkowo: generator pisze z wątku roboczego, pasek czyta z głównego (fraction/label).
 
-## Kolejność etapów i ich wagi ≈ czas etapu w ms / 10 (pełna ścieżka gry 250×250 z płaskowyżami).
-## Etap spoza listy nie przesuwa paska, ale jego czas jest mierzony.
-## Kalibracja 2026-09-30: seed 184356, średnia z dwóch przebiegów (Godot 4.7.2 headless). Pasek i tak
-## dopasowuje tempo w trakcie, więc wagi muszą być tylko w dobrych proporcjach.
-const STAGES: Array = [
-	[&"rooms", 4.0, "Kopanie komnat"],
-	[&"corridors", 5.0, "Łączenie korytarzy"],
-	[&"smoothing", 66.0, "Wygładzanie ścian"],
-	[&"connectivity", 5.0, "Sprawdzanie przejść"],
-	[&"portals", 35.0, "Wejście i wyjście"],
-	[&"plateaus", 74.0, "Wznoszenie płaskowyżów"],
-	[&"plateau_stairs", 124.0, "Schody na płaskowyże"],
-	[&"terrain", 36.0, "Błoto i trawa"],
-	[&"objects", 82.0, "Rozmieszczanie obiektów"],
-	[&"spawns", 1.0, "Rozmieszczanie potworów"],
-	[&"edges", 304.0, "Analiza krawędzi"],
-	[&"rock", 174.0, "Lita skała"],
-	[&"floor", 72.0, "Podłoga"],
-	[&"walls", 40.0, "Ściany"],
-	[&"plateau_tiles", 299.0, "Płaskowyże"],
-	[&"navmesh", 20.0, "Ścieżki przeciwników"],
-	[&"paint", 75.0, "Układanie kafli"],
-	[&"entities", 5.0, "Potwory i skrzynie"],
-	[&"props", 333.0, "Ustawianie obiektów"],
-	[&"navigation", 1.0, "Nawigacja"],
-]
+## Opisy etapów dla gracza. Etap spoza tabeli wag układu nie przesuwa paska, ale jego czas jest mierzony.
+const LABELS := {
+	&"rooms": "Kopanie komnat",
+	&"corridors": "Łączenie korytarzy",
+	&"smoothing": "Wygładzanie ścian",
+	&"connectivity": "Sprawdzanie przejść",
+	&"portals": "Wejście i wyjście",
+	&"plateaus": "Wznoszenie płaskowyżów",
+	&"plateau_stairs": "Schody na płaskowyże",
+	&"terrain": "Błoto i trawa",
+	&"objects": "Rozmieszczanie obiektów",
+	&"spawns": "Rozmieszczanie potworów",
+	&"edges": "Analiza krawędzi",
+	&"rock": "Lita skała",
+	&"floor": "Podłoga",
+	&"walls": "Ściany",
+	&"plateau_tiles": "Płaskowyże",
+	&"navmesh": "Ścieżki przeciwników",
+	&"paint": "Układanie kafli",
+	&"entities": "Potwory i skrzynie",
+	&"props": "Ustawianie obiektów",
+	&"navigation": "Nawigacja",
+}
+
+## Wagi etapów per układ mapy (GenerationFlags.layout), w kolejności wykonania: [etap, ms przy 250×250, wykładnik].
+## Oczekiwany czas etapu = ms × (pole / 250²)^wykładnik — etapy rosną z polem różnie (korytarze ścieków ~pole^1,5).
+## Kalibracja 2026-10-16: pełna ścieżka gry, seed 119, 160² / 250² / 500², dopasowanie w skali log (Godot 4.7.2
+## headless). Tempo maszyny pasek dopasowuje w trakcie, więc wagi muszą być tylko w dobrych proporcjach.
+const WEIGHTS := {
+	"interior": [
+		[&"rooms", 11.0, 1.04], [&"corridors", 22.0, 1.0], [&"smoothing", 140.0, 0.96], [&"connectivity", 24.0, 1.0],
+		[&"portals", 91.0, 0.97], [&"plateaus", 209.0, 1.03], [&"plateau_stairs", 383.0, 1.33], [&"terrain", 198.0, 0.67],
+		[&"objects", 352.0, 1.11], [&"spawns", 53.0, 1.05], [&"edges", 423.0, 1.03], [&"rock", 275.0, 1.01],
+		[&"floor", 184.0, 0.98], [&"walls", 158.0, 0.99], [&"plateau_tiles", 498.0, 1.01], [&"navmesh", 66.0, 0.95],
+		[&"paint", 183.0, 0.99], [&"entities", 41.0, 1.2], [&"props", 17.0, 1.17], [&"navigation", 1.0, 0.7],
+	],
+	"structured": [
+		[&"rooms", 216.0, 1.35], [&"corridors", 918.0, 1.53], [&"portals", 5.0, 1.5], [&"smoothing", 462.0, 1.19],
+		[&"plateaus", 143.0, 1.1], [&"terrain", 2.0, 0.0], [&"objects", 798.0, 1.25], [&"spawns", 58.0, 0.5],
+		[&"edges", 427.0, 1.02], [&"rock", 220.0, 1.07], [&"floor", 527.0, 0.93], [&"walls", 238.0, 0.93],
+		[&"plateau_tiles", 122.0, 1.33], [&"navmesh", 54.0, 0.94], [&"paint", 367.0, 1.13], [&"entities", 29.0, 0.92],
+		[&"props", 79.0, 0.0], [&"navigation", 1.0, 0.7],
+	],
+}
+
+## Kroki wewnątrz długich etapów (GenProgress.step) — [krok, ms przy 250×250, wykładnik] jak WEIGHTS; pasek idzie
+## krok po kroku zamiast stać przez cały etap. Klucz: "układ:etap".
+const STEPS := {
+	"structured:corridors": [
+		[&"service_corridors", 98.0, 1.33], [&"lane_gaps", 23.0, 0.0], [&"rooms", 65.0, 0.92],
+		[&"room_links", 169.0, 1.63], [&"complex_loops", 74.0, 2.23], [&"attached_rooms", 3.0, 1.0],
+		[&"segment_bridges", 65.0, 0.37], [&"repair", 188.0, 1.48], [&"drop_redundant_bridges", 10.0, 0.92],
+	],
+}
 
 ## Pasek sam przesuwa się w obrębie etapu (także bez sub()) według oczekiwanego czasu etapu: liniowo do
 ## CREEP_LINEAR szerokości etapu w oczekiwanym czasie, potem coraz wolniej do CREEP_MAX — nigdy za
-## koniec etapu. Oczekiwany czas = waga × tempo (ms na jednostkę wagi); tempo startuje od
-## `ms_per_weight` (wywołujący skaluje je rozmiarem mapy) i dopasowuje się do zmierzonych etapów.
+## koniec etapu (kroku, gdy etap ma kroki). Oczekiwany czas = waga × tempo; tempo startuje od ms_per_weight (wagi
+## są w ms) i dopasowuje się do zmierzonych etapów (wolniejsza maszyna = wolniejsze tempo).
 const CREEP_LINEAR := 0.8
 const CREEP_MAX := 0.95
 ## Najdalej, dokąd w etapie dochodzi sub() — resztę dokłada end().
 const SUB_MAX := 0.95
 ## Pasek przed finish() — 100% tylko na koniec całości.
 const BEFORE_FINISH := 0.99
-## Ile jednostek wagi „waży” początkowe tempo przy uśrednianiu z pomiarem.
-const PRIOR_WEIGHT := 40.0
+## Ile ms wagi „waży” początkowe tempo przy uśrednianiu z pomiarem.
+const PRIOR_WEIGHT := 400.0
 
 static var _active = null  # aktywny obiekt tego skryptu
 
@@ -63,9 +91,15 @@ var _stage: StringName = &""
 var _stage_start_usec := 0
 var _start_usec := 0
 var times := {}          # etap -> łączny czas w µs (etapy mogą się powtarzać)
-var _raw := {}           # etap -> waga z STAGES (jednostki ≈ 10 ms przy 250×250)
-## Początkowe tempo (ms na jednostkę wagi) — 10 przy 250×250; wywołujący skaluje rozmiarem mapy.
-var ms_per_weight := 10.0
+var _raw := {}           # etap -> oczekiwany czas (ms) dla układu i rozmiaru mapy (configure)
+var _layout := "interior"
+var _area_k := 1.0       # pole mapy / 250²
+## Początkowe tempo (ms rzeczywiste na ms wagi).
+var ms_per_weight := 1.0
+var _steps := {}         # etap -> {krok: [początek, długość]} (ułamki etapu)
+var _step_base := 0.0    # bieżący krok: początek i długość w etapie (długość 0 = bez kroku)
+var _step_len := 0.0
+var _step_start_usec := 0
 var _done_w := 0.0       # suma wag zakończonych etapów z listy
 var _done_ms := 0.0      # ich zmierzony czas
 var _last_stage: StringName = &""  # etap do opisu między end() a kolejnym begin()
@@ -74,18 +108,46 @@ var order: Array[StringName] = []  # etapy w kolejności pierwszego wystąpienia
 
 
 func _init() -> void:
-	var total := 0.0
-	for s in STAGES:
-		total += float(s[1])
-	var acc := 0.0
-	for s in STAGES:
-		_base[s[0]] = acc / total
-		_weight[s[0]] = float(s[1]) / total
-		_labels[s[0]] = s[2]
-		_raw[s[0]] = float(s[1])
-		acc += float(s[1])
+	_labels = LABELS
+	configure("interior", 250, 250)
 	_start_usec = Time.get_ticks_usec()
 	_stage_start_usec = _start_usec
+
+
+## Wagi etapów dla układu mapy ("interior" = jaskinia, "structured" = ścieki) i jej rozmiaru. Wołać przed start().
+func configure(layout: String, width: int, height: int) -> void:
+	_layout = layout if WEIGHTS.has(layout) else "interior"
+	_area_k = maxf(float(width * height), 1.0) / (250.0 * 250.0)
+	_base.clear()
+	_weight.clear()
+	_raw.clear()
+	var total := 0.0
+	for row in WEIGHTS[_layout]:
+		_raw[row[0]] = _expected(row)
+		total += _raw[row[0]]
+	var acc := 0.0
+	for row in WEIGHTS[_layout]:
+		_base[row[0]] = acc / total
+		_weight[row[0]] = _raw[row[0]] / total
+		acc += _raw[row[0]]
+	_steps.clear()
+	for key: String in STEPS:
+		if not key.begins_with(_layout + ":"):
+			continue
+		var steps := {}
+		var sum := 0.0
+		for row in STEPS[key]:
+			sum += _expected(row)
+		var at := 0.0
+		for row in STEPS[key]:
+			var part := _expected(row) / sum
+			steps[row[0]] = [at, part]
+			at += part
+		_steps[StringName(key.get_slice(":", 1))] = steps
+
+
+func _expected(row: Array) -> float:
+	return float(row[1]) * pow(_area_k, float(row[2]))
 
 
 # --- API generatora (statyczne, no-op bez aktywnego obiektu) ------------------------------
@@ -119,6 +181,14 @@ static func end(stage: StringName = &"") -> void:
 		p._end()
 
 
+## Początek kroku bieżącego etapu (tabela STEPS) — pasek na początek kroku i płynie w nim wg jego wagi.
+## Krok spoza tabeli = no-op.
+static func step(step_name: StringName) -> void:
+	var p = _active
+	if p != null:
+		p._step(step_name)
+
+
 ## Postęp wewnątrz bieżącego etapu (0..1).
 static func sub(frac: float) -> void:
 	var p = _active
@@ -140,10 +210,14 @@ func fraction() -> float:
 	_mutex.lock()
 	var f := _fraction
 	if _base.has(_stage):
+		var w: float = _weight[_stage]
 		var expected_ms: float = maxf(float(_raw[_stage]) * _tempo(), 1.0)
-		var t := (Time.get_ticks_usec() - _stage_start_usec) / 1000.0 / expected_ms
-		var k := CREEP_LINEAR * t if t < 1.0 else CREEP_LINEAR + (CREEP_MAX - CREEP_LINEAR) * (1.0 - exp(1.0 - t))
-		f = maxf(f, float(_base[_stage]) + float(_weight[_stage]) * k)
+		if _step_len > 0.0:
+			var ts := (Time.get_ticks_usec() - _step_start_usec) / 1000.0 / maxf(expected_ms * _step_len, 1.0)
+			f = maxf(f, float(_base[_stage]) + w * (_step_base + _step_len * _creep(ts)))
+		else:
+			var t := (Time.get_ticks_usec() - _stage_start_usec) / 1000.0 / expected_ms
+			f = maxf(f, float(_base[_stage]) + w * _creep(t))
 	if not _finished:
 		f = minf(f, BEFORE_FINISH)
 	_mutex.unlock()
@@ -181,12 +255,29 @@ func report() -> String:
 
 # --- Wewnętrzne ----------------------------------------------------------------------------
 
+## Ułamek drogi w etapie / kroku po czasie t (1 = oczekiwany czas): liniowo do CREEP_LINEAR, potem asymptotycznie.
+static func _creep(t: float) -> float:
+	return CREEP_LINEAR * t if t < 1.0 else CREEP_LINEAR + (CREEP_MAX - CREEP_LINEAR) * (1.0 - exp(1.0 - t))
+
+
+func _step(step_name: StringName) -> void:
+	_mutex.lock()
+	var steps: Dictionary = _steps.get(_stage, {})
+	if steps.has(step_name):
+		_step_base = float(steps[step_name][0])
+		_step_len = float(steps[step_name][1])
+		_step_start_usec = Time.get_ticks_usec()
+		_fraction = maxf(_fraction, float(_base[_stage]) + float(_weight[_stage]) * _step_base)
+	_mutex.unlock()
+
+
 func _begin(stage: StringName) -> void:
 	_close_stage()
 	_mutex.lock()
 	_stage = stage
 	_last_stage = stage
 	_stage_start_usec = Time.get_ticks_usec()
+	_step_len = 0.0
 	if not times.has(stage):
 		times[stage] = 0
 		order.append(stage)

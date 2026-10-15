@@ -41,9 +41,9 @@ static func run(state: State, seed_val: int, config: Dictionary) -> Dictionary:
 	for idx in range(steps.size()):
 		var step: StringName = steps[idx]
 		var t0 := Time.get_ticks_usec()
+		GenProgress.step(StringName(String(step).trim_prefix("_")))
 		p.call(step)
 		times[String(step).trim_prefix("_")] = (Time.get_ticks_usec() - t0) / 1000
-		GenProgress.sub((idx + 1.0) / float(steps.size()))
 	p.stats["t"] = times
 	return p.stats
 

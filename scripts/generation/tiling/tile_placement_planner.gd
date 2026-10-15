@@ -73,7 +73,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	GenProgress.begin(&"plateau_tiles")
 	PlateauPlacer.plan(ctx, tiles)
 	CorridorStairsPlacerScript.plan(ctx, tiles)
-	GenProgress.end(&"plateau_tiles")
+	# Bez GenProgress.end — zwalnianie analizy krawędzi po powrocie trwa (duże mapy); zamyka begin(&"navmesh").
 
 	return {
 		"tiles": tiles,
