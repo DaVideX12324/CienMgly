@@ -34,6 +34,31 @@ static func walk_raster(ctx: GenerationContext) -> PackedByteArray:
 	return out
 
 
+## Typ kratki z siatki do rastra typów; MISSING = brak kratki w ctx.grid (domyślna wartość zależy od wywołania).
+const MISSING := 255
+
+
+## Raster typów kratek (W × H, wartość CellType, MISSING = brak w ctx.grid). Pass aktualizuje go przy zapisie.
+static func type_raster(ctx: GenerationContext) -> PackedByteArray:
+	var w := ctx.width
+	var h := ctx.height
+	var out := PackedByteArray()
+	out.resize(w * h)
+	out.fill(MISSING)
+	var keys: Array = ctx.grid.keys()
+	var vals: Array = ctx.grid.values()
+	for k in range(keys.size()):
+		var p: Vector2i = keys[k]
+		if p.x >= 0 and p.y >= 0 and p.x < w and p.y < h:
+			out[p.y * w + p.x] = int(vals[k])
+	return out
+
+
+## Typ chodliwy (jak GridUtils.is_walkable; MISSING = VOID).
+static func walkable_type(t: int) -> bool:
+	return t == CellType.FLOOR or t == CellType.DOOR or t == CellType.ENTRANCE or t == CellType.EXIT
+
+
 ## Chodliwość (x, y) z rastra; poza mapą false (jak GridUtils.is_walkable dla brakującej kratki).
 static func raster_walk(r: PackedByteArray, w: int, h: int, x: int, y: int) -> bool:
 	return x >= 0 and y >= 0 and x < w and y < h and r[y * w + x] == 1
