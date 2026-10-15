@@ -28,7 +28,7 @@ const TP_PER_ATTACK := 5
 const SKILL_SP_COST := 20
 const ATTACK_HIT_CHANCE_CORRECT := 0.8
 const ATTACK_HIT_CHANCE_WRONG := 0.2
-const FLEE_SUCCESS_CHANCE := 0.8
+const FLEE_SUCCESS_CHANCE := 0.8  # jak w FNaFB1 (BattleManager.make_escape_ratio)
 const COMMAND_PANEL_WIDTH_DEFAULT := 1.0
 const PARTY_PANEL_WIDTH_DEFAULT := 2.2
 const COMMAND_PANEL_WIDTH_MIN := 240.0
@@ -48,6 +48,8 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 ## (drużyny do wrogów przy przewadze, wrogów do drużyny przy zaskoczeniu), w granicach. Bossy bez tego.
 @export_range(0.0, 1.0, 0.05) var preemptive_base_chance := 0.75  ## wróg nie zauważył, gracz zwrócony do niego (równe AGI)
 @export_range(0.0, 1.0, 0.05) var surprise_base_chance := 0.6     ## goniący wróg dopadł gracza od tyłu (równe AGI)
+## Ucieczka z pytaniem: dobra odpowiedź — zwykła szansa (FLEE_SUCCESS_CHANCE), zła — mniejsza o tyle.
+@export_range(0.0, 1.0, 0.05) var flee_wrong_penalty := 0.3
 @export_range(0.08, 0.6, 0.01) var party_command_width := 0.15  ## okno komend drużyny (lewa strona; szersze, gdy treść wymaga)
 @export_range(0.08, 0.6, 0.01) var actor_command_width := 0.15  ## okno komend postaci (prawa strona; szersze, gdy treść wymaga)
 @export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
@@ -862,7 +864,7 @@ func _on_action(action: Action) -> void:
 		audio.play_sfx_by_name("click")
 	chosen_action = action
 	if action == Action.FLEE:
-		_try_flee()
+		_start_flee()
 		return
 	if action == Action.ATTACK:
 		_open_target_menu()
@@ -1510,6 +1512,9 @@ func _resolve_action(correct: bool) -> void:
 	_set_band_mode(Band.STATUS_ONLY)  # wykonanie akcji: sam status, komunikaty w logu u góry
 	_quiz_panel_controller.hide_quiz()
 	result_label.visible = true
+	if chosen_action == Action.FLEE:
+		_try_flee(correct)  # koniec walki albo runda bez akcji drużyny
+		return
 	match chosen_action:
 		Action.ATTACK:
 			await _resolve_attack(correct)
@@ -1685,8 +1690,19 @@ func _heal_targets(skill: QuizRpgSkillBase) -> Array[int]:
 	return out
 
 
-func _try_flee() -> void:
-	if randf() < FLEE_SUCCESS_CHANCE:
+## Ucieczka (decyzja usera 2026-10-16): najpierw pytanie quizu — dobra odpowiedź daje zwykłą szansę, zła mniejszą
+## o flee_wrong_penalty (wymusza myślenie nad zadaniem). Od razu (nie czeka na fazę wykonania); bez pytania — zwykła.
+func _start_flee() -> void:
+	chosen_action = Action.FLEE
+	_executing = true
+	_begin_action_quiz()
+
+
+func _try_flee(correct: bool) -> void:
+	var chance := maxf(FLEE_SUCCESS_CHANCE - (0.0 if correct else flee_wrong_penalty), 0.0)
+	if not correct and flee_wrong_penalty > 0.0:
+		_push_log("Zła odpowiedź — trudniej uciec (%d %%)." % roundi(chance * 100.0), Color(1.0, 0.55, 0.35))
+	if randf() < chance:
 		result_label.visible = true
 		result_label.text = "Uciekasz!"
 		result_label.add_theme_color_override("font_color", Color.WHITE)
@@ -3438,7 +3454,7 @@ func _on_run_pressed() -> void:
 	if audio:
 		audio.play_sfx_by_name("click")
 	_close_actor_select()
-	_try_flee()
+	_start_flee()
 
 
 func _close_actor_select() -> void:
