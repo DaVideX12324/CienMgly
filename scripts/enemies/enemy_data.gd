@@ -18,6 +18,8 @@ class_name QuizRpgEnemyData
 ## Magia (MAT / MDF) — umiejętności z wzorem magicznym (jak w FNaFB).
 @export var magic_attack: int = 24
 @export var magic_defense: int = 12
+## AGI — kolejność w turze (bohater na lv 1: 15). Wróg z poziomem: AGI wzorcowego bohatera × agility / 15.
+@export var agility: int = 15
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
 ## Poziom wroga (QuizRpgEnemyXp): > 0 = XP z poziomu i tieru (mapa nadpisuje poziomem z "enemy_levels"), 0 = stałe xp_reward.
 @export_range(0, 100) var enemy_level: int = 0

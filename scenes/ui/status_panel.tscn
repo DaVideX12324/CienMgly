@@ -160,7 +160,7 @@ theme_override_constants/separation = 24
 
 [node name="StatusStatsVBox" type="GridContainer" parent="StatusStatsVBoxFrame/StatsRow" unique_id=1752907442]
 layout_mode = 2
-columns = 4
+columns = 5
 theme_override_constants/h_separation = 40
 theme_override_constants/v_separation = 6
 
@@ -293,6 +293,39 @@ theme_override_constants/separation = 6
 layout_mode = 2
 
 [node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow3/Margin/ContentRow" unique_id=1771200414]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatusStatRow4" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1771200500]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4" unique_id=1771200501]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Control" unique_id=1771200502]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4" unique_id=1771200503]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Margin" unique_id=1771200504]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="LeftLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Margin/ContentRow" unique_id=1771200505]
+layout_mode = 2
+
+[node name="RightLabel" type="Label" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox/StatusStatRow4/Margin/ContentRow" unique_id=1771200506]
 layout_mode = 2
 size_flags_horizontal = 3
 

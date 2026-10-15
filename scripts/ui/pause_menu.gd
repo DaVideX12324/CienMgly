@@ -770,7 +770,8 @@ func _show_equipment_panel() -> void:
 	var def: int = _ps.get_member_total_def(_selected_member_index) if _ps and _ps.has_method("get_member_total_def") else 0
 	var mat: int = _ps.get_member_total_mat(_selected_member_index) if _ps and _ps.has_method("get_member_total_mat") else 0
 	var mdf: int = _ps.get_member_total_mdf(_selected_member_index) if _ps and _ps.has_method("get_member_total_mdf") else 0
-	equipment_stats_label.text = "ATK %d   DEF %d   MAT %d   MDF %d" % [atk, def, mat, mdf]
+	var agi: int = _ps.get_member_total_agi(_selected_member_index) if _ps and _ps.has_method("get_member_total_agi") else 0
+	equipment_stats_label.text = "ATK %d   DEF %d   MAT %d   MDF %d   AGI %d" % [atk, def, mat, mdf, agi]
 	_rebuild_equip_action_rows()
 	_rebuild_equipment_slots()
 	_rebuild_equipment_item_rows()
@@ -1175,7 +1176,7 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 	if _status_bar_rows.size() >= 2:
 		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "SP", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
-	var stat_names := ["ATK", "DEF", "MAT", "MDF"]
+	var stat_names := ["ATK", "DEF", "MAT", "MDF", "AGI"]
 	for i in range(mini(_status_stat_rows.size(), stat_names.size())):
 		var value: int = _ps.get_member_total_stat(_selected_member_index, stat_names[i].to_lower()) if _ps and _ps.has_method("get_member_total_stat") else 0
 		_set_simple_row(_status_stat_rows[i], stat_names[i] + ":", str(value))
@@ -1493,7 +1494,7 @@ func _get_equipment_delta_text(entry: Dictionary) -> String:
 	var equipment: Dictionary = member.get("equipment", {})
 	var current_item_id: String = str(equipment.get(_get_equipment_preview_slot_name(), ""))
 	var parts: Array[String] = []
-	for stat in ["atk", "def", "mat", "mdf"]:
+	for stat in ["atk", "def", "mat", "mdf", "agi"]:
 		var delta: int = int(entry.get(stat + "_bonus", 0)) - _get_item_stat(current_item_id, stat + "_bonus")
 		if delta != 0 or stat in ["atk", "def"]:
 			parts.append("%s %s%d" % [stat.to_upper(), _delta_sign(delta), delta])

@@ -28,6 +28,7 @@ enum Restriction { NONE, SKIP_TURN, CONFUSED, SILENCED }
 @export_range(0.0, 3.0, 0.05) var def_mult: float = 1.0
 @export_range(0.0, 3.0, 0.05) var mat_mult: float = 1.0
 @export_range(0.0, 3.0, 0.05) var mdf_mult: float = 1.0
+@export_range(0.0, 3.0, 0.05) var agi_mult: float = 1.0
 ## Mnożnik szansy trafienia (oślepienie 0.4).
 @export_range(0.0, 2.0, 0.05) var hit_mult: float = 1.0
 ## Zmiana HP na koniec rundy jako część maks. HP (trucizna −0.05, regeneracja +0.05); co najmniej 1.
@@ -46,6 +47,7 @@ func stat_mult(stat: String) -> float:
 		"def": return def_mult
 		"mat": return mat_mult
 		"mdf": return mdf_mult
+		"agi": return agi_mult
 	return 1.0
 
 

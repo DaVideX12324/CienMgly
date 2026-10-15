@@ -44,6 +44,9 @@ class_name QuizRpgHeroData
 @export_range(0.0, 4.0, 0.1) var def_per_level: float = 1.1
 @export_range(0.0, 4.0, 0.05) var mat_per_level: float = 1.95
 @export_range(0.0, 4.0, 0.1) var mdf_per_level: float = 1.1
+## AGI (zwinność): kolejność w turze — kto ma więcej, działa wcześniej (prędkość = AGI + losowo do AGI / 4, jak RPG Maker).
+@export_range(5, 30) var base_agi: int = 15
+@export_range(0.0, 4.0, 0.1) var agi_per_level: float = 1.0
 
 @export_group("Skills")
 ## Pula umiejętności postaci (kolejność = kolejność w menu); z poziomu — QuizRpgSkillData.learn_level, reszta od NPC.
@@ -138,6 +141,8 @@ func build_member_data() -> Dictionary:
 		"base_mdf": base_mdf,
 		"mat_per_level": mat_per_level,
 		"mdf_per_level": mdf_per_level,
+		"base_agi": base_agi,
+		"agi_per_level": agi_per_level,
 		"skills": [],
 		"def_per_level": def_per_level,
 		"portrait": portrait,

@@ -24,6 +24,7 @@ var _variant_ratio: Dictionary = {}  # stosunek statystyk wariantu do bazy tieru
 @export var defense: int = 12
 @export var magic_attack: int = 24
 @export var magic_defense: int = 12
+@export var agility: int = 15
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
 ## Poziom wroga: > 0 = XP z poziomu (QuizRpgEnemyXp.kill_xp), 0 = stałe xp_reward. Ustawia dane albo mapa (set_enemy_level).
@@ -216,6 +217,7 @@ func _apply_enemy_data() -> void:
 	defense = maxi(enemy_data.defense, 0)
 	magic_attack = maxi(enemy_data.magic_attack, 0)
 	magic_defense = maxi(enemy_data.magic_defense, 0)
+	agility = maxi(enemy_data.agility, 1)
 	if not enemy_data.battle_skills.is_empty():
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)
@@ -266,7 +268,7 @@ func _update_gold_reward() -> void:
 ## Stosunek liczony raz z wartości sprzed skalowania, więc ponowne wywołanie nie kumuluje zmian.
 func _apply_level_stats() -> void:
 	if _variant_ratio.is_empty():
-		_variant_ratio = QuizRpgEnemyStats.variant_ratio(encounter_tier, max_hp, attack, defense)
+		_variant_ratio = QuizRpgEnemyStats.variant_ratio(encounter_tier, max_hp, attack, defense, agility)
 	var s := QuizRpgEnemyStats.for_level(enemy_level, encounter_tier)
 	max_hp = maxi(roundi(s["hp"] * _variant_ratio["hp"]), 1)
 	hp = max_hp
@@ -274,6 +276,7 @@ func _apply_level_stats() -> void:
 	magic_attack = attack
 	defense = maxi(roundi(s["def"] * _variant_ratio["def"]), 0)
 	magic_defense = defense
+	agility = maxi(roundi(s["agi"] * _variant_ratio["agi"]), 1)
 
 
 func _physics_process(delta: float) -> void:

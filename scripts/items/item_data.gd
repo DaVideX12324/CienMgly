@@ -25,6 +25,7 @@ class_name QuizRpgItemData
 @export var def_bonus: int = 0
 @export var mat_bonus: int = 0
 @export var mdf_bonus: int = 0
+@export var agi_bonus: int = 0
 
 
 ## Czy przedmiot może założyć postać danej klasy.

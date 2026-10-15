@@ -55,12 +55,12 @@ enum PoisonMode { PERCENT, FIXED }
 
 @export_group("Bonus na cel ze statusem")
 ## Cel z tym statusem dostaje obrażenia razy bonus_multiplier (np. Krzyk prowadzącego z FNaFB CC: ×2,1 na zatrutego).
-@export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "regen", "lunatic", "charm", "provoke", "spooked", "bleed", "curse") var bonus_vs_status: String = "none"
+@export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "agi_up", "agi_down", "regen", "lunatic", "charm", "provoke", "spooked", "bleed", "curse") var bonus_vs_status: String = "none"
 @export_range(1.0, 10.0, 0.05) var bonus_multiplier: float = 1.0
 
 @export_group("Status")
 ## Status nadawany celowi ("none" = brak) — status_id z resources/statuses/ (QuizRpgStatusCatalog).
-@export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "regen", "lunatic", "charm", "provoke", "spooked", "bleed", "curse") var inflict_status: String = "none"
+@export_enum("none", "poison", "sleep", "stun", "paralysis", "blind", "confusion", "silence", "atk_up", "atk_down", "def_up", "def_down", "agi_up", "agi_down", "regen", "lunatic", "charm", "provoke", "spooked", "bleed", "curse") var inflict_status: String = "none"
 @export_range(0.0, 1.0, 0.05) var status_chance: float = 1.0
 ## Status losowany przy każdym trafieniu (inaczej raz po serii, gdy cokolwiek trafiło).
 @export var status_per_hit: bool = false

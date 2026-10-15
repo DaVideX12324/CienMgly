@@ -6,11 +6,11 @@
 script = ExtResource("1_skill")
 skill_id = "share_tempo"
 display_name = "Dzielenie Tempa"
-description = "[TODO: wymaga AGI — na razie daje ATK w górę] Dzieli się impetem z całą drużyną, zwiększając jej zwinność."
+description = "Dzieli się impetem z całą drużyną, zwiększając jej zwinność."
 color = Color(0.9, 0.3, 0.2, 1)
 damage_mode = 2
 target = 5
-inflict_status = "atk_up"
+inflict_status = "agi_up"
 status_chance = 1.0
 sp_cost = 25
 learn_level = 0

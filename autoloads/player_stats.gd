@@ -953,7 +953,7 @@ func get_equipment_label(slot_name: String) -> String:
 
 
 ## Staty członka: baza + poziom × przyrost postaci + bonusy ekwipunku (<stat>_bonus przedmiotów).
-const STATS: Array[String] = ["atk", "def", "mat", "mdf"]
+const STATS: Array[String] = ["atk", "def", "mat", "mdf", "agi"]
 
 
 func get_member_total_stat(member_index: int, stat: String) -> int:
@@ -980,6 +980,10 @@ func get_member_total_mat(member_index: int) -> int:
 
 func get_member_total_mdf(member_index: int) -> int:
 	return get_member_total_stat(member_index, "mdf")
+
+
+func get_member_total_agi(member_index: int) -> int:
+	return get_member_total_stat(member_index, "agi")
 
 
 ## Klasa członka (starsze zapisy bez pola: z danych jego postaci).

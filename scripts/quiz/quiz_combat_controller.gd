@@ -53,8 +53,6 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
-var quiz_correct := false
-var defending := false
 
 var enemy: Node2D
 var player: Node2D
@@ -71,6 +69,7 @@ var enemy_base_attack := 24
 var enemy_base_defense := 12
 var enemy_base_magic_attack := 24
 var enemy_base_magic_defense := 12
+var enemy_base_agility := 15
 ## Leczenie umiejętności po złej odpowiedzi w quizie: tyle efektu po dobrej (dawne 30 % / 10 % HP).
 const WRONG_ANSWER_HEAL_FACTOR := 1.0 / 3.0
 ## Obrona: część obrażeń, która przechodzi (jak Guard w FNaFB — tam połowa): 1/4 po dobrej odpowiedzi, 1/2 po złej.
@@ -158,7 +157,8 @@ var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
 var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY)
 ## Kursor drużyny wybiera cel leczenia zamiast postaci: 0 — nie, 1 — żywy sojusznik, 2 — nieprzytomny (wskrzeszenie).
 var _ally_pick := 0
-var _defender_index := 0         # postać, która wybrała Obronę w tej turze (obrona zmniejsza obrażenia od umiejętności wrogów)
+var _guard := {}                 # członek drużyny -> dobra odpowiedź przy Obronie (trwa do jego następnego ruchu)
+var _turn_queue: Array[Dictionary] = []   # reszta rundy: {"party": bool, "index": int}, od najszybszego
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
 var _list_menu_entries: Array[Dictionary] = []
@@ -212,6 +212,7 @@ func setup(
 	enemy_base_defense = p_enemy.defense
 	enemy_base_magic_attack = p_enemy.magic_attack
 	enemy_base_magic_defense = p_enemy.magic_defense
+	enemy_base_agility = int(p_enemy.get("agility")) if p_enemy.get("agility") != null else 15
 	_roll_enemy_party()
 	if is_node_ready():
 		_setup_enemy_display()
@@ -388,7 +389,7 @@ func _ready() -> void:
 		else:
 			audio.play_music("battle")
 
-	_start_player_turn()
+	_start_round()
 
 
 func trigger_instant_win() -> void:
@@ -541,8 +542,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if _action_menu_open and _is_menu_cancel(event):
-			_show_primary_menu()
-			_open_actor_select()  # jak w RPG Makerze: anulowanie komend postaci wraca do wyboru postaci
+			_show_primary_menu()   # anulowanie komend postaci: Walcz / Uciekaj
+			_highlight_action(0)
 			get_viewport().set_input_as_handled()
 			return
 		if event.is_action_pressed("ui_accept"):
@@ -580,48 +581,88 @@ func _handle_hovered_enemy_click(event: InputEvent) -> bool:
 	return true
 
 
-func _start_player_turn() -> void:
+## Runda: każdy przytomny (drużyna i wrogowie) działa raz, po kolei wg prędkości = AGI + losowo 0..AGI / 4
+## (jak RPG Maker VX Ace — wyższe AGI zwykle pierwsze, przy zbliżonych bywa różnie). Na koniec rundy statusy.
+func _start_round() -> void:
 	turn_number += 1
-	defending = false
+	_turn_queue = _roll_turn_order()
+	_next_turn()
+
+
+func _roll_turn_order() -> Array[Dictionary]:
+	var order: Array[Dictionary] = []
+	for i in _party_indices(false):
+		if i < party_rows.size():
+			order.append({"party": true, "index": i, "speed": _roll_speed(int(_member_stats(i)["agi"]))})
+	for i in range(_enemy_units.size()):
+		if int(_enemy_units[i].get("hp", 0)) > 0:
+			order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"]))})
+	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["speed"]) > int(b["speed"]))
+	return order
+
+
+static func _roll_speed(agi: int) -> int:
+	return agi + randi_range(0, floori(maxi(agi, 1) / 4.0))
+
+
+## Następny w kolejce rundy: członek drużyny dostaje komendy (dalej po jego akcji — znów _next_turn), wróg działa od
+## razu. Pusta kolejka = koniec rundy.
+func _next_turn() -> void:
+	while true:
+		if _all_enemies_defeated():
+			_end_combat(true)
+			return
+		if _ps and _ps.is_party_defeated():
+			_end_combat(false)
+			return
+		if _turn_queue.is_empty():
+			break
+		var entry: Dictionary = _turn_queue.pop_front()
+		var i := int(entry["index"])
+		if bool(entry["party"]):
+			if _member_hp(i) > 0:
+				_start_member_turn(i)
+				return
+			continue
+		if int(_enemy_units[i].get("hp", 0)) > 0 and await _enemy_act(i):
+			return
+	if await _apply_status_round():
+		return
+	_start_round()
+
+
+## Ruch członka drużyny: od razu jego komendy (anulowanie -> Walcz / Uciekaj); sen / ogłuszenie / paraliż — traci ruch.
+func _start_member_turn(i: int) -> void:
+	_active_actor_index = i
+	_guard.erase(i)
 	_selected_skill_data.clear()
 	_selected_item_data.clear()
 	_pending_skill_data.clear()
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false)
-	phase = Phase.ACTION_SELECT
 	_clear_battle_log()
 	if turn_label:
-		turn_label.text = "Tura %d - Twój ruch" % turn_number
+		turn_label.text = "Tura %d - ruch: %s" % [turn_number, _member_name(i)]
 	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
-	action_panel.visible = true
 	result_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
-	_set_action_buttons_enabled(true)
-	if not _any_actor_can_act():
-		await _skip_party_turn()
+	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(i, QuizRpgStatusData.Restriction.SKIP_TURN):
+		phase = Phase.PLAYER_RESULT
+		_set_band_mode(Band.STATUS_ONLY)
+		result_label.visible = true
+		result_label.text = "%s nie może się ruszyć!" % _member_name(i)
+		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.9))
+		await get_tree().create_timer(1.2).timeout
+		_next_turn()
 		return
-	_show_primary_menu()
+	phase = Phase.ACTION_SELECT
+	action_panel.visible = true
+	_set_action_buttons_enabled(true)
+	_show_action_menu()
 	_highlight_action(0)
-
-
-func _any_actor_can_act() -> bool:
-	for i in range(mini(_party_state.size(), party_rows.size())):
-		if _is_actor_selectable(i):
-			return true
-	return false
-
-
-## Nikt w drużynie nie może się ruszyć (sen, ogłuszenie, paraliż) — od razu tura wrogów.
-func _skip_party_turn() -> void:
-	phase = Phase.PLAYER_RESULT
-	_set_band_mode(Band.STATUS_ONLY)
-	result_label.visible = true
-	result_label.text = "Drużyna nie może się ruszyć!"
-	result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.9))
-	await get_tree().create_timer(1.2).timeout
-	_enemy_turn()
+	_refresh_actor_selection()
 
 
 func _on_action(action: Action) -> void:
@@ -861,7 +902,7 @@ func _scan_enemy(enemy_index: int) -> void:
 		var skill_names: Array[String] = []
 		for sk in (src.get("battle_skills") if src != null and src.get("battle_skills") != null else []):
 			skill_names.append(sk.localized_name())
-		text = "ATK %d · DEF %d · MAT %d · MDF %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0))]
+		text = "ATK %d · DEF %d · MAT %d · MDF %d · AGI %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0)), int(unit.get("agi", 0))]
 		if not skill_names.is_empty():
 			text += "\nUmiejętności: " + ", ".join(skill_names)
 	var level: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
@@ -1255,10 +1296,7 @@ func _use_item(item_data: Dictionary) -> void:
 	_refresh_stats_panel()
 	_update_hp_bars()
 	await get_tree().create_timer(1.0).timeout
-	if _all_enemies_defeated():
-		_end_combat(true)
-		return
-	_enemy_turn()
+	_next_turn()
 
 
 func _show_question(q: Dictionary) -> void:
@@ -1292,7 +1330,6 @@ func _show_quiz_feedback(result: Dictionary, submitted_answer: Dictionary) -> vo
 
 
 func _resolve_action(correct: bool) -> void:
-	quiz_correct = correct
 	phase = Phase.PLAYER_RESULT
 	_set_quiz_layout_active(false)
 	_set_band_mode(Band.STATUS_ONLY)  # wykonanie akcji: sam status, komunikaty w logu u góry
@@ -1311,10 +1348,7 @@ func _resolve_action(correct: bool) -> void:
 	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	await get_tree().create_timer(1.5).timeout
-	if _all_enemies_defeated():
-		_end_combat(true)
-		return
-	_enemy_turn()
+	_next_turn()
 
 
 ## Atak gracza (zwykły albo umiejętność): cele wg umiejętności, `hits` trafień, każde trafienie — szansa z quizu ×
@@ -1418,8 +1452,7 @@ func _show_attack_miss(ti: int, correct: bool) -> void:
 
 
 func _resolve_defend(correct: bool) -> void:
-	defending = true
-	_defender_index = _active_actor_index
+	_guard[_active_actor_index] = correct
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("magic")
@@ -1493,104 +1526,96 @@ func _try_flee() -> void:
 		if party_command_panel:
 			party_command_panel.visible = false
 		await get_tree().create_timer(1.0).timeout
-		_enemy_turn()
+		_next_turn()
 
 
-func _enemy_turn() -> void:
-	if _all_enemies_defeated():
-		_end_combat(true)
-		return
+## Ruch wroga (jedna jednostka): umiejętność albo zwykły atak w losowego przytomnego członka drużyny.
+## true = walka zakończona (drużyna padła).
+func _enemy_act(enemy_index: int) -> bool:
 	phase = Phase.ENEMY_TURN
 	_set_band_mode(Band.STATUS_ONLY)
 	result_label.visible = true
-	for enemy_index in range(_enemy_units.size()):
-		var enemy_unit := _enemy_units[enemy_index]
-		if int(enemy_unit.get("hp", 0)) <= 0:
-			continue
-		var enemy_label := str(enemy_unit.get("name", enemy_name_str))
-		var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
-		if stop != null:
-			_push_log("%s: %s — traci turę." % [enemy_label, stop.localized_name()], stop.color)
-			await get_tree().create_timer(0.6).timeout
-			continue
-		if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
-			continue
-		var skill := _pick_enemy_skill(enemy_unit)
-		if skill != null:
-			if await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill):
-				return
-			continue
-		if turn_label:
-			turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
-		_push_log("%s atakuje!" % enemy_label, Color.WHITE)
-		_active_enemy_index = enemy_index
-		_refresh_enemy_header()
-		if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
-			var active_display: Node2D = _enemy_displays[enemy_index]
-			if active_display.has_method("play_attack"):
-				active_display.call("play_attack")
-		await get_tree().create_timer(0.5).timeout
-		# Cel: losowy przytomny członek drużyny (sam lider, gdy drużyna jednoosobowa).
-		var alive := _party_indices(false)
-		var t: int = alive[randi() % alive.size()] if not alive.is_empty() else 0
-		var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
-		var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
-		if randf() >= _unit_hit_mult(enemy_unit):
-			_push_log("%s pudłuje!" % enemy_label, Color(0.75, 0.75, 0.82))
-			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
-			await get_tree().create_timer(0.8).timeout
-			continue
-		var actual_damage: int
-		_gain_party_tp(t, _tp_from_damage(full_damage))
-		if defending and t == _defender_index:
-			actual_damage = maxi(floori(full_damage * (GUARD_DAMAGE_FACTOR_CORRECT if quiz_correct else GUARD_DAMAGE_FACTOR_WRONG)), 1)
-			if _ps:
-				_ps.damage_member(t, actual_damage)
-			var audio := get_node_or_null("/root/AudioService")
-			if actual_damage <= 0:
-				if audio:
-					audio.play_sfx_by_name("hit")
-				result_label.text = "%s odbija się od obrony!" % enemy_label
-				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
-				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
-			else:
-				if audio:
-					audio.play_sfx_by_name("player_damage")
-				result_label.text = "%s zadaje %d HP%s" % [enemy_label, actual_damage, target_suffix]
-				result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
-				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
+	var enemy_unit := _enemy_units[enemy_index]
+	var enemy_label := str(enemy_unit.get("name", enemy_name_str))
+	var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
+	if stop != null:
+		_push_log("%s: %s — traci turę." % [enemy_label, stop.localized_name()], stop.color)
+		await get_tree().create_timer(0.6).timeout
+		return false
+	if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
+		return false
+	var skill := _pick_enemy_skill(enemy_unit)
+	if skill != null:
+		return await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill)
+	if turn_label:
+		turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
+	_push_log("%s atakuje!" % enemy_label, Color.WHITE)
+	_active_enemy_index = enemy_index
+	_refresh_enemy_header()
+	if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
+		var active_display: Node2D = _enemy_displays[enemy_index]
+		if active_display.has_method("play_attack"):
+			active_display.call("play_attack")
+	await get_tree().create_timer(0.5).timeout
+	# Cel: losowy przytomny członek drużyny (sam lider, gdy drużyna jednoosobowa).
+	var alive := _party_indices(false)
+	var t: int = alive[randi() % alive.size()] if not alive.is_empty() else 0
+	var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
+	var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
+	if randf() >= _unit_hit_mult(enemy_unit):
+		_push_log("%s pudłuje!" % enemy_label, Color(0.75, 0.75, 0.82))
+		FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
+		await get_tree().create_timer(0.8).timeout
+		return false
+	var actual_damage: int
+	_gain_party_tp(t, _tp_from_damage(full_damage))
+	if _guard.has(t):
+		actual_damage = maxi(floori(full_damage * _guard_factor(t)), 1)
+		if _ps:
+			_ps.damage_member(t, actual_damage)
+		var audio := get_node_or_null("/root/AudioService")
+		if actual_damage <= 0:
+			if audio:
+				audio.play_sfx_by_name("hit")
+			result_label.text = "%s odbija się od obrony!" % enemy_label
+			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+			_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
 		else:
-			actual_damage = full_damage
-			if _ps:
-				_ps.damage_member(t, actual_damage)
-				_member_damaged(t)
-			var audio := get_node_or_null("/root/AudioService")
-			if actual_damage <= 0:
-				if audio:
-					audio.play_sfx_by_name("hit")
-				result_label.text = "%s nie przebija pancerza!" % enemy_label
-				result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
-				_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
-			else:
-				if audio:
-					audio.play_sfx_by_name("player_damage")
-				result_label.text = "%s atakuje%s! -%d HP" % [enemy_label, target_suffix, actual_damage]
-				result_label.add_theme_color_override("font_color", Color.RED)
-				_flash_sprite(player_sprite_node, Color.RED)
-				HitParticles.create_at(player, player.global_position, Color.RED, 6)
-				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
-		_update_hp_bars()
-		_refresh_stats_panel()
-		await get_tree().create_timer(1.0).timeout
-		if _ps and _ps.is_party_defeated():
-			_end_combat(false)
-			return
-	if await _apply_status_round():
-		return
-	_start_player_turn()
+			if audio:
+				audio.play_sfx_by_name("player_damage")
+			result_label.text = "%s zadaje %d HP%s" % [enemy_label, actual_damage, target_suffix]
+			result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
+			_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
+	else:
+		actual_damage = full_damage
+		if _ps:
+			_ps.damage_member(t, actual_damage)
+			_member_damaged(t)
+		var audio := get_node_or_null("/root/AudioService")
+		if actual_damage <= 0:
+			if audio:
+				audio.play_sfx_by_name("hit")
+			result_label.text = "%s nie przebija pancerza!" % enemy_label
+			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+			_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
+		else:
+			if audio:
+				audio.play_sfx_by_name("player_damage")
+			result_label.text = "%s atakuje%s! -%d HP" % [enemy_label, target_suffix, actual_damage]
+			result_label.add_theme_color_override("font_color", Color.RED)
+			_flash_sprite(player_sprite_node, Color.RED)
+			HitParticles.create_at(player, player.global_position, Color.RED, 6)
+			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
+	_update_hp_bars()
+	_refresh_stats_panel()
+	await get_tree().create_timer(1.0).timeout
+	if _ps and _ps.is_party_defeated():
+		_end_combat(false)
+		return true
+	return false
 
 
 ## Umiejętność wroga na tę turę: pierwsza z battle_skills dostępna (cooldown, first_turn) i wylosowana z use_chance;
@@ -1694,8 +1719,8 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 			if full > 0:
 				_gain_party_tp(t, _tp_from_damage(full))
 			var mult := 1.0
-			if t == _defender_index and defending and sk.can_be_blocked:
-				mult = GUARD_DAMAGE_FACTOR_CORRECT if quiz_correct else GUARD_DAMAGE_FACTOR_WRONG
+			if _guard.has(t) and sk.can_be_blocked:
+				mult = _guard_factor(t)
 			var dmg := maxi(floori(full * mult), 1) if full > 0 else 0
 			if dmg > 0 and _ps:
 				_ps.damage_member(t, dmg)
@@ -2730,6 +2755,7 @@ func _roll_enemy_party() -> void:
 				"def": maxi(0, int(src.defense)),
 				"mat": maxi(0, int(src.magic_attack)),
 				"mdf": maxi(0, int(src.magic_defense)),
+				"agi": maxi(1, int(src.get("agility")) if src.get("agility") != null else enemy_base_agility),
 				"tier": _get_encounter_tier(src),
 				"source": src,
 			})
@@ -2751,6 +2777,7 @@ func _roll_enemy_party() -> void:
 			"def": maxi(0, enemy_base_defense),
 			"mat": maxi(0, enemy_base_magic_attack),
 			"mdf": maxi(0, enemy_base_magic_defense),
+			"agi": maxi(1, enemy_base_agility),
 			"tier": _get_encounter_tier(),
 		})
 	_active_enemy_index = 0
@@ -2779,9 +2806,9 @@ func _tp_from_damage(undefended_damage: int) -> int:
 ## Staty członka drużyny / jednostki wroga dla QuizRpgSkillMath ({atk, def, mat, mdf}).
 func _member_stats(i: int) -> Dictionary:
 	if _ps == null or not _ps.has_method("get_member_total_stat"):
-		return {"atk": 20, "def": 0, "mat": 20, "mdf": 0}
+		return {"atk": 20, "def": 0, "mat": 20, "mdf": 0, "agi": 15}
 	var out := {}
-	for stat in ["atk", "def", "mat", "mdf"]:
+	for stat in ["atk", "def", "mat", "mdf", "agi"]:
 		out[stat] = roundi(_ps.get_member_total_stat(i, stat) * _ps.member_status_mult(i, stat))
 	out["statuses"] = _ps.get_statuses(i)
 	return out
@@ -2789,7 +2816,8 @@ func _member_stats(i: int) -> Dictionary:
 
 func _unit_stats(unit: Dictionary) -> Dictionary:
 	var base := {"atk": int(unit.get("atk", enemy_base_attack)), "def": int(unit.get("def", enemy_base_defense)),
-		"mat": int(unit.get("mat", enemy_base_magic_attack)), "mdf": int(unit.get("mdf", enemy_base_magic_defense))}
+		"mat": int(unit.get("mat", enemy_base_magic_attack)), "mdf": int(unit.get("mdf", enemy_base_magic_defense)),
+		"agi": int(unit.get("agi", enemy_base_agility))}
 	for stat in base:
 		base[stat] = roundi(base[stat] * _unit_status_mult(unit, stat))
 	base["statuses"] = (unit.get("statuses", {}) as Dictionary).keys()
@@ -2983,9 +3011,14 @@ func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, c
 	bar.add_theme_stylebox_override("background", bg)
 
 
+## Mnożnik obrażeń bronionego członka: 1/4 po dobrej odpowiedzi, 1/2 po złej.
+func _guard_factor(member_index: int) -> float:
+	return GUARD_DAMAGE_FACTOR_CORRECT if bool(_guard.get(member_index, false)) else GUARD_DAMAGE_FACTOR_WRONG
+
+
 ## Szansa statusu od umiejętności wroga na członka drużyny: połowa, gdy właśnie się broni.
 func _guarded_status_chance(member_index: int, sk: QuizRpgSkillBase) -> float:
-	if defending and member_index == _defender_index and sk.can_be_blocked:
+	if _guard.has(member_index) and sk.can_be_blocked:
 		return sk.status_chance * GUARD_STATUS_CHANCE_FACTOR
 	return sk.status_chance
 
@@ -3207,7 +3240,8 @@ func _on_engage_pressed() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("click")
-	_open_actor_select()
+	_show_action_menu()
+	_highlight_action(0)
 
 
 func _on_run_pressed() -> void:
@@ -3307,7 +3341,8 @@ func _refresh_actor_selection() -> void:
 
 ## Kursor na wierszu drużyny: ten sam styl „selected” co pozycje menu (pasek pod wierszem).
 func _draw_party_row_cursor(index: int) -> void:
-	if not _actor_select_open or index != _actor_selected_idx or index >= party_rows.size():
+	var at := _actor_selected_idx if _actor_select_open else (_active_actor_index if phase == Phase.ACTION_SELECT or phase == Phase.TARGET_SELECT else -1)
+	if index != at or index >= party_rows.size():
 		return
 	var row := party_rows[index]
 	var sb := row.get_theme_stylebox(&"selected", QuizTheme.MENU_ITEM)
