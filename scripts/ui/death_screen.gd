@@ -29,6 +29,7 @@ var _in_slots := false
 
 
 func _ready() -> void:
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	var gm := _singleton("GameManager")
 	if gm and gm.has_method("change_state"):
 		gm.call("change_state", 0)   # GameState.MENU

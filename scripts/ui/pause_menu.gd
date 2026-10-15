@@ -144,6 +144,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	_gm = CoreManager.get_singleton("GameManager")
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_cache_panel_nodes()
@@ -159,9 +160,6 @@ func _ready() -> void:
 			if module_id == QuizTheme.MODULE_ID and key == QuizTheme.SETTING_PAUSE_COMPACT:
 				_apply_compact_layout())
 	_resolve_options_menu()
-	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
-	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
-		ui_scale_service.scale_changed.connect(func(_f: float) -> void: _apply_scaling())
 	_show_default_party_panel()
 	if _ps:
 		if _ps.has_signal("inventory_changed"):
@@ -1634,7 +1632,7 @@ func _apply_compact_layout() -> void:
 	var margin_x := 28.0
 	var margin_y := 28.0
 	if QuizTheme.pause_ui_compact():
-		var vp := get_viewport().get_visible_rect().size
+		var vp := UiLayerScale.screen_size(pause_root)
 		margin_x = vp.x * (1.0 - compact_width) * 0.5
 		margin_y = vp.y * (1.0 - compact_height) * 0.5
 	main_row.offset_left = margin_x
@@ -1644,11 +1642,11 @@ func _apply_compact_layout() -> void:
 
 
 func _apply_scaling() -> void:
-	context_title_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(28)))
+	context_title_label.add_theme_font_size_override("font_size", QuizTheme.snap(28))
 	var title_label: Label = left_panel.get_node("Margin/LeftVBox/TitleLabel") as Label
-	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(26)))
-	toast_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
-	score_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
+	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(26))
+	toast_label.add_theme_font_size_override("font_size", QuizTheme.snap(18))
+	score_label.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 	_apply_row_scaling(_menu_rows)
 	_apply_row_scaling(_item_tab_rows)
 	_apply_row_scaling(_item_rows)
@@ -1675,16 +1673,16 @@ func _apply_row_scaling(rows: Array[Control]) -> void:
 		var right_label: Label = row.get_node_or_null("Margin/ContentRow/RightLabel") as Label
 		var underline: ColorRect = _ensure_row_selection_underline(row)
 		if margin:
-			margin.add_theme_constant_override("margin_left", _ui_px(8))
-			margin.add_theme_constant_override("margin_top", _ui_px(6))
-			margin.add_theme_constant_override("margin_right", _ui_px(8))
-			margin.add_theme_constant_override("margin_bottom", _ui_px(6))
+			margin.add_theme_constant_override("margin_left", 8)
+			margin.add_theme_constant_override("margin_top", 6)
+			margin.add_theme_constant_override("margin_right", 8)
+			margin.add_theme_constant_override("margin_bottom", 6)
 		if content:
-			content.add_theme_constant_override("separation", _ui_px(10))
+			content.add_theme_constant_override("separation", 10)
 		if left_label:
-			left_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(18)))
+			left_label.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 		if right_label:
-			right_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(17)))
+			right_label.add_theme_font_size_override("font_size", QuizTheme.snap(17))
 		if underline:
 			_configure_selection_underline(underline, row)
 
@@ -1699,16 +1697,16 @@ func _apply_party_rows_scaling(rows: Array[Control]) -> void:
 		var hp_row: HBoxContainer = row.get_node("Margin/ContentRow/HPRow") as HBoxContainer
 		var sp_row: HBoxContainer = row.get_node("Margin/ContentRow/SPRow") as HBoxContainer
 		var underline: ColorRect = _ensure_row_selection_underline(row)
-		margin.add_theme_constant_override("margin_left", _ui_px(10))
-		margin.add_theme_constant_override("margin_top", _ui_px(8))
-		margin.add_theme_constant_override("margin_right", _ui_px(10))
-		margin.add_theme_constant_override("margin_bottom", _ui_px(8))
-		content.add_theme_constant_override("separation", _ui_px(12))
-		portrait.custom_minimum_size = Vector2(_ui_px(64), _ui_px(64))
-		name_label.custom_minimum_size = Vector2(_ui_px(160), 0)
-		level_label.custom_minimum_size = Vector2(_ui_px(70), 0)
-		hp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
-		sp_row.custom_minimum_size = Vector2(_ui_px(220), 0)
+		margin.add_theme_constant_override("margin_left", 10)
+		margin.add_theme_constant_override("margin_top", 8)
+		margin.add_theme_constant_override("margin_right", 10)
+		margin.add_theme_constant_override("margin_bottom", 8)
+		content.add_theme_constant_override("separation", 12)
+		portrait.custom_minimum_size = Vector2(64, 64)
+		name_label.custom_minimum_size = Vector2(160, 0)
+		level_label.custom_minimum_size = Vector2(70, 0)
+		hp_row.custom_minimum_size = Vector2(220, 0)
+		sp_row.custom_minimum_size = Vector2(220, 0)
 		_apply_bar_row_scaling(hp_row)
 		_apply_bar_row_scaling(sp_row)
 		if underline:
@@ -1724,14 +1722,14 @@ func _apply_bar_rows_scaling(rows: Array[Control]) -> void:
 func _apply_bar_row_scaling(row: HBoxContainer) -> void:
 	var label: Label = row.get_node("BarLabel") as Label
 	var value_label: Label = row.get_node("BarValue") as Label
-	row.add_theme_constant_override("separation", _ui_px(8))
-	label.custom_minimum_size = Vector2(_ui_px(70), 0)
-	value_label.custom_minimum_size = Vector2(_ui_px(90), 0)
+	row.add_theme_constant_override("separation", 8)
+	label.custom_minimum_size = Vector2(70, 0)
+	value_label.custom_minimum_size = Vector2(90, 0)
 
 
 func _configure_selection_underline(underline: ColorRect, row: Control) -> void:
-	var thickness: int = _ui_px(2)
-	var side_margin: int = _ui_px(8)
+	var thickness: int = 2
+	var side_margin: int = 8
 	underline.color = Color.WHITE
 	underline.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var underline_parent: Control = underline.get_parent() as Control
@@ -1799,10 +1797,10 @@ func _apply_actor_header_scaling(header: HBoxContainer) -> void:
 	var name_label: Label = header.get_node("InfoVBox/NameLabel") as Label
 	var hp_row: HBoxContainer = header.get_node("InfoVBox/HPRow") as HBoxContainer
 	var sp_row: HBoxContainer = header.get_node("InfoVBox/SPRow") as HBoxContainer
-	header.add_theme_constant_override("separation", _ui_px(12))
-	portrait.custom_minimum_size = Vector2(_ui_px(128), _ui_px(128))
-	info_box.add_theme_constant_override("separation", _ui_px(6))
-	name_label.add_theme_font_size_override("font_size", QuizTheme.snap(_ui_px(22)))
+	header.add_theme_constant_override("separation", 12)
+	portrait.custom_minimum_size = Vector2(128, 128)
+	info_box.add_theme_constant_override("separation", 6)
+	name_label.add_theme_font_size_override("font_size", QuizTheme.snap(22))
 	_apply_bar_row_scaling(hp_row)
 	_apply_bar_row_scaling(sp_row)
 	var tp_row := header.get_node_or_null("InfoVBox/TPRow") as HBoxContainer
@@ -1830,16 +1828,6 @@ func _get_inventory_service() -> Node:
 		if service is Node:
 			return service
 	return get_node_or_null("/root/InventoryService")
-
-
-func _ui_px(value: int) -> int:
-	var ui_scale_manager: Node = get_node_or_null("/root/UIScaleManager")
-	if ui_scale_manager and ui_scale_manager.has_method("px"):
-		return int(ui_scale_manager.call("px", value))
-	var ui_scale_service: Node = get_node_or_null("/root/UIScaleService")
-	if ui_scale_service and ui_scale_service.has_method("px"):
-		return int(ui_scale_service.call("px", value))
-	return value
 
 
 func _is_accept(event: InputEvent) -> bool:

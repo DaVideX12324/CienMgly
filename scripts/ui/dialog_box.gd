@@ -31,6 +31,7 @@ static func open(host: Node, speaker: String, lines: PackedStringArray) -> Canva
 
 
 func _begin(speaker: String) -> void:
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	_name.text = speaker
 	_name.visible = speaker != ""
 	var cm := get_node_or_null("/root/CoreManager")

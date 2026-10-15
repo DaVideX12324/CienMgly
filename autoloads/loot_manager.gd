@@ -124,6 +124,7 @@ func _ensure_toasts() -> void:
 	_toast_layer.layer = 39
 	_toast_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_toast_layer)
+	UiLayerScale.attach(_toast_layer)  # skala UI z opcji
 	_toast_box = VBoxContainer.new()
 	_toast_box.name = "Toasts"
 	_toast_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -203,6 +204,7 @@ func _ensure_popup() -> void:
 	_popup_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	_popup_layer.visible = false
 	add_child(_popup_layer)
+	UiLayerScale.attach(_popup_layer)  # skala UI z opcji
 
 	_popup_root = Control.new()
 	_popup_root.name = "Root"

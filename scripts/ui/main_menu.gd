@@ -33,6 +33,7 @@ const MAX_MENU_SAVE_SLOTS := 20
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	_connect_buttons()
 	_build_save_slots_panel()
 	_update_load_button()

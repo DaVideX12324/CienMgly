@@ -11,6 +11,7 @@ var _reward_base_y: float = 80.0
 
 
 func _ready() -> void:
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	if reward_popup:
 		reward_popup.visible = false
 		_reward_base_y = reward_popup.position.y

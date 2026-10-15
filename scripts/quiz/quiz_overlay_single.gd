@@ -80,6 +80,7 @@ var _match_right_buttons: Array[Button] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	visible = false
 	timer_node.timeout.connect(_on_timeout)
 	fill_confirm.pressed.connect(_on_fill_text_confirm)
@@ -92,9 +93,7 @@ func _ready() -> void:
 	tf_buttons[0].pressed.connect(func(): _on_tf_button(true))
 	tf_buttons[1].pressed.connect(func(): _on_tf_button(false))
 
-	if UIScaleService.has_signal("scale_changed") and not UIScaleService.scale_changed.is_connected(_on_scale_changed):
-		UIScaleService.scale_changed.connect(_on_scale_changed)
-	_on_scale_changed(UIScaleService.scale_factor)
+	_apply_sizes()
 
 
 static func calculate_time(question: Dictionary, base_time: float, base_difficulty: int) -> float:
@@ -188,27 +187,28 @@ func _unhandled_input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 
 
-func _on_scale_changed(_scale: float) -> void:
-	panel.offset_left = -UIScaleService.sz(340.0)
-	panel.offset_top = -UIScaleService.sz(300.0)
-	panel.offset_right = UIScaleService.sz(340.0)
-	panel.offset_bottom = UIScaleService.sz(300.0)
-	vbox.add_theme_constant_override("separation", UIScaleService.px(10))
-	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(24)))
-	question_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(21)))
-	timer_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
-	hint_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(13)))
-	result_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(22)))
-	correct_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(18)))
+## Rozmiary okna i czcionek (skala UI z opcji — cała warstwa, UiLayerScale).
+func _apply_sizes() -> void:
+	panel.offset_left = -340.0
+	panel.offset_top = -300.0
+	panel.offset_right = 340.0
+	panel.offset_bottom = 300.0
+	vbox.add_theme_constant_override("separation", 10)
+	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(24))
+	question_label.add_theme_font_size_override("font_size", QuizTheme.snap(21))
+	timer_label.add_theme_font_size_override("font_size", QuizTheme.snap(20))
+	hint_label.add_theme_font_size_override("font_size", QuizTheme.snap(13))
+	result_label.add_theme_font_size_override("font_size", QuizTheme.snap(22))
+	correct_label.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 	for btn in mc_buttons:
-		btn.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
+		btn.add_theme_font_size_override("font_size", QuizTheme.snap(20))
 	for btn in tf_buttons:
-		btn.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
-	fill_input.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
-	fill_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
-	pattern_label.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
-	tiles_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(20)))
-	match_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(UIScaleService.px(18)))
+		btn.add_theme_font_size_override("font_size", QuizTheme.snap(20))
+	fill_input.add_theme_font_size_override("font_size", QuizTheme.snap(20))
+	fill_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(20))
+	pattern_label.add_theme_font_size_override("font_size", QuizTheme.snap(20))
+	tiles_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(20))
+	match_confirm.add_theme_font_size_override("font_size", QuizTheme.snap(18))
 func _build_ui() -> void:
 	var qtype := str(_question.get("type", "multiple_choice"))
 	mc_box.visible = false
@@ -276,7 +276,7 @@ func _build_fill_tiles() -> void:
 	var tiles: Array = _question.get("tiles", [])
 	_tile_slots.resize(gaps.size())
 	_tile_slots.fill("")
-	var font_size := UIScaleService.px(20)
+	var font_size := 20
 	var parts := text_with_gaps.split("___")
 	for i in range(parts.size()):
 		var label := Label.new()
@@ -287,7 +287,7 @@ func _build_fill_tiles() -> void:
 			var gap_button := Button.new()
 			gap_button.add_theme_font_size_override("font_size", QuizTheme.snap(font_size))
 			gap_button.focus_mode = Control.FOCUS_NONE
-			gap_button.custom_minimum_size = UIScaleService.sz2(120, 36)
+			gap_button.custom_minimum_size = Vector2(120, 36)
 			gap_button.text = "[ ___ ]"
 			var gap_index := i
 			gap_button.pressed.connect(func(): _on_gap_clicked(gap_index))

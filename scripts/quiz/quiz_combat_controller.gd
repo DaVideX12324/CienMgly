@@ -262,6 +262,8 @@ func _play_exit_transition() -> void:
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if get_parent() is CanvasLayer:
+		UiLayerScale.attach(get_parent() as CanvasLayer)  # skala UI z opcji na całą warstwę
 	theme = QuizTheme.combat_theme()  # większy tekst w walce (QuizTheme.COMBAT_FONT_SIZE), ten sam motyw
 	var settings := get_node_or_null("/root/SettingsService")
 	if settings and settings.has_signal("module_setting_changed"):
@@ -297,7 +299,7 @@ func _ready() -> void:
 			)
 
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
-	var ui_scale_service: Node = _get_ui_scale_service()
+	var ui_scale_service: Node = get_node_or_null(^"/root/UIScaleService")
 	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
 		ui_scale_service.scale_changed.connect(func(_f: float) -> void:
 			_apply_responsive_layout()
@@ -762,7 +764,7 @@ func _build_target_menu() -> void:
 		var row: PanelContainer = PanelContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		row.custom_minimum_size = Vector2(0.0, _ui_scale_px(34))
+		row.custom_minimum_size = Vector2(0.0, 34)
 		var row_margin: MarginContainer = MarginContainer.new()
 		row_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row_margin.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -1149,33 +1151,6 @@ func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
 		return false
 	var key_event: InputEventKey = event as InputEventKey
 	return key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
-
-
-func _get_ui_scale_service() -> Node:
-	var tree: SceneTree = null
-	if is_inside_tree():
-		tree = get_tree()
-	else:
-		var main_loop = Engine.get_main_loop()
-		if main_loop is SceneTree:
-			tree = main_loop
-	if tree and tree.root and tree.root.has_node("UIScaleService"):
-		return tree.root.get_node("UIScaleService")
-	return null
-
-
-func _get_ui_scale_factor() -> float:
-	var ui_scale_service: Node = _get_ui_scale_service()
-	if ui_scale_service and "scale_factor" in ui_scale_service:
-		return float(ui_scale_service.scale_factor)
-	return 1.0
-
-
-func _ui_scale_px(base_size: int) -> int:
-	var ui_scale_service: Node = _get_ui_scale_service()
-	if ui_scale_service and ui_scale_service.has_method("px"):
-		return int(ui_scale_service.call("px", base_size))
-	return base_size
 
 
 ## Umiejętność z listy: leczenie (cel: ja / sojusznik — kursor drużyny, gdy jest wybór / drużyna / nieprzytomny)
@@ -2444,7 +2419,7 @@ func _on_viewport_size_changed() -> void:
 
 
 func _get_resolution_scale_factor() -> float:
-	var vp_size: Vector2 = get_viewport_rect().size
+	var vp_size: Vector2 = UiLayerScale.screen_size(self)
 	if vp_size.x <= 0.0 or vp_size.y <= 0.0:
 		return 1.0
 	var scale_x: float = vp_size.x / 1920.0
@@ -2456,7 +2431,7 @@ func _get_enemy_scale(slot_index: int, focused: bool = false) -> Vector2:
 	var spots: Array = []
 	for slot_data in _enemy_active_layout_slots:
 		spots.append(slot_data.get("spot", null))
-	var s: float = BattleBackgroundLayout.enemy_scale(BattleBackgroundLayout.crowd(spots), get_viewport_rect().size)
+	var s: float = BattleBackgroundLayout.enemy_scale(BattleBackgroundLayout.crowd(spots), UiLayerScale.screen_size(self))
 	if slot_index >= 0 and slot_index < _enemy_active_layout_slots.size() and _battle_layout:
 		var spot = _enemy_active_layout_slots[slot_index].get("spot", null)
 		if spot != null:
@@ -2477,7 +2452,7 @@ func _apply_responsive_enemy_layout() -> void:
 		return
 	if _battle_layout == null:
 		_battle_layout = _get_battle_layout()
-	var vp_size: Vector2 = get_viewport_rect().size
+	var vp_size: Vector2 = UiLayerScale.screen_size(self)
 	var area: Vector2 = _enemy_field_layer.size
 	var depth_order: Array = []  # [linia stóp y, wrapper] — dalsi (wyżej na ekranie) rysowani pierwsi
 	for slot_idx in range(_enemy_active_layout_slots.size()):
@@ -2538,11 +2513,11 @@ func _style_enemy_progress_bar(_hp_bar: ProgressBar) -> void:
 
 
 ## Stała wysokość pasa (decyzja usera 2026-10-11: UI nie skacze) = najwyższy z trybów: pas ze sceny
-## (BattleWindow.offset_top) + dodatek quizu (poza siatką odpowiedzi), w skali UI, albo najwyższe okno trybów.
+## (BattleWindow.offset_top) + dodatek quizu (poza siatką odpowiedzi), albo najwyższe okno trybów (skala UI — cała warstwa).
 ## Treść wyższa od tego (np. bardzo długie pytanie) podnosi pas tylko na ten czas (okno rośnie do treści i wraca).
 func _get_desired_battle_window_height() -> float:
 	var quiz_extra := quiz_band_extra_height if QuizTheme.answers_layout() != QuizTheme.ANSWERS_GRID else 0.0
-	return maxf((_band_height + quiz_extra) * _get_ui_scale_factor(), _band_content_min_height())
+	return maxf(_band_height + quiz_extra, _band_content_min_height())
 
 
 ## Najwyższe okno ze wszystkich trybów pasa (także ukrytych teraz) + ramki pasa — od początku walki, zanim się pokażą.
@@ -2586,7 +2561,12 @@ func _fit_field_to_band(band_h: float) -> void:
 ## Opcja „UI walki na szerokość treści”, ale tylko w oknie gry co najmniej compact_min_viewport_width — w węższym
 ## (np. 1280 px) wąskie okna drużyny / quizu są za ciasne, więc pas idzie na całą szerokość.
 func _combat_ui_compact() -> bool:
-	return QuizTheme.combat_ui_compact() and get_viewport_rect().size.x >= compact_min_viewport_width
+	return QuizTheme.combat_ui_compact() and not _narrow_window()
+
+
+## Okno gry węższe niż compact_min_viewport_width — w pikselach okna, nie ekranu logicznego skali UI.
+func _narrow_window() -> bool:
+	return get_viewport_rect().size.x < compact_min_viewport_width
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
@@ -2596,7 +2576,7 @@ func _set_band_mode(mode: Band) -> void:
 		return
 	if phase == Phase.QUIZ and not party_panel_container.visible:
 		return  # quiz zajmuje pas (_set_quiz_layout_active)
-	var vp_w: float = get_viewport_rect().size.x
+	var vp_w: float = UiLayerScale.screen_size(self).x
 	party_panel_container.visible = true
 	if list_panel:
 		list_panel.visible = mode == Band.LIST
@@ -2633,7 +2613,7 @@ func _set_band_mode(mode: Band) -> void:
 			party_command_panel.visible = false
 			if actor_command_panel:
 				actor_command_panel.visible = false
-			if vp_w < compact_min_viewport_width:
+			if _narrow_window():
 				party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				party_panel_container.custom_minimum_size = Vector2.ZERO
 			else:
@@ -3106,7 +3086,7 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 				actor_command_panel.visible = false
 			party_command_panel.visible = true
 			if _combat_ui_compact() and _quiz_panel_controller:
-				var vp_w: float = get_viewport_rect().size.x
+				var vp_w: float = UiLayerScale.screen_size(self).x
 				var w: float = _quiz_panel_controller.get_desired_panel_width() + maxf(margins, 0.0)
 				party_command_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				party_command_panel.custom_minimum_size = Vector2(clampf(w, vp_w * compact_quiz_min_width, vp_w * 0.95), 0)
@@ -3397,7 +3377,7 @@ func _on_exit_pressed() -> void:
 ## Okno komunikatów po bitwie ma szerokość UI walki (wyśrodkowane): zakres widocznych okien paska tuż przed ich ukryciem,
 ## nie mniej niż status_only_width.
 func _fit_message_window_width() -> void:
-	var vp_w := get_viewport_rect().size.x
+	var vp_w := UiLayerScale.screen_size(self).x
 	var left := INF
 	var right := -INF
 	if content_row:

@@ -40,6 +40,7 @@ func _ready() -> void:
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_panel.add_child(_label)
 	add_child(_panel)
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 
 
 func set_target(target: Node2D, action_text: String) -> void:
@@ -59,6 +60,7 @@ func _process(_delta: float) -> void:
 	var offset: Vector2 = target.call("interaction_prompt_offset") if target.has_method("interaction_prompt_offset") else DEFAULT_OFFSET
 	var screen: Vector2 = target.get_viewport().get_canvas_transform() * (target.global_position + offset)
 	_panel.reset_size()
+	screen /= scale.x  # warstwa skalowana skalą UI (UiLayerScale)
 	_panel.position = (screen - Vector2(_panel.size.x * 0.5, _panel.size.y)).round()
 	_panel.visible = true
 

@@ -42,6 +42,8 @@ func setup(p_door: Node2D, p_player: Node2D, quiz_id: String,
 
 
 func _ready() -> void:
+	if get_parent() is CanvasLayer:
+		UiLayerScale.attach(get_parent() as CanvasLayer)  # skala UI z opcji na całą warstwę
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_dm = CoreManager.get_singleton("DifficultyManager")
 

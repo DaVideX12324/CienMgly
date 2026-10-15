@@ -141,6 +141,7 @@ func set_background_for(keys) -> bool:
 
 
 func _ready() -> void:
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	_title.text = title
 	_apply_location()
 	_art.texture = background
