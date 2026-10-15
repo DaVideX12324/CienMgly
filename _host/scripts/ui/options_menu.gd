@@ -9,6 +9,9 @@ signal closed
 @onready var _res_note: Label = $Panel/Margin/VBox/Tabs/Ekran/ResNote
 @onready var _monitor_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/MonitorOption
 @onready var _scale_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/ScaleOption
+@onready var _vsync_check: CheckButton = $Panel/Margin/VBox/Tabs/Ekran/VSyncCheck
+@onready var _fps_label: Label = $Panel/Margin/VBox/Tabs/Ekran/FpsLabel
+@onready var _fps_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/FpsOption
 @onready var _quizless_mode: CheckButton = $Panel/Margin/VBox/Tabs/Ogolne/QuizlessMode
 @onready var _lang_label: Label = $Panel/Margin/VBox/Tabs/Ogolne/LangLabel
 @onready var _lang_option: OptionButton = $Panel/Margin/VBox/Tabs/Ogolne/LangOption
@@ -128,6 +131,9 @@ func _ready() -> void:
 	_monitor_option.item_selected.connect(_on_monitor_changed)
 	_populate_resolutions(_monitor_option.selected)
 	_populate_scale()
+	_populate_fps_limits()
+	_vsync_check.toggled.connect(_on_vsync_toggled)
+	_fps_option.item_selected.connect(_on_fps_limit_selected)
 	_setup_audio_sliders()
 	_skin_option.item_selected.connect(_on_skin_selected)
 	_bars_option.item_selected.connect(_on_bar_style_selected)
@@ -217,6 +223,7 @@ func open() -> void:
 	_sync_scale()
 	_sync_quizless_mode()
 	_sync_audio_sliders()
+	_sync_frame_pacing()
 	_remember_display_selection()
 	_sync_apply_button()
 	_sync_skin_tab()
@@ -357,6 +364,38 @@ func _populate_scale() -> void:
 func _on_scale_item_selected(index: int) -> void:
 	_sel_scale = index
 	_scale_manually_changed = true
+
+
+## V-Sync i limit FPS działają od razu (bez „Zastosuj”) i od razu się zapisują, jak głośność.
+func _populate_fps_limits() -> void:
+	_fps_option.clear()
+	for fps in WindowService.FPS_LIMITS:
+		_fps_option.add_item("Bez limitu" if fps == 0 else "%d FPS" % fps)
+
+
+func _sync_frame_pacing() -> void:
+	_vsync_check.set_pressed_no_signal(WindowService.vsync_enabled)
+	var idx := WindowService.FPS_LIMITS.find(WindowService.max_fps)
+	_fps_option.selected = idx if idx >= 0 else WindowService.FPS_LIMITS.size() - 1
+	_fps_option.disabled = WindowService.vsync_enabled
+	_fps_label.modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
+
+
+func _on_vsync_toggled(on: bool) -> void:
+	_play_click()
+	WindowService.vsync_enabled = on
+	WindowService.apply_frame_pacing()
+	SettingsService.save_settings()
+	_sync_frame_pacing()
+
+
+func _on_fps_limit_selected(index: int) -> void:
+	if index < 0 or index >= WindowService.FPS_LIMITS.size():
+		return
+	_play_click()
+	WindowService.max_fps = WindowService.FPS_LIMITS[index]
+	WindowService.apply_frame_pacing()
+	SettingsService.save_settings()
 
 
 func _sync_language() -> void:
@@ -866,6 +905,10 @@ func _on_scale_changed(_scale: float) -> void:
 	_res_label.add_theme_font_size_override("font_size", main_size)
 	_res_note.add_theme_font_size_override("font_size", _fs(15))
 	_scale_label.add_theme_font_size_override("font_size", main_size)
+	_vsync_check.add_theme_font_size_override("font_size", main_size)
+	_fps_label.add_theme_font_size_override("font_size", main_size)
+	_fps_option.add_theme_font_size_override("font_size", main_size)
+	_scale_popup_font(_fps_option, main_size)
 	_quizless_mode.add_theme_font_size_override("font_size", main_size)
 	_lang_label.add_theme_font_size_override("font_size", main_size)
 	_lang_option.add_theme_font_size_override("font_size", main_size)
@@ -911,7 +954,7 @@ func _on_scale_changed(_scale: float) -> void:
 	for button in _mode_btns:
 		button.add_theme_font_size_override("font_size", mode_font_size)
 		button.custom_minimum_size = UIScaleService.sz2(BASE_BTN_MODE_SIZE.x, maxf(BASE_BTN_MODE_SIZE.y, float(btn_min_h)))
-	for opt in [_monitor_option, _res_option, _scale_option, _skin_option, _bars_option, _bind_game_option]:
+	for opt in [_monitor_option, _res_option, _scale_option, _fps_option, _skin_option, _bars_option, _bind_game_option]:
 		if opt:
 			opt.custom_minimum_size = Vector2(opt.custom_minimum_size.x, float(btn_min_h))
 	_btn_apply.custom_minimum_size = UIScaleService.sz2(BASE_BTN_ACTION_SIZE.x, maxf(BASE_BTN_ACTION_SIZE.y, float(btn_min_h)))

@@ -180,6 +180,26 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 
+[node name="Sep4" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ekran"]
+layout_mode = 2
+
+[node name="VSyncCheck" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+button_pressed = true
+text = "V-Sync (synchronizacja pionowa)"
+
+[node name="FpsLabel" type="Label" parent="Panel/Margin/VBox/Tabs/Ekran"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "Limit FPS (przy wylaczonym V-Sync):"
+
+[node name="FpsOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+
 [node name="Dzwiek" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 visible = false
 layout_mode = 2
