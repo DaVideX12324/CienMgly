@@ -1,6 +1,7 @@
 extends Control
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const Encounter = preload("../enemies/encounter_situation.gd")
 
 signal combat_finished(player_won: bool)
 
@@ -43,6 +44,10 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 
 ## Wygląd i układ ekranu są w scenie (WYSIWYG) i w motywie QuizTheme.THEME_PATH; tutaj tylko to, co
 ## zależy od fazy tury. Szerokości okien dolnego pasa jako część szerokości ekranu.
+## Przewaga / zaskoczenie na start walki (sytuacja z mapy: Encounter.*): szansa = bazowa × stosunek średniego AGI
+## (drużyny do wrogów przy przewadze, wrogów do drużyny przy zaskoczeniu), w granicach. Bossy bez tego.
+@export_range(0.0, 1.0, 0.05) var preemptive_base_chance := 0.75  ## wróg nie zauważył, gracz zwrócony do niego (równe AGI)
+@export_range(0.0, 1.0, 0.05) var surprise_base_chance := 0.6     ## goniący wróg dopadł gracza od tyłu (równe AGI)
 @export_range(0.08, 0.6, 0.01) var party_command_width := 0.15  ## okno komend drużyny (lewa strona; szersze, gdy treść wymaga)
 @export_range(0.08, 0.6, 0.01) var actor_command_width := 0.15  ## okno komend postaci (prawa strona; szersze, gdy treść wymaga)
 @export_range(0.3, 1.0, 0.01) var status_only_width := 0.72    ## sam status (tura wroga): wyśrodkowany
@@ -80,6 +85,9 @@ const GUARD_DAMAGE_FACTOR_WRONG := 0.5
 ## Broniąca się postać ma o połowę mniejszą szansę na status od umiejętności wroga (jak Guard w FNaFB).
 const GUARD_STATUS_CHANCE_FACTOR := 0.5
 var turn_number := 0
+enum Initiative { NONE, PREEMPTIVE, SURPRISE }
+var _encounter_situation := 0              # Encounter.* z setup
+var _initiative := Initiative.NONE         # wynik losowania na start walki (dotyczy 1. rundy)
 var _combat_started_msec := Time.get_ticks_msec()  # początek walki (log progresji)
 
 @onready var battle_window: PanelContainer = $BattleWindow
@@ -199,9 +207,11 @@ func setup(
 	diff_range: Vector2i,
 	question_count: int,
 	encounter_size_range: Vector2i = Vector2i(1, 1),
-	p_joined: Array = []
+	p_joined: Array = [],
+	p_situation: int = 0
 ) -> void:
 	enemy = p_enemy
+	_encounter_situation = p_situation
 	_joined = p_joined.duplicate()
 	player = p_player
 	quiz_id = p_quiz_id
@@ -394,6 +404,7 @@ func _ready() -> void:
 		else:
 			audio.play_music("battle")
 
+	_roll_initiative()
 	_start_round()
 
 
@@ -586,28 +597,77 @@ func _handle_hovered_enemy_click(event: InputEvent) -> bool:
 	return true
 
 
-## Runda: każdy przytomny (drużyna i wrogowie) działa raz, po kolei wg prędkości = AGI + losowo 0..AGI / 4
-## (jak RPG Maker VX Ace — wyższe AGI zwykle pierwsze, przy zbliżonych bywa różnie). Na koniec rundy statusy.
+## Runda: każdy przytomny (drużyna i wrogowie) działa raz, po kolei wg AGI — bez losowania (decyzja usera 2026-10-16:
+## AGI 26 zawsze przed 25); przy równym AGI drużyna przed wrogami, dalej wg kolejności. 1. runda: przy zaskoczeniu
+## najpierw wszyscy wrogowie, przy przewadze wrogowie ją pomijają. Na koniec rundy statusy.
 func _start_round() -> void:
 	turn_number += 1
-	_turn_queue = _roll_turn_order()
+	_turn_queue = _turn_order()
+	if turn_number == 1:
+		_push_initiative_notice()
 	_next_turn()
 
 
-func _roll_turn_order() -> Array[Dictionary]:
+func _turn_order() -> Array[Dictionary]:
+	var first_round := turn_number <= 1
 	var order: Array[Dictionary] = []
 	for i in _party_indices(false):
 		if i < party_rows.size():
-			order.append({"party": true, "index": i, "speed": _roll_speed(int(_member_stats(i)["agi"]))})
-	for i in range(_enemy_units.size()):
-		if int(_enemy_units[i].get("hp", 0)) > 0:
-			order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"]))})
-	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["speed"]) > int(b["speed"]))
+			order.append({"party": true, "index": i, "agi": int(_member_stats(i)["agi"])})
+	if not (first_round and _initiative == Initiative.PREEMPTIVE):
+		for i in range(_enemy_units.size()):
+			if int(_enemy_units[i].get("hp", 0)) > 0:
+				order.append({"party": false, "index": i, "agi": int(_unit_stats(_enemy_units[i])["agi"])})
+	var enemies_first := first_round and _initiative == Initiative.SURPRISE
+	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if enemies_first and bool(a["party"]) != bool(b["party"]):
+			return not bool(a["party"])
+		if int(a["agi"]) != int(b["agi"]):
+			return int(a["agi"]) > int(b["agi"])
+		if bool(a["party"]) != bool(b["party"]):
+			return bool(a["party"])
+		return int(a["index"]) < int(b["index"]))
 	return order
 
 
-static func _roll_speed(agi: int) -> int:
-	return agi + randi_range(0, floori(maxi(agi, 1) / 4.0))
+## Przewaga / zaskoczenie na start walki z sytuacji na mapie; szansa rośnie ze stosunkiem średniego AGI.
+func _roll_initiative() -> void:
+	_initiative = Initiative.NONE
+	if _is_boss_encounter():
+		return
+	var party_agi := _average_agi(true)
+	var enemy_agi := _average_agi(false)
+	match _encounter_situation:
+		Encounter.UNSEEN:
+			if randf() < clampf(preemptive_base_chance * party_agi / enemy_agi, 0.25, 0.95):
+				_initiative = Initiative.PREEMPTIVE
+		Encounter.FROM_BEHIND:
+			if randf() < clampf(surprise_base_chance * enemy_agi / party_agi, 0.2, 0.9):
+				_initiative = Initiative.SURPRISE
+
+
+func _average_agi(party: bool) -> float:
+	var total := 0.0
+	var count := 0
+	if party:
+		for i in _party_indices(false):
+			total += float(_member_stats(i)["agi"])
+			count += 1
+	else:
+		for u in _enemy_units:
+			if int(u.get("hp", 0)) > 0:
+				total += float(_unit_stats(u)["agi"])
+				count += 1
+	return maxf(total / maxi(count, 1), 1.0)
+
+
+## Komunikat 1. rundy (przewaga / zaskoczenie) — w logu na start i po wyczyszczeniu logu przed ruchem postaci.
+func _push_initiative_notice() -> void:
+	match _initiative:
+		Initiative.PREEMPTIVE:
+			_push_log("Przewaga! Potwory nie zdążą zareagować w tej turze.", Color(0.55, 0.95, 0.55))
+		Initiative.SURPRISE:
+			_push_log("Zaskoczenie! Potwory atakują pierwsze.", Color(1.0, 0.55, 0.35))
 
 
 ## Następny w kolejce rundy: członek drużyny dostaje komendy (dalej po jego akcji — znów _next_turn), wróg działa od
@@ -646,6 +706,8 @@ func _start_member_turn(i: int) -> void:
 	_quiz_panel_controller.reset_question()
 	_set_quiz_layout_active(false)
 	_clear_battle_log()
+	if turn_number == 1:
+		_push_initiative_notice()
 	if turn_label:
 		turn_label.text = "Tura %d - ruch: %s" % [turn_number, _member_name(i)]
 	if streak_label and _ps:

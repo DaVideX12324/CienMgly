@@ -62,6 +62,9 @@ var loot_table: Array = []
 @export_group("AI Behavior")
 @export var wander_radius: float = 100.0
 @export var memory_duration: float = 3.0
+## Pole widzenia (stopnie) w kierunku ruchu: gracza poza nim wróg nie zauważa — można go podejść od tyłu
+## (przewaga w walce). Goniący wróg widzi dookoła. 360 = zawsze widzi (jak dawniej).
+@export_range(30.0, 360.0, 5.0) var vision_angle_deg: float = 120.0
 @export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
 ## 2-way: odbicie w poziomie dopiero, gdy |kierunek.x| (wektor znormalizowany) przekracza próg —
@@ -72,6 +75,7 @@ var loot_table: Array = []
 @export_range(0.0, 0.9, 0.05) var direction_hysteresis: float = 0.5
 
 enum State { IDLE, PATROL, CHASING, COMBAT, DEFEATED }
+const Encounter = preload("encounter_situation.gd")  # sytuacja na mapie przy starcie walki
 const GROUP_RADIUS := 96.0  # px — wrogowie bliżej dołączają do walki (grupa)
 const GROUP_MAX := 4        # najwyżej tyle jednostek w walce z grupy (pole walki ma 5 miejsc)
 var state: State = State.PATROL
@@ -96,6 +100,7 @@ var _flash_timer: float = 0.0
 var _flash_color: Color = Color.WHITE
 var _uses_directional_animations: bool = false
 var _last_facing_dir: String = "down"
+var _facing: Vector2 = Vector2.DOWN  # kierunek patrzenia = ostatni kierunek ruchu (pole widzenia)
 var _anim_walk_2way: StringName = &""   # 2-way: animacja chodu / spoczynku wykryta w SpriteFrames
 var _anim_idle_2way: StringName = &""   # („walk”, „slime_walk”…), patrz _resolve_2way_anims
 
@@ -304,6 +309,8 @@ func _physics_process(delta: float) -> void:
 			_chase(delta)
 		State.IDLE:
 			pass
+	if velocity.length() > MOVING_EPS:
+		_facing = velocity.normalized()
 
 	if not _use_programmer_art:
 		_update_sprite_animation()
@@ -419,6 +426,20 @@ func _has_line_of_sight_to_player() -> bool:
 	return true
 
 
+## Zauważenie gracza (start pościgu): widoczność + pole widzenia w kierunku patrzenia. Pościg dalej tylko z widoczności.
+func _can_spot_player() -> bool:
+	return _in_vision_cone(player_ref.global_position) and _has_line_of_sight_to_player() if is_instance_valid(player_ref) else false
+
+
+func _in_vision_cone(point: Vector2) -> bool:
+	if vision_angle_deg >= 360.0:
+		return true
+	var to_point := point - global_position
+	if to_point.length_squared() < 1.0:
+		return true
+	return absf(_facing.angle_to(to_point)) <= deg_to_rad(vision_angle_deg) * 0.5
+
+
 ## Siatka mapy z poziomu (pusta dla poziomów robionych ręcznie). Szukana ponownie, dopóki pusta —
 ## wróg bywa dodany, zanim poziom ustawi last_result.
 func _map_grid() -> Dictionary:
@@ -510,7 +531,7 @@ func _draw_polygon_shape(center: Vector2, radius: float, sides: int, color: Colo
 
 
 func _patrol(delta: float) -> void:
-	if is_instance_valid(player_ref) and not defeated and _has_line_of_sight_to_player():
+	if is_instance_valid(player_ref) and not defeated and _can_spot_player():
 		state = State.CHASING
 		last_seen_player_pos = player_ref.global_position
 		memory_timer = memory_duration
@@ -734,7 +755,7 @@ func _on_detection_area_body_entered(body: Node2D) -> void:
 		return
 	if body.is_in_group("player") and not defeated:
 		player_ref = body
-		if _has_line_of_sight_to_player():
+		if _can_spot_player():
 			state = State.CHASING
 			last_seen_player_pos = body.global_position
 			memory_timer = memory_duration
@@ -777,6 +798,7 @@ func start_combat(player: Node2D) -> void:
 	if player.has_method("is_encounter_immune") and player.is_encounter_immune():
 		return
 
+	var situation := _encounter_situation(player)
 	state = State.COMBAT
 	velocity = Vector2.ZERO
 	# Wrogowie obok (w zasięgu wzroku) dołączają do tej walki — zamiast walki zaraz po walce.
@@ -802,12 +824,27 @@ func start_combat(player: Node2D) -> void:
 	var snapshot: Image = get_viewport().get_texture().get_image() if get_viewport() else null
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
-	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners)
+	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners, situation)
 	var target_parent: Node = get_tree().current_scene if (get_tree() and get_tree().current_scene) else (get_tree().root if get_tree() else null)
 	if target_parent:
 		target_parent.add_child(combat_canvas)
 	get_tree().paused = true
 	combat_ui.call("play_entry_transition", snapshot)
+
+
+## Sytuacja na mapie w chwili kontaktu (przed zmianą stanu na COMBAT): wróg nie zauważył gracza, a gracz jest do niego
+## zwrócony -> UNSEEN; wróg goni, a gracz stoi do niego tyłem -> FROM_BEHIND; inaczej NORMAL (decyzja usera 2026-10-16).
+func _encounter_situation(player: Node2D) -> int:
+	var facing: Variant = player.get("facing_direction")
+	if not (facing is Vector2) or (facing as Vector2) == Vector2.ZERO:
+		return Encounter.NORMAL
+	var to_enemy := global_position - player.global_position
+	if to_enemy.length_squared() < 1.0:
+		return Encounter.NORMAL
+	var faces_enemy := (facing as Vector2).normalized().dot(to_enemy.normalized()) > 0.0
+	if state != State.CHASING:
+		return Encounter.UNSEEN if faces_enemy else Encounter.NORMAL
+	return Encounter.NORMAL if faces_enemy else Encounter.FROM_BEHIND
 
 
 ## Grupowanie walk (decyzja usera 2026-10-11: zawsze działa): do walki dołączają WSZYSCY wrogowie tej samej frakcji
