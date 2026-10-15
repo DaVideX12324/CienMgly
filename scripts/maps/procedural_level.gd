@@ -388,15 +388,58 @@ func _pool_from_paths(enemy_paths: Array) -> Array:
 	for entry in enemy_paths:
 		var variants: Array[PackedScene] = []
 		for ep in (entry if entry is Array else [entry]):
-			if ResourceLoader.exists(ep):
-				var p := load(ep) as PackedScene
-				if p:
-					variants.append(p)
+			var p := enemy_scene(String(ep))
+			if p:
+				variants.append(p)
 		if variants.size() == 1:
 			pool.append(variants[0])
 		elif variants.size() > 1:
 			pool.append(variants)
 	return pool
+
+
+## Sceny wrogów z pul map trzymane przez całą sesję modułu — wczytanie (~0,4 s) nie wypada na główny wątek
+## przed ekranem ładowania każdej mapy. warm_enemy_scenes() (start modułu) zleca wczytanie w tle.
+static var _enemy_scenes := {}      # ścieżka -> PackedScene (null = brak)
+static var _enemy_requested := {}   # ścieżki wczytywane w tle (load_threaded_request)
+
+
+static func enemy_scene(path: String) -> PackedScene:
+	if _enemy_scenes.has(path):
+		return _enemy_scenes[path]
+	var p: PackedScene = null
+	if _enemy_requested.has(path):
+		_enemy_requested.erase(path)
+		p = ResourceLoader.load_threaded_get(path) as PackedScene   # czeka, jeśli jeszcze się wczytuje
+	elif ResourceLoader.exists(path):
+		p = load(path) as PackedScene
+	_enemy_scenes[path] = p
+	return p
+
+
+## Zleca wczytanie w tle scen wrogów ze wszystkich companion-JSON map ("enemies": tiery albo frakcje -> tiery).
+static func warm_enemy_scenes() -> void:
+	var dir := QuizRpgPaths.path("resources/maps/config")
+	for f in DirAccess.get_files_at(dir):
+		if not f.ends_with(".json"):
+			continue
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(dir.path_join(f)))
+		if not data is Dictionary:
+			continue
+		var en: Variant = (data as Dictionary).get("enemies")
+		var tier_lists: Array = []
+		if en is Array:
+			tier_lists.append(en)
+		elif en is Dictionary:
+			tier_lists.append_array((en as Dictionary).values())
+		for tiers in tier_lists:
+			if not tiers is Array:
+				continue
+			for entry in tiers:
+				for e in (entry if entry is Array else [entry]):
+					var path := QuizRpgPaths.path(String(e))
+					if not _enemy_scenes.has(path) and not _enemy_requested.has(path) and ResourceLoader.exists(path) 							and ResourceLoader.load_threaded_request(path) == OK:
+						_enemy_requested[path] = true
 
 
 ## Tiery puli ze ścieżek względem modułu (tier = ścieżka albo lista wariantów) -> ścieżki res://.

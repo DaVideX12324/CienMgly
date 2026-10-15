@@ -32,6 +32,7 @@ func _ready() -> void:
 		add_child(preload("scripts/tools/perf_monitor.gd").new())  # F3 = nakładka, zacięcia w user://perf_log.txt
 	_start_progress_log()
 	QuizTheme.apply()  # czcionka / wygląd modułu na czas jego działania (z motywem z ustawień)
+	ProceduralLevel.warm_enemy_scenes()  # sceny wrogów z pul map wczytywane w tle (bez zacięcia przed mapą)
 	var settings := get_node_or_null("/root/SettingsService")
 	if settings and settings.has_signal("module_setting_changed"):
 		settings.module_setting_changed.connect(_on_module_setting_changed)
