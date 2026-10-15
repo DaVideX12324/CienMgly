@@ -20,13 +20,9 @@ const SCALE_LABELS: Dictionary = {
 	ScaleMode.XLARGE: "4K (2x)",
 }
 
-const MIN_SCREEN_H: Dictionary = {
-	ScaleMode.XLARGE: 2160,
-	ScaleMode.LARGE: 1080,
-	ScaleMode.NORMAL: 900,
-	ScaleMode.SMALL: 720,
-	ScaleMode.XSMALL: 0,
-}
+## Ręczny wybór skali: najmniejsza wysokość ekranu po skalowaniu (okno / mnożnik), przy której UI się mieści —
+## większy wybór schodzi o stopień (np. okno 976 px: ×1,5 tak, ×2 nie; okno 1369 px: ×2 tak).
+const MIN_SCALED_HEIGHT := 600.0
 
 var current_mode: int = ScaleMode.NORMAL:
 	set(value):
@@ -114,6 +110,6 @@ func _clamp_mode_to_screen(mode: int) -> int:
 	var height: int = WindowService.resolution.y
 	if height <= 0:
 		height = DisplayServer.window_get_size().y
-	while result > ScaleMode.XSMALL and height < int(MIN_SCREEN_H[result]):
+	while result > ScaleMode.XSMALL and height < MIN_SCALED_HEIGHT * float(SCALE_VALUES[result]):
 		result -= 1
 	return result
