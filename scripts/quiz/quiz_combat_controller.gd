@@ -50,6 +50,7 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 @export_range(0.2, 0.8, 0.01) var list_party_width := 0.4  ## lista umiejętności / przedmiotów: okno drużyny obok (reszta pasa = lista)
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
 @export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
+@export var compact_min_viewport_width := 1600.0  ## węższe okno gry (px): UI walki na całą szerokość (także sam status i opcja „na szerokość treści”)
 
 var phase: Phase = Phase.ACTION_SELECT
 var chosen_action: Action = Action.ATTACK
@@ -2582,6 +2583,12 @@ func _fit_field_to_band(band_h: float) -> void:
 		window_shadow.offset_top = -band_h - _shadow_height
 
 
+## Opcja „UI walki na szerokość treści”, ale tylko w oknie gry co najmniej compact_min_viewport_width — w węższym
+## (np. 1280 px) wąskie okna drużyny / quizu są za ciasne, więc pas idzie na całą szerokość.
+func _combat_ui_compact() -> bool:
+	return QuizTheme.combat_ui_compact() and get_viewport_rect().size.x >= compact_min_viewport_width
+
+
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
 func _set_band_mode(mode: Band) -> void:
 	_band_mode = mode
@@ -2596,7 +2603,7 @@ func _set_band_mode(mode: Band) -> void:
 	content_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	# Opcje -> Motyw: „UI walki na szerokość treści” — okno drużyny o stałej szerokości, okna wyśrodkowane
 	# (inaczej rozciągnięte na cały ekran).
-	var compact := QuizTheme.combat_ui_compact()
+	var compact := _combat_ui_compact()
 	var party_flags := Control.SIZE_SHRINK_CENTER if compact else Control.SIZE_EXPAND_FILL
 	var party_min := Vector2(vp_w * compact_party_width, 0) if compact else Vector2.ZERO
 	match mode:
@@ -2626,8 +2633,12 @@ func _set_band_mode(mode: Band) -> void:
 			party_command_panel.visible = false
 			if actor_command_panel:
 				actor_command_panel.visible = false
-			party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-			party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
+			if vp_w < compact_min_viewport_width:
+				party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				party_panel_container.custom_minimum_size = Vector2.ZERO
+			else:
+				party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+				party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
 
 
 func _update_corner_label() -> void:
@@ -3094,7 +3105,7 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 			if actor_command_panel:
 				actor_command_panel.visible = false
 			party_command_panel.visible = true
-			if QuizTheme.combat_ui_compact() and _quiz_panel_controller:
+			if _combat_ui_compact() and _quiz_panel_controller:
 				var vp_w: float = get_viewport_rect().size.x
 				var w: float = _quiz_panel_controller.get_desired_panel_width() + maxf(margins, 0.0)
 				party_command_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
