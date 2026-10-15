@@ -36,11 +36,13 @@ func _pass(ctx: GenerationContext, r: PackedByteArray) -> int:
 			var i := y * w + x
 			if r[i] or r[i - w] or r[i + w] or r[i - 1] or r[i + 1]:
 				continue
+			var nw: bool = r[i - w - 1] == 1
+			var ne: bool = r[i - w + 1] == 1
+			var sw: bool = r[i + w - 1] == 1
+			var se: bool = r[i + w + 1] == 1
+			if nw == ne or nw == sw:   # żaden wzorzec (oba wymagają nw != ne i nw != sw)
+				continue
 			var p := Vector2i(x, y)
-			var nw := GridUtils.is_walkable(grid, p + Vector2i(-1, -1))
-			var ne := GridUtils.is_walkable(grid, p + Vector2i(1, -1))
-			var sw := GridUtils.is_walkable(grid, p + Vector2i(-1, 1))
-			var se := GridUtils.is_walkable(grid, p + Vector2i(1, 1))
 			var pair: Array[Vector2i] = []
 			if nw and se and not ne and not sw:
 				pair = [p + Vector2i(-1, -1), p + Vector2i(1, 1)]

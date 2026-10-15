@@ -576,22 +576,28 @@ static func _pick_portal_rooms(st: State, rooms: Array[Rect2i]) -> Vector2i:
 ## Zwraca liczbę przywróconych kratek.
 static func _restore_cuts(ctx: GenerationContext, canals, before: PackedByteArray) -> int:
 	var restored := 0
+	var w := ctx.width
+	var h := ctx.height
+	var blocked := _cells_raster(canals.blocked, w, h)
 	for _it in range(12):
-		var reach := _reach_set(ctx, canals)
+		var walk := _walk_raster(ctx)
+		var reach := _reach_raster(ctx, walk, blocked)
 		var fix: Array[Vector2i] = []
-		for y in range(ctx.height):
-			for x in range(ctx.width):
-				var p := Vector2i(x, y)
-				if not GridUtils.is_walkable(ctx.grid, p) or canals.blocked.has(p) or reach.has(p):
+		for y in range(h):
+			for x in range(w):
+				var i := y * w + x
+				if walk[i] == 0 or blocked[i] == 1 or reach[i] == 1:
 					continue
 				# p nieosiągalne: zamurowane przez przejścia kratki obok wracają
 				for dy in range(-2, 3):
 					for dx in range(-2, 3):
-						var q := p + Vector2i(dx, dy)
-						if q.x < 0 or q.y < 0 or q.x >= ctx.width or q.y >= ctx.height:
+						var qx := x + dx
+						var qy := y + dy
+						if qx < 0 or qy < 0 or qx >= w or qy >= h:
 							continue
-						if before[q.y * ctx.width + q.x] and not GridUtils.is_walkable(ctx.grid, q):
-							fix.append(q)
+						var j := qy * w + qx
+						if before[j] and walk[j] == 0:
+							fix.append(Vector2i(qx, qy))
 		if fix.is_empty():
 			break
 		for q in fix:
@@ -601,58 +607,52 @@ static func _restore_cuts(ctx: GenerationContext, canals, before: PackedByteArra
 	return restored
 
 
-static func _reach_set(ctx: GenerationContext, canals) -> Dictionary:
-	var seen := {}
-	var q: Array[Vector2i] = [ctx.entrance_pos]
-	seen[ctx.entrance_pos] = true
-	while not q.is_empty():
-		var p: Vector2i = q.pop_back()
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var n: Vector2i = p + d
-			if seen.has(n) or not GridUtils.is_walkable(ctx.grid, n) or canals.blocked.has(n):
+## Kratki osiągalne z wejścia (raster W × H, 1 = osiągalna) po chodliwych (walk) bez zablokowanych (blocked);
+## wejście zawsze osiągalne.
+static func _reach_raster(ctx: GenerationContext, walk: PackedByteArray, blocked: PackedByteArray) -> PackedByteArray:
+	var w := ctx.width
+	var h := ctx.height
+	var seen := PackedByteArray()
+	seen.resize(w * h)
+	var e := ctx.entrance_pos
+	if e.x < 0 or e.y < 0 or e.x >= w or e.y >= h:
+		return seen
+	var stack := PackedInt32Array([e.y * w + e.x])
+	seen[e.y * w + e.x] = 1
+	while not stack.is_empty():
+		var i: int = stack[stack.size() - 1]
+		stack.resize(stack.size() - 1)
+		var x := i % w
+		for n: int in [i + 1 if x < w - 1 else -1, i - 1 if x > 0 else -1, i + w if i + w < w * h else -1, i - w]:
+			if n < 0 or seen[n] == 1 or walk[n] == 0 or blocked[n] == 1:
 				continue
-			seen[n] = true
-			q.append(n)
+			seen[n] = 1
+			stack.append(n)
 	return seen
 
 
 ## Liczba kratek chodliwych (podłoga bez wody poza kładkami) nieosiągalnych z wejścia.
 static func _unreachable(ctx: GenerationContext, canals) -> int:
-	var seen := {}
-	var q: Array[Vector2i] = [ctx.entrance_pos]
-	seen[ctx.entrance_pos] = true
-	while not q.is_empty():
-		var p: Vector2i = q.pop_back()
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var n: Vector2i = p + d
-			if seen.has(n) or not GridUtils.is_walkable(ctx.grid, n) or canals.blocked.has(n):
-				continue
-			seen[n] = true
-			q.append(n)
+	var walk := _walk_raster(ctx)
+	var blocked := _cells_raster(canals.blocked, ctx.width, ctx.height)
+	var seen := _reach_raster(ctx, walk, blocked)
 	var lost := 0
-	for y in range(ctx.height):
-		for x in range(ctx.width):
-			var p := Vector2i(x, y)
-			if GridUtils.is_walkable(ctx.grid, p) and not canals.blocked.has(p) and not seen.has(p):
-				lost += 1
+	for i in range(walk.size()):
+		if walk[i] == 1 and blocked[i] == 0 and seen[i] == 0:
+			lost += 1
 	return lost
 
 
 static func _grid_snapshot(ctx: GenerationContext) -> PackedByteArray:
-	var out := PackedByteArray()
-	out.resize(ctx.width * ctx.height)
-	for y in range(ctx.height):
-		for x in range(ctx.width):
-			out[y * ctx.width + x] = 1 if GridUtils.is_walkable(ctx.grid, Vector2i(x, y)) else 0
-	return out
+	return _walk_raster(ctx)
 
 
 static func _grid_diff(ctx: GenerationContext, before: PackedByteArray) -> int:
+	var now := _walk_raster(ctx)
 	var n := 0
-	for y in range(ctx.height):
-		for x in range(ctx.width):
-			if before[y * ctx.width + x] != (1 if GridUtils.is_walkable(ctx.grid, Vector2i(x, y)) else 0):
-				n += 1
+	for i in range(now.size()):
+		if before[i] != now[i]:
+			n += 1
 	return n
 
 
@@ -802,12 +802,7 @@ static func _fill_dead_end_slivers(ctx: GenerationContext, canals) -> int:
 
 ## Raster chodliwości siatki (W × H, 1 = GridUtils.is_walkable).
 static func _walk_raster(ctx: GenerationContext) -> PackedByteArray:
-	var out := PackedByteArray()
-	out.resize(ctx.width * ctx.height)
-	for p: Vector2i in ctx.grid:
-		if p.x >= 0 and p.y >= 0 and p.x < ctx.width and p.y < ctx.height and GridUtils.is_walkable(ctx.grid, p):
-			out[p.y * ctx.width + p.x] = 1
-	return out
+	return GridPass.walk_raster(ctx)
 
 
 ## Raster kluczy słownika kratek (W × H, 1 = jest).

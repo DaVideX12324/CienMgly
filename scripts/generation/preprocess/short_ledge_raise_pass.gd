@@ -40,8 +40,11 @@ func _pass(ctx: GenerationContext, r: PackedByteArray) -> int:
 	var changed := 0
 	for y in range(4, height - 1):
 		var x := 1
+		var row := y * width
 		while x < width - 1:
-			if _depth(r, width, height, x, y) != 2:
+			# _depth(x, y) == 2 z rastra wprost (y >= 4, więc rzędy y - 1 .. y - 3 są w mapie)
+			var i := row + x
+			if r[i] == 0 or r[i - width] == 1 or r[i - 2 * width] == 1 or r[i - 3 * width] == 0:
 				x += 1
 				continue
 			var start := x
