@@ -31,6 +31,7 @@ var _opt_items: OptionButton
 var _spin_item_count: SpinBox
 var _btn_equip_item: Button
 var _opt_status_member: OptionButton
+var _opt_party_hero: OptionButton
 var _opt_status_id: OptionButton
 var _lbl_fps: Label
 var _lbl_info: Label
@@ -121,6 +122,7 @@ func toggle() -> void:
 		_refresh_controls_state()
 		_refresh_item_cheats()
 		_refresh_status_cheats()
+		_refresh_party_cheats()
 		_center_panel()
 	menu_visibility_changed.emit(new_vis)
 
@@ -734,6 +736,7 @@ func _build_tab_gameplay() -> Control:
 
 	vbox.add_child(_build_item_cheats())
 	vbox.add_child(_build_status_cheats())
+	vbox.add_child(_build_party_cheats())
 
 	return scroll
 
@@ -878,6 +881,56 @@ func _on_cheat_clear_statuses() -> void:
 		return
 	var removed: Array = t[0].cure_statuses(t[1], t[0].get_statuses(t[1]))
 	_status_cheat_toast("🧹 Zdjęto statusy: %d" % removed.size(), Color(0.5, 1.0, 0.6))
+
+
+func _build_party_cheats() -> PanelContainer:
+	var box := _create_card_container("Drużyna", "[ PARTY ]", "Dołącz towarzysza do drużyny (poziom: najwyższy w drużynie − 1, pełne HP / SP, ekwipunek startowy).")
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_opt_party_hero = OptionButton.new()
+	_opt_party_hero.focus_mode = Control.FOCUS_NONE
+	_opt_party_hero.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_opt_party_hero)
+	var btn := Button.new()
+	btn.text = "➕ Dołącz"
+	btn.focus_mode = Control.FOCUS_NONE
+	_min_height(btn, 36)
+	btn.pressed.connect(_on_cheat_recruit)
+	row.add_child(btn)
+	_get_card_content(box).add_child(row)
+	return box
+
+
+## Lista postaci spoza drużyny (PlayerStats.recruitable_heroes) odświeżana przy otwarciu menu.
+func _refresh_party_cheats() -> void:
+	if _opt_party_hero == null:
+		return
+	_opt_party_hero.clear()
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or not ps.has_method("recruitable_heroes"):
+		_opt_party_hero.add_item("(brak drużyny — moduł nieaktywny)")
+		_opt_party_hero.disabled = true
+		return
+	for id: String in ps.recruitable_heroes():
+		var hero = ps.hero_by_id(id)
+		_opt_party_hero.add_item("%s (%s)" % [hero.display_name, hero.class_label(hero.character_class)])
+		_opt_party_hero.set_item_metadata(_opt_party_hero.item_count - 1, id)
+	_opt_party_hero.disabled = _opt_party_hero.item_count == 0
+	if _opt_party_hero.item_count == 0:
+		_opt_party_hero.add_item("(wszyscy są już w drużynie)")
+
+
+func _on_cheat_recruit() -> void:
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or _opt_party_hero == null or _opt_party_hero.disabled or _opt_party_hero.selected < 0:
+		return
+	var id := str(_opt_party_hero.get_item_metadata(_opt_party_hero.selected))
+	var label := _opt_party_hero.get_item_text(_opt_party_hero.selected)
+	var cheat_service = _get_service("CheatService")
+	if ps.recruit(id) and cheat_service:
+		cheat_service.show_toast("➕ Dołącza: %s" % label, Color(0.5, 1.0, 0.6))
+	_refresh_party_cheats()
+	_refresh_status_cheats()
 
 
 func _module_singleton(singleton_name: String) -> Node:

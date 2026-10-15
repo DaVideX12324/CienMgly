@@ -190,6 +190,15 @@ func highest_level() -> int:
 	return best
 
 
+## Postacie z HERO_PATHS, których nie ma w drużynie (menu deweloperskie, przyszłe zadania towarzyszy).
+func recruitable_heroes() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in HERO_PATHS:
+		if not has_member(id) and hero_by_id(id) != null:
+			out.append(id)
+	return out
+
+
 func has_member(hero_id: String) -> bool:
 	for m: Dictionary in party:
 		if str(m.get("hero_id", "")) == hero_id:
