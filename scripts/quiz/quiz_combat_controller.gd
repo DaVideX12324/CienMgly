@@ -1530,18 +1530,22 @@ func _enemy_turn() -> void:
 			if active_display.has_method("play_attack"):
 				active_display.call("play_attack")
 		await get_tree().create_timer(0.5).timeout
-		var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(0))
+		# Cel: losowy przytomny członek drużyny (sam lider, gdy drużyna jednoosobowa).
+		var alive := _party_indices(false)
+		var t: int = alive[randi() % alive.size()] if not alive.is_empty() else 0
+		var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
+		var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
 		if randf() >= _unit_hit_mult(enemy_unit):
 			_push_log("%s pudłuje!" % enemy_label, Color(0.75, 0.75, 0.82))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
 			await get_tree().create_timer(0.8).timeout
 			continue
 		var actual_damage: int
-		_gain_party_tp(0, _tp_from_damage(full_damage))
-		if defending:
+		_gain_party_tp(t, _tp_from_damage(full_damage))
+		if defending and t == _defender_index:
 			actual_damage = maxi(floori(full_damage * (GUARD_DAMAGE_FACTOR_CORRECT if quiz_correct else GUARD_DAMAGE_FACTOR_WRONG)), 1)
 			if _ps:
-				_ps.take_damage(actual_damage)
+				_ps.damage_member(t, actual_damage)
 			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
 				if audio:
@@ -1553,15 +1557,15 @@ func _enemy_turn() -> void:
 			else:
 				if audio:
 					audio.play_sfx_by_name("player_damage")
-				result_label.text = "%s zadaje %d HP" % [enemy_label, actual_damage]
+				result_label.text = "%s zadaje %d HP%s" % [enemy_label, actual_damage, target_suffix]
 				result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
 				_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
 		else:
 			actual_damage = full_damage
 			if _ps:
-				_ps.take_damage(actual_damage)
-				_member_damaged(0)
+				_ps.damage_member(t, actual_damage)
+				_member_damaged(t)
 			var audio := get_node_or_null("/root/AudioService")
 			if actual_damage <= 0:
 				if audio:
@@ -1573,7 +1577,7 @@ func _enemy_turn() -> void:
 			else:
 				if audio:
 					audio.play_sfx_by_name("player_damage")
-				result_label.text = "%s atakuje! -%d HP" % [enemy_label, actual_damage]
+				result_label.text = "%s atakuje%s! -%d HP" % [enemy_label, target_suffix, actual_damage]
 				result_label.add_theme_color_override("font_color", Color.RED)
 				_flash_sprite(player_sprite_node, Color.RED)
 				HitParticles.create_at(player, player.global_position, Color.RED, 6)
@@ -1581,7 +1585,7 @@ func _enemy_turn() -> void:
 		_update_hp_bars()
 		_refresh_stats_panel()
 		await get_tree().create_timer(1.0).timeout
-		if _ps and not _ps.is_alive():
+		if _ps and _ps.is_party_defeated():
 			_end_combat(false)
 			return
 	if await _apply_status_round():
@@ -1708,7 +1712,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 					_inflict_status(t, sk)
 		_update_hp_bars()
 		_refresh_stats_panel()
-		if _ps and not _ps.is_alive():
+		if _ps and _ps.is_party_defeated():
 			await get_tree().create_timer(0.6).timeout
 			_end_combat(false)
 			return true
@@ -1842,7 +1846,7 @@ func _apply_status_round() -> bool:
 	_update_hp_bars()
 	_refresh_stats_panel()
 	await get_tree().create_timer(0.8).timeout
-	if _ps and not _ps.is_alive():
+	if _ps and _ps.is_party_defeated():
 		_end_combat(false)
 		return true
 	if _all_enemies_defeated():
@@ -1875,9 +1879,14 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		var total_xp_reward :int= enemy.xp_reward + _bonus_xp_reward
 		var lvl_before :int= _ps.level if _ps else 1
 		var learned: Array[String] = []
-		var on_learned := func(_i: int, skill_name: String): learned.append(skill_name)
+		var on_learned := func(i: int, skill_name: String):
+			learned.append(skill_name if i == 0 else "%s (%s)" % [skill_name, _member_name(i)])
 		if _ps and _ps.has_signal("skill_learned"):
 			_ps.skill_learned.connect(on_learned)
+		var member_levels := {}   # członek -> najwyższy nowy poziom
+		var on_member_level := func(i: int, lvl: int): member_levels[i] = maxi(int(member_levels.get(i, 0)), lvl)
+		if _ps and _ps.has_signal("member_level_up"):
+			_ps.member_level_up.connect(on_member_level)
 		var total_gold := _total_gold_reward()
 		if _ps:
 			_ps.add_xp(total_xp_reward)
@@ -1888,6 +1897,10 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 			lines.append("Zdobyto %d złota!" % total_gold)
 		if _ps and _ps.level > lvl_before:
 			lines.append("%s osiąga poziom %d!" % [_ps.player_name, _ps.level])
+		for i: int in member_levels:
+			lines.append("%s osiąga poziom %d!" % [_member_name(i), int(member_levels[i])])
+		if _ps and _ps.has_signal("member_level_up") and _ps.member_level_up.is_connected(on_member_level):
+			_ps.member_level_up.disconnect(on_member_level)
 		for skill_name in learned:
 			lines.append("Nowa umiejętność: %s!" % skill_name)
 		if _ps and _ps.has_signal("skill_learned") and _ps.skill_learned.is_connected(on_learned):
@@ -2926,7 +2939,8 @@ func _refresh_enemy_header() -> void:
 func _refresh_stats_panel() -> void:
 	if party_rows.is_empty():
 		return
-	_sync_party_member_from_player()
+	for i in range(_party_state.size()):
+		_sync_party_member_from_player(i)
 	for i in range(party_rows.size()):
 		var row := party_rows[i]
 		if i < _party_state.size():
@@ -3082,29 +3096,37 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 		_set_band_mode(_band_mode)
 
 
+## Stan walki każdego członka drużyny (PlayerStats.party): HP z PlayerStats, pula SP / TP na walkę (jak u lidera).
 func _init_party_state() -> void:
 	_party_state.clear()
-	var hero_name : String = _ps.player_name if _ps and str(_ps.player_name) != "" else "Bohater"
-	var hero_hp : int = _ps.hp if _ps else 0
-	var hero_hp_max : int = _ps.max_hp if _ps else 1
-	_party_state.append({
-		"name": hero_name,
-		"lp": hero_hp,
-		"lp_max": hero_hp_max,
-		"sp": PARTY_SKILL_SP_MAX,
-		"sp_max": PARTY_SKILL_SP_MAX,
-		"tp": 0,
-		"tp_max": PARTY_TP_MAX,
-	})
+	var n: int = _ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1
+	for i in range(maxi(n, 1)):
+		_party_state.append({
+			"name": "",
+			"lp": 0,
+			"lp_max": 1,
+			"sp": PARTY_SKILL_SP_MAX,
+			"sp_max": PARTY_SKILL_SP_MAX,
+			"tp": 0,
+			"tp_max": PARTY_TP_MAX,
+		})
+		_sync_party_member_from_player(i)
 
 
+## Imię i HP członka z PlayerStats (lider: player_name / hp / max_hp, reszta: dane drużyny).
 func _sync_party_member_from_player(index: int = 0) -> void:
 	if _ps == null or index < 0 or index >= _party_state.size():
 		return
 	var member := _party_state[index]
-	member["name"] = _ps.player_name if str(_ps.player_name) != "" else "Bohater"
-	member["lp"] = _ps.hp
-	member["lp_max"] = _ps.max_hp
+	if index == 0:
+		member["name"] = _ps.player_name if str(_ps.player_name) != "" else "Bohater"
+		member["lp"] = _ps.hp
+		member["lp_max"] = _ps.max_hp
+	else:
+		var m: Dictionary = _ps.get_party_member(index) if _ps.has_method("get_party_member") else {}
+		member["name"] = str(m.get("name", "?"))
+		member["lp"] = int(m.get("hp", 0))
+		member["lp_max"] = maxi(int(m.get("max_hp", 1)), 1)
 	_party_state[index] = member
 
 
