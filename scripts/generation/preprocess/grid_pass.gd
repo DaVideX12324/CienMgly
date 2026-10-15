@@ -54,6 +54,21 @@ static func type_raster(ctx: GenerationContext) -> PackedByteArray:
 	return out
 
 
+## Tablice wartości rastra typów (indeks = CellType albo MISSING): 1 = chodliwy (jak walkable_type), 1 = „ściana” w
+## sensie grid.get(p, WALL) == WALL (WALL albo brak kratki). W gorących pętlach odczyt z tablicy zamiast wywołania
+## funkcji — wywołanie w GDScript kosztuje kilka razy więcej niż cała reszta sprawdzenia kratki.
+static var WALK_LUT: PackedByteArray = _lut([CellType.FLOOR, CellType.DOOR, CellType.ENTRANCE, CellType.EXIT])
+static var WALL_LUT: PackedByteArray = _lut([CellType.WALL, MISSING])
+
+
+static func _lut(types: Array) -> PackedByteArray:
+	var out := PackedByteArray()
+	out.resize(256)
+	for t in types:
+		out[t] = 1
+	return out
+
+
 ## Typ chodliwy (jak GridUtils.is_walkable; MISSING = VOID).
 static func walkable_type(t: int) -> bool:
 	return t == CellType.FLOOR or t == CellType.DOOR or t == CellType.ENTRANCE or t == CellType.EXIT

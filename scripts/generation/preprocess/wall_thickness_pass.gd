@@ -14,8 +14,10 @@ func apply(ctx: GenerationContext) -> int:
 	var passes := 0
 	var total_changed := 0
 	# Raster typów kratek (aktualizowany przy każdym zapisie): „ściana” = grid.get(p, WALL) == WALL, czyli WALL
-	# albo brak kratki; „podłoga” = GridUtils.is_walkable.
+	# albo brak kratki (WALL_LUT); „podłoga” = GridUtils.is_walkable (WALK_LUT).
 	var t := type_raster(ctx)
+	var wk := WALK_LUT
+	var sl := WALL_LUT
 	const W := CellType.WALL
 	const F := CellType.FLOOR
 
@@ -28,16 +30,15 @@ func apply(ctx: GenerationContext) -> int:
 			var row := y * width
 			var x := 0
 			while x < width:
-				var tv: int = t[row + x]
-				if tv == W or tv == MISSING:
+				if sl[t[row + x]] == 1:
 					var x_start := x
-					while x < width and (t[row + x] == W or t[row + x] == MISSING):
+					while x < width and sl[t[row + x]] == 1:
 						x += 1
 					var x_end := x - 1
 					var wall_len := x_end - x_start + 1
 
-					var has_floor_left := x_start > 0 and walkable_type(t[row + x_start - 1])
-					var has_floor_right := x_end < width - 1 and walkable_type(t[row + x_end + 1])
+					var has_floor_left := x_start > 0 and wk[t[row + x_start - 1]] == 1
+					var has_floor_right := x_end < width - 1 and wk[t[row + x_end + 1]] == 1
 
 					if has_floor_left and has_floor_right and wall_len < 2:
 						for cx in range(x_start, x_end + 1):
@@ -52,9 +53,8 @@ func apply(ctx: GenerationContext) -> int:
 		for y in range(1, height - 1):
 			for x in range(1, width - 1):
 				var i := y * width + x
-				if t[i] == W or t[i] == MISSING:
-					var floor_count := int(walkable_type(t[i + 1])) + int(walkable_type(t[i - 1])) \
-							+ int(walkable_type(t[i + width])) + int(walkable_type(t[i - width]))
+				if sl[t[i]] == 1:
+					var floor_count: int = wk[t[i + 1]] + wk[t[i - 1]] + wk[t[i + width]] + wk[t[i - width]]
 					if floor_count >= 3:
 						grid[Vector2i(x, y)] = F
 						t[i] = F
@@ -65,13 +65,12 @@ func apply(ctx: GenerationContext) -> int:
 		for y in range(1, height - 1):
 			for x in range(1, width - 1):
 				var i := y * width + x
-				if (t[i] == W or t[i] == MISSING) and (t[i - width] == W or t[i - width] == MISSING) \
-						and (t[i + width] == W or t[i + width] == MISSING) and (t[i - 1] == W or t[i - 1] == MISSING) \
-						and (t[i + 1] == W or t[i + 1] == MISSING):
-					var nw := walkable_type(t[i - width - 1])
-					var ne := walkable_type(t[i - width + 1])
-					var sw := walkable_type(t[i + width - 1])
-					var se := walkable_type(t[i + width + 1])
+				if sl[t[i]] == 1 and sl[t[i - width]] == 1 and sl[t[i + width]] == 1 and sl[t[i - 1]] == 1 \
+						and sl[t[i + 1]] == 1:
+					var nw: bool = wk[t[i - width - 1]] == 1
+					var ne: bool = wk[t[i - width + 1]] == 1
+					var sw: bool = wk[t[i + width - 1]] == 1
+					var se: bool = wk[t[i + width + 1]] == 1
 
 					# Wzorzec 1: 100 / 000 / 001 -> górny narożnik NW staje się 0
 					if nw and se and not ne and not sw:

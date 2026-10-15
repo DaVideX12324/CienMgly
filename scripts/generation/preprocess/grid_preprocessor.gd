@@ -1,13 +1,17 @@
-﻿class_name GridPreprocessor
+class_name GridPreprocessor
 extends RefCounted
 
 
-## Uruchamia passy w PODANEJ kolejności. Zapisuje statystyki do ctx.preprocess_stats.
+## Uruchamia passy w PODANEJ kolejności. Zapisuje statystyki do ctx.preprocess_stats (liczba zmian pod id passa,
+## łączny czas w ms pod "t_" + id — diagnostyka wydajności).
 static func run(ctx: GenerationContext, passes: Array[GridPass]) -> void:
 	for p in passes:
 		if p.is_enabled(ctx):
+			var t0 := Time.get_ticks_usec()
 			var changed := p.apply(ctx)
 			ctx.preprocess_stats[p.get_id()] = changed
+			var tk := "t_" + String(p.get_id())
+			ctx.preprocess_stats[tk] = int(ctx.preprocess_stats.get(tk, 0)) + (Time.get_ticks_usec() - t0) / 1000
 
 
 ## Uruchamia grupę passów czyszczących w pętli zbieżnej (jak _cleanup_grid_before_tiling)

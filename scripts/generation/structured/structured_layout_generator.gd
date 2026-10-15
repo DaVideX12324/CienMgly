@@ -127,33 +127,50 @@ static func generate_layout(
 	# Przejścia czyszczące — układ ma już być z nimi zgodny (R7: < 1 % zmienionych kratek). Kanały, chodniki,
 	# korytarze i kładki chronione przed zamurowaniem (Wall3HPass potrafił zasypać przesmyk i odciąć część mapy).
 	GenProgress.begin(&"smoothing")
+	var ts := {}   # czasy kroków wygładzania (ms) — diagnostyka wydajności, stats["t_smooth"]
+	var t0 := Time.get_ticks_usec()
 	for i in range(width * height):
 		if st.water[i] or st.lanes[i] or st.corrm[i] or st.service[i] or st.bridge_m[i]:
 			ctx.protected_floor[Vector2i(i % width, i / width)] = true
+	t0 = _lap(ts, "protect", t0)
 	stats["lost_pre"] = _unreachable(ctx, canals)
+	t0 = _lap(ts, "lost_pre", t0)
 	var before := _grid_snapshot(ctx)
 	GridPreprocessor.run(ctx, [Remove1hWallsPass.new(), WallThicknessPass.new()])
+	t0 = _lap(ts, "thickness", t0)
 	_run_wall_shape_passes(ctx, flags)
+	t0 = _lap(ts, "wall_shape_1", t0)
 	if flags.enable_grid_cleanup:
 		GridPreprocessor.run_convergent(ctx, [
 			SpikeCleanupPass.new(),
 			ThinBridgeCleanupPass.new(),
 			StaircaseNormalizerPass.new()
 		], 4)
+	t0 = _lap(ts, "cleanup", t0)
 	_run_wall_shape_passes(ctx, flags)
+	t0 = _lap(ts, "wall_shape_2", t0)
 	GridPreprocessor.run(ctx, [ShortLedgeRaisePass.new(), DiagonalTouchPassScript.new(), SlopeThicknessPassScript.new()])
+	t0 = _lap(ts, "ledges", t0)
 	stats["restored"] = _restore_cuts(ctx, canals, before)
+	t0 = _lap(ts, "restore", t0)
 	stats["prepass_changed"] = _grid_diff(ctx, before)
 	_drop_walled_canal_cells(ctx, canals)
+	t0 = _lap(ts, "drop_walled", t0)
 	stats["dead_end_slivers"] = _fill_dead_end_slivers(ctx, canals)
+	t0 = _lap(ts, "slivers", t0)
 	stats["raised_protrusions"] = _raise_facade_protrusions(ctx, canals)
 	if int(stats["raised_protrusions"]) > 0:   # zasypane kratki mogą zostawić ślepą kieszeń obok
 		stats["dead_end_slivers"] = int(stats["dead_end_slivers"]) + _fill_dead_end_slivers(ctx, canals)
+	t0 = _lap(ts, "protrusions", t0)
 	if bool(cfg.get("canal_rails", true)):
 		stats["rails"] = _canal_rails(st, canals, ctx, seed_used, cfg)
+	t0 = _lap(ts, "rails", t0)
 	if flags.enable_1w_walls:
 		stats["walls_1w"] = _walls_1w(ctx, canals, seed_used, cfg)
+	t0 = _lap(ts, "walls_1w", t0)
 	stats["lost_post"] = _unreachable(ctx, canals)
+	t0 = _lap(ts, "lost_post", t0)
+	stats["t_smooth"] = ts
 	GenProgress.end(&"smoothing")
 	ctx.preprocess_stats["structured"] = stats
 
@@ -923,6 +940,13 @@ static func _drop_walled_canal_cells(ctx: GenerationContext, canals) -> void:
 		canals.water.erase(p)
 		canals.dry.erase(p)
 	canals.rebuild_blocked()
+
+
+## Dopisuje do ts[key] czas od t0 (ms), zwraca nowy znacznik.
+static func _lap(ts: Dictionary, key: String, t0: int) -> int:
+	var now := Time.get_ticks_usec()
+	ts[key] = int(ts.get(key, 0)) + (now - t0) / 1000
+	return now
 
 
 static func _run_wall_shape_passes(ctx: GenerationContext, flags: GenerationFlags) -> void:
