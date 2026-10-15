@@ -664,10 +664,15 @@ func _build_fill_tiles(question: Dictionary) -> void:
 	_tile_slots.resize(gaps.size())
 	_tile_slots.fill("")
 	var parts := text_with_gaps.split("___")
+	# Tekst między lukami po jednym słowie na etykietę — wiersz luk zawija się jak zwykły tekst (cały fragment
+	# w jednej etykiecie bywał szerszy niż ekran i wypychał okno). Odstęp w wierszu = szerokość spacji.
+	var font := gap_row.get_theme_font("font", "Label")
+	if font:
+		gap_row.add_theme_constant_override("h_separation", ceili(font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, _ts(18)).x))
 	for i in range(parts.size()):
-		if parts[i] != "":
+		for word in parts[i].split(" ", false):
 			var label := Label.new()
-			label.text = parts[i]
+			label.text = word
 			label.autowrap_mode = TextServer.AUTOWRAP_OFF
 			label.add_theme_font_size_override("font_size", _ts(18))
 			label.add_theme_color_override("font_color", TEXT_PRIMARY)
@@ -826,7 +831,8 @@ func _match_left_width() -> float:
 			continue
 		var text := "%s ▶ %s" % [MATCH_TAGS[i % MATCH_TAGS.size()], str(left_items[i])]
 		w = maxf(w, font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, btn.get_theme_font_size("font_size")).x + 28.0)
-	var vp := quiz_panel.get_viewport_rect().size.x if quiz_panel and quiz_panel.is_inside_tree() else 1920.0
+	# Szerokość ekranu w jednostkach warstwy UI (warstwa może być skalowana skalą UI).
+	var vp := quiz_panel.get_viewport_rect().size.x / quiz_panel.get_canvas_transform().get_scale().x if quiz_panel and quiz_panel.is_inside_tree() else 1920.0
 	return minf(w, vp * MATCH_LEFT_MAX_SHARE)
 
 
