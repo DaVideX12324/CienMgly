@@ -161,7 +161,7 @@ theme_override_constants/separation = 24
 [node name="StatusStatsVBox" type="GridContainer" parent="StatusStatsVBoxFrame/StatsRow" unique_id=1752907442]
 layout_mode = 2
 columns = 5
-theme_override_constants/h_separation = 40
+theme_override_constants/h_separation = 24
 theme_override_constants/v_separation = 6
 
 [node name="StatusStatRow0" type="PanelContainer" parent="StatusStatsVBoxFrame/StatsRow/StatusStatsVBox" unique_id=1654304888]
