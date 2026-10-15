@@ -1582,7 +1582,7 @@ func _enemy_act(enemy_index: int) -> bool:
 		else:
 			if audio:
 				audio.play_sfx_by_name("player_damage")
-			result_label.text = "%s atakuje%s! -%d HP" % [enemy_label, target_suffix, actual_damage]
+			result_label.text = "%s trafia%s! -%d HP" % [enemy_label, target_suffix, actual_damage]  # „atakuje!” jest już w logu — inaczej jeden atak wyglądał jak dwa
 			result_label.add_theme_color_override("font_color", Color.RED)
 			_flash_sprite(player_sprite_node, Color.RED)
 			HitParticles.create_at(player, player.global_position, Color.RED, 6)
