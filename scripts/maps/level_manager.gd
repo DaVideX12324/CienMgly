@@ -1,5 +1,7 @@
 extends Node2D
 
+const PartyFollowers = preload("../player/party_followers.gd")
+
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 signal set_spawn(spawn: Vector2)
@@ -98,6 +100,7 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	if is_instance_valid(player):
 		player.process_mode = player_mode
 	var spawn_pos := _place_player_at_spawn(spawn_name)
+	_sync_party_followers(true)
 	_setup_start_safety(spawn_pos)
 	_play_level_music(level_path, current_level)
 	QuizRpgProgressLog.map_entered(_progress_ps(), level_path)
@@ -170,6 +173,33 @@ func _play_level_music(level_path: String, level_node: Node) -> void:
 				track = str(level_node.get(prop)).to_snake_case()
 				break
 	audio_service.call("play_music", track)
+
+
+## Towarzysze drużyny za graczem (PartyFollowers); snap = ustawieni na graczu (nowa mapa / spawn).
+## Zmiana składu (PlayerStats.party_changed) przebudowuje ich na bieżąco.
+func _sync_party_followers(snap: bool) -> void:
+	var player := _get_player() as CharacterBody2D
+	var ps := _player_stats()
+	if player == null or ps == null:
+		return
+	PartyFollowers.sync(player, ps)
+	if snap:
+		PartyFollowers.snap_to_leader(player)
+	if ps.has_signal("party_changed") and not ps.party_changed.is_connected(_on_party_changed):
+		ps.party_changed.connect(_on_party_changed)
+
+
+func _on_party_changed() -> void:
+	_sync_party_followers(false)
+
+
+func _player_stats() -> Node:
+	var cm := get_node_or_null("/root/CoreManager")
+	if cm and cm.has_method("get_singleton"):
+		var s: Variant = cm.call("get_singleton", "PlayerStats")
+		if s is Node:
+			return s
+	return get_node_or_null("/root/PlayerStats")
 
 
 func _place_player_at_spawn(spawn_name: String) -> Vector2:

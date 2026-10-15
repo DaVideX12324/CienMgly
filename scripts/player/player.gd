@@ -41,6 +41,8 @@ var _sprint_toggled := false
 const BODY_SIZE := Vector2(16, 20)
 const TRAIL_RECORD_DISTANCE := 4.0
 const MAX_TRAIL_POINTS := 96
+## Towarzysz dalej od swojego punktu na śladzie niż tyle px przeskakuje na niego.
+const FOLLOW_CATCH_UP_DISTANCE := 96.0
 
 # Bobbing animation
 var _bob_time: float = 0.0
@@ -258,6 +260,9 @@ func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
 		sprite.play(anim_name)
 	elif sprite.sprite_frames.has_animation(state):
 		sprite.play(state)
+		# Animacje bez kierunku (klatki Pixel Crawlera patrzą w prawo) — w lewo lustrzane odbicie.
+		if absf(facing_direction.x) > 0.01:
+			sprite.flip_h = facing_direction.x < 0.0
 
 
 func _direction_name() -> String:
@@ -339,6 +344,12 @@ func set_follow_target(target: CharacterBody2D, spacing: float = 28.0) -> void:
 	_setup_as_follower()
 
 
+## Czyści ślad (po przeniesieniu na spawn — towarzysze nie idą starą trasą przez mapę).
+func reset_trail() -> void:
+	_trail_points.clear()
+	_trail_points.append(global_position)
+
+
 func get_trail_position(distance_back: float) -> Vector2:
 	if _trail_points.is_empty():
 		return global_position
@@ -355,6 +366,11 @@ func get_trail_position(distance_back: float) -> Vector2:
 
 
 func _setup_as_follower() -> void:
+	# Nie „gracz” dla reszty gry (wrogowie, portale, kamera szukają grupy player) i bez warstwy kolizji —
+	# nie wchodzi w obszary przejść ani walk; ściany (maska) dalej go zatrzymują.
+	if is_in_group("player"):
+		remove_from_group("player")
+	collision_layer = 0
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera:
 		camera.enabled = false
@@ -379,12 +395,16 @@ func _connect_interaction_area() -> void:
 
 
 func _get_follow_input() -> Vector2:
-	if _follow_target == null:
+	if _follow_target == null or not is_instance_valid(_follow_target):
 		return Vector2.ZERO
 	var target_position: Vector2 = _follow_target.global_position
 	if _follow_target.has_method("get_trail_position"):
 		target_position = _follow_target.call("get_trail_position", follow_spacing)
 	var delta: Vector2 = target_position - global_position
+	if delta.length() > FOLLOW_CATCH_UP_DISTANCE:
+		global_position = target_position   # utknął na rogu albo został daleko — dogania skokiem
+		_trail_points.clear()
+		return Vector2.ZERO
 	if delta.length() <= follow_stop_distance:
 		return Vector2.ZERO
 	return delta.normalized()
