@@ -24,54 +24,57 @@ func apply(ctx: GenerationContext) -> int:
 	if ctx.flags != null and not ctx.flags.enable_ledge_fix:
 		return 0
 	var total := 0
+	var r := walk_raster(ctx)   # aktualizowany przy każdym zapisie do grid (wszystkie rundy)
 	for _round in MAX_ROUNDS:
-		var changed := _pass(ctx)
+		var changed := _pass(ctx, r)
 		total += changed
 		if changed == 0:
 			break
 	return total
 
 
-func _pass(ctx: GenerationContext) -> int:
+func _pass(ctx: GenerationContext, r: PackedByteArray) -> int:
 	var grid := ctx.grid
 	var width := ctx.width
 	var height := ctx.height
 	var changed := 0
-	var walk := func(c: Vector2i) -> bool: return GridUtils.is_walkable(grid, c)
-	# Grubość ściany nad stopą (x, y): 2 = dokładnie dwie kratki, 3 = trzy i więcej, 0 = brak lica.
-	var depth := func(cx: int, fy: int) -> int:
-		if not walk.call(Vector2i(cx, fy)) or walk.call(Vector2i(cx, fy - 1)) or walk.call(Vector2i(cx, fy - 2)):
-			return 0
-		return 2 if walk.call(Vector2i(cx, fy - 3)) else 3
-
 	for y in range(4, height - 1):
 		var x := 1
 		while x < width - 1:
-			if depth.call(x, y) != 2:
+			if _depth(r, width, height, x, y) != 2:
 				x += 1
 				continue
 			var start := x
-			while x < width - 1 and depth.call(x, y) == 2:
+			while x < width - 1 and _depth(r, width, height, x, y) == 2:
 				x += 1
 			var end := x - 1
 			if end - start + 1 > MAX_LEDGE:
 				continue
-			if depth.call(start - 1, y) != 3 and depth.call(end + 1, y) != 3:
+			if _depth(r, width, height, start - 1, y) != 3 and _depth(r, width, height, end + 1, y) != 3:
 				continue
 			if _small_island(ctx, Vector2i(start, y - 1)):
 				continue
 			for lx in range(start, end + 1):
 				var top := Vector2i(lx, y - 3)
-				var room_above: bool = walk.call(top + Vector2i(0, -1)) and walk.call(top + Vector2i(0, -2))
+				var room_above: bool = raster_walk(r, width, height, lx, y - 4) and raster_walk(r, width, height, lx, y - 5)
 				if room_above and not ctx.portal_zone.has(top) and grid.get(top) == CellType.FLOOR:
 					grid[top] = CellType.WALL
+					raster_set(r, width, height, top, false)
 					changed += 1
 				else:
 					for c in [Vector2i(lx, y - 1), Vector2i(lx, y - 2)]:
-						if not walk.call(c):
+						if not raster_walk(r, width, height, c.x, c.y):
 							grid[c] = CellType.FLOOR
+							raster_set(r, width, height, c, true)
 							changed += 1
 	return changed
+
+
+## Grubość ściany nad stopą (cx, fy): 2 = dokładnie dwie kratki, 3 = trzy i więcej, 0 = brak lica.
+static func _depth(r: PackedByteArray, w: int, h: int, cx: int, fy: int) -> int:
+	if not raster_walk(r, w, h, cx, fy) or raster_walk(r, w, h, cx, fy - 1) or raster_walk(r, w, h, cx, fy - 2):
+		return 0
+	return 2 if raster_walk(r, w, h, cx, fy - 3) else 3
 
 
 ## Kratka ściany należy do małej wolnostojącej wyspy (komponent 8-spójny <= ISLAND_MAX, bez brzegu mapy).
