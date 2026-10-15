@@ -15,6 +15,7 @@ const CaveGeneratorScript = preload("../generation/cave_generator.gd")
 const TileSetFieldScript = preload("../generation/core/tileset_field.gd")
 const GenProgress = preload("../generation/core/gen_progress.gd")
 const FrameSlicer = preload("../generation/core/frame_slicer.gd")
+const MapPrefetch = preload("map_prefetch.gd")
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
@@ -118,8 +119,20 @@ class GenJob extends RefCounted:
 	var rng: RandomNumberGenerator = null
 	var plans: Dictionary = {}
 	var chest_scene: PackedScene = null  # scena skrzyni z companion-JSON (nadpisuje @export chest_scene)
+	## Pasek, do którego raportuje run() w wątku roboczym (GenProgress.bind); background = mapa z wyprzedzeniem
+	## (bez paska, dopóki gracz na nią nie wejdzie — GenProgress.set_holder_progress).
+	var progress = null
+	var background := false
 
 	func run() -> void:
+		var bound := background or progress != null
+		if bound:
+			GenProgress.bind(self)
+		_run()
+		if bound:
+			GenProgress.unbind()
+
+	func _run() -> void:
 		if is_cave:
 			result = gen_script.generate(width, height, seed_value, min_room, max_room, rooms_count, corridor, flags)
 			# Seed faktycznie użyty przez topologię (== seed_value, gdy > 0; przy losowym seedzie
@@ -271,11 +284,22 @@ func generate_level_async(seed_val: int = 0) -> void:
 	overlay.track(progress)
 	GenProgress.start(progress)
 
-	_task_id = WorkerThreadPool.add_task(job.run, false, "Generowanie mapy")
-	while not WorkerThreadPool.is_task_completed(_task_id):
-		await get_tree().process_frame
-	WorkerThreadPool.wait_for_task_completion(_task_id)
-	_task_id = -1
+	# Dane mapy policzone już w tle (MapPrefetch, ten sam klucz = te same dane) albo liczone teraz.
+	var pre: Dictionary = MapPrefetch.take(MapPrefetch.key_of(job)) if _prefetch_allowed() else {}
+	if not pre.is_empty():
+		job = pre.job
+		_task_id = pre.task
+		if _task_id >= 0:
+			GenProgress.set_holder_progress(job, progress)
+	else:
+		MapPrefetch.unqueue(job.level_key)
+		job.progress = progress
+		_task_id = WorkerThreadPool.add_task(job.run, false, "Generowanie mapy")
+	if _task_id >= 0:
+		while not WorkerThreadPool.is_task_completed(_task_id):
+			await get_tree().process_frame
+		WorkerThreadPool.wait_for_task_completion(_task_id)
+		_task_id = -1
 
 	await _apply_job_async(job)
 	progress.finish()
@@ -285,6 +309,14 @@ func generate_level_async(seed_val: int = 0) -> void:
 	if job.debug_report:
 		print(map_report(job, progress))
 	generation_finished.emit()
+	if _prefetch_allowed():
+		MapPrefetch.request(next_level_path)
+		MapPrefetch.request(previous_level_path)
+
+
+## Mapy z wyprzedzeniem tylko w grze: seed zapisu i flagi z JSON-a (eksplorator map podaje własne).
+func _prefetch_allowed() -> bool:
+	return map_seed <= 0 and flag_overrides.is_empty() and _find_level_manager() != null
 
 
 ## Raport wygenerowanej mapy (debug.print_map_report w companion-JSON): seed i rozmiar do odtworzenia
@@ -782,12 +814,17 @@ func _level_key() -> String:
 
 
 func _get_level_state_manager() -> Node:
-	var core_manager := get_node_or_null("/root/CoreManager")
+	# Przez korzeń drzewa, nie get_node("/root/…") — działa też dla poziomu poza drzewem (MapPrefetch).
+	var tree := Engine.get_main_loop() as SceneTree
+	var root: Node = tree.root if tree != null else null
+	if root == null:
+		return null
+	var core_manager := root.get_node_or_null("CoreManager")
 	if core_manager and core_manager.has_method("get_singleton"):
 		var s: Variant = core_manager.call("get_singleton", "LevelStateManager")
 		if s is Node:
 			return s
-	return get_node_or_null("/root/LevelStateManager")
+	return root.get_node_or_null("LevelStateManager")
 
 
 ## Reroll: NOWY seed zapisu (new_seed <= 0 => losowy) — zmienia wszystkie mapy, więc czyści stan wszystkich
@@ -799,6 +836,7 @@ func reroll(new_seed: int = 0) -> void:
 		push_warning("[ProceduralLevel] reroll: brak LevelStateManager")
 		return
 	lsm.reroll_world_seed(new_seed)
+	MapPrefetch.clear()
 
 	var lm := _find_level_manager()
 	if lm != null and lm.has_method("change_level"):

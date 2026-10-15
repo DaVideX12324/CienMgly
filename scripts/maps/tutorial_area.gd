@@ -8,11 +8,14 @@ const NEXT_SPAWN_NAME := "Spawn"
 ## odsunięty od obszaru wyjścia (ustawiany w edytorze).
 const FROM_CAVES_SPAWN := "Tutorial-Caves"
 const LevelPortal = preload("level_portal.gd")
+const MapPrefetch = preload("map_prefetch.gd")
 
 var _transitioning: bool = false
 
 
 func _ready() -> void:
+	# Jaskinia liczy się w tle, gdy gracz jest w ruinach — wejście bez czekania na generowanie.
+	MapPrefetch.request.call_deferred(NEXT_LEVEL_PATH)
 	var next_level_area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
 	if next_level_area == null:
 		return

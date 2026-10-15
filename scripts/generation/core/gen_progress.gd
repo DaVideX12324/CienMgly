@@ -81,6 +81,10 @@ const BEFORE_FINISH := 0.99
 const PRIOR_WEIGHT := 400.0
 
 static var _active = null  # aktywny obiekt tego skryptu
+## Wątek -> zadanie generowania (obiekt z polem `progress`): wątek z wpisem raportuje do progress swojego zadania
+## (null = nikomu — generowanie mapy z wyprzedzeniem nie rusza paska bieżącej mapy), wątek bez wpisu do _active.
+static var _bound := {}
+static var _bind_mutex := Mutex.new()
 
 var _mutex := Mutex.new()
 var _base := {}          # etap -> suma wag etapów przed nim (0..1)
@@ -162,13 +166,44 @@ static func stop() -> void:
 	_active = null
 
 
+## Bieżący wątek raportuje do `holder.progress` (GenJob.run w wątku roboczym); unbind() po zakończeniu.
+static func bind(holder) -> void:
+	_bind_mutex.lock()
+	_bound[OS.get_thread_caller_id()] = holder
+	_bind_mutex.unlock()
+
+
+static func unbind() -> void:
+	_bind_mutex.lock()
+	_bound.erase(OS.get_thread_caller_id())
+	_bind_mutex.unlock()
+
+
+## Podpina pasek pod zadanie, które już liczy w tle (mapa z wyprzedzeniem, na którą gracz właśnie wchodzi).
+static func set_holder_progress(holder, p) -> void:
+	_bind_mutex.lock()
+	holder.progress = p
+	_bind_mutex.unlock()
+
+
+static func _for_caller():
+	_bind_mutex.lock()
+	var p = _active
+	var tid := OS.get_thread_caller_id()
+	if _bound.has(tid):
+		var h = _bound[tid]
+		p = h.progress if h != null else null
+	_bind_mutex.unlock()
+	return p
+
+
 static func current():
 	return _active
 
 
 ## Początek etapu: zamyka poprzedni (czas) i przesuwa pasek na początek etapu.
 static func begin(stage: StringName) -> void:
-	var p = _active
+	var p = _for_caller()
 	if p != null:
 		p._begin(stage)
 
@@ -176,7 +211,7 @@ static func begin(stage: StringName) -> void:
 ## Koniec etapu: pasek na koniec etapu, zamknięty pomiar czasu. `stage` inny niż bieżący = no-op
 ## (pusty = bieżący, np. po PlateauPass.run, który kończy się w plateaus albo plateau_stairs).
 static func end(stage: StringName = &"") -> void:
-	var p = _active
+	var p = _for_caller()
 	if p != null and (stage == &"" or p._stage == stage):
 		p._end()
 
@@ -184,14 +219,14 @@ static func end(stage: StringName = &"") -> void:
 ## Początek kroku bieżącego etapu (tabela STEPS) — pasek na początek kroku i płynie w nim wg jego wagi.
 ## Krok spoza tabeli = no-op.
 static func step(step_name: StringName) -> void:
-	var p = _active
+	var p = _for_caller()
 	if p != null:
 		p._step(step_name)
 
 
 ## Postęp wewnątrz bieżącego etapu (0..1).
 static func sub(frac: float) -> void:
-	var p = _active
+	var p = _for_caller()
 	if p != null:
 		p._sub(frac)
 
@@ -199,7 +234,7 @@ static func sub(frac: float) -> void:
 ## Postęp etapu `stage`, tylko gdy to on trwa — dla kodu wołanego też z innych etapów (EdgeAnalyzer
 ## i placery działają również w oknach płaskowyżów, w etapie plateau_tiles).
 static func sub_in(stage: StringName, frac: float) -> void:
-	var p = _active
+	var p = _for_caller()
 	if p != null and p._stage == stage:
 		p._sub(frac)
 
