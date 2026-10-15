@@ -287,12 +287,32 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 			var pos := Vector2i(x, y)
 			var edge := EdgeContext.new()
 			edge.pos = pos
-			_populate_neighborhood_bytes(edge, walk, row + x, ww)
+			# Sąsiedztwo 3x3 (wpisane tu zamiast w funkcję — wywołanie na kratkę kosztowało więcej niż reszta).
+			var i := row + x
+			var m: int = walk[i - ww] | (walk[i - ww + 1] << 1) | (walk[i + 1] << 2) | (walk[i + ww + 1] << 3) \
+				| (walk[i + ww] << 4) | (walk[i + ww - 1] << 5) | (walk[i - 1] << 6) | (walk[i - ww - 1] << 7)
+			# Reguła prepass: 100 / 000 / 001 -> narożnik NW na 0; 001 / 000 / 100 -> narożnik NE na 0.
+			if m == 136:
+				m = 8
+			elif m == 34:
+				m = 32
+			edge.n_floor = (m & 1) != 0
+			edge.ne_floor = (m & 2) != 0
+			edge.e_floor = (m & 4) != 0
+			edge.se_floor = (m & 8) != 0
+			edge.s_floor = (m & 16) != 0
+			edge.sw_floor = (m & 32) != 0
+			edge.w_floor = (m & 64) != 0
+			edge.nw_floor = (m & 128) != 0
+			var cardinal: int = (m & 1) + ((m >> 2) & 1) + ((m >> 4) & 1) + ((m >> 6) & 1)
+			edge.floor_cardinal_count = cardinal
+			edge.wall_cardinal_count = 4 - cardinal
+			edge.neighborhood_mask = m
 
 			if ctx.portal_zone.has(pos):
 				edge.edge_kind = EdgeKind.Kind.PORTAL_CLEAR
 				edge.in_portal_zone = true
-			elif GridUtils.is_walkable(grid, pos):
+			elif walk[i] == 1:
 				edge.edge_kind = EdgeKind.Kind.FLOOR
 
 			edges[pos] = edge
@@ -303,10 +323,13 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var facade_candidates: Array[Vector2i] = []
 
 	for y in range(scan.position.y, scan.end.y):
+		var row := (y - walk_rect.position.y) * ww - walk_rect.position.x
 		for x in range(scan.position.x, scan.end.x):
-			var pos := Vector2i(x, y)
-			if GridUtils.is_walkable(grid, pos) and not GridUtils.is_walkable(grid, pos + Vector2i(0, -1)):
-				if not GridUtils.is_walkable(grid, pos + Vector2i(0, -2)):
+			var i := row + x
+			if walk[i] == 1 and walk[i - ww] == 0:
+				# Dwa rzędy wyżej: w ramce tablicy tylko poniżej pierwszego rzędu skanu.
+				var pos := Vector2i(x, y)
+				if not (walk[i - 2 * ww] == 1 if y > scan.position.y else GridUtils.is_walkable(grid, pos + Vector2i(0, -2))):
 					if not facade_cols.has(x):
 						facade_cols[x] = []
 					facade_cols[x].append(y)
@@ -455,14 +478,18 @@ static func analyze(ctx: GenerationContext) -> EdgeAnalysisResult:
 	var rim_cells: Array[Vector2i] = []
 
 	for y in range(scan.position.y, scan.end.y):
+		var row := (y - walk_rect.position.y) * ww - walk_rect.position.x
 		for x in range(scan.position.x, scan.end.x):
+			var i := row + x
+			if walk[i] == 1:
+				continue
 			var pos := Vector2i(x, y)
 			var edge: EdgeContext = edges[pos]
 
-			if not GridUtils.is_walkable(grid, pos) and edge.edge_kind == EdgeKind.Kind.NONE:
+			if edge.edge_kind == EdgeKind.Kind.NONE:
 				# 1. TOP_RIM: komórka pod podłogą od północy.
 				if edge.n_floor:
-					if not GridUtils.is_walkable(grid, pos + Vector2i(0, 1)):
+					if walk[i + ww] == 0:
 						edge.edge_kind = EdgeKind.Kind.TOP_RIM
 						var is_edge_diag_left: bool = (not edge.nw_floor and edge.ne_floor) and (not edge.w_floor and not edge.e_floor) and (edge.sw_floor and not edge.se_floor)
 						var is_edge_diag_right: bool = (edge.nw_floor and not edge.ne_floor) and (not edge.w_floor and not edge.e_floor) and (edge.se_floor and not edge.sw_floor)
@@ -709,81 +736,6 @@ static func _walkable_bytes(grid: Dictionary, r: Rect2i) -> PackedByteArray:
 				out[i] = 1
 			i += 1
 	return out
-
-
-## _populate_neighborhood na tablicy z _walkable_bytes: i = indeks komórki, w = szerokość wiersza.
-static func _populate_neighborhood_bytes(edge: EdgeContext, walk: PackedByteArray, i: int, w: int) -> void:
-	edge.n_floor = walk[i - w] == 1
-	edge.ne_floor = walk[i - w + 1] == 1
-	edge.e_floor = walk[i + 1] == 1
-	edge.se_floor = walk[i + w + 1] == 1
-	edge.s_floor = walk[i + w] == 1
-	edge.sw_floor = walk[i + w - 1] == 1
-	edge.w_floor = walk[i - 1] == 1
-	edge.nw_floor = walk[i - w - 1] == 1
-	_finish_neighborhood(edge)
-
-
-static func _populate_neighborhood(ctx: GenerationContext, edge: EdgeContext) -> void:
-	var pos := edge.pos
-	var grid := ctx.grid
-
-	edge.n_floor = GridUtils.is_walkable(grid, pos + Vector2i(0, -1))
-	edge.ne_floor = GridUtils.is_walkable(grid, pos + Vector2i(1, -1))
-	edge.e_floor = GridUtils.is_walkable(grid, pos + Vector2i(1, 0))
-	edge.se_floor = GridUtils.is_walkable(grid, pos + Vector2i(1, 1))
-	edge.s_floor = GridUtils.is_walkable(grid, pos + Vector2i(0, 1))
-	edge.sw_floor = GridUtils.is_walkable(grid, pos + Vector2i(-1, 1))
-	edge.w_floor = GridUtils.is_walkable(grid, pos + Vector2i(-1, 0))
-	edge.nw_floor = GridUtils.is_walkable(grid, pos + Vector2i(-1, -1))
-	_finish_neighborhood(edge)
-
-
-## Wspólna część sąsiedztwa: reguła prepass (diagonalne narożniki), liczniki kardynalne i maska.
-static func _finish_neighborhood(edge: EdgeContext) -> void:
-	# Reguła prepass:
-	# 100 / 000 / 001 -> górny narożnik (NW) zmienia się na 0
-	if edge.nw_floor and edge.se_floor \
-		and not edge.n_floor and not edge.ne_floor and not edge.e_floor \
-		and not edge.s_floor and not edge.sw_floor and not edge.w_floor:
-		edge.nw_floor = false
-
-	# 001 / 000 / 100 -> górny narożnik (NE) zmienia się na 0
-	if edge.ne_floor and edge.sw_floor \
-		and not edge.nw_floor and not edge.n_floor and not edge.w_floor \
-		and not edge.e_floor and not edge.s_floor and not edge.se_floor:
-		edge.ne_floor = false
-
-	var cardinal := 0
-	if edge.n_floor:
-		cardinal += 1
-	if edge.s_floor:
-		cardinal += 1
-	if edge.w_floor:
-		cardinal += 1
-	if edge.e_floor:
-		cardinal += 1
-	edge.floor_cardinal_count = cardinal
-	edge.wall_cardinal_count = 4 - cardinal
-
-	var mask := 0
-	if edge.n_floor:
-		mask |= 1
-	if edge.ne_floor:
-		mask |= 2
-	if edge.e_floor:
-		mask |= 4
-	if edge.se_floor:
-		mask |= 8
-	if edge.s_floor:
-		mask |= 16
-	if edge.sw_floor:
-		mask |= 32
-	if edge.w_floor:
-		mask |= 64
-	if edge.nw_floor:
-		mask |= 128
-	edge.neighborhood_mask = mask
 
 
 static func _check_niche_candidates(
