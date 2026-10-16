@@ -4,10 +4,11 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 tp_gain = 5
 skill_id = "coin_barrage"
-display_name = "Grad Monet"
-description = "Ciska monetami w losowych wrogów. Trafia kilkukrotnie."
+display_name = "Grad Sztyletów"
+description = "Ciska serią ostrych sztyletów w losowych wrogów, trafiając łącznie 3 razy."
 color = Color(0.9, 0.75, 0.2, 1)
 base_damage = 20
 atk_coeff = 3.4

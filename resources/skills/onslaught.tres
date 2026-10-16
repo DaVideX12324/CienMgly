@@ -4,10 +4,11 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 tp_gain = 5
 skill_id = "onslaught"
-display_name = "Natarcie"
-description = "Sześć szybkich ataków."
+display_name = "Taniec Ostrzy"
+description = "Wyprowadza zabójczy taniec 6 błyskawicznych cięć w jednego przeciwnika."
 color = Color(0.95, 0.3, 0.3, 1)
 damage_multiplier = 0.25
 base_damage = 200

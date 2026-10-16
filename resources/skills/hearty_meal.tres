@@ -6,8 +6,8 @@
 script = ExtResource("1_skill")
 speed = 1000
 skill_id = "hearty_meal"
-display_name = "Pożywny Posiłek"
-description = "Leczy sojusznika o MAT × 4 HP. Działa też w menu."
+display_name = "Modlitwa Uzdrowienia"
+description = "Mocą żarliwej modlitwy leczy sojusznika o wartość MAT × 4 HP. Działa także w menu."
 color = Color(0.4, 1, 0.5, 1)
 damage_mode = 2
 target = 4

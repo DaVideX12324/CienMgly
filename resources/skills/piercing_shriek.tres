@@ -6,8 +6,8 @@
 script = ExtResource("1_skill")
 speed = -25
 skill_id = "piercing_shriek"
-display_name = "Przeszywający Krzyk"
-description = "Wrzask, który rani zatrutego wroga ponad dwa razy mocniej. Może zatruć."
+display_name = "Jadowity Pocisk"
+description = "Ciska we wroga pociskiem żrącego jadu z 15% szansą na zatrucie. Zadaje ponad dwukrotnie większe obrażenia (×2,1) zatrutym celom."
 color = Color(0.7, 0.9, 0.3, 1)
 base_damage = 105
 atk_coeff = 3.5

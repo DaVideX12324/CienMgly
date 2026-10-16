@@ -4,9 +4,11 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
+tp_gain = 5
 skill_id = "leap_series"
-display_name = "Seria Skoków"
-description = "Pięć skoków po głowie wroga. Może ogłuszyć."
+display_name = "Błyskawiczna Seria"
+description = "Wyprowadza serię 5 błyskawicznych cięć we wroga, z 4% szansą na ogłuszenie przy każdym trafieniu."
 color = Color(0.6, 0.5, 1.0, 1)
 damage_multiplier = 0.45
 base_damage = 20

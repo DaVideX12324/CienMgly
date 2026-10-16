@@ -6,8 +6,8 @@
 script = ExtResource("1_skill")
 speed = 25
 skill_id = "shove"
-display_name = "Zepchnięcie"
-description = "Wróg zostaje zepchnięty w dół. Może sparaliżować."
+display_name = "Paraliżujące Pchnięcie"
+description = "Precyzyjnie godzi w czuły punkt wroga, z 50% szansą na nałożenie paraliżu."
 color = Color(0.9, 0.6, 0.3, 1)
 damage_multiplier = 0.9
 base_damage = 100

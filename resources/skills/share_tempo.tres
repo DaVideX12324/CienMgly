@@ -6,8 +6,8 @@
 script = ExtResource("1_skill")
 speed = 1000
 skill_id = "share_tempo"
-display_name = "Dzielenie Tempa"
-description = "Dzieli się impetem z całą drużyną, zwiększając jej zwinność."
+display_name = "Błogosławieństwo Wiatru"
+description = "Zsyła na całą drużynę błogosławieństwo wiatru, zwiększając zwinność (AGI) wszystkich sojuszników."
 color = Color(0.9, 0.3, 0.2, 1)
 damage_mode = 2
 target = 5

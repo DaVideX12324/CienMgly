@@ -6,8 +6,8 @@
 script = ExtResource("1_skill")
 speed = 25
 skill_id = "smoke_cloud"
-display_name = "Chmura Dymu"
-description = "Wypuszcza gęsty dym. Szansa na oślepienie wroga."
+display_name = "Zasłona Dymna"
+description = "Rzuca bombę dymną, spowijając wroga gęstym dymem z 50% szansą na jego oślepienie."
 color = Color(0.6, 0.6, 0.65, 1)
 damage_mode = 2
 target = 0
