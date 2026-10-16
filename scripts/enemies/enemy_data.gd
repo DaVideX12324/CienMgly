@@ -35,3 +35,19 @@ class_name QuizRpgEnemyData
 @export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
 @export var shape_type: int = 0
+
+
+## Nazwa wroga w wybranym języku (klucz "enemy.<plik>.name", zapasowo enemy_name).
+func localized_name() -> String:
+	var base := resource_path.get_file().get_basename()
+	if base != "":
+		return QuizRpgI18n.t("enemy." + base + ".name", enemy_name)
+	return enemy_name
+
+
+## Tekst skanu wroga w wybranym języku (klucz "enemy.<plik>.scan", zapasowo scan_text).
+func localized_scan_text() -> String:
+	var base := resource_path.get_file().get_basename()
+	if base != "":
+		return QuizRpgI18n.t("enemy." + base + ".scan", scan_text)
+	return scan_text

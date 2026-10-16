@@ -275,7 +275,9 @@ func generate_level_async(seed_val: int = 0) -> void:
 	progress.configure(str(job.flags.layout) if job.flags != null else "interior", job.width, job.height)
 	var overlay = LoadingScreenScene.instantiate()
 	overlay.title = _loading_title()
-	overlay.location = location_name if not location_name.is_empty() else LOCATION_NAMES.get(level_type, "")
+	var raw_loc: String = location_name if not location_name.is_empty() else str(LOCATION_NAMES.get(level_type, ""))
+	var map_k := get_map_key()
+	overlay.location = QuizRpgI18n.t("map." + map_k + ".name", raw_loc) if map_k != "" else raw_loc
 	if loading_background != null:
 		overlay.background = loading_background
 	else:

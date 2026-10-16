@@ -54,7 +54,7 @@ func search_barrel(scale: float = -1.0, max_items: int = -1) -> Dictionary:
 		_award_item(item_id, int(counts[item_id]))
 		items.append({
 			"item_id": item_id,
-			"item_name": item_data.display_name if item_data != null else item_id,
+			"item_name": item_data.localized_name() if item_data != null else item_id,
 			"count": int(counts[item_id]),
 			"icon": item_data.icon if item_data != null else null,
 		})

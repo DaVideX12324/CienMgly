@@ -1022,3 +1022,17 @@ func _get_current_level_path() -> String:
 	if lm and lm.get("current_level_path") != null:
 		return str(lm.get("current_level_path"))
 	return ""
+
+
+## Nazwa wroga w wybranym języku (deleguje do enemy_data jeśli dostępne, zapasowo enemy_name).
+func localized_name() -> String:
+	if enemy_data != null and enemy_data.has_method("localized_name"):
+		return enemy_data.localized_name()
+	return enemy_name
+
+
+## Tekst skanu wroga w wybranym języku (deleguje do enemy_data jeśli dostępne, zapasowo scan_text).
+func localized_scan_text() -> String:
+	if enemy_data != null and enemy_data.has_method("localized_scan_text"):
+		return enemy_data.localized_scan_text()
+	return scan_text

@@ -230,7 +230,7 @@ func setup(
 	_encounter_size_range = encounter_size_range
 	enemy_hp = p_enemy.hp
 	enemy_max_hp = p_enemy.max_hp
-	enemy_name_str = p_enemy.enemy_name
+	enemy_name_str = p_enemy.localized_name() if p_enemy.has_method("localized_name") else p_enemy.enemy_name
 	enemy_base_attack = p_enemy.attack
 	enemy_base_defense = p_enemy.defense
 	enemy_base_magic_attack = p_enemy.magic_attack
@@ -1102,7 +1102,12 @@ func _confirm_target_selection() -> void:
 func _scan_enemy(enemy_index: int) -> void:
 	var unit: Dictionary = _enemy_units[enemy_index]
 	var src: Variant = unit.get("source", enemy)
-	var text := str(src.get("scan_text")) if src != null and src.get("scan_text") != null else ""
+	var text := ""
+	if src != null:
+		if src.has_method("localized_scan_text"):
+			text = src.localized_scan_text()
+		elif src.get("scan_text") != null:
+			text = str(src.get("scan_text"))
 	if text.strip_edges() == "":
 		var skill_names: Array[String] = []
 		for sk in (src.get("battle_skills") if src != null and src.get("battle_skills") != null else []):
@@ -2300,11 +2305,12 @@ func _setup_enemy_display() -> void:
 
 	_clear_enemy_display()
 
+	var e_name: String = enemy.localized_name() if enemy.has_method("localized_name") else enemy.enemy_name
 	if _enemy_name_label:
-		_enemy_name_label.text = enemy.enemy_name
+		_enemy_name_label.text = e_name
 
 	var units: Array = _enemy_units if _enemy_units.size() > 0 else [{
-		"name": enemy.enemy_name,
+		"name": e_name,
 		"hp": enemy.hp,
 		"max_hp": enemy.max_hp,
 	}]
@@ -2975,11 +2981,12 @@ func _roll_enemy_party() -> void:
 			sources.append(enemy)
 		var names := {}
 		for src in sources:
-			names[src.enemy_name] = int(names.get(src.enemy_name, 0)) + 1
+			var s_name: String = src.localized_name() if src.has_method("localized_name") else src.enemy_name
+			names[s_name] = int(names.get(s_name, 0)) + 1
 		var seen := {}
 		_bonus_xp_reward = 0
 		for src in sources:
-			var nm: String = src.enemy_name
+			var nm: String = src.localized_name() if src.has_method("localized_name") else src.enemy_name
 			if int(names[nm]) > 1:
 				seen[nm] = int(seen.get(nm, 0)) + 1
 				nm = "%s %d" % [nm, seen[nm]]
@@ -3781,7 +3788,7 @@ func _item_display_name(item_id: String) -> String:
 	var inv := get_node_or_null("/root/CoreManager")
 	var svc: Variant = inv.call("get_singleton", "InventoryService") if inv else null
 	var data: QuizRpgItemData = svc.call("get_item", item_id) if svc is Node else null
-	return data.display_name if data != null else item_id
+	return data.localized_name() if data != null else item_id
 
 
 func _find_current_map_node() -> Node:

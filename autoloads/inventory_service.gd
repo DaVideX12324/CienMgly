@@ -26,7 +26,7 @@ func get_all_items() -> Array[QuizRpgItemData]:
 	for v in _items_by_id.values():
 		out.append(v as QuizRpgItemData)
 	out.sort_custom(func(a: QuizRpgItemData, b: QuizRpgItemData) -> bool:
-		return [a.category, a.equip_slot, a.display_name] < [b.category, b.equip_slot, b.display_name])
+		return [a.category, a.equip_slot, a.localized_name()] < [b.category, b.equip_slot, b.localized_name()])
 	return out
 
 
@@ -55,8 +55,8 @@ func get_menu_entries(raw_inventory: Array) -> Array[Dictionary]:
 			continue
 		entries.append({
 			"item_id": item_data.item_id,
-			"name": item_data.display_name,
-			"description": item_data.description,
+			"name": item_data.localized_name(),
+			"description": item_data.localized_description(),
 			"count": int(entry.get("count", 0)),
 			"stackable": item_data.stackable,
 			"display_count": _format_display_count(item_data, int(entry.get("count", 0))),
@@ -156,8 +156,8 @@ func use_item(user: Node, raw_inventory: Array, item_ref: String) -> Dictionary:
 		"success": true,
 		"inventory": normalized_inventory,
 		"item_id": item_data.item_id,
-		"name": item_data.display_name,
-		"description": item_data.description,
+		"name": item_data.localized_name(),
+		"description": item_data.localized_description(),
 		"heal_amount": item_data.heal_amount,
 		"sp_restore": item_data.sp_restore,
 		"tp_restore": item_data.tp_restore,
@@ -170,8 +170,8 @@ func use_item(user: Node, raw_inventory: Array, item_ref: String) -> Dictionary:
 func _build_use_message(item_data: QuizRpgItemData) -> String:
 	var summary: String = item_data.get_effect_summary()
 	if summary == "":
-		return QuizRpgI18n.tf("inventory.used_item", {"item": item_data.display_name}, "Użyto {item}.")
-	return "%s: %s" % [item_data.display_name, summary]
+		return QuizRpgI18n.tf("inventory.used_item", {"item": item_data.localized_name()}, "Użyto {item}.")
+	return "%s: %s" % [item_data.localized_name(), summary]
 
 
 func _load_item_database() -> void:
@@ -200,6 +200,9 @@ func _register_item(item_data: QuizRpgItemData) -> void:
 		return
 	_items_by_id[item_data.item_id] = item_data
 	_display_name_to_id[item_data.display_name.strip_edges().to_lower()] = item_data.item_id
+	var loc_name: String = item_data.localized_name().strip_edges().to_lower()
+	if loc_name != "":
+		_display_name_to_id[loc_name] = item_data.item_id
 
 
 func _append_or_stack(inventory: Array[Dictionary], item_id: String, count: int) -> void:

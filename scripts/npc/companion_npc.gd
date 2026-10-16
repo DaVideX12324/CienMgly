@@ -99,7 +99,8 @@ func interact(_player: Node2D) -> void:
 	else:
 		lines = progress_lines
 	var hero := _hero()
-	var box := DialogBox.open(self, hero.display_name if hero else "", _fill(lines, ps, st))
+	var hero_name: String = hero.localized_name() if hero and hero.has_method("localized_name") else (hero.display_name if hero else "")
+	var box := DialogBox.open(self, hero_name, _fill(lines, ps, st))
 	await box.finished
 	if join:
 		if quest == Quest.BRING_ITEM and quest_item_id != "":
@@ -139,8 +140,11 @@ func _fill(lines: PackedStringArray, ps: Node, st: Dictionary) -> PackedStringAr
 	var inv := _singleton("InventoryService")
 	if inv and inv.has_method("get_item") and quest_item_id != "":
 		var it: Variant = inv.call("get_item", quest_item_id)
-		if it != null and "display_name" in it:
-			item_name = str(it.display_name)
+		if it != null:
+			if it.has_method("localized_name"):
+				item_name = it.localized_name()
+			elif "display_name" in it:
+				item_name = str(it.display_name)
 	var out := PackedStringArray()
 	for l in lines:
 		var line_key := ""

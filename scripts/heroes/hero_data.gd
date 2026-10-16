@@ -126,10 +126,20 @@ static func class_label(class_id: String) -> String:
 	return QuizRpgI18n.t("class." + class_id, str(CLASS_LABELS.get(class_id, class_id)))
 
 
+## Imię postaci w wybranym języku (klucz "hero.<hero_id>.name", zapasowo display_name).
+func localized_name() -> String:
+	var hid := hero_id
+	if hid == "":
+		hid = resource_path.get_file().get_basename().trim_prefix("hero_")
+	if hid != "":
+		return QuizRpgI18n.t("hero." + hid + ".name", display_name)
+	return display_name
+
+
 func build_member_data() -> Dictionary:
 	return {
 		"hero_id": hero_id,
-		"name": display_name,
+		"name": localized_name(),
 		"character_class": character_class,
 		"level": base_level,
 		"hp": base_hp,

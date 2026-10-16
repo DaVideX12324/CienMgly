@@ -144,9 +144,13 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
-	_gm = CoreManager.get_singleton("GameManager")
-	_ps = CoreManager.get_singleton("PlayerStats")
+	var core_mgr: Node = get_node_or_null("/root/CoreManager")
+	if core_mgr and core_mgr.has_method("get_singleton"):
+		_gm = core_mgr.call("get_singleton", "GameManager")
+		_ps = core_mgr.call("get_singleton", "PlayerStats")
+	else:
+		_gm = get_node_or_null("/root/GameManager")
+		_ps = get_node_or_null("/root/PlayerStats")
 	_cache_panel_nodes()
 	pause_root.visible = false
 	_cache_scene_rows()
@@ -723,8 +727,9 @@ func _confirm_exit_choice() -> void:
 			_paused = false
 			_state_before_pause = -1
 			pause_root.visible = false
-			if CoreManager.get_active_module_id() != "":
-				CoreManager.exit_active_module()
+			var core_mgr: Node = get_node_or_null("/root/CoreManager")
+			if core_mgr and core_mgr.has_method("get_active_module_id") and str(core_mgr.call("get_active_module_id")) != "":
+				core_mgr.call("exit_active_module")
 				return
 			get_tree().quit()
 		_:
@@ -1519,14 +1524,14 @@ func _ensure_save_slot_row_capacity(required_count: int) -> void:
 
 func _get_equipped_item_name(item_id: String) -> String:
 	if item_id == "":
-		return "(puste)"
+		return QuizRpgI18n.t("equip.empty_slot_name", "(puste)")
 	var inventory_service: Node = _get_inventory_service()
 	if inventory_service == null or not inventory_service.has_method("get_item"):
 		return item_id
 	var item_data: QuizRpgItemData = inventory_service.call("get_item", item_id)
 	if item_data == null:
 		return item_id
-	return item_data.display_name
+	return item_data.localized_name()
 
 
 func _get_equipment_delta_text(entry: Dictionary) -> String:

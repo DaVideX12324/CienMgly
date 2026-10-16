@@ -215,7 +215,7 @@ func drop_item() -> void:
 		if inventory_service and inventory_service.has_method("get_item"):
 			var item_data := inventory_service.call("get_item", item_id) as QuizRpgItemData
 			if item_data != null:
-				item_name = item_data.display_name
+				item_name = item_data.localized_name()
 		loot_manager.call("show_loot_popup", {
 			"found": true,
 			"title": "Zawartosc skrzyni",

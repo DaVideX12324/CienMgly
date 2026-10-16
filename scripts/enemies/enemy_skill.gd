@@ -17,4 +17,4 @@ class_name QuizRpgEnemySkill
 ## Tekst logu w wybranym języku (klucz skill.<plik>.log), zapasowo log_text z zasobu (może być pusty).
 func localized_log_text() -> String:
 	var key := QuizRpgI18n.skill_log_key(self)
-	return QuizRpgI18n.t(key) if QuizRpgI18n.has(key) else log_text
+	return QuizRpgI18n.t(key, log_text)

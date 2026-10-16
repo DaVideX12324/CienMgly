@@ -950,15 +950,15 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 		"success": true,
 		"inventory": inventory.duplicate(true),
 		"item_id": item_data.item_id,
-		"name": item_data.display_name,
-		"description": item_data.description,
+		"name": item_data.localized_name(),
+		"description": item_data.localized_description(),
 		"heal_amount": item_data.heal_amount,
 		"sp_restore": item_data.sp_restore,
 		"tp_restore": item_data.tp_restore,
 		"cured_statuses": cured,
 		"usable_in_menu": item_data.usable_in_menu,
 		"usable_in_combat": item_data.usable_in_combat,
-		"message": "%s: %s" % [item_data.display_name, item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else QuizRpgI18n.tf("inventory.used_item", {"item": item_data.display_name}, "Użyto {item}."),
+		"message": "%s: %s" % [item_data.localized_name(), item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else QuizRpgI18n.tf("inventory.used_item", {"item": item_data.localized_name()}, "Użyto {item}."),
 	}
 	if bool(result.get("success", false)):
 		_sync_primary_party_member()
@@ -1058,8 +1058,8 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 				if item_data:
 					options.append({
 						"item_id": item_data.item_id,
-						"name": item_data.display_name,
-						"description": item_data.description,
+						"name": item_data.localized_name(),
+						"description": item_data.localized_description(),
 						"count": 1,
 						"category": item_data.category,
 						"equip_slot": item_data.equip_slot,

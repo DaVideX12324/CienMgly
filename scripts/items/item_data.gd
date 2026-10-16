@@ -50,5 +50,25 @@ func get_effect_summary() -> String:
 	if tp_restore > 0:
 		parts.append("+%d TP" % tp_restore)
 	if cure_statuses.has("poison"):
-		parts.append("leczy zatrucie")
+		parts.append(QuizRpgI18n.t("item.effect.cures_poison", "leczy zatrucie"))
 	return ", ".join(parts)
+
+
+## Nazwa przedmiotu w wybranym języku (klucz "item.<plik>.name", zapasowo display_name).
+func localized_name() -> String:
+	var base := resource_path.get_file().get_basename()
+	if base == "" and item_id != "":
+		base = item_id
+	if base != "":
+		return QuizRpgI18n.t("item." + base + ".name", display_name)
+	return display_name
+
+
+## Opis przedmiotu w wybranym języku (klucz "item.<plik>.desc", zapasowo description).
+func localized_description() -> String:
+	var base := resource_path.get_file().get_basename()
+	if base == "" and item_id != "":
+		base = item_id
+	if base != "":
+		return QuizRpgI18n.t("item." + base + ".desc", description)
+	return description
