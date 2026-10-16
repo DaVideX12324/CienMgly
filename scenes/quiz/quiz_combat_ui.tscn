@@ -580,6 +580,7 @@ layout_mode = 2
 autowrap_mode = 3
 
 [node name="MC_Box" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=1793185763]
+auto_translate_mode = 2
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -624,6 +625,7 @@ text_overrun_behavior = 3
 autowrap_mode = 3
 
 [node name="TF_Box" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel" unique_id=210528019]
+auto_translate_mode = 2
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -656,6 +658,7 @@ layout_mode = 2
 autowrap_mode = 3
 
 [node name="Input" type="LineEdit" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillText_Box" unique_id=1299322072]
+auto_translate_mode = 2
 layout_mode = 2
 placeholder_text = "Odpowiedź..."
 
@@ -670,12 +673,14 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="GapRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=1502888160]
+auto_translate_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
 theme_override_constants/v_separation = 8
 
 [node name="TileRow" type="HFlowContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/FillTiles_Box" unique_id=878326736]
+auto_translate_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 12
@@ -693,6 +698,7 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="MatchGrid" type="GridContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/QuizPanel/Matching_Box" unique_id=1395954460]
+auto_translate_mode = 2
 layout_mode = 2
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 8
@@ -1415,6 +1421,7 @@ layout_mode = 2
 theme_override_constants/separation = 6
 
 [node name="QuestionLabel" type="Label" parent="Root/TopWindow/VBox" unique_id=2052245524]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -1456,6 +1463,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 autowrap_mode = 3
 
 [node name="CorrectAnswerLabel" type="Label" parent="Root/TopWindow/VBox" unique_id=974434540]
+auto_translate_mode = 2
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.95, 0.45, 1)

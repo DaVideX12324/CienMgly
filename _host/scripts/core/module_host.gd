@@ -4,6 +4,8 @@ class_name ModuleHost
 signal module_started(module_id: String)
 signal module_exited(module_id: String)
 signal module_failed(module_id: String, reason: String)
+## Moduł prosi o wyjście, ale jeszcze działa — host zasłania ekran, zanim go wyłączy (potem module_exited).
+signal module_exiting(module_id: String)
 
 var current_module: Node
 var current_manifest: Dictionary = {}
@@ -65,11 +67,18 @@ func _fail(module_id: String, reason: String) -> void:
 
 
 func _on_exit_requested(module_id: String) -> void:
-	stop_module()
-	module_exited.emit(module_id)
+	_finish_exit(module_id)
 
 
 func _on_module_exit_requested() -> void:
-	var module_id := str(current_manifest.get("id", ""))
+	_finish_exit(str(current_manifest.get("id", "")))
+
+
+## Wyjście w dwóch krokach: sygnał module_exiting (ekran przejścia) i klatki na jego narysowanie, dopiero potem
+## wyłączenie modułu — ciężkie zwalnianie sceny dzieje się pod zasłoną.
+func _finish_exit(module_id: String) -> void:
+	module_exiting.emit(module_id)
+	await get_tree().process_frame
+	await ModuleTransition.after_draw(get_tree())
 	stop_module()
 	module_exited.emit(module_id)

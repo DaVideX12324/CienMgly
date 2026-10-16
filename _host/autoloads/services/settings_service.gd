@@ -5,6 +5,7 @@ signal settings_saved
 signal settings_loaded
 ## Zmiana ustawienia modułu (set_module) — np. motyw UI z opcji, zmieniany na żywo.
 signal module_setting_changed(module_id: String, key: String, value: Variant)
+signal language_changed(lang: String)
 
 const CONFIG_PATH := "user://artefakt_wiedzy_settings.cfg"
 const SEC_DISPLAY := "display"
@@ -118,7 +119,11 @@ func get_language() -> String:
 
 
 func set_language(id: String, save_now: bool = true) -> void:
+	var prev := get_language()
 	set_global(KEY_LANGUAGE, id, save_now)
+	var new_lang := get_language()
+	if new_lang != prev:
+		language_changed.emit(new_lang)
 
 
 func get_module(module_id: String, key: String, default_value: Variant = null) -> Variant:

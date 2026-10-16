@@ -8,6 +8,7 @@ const MODULE_ID := "quiz_rpg"
 
 
 func _ready() -> void:
+	QuizRpgI18n.register()
 	var registry := get_node_or_null("/root/ModuleRegistry")
 	var manifest: Dictionary = registry.call("get_by_id", MODULE_ID) if registry else {}
 	if manifest.is_empty():

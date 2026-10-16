@@ -2,30 +2,64 @@ class_name QuizRpgI18n
 extends RefCounted
 
 ## Tłumaczenia tekstów gry: płaskie słowniki klucz -> tekst w resources/i18n/<język>.json (np. "skill.onslaught.name", "skill.onslaught.desc").
-## Język wybiera opcja „Język” w Motywie (QuizTheme.language()). Brak klucza w wybranym języku -> en -> tekst zapasowy
-## (display_name z zasobu), więc nowe teksty można dopisywać stopniowo.
+## Deleguje operacje do globalnego serwisu I18nService.
 
-const DIR := "res://modules/quiz_rpg/resources/i18n/"
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const FALLBACK_LANG := "en"
 
-static var _cache: Dictionary = {}  # język -> słownik
+static var _registered := false
+
+
+## Rejestruje katalog słowników w I18nService (idempotentnie).
+static func register() -> void:
+	if _registered:
+		return
+	var svc := _get_service()
+	if svc != null:
+		svc.call("register_dir", QuizRpgPaths.path("resources/i18n/"))
+		_registered = true
+
+
+static func _get_service() -> Node:
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree and main_loop.root:
+		return main_loop.root.get_node_or_null("I18nService")
+	return null
 
 
 static func t(key: String, fallback: String = "") -> String:
-	var lang := QuizTheme.language()
-	var dict := _dict(lang)
-	if dict.has(key):
-		return str(dict[key])
-	if lang != FALLBACK_LANG:
-		var en := _dict(FALLBACK_LANG)
-		if en.has(key):
-			return str(en[key])
+	register()
+	var svc := _get_service()
+	if svc != null:
+		return str(svc.call("t", key, fallback))
 	return fallback if fallback != "" else key
+
+
+static func tf(key: String, args: Dictionary, fallback: String = "") -> String:
+	register()
+	var svc := _get_service()
+	if svc != null:
+		return str(svc.call("tf", key, args, fallback))
+	return (fallback if fallback != "" else key).format(args)
+
+
+static func plural(key_base: String, n: int, args: Dictionary = {}) -> String:
+	register()
+	var svc := _get_service()
+	if svc != null:
+		return str(svc.call("plural", key_base, n, args))
+	var fmt_args := args.duplicate()
+	fmt_args["n"] = n
+	return ("%s.many" % key_base).format(fmt_args)
 
 
 ## Czy klucz istnieje w wybranym języku albo w en (t() zwraca wtedy tłumaczenie, a nie klucz).
 static func has(key: String) -> bool:
-	return _dict(QuizTheme.language()).has(key) or _dict(FALLBACK_LANG).has(key)
+	register()
+	var svc := _get_service()
+	if svc != null:
+		return bool(svc.call("has", key))
+	return false
 
 
 ## Klucz nazwy umiejętności z pliku zasobu: "skill.<nazwa pliku .tres bez rozszerzenia>.name".
@@ -54,19 +88,8 @@ static func status_desc_key(res: Resource) -> String:
 
 ## Wymusza ponowne wczytanie słowników (po edycji JSON w edytorze / w testach).
 static func reload() -> void:
-	_cache.clear()
-
-
-static func _dict(lang: String) -> Dictionary:
-	if _cache.has(lang):
-		return _cache[lang]
-	var d := {}
-	var path := DIR + lang + ".json"
-	if FileAccess.file_exists(path):
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-		if parsed is Dictionary:
-			d = parsed
-		else:
-			push_warning("QuizRpgI18n: nieprawidłowy JSON: " + path)
-	_cache[lang] = d
-	return d
+	_registered = false
+	register()
+	var svc := _get_service()
+	if svc != null:
+		svc.call("reload")
