@@ -73,7 +73,7 @@ func can_interact() -> bool:
 
 
 func interaction_prompt_text() -> String:
-	return "Porozmawiaj"
+	return QuizRpgI18n.t("prompt.talk", "Porozmawiaj")
 
 
 func interaction_prompt_offset() -> Vector2:
@@ -143,7 +143,17 @@ func _fill(lines: PackedStringArray, ps: Node, st: Dictionary) -> PackedStringAr
 			item_name = str(it.display_name)
 	var out := PackedStringArray()
 	for l in lines:
-		out.append(l.format({"count": quest_count, "left": _left(ps, st), "item": item_name}))
+		var line_key := ""
+		if l == "Hej, wędrowcze. Ta mgła odebrała mi pamięć — ale nie rozum.":
+			line_key = "npc.companion.intro_1"
+		elif l == "Odpowiedz poprawnie na {count} pytań, a uwierzę, że warto z tobą iść.":
+			line_key = "npc.companion.intro_2"
+		elif l == "Jeszcze {left}. Nie poddawaj się.":
+			line_key = "npc.companion.progress"
+		elif l == "Dotrzymałeś słowa. Idę z tobą!":
+			line_key = "npc.companion.done"
+		var text := QuizRpgI18n.t(line_key, l) if line_key != "" else QuizRpgI18n.t(l, l)
+		out.append(text.format({"count": quest_count, "left": _left(ps, st), "item": item_name}))
 	return out
 
 

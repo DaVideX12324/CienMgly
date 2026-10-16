@@ -415,7 +415,7 @@ func get_member_skill_pool(member_index: int) -> Array[QuizRpgSkillData]:
 ## nieprzytomny (wskrzeszenie). Bez efektu (pełne HP, brak zasobów) nic nie pobiera. Zwraca {success, message}.
 func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -> Dictionary:
 	if user_index < 0 or user_index >= party.size() or target_index < 0 or target_index >= party.size():
-		return {"success": false, "message": "Nieprawidłowy cel."}
+		return {"success": false, "message": QuizRpgI18n.t("party.invalid_target", "Nieprawidłowy cel.")}
 	var skill: QuizRpgSkillBase = null
 	var entry: Dictionary = {}
 	for e in get_member_skills(user_index):
@@ -423,16 +423,16 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 			entry = e
 			skill = e.get("resource") as QuizRpgSkillBase
 	if skill == null or not bool(entry.get("usable_in_menu", false)):
-		return {"success": false, "message": "Tej umiejętności używa się tylko w walce."}
+		return {"success": false, "message": QuizRpgI18n.t("party.skill_combat_only", "Tej umiejętności używa się tylko w walce.")}
 	if not skill.is_heal():
-		return {"success": false, "message": "Ta umiejętność nic tu nie da."}
+		return {"success": false, "message": QuizRpgI18n.t("party.skill_no_effect", "Ta umiejętność nic tu nie da.")}
 	var user: Dictionary = party[user_index]
 	var sp_cost := int(entry.get("sp_cost", 0))
 	var tp_cost := int(entry.get("tp_cost", 0))
 	if int(user.get("sp", 0)) < sp_cost or int(user.get("tp", 0)) < tp_cost:
-		return {"success": false, "message": "Za mało SP / TP."}
+		return {"success": false, "message": QuizRpgI18n.t("party.not_enough_sp_tp", "Za mało SP / TP.")}
 	if not member_meets_weapon_requirement(user_index, entry):
-		return {"success": false, "message": "Wymaga innej broni."}
+		return {"success": false, "message": QuizRpgI18n.t("party.requires_other_weapon", "Wymaga innej broni.")}
 	var targets: Array[int] = []
 	match skill.target:
 		QuizRpgSkillBase.Target.SELF:
@@ -445,14 +445,14 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 			targets = [target_index]
 	var revive := skill.target == QuizRpgSkillBase.Target.DEAD_ALLY
 	if revive and _member_hp(target_index) > 0:
-		return {"success": false, "message": "Ta umiejętność wskrzesza tylko nieprzytomnych."}
+		return {"success": false, "message": QuizRpgI18n.t("party.skill_revive_only", "Ta umiejętność wskrzesza tylko nieprzytomnych.")}
 	var parts: Array[String] = []
 	for t in targets:
 		var healed := heal_member(t, QuizRpgSkillMath.heal(skill, _member_max_hp(t), int(get_member_total_stat(user_index, "mat"))), revive)
 		if healed > 0:
 			parts.append("%s +%d HP" % [str((party[t] as Dictionary).get("name", "Bohater")), healed])
 	if parts.is_empty():
-		return {"success": false, "message": "HP jest pełne."}
+		return {"success": false, "message": QuizRpgI18n.t("party.hp_full", "HP jest pełne.")}
 	user = party[user_index]
 	user["sp"] = int(user.get("sp", 0)) - sp_cost
 	user["tp"] = int(user.get("tp", 0)) - tp_cost
@@ -914,16 +914,16 @@ func use_item(item_ref: String) -> Dictionary:
 func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 	var inventory_service: Node = _get_inventory_service()
 	if inventory_service == null or not inventory_service.has_method("use_item"):
-		return {"success": false, "message": "InventoryService niedostępny."}
+		return {"success": false, "message": QuizRpgI18n.t("inventory.service_unavailable", "InventoryService niedostępny.")}
 	_ensure_party_defaults()
 	if member_index < 0 or member_index >= party.size():
-		return {"success": false, "message": "Nieprawidłowy cel."}
+		return {"success": false, "message": QuizRpgI18n.t("party.invalid_target", "Nieprawidłowy cel.")}
 	var item_data: QuizRpgItemData = inventory_service.call("get_item", item_ref)
 	if item_data == null:
-		return {"success": false, "message": "Nieznany przedmiot."}
+		return {"success": false, "message": QuizRpgI18n.t("inventory.unknown_item", "Nieznany przedmiot.")}
 	var consume_result: Dictionary = inventory_service.call("consume_item_from_inventory", inventory, item_ref, 1)
 	if not bool(consume_result.get("success", false)):
-		return {"success": false, "message": "Brak przedmiotu."}
+		return {"success": false, "message": QuizRpgI18n.t("inventory.no_item", "Brak przedmiotu.")}
 	inventory = consume_result.get("inventory", inventory)
 	var member: Dictionary = party[member_index]
 	if item_data.heal_amount > 0:
@@ -958,7 +958,7 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 		"cured_statuses": cured,
 		"usable_in_menu": item_data.usable_in_menu,
 		"usable_in_combat": item_data.usable_in_combat,
-		"message": "%s: %s" % [item_data.display_name, item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else "Użyto %s." % item_data.display_name,
+		"message": "%s: %s" % [item_data.display_name, item_data.get_effect_summary()] if item_data.get_effect_summary() != "" else QuizRpgI18n.tf("inventory.used_item", {"item": item_data.display_name}, "Użyto {item}."),
 	}
 	if bool(result.get("success", false)):
 		_sync_primary_party_member()
@@ -989,7 +989,8 @@ func get_equipment_slots() -> Array[String]:
 
 
 func get_equipment_label(slot_name: String) -> String:
-	return str(EQUIPMENT_LABELS.get(slot_name, slot_name.capitalize()))
+	var fallback := str(EQUIPMENT_LABELS.get(slot_name, slot_name.capitalize()))
+	return QuizRpgI18n.t("equip.slot." + slot_name, fallback)
 
 
 ## Staty członka: baza + poziom × przyrost postaci + bonusy ekwipunku (<stat>_bonus przedmiotów).
@@ -1069,8 +1070,8 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 					})
 	var empty_entry: Dictionary = {
 		"item_id": "",
-		"name": "(puste)",
-		"description": "Zdejmij wyposażenie z tego slotu.",
+		"name": QuizRpgI18n.t("equip.empty_slot_name", "(puste)"),
+		"description": QuizRpgI18n.t("equip.empty_slot_desc", "Zdejmij wyposażenie z tego slotu."),
 		"count": 1,
 		"equip_slot": slot_name,
 		"atk_bonus": 0,

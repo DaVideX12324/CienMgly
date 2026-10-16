@@ -47,7 +47,7 @@ func _exit_tree() -> void:
 ## Motywy UI dla zakładki „Motyw” w opcjach hosta: [{id, name}], zapis w ustawieniach modułu
 ## (klucze ui_skin / ui_brightness / ui_bar_style).
 func get_ui_skins() -> Array[Dictionary]:
-	return QuizTheme.SKINS
+	return QuizTheme.get_skins()
 
 
 ## Rozmiar tekstu ekranów hosta (opcje) dopasowany do pikselowej czcionki modułu (Jersey 15).
@@ -58,18 +58,18 @@ func snap_font_size(size: int) -> int:
 ## Dodatkowe opcje wyglądu dla zakładki „Motyw”: [{key, label, type: "bool" | "choice", default}]
 ## ("choice" z listą choices: [{id, name}]).
 func get_ui_options() -> Array[Dictionary]:
-	return QuizTheme.UI_OPTIONS
+	return QuizTheme.get_ui_options()
 
 
 ## Style pasków dla zakładki „Motyw” (klucz ui_bar_style).
 func get_ui_bar_styles() -> Array[Dictionary]:
-	return QuizTheme.BAR_STYLES
+	return QuizTheme.get_bar_styles()
 
 
 ## Siatka kafelków z podglądem stylów pasków (zamiast listy w opcjach hosta); sygnał style_selected(id).
 func create_bar_style_picker(current: String, font_size: int = 16) -> Control:
 	var picker := (load(QuizRpgPaths.path("scenes/ui/bar_style_picker.tscn")) as PackedScene).instantiate() as Control
-	picker.call("setup", QuizTheme.BAR_STYLES, current, font_size)
+	picker.call("setup", QuizTheme.get_bar_styles(), current, font_size)
 	return picker
 
 

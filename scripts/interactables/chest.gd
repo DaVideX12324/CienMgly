@@ -110,10 +110,10 @@ func try_open() -> void:
 		var key_id := _usable_key(ps)
 		if key_id != "":
 			ps.call("consume_item", key_id, 1)
-			_toast("Klucz otwiera skrzynię.")
+			_toast(QuizRpgI18n.t("chest.key_opens", "Klucz otwiera skrzynię."))
 			unlock()
 		else:
-			_toast("Zamknięte. Potrzebny klucz tieru %d (lub wyższego) albo wytrych." % tier)
+			_toast(QuizRpgI18n.tf("chest.locked_need_key", {"tier": tier}, "Zamknięte. Potrzebny klucz tieru {tier} (lub wyższego) albo wytrych."))
 
 
 ## Najsłabszy klucz z plecaka, który otwiera tę skrzynię (tier klucza ≥ tier skrzyni); "" gdy brak.
@@ -155,9 +155,9 @@ func _on_lockpick_finished(success: bool, ps: Node, player: Node2D, gm: Node) ->
 		unlock()
 	elif randf() < LOCKPICK_BREAK_CHANCE:
 		ps.call("consume_item", LOCKPICK_ITEM, 1)
-		_toast("Wytrych się złamał!")
+		_toast(QuizRpgI18n.t("chest.lockpick_broke", "Wytrych się złamał!"))
 	else:
-		_toast("Nie udało się. Wytrych wytrzymał.")
+		_toast(QuizRpgI18n.t("chest.lockpick_failed_held", "Nie udało się. Wytrych wytrzymał."))
 
 
 func _toast(text: String) -> void:
@@ -264,7 +264,7 @@ func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_in_interaction_range = true
 		if not opened:
-			InteractPromptScript.request(self, "Otwórz" if not is_locked else "Otwórz (klucz / wytrych)")
+			InteractPromptScript.request(self, QuizRpgI18n.t("prompt.open", "Otwórz") if not is_locked else QuizRpgI18n.t("prompt.open_key_lockpick", "Otwórz (klucz / wytrych)"))
 
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:

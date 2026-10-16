@@ -141,9 +141,9 @@ func show_loot_popup(result: Dictionary) -> void:
 	if not bool(result.get("found", false)):
 		return
 	_ensure_popup()
-	_popup_title.text = str(result.get("title", "Loot"))
+	_popup_title.text = QuizRpgI18n.t(str(result.get("title", "Loot")), str(result.get("title", QuizRpgI18n.t("loot.default_title", "Łup"))))
 	_popup_message.text = str(result.get("message", ""))
-	_popup_detail.text = str(result.get("detail", "Nacisnij E albo Enter, aby kontynuowac."))
+	_popup_detail.text = QuizRpgI18n.t(str(result.get("detail", "")), str(result.get("detail", QuizRpgI18n.t("loot.continue_hint", "Naciśnij E albo Enter, aby kontynuować."))))
 	_previous_pause_state = get_tree().paused
 	get_tree().paused = true
 	_popup_layer.visible = true
@@ -274,7 +274,7 @@ func _ensure_popup() -> void:
 	text_box.add_child(_popup_detail)
 
 	_popup_button = Button.new()
-	_popup_button.text = "OK"
+	_popup_button.text = QuizRpgI18n.t("ui.common.ok", "OK")
 	_popup_button.custom_minimum_size = Vector2(108, 52)
 	_popup_button.process_mode = Node.PROCESS_MODE_ALWAYS
 	_popup_button.pressed.connect(_close_popup)

@@ -106,7 +106,7 @@ func _on_new_game() -> void:
 
 func _on_load_game() -> void:
 	_slot_mode = "load"
-	_show_save_slots("Wczytaj grę")
+	_show_save_slots(QuizRpgI18n.t("main_menu.load_game_title", "Wczytaj grę"))
 
 
 func _on_stats() -> void:
@@ -115,7 +115,7 @@ func _on_stats() -> void:
 		return
 	_populate_stats()
 	_show_context("stats")
-	context_title.text = "Statystyki"
+	context_title.text = QuizRpgI18n.t("main_menu.title_stats", "Statystyki")
 
 
 ## Opcje hosta (ekran, dźwięk, motyw, sterowanie) na ekranie treści — ta sama treść co w menu Esc.
@@ -137,7 +137,7 @@ func _on_options() -> void:
 				if _context == "options":
 					_show_context(""))
 	_show_context("options")
-	context_title.text = "Opcje"
+	context_title.text = QuizRpgI18n.t("main_menu.title_options", "Opcje")
 	if _options_menu.has_method("open"):
 		_options_menu.call("open")
 	else:
@@ -176,7 +176,7 @@ func _build_save_slots_panel() -> void:
 	context_body.add_child(_save_slots_panel)
 
 	var hint := Label.new()
-	hint.text = "Kliknij zapis, aby go wczytać. Kosz z boku usuwa zapis (kliknij dwa razy). Esc — wróć."
+	hint.text = QuizRpgI18n.t("main_menu.save_hint", "Kliknij zapis, aby go wczytać. Kosz z boku usuwa zapis (kliknij dwa razy). Esc — wróć.")
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_font_size_override("font_size", QuizTheme.snap(13))
 	hint.add_theme_color_override("font_color", Color(0.68, 0.68, 0.76, 1))
@@ -303,7 +303,7 @@ func _create_trash_button(slot_index: int) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(44, 44)
 	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	btn.tooltip_text = "Usuń zapis"
+	btn.tooltip_text = QuizRpgI18n.t("main_menu.delete_save", "Usuń zapis")
 	var icon := QuizTrashIcon.new()
 	icon.set_anchors_preset(Control.PRESET_CENTER)
 	icon.offset_left = -11
@@ -315,14 +315,14 @@ func _create_trash_button(slot_index: int) -> Button:
 	var disarm := func() -> void:
 		armed[0] = false
 		icon.set_color(Color(0.78, 0.78, 0.86, 1))
-		btn.tooltip_text = "Usuń zapis"
+		btn.tooltip_text = QuizRpgI18n.t("main_menu.delete_save", "Usuń zapis")
 	btn.pressed.connect(func() -> void:
 		if armed[0]:
 			_on_delete_slot_pressed(slot_index)
 			return
 		armed[0] = true
 		icon.set_color(Color(1.0, 0.35, 0.35, 1))
-		btn.tooltip_text = "Kliknij ponownie, aby usunąć")
+		btn.tooltip_text = QuizRpgI18n.t("main_menu.delete_save_confirm", "Kliknij ponownie, aby usunąć"))
 	_add_click_sfx(btn)
 	btn.focus_exited.connect(disarm)
 	btn.mouse_exited.connect(disarm)

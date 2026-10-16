@@ -17,7 +17,7 @@ func set_in_range(value: bool) -> void:
 	if not is_instance_valid(prompt_target):
 		return
 	if value:
-		InteractPromptScript.request(prompt_target, prompt_text)
+		InteractPromptScript.request(prompt_target, QuizRpgI18n.t(prompt_text, prompt_text))
 	else:
 		InteractPromptScript.release(prompt_target)
 

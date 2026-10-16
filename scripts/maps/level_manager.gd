@@ -82,7 +82,7 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	current_level = packed.instantiate()
 	# Mapa spoza LOCATION_NAMES: nazwa z jej własnego location_name (jeśli ma), zanim ProceduralLevel pokaże swój ekran.
 	if is_instance_valid(_loading_screen) and _loading_screen.location.is_empty() and "location_name" in current_level:
-		_loading_screen.location = str(current_level.get("location_name"))
+		_loading_screen.location = QuizRpgI18n.t(str(current_level.get("location_name")), str(current_level.get("location_name")))
 	# ProceduralLevel zastępuje ten ekran własnym (z postępem generowania) — niech pokaże to samo tło.
 	if is_instance_valid(_loading_screen) and _loading_screen.background != null and "loading_background" in current_level:
 		current_level.loading_background = _loading_screen.background
@@ -129,7 +129,8 @@ func _show_loading_screen(level_path: String) -> Node:
 	_loading_screen = LoadingScreenScene.instantiate()
 	_loading_screen.process_mode = Node.PROCESS_MODE_ALWAYS
 	var level_key := level_path.get_file().get_basename()
-	_loading_screen.location = LOCATION_NAMES.get(level_key, "")
+	var loc_name: String = str(LOCATION_NAMES.get(level_key, ""))
+	_loading_screen.location = QuizRpgI18n.t("map." + level_key + ".name", loc_name) if loc_name != "" else ""
 	_loading_screen.set_background_for(level_key)
 	add_child(_loading_screen)
 	return _loading_screen

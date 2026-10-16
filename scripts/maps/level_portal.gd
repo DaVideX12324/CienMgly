@@ -42,7 +42,7 @@ static func _connect_key(area: Area2D, on_enter: Callable, prompt: String) -> vo
 	var listener: Node = PortalKeyListener.new()
 	listener.name = "PortalKey"
 	listener.on_enter = on_enter
-	listener.prompt_text = prompt if not prompt.is_empty() else DEFAULT_PROMPT
+	listener.prompt_text = prompt if not prompt.is_empty() else QuizRpgI18n.t("prompt.transition", DEFAULT_PROMPT)
 	var shape := area.get_node_or_null("CollisionShape2D") as Node2D
 	listener.prompt_target = shape if shape else area
 	area.add_child(listener)

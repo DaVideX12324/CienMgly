@@ -47,10 +47,10 @@ func _refresh_inventory(reset_message: bool = true) -> void:
 
 
 func _show_empty_state() -> void:
-	item_name_label.text = "Ekwipunek pusty"
+	item_name_label.text = QuizRpgI18n.t("inventory.empty_title", "Ekwipunek pusty")
 	count_label.text = ""
 	effect_label.text = ""
-	description_label.text = "Brak przedmiotow."
+	description_label.text = QuizRpgI18n.t("inventory.empty_desc", "Brak przedmiotów.")
 	use_btn.disabled = true
 
 
@@ -62,7 +62,7 @@ func _select_index(index: int) -> void:
 	item_list.select(index)
 	var entry: Dictionary = _entries[index]
 	item_name_label.text = str(entry.get("name", "---"))
-	count_label.text = "Ilosc: %s" % str(entry.get("display_count", int(entry.get("count", 0))))
+	count_label.text = QuizRpgI18n.tf("inventory.quantity", {"count": str(entry.get("display_count", int(entry.get("count", 0))))}, "Ilość: {count}")
 	effect_label.text = str(entry.get("effect_summary", ""))
 	description_label.text = str(entry.get("description", ""))
 	var can_use: bool = int(entry.get("count", 0)) > 0 and bool(entry.get("usable_in_menu", true))
@@ -91,9 +91,9 @@ func _on_use() -> void:
 	var result: Dictionary = _ps.use_item(item_id)
 	if bool(result.get("success", false)):
 		_on_inventory_changed()
-		result_label.text = str(result.get("message", "Uzyto przedmiotu."))
+		result_label.text = str(result.get("message", QuizRpgI18n.t("inventory.item_used", "Użyto przedmiotu.")))
 	else:
-		result_label.text = str(result.get("message", "Nie mozna uzyc przedmiotu."))
+		result_label.text = str(result.get("message", QuizRpgI18n.t("inventory.cannot_use_item", "Nie można użyć przedmiotu.")))
 		_refresh_inventory(false)
 
 

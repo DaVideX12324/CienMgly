@@ -637,7 +637,7 @@ func _begin_input() -> void:
 	if turn_number == 1:
 		_push_initiative_notice()
 	if turn_label:
-		turn_label.text = "Tura %d" % turn_number
+		turn_label.text = QuizRpgI18n.tf("combat.turn_number", {"turn": turn_number}, "Tura {turn}")
 	if streak_label and _ps:
 		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
 	result_label.visible = false
@@ -690,7 +690,7 @@ func _open_member_commands(m: int) -> void:
 	_pending_skill_data.clear()
 	phase = Phase.ACTION_SELECT
 	if turn_label:
-		turn_label.text = "Tura %d - %s" % [turn_number, _member_name(m)]
+		turn_label.text = QuizRpgI18n.tf("combat.turn_member", {"turn": turn_number, "name": _member_name(m)}, "Tura {turn} - {name}")
 	action_panel.visible = true
 	_set_action_buttons_enabled(true)
 	_show_action_menu()
@@ -802,9 +802,9 @@ func _average_agi(party: bool) -> float:
 func _push_initiative_notice() -> void:
 	match _initiative:
 		Initiative.PREEMPTIVE:
-			_push_log("Przewaga! Potwory nie zdążą zareagować w tej turze.", Color(0.55, 0.95, 0.55))
+			_push_log(QuizRpgI18n.t("log.combat.preemptive", "Przewaga! Potwory nie zdążą zareagować w tej turze."), Color(0.55, 0.95, 0.55))
 		Initiative.SURPRISE:
-			_push_log("Zaskoczenie! Drużyna traci pierwszą turę.", Color(1.0, 0.55, 0.35))
+			_push_log(QuizRpgI18n.t("log.combat.surprise", "Zaskoczenie! Drużyna traci pierwszą turę."), Color(1.0, 0.55, 0.35))
 
 
 ## Następny w kolejce rundy: członek drużyny dostaje komendy (dalej po jego akcji — znów _next_turn), wróg działa od
@@ -845,7 +845,7 @@ func _start_member_action(i: int, plan: Dictionary) -> void:
 	if turn_number == 1:
 		_push_initiative_notice()
 	if turn_label:
-		turn_label.text = "Tura %d - ruch: %s" % [turn_number, _member_name(i)]
+		turn_label.text = QuizRpgI18n.tf("log.combat.turn_move", {"turn": turn_number, "name": _member_name(i)}, "Tura {turn} - ruch: {name}")
 	result_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
@@ -853,7 +853,7 @@ func _start_member_action(i: int, plan: Dictionary) -> void:
 	_set_band_mode(Band.STATUS_ONLY)
 	if _member_cannot_act(i):
 		result_label.visible = true
-		result_label.text = "%s nie może się ruszyć!" % _member_name(i)
+		result_label.text = QuizRpgI18n.tf("log.combat.member_cannot_move", {"name": _member_name(i)}, "{name} nie może się ruszyć!")
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.9))
 		await get_tree().create_timer(1.2).timeout
 		_next_turn()
@@ -889,7 +889,7 @@ func _on_action(action: Action) -> void:
 func _open_skills_menu() -> void:
 	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(_active_actor_index, QuizRpgStatusData.Restriction.SILENCED):
 		result_label.visible = true
-		result_label.text = "%s: cisza — umiejętności zablokowane." % _member_name(_active_actor_index)
+		result_label.text = QuizRpgI18n.tf("log.combat.silenced", {"name": _member_name(_active_actor_index)}, "{name}: cisza — umiejętności zablokowane.")
 		result_label.add_theme_color_override("font_color", QuizRpgStatusCatalog.color_of("silence"))
 		return
 	var entries: Array[Dictionary] = []
@@ -1109,7 +1109,7 @@ func _scan_enemy(enemy_index: int) -> void:
 			skill_names.append(sk.localized_name())
 		text = "ATK %d · DEF %d · MAT %d · MDF %d · AGI %d" % [int(unit.get("atk", 0)), int(unit.get("def", 0)), int(unit.get("mat", 0)), int(unit.get("mdf", 0)), int(unit.get("agi", 0))]
 		if not skill_names.is_empty():
-			text += "\nUmiejętności: " + ", ".join(skill_names)
+			text += "\n" + QuizRpgI18n.t("combat.skills_colon", "Umiejętności: ") + ", ".join(skill_names)
 	var level: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
 	_push_log("%s%s — HP %d/%d" % [str(unit.get("name", "?")), " (lv %d)" % level if level > 0 else "", int(unit.get("hp", 0)), int(unit.get("max_hp", 1))], Color(0.55, 0.85, 1.0))
 	_push_log(text, Color.WHITE)
@@ -1276,7 +1276,7 @@ func _build_list_menu(entries: Array[Dictionary], is_skill_menu: bool) -> void:
 	if entries.is_empty():
 		var empty := ListRowScene.instantiate() as Button
 		list_grid.add_child(empty)
-		empty.setup("Brak umiejętności" if is_skill_menu else "Brak przedmiotów", "", 0, true)
+		empty.setup(QuizRpgI18n.t("combat.no_skills", "Brak umiejętności") if is_skill_menu else QuizRpgI18n.t("combat.no_items", "Brak przedmiotów"), "", 0, true)
 	_fit_list_columns()
 
 
@@ -1369,7 +1369,7 @@ func _use_skill(skill_data: Dictionary) -> void:
 			var valid := _party_indices(dead)
 			if valid.is_empty():
 				result_label.visible = true
-				result_label.text = "Brak nieprzytomnych sojuszników." if dead else "Brak celu."
+				result_label.text = QuizRpgI18n.t("combat.no_dead_allies", "Brak nieprzytomnych sojuszników.") if dead else QuizRpgI18n.t("combat.no_target", "Brak celu.")
 				return
 			_pending_skill_data = skill_data.duplicate()
 			if valid.size() == 1:
@@ -1450,10 +1450,10 @@ func _use_item(item_data: Dictionary) -> void:
 		_commit_plan({"item": item_data.duplicate(true)})  # przedmiot zużywany w ruchu postaci
 		return
 	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index)
-	var item_name: String = str(use_result.get("name", item_data.get("name", "Przedmiot")))
+	var item_name: String = str(use_result.get("name", item_data.get("name", QuizRpgI18n.t("combat.default_item_name", "Przedmiot"))))
 	if not bool(use_result.get("success", false)):
 		result_label.visible = true
-		result_label.text = "%s: brak przedmiotu — %s." % [_member_name(_active_actor_index), item_name]
+		result_label.text = QuizRpgI18n.tf("combat.no_item_left", {"name": _member_name(_active_actor_index), "item": item_name}, "{name}: brak przedmiotu — {item}.")
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 		await get_tree().create_timer(1.0).timeout
 		_next_turn()
@@ -1476,10 +1476,10 @@ func _use_item(item_data: Dictionary) -> void:
 		_restore_party_tp(_active_actor_index, tp_restore)
 		effect_parts.append("+%d TP" % tp_restore)
 	if (use_result.get("cured_statuses", []) as Array).has("poison"):
-		effect_parts.append("zatrucie wyleczone")
-		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "Wyleczono", Color.GREEN, 12)
+		effect_parts.append(QuizRpgI18n.t("combat.poison_cured", "zatrucie wyleczone"))
+		FloatingText.create_at(player, player.global_position + Vector2(0, -34), QuizRpgI18n.t("combat.cured", "Wyleczono"), Color.GREEN, 12)
 	if effect_parts.is_empty():
-		result_label.text = str(use_result.get("message", "Użyto: %s" % item_name))
+		result_label.text = str(use_result.get("message", QuizRpgI18n.tf("combat.used_item", {"item": item_name}, "Użyto: {item}")))
 		result_label.add_theme_color_override("font_color", Color.WHITE)
 	else:
 		result_label.text = "%s: %s" % [item_name, ", ".join(effect_parts)]
@@ -1624,11 +1624,11 @@ func _apply_player_hit(ti: int, base_dmg: int) -> void:
 	_refresh_enemy_cache()
 	_sync_enemy_display_hit(ti)
 	if crit:
-		result_label.text = "%s: krytyk! -%d HP" % [target_name_str, dmg]
+		result_label.text = QuizRpgI18n.tf("combat.crit_damage", {"target": target_name_str, "damage": dmg}, "{target}: krytyk! -{damage} HP")
 		result_label.add_theme_color_override("font_color", Color.GOLD)
-		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "KRYT -%d" % dmg, Color.GOLD, 16)
+		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), QuizRpgI18n.tf("combat.crit_float", {"damage": dmg}, "KRYT -{damage}"), Color.GOLD, 16)
 	else:
-		result_label.text = "%s: trafienie! -%d HP" % [target_name_str, dmg]
+		result_label.text = QuizRpgI18n.tf("combat.hit_damage", {"target": target_name_str, "damage": dmg}, "{target}: trafienie! -{damage} HP")
 		result_label.add_theme_color_override("font_color", Color.GREEN)
 		FloatingText.create_at(enemy, enemy.global_position + Vector2(0, -20), "-%d" % dmg, Color.YELLOW, 14)
 	HitParticles.create_at(enemy, enemy.global_position, Color(1.0, 0.5, 0.2))
@@ -1638,7 +1638,12 @@ func _show_attack_miss(ti: int, correct: bool) -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("attack")
-	var fail_type: String = ["Pudło!", "Unik wroga!", "Blok wroga!"][randi() % 3]
+	var fail_types: Array[String] = [
+		QuizRpgI18n.t("combat.miss", "Pudło!"),
+		QuizRpgI18n.t("combat.enemy_dodged", "Unik wroga!"),
+		QuizRpgI18n.t("combat.enemy_blocked", "Blok wroga!"),
+	]
+	var fail_type: String = fail_types[randi() % fail_types.size()]
 	result_label.text = fail_type
 	result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.75) if correct else Color(0.82, 0.62, 0.35))
 	_dodge_enemy_display(ti)
@@ -1652,11 +1657,11 @@ func _resolve_defend(correct: bool) -> void:
 	if audio:
 		audio.play_sfx_by_name("magic")
 	if correct:
-		result_label.text = "Dobra obrona!"
+		result_label.text = QuizRpgI18n.t("combat.good_defense", "Dobra obrona!")
 		result_label.add_theme_color_override("font_color", Color(0.3, 0.7, 1.0))
 		_flash_sprite(player_sprite_node, Color(0.3, 0.7, 1.0))
 	else:
-		result_label.text = "Częściowa obrona."
+		result_label.text = QuizRpgI18n.t("combat.partial_defense", "Częściowa obrona.")
 		result_label.add_theme_color_override("font_color", Color(0.5, 0.6, 0.8))
 
 
@@ -1690,12 +1695,12 @@ func _resolve_heal(correct: bool) -> void:
 		if t == 0:
 			_flash_sprite(player_sprite_node, Color.GREEN)
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % healed, Color.GREEN, 14)
-	var title: String = str(_selected_skill_data.get("name", "Leczenie"))
+	var title: String = str(_selected_skill_data.get("name", QuizRpgI18n.t("combat.default_heal_name", "Leczenie")))
 	if parts.is_empty():
-		result_label.text = "%s: bez efektu." % title
+		result_label.text = QuizRpgI18n.tf("combat.no_effect", {"title": title}, "{title}: bez efektu.")
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 	else:
-		result_label.text = "%s%s: %s" % [title, "" if correct else " (słabiej)", ", ".join(parts)]
+		result_label.text = "%s%s: %s" % [title, "" if correct else QuizRpgI18n.t("combat.weaker_suffix", " (słabiej)"), ", ".join(parts)]
 		result_label.add_theme_color_override("font_color", Color.GREEN if correct else Color(0.6, 0.8, 0.5))
 
 
@@ -1718,16 +1723,16 @@ func _start_flee() -> void:
 func _try_flee(correct: bool) -> void:
 	var chance := maxf(FLEE_SUCCESS_CHANCE - (0.0 if correct else flee_wrong_penalty), 0.0)
 	if not correct and flee_wrong_penalty > 0.0:
-		_push_log("Zła odpowiedź — trudniej uciec (%d %%)." % roundi(chance * 100.0), Color(1.0, 0.55, 0.35))
+		_push_log(QuizRpgI18n.tf("combat.flee_penalty_log", {"chance": roundi(chance * 100.0)}, "Zła odpowiedź — trudniej uciec ({chance} %)."), Color(1.0, 0.55, 0.35))
 	if randf() < chance:
 		result_label.visible = true
-		result_label.text = "Uciekasz!"
+		result_label.text = QuizRpgI18n.t("combat.escaped", "Uciekasz!")
 		result_label.add_theme_color_override("font_color", Color.WHITE)
 		await get_tree().create_timer(1.0).timeout
 		_end_combat(false, true)
 	else:
 		result_label.visible = true
-		result_label.text = "Nie udało się uciec!"
+		result_label.text = QuizRpgI18n.t("combat.escape_failed", "Nie udało się uciec!")
 		result_label.add_theme_color_override("font_color", Color.RED)
 		if action_panel:
 			action_panel.visible = false
@@ -1750,7 +1755,7 @@ func _enemy_act(enemy_index: int) -> bool:
 	enemy_unit.erase("planned_skill")
 	var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
 	if stop != null:
-		_push_log("%s: %s — traci turę." % [enemy_label, stop.localized_name()], stop.color)
+		_push_log(QuizRpgI18n.tf("combat.enemy_skips_turn", {"enemy": enemy_label, "status": stop.localized_name()}, "{enemy}: {status} — traci turę."), stop.color)
 		await get_tree().create_timer(0.6).timeout
 		return false
 	if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
@@ -1759,8 +1764,8 @@ func _enemy_act(enemy_index: int) -> bool:
 	if skill != null:
 		return await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill)
 	if turn_label:
-		turn_label.text = "Tura %d - %s atakuje" % [turn_number, enemy_label]
-	_push_log("%s atakuje!" % enemy_label, Color.WHITE)
+		turn_label.text = QuizRpgI18n.tf("combat.turn_enemy_attacks", {"turn": turn_number, "enemy": enemy_label}, "Tura {turn} - {enemy} atakuje")
+	_push_log(QuizRpgI18n.tf("combat.enemy_attacks_log", {"enemy": enemy_label}, "{enemy} atakuje!"), Color.WHITE)
 	_active_enemy_index = enemy_index
 	_refresh_enemy_header()
 	if enemy_index < _enemy_displays.size() and _enemy_displays[enemy_index] != null:
@@ -1774,8 +1779,8 @@ func _enemy_act(enemy_index: int) -> bool:
 	var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
 	var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
 	if randf() >= _unit_hit_mult(enemy_unit):
-		_push_log("%s pudłuje!" % enemy_label, Color(0.75, 0.75, 0.82))
-		FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
+		_push_log(QuizRpgI18n.tf("combat.enemy_misses_log", {"enemy": enemy_label}, "{enemy} pudłuje!"), Color(0.75, 0.75, 0.82))
+		FloatingText.create_at(player, player.global_position + Vector2(0, -20), QuizRpgI18n.t("combat.dodge_short", "Unik!"), Color(0.8, 0.8, 0.8), 12)
 		await get_tree().create_timer(0.8).timeout
 		return false
 	var actual_damage: int
@@ -1787,14 +1792,14 @@ func _enemy_act(enemy_index: int) -> bool:
 		if actual_damage <= 0:
 			if audio:
 				audio.play_sfx_by_name("hit")
-			result_label.text = "%s odbija się od obrony!" % enemy_label
+			result_label.text = QuizRpgI18n.tf("combat.enemy_defended", {"enemy": enemy_label}, "{enemy} odbija się od obrony!")
 			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 			_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
 		else:
 			if audio:
 				audio.play_sfx_by_name("player_damage")
-			result_label.text = "%s zadaje %d HP%s" % [enemy_label, actual_damage, target_suffix]
+			result_label.text = QuizRpgI18n.tf("combat.enemy_deals_hp", {"enemy": enemy_label, "damage": actual_damage}, "{enemy} zadaje {damage} HP") if _party_state.size() <= 1 else QuizRpgI18n.tf("combat.enemy_deals_hp_target", {"enemy": enemy_label, "damage": actual_damage, "target": _member_name(t)}, "{enemy} zadaje {damage} HP ({target})")
 			result_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.3))
 			_flash_sprite(player_sprite_node, Color(0.8, 0.6, 0.3))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.ORANGE, 12)
@@ -1807,14 +1812,14 @@ func _enemy_act(enemy_index: int) -> bool:
 		if actual_damage <= 0:
 			if audio:
 				audio.play_sfx_by_name("hit")
-			result_label.text = "%s nie przebija pancerza!" % enemy_label
+			result_label.text = QuizRpgI18n.tf("combat.enemy_armor_blocked", {"enemy": enemy_label}, "{enemy} nie przebija pancerza!")
 			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 			_flash_sprite(player_sprite_node, Color(0.75, 0.75, 0.82))
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "0", Color(0.75, 0.75, 0.82), 12)
 		else:
 			if audio:
 				audio.play_sfx_by_name("player_damage")
-			result_label.text = "%s trafia%s! -%d HP" % [enemy_label, target_suffix, actual_damage]  # „atakuje!” jest już w logu — inaczej jeden atak wyglądał jak dwa
+			result_label.text = QuizRpgI18n.tf("combat.enemy_hits", {"enemy": enemy_label, "damage": actual_damage}, "{enemy} trafia! -{damage} HP") if _party_state.size() <= 1 else QuizRpgI18n.tf("combat.enemy_hits_target", {"enemy": enemy_label, "damage": actual_damage, "target": _member_name(t)}, "{enemy} trafia ({target})! -{damage} HP")  # „atakuje!” jest już w logu — inaczej jeden atak wyglądał jak dwa
 			result_label.add_theme_color_override("font_color", Color.RED)
 			_flash_sprite(player_sprite_node, Color.RED)
 			HitParticles.create_at(player, player.global_position, Color.RED, 6)
@@ -1851,7 +1856,7 @@ func _confused_unit_strike(enemy_index: int) -> bool:
 	var dmg := QuizRpgSkillMath.basic_attack(_unit_stats(attacker), _unit_stats(victim))
 	victim["hp"] = maxi(int(victim.get("hp", 0)) - dmg, 0)
 	_enemy_units[ti] = victim
-	_push_log("%s w zamroczeniu atakuje: %s -%d HP" % [str(attacker.get("name", enemy_name_str)), str(victim.get("name", enemy_name_str)), dmg], QuizRpgStatusCatalog.color_of("confusion"))
+	_push_log(QuizRpgI18n.tf("combat.confused_attacks", {"attacker": str(attacker.get("name", enemy_name_str)), "victim": str(victim.get("name", enemy_name_str)), "damage": dmg}, "{attacker} w zamroczeniu atakuje: {victim} -{damage} HP"), QuizRpgStatusCatalog.color_of("confusion"))
 	_unit_on_damaged(ti)
 	_refresh_enemy_cache()
 	_refresh_enemy_header()
@@ -1901,7 +1906,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 		text = QuizRpgI18n.t("combat.enemy_uses_skill", "{enemy} używa: {skill}!")
 	text = text.replace("{enemy}", enemy_label).replace("{skill}", sk.localized_name())
 	if turn_label:
-		turn_label.text = "Tura %d - %s: %s" % [turn_number, enemy_label, sk.localized_name()]
+		turn_label.text = QuizRpgI18n.tf("combat.turn_enemy_skill", {"turn": turn_number, "enemy": enemy_label, "skill": sk.localized_name()}, "Tura {turn} - {enemy}: {skill}")
 	_push_log(text, sk.color)
 	result_label.text = text
 	result_label.add_theme_color_override("font_color", sk.color)
@@ -1924,7 +1929,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 		for t in targets:
 			if not QuizRpgSkillMath.roll_hit(sk, _unit_hit_mult(enemy_unit)):
 				if t == 0:
-					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
+					FloatingText.create_at(player, player.global_position + Vector2(0, -20), QuizRpgI18n.t("combat.dodge_short", "Unik!"), Color(0.8, 0.8, 0.8), 12)
 				continue
 			var full := QuizRpgSkillMath.damage(sk, _unit_stats(enemy_unit), _member_stats(t))
 			var mult := 1.0
@@ -2010,7 +2015,7 @@ func _enemy_heal(enemy_index: int, sk: QuizRpgSkillBase) -> void:
 			continue
 		u["hp"] = int(u.get("hp", 0)) + healed
 		_enemy_units[i] = u
-		_push_log("%s odzyskuje %d HP." % [str(u.get("name", enemy_name_str)), healed], sk.color)
+		_push_log(QuizRpgI18n.tf("combat.recovers_hp", {"name": str(u.get("name", enemy_name_str)), "amount": healed}, "{name} odzyskuje {amount} HP."), sk.color)
 	_refresh_enemy_cache()
 	_refresh_enemy_header()
 	await get_tree().create_timer(0.8).timeout
@@ -2022,7 +2027,7 @@ func _inflict_status(member_index: int, sk: QuizRpgEnemySkill) -> void:
 	var member: Dictionary = _ps.get_party_member(member_index) if _ps.has_method("get_party_member") else {}
 	var st_name: String = _ps.status_name(sk.inflict_status) if _ps.has_method("status_name") else sk.inflict_status
 	var col := QuizRpgStatusCatalog.color_of(sk.inflict_status, sk.color)
-	_push_log("%s: %s!" % [str(member.get("name", "Bohater")), st_name], col)
+	_push_log(QuizRpgI18n.tf("combat.status_inflicted", {"name": str(member.get("name", QuizRpgI18n.t("combat.default_hero_name", "Bohater"))), "status": st_name}, "{name}: {status}!"), col)
 	if member_index == 0:
 		FloatingText.create_at(player, player.global_position + Vector2(0, -34), "%s!" % st_name, col, 12)
 
@@ -2038,13 +2043,13 @@ func _apply_status_round() -> bool:
 			var sid := String(ev["status"])
 			var col := QuizRpgStatusCatalog.color_of(sid, POISON_COLOR)
 			if ev.get("expired", false):
-				_push_log("%s: koniec — %s." % [_member_name(i), QuizRpgStatusCatalog.name_of(sid)], col)
+				_push_log(QuizRpgI18n.tf("combat.status_ended", {"name": _member_name(i), "status": QuizRpgStatusCatalog.name_of(sid)}, "{name}: koniec — {status}."), col)
 				continue
 			var delta := int(ev["hp"])
 			if delta < 0:
-				_push_log("%s: %s -%d HP" % [_member_name(i), QuizRpgStatusCatalog.name_of(sid), -delta], col)
+				_push_log(QuizRpgI18n.tf("combat.status_hp_loss", {"name": _member_name(i), "status": QuizRpgStatusCatalog.name_of(sid), "amount": -delta}, "{name}: {status} -{amount} HP"), col)
 			else:
-				_push_log("%s: %s +%d HP" % [_member_name(i), QuizRpgStatusCatalog.name_of(sid), delta], col)
+				_push_log(QuizRpgI18n.tf("combat.status_hp_gain", {"name": _member_name(i), "status": QuizRpgStatusCatalog.name_of(sid), "amount": delta}, "{name}: {status} +{amount} HP"), col)
 			if i == 0:
 				_flash_sprite(player_sprite_node, col)
 				FloatingText.create_at(player, player.global_position + Vector2(0, -20), "%+d" % delta, col, 14)
@@ -2064,14 +2069,14 @@ func _apply_status_round() -> bool:
 				if delta != 0:
 					unit["hp"] = int(unit.get("hp", 0)) + delta
 					any = true
-					_push_log("%s: %s %+d HP" % [str(unit.get("name", enemy_name_str)), def.localized_name(), delta], def.color)
+					_push_log(QuizRpgI18n.tf("combat.status_hp_gain", {"name": str(unit.get("name", enemy_name_str)), "status": def.localized_name(), "amount": delta}, "{name}: {status} +{amount} HP") if delta > 0 else QuizRpgI18n.tf("combat.status_hp_loss", {"name": str(unit.get("name", enemy_name_str)), "status": def.localized_name(), "amount": -delta}, "{name}: {status} -{amount} HP"), def.color)
 			var data: Dictionary = st[sid] if st[sid] is Dictionary else {}
 			if int(data.get("turns", 0)) > 0:
 				data["turns"] = int(data["turns"]) - 1
 				if int(data["turns"]) <= 0:
 					st.erase(sid)
 					any = true
-					_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
+					_push_log(QuizRpgI18n.tf("combat.status_ended", {"name": str(unit.get("name", enemy_name_str)), "status": def.localized_name()}, "{name}: koniec — {status}."), def.color)
 		unit["statuses"] = st
 		_enemy_units[ti] = unit
 	if not any:
@@ -2126,32 +2131,34 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		if _ps:
 			_ps.add_xp(total_xp_reward)
 			_ps.add_gold(total_gold)
-		var lines: Array[String] = ["%s i drużyna wygrywają walkę!" % (_ps.player_name if _ps else "Bohater")]
-		lines.append("Zdobyto %d EXP!" % total_xp_reward)
+		var lines: Array[String] = [
+			QuizRpgI18n.tf("combat.victory_party", {"name": _ps.player_name if _ps else QuizRpgI18n.t("combat.default_hero_name", "Bohater")}, "{name} i drużyna wygrywają walkę!")
+		]
+		lines.append(QuizRpgI18n.tf("combat.gained_exp", {"amount": total_xp_reward}, "Zdobyto {amount} EXP!"))
 		if total_gold > 0:
-			lines.append("Zdobyto %d złota!" % total_gold)
+			lines.append(QuizRpgI18n.tf("combat.gained_gold", {"amount": total_gold}, "Zdobyto {amount} złota!"))
 		if _ps and _ps.level > lvl_before:
-			lines.append("%s osiąga poziom %d!" % [_ps.player_name, _ps.level])
+			lines.append(QuizRpgI18n.tf("combat.hero_level_up", {"name": _ps.player_name, "level": _ps.level}, "{name} osiąga poziom {level}!"))
 		for i: int in member_levels:
-			lines.append("%s osiąga poziom %d!" % [_member_name(i), int(member_levels[i])])
+			lines.append(QuizRpgI18n.tf("combat.hero_level_up", {"name": _member_name(i), "level": int(member_levels[i])}, "{name} osiąga poziom {level}!"))
 		if _ps and _ps.has_signal("member_level_up") and _ps.member_level_up.is_connected(on_member_level):
 			_ps.member_level_up.disconnect(on_member_level)
 		for skill_name in learned:
-			lines.append("Nowa umiejętność: %s!" % skill_name)
+			lines.append(QuizRpgI18n.tf("combat.new_skill_learned", {"skill": skill_name}, "Nowa umiejętność: {skill}!"))
 		if _ps and _ps.has_signal("skill_learned") and _ps.skill_learned.is_connected(on_learned):
 			_ps.skill_learned.disconnect(on_learned)
 		for item_id in _roll_item_drops():
-			lines.append("Zdobyto: %s!" % _item_display_name(item_id))
+			lines.append(QuizRpgI18n.tf("combat.item_dropped", {"item": _item_display_name(item_id)}, "Zdobyto: {item}!"))
 		_refresh_stats_panel()
 		await _show_message_sequence(lines)
 	elif fled:
 		if audio:
 			audio.play_sfx_by_name("flee")
-		await _show_message_sequence(["Uciekasz!"])
+		await _show_message_sequence([QuizRpgI18n.t("combat.escaped", "Uciekasz!")])
 	else:
 		if audio:
 			audio.play_sfx_by_name("defeat")
-		await _show_message_sequence(["Porażka..."])
+		await _show_message_sequence([QuizRpgI18n.t("combat.defeat", "Porażka...")])
 	_refresh_stats_panel()
 	if player_won or fled or not (_ps and _ps.is_party_defeated()):
 		await _play_exit_transition()  # przy śmierci drużyny zamiast tego ekran śmierci
@@ -3099,7 +3106,7 @@ func _unit_add_status(ti: int, status_id: String) -> bool:
 	st[status_id] = {"turns": def.roll_turns()}
 	unit["statuses"] = st
 	_enemy_units[ti] = unit
-	_push_log("%s: %s!" % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
+	_push_log(QuizRpgI18n.tf("combat.status_inflicted", {"name": str(unit.get("name", enemy_name_str)), "status": def.localized_name()}, "{name}: {status}!"), def.color)
 	return true
 
 
@@ -3111,14 +3118,14 @@ func _unit_on_damaged(ti: int) -> void:
 		var def := QuizRpgStatusCatalog.get_status(String(sid))
 		if def and def.remove_on_damage_chance > 0.0 and randf() < def.remove_on_damage_chance:
 			st.erase(sid)
-			_push_log("%s: koniec — %s." % [str(unit.get("name", enemy_name_str)), def.localized_name()], def.color)
+			_push_log(QuizRpgI18n.tf("combat.status_ended", {"name": str(unit.get("name", enemy_name_str)), "status": def.localized_name()}, "{name}: koniec — {status}."), def.color)
 	unit["statuses"] = st
 	_enemy_units[ti] = unit
 
 
 func _member_name(i: int) -> String:
 	var member: Dictionary = _ps.get_party_member(i) if _ps and _ps.has_method("get_party_member") else {}
-	return str(member.get("name", "Bohater"))
+	return str(member.get("name", QuizRpgI18n.t("combat.default_hero_name", "Bohater")))
 
 
 ## Obrażenia członka drużyny mogą zdjąć status (sen budzi).
@@ -3126,7 +3133,7 @@ func _member_damaged(t: int) -> void:
 	if _ps == null or not _ps.has_method("on_member_damaged"):
 		return
 	for sid in _ps.on_member_damaged(t):
-		_push_log("%s: koniec — %s." % [_member_name(t), QuizRpgStatusCatalog.name_of(String(sid))], QuizRpgStatusCatalog.color_of(String(sid)))
+		_push_log(QuizRpgI18n.tf("combat.status_ended", {"name": _member_name(t), "status": QuizRpgStatusCatalog.name_of(String(sid))}, "{name}: koniec — {status}."), QuizRpgStatusCatalog.color_of(String(sid)))
 
 
 ## HP członka drużyny w walce (bohater z PlayerStats.hp, reszta z danych drużyny).
@@ -3174,19 +3181,20 @@ func _refresh_enemy_header() -> void:
 		if int(enemy_unit.get("hp", 0)) > 0:
 			living_count += 1
 	if living_count <= 0:
-		enemy_name_label.text = "Wrogowie pokonani"
+		enemy_name_label.text = QuizRpgI18n.t("combat.enemies_defeated", "Wrogowie pokonani")
 		if _enemy_name_label:
 			_enemy_name_label.text = enemy_name_label.text
 		return
+	var rem_str: String = QuizRpgI18n.plural("combat.remaining_count", living_count, {"n": living_count})
 	if _active_enemy_index >= 0 and _active_enemy_index < _enemy_units.size():
 		var active_enemy := _enemy_units[_active_enemy_index]
 		var tags: Array[String] = []
 		for def: QuizRpgStatusData in _unit_status_defs(active_enemy):
 			tags.append(def.localized_name())
 		var suffix := "" if tags.is_empty() else "  [%s]" % ", ".join(tags)
-		enemy_name_label.text = "%s%s  (%d pozostało)" % [str(active_enemy.get("name", enemy_name_str)), suffix, living_count]
+		enemy_name_label.text = "%s%s  (%s)" % [str(active_enemy.get("name", enemy_name_str)), suffix, rem_str]
 	else:
-		enemy_name_label.text = "Wrogowie  (%d pozostało)" % living_count
+		enemy_name_label.text = "%s  (%s)" % [QuizRpgI18n.t("combat.enemies", "Wrogowie"), rem_str]
 	if _enemy_name_label:
 		_enemy_name_label.text = enemy_name_label.text
 
@@ -3390,7 +3398,7 @@ func _on_member_recruited(index: int, _hero_id: String) -> void:
 		_party_state.append(_new_member_state())
 		_sync_party_member_from_player(_party_state.size() - 1)
 	if index < party_rows.size():
-		_push_log("%s dołącza do walki!" % _member_name(index), Color(0.55, 0.85, 1.0))
+		_push_log(QuizRpgI18n.tf("combat.member_joins_battle", {"name": _member_name(index)}, "{name} dołącza do walki!"), Color(0.55, 0.85, 1.0))
 	_refresh_stats_panel()
 
 

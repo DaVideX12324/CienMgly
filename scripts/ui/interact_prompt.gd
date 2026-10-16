@@ -56,7 +56,7 @@ func _process(_delta: float) -> void:
 	if target == null or not _is_exploring():
 		_panel.visible = false
 		return
-	_label.text = "[%s] %s" % [_key_name(), _targets[target]]
+	_label.text = "[%s] %s" % [_key_name(), QuizRpgI18n.t(_targets[target], _targets[target])]
 	var offset: Vector2 = target.call("interaction_prompt_offset") if target.has_method("interaction_prompt_offset") else DEFAULT_OFFSET
 	var screen: Vector2 = target.get_viewport().get_canvas_transform() * (target.global_position + offset)
 	_panel.reset_size()

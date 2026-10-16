@@ -325,7 +325,7 @@ func _handle_close_input(event: InputEvent) -> bool:
 				_show_default_party_panel()
 		"skills_list":
 			_mode = "skills_party_select"
-			_show_party_select_panel("Wybierz postać dla umiejętności")
+			_show_party_select_panel(QuizRpgI18n.t("pause.party_select_skill", "Wybierz postać dla umiejętności"))
 		"skill_target_select":
 			_pending_skill_id = ""
 			_mode = "skills_list"
@@ -339,10 +339,10 @@ func _handle_close_input(event: InputEvent) -> bool:
 				_show_equipment_panel()
 			else:
 				_mode = "equip_party_select"
-				_show_party_select_panel("Wybierz postać do ekwipunku")
+				_show_party_select_panel(QuizRpgI18n.t("pause.party_select_equip", "Wybierz postać do ekwipunku"))
 		"status_view":
 			_mode = "status_party_select"
-			_show_party_select_panel("Wybierz postać do statusu")
+			_show_party_select_panel(QuizRpgI18n.t("pause.party_select_status", "Wybierz postać do statusu"))
 		"confirm_exit":
 			if _opened_direct_exit:
 				_opened_direct_exit = false
@@ -537,15 +537,15 @@ func _accept_left_menu() -> void:
 		"MenuRow1":
 			_mode = "skills_party_select"
 			_party_index = 0
-			_show_party_select_panel("Wybierz postać dla umiejętności")
+			_show_party_select_panel(QuizRpgI18n.t("pause.party_select_skill", "Wybierz postać dla umiejętności"))
 		"MenuRow2":
 			_mode = "equip_party_select"
 			_party_index = 0
-			_show_party_select_panel("Wybierz postać do ekwipunku")
+			_show_party_select_panel(QuizRpgI18n.t("pause.party_select_equip", "Wybierz postać do ekwipunku"))
 		"MenuRow3":
 			_mode = "status_party_select"
 			_party_index = 0
-			_show_party_select_panel("Wybierz postać do statusu")
+			_show_party_select_panel(QuizRpgI18n.t("pause.party_select_status", "Wybierz postać do statusu"))
 		"MenuRowFormation":
 			_mode = "formation_select"
 			_party_index = 0
@@ -583,7 +583,7 @@ func _resolve_options_menu() -> CanvasLayer:
 func _open_options_menu() -> void:
 	var opt_menu: CanvasLayer = _resolve_options_menu()
 	if opt_menu == null:
-		_show_toast("Nie udało się otworzyć opcji.")
+		_show_toast(QuizRpgI18n.t("pause.options_open_failed", "Nie udało się otworzyć opcji."))
 		return
 	_mode = "options"
 	if opt_menu.has_signal("closed") and not opt_menu.closed.is_connected(_on_options_menu_closed):
@@ -592,7 +592,7 @@ func _open_options_menu() -> void:
 	if opt_menu.has_method("embed_in"):
 		opt_menu.call("embed_in", get_node("PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody"))
 		_show_panel("options")
-		context_title_label.text = "Opcje"
+		context_title_label.text = QuizRpgI18n.t("pause.title_options", "Opcje")
 	if opt_menu.has_method("open"):
 		opt_menu.call("open")
 	else:
@@ -610,12 +610,12 @@ func _accept_items_list() -> void:
 		return
 	var entry: Dictionary = _current_item_entries[_items_index]
 	if not bool(entry.get("usable_in_menu", true)) or int(entry.get("count", 0)) <= 0:
-		_show_toast("Nie można użyć tego przedmiotu.")
+		_show_toast(QuizRpgI18n.t("pause.cannot_use_item", "Nie można użyć tego przedmiotu."))
 		return
 	_pending_item_id = str(entry.get("item_id", ""))
 	_mode = "item_target_select"
 	_party_index = 0
-	_show_party_select_panel("Wybierz postać dla przedmiotu")
+	_show_party_select_panel(QuizRpgI18n.t("pause.party_select_item", "Wybierz postać dla przedmiotu"))
 
 
 func _use_pending_item_on_member() -> void:
@@ -625,7 +625,7 @@ func _use_pending_item_on_member() -> void:
 	_pending_item_id = ""
 	_mode = "items_list"
 	_show_items_panel()
-	_show_toast(str(result.get("message", "Użyto przedmiotu.")))
+	_show_toast(str(result.get("message", QuizRpgI18n.t("pause.item_used", "Użyto przedmiotu."))))
 
 
 func _use_selected_skill() -> void:
@@ -633,10 +633,10 @@ func _use_selected_skill() -> void:
 		return
 	var entry: Dictionary = _current_skill_entries[_skills_index]
 	if not bool(entry.get("usable_in_menu", false)):
-		_show_toast("%s — tylko w walce." % str(entry.get("name", "Umiejętność")))
+		_show_toast(QuizRpgI18n.tf("pause.skill_combat_only", {"name": str(entry.get("name", QuizRpgI18n.t("pause.default_skill_name", "Umiejętność")))}, "{name} — tylko w walce."))
 		return
 	if bool(entry.get("disabled", false)):
-		_show_toast("Za mało SP / TP.")
+		_show_toast(QuizRpgI18n.t("pause.not_enough_sp_tp", "Za mało SP / TP."))
 		return
 	_pending_skill_id = str(entry.get("skill_id", ""))
 	var res := entry.get("resource") as QuizRpgSkillBase
@@ -646,7 +646,7 @@ func _use_selected_skill() -> void:
 		return
 	_mode = "skill_target_select"
 	_party_index = 0
-	_show_party_select_panel("Na kogo użyć: %s" % str(entry.get("name", "")))
+	_show_party_select_panel(QuizRpgI18n.tf("pause.party_select_target", {"name": str(entry.get("name", ""))}, "Na kogo użyć: {name}"))
 
 
 func _use_pending_skill_on_member() -> void:
@@ -677,12 +677,12 @@ func _accept_equip_action() -> void:
 			if _ps and _ps.has_method("optimize_member_equipment"):
 				_ps.optimize_member_equipment(_selected_member_index)
 			_show_equipment_panel()
-			_show_toast("Zoptymalizowano ekwipunek.")
+			_show_toast(QuizRpgI18n.t("pause.equipment_optimized", "Zoptymalizowano ekwipunek."))
 		2:
 			if _ps and _ps.has_method("clear_member_equipment"):
 				_ps.clear_member_equipment(_selected_member_index)
 			_show_equipment_panel()
-			_show_toast("Zdjęto cały ekwipunek.")
+			_show_toast(QuizRpgI18n.t("pause.equipment_removed_all", "Zdjęto cały ekwipunek."))
 
 
 func _accept_equip_item() -> void:
@@ -696,7 +696,7 @@ func _accept_equip_item() -> void:
 	if success:
 		_mode = "equip_slots"
 		_show_equipment_panel()
-		_show_toast("Zmieniono wyposażenie.")
+		_show_toast(QuizRpgI18n.t("pause.equipment_changed", "Zmieniono wyposażenie."))
 
 
 func _cleanup_combat_ui() -> void:
@@ -741,7 +741,7 @@ func _show_default_party_panel() -> void:
 	for row in _party_rows:
 		row.modulate = Color.WHITE
 	_show_panel("party")
-	context_title_label.text = "Drużyna"
+	context_title_label.text = QuizRpgI18n.t("pause.title_party", "Drużyna")
 	party_hint_label.text = ""
 	_party_rows_selectable = false
 	_refresh_left_menu_rows()
@@ -751,7 +751,7 @@ func _show_default_party_panel() -> void:
 func _show_party_select_panel(title_text: String) -> void:
 	_show_panel("party")
 	context_title_label.text = title_text
-	party_hint_label.text = "Enter/Z: potwierdź    X/Esc: wróć"
+	party_hint_label.text = QuizRpgI18n.t("pause.hint_confirm_back", "Enter/Z: potwierdź    X/Esc: wróć")
 	_party_rows_selectable = true
 	_rebuild_party_rows(true)
 
@@ -760,9 +760,9 @@ func _show_party_select_panel(title_text: String) -> void:
 func _show_formation_panel() -> void:
 	if _formation_pick >= 0:
 		var picked: Dictionary = _ps.get_party_member(_formation_pick) if _ps else {}
-		_show_party_select_panel("Szyk: z kim zamienić — %s?" % str(picked.get("name", "?")))
+		_show_party_select_panel(QuizRpgI18n.tf("pause.formation_swap", {"name": str(picked.get("name", "?"))}, "Szyk: z kim zamienić — {name}?"))
 	else:
-		_show_party_select_panel("Szyk: wybierz postać (pierwsza prowadzi drużynę)")
+		_show_party_select_panel(QuizRpgI18n.t("pause.formation_select", "Szyk: wybierz postać (pierwsza prowadzi drużynę)"))
 	for i in range(_party_rows.size()):
 		_party_rows[i].modulate = Color(1.0, 0.85, 0.45) if i == _formation_pick else Color.WHITE
 
@@ -780,7 +780,7 @@ func _accept_formation() -> void:
 
 func _show_items_panel() -> void:
 	_show_panel("items")
-	context_title_label.text = "Przedmioty"
+	context_title_label.text = QuizRpgI18n.t("pause.title_items", "Przedmioty")
 	_rebuild_item_tabs()
 	_rebuild_item_rows()
 
@@ -795,14 +795,14 @@ func _get_current_party_member() -> Dictionary:
 
 func _show_skills_panel() -> void:
 	_show_panel("skills")
-	context_title_label.text = "Umiejętności"
+	context_title_label.text = QuizRpgI18n.t("pause.title_skills", "Umiejętności")
 	_populate_actor_header(skills_actor_header, _get_current_party_member(), true)
 	_rebuild_skill_rows()
 
 
 func _show_equipment_panel() -> void:
 	_show_panel("equipment")
-	context_title_label.text = "Ekwipunek"
+	context_title_label.text = QuizRpgI18n.t("pause.title_equipment", "Ekwipunek")
 	var member: Dictionary = _get_current_party_member()
 	_populate_actor_header(equipment_actor_header, member, true)
 	var atk: int = _ps.get_member_total_atk(_selected_member_index) if _ps and _ps.has_method("get_member_total_atk") else 0
@@ -817,12 +817,12 @@ func _show_equipment_panel() -> void:
 	if _mode == "equip_item_list":
 		equipment_footer_label.text = str(_current_equip_entries[_equip_item_index].get("description", "")) if _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size() else ""
 	else:
-		equipment_footer_label.text = "Enter/Z: wybierz    X/Esc: wróć"
+		equipment_footer_label.text = QuizRpgI18n.t("pause.hint_select_back", "Enter/Z: wybierz    X/Esc: wróć")
 
 
 func _show_status_panel() -> void:
 	_show_panel("status")
-	context_title_label.text = "Status"
+	context_title_label.text = QuizRpgI18n.t("pause.title_status", "Status")
 	var member: Dictionary = _get_current_party_member()
 	_populate_actor_header(status_actor_header, member, true)
 	_rebuild_status_panel(member)
@@ -830,18 +830,18 @@ func _show_status_panel() -> void:
 
 func _show_confirm_panel() -> void:
 	_show_panel("confirm")
-	context_title_label.text = "Wyjscie"
-	confirm_label.text = "Co chcesz zrobić?"
+	context_title_label.text = QuizRpgI18n.t("pause.title_exit", "Wyjście")
+	confirm_label.text = QuizRpgI18n.t("pause.confirm_prompt", "Co chcesz zrobić?")
 	_rebuild_confirm_rows()
 
 
 func _show_save_panel() -> void:
 	_show_panel("save")
-	context_title_label.text = "Zapis gry"
+	context_title_label.text = QuizRpgI18n.t("pause.title_save", "Zapis gry")
 	if _is_in_combat():
-		save_hint_label.text = "Zapisywanie jest niedostępne w trakcie walki.    X/Esc: wróć"
+		save_hint_label.text = QuizRpgI18n.t("pause.save_disabled_combat", "Zapisywanie jest niedostępne w trakcie walki.    X/Esc: wróć")
 	else:
-		save_hint_label.text = "Enter/Z: zapisz    A/Left: usuń slot    D/Right: dodaj slot    X/Esc: wróć"
+		save_hint_label.text = QuizRpgI18n.t("pause.save_hint", "Enter/Z: zapisz    A/Left: usuń slot    D/Right: dodaj slot    X/Esc: wróć")
 	_rebuild_save_slots()
 
 
@@ -1086,7 +1086,7 @@ func _rebuild_item_rows() -> void:
 			_set_simple_row(row, str(entry.get("name", "---")), "×%s" % str(entry.get("display_count", int(entry.get("count", 0)))), false, true, entry.get("icon") as Texture2D)
 			_current_item_entries.append(entry)
 	if _current_item_entries.is_empty():
-		items_footer_label.text = "Brak przedmiotów w tej zakładce."
+		items_footer_label.text = QuizRpgI18n.t("pause.no_items_tab", "Brak przedmiotów w tej zakładce.")
 	else:
 		_items_index = clampi(_items_index, 0, _current_item_entries.size() - 1)
 		_refresh_item_rows()
@@ -1130,7 +1130,7 @@ func _rebuild_skill_rows() -> void:
 			skill_copy["disabled"] = disabled
 			_current_skill_entries.append(skill_copy)
 	if _current_skill_entries.is_empty():
-		skills_footer_label.text = "Brak umiejętności."
+		skills_footer_label.text = QuizRpgI18n.t("pause.no_skills", "Brak umiejętności.")
 		return
 	_skills_index = clampi(_skills_index, 0, _current_skill_entries.size() - 1)
 	_refresh_skill_rows()
@@ -1212,7 +1212,7 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 	var is_hero: bool = _ps != null and _ps.has_method("is_hero") and _ps.is_hero(_selected_member_index)
 	var exp_to_next: int = _ps.xp_to_next_level() if is_hero else 0
 	var current_xp: int = _ps.xp if is_hero else 0
-	status_info_label.text = "LV %d   Exp %d   Do następnego poziomu %d" % [int(member.get("level", 1)), current_xp, exp_to_next]
+	status_info_label.text = QuizRpgI18n.tf("pause.status_info", {"level": int(member.get("level", 1)), "xp": current_xp, "next": exp_to_next}, "LV {level}   Exp {xp}   Do następnego poziomu {next}")
 	if _status_bar_rows.size() >= 2:
 		_populate_bar_row(_status_bar_rows[0] as HBoxContainer, "HP", int(member.get("hp", 0)), int(member.get("max_hp", 1)))
 		_populate_bar_row(_status_bar_rows[1] as HBoxContainer, "SP", int(member.get("sp", 0)), int(member.get("max_sp", 1)))
@@ -1232,11 +1232,11 @@ func _rebuild_status_panel(member: Dictionary) -> void:
 
 func _rebuild_confirm_rows() -> void:
 	if _confirm_rows.size() > 0:
-		_set_simple_row(_confirm_rows[0], "M Do menu głównego", "")
+		_set_simple_row(_confirm_rows[0], QuizRpgI18n.t("pause.confirm_main_menu", "M Do menu głównego"), "")
 	if _confirm_rows.size() > 1:
-		_set_simple_row(_confirm_rows[1], "Q Wyjście z gry", "")
+		_set_simple_row(_confirm_rows[1], QuizRpgI18n.t("pause.confirm_quit", "Q Wyjście z gry"), "")
 	if _confirm_rows.size() > 2:
-		_set_simple_row(_confirm_rows[2], "N Anuluj", "")
+		_set_simple_row(_confirm_rows[2], QuizRpgI18n.t("pause.confirm_cancel", "N Anuluj"), "")
 	_refresh_confirm_rows()
 
 
@@ -1273,7 +1273,7 @@ func _refresh_save_slot_rows() -> void:
 			str(slot_entry.get("detail", "")),
 		]
 	else:
-		save_footer_label.text = "Pusty slot. Enter/Z zapisze aktualną grę do tego miejsca."
+		save_footer_label.text = QuizRpgI18n.t("pause.save_slot_empty_hint", "Pusty slot. Enter/Z zapisze aktualną grę do tego miejsca.")
 
 
 func _populate_save_slot_row(row: Control, slot_entry: Dictionary) -> void:
@@ -1289,38 +1289,38 @@ func _populate_save_slot_row(row: Control, slot_entry: Dictionary) -> void:
 
 func _save_to_selected_slot() -> void:
 	if _is_in_combat():
-		_show_toast("Nie można zapisać gry w trakcie walki.")
+		_show_toast(QuizRpgI18n.t("pause.cannot_save_in_combat", "Nie można zapisać gry w trakcie walki."))
 		return
 	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
 		return
 	if _gm and _gm.has_method("save_game") and _gm.save_game(_save_slot_index):
 		_show_save_panel()
-		_show_toast("Zapisano do slotu %d." % (_save_slot_index + 1))
+		_show_toast(QuizRpgI18n.tf("pause.saved_to_slot", {"slot": _save_slot_index + 1}, "Zapisano do slotu {slot}."))
 
 
 func _add_save_slot() -> void:
 	if _is_in_combat():
-		_show_toast("Nie można modyfikować slotów w trakcie walki.")
+		_show_toast(QuizRpgI18n.t("pause.cannot_modify_slots_in_combat", "Nie można modyfikować slotów w trakcie walki."))
 		return
 	if _gm == null or not _gm.has_method("add_save_slot"):
 		return
 	_save_slot_index = int(_gm.add_save_slot())
 	_show_save_panel()
-	_show_toast("Dodano slot %d." % (_save_slot_index + 1))
+	_show_toast(QuizRpgI18n.tf("pause.slot_added", {"slot": _save_slot_index + 1}, "Dodano slot {slot}."))
 
 
 func _delete_selected_save_slot() -> void:
 	if _is_in_combat():
-		_show_toast("Nie można modyfikować slotów w trakcie walki.")
+		_show_toast(QuizRpgI18n.t("pause.cannot_modify_slots_in_combat", "Nie można modyfikować slotów w trakcie walki."))
 		return
 	if _gm == null or not _gm.has_method("delete_save_slot"):
 		return
 	if _gm.delete_save_slot(_save_slot_index):
 		_save_slot_index = maxi(0, _save_slot_index - 1)
 		_show_save_panel()
-		_show_toast("Usunięto slot.")
+		_show_toast(QuizRpgI18n.t("pause.slot_deleted", "Usunięto slot."))
 	else:
-		_show_toast("Nie można usunąć tego slotu.")
+		_show_toast(QuizRpgI18n.t("pause.cannot_delete_slot", "Nie można usunąć tego slotu."))
 
 
 func _populate_actor_header(target: HBoxContainer, member: Dictionary, show_bars: bool) -> void:
@@ -1562,12 +1562,12 @@ func _delta_sign(value: int) -> String:
 func _save_game() -> void:
 	if _gm and _gm.has_method("save_game"):
 		if _gm.save_game():
-			_show_toast("Zapisano.")
+			_show_toast(QuizRpgI18n.t("pause.saved", "Zapisano."))
 		else:
 			_mode = "save_slots"
 			_save_slot_index = 0
 			_show_save_panel()
-			_show_toast("Wybierz slot zapisu.")
+			_show_toast(QuizRpgI18n.t("pause.select_save_slot", "Wybierz slot zapisu."))
 
 
 func _show_toast(text: String) -> void:
@@ -1589,22 +1589,22 @@ func _on_player_data_changed() -> void:
 			if _mode == "items_list":
 				_show_items_panel()
 			else:
-				_show_party_select_panel("Wybierz postać dla przedmiotu")
+				_show_party_select_panel(QuizRpgI18n.t("pause.party_select_item", "Wybierz postać dla przedmiotu"))
 		"skills_party_select", "skills_list":
 			if _mode == "skills_list":
 				_show_skills_panel()
 			else:
-				_show_party_select_panel("Wybierz postać dla umiejętności")
+				_show_party_select_panel(QuizRpgI18n.t("pause.party_select_skill", "Wybierz postać dla umiejętności"))
 		"equip_party_select", "equip_actions", "equip_slots", "equip_item_list":
 			if _mode == "equip_party_select":
-				_show_party_select_panel("Wybierz postać do ekwipunku")
+				_show_party_select_panel(QuizRpgI18n.t("pause.party_select_equip", "Wybierz postać do ekwipunku"))
 			else:
 				_show_equipment_panel()
 		"status_party_select", "status_view":
 			if _mode == "status_view":
 				_show_status_panel()
 			else:
-				_show_party_select_panel("Wybierz postać do statusu")
+				_show_party_select_panel(QuizRpgI18n.t("pause.party_select_status", "Wybierz postać do statusu"))
 		"save_slots":
 			_show_save_panel()
 
@@ -1615,9 +1615,7 @@ func _refresh_score() -> void:
 		return
 	score_label.visible = _ps != null
 	if _ps:
-		score_label.text = "Punkty %d
-Seria x%d
-Złoto %d" % [int(_ps.points), int(_ps.streak), int(_ps.gold)]
+		score_label.text = QuizRpgI18n.tf("pause.score_summary", {"points": int(_ps.points), "streak": int(_ps.streak), "gold": int(_ps.gold)}, "Punkty {points}\nSeria x{streak}\nZłoto {gold}")
 
 
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:

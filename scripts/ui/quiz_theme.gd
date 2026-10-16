@@ -95,6 +95,54 @@ const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_list_layout", "label": "Umiejętności i przedmioty w walce", "type": "choice", "default": "grid",
 		"choices": [{"id": "grid", "name": "Siatka (2 kolumny)"}, {"id": "list", "name": "Lista przewijana"}]},
 ]
+
+
+static func get_skins() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for s in SKINS:
+		var item: Dictionary = s.duplicate()
+		var key: String = "theme.skin." + str(item.get("id", ""))
+		item["name"] = QuizRpgI18n.t(key, str(item.get("name", "")))
+		result.append(item)
+	return result
+
+
+static func get_bar_styles() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for b in BAR_STYLES:
+		var item: Dictionary = b.duplicate()
+		var key: String = "theme.bar." + str(item.get("id", ""))
+		item["name"] = QuizRpgI18n.t(key, str(item.get("name", "")))
+		result.append(item)
+	return result
+
+
+static func get_ui_options() -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for opt in UI_OPTIONS:
+		var item: Dictionary = opt.duplicate(true)
+		var k: String = str(item.get("key", "")).trim_prefix("ui_")
+		item["label"] = QuizRpgI18n.t("theme.opt." + k, str(item.get("label", "")))
+		if item.has("choices"):
+			var choices: Array = []
+			for ch in item["choices"]:
+				var choice_item: Dictionary = ch.duplicate()
+				var cid: String = str(choice_item.get("id", ""))
+				var choice_key: String = ""
+				if k == "question_position":
+					choice_key = "theme.opt.question_pos_" + cid
+				elif k == "answers_layout":
+					choice_key = "theme.opt.layout_" + cid
+				elif k == "list_layout":
+					choice_key = "theme.opt.layout_grid" if cid == "grid" else "theme.opt.list_scroll"
+				if choice_key != "":
+					choice_item["name"] = QuizRpgI18n.t(choice_key, str(choice_item.get("name", "")))
+				choices.append(choice_item)
+			item["choices"] = choices
+		result.append(item)
+	return result
+
+
 const DEFAULT_BAR_STYLE := "klasyczny"
 ## Style pasków (osobno od motywu okien): plik SKIN_DIR + "bars_" + id + ".tres" (tests/build_ui_skins.gd).
 ## Style z Pixel UI pack 3 (assets/UI/Pixel UI pack 3/Full.png, 05.png).

@@ -27,38 +27,27 @@ func _populate() -> void:
 	var accuracy     := QuizManager.get_overall_accuracy()
 	var total_answered : int = _ps.total_correct + _ps.total_wrong
 
-	stats_text.text = """[b]Postepy gracza[/b]
-
-[b]Poziom:[/b] %d
-[b]XP:[/b] %d / %d
-[b]Punkty:[/b] %d
-[b]HP:[/b] %d / %d
-
-[b]Quiz \u2014 statystyki[/b]
-Odpowiedzi ogolem: %d
-Poprawne: %d (%.0f%%)
-Bledne: %d
-Aktualna seria: %d
-Najlepsza seria: %d
-Bonus RNG: +%.0f%%""" % [
-		_ps.level,
-		_ps.xp, _ps.xp_to_next_level(),
-		_ps.points,
-		_ps.hp, _ps.max_hp,
-		total_answered,
-		_ps.total_correct, accuracy * 100.0,
-		_ps.total_wrong,
-		_ps.streak,
-		_ps.best_streak,
-		_ps.rng_bonus * 100.0,
-	]
+	stats_text.text = (
+		"[b]" + QuizRpgI18n.t("stats.progress_title", "Postępy gracza") + "[/b]\n\n"
+		+ "[b]" + QuizRpgI18n.t("stats.level", "Poziom:") + "[/b] %d\n" % _ps.level
+		+ "[b]XP:[/b] %d / %d\n" % [_ps.xp, _ps.xp_to_next_level()]
+		+ "[b]" + QuizRpgI18n.t("stats.points", "Punkty:") + "[/b] %d\n" % _ps.points
+		+ "[b]HP:[/b] %d / %d\n\n" % [_ps.hp, _ps.max_hp]
+		+ "[b]" + QuizRpgI18n.t("stats.quiz_stats", "Quiz — statystyki") + "[/b]\n"
+		+ QuizRpgI18n.tf("stats.total_answers", {"total": total_answered}, "Odpowiedzi ogółem: {total}") + "\n"
+		+ QuizRpgI18n.tf("stats.correct_answers", {"correct": _ps.total_correct, "accuracy": "%.0f" % (accuracy * 100.0)}, "Poprawne: {correct} ({accuracy}%)") + "\n"
+		+ QuizRpgI18n.tf("stats.wrong_answers", {"wrong": _ps.total_wrong}, "Błędne: {wrong}") + "\n"
+		+ QuizRpgI18n.tf("stats.current_streak", {"streak": _ps.streak}, "Aktualna seria: {streak}") + "\n"
+		+ QuizRpgI18n.tf("stats.best_streak", {"best_streak": _ps.best_streak}, "Najlepsza seria: {best_streak}") + "\n"
+		+ QuizRpgI18n.tf("stats.rng_bonus", {"rng_bonus": "%.0f" % (_ps.rng_bonus * 100.0)}, "Bonus RNG: +{rng_bonus}%")
+	)
 
 	# Trudnosc per kategoria
-	var diff_text := "[b]Adaptacyjna trudnosc[/b]\n"
+	var diff_text := "[b]" + QuizRpgI18n.t("stats.adaptive_difficulty", "Adaptacyjna trudność") + "[/b]\n"
 	if _dm:
-		diff_text += "Globalna: %.1f / 5\n" % _dm.get_global_difficulty()
+		diff_text += QuizRpgI18n.tf("stats.global_difficulty", {"diff": "%.1f" % _dm.get_global_difficulty()}, "Globalna: {diff} / 5\n")
 	else:
-		diff_text += "(DifficultyManager niedostepny)\n"
+		diff_text += QuizRpgI18n.t("stats.dm_unavailable", "(DifficultyManager niedostępny)\n")
 	if difficulty_text:
 		difficulty_text.text = diff_text
 
@@ -68,12 +57,12 @@ Bonus RNG: +%.0f%%""" % [
 			child.queue_free()
 		if _ps.rewards.is_empty():
 			var lbl = Label.new()
-			lbl.text = "Brak nagrod \u2014 graj dalej!"
+			lbl.text = QuizRpgI18n.t("stats.no_rewards", "Brak nagród — graj dalej!")
 			rewards_list.add_child(lbl)
 		else:
 			for r in _ps.rewards:
 				var lbl = Label.new()
-				lbl.text = "\U0001F3C6 " + r
+				lbl.text = "\U0001F3C6 " + QuizRpgI18n.t("reward." + r, r)
 				rewards_list.add_child(lbl)
 
 

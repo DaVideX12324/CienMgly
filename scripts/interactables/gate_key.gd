@@ -47,8 +47,8 @@ func _on_body_entered(body: Node2D) -> void:
 	if loot and loot.has_method("show_loot_popup"):
 		loot.call("show_loot_popup", {
 			"found": true,
-			"title": "Klucz do przejscia",
-			"message": "Pasuje do zamka przy kracie z kolcow. Klucze: %d." % GateStateScript.keys_available(self),
-			"detail": "Nacisnij E albo Enter, aby kontynuowac.",
+			"title": QuizRpgI18n.t("loot.gate_key_title", "Klucz do przejścia"),
+			"message": QuizRpgI18n.tf("loot.gate_key_msg", {"count": GateStateScript.keys_available(self)}, "Pasuje do zamka przy kracie z kolców. Klucze: {count}."),
+			"detail": QuizRpgI18n.t("loot.continue_hint", "Naciśnij E albo Enter, aby kontynuować."),
 		})
 	queue_free()

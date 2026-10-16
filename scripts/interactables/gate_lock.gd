@@ -49,7 +49,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 	var audio := get_node_or_null("/root/AudioService")
 	if GateStateScript.keys_available(self) <= 0:
-		InteractPromptScript.request(self, "Brak klucza")
+		InteractPromptScript.request(self, QuizRpgI18n.t("prompt.no_key", "Brak klucza"))
 		return
 	_show(true)
 	InteractPromptScript.release(self)
@@ -60,7 +60,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _prompt_text() -> String:
-	return "Wloz klucz" if GateStateScript.keys_available(self) > 0 else "Zamek (brak klucza)"
+	return QuizRpgI18n.t("prompt.insert_key", "Włóż klucz") if GateStateScript.keys_available(self) > 0 else QuizRpgI18n.t("prompt.lock_no_key", "Zamek (brak klucza)")
 
 
 func _on_body_entered(body: Node2D) -> void:

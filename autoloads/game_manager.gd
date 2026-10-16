@@ -216,9 +216,9 @@ func new_game(slot_index: int = 0) -> void:
 ## Powrót do menu głównego (ekran śmierci, menu pauzy): ekran ładowania przykrywa przełączenie sceny.
 func return_to_main_menu() -> void:
 	change_state(GameState.MENU)
-	var overlay := MenuTransition.cover(get_tree(), "Ładowanie…", "Menu główne", 0.2, "Powrót do menu")
+	var overlay := MenuTransition.cover(get_tree(), QuizRpgI18n.t("ui.loading.default_title", "Ładowanie…"), QuizRpgI18n.t("ui.loading.main_menu", "Menu główne"), 0.2, QuizRpgI18n.t("ui.loading.return_to_menu", "Powrót do menu"))
 	await transition_to_scene(QuizRpgPaths.path("scenes/ui/main_menu.tscn"))
-	MenuTransition.uncover(get_tree(), overlay, MenuTransition.MENU_HOLD_SEC, "Menu główne")
+	MenuTransition.uncover(get_tree(), overlay, MenuTransition.MENU_HOLD_SEC, QuizRpgI18n.t("ui.loading.main_menu", "Menu główne"))
 
 
 func log_debug(message: Variant, category: String = "GENERAL") -> void:

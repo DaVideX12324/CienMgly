@@ -24,9 +24,10 @@ func setup(styles: Array, current: String, font_size: int = 16) -> void:
 		cell.name = "Cell_" + id
 		cell.button_group = _group
 		cell.theme = QuizTheme.bar_preview_theme(id)
-		cell.tooltip_text = str(st.get("name", id))
+		var name_str: String = QuizRpgI18n.t(str(st.get("name", id)), str(st.get("name", id)))
+		cell.tooltip_text = name_str
 		var lbl := cell.get_node("%Name") as Label
-		lbl.text = str(st.get("name", id))
+		lbl.text = name_str
 		lbl.add_theme_font_size_override("font_size", _font_size)
 		cell.button_pressed = id == cur
 		cell.pressed.connect(func() -> void: style_selected.emit(id))

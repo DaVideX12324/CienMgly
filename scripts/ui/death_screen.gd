@@ -44,7 +44,7 @@ func _ready() -> void:
 		b.mouse_entered.connect(_on_hover.bind(b))
 	_load_button.disabled = _load_slot() < 0
 	if _load_button.disabled:
-		_load_button.tooltip_text = "Brak zapisu"
+		_load_button.tooltip_text = QuizRpgI18n.t("death.no_save", "Brak zapisu")
 	_selected = 1 if _load_button.disabled else 0
 	_refresh_selection()
 	var audio := get_node_or_null("/root/AudioService")
@@ -126,7 +126,7 @@ func _open_slots() -> void:
 		row.theme_type_variation = &"QuizMenuItem"
 		row.custom_minimum_size = Vector2(600, 0)
 		row.text = "%s — %s
-%s  |  %s" % [summary.get("slot_name", "Slot"), summary.get("title", ""), summary.get("subtitle", ""), summary.get("detail", "")]
+%s  |  %s" % [summary.get("slot_name", QuizRpgI18n.t("death.default_slot_name", "Slot")), summary.get("title", ""), summary.get("subtitle", ""), summary.get("detail", "")]
 		row.pressed.connect(_on_slot_chosen.bind(slot))
 		row.mouse_entered.connect(_on_hover.bind(row))
 		_slot_list.add_child(row)

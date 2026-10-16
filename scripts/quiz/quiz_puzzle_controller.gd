@@ -67,7 +67,7 @@ func _ready() -> void:
 
 	if title_label:
 		if door and "door_name" in door:
-			title_label.text = "🔒 " + door.door_name
+			title_label.text = "🔒 " + QuizRpgI18n.t(str(door.door_name), str(door.door_name))
 		else:
 			title_label.text = "🔒 Zagadka"
 
@@ -183,12 +183,12 @@ func _on_answer_pressed(index: int) -> void:
 			_ps.on_correct_answer()
 		if _dm:
 			_dm.record_answer(category, true)
-		feedback_label.text = "✓ Poprawnie!"
+		feedback_label.text = "✓ " + QuizRpgI18n.t("puzzle.correct", "Poprawnie!")
 		feedback_label.add_theme_color_override("font_color", Color.GREEN)
 
 		if _ps and _ps.roll_with_bonus(0.15):
 			current_correct += 1
-			feedback_label.text += " (Bonus! +1 postęp)"
+			feedback_label.text += " " + QuizRpgI18n.t("puzzle.bonus_progress", "(Bonus! +1 postęp)")
 	else:
 		if audio:
 			audio.play_sfx_by_name("wrong")
@@ -198,7 +198,7 @@ func _on_answer_pressed(index: int) -> void:
 			_ps.on_wrong_answer()
 		if _dm:
 			_dm.record_answer(category, false)
-		feedback_label.text = "✗ Źle! " + result.get("explanation", "")
+		feedback_label.text = "✗ " + QuizRpgI18n.t("puzzle.wrong", "Źle!") + " " + result.get("explanation", "")
 		feedback_label.add_theme_color_override("font_color", Color.RED)
 
 	current_question += 1
@@ -224,7 +224,7 @@ func _update_progress() -> void:
 	if progress_bar:
 		progress_bar.value = (float(current_correct) / float(required_correct)) * 100.0
 	if progress_label:
-		progress_label.text = "%d / %d poprawnych odpowiedzi" % [current_correct, required_correct]
+		progress_label.text = QuizRpgI18n.tf("puzzle.progress", {"correct": current_correct, "required": required_correct}, "{correct} / {required} poprawnych odpowiedzi")
 
 
 func _on_overlay_answered(result: Dictionary) -> void:
@@ -242,19 +242,19 @@ func _on_overlay_answered(result: Dictionary) -> void:
 			_ps.on_correct_answer()
 		if _dm:
 			_dm.record_answer(category, true)
-		feedback_label.text = "Poprawnie!"
+		feedback_label.text = QuizRpgI18n.t("puzzle.correct", "Poprawnie!")
 		feedback_label.add_theme_color_override("font_color", Color.GREEN)
 		if _ps and _ps.roll_with_bonus(0.15):
 			current_correct += 1
-			feedback_label.text += " (Bonus! +1 postep)"
+			feedback_label.text += " " + QuizRpgI18n.t("puzzle.bonus_progress", "(Bonus! +1 postęp)")
 	else:
 		if _ps:
 			_ps.on_wrong_answer()
 		if _dm:
 			_dm.record_answer(category, false)
-		feedback_label.text = "Zle! " + result.get("explanation", "")
+		feedback_label.text = QuizRpgI18n.t("puzzle.wrong", "Źle!") + " " + result.get("explanation", "")
 		if result.get("timed_out", false):
-			feedback_label.text = "Czas minal! " + result.get("explanation", "")
+			feedback_label.text = QuizRpgI18n.t("puzzle.time_out", "Czas minął!") + " " + result.get("explanation", "")
 		feedback_label.add_theme_color_override("font_color", Color.RED)
 
 	current_question += 1
@@ -281,12 +281,12 @@ func _finish(success: bool) -> void:
 	if success:
 		if audio:
 			audio.play_sfx_by_name("victory")
-		feedback_label.text = "🔓 Otwarto!"
+		feedback_label.text = "🔓 " + QuizRpgI18n.t("puzzle.opened", "Otwarto!")
 		feedback_label.add_theme_color_override("font_color", Color.GOLD)
 	else:
 		if audio:
 			audio.play_sfx_by_name("defeat")
-		feedback_label.text = "🔒 Nie udało się otworzyć..."
+		feedback_label.text = "🔒 " + QuizRpgI18n.t("puzzle.failed_to_open", "Nie udało się otworzyć...")
 		feedback_label.add_theme_color_override("font_color", Color.RED)
 
 	await get_tree().create_timer(1.0).timeout

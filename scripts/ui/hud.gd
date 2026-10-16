@@ -28,11 +28,12 @@ func _ready() -> void:
 
 
 func _on_level_up(new_level: int) -> void:
-	_show_reward_popup("LEVEL UP! Lvl %d" % new_level)
+	_show_reward_popup(QuizRpgI18n.tf("hud.level_up", {"level": new_level}, "LEVEL UP! Lvl {level}"))
 
 
 func _on_reward_earned(reward_name: String) -> void:
-	_show_reward_popup("Nagroda: " + reward_name)
+	var localized_reward := QuizRpgI18n.t("reward." + reward_name, QuizRpgI18n.t(reward_name, reward_name))
+	_show_reward_popup(QuizRpgI18n.tf("hud.reward", {"reward": localized_reward}, "Nagroda: {reward}"))
 
 
 func _show_reward_popup(text: String) -> void:

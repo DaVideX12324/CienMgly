@@ -72,6 +72,24 @@ var _tf_selected_idx: int = 0
 ## `nodes`: węzły przeniesione poza panel quizu (np. pytanie i czas w oknie u góry ekranu) —
 ## question_label, timer_label, timer_bar, result_label, correct_answer_label; brak klucza = ścieżka
 ## domyślna w command_vbox / QuizPanel.
+## Tłumaczenia przez autoload I18nService pobrany z drzewa (identyfikator autoloadu nie kompiluje się, gdy skrypt ładuje się przed autoloadami, np. w testach -s).
+static func _i18n_service() -> Node:
+	var loop := Engine.get_main_loop()
+	if loop is SceneTree:
+		return (loop as SceneTree).root.get_node_or_null("I18nService")
+	return null
+
+
+static func _i18n_t(key: String) -> String:
+	var svc := _i18n_service()
+	return str(svc.call("t", key)) if svc else key
+
+
+static func _i18n_tf(key: String, args: Dictionary) -> String:
+	var svc := _i18n_service()
+	return str(svc.call("tf", key, args)) if svc else key
+
+
 func setup(p_command_vbox: VBoxContainer, nodes: Dictionary = {}) -> void:
 	command_vbox = p_command_vbox
 	quiz_panel = command_vbox.get_node("QuizPanel") as VBoxContainer
@@ -399,12 +417,12 @@ func show_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
 	correct_answer_label.visible = false
 	_show_correct_answer()
 	if bool(result.get("correct", false)):
-		result_label.text = I18nService.t("host.quiz.correct")
+		result_label.text = _i18n_t("host.quiz.correct")
 		result_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
 	else:
-		result_label.text = I18nService.t("host.quiz.wrong_answer")
+		result_label.text = _i18n_t("host.quiz.wrong_answer")
 		if bool(result.get("timed_out", false)):
-			result_label.text = I18nService.t("host.quiz.time_out")
+			result_label.text = _i18n_t("host.quiz.time_out")
 		result_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 
 	match str(_current_question.get("type", "multiple_choice")):
@@ -539,7 +557,7 @@ func _build_mc(question: Dictionary) -> void:
 func _build_tf() -> void:
 	tf_box.visible = true
 	_tf_selected_idx = 0
-	var tf_texts := ["[1] " + I18nService.t("host.quiz.true"), "[2] " + I18nService.t("host.quiz.false")] if show_index_prefix else [I18nService.t("host.quiz.true"), I18nService.t("host.quiz.false")]
+	var tf_texts := ["[1] " + _i18n_t("host.quiz.true"), "[2] " + _i18n_t("host.quiz.false")] if show_index_prefix else [_i18n_t("host.quiz.true"), _i18n_t("host.quiz.false")]
 	for i in range(2):
 		tf_buttons[i].text = tf_texts[i]
 		tf_buttons[i].set_meta("base_text", tf_texts[i])
@@ -642,7 +660,7 @@ func _on_tf_button_hover(index: int) -> void:
 func _build_fill_text(question: Dictionary) -> void:
 	fill_text_box.visible = true
 	var pattern := str(question.get("prefilled_pattern", ""))
-	pattern_label.text = I18nService.tf("host.quiz.pattern_hint", {"pattern": pattern})
+	pattern_label.text = _i18n_tf("host.quiz.pattern_hint", {"pattern": pattern})
 	pattern_label.visible = pattern != ""
 	fill_input.text = ""
 	fill_input.grab_focus()
@@ -742,7 +760,7 @@ func _show_correct_answer() -> void:
 		answer_text = str(_current_question.get("answer", ""))
 	if answer_text == "":
 		return
-	correct_answer_label.text = I18nService.tf("host.quiz.correct_answer_revealed", {"answer": answer_text})
+	correct_answer_label.text = _i18n_tf("host.quiz.correct_answer_revealed", {"answer": answer_text})
 	correct_answer_label.visible = true
 
 

@@ -49,7 +49,7 @@ const DOTS_STEP := 0.4
 	set(value):
 		title = value
 		if is_node_ready():
-			_title.text = value
+			_title.text = QuizRpgI18n.t(value, value)
 
 ## Grafika tła (zakrywa ekran, proporcje zachowane). null = ciemne tło.
 @export var background: Texture2D = null:
@@ -142,7 +142,7 @@ func set_background_for(keys) -> bool:
 
 func _ready() -> void:
 	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
-	_title.text = title
+	_title.text = QuizRpgI18n.t(title, title)
 	_apply_location()
 	_art.texture = background
 	_apply_band()
@@ -158,9 +158,9 @@ func _show_preview() -> void:
 	set_background_for(preview_key)
 	if location.is_empty():
 		location = preview_location
-	if title == "Ładowanie…":
-		title = "Generowanie jaskini…"
-	set_progress(preview_progress, "Podgląd układu")
+	if title == "Ładowanie…" or title == QuizRpgI18n.t("ui.loading.default_title", "Ładowanie…"):
+		title = QuizRpgI18n.t("ui.loading.preview_title", "Generowanie jaskini…")
+	set_progress(preview_progress, QuizRpgI18n.t("ui.loading.preview_stage", "Podgląd układu"))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -212,7 +212,9 @@ func track(source) -> void:
 
 
 ## Pasek za wczytywaniem zasobu w tle; load_threaded_request(path) musi być już wywołane.
-func track_resource_load(path: String, label: String = "Wczytywanie mapy") -> void:
+func track_resource_load(path: String, label: String = "") -> void:
+	if label.is_empty():
+		label = QuizRpgI18n.t("ui.loading.map_load", "Wczytywanie mapy")
 	track(ResourceLoadProgress.new(path, label))
 
 
@@ -240,7 +242,7 @@ func _process(delta: float) -> void:
 ## Błysk na pasku i kropki po nazwie etapu (niezależnie od postępu).
 func _animate(delta: float) -> void:
 	if _label != "":
-		_stage.text = _label + ".".repeat(1 + int(_anim_t / DOTS_STEP) % 3)
+		_stage.text = QuizRpgI18n.t(_label, _label) + ".".repeat(1 + int(_anim_t / DOTS_STEP) % 3)
 	if _fill_clip == null or _shine == null:
 		return
 	var fill_w := _bar.size.x * _bar.value / 100.0

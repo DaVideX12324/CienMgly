@@ -26,6 +26,10 @@ static var PUZZLE_UI_SCENE: String = QuizRpgPaths.path("scenes/quiz/quiz_puzzle_
 
 
 func _ready() -> void:
+	if door_name == "Zamknięte drzwi":
+		door_name = QuizRpgI18n.t("door.name_locked", "Zamknięte drzwi")
+	if locked_message == "Te drzwi wymagają wiedzy, by je otworzyć...":
+		locked_message = QuizRpgI18n.t("door.locked_message", "Te drzwi wymagają wiedzy, by je otworzyć...")
 	_gm = CoreManager.get_singleton("GameManager")
 	add_to_group("interactable")
 
@@ -109,7 +113,7 @@ func can_interact() -> bool:
 
 
 func interaction_prompt_text() -> String:
-	return "Rozwiąż zagadkę"
+	return QuizRpgI18n.t("prompt.solve_puzzle", "Rozwiąż zagadkę")
 
 
 func interaction_prompt_offset() -> Vector2:
