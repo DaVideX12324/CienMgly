@@ -3361,16 +3361,37 @@ func _init_party_state() -> void:
 	_party_state.clear()
 	var n: int = _ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1
 	for i in range(maxi(n, 1)):
-		_party_state.append({
-			"name": "",
-			"lp": 0,
-			"lp_max": 1,
-			"sp": PARTY_SKILL_SP_MAX,
-			"sp_max": PARTY_SKILL_SP_MAX,
-			"tp": randi_range(TP_START_MIN, TP_START_MAX),
-			"tp_max": PARTY_TP_MAX,
-		})
+		_party_state.append(_new_member_state())
 		_sync_party_member_from_player(i)
+	if _ps and _ps.has_signal("member_recruited") and not _ps.member_recruited.is_connected(_on_member_recruited):
+		_ps.member_recruited.connect(_on_member_recruited)
+
+
+## Stan walki uczestnika: TP na start losowo TP_START_MIN..TP_START_MAX (także przy dołączeniu w trakcie walki).
+func _new_member_state() -> Dictionary:
+	return {
+		"name": "",
+		"lp": 0,
+		"lp_max": 1,
+		"sp": PARTY_SKILL_SP_MAX,
+		"sp_max": PARTY_SKILL_SP_MAX,
+		"tp": randi_range(TP_START_MIN, TP_START_MAX),
+		"tp_max": PARTY_TP_MAX,
+	}
+
+
+## Postać zwerbowana w trakcie walki (PlayerStats.recruit — zadanie, zdarzenie walki, menu deweloperskie) od razu
+## dołącza do walki: wiersz w oknie drużyny, TP jak na start walki, komendy od następnej rundy (w bieżącej nie działa).
+## Okno drużyny ma party_rows.size() wierszy — dalsze postacie są w drużynie, ale nie walczą (jak dotąd).
+func _on_member_recruited(index: int, _hero_id: String) -> void:
+	if phase == Phase.COMBAT_END:
+		return
+	while _party_state.size() <= index:
+		_party_state.append(_new_member_state())
+		_sync_party_member_from_player(_party_state.size() - 1)
+	if index < party_rows.size():
+		_push_log("%s dołącza do walki!" % _member_name(index), Color(0.55, 0.85, 1.0))
+	_refresh_stats_panel()
 
 
 ## Imię i HP członka z PlayerStats (lider: player_name / hp / max_hp, reszta: dane drużyny).
