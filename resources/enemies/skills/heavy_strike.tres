@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
 display_name = "Ciężkie Uderzenie"
 log_text = "{enemy} atakuje plątaniną metalowych członków!"
 use_chance = 0.3

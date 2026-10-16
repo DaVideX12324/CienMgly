@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
+tp_gain = 0
 skill_id = "sea_chant"
 display_name = "Morska Pieśń"
 description = "Nuci morską melodię. Osłabia wroga i może go uciszyć."

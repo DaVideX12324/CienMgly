@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
 display_name = "Miażdżący Cios"
 log_text = "{enemy} wyprowadza potężny, ryzykowny cios!"
 use_chance = 0.2

@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 1000
+tp_gain = 0
 skill_id = "rousing_tune"
 display_name = "Porywająca Melodia"
 description = "Gra motywujący utwór. Zwiększa atak sojusznika."

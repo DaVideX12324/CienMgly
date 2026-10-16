@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
 skill_id = "dive_attack"
 display_name = "Atak Nurkujący"
 description = "Nurkuje we wroga z potężną siłą."

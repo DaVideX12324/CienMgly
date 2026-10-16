@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
+tp_gain = 5
 skill_id = "double_throw"
 display_name = "Podwójny Rzut"
 description = "Rzuca przedmiotem we wroga. Dwa trafienia."

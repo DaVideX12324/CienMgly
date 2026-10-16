@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+tp_gain = 5
 skill_id = "onslaught"
 display_name = "Natarcie"
 description = "Sześć szybkich ataków."

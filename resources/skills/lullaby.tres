@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
+tp_gain = 0
 skill_id = "lullaby"
 display_name = "Usypiająca Melodia"
 description = "Dziewięć lekkich trafień w rytm melodii. Duża szansa uśpienia wroga."

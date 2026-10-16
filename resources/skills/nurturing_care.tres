@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 1000
+tp_gain = 0
 skill_id = "nurturing_care"
 display_name = "Troskliwa Opieka"
 description = "Podaje sojusznikowi orzeźwiający napój. Zwiększa obronę i odnawia SP."

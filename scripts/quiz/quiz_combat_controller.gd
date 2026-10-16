@@ -22,9 +22,12 @@ const PARTY_SKILL_SP_MAX := 100
 const PARTY_TP_MAX := 100
 ## TP z otrzymanych obrażeń: proporcjonalnie do utraconej części HP — tyle TP za utratę 100% HP
 ## (utrata 50% HP -> 40 TP). Liczone z obrażeń bez redukcji przez obronę (obrona nie zmniejsza TP).
-const TP_PER_FULL_HP_LOST := 80.0
+const TP_PER_FULL_HP_LOST := 50.0  # jak w FNaFB: 50 × obrażenia / maks. HP trafionej postaci (× mnożnik ładowania)
 ## TP za atak — dużo mniej niż z obrażeń (docs/game_design.md, „Tech Pointy w walce”).
-const TP_PER_ATTACK := 5
+const TP_PER_HIT := 5              # zwykły atak (za trafienie) i Obrona — „TP Gain” 5 jak w FNaFB
+const TP_START_MIN := 10           # TP na start walki: losowo TP_START_MIN..TP_START_MAX (decyzja usera 2026-10-16)
+const TP_START_MAX := 20
+const GUARD_SPEED := 2000          # Obrona zawsze pierwsza (Guard w FNaFB ma speed 2000)
 const SKILL_SP_COST := 20
 const ATTACK_HIT_CHANCE_CORRECT := 0.8
 const ATTACK_HIT_CHANCE_WRONG := 0.2
@@ -722,6 +725,8 @@ func _execute_round() -> void:
 	phase = Phase.ENEMY_TURN
 	_set_band_mode(Band.STATUS_ONLY)
 	_refresh_actor_selection()
+	for unit in _enemy_units:  # akcje wrogów na tę rundę (jak w RPG Makerze) — prędkość umiejętności w kolejce
+		unit["planned_skill"] = _pick_enemy_skill(unit) if int(unit.get("hp", 0)) > 0 else null
 	_turn_queue = _turn_order()
 	_next_turn()
 
@@ -731,21 +736,30 @@ func _turn_order() -> Array[Dictionary]:
 	var order: Array[Dictionary] = []
 	for i in _party_indices(false):
 		if i < party_rows.size():
-			var guard := int(_plan_for(i).get("action", -1)) == Action.DEFEND
-			order.append({"party": true, "index": i, "speed": _roll_speed(int(_member_stats(i)["agi"])), "guard": guard})
+			order.append({"party": true, "index": i, "speed": _roll_speed(int(_member_stats(i)["agi"])) + _plan_speed(_plan_for(i))})
 	if not (first_round and _initiative == Initiative.PREEMPTIVE):
 		for i in range(_enemy_units.size()):
 			if int(_enemy_units[i].get("hp", 0)) > 0:
-				order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"])), "guard": false})
+				var planned: Variant = _enemy_units[i].get("planned_skill")
+				var skill_speed: int = (planned as QuizRpgEnemySkill).speed if planned is QuizRpgEnemySkill else 0
+				order.append({"party": false, "index": i, "speed": _roll_speed(int(_unit_stats(_enemy_units[i])["agi"])) + skill_speed})
 	order.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if bool(a["guard"]) != bool(b["guard"]):
-			return bool(a["guard"])
 		if int(a["speed"]) != int(b["speed"]):
 			return int(a["speed"]) > int(b["speed"])
 		if bool(a["party"]) != bool(b["party"]):
 			return bool(a["party"])
 		return int(a["index"]) < int(b["index"]))
 	return order
+
+
+## Dodatek prędkości wybranej akcji: Obrona GUARD_SPEED, umiejętność — jej speed (jak w FNaFB).
+func _plan_speed(plan: Dictionary) -> int:
+	if plan.is_empty():
+		return 0
+	if int(plan["action"]) == Action.DEFEND:
+		return GUARD_SPEED
+	var skill := (plan["skill"] as Dictionary).get("resource") as QuizRpgSkillBase
+	return skill.speed if skill != null else 0
 
 
 ## Prędkość w rundzie jak w FNaFB (RPG Maker VX Ace Game_Action#speed): AGI + rand(5 + AGI / 4).
@@ -815,6 +829,7 @@ func _next_turn() -> void:
 			continue
 		if int(_enemy_units[i].get("hp", 0)) > 0 and await _enemy_act(i):
 			return
+	_regen_party_tp()
 	if await _apply_status_round():
 		return
 	_start_round()
@@ -1537,7 +1552,6 @@ func _resolve_attack(correct: bool) -> void:
 	var targets := _offense_targets(skill)
 	if targets.is_empty():
 		return
-	_gain_party_tp(_active_actor_index, TP_PER_ATTACK)
 	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
 	if _ps and _ps.has_method("member_hit_mult"):
 		hit_chance *= _ps.member_hit_mult(_active_actor_index)
@@ -1556,6 +1570,7 @@ func _resolve_attack(correct: bool) -> void:
 				_show_attack_miss(ti, correct)
 				continue
 			_apply_player_hit(ti, QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti])))
+			_gain_party_tp(_active_actor_index, skill.tp_gain if skill else TP_PER_HIT)  # TP za każde trafienie
 			_unit_on_damaged(ti)
 			touched[ti] = true
 			if skill != null and skill.has_status() and skill.status_per_hit and randf() < skill.status_chance:
@@ -1632,6 +1647,7 @@ func _show_attack_miss(ti: int, correct: bool) -> void:
 
 func _resolve_defend(correct: bool) -> void:
 	_guard[_active_actor_index] = correct
+	_gain_party_tp(_active_actor_index, TP_PER_HIT)
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("magic")
@@ -1658,6 +1674,8 @@ func _resolve_heal(correct: bool) -> void:
 	var parts: Array[String] = []
 	var user_mat := int(_member_stats(_active_actor_index).get("mat", 0))
 	for t in _heal_targets(skill):
+		if skill != null:
+			_gain_party_tp(_active_actor_index, skill.tp_gain)  # TP za każdy cel
 		var member: Dictionary = _ps.get_party_member(t) if _ps.has_method("get_party_member") else {}
 		var max_hp: int = int(member.get("max_hp", _ps.max_hp))
 		if skill != null and skill.has_status() and randf() < skill.status_chance and _ps.add_status(t, skill.inflict_status, skill.status_params()):
@@ -1728,6 +1746,8 @@ func _enemy_act(enemy_index: int) -> bool:
 	result_label.visible = true
 	var enemy_unit := _enemy_units[enemy_index]
 	var enemy_label := str(enemy_unit.get("name", enemy_name_str))
+	var planned_skill: Variant = enemy_unit.get("planned_skill")
+	enemy_unit.erase("planned_skill")
 	var stop := _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.SKIP_TURN)
 	if stop != null:
 		_push_log("%s: %s — traci turę." % [enemy_label, stop.localized_name()], stop.color)
@@ -1735,7 +1755,7 @@ func _enemy_act(enemy_index: int) -> bool:
 		return false
 	if _unit_restriction(enemy_unit, QuizRpgStatusData.Restriction.CONFUSED) != null and randf() < 0.5 and await _confused_unit_strike(enemy_index):
 		return false
-	var skill := _pick_enemy_skill(enemy_unit)
+	var skill: QuizRpgEnemySkill = planned_skill if _executing else _pick_enemy_skill(enemy_unit)  # poza rundą (testy) — od razu
 	if skill != null:
 		return await _enemy_use_skill(enemy_index, enemy_unit, enemy_label, skill)
 	if turn_label:
@@ -1759,7 +1779,6 @@ func _enemy_act(enemy_index: int) -> bool:
 		await get_tree().create_timer(0.8).timeout
 		return false
 	var actual_damage: int
-	_gain_party_tp(t, _tp_from_damage(full_damage))
 	if _guard.has(t):
 		actual_damage = maxi(floori(full_damage * _guard_factor(t)), 1)
 		if _ps:
@@ -1800,6 +1819,7 @@ func _enemy_act(enemy_index: int) -> bool:
 			_flash_sprite(player_sprite_node, Color.RED)
 			HitParticles.create_at(player, player.global_position, Color.RED, 6)
 			FloatingText.create_at(player, player.global_position + Vector2(0, -20), "-%d" % actual_damage, Color.RED, 14)
+	_gain_party_tp(t, _tp_from_damage(t, actual_damage))
 	_update_hp_bars()
 	_refresh_stats_panel()
 	await get_tree().create_timer(1.0).timeout
@@ -1907,14 +1927,13 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 					FloatingText.create_at(player, player.global_position + Vector2(0, -20), "Unik!", Color(0.8, 0.8, 0.8), 12)
 				continue
 			var full := QuizRpgSkillMath.damage(sk, _unit_stats(enemy_unit), _member_stats(t))
-			if full > 0:
-				_gain_party_tp(t, _tp_from_damage(full))
 			var mult := 1.0
 			if _guard.has(t) and sk.can_be_blocked:
 				mult = _guard_factor(t)
 			var dmg := maxi(floori(full * mult), 1) if full > 0 else 0
 			if dmg > 0 and _ps:
 				_ps.damage_member(t, dmg)
+				_gain_party_tp(t, _tp_from_damage(t, dmg))
 				_member_damaged(t)
 				if t == 0:
 					if audio:
@@ -3008,10 +3027,11 @@ func _refresh_enemy_cache() -> void:
 	_sync_enemy_displays()
 
 
-## TP za cios wroga: część maks. HP, którą zabrałby bez obrony, razy TP_PER_FULL_HP_LOST.
-func _tp_from_damage(undefended_damage: int) -> int:
-	var max_hp: int = maxi(_ps.max_hp, 1) if _ps else 100
-	return roundi(TP_PER_FULL_HP_LOST * float(undefended_damage) / float(max_hp))
+## TP za otrzymane obrażenia jak w FNaFB: TP_PER_FULL_HP_LOST × obrażenia / maks. HP trafionej postaci (mnożnik
+## ładowania dolicza _gain_party_tp).
+func _tp_from_damage(member: int, damage: int) -> int:
+	var max_hp: int = int(_party_state[member].get("lp_max", 1)) if member >= 0 and member < _party_state.size() else 100
+	return roundi(TP_PER_FULL_HP_LOST * float(maxi(damage, 0)) / float(maxi(max_hp, 1)))
 
 
 ## Staty członka drużyny / jednostki wroga dla QuizRpgSkillMath ({atk, def, mat, mdf}).
@@ -3347,7 +3367,7 @@ func _init_party_state() -> void:
 			"lp_max": 1,
 			"sp": PARTY_SKILL_SP_MAX,
 			"sp_max": PARTY_SKILL_SP_MAX,
-			"tp": 0,
+			"tp": randi_range(TP_START_MIN, TP_START_MAX),
 			"tp_max": PARTY_TP_MAX,
 		})
 		_sync_party_member_from_player(i)
@@ -3365,11 +3385,13 @@ func _sync_party_member_from_player(index: int = 0) -> void:
 	_party_state[index] = member
 
 
-func _gain_party_tp(index: int, amount: int) -> void:
+## TP za trafienia i otrzymane obrażenia — × mnożnik ładowania postaci (TCR); charge = false: bez mnożnika (regeneracja).
+func _gain_party_tp(index: int, amount: int, charge: bool = true) -> void:
 	if index < 0 or index >= _party_state.size():
 		return
+	var gain := roundi(maxi(amount, 0) * (_member_hero_value(index, "tp_charge_rate", 1.0) if charge else 1.0))
 	var member := _party_state[index]
-	member["tp"] = clampi(int(member.get("tp", 0)) + maxi(amount, 0), 0, int(member.get("tp_max", PARTY_TP_MAX)))
+	member["tp"] = clampi(int(member.get("tp", 0)) + gain, 0, int(member.get("tp_max", PARTY_TP_MAX)))
 	_party_state[index] = member
 
 
@@ -3387,6 +3409,25 @@ func _restore_party_sp(index: int, amount: int) -> void:
 	var member := _party_state[index]
 	member["sp"] = clampi(int(member.get("sp", 0)) + maxi(amount, 0), 0, int(member.get("sp_max", PARTY_SKILL_SP_MAX)))
 	_party_state[index] = member
+
+
+## Pole danych postaci (QuizRpgHeroData) członka drużyny; domyślna wartość bez danych.
+func _member_hero_value(index: int, field: String, fallback: Variant) -> Variant:
+	if _ps == null or not _ps.has_method("hero_for_member"):
+		return fallback
+	var members: Array = _ps.get_party_members()
+	if index < 0 or index >= members.size():
+		return fallback
+	var hero = _ps.hero_for_member(members[index])
+	return hero.get(field) if hero != null and hero.get(field) != null else fallback
+
+
+## Regeneracja TP na koniec rundy (TRG w FNaFB): tp_regen z danych postaci, bez mnożnika ładowania.
+func _regen_party_tp() -> void:
+	for i in _party_indices(false):
+		var regen := int(_member_hero_value(i, "tp_regen", 0))
+		if regen > 0:
+			_gain_party_tp(i, regen, false)
 
 
 func _restore_party_tp(index: int, amount: int) -> void:

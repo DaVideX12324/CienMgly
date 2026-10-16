@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
 display_name = "Powalenie"
 log_text = "{enemy} spycha przeciwnika w dół!"
 use_chance = 0.3

@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+tp_gain = 5
 skill_id = "coin_barrage"
 display_name = "Grad Monet"
 description = "Ciska monetami w losowych wrogów. Trafia kilkukrotnie."

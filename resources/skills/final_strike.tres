@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -2000
 skill_id = "final_strike"
 display_name = "Ostatni Zamach"
 description = "Cały impet w jednym ciosie (ATK × 8)."

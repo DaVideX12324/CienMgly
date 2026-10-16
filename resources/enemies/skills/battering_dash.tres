@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 display_name = "Rozpędzony Taran"
 log_text = "{enemy} z impetem taranuje cel!"
 use_chance = 0.35

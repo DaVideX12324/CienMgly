@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 display_name = "Szał Natarcia"
 log_text = "{enemy} bezlitośnie szarżuje osiem razy!"
 use_chance = 0.25

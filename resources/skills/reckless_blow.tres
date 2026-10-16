@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
 skill_id = "reckless_blow"
 display_name = "Ryzykowny Cios"
 description = "Niewiarygodny cios... ale trafia rzadko (8 %)."

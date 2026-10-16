@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 skill_id = "smoke_cloud"
 display_name = "Chmura Dymu"
 description = "Wypuszcza gęsty dym. Szansa na oślepienie wroga."

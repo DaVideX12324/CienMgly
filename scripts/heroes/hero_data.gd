@@ -34,6 +34,10 @@ class_name QuizRpgHeroData
 @export var base_sp: int = 139
 @export var sp_at_max_level: int = 1739
 @export var base_tp: int = 100
+## Mnożnik ładowania TP (TCR w FNaFB: TP za trafienia i za otrzymane obrażenia; G. Freddy 1,25, Freddy 0).
+@export_range(0.0, 3.0, 0.05) var tp_charge_rate: float = 1.0
+## TP na koniec każdej rundy (TRG w FNaFB, np. Dreadbear +5).
+@export_range(0, 50, 1) var tp_regen: int = 0
 ## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
 ## ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).
 @export_range(5, 30) var base_atk: int = 21

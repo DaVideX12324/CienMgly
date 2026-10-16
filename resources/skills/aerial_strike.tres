@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 skill_id = "aerial_strike"
 display_name = "Atak z Powietrza"
 description = "Szarża z powietrza. Fizyczna i magiczna."

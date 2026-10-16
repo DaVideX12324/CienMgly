@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 1000
 skill_id = "leczenie"
 display_name = "Leczenie"
 description = "Przywraca 30 % HP (po złej odpowiedzi 1/3 tego). Działa też w menu."

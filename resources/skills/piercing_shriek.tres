@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = -25
 skill_id = "piercing_shriek"
 display_name = "Przeszywający Krzyk"
 description = "Wrzask, który rani zatrutego wroga ponad dwa razy mocniej. Może zatruć."

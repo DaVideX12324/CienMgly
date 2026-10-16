@@ -41,6 +41,14 @@ enum PoisonMode { PERCENT, FIXED }
 ## Trafienie zależy tylko od success_rate (bez szansy z odpowiedzi na quiz).
 @export var hit_ignores_quiz: bool = false
 
+@export_group("Kolejka i TP")
+## Prędkość jak w FNaFB (dodawana do prędkości z AGI w kolejce rundy): +2000 zawsze pierwsza, −2000 zawsze ostatnia,
+## małe wartości (±25) — szybki / wolny atak, który AGI nadal może przebić. 0 = zwykła.
+@export_range(-2000, 2000, 1) var speed: int = 0
+## TP dla używającego za każde trafienie (każdy cel, każde uderzenie serii) × mnożnik ładowania postaci — jak „TP Gain”
+## w FNaFB (zwykły atak / obrona 5, większość umiejętności 0–1).
+@export_range(0, 100, 1) var tp_gain: int = 1
+
 @export_group("Cel")
 @export var target: Target = Target.ONE_OPPONENT
 ## Liczba losowych celów (Target.RANDOM_OPPONENTS).

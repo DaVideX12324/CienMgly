@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 25
 skill_id = "shove"
 display_name = "Zepchnięcie"
 description = "Wróg zostaje zepchnięty w dół. Może sparaliżować."

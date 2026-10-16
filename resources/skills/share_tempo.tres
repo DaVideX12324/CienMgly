@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_skill")
+speed = 1000
 skill_id = "share_tempo"
 display_name = "Dzielenie Tempa"
 description = "Dzieli się impetem z całą drużyną, zwiększając jej zwinność."
