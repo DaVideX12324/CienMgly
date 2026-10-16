@@ -68,6 +68,7 @@ door_width = 64.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Doors/QuizDoor1" unique_id=1423768933]
 
 [node name="InteractionHint" type="Label" parent="Doors/QuizDoor1" unique_id=476844088]
+auto_translate_mode = 2
 visible = false
 offset_left = -60.0
 offset_top = -30.0
@@ -98,6 +99,7 @@ door_height = 64.0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Doors/QuizDoor2" unique_id=1527993977]
 
 [node name="InteractionHint" type="Label" parent="Doors/QuizDoor2" unique_id=619980880]
+auto_translate_mode = 2
 visible = false
 offset_left = -60.0
 offset_top = -30.0

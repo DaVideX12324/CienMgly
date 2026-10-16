@@ -99,12 +99,14 @@ grow_vertical = 0
 theme_override_constants/separation = 12
 
 [node name="EnemyName" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=1684427100]
+auto_translate_mode = 2
 visible = false
 layout_mode = 2
 text = "Przeciwnicy"
 horizontal_alignment = 1
 
 [node name="EnemyNameLabel" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=711721997]
+auto_translate_mode = 2
 visible = false
 layout_mode = 2
 text = "Przeciwnicy"
@@ -466,6 +468,7 @@ custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 
 [node name="PlayerName" type="Label" parent="Root/Battlefield/FieldContent/PlayerSection" unique_id=1086654047]
+auto_translate_mode = 2
 layout_mode = 2
 text = "Bohater"
 
@@ -763,6 +766,7 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=820547815]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_horizontal = 0
@@ -890,6 +894,7 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=489189149]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
@@ -1016,6 +1021,7 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1040332721]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
@@ -1142,6 +1148,7 @@ layout_mode = 2
 theme_override_constants/separation = 24
 
 [node name="NameLabel" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1769485415]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 0
@@ -1263,6 +1270,7 @@ show_percentage = false
 script = ExtResource("quiz_bar")
 
 [node name="CornerInfo" type="Label" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel" unique_id=574272104]
+auto_translate_mode = 2
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
@@ -1443,6 +1451,7 @@ show_percentage = false
 script = ExtResource("quiz_bar")
 
 [node name="TimerLabel" type="Label" parent="Root/TopWindow/VBox/TimerRow" unique_id=1374842371]
+auto_translate_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
 text = "Czas: 20.0 s"

@@ -55,6 +55,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="LeftLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow0/Margin/ContentRow" unique_id=798754985]
+auto_translate_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 1  Pusty slot"
@@ -90,6 +91,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="LeftLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow1/Margin/ContentRow" unique_id=218323630]
+auto_translate_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 2  Pusty slot"
@@ -125,6 +127,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="LeftLabel" type="Label" parent="SaveSlotsVBoxFrame/SaveSlotsVBox/SaveSlotRow2/Margin/ContentRow" unique_id=742675859]
+auto_translate_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 3  Pusty slot"

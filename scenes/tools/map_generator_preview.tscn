@@ -12,6 +12,7 @@ zoom = Vector2(0.8, 0.8)
 y_sort_enabled = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1436035097]
+auto_translate_mode = 2
 
 [node name="Panel" type="PanelContainer" parent="CanvasLayer" unique_id=1699924494]
 custom_minimum_size = Vector2(340, 0)

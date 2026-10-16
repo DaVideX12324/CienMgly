@@ -85,6 +85,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="StatsLabel" type="Label" parent="StatsPanel" unique_id=1311247590]
+auto_translate_mode = 2
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

@@ -79,10 +79,12 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="ItemNameLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin/DetailsVBox"]
+auto_translate_mode = 2
 layout_mode = 2
 text = "Przedmiot"
 
 [node name="CountLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/ContentRow/DetailsPanel/DetailsMargin/DetailsVBox"]
+auto_translate_mode = 2
 layout_mode = 2
 text = "Ilosc: 0"
 

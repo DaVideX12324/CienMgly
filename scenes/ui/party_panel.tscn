@@ -70,12 +70,14 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="PartyListVBoxFrame/PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=1980509735]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
 text = "Bohater"
 
 [node name="LevelLabel" type="Label" parent="PartyListVBoxFrame/PartyListVBox/PartyRow0/Margin/ContentRow" unique_id=893253877]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
@@ -171,12 +173,14 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="PartyListVBoxFrame/PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=475283320]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
 text = "Towarzysz"
 
 [node name="LevelLabel" type="Label" parent="PartyListVBoxFrame/PartyListVBox/PartyRow1/Margin/ContentRow" unique_id=43141695]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 27

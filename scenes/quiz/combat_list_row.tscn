@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/quiz/combat_list_row.gd" id="1_row"]
 
 [node name="CombatListRow" type="Button"]
+auto_translate_mode = 2
 custom_minimum_size = Vector2(340, 48)
 size_flags_horizontal = 1
 focus_mode = 0

@@ -119,6 +119,7 @@ theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
 value = 0.0
 
 [node name="ProgressLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
+auto_translate_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 text = "0 / 3 poprawnych odpowiedzi"
