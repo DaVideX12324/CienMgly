@@ -144,6 +144,9 @@ func _ready() -> void:
 	_slider_brightness.value_changed.connect(_on_brightness_changed)
 	_bind_game_option.item_selected.connect(_on_bind_game_selected)
 	_populate_binds()
+	_update_tab_titles()
+	if I18nService:
+		I18nService.language_changed.connect(_on_language_changed)
 	_tabs.tab_changed.connect(func(_i: int) -> void: _sync_apply_button())
 	UIScaleService.scale_changed.connect(_on_scale_changed)
 	WindowService.resolution_changed.connect(func(_r: Vector2i) -> void: _on_scale_changed(UIScaleService.scale_factor))
@@ -153,6 +156,31 @@ func _ready() -> void:
 	_on_scale_changed(UIScaleService.scale_factor)
 
 
+func _update_tab_titles() -> void:
+	if _tabs:
+		_tabs.set_tab_title(0, I18nService.t("host.options.tab_general"))
+		_tabs.set_tab_title(1, I18nService.t("host.options.tab_display"))
+		_tabs.set_tab_title(2, I18nService.t("host.options.tab_audio"))
+		_tabs.set_tab_title(3, I18nService.t("host.options.tab_theme"))
+		_tabs.set_tab_title(4, I18nService.t("host.options.tab_questions"))
+		_tabs.set_tab_title(5, I18nService.t("host.options.tab_controls"))
+
+
+func _on_language_changed(_lang: String) -> void:
+	_update_tab_titles()
+	_sync_language()
+	_populate_monitors()
+	var cur_res := _res_option.selected
+	_populate_resolutions(_monitor_option.selected)
+	if cur_res >= 0 and cur_res < _res_option.item_count:
+		_res_option.selected = cur_res
+	_populate_scale()
+	_sync_frame_pacing()
+	_update_brightness_label()
+	_populate_question_sets()
+	_populate_binds()
+
+
 func _process(delta: float) -> void:
 	if not _confirming:
 		return
@@ -160,7 +188,7 @@ func _process(delta: float) -> void:
 	if _countdown <= 0.0:
 		_on_revert()
 		return
-	_lbl_countdown.text = "Przywrocenie za: %ds" % ceili(_countdown)
+	_lbl_countdown.text = I18nService.tf("host.options.countdown", {"seconds": ceili(_countdown)}, "Przywrocenie za: %ds" % ceili(_countdown))
 
 
 func _input(event: InputEvent) -> void:
@@ -210,6 +238,7 @@ func is_embedded() -> bool:
 
 
 func open() -> void:
+	_update_tab_titles()
 	_prev_mode = WindowService.window_mode_idx
 	_prev_res = WindowService.resolution
 	_prev_monitor = WindowService.monitor_idx
@@ -322,13 +351,16 @@ func _on_display_target_changed() -> void:
 
 
 func _populate_monitors() -> void:
+	var cur := _monitor_option.selected
 	_monitor_option.clear()
 	for index in range(DisplayServer.get_screen_count()):
 		var size := DisplayServer.screen_get_size(index)
-		var label := "Monitor %d (%d x %d)" % [index + 1, size.x, size.y]
+		var label := I18nService.tf("host.options.monitor_item", {"index": index + 1, "width": size.x, "height": size.y}, "Monitor {index} ({width} x {height})")
 		if index == DisplayServer.get_primary_screen():
-			label += " [glowny]"
+			label += " " + I18nService.t("host.options.monitor_primary", "[glowny]")
 		_monitor_option.add_item(label)
+	if cur >= 0 and cur < _monitor_option.item_count:
+		_monitor_option.selected = cur
 
 
 func _on_monitor_changed(index: int) -> void:
@@ -352,12 +384,12 @@ func _populate_resolutions(screen: int) -> void:
 	for resolution in _resolutions:
 		var label := "%d x %d" % [resolution.x, resolution.y]
 		if resolution == screen_size:
-			label += " (natywna)"
+			label += " " + I18nService.t("host.options.res_native", "(natywna)")
 		elif _sel_mode == WindowService.MODE_WINDOWED and resolution == max_window:
-			label += " (maks. okno)"
+			label += " " + I18nService.t("host.options.res_max_window", "(maks. okno)")
 		elif _sel_mode == WindowService.MODE_WINDOWED and resolution == own and own != max_window \
 				and not WindowService.get_available_resolutions(screen, _sel_mode).has(own):
-			label += " (zmaksymalizowane)" if WindowService.window_maximized else " (własny)"
+			label += " " + (I18nService.t("host.options.res_maximized") if WindowService.window_maximized else I18nService.t("host.options.res_custom"))
 		_res_option.add_item(label)
 
 
@@ -376,14 +408,18 @@ func _on_window_resized_by_user(_size: Vector2i) -> void:
 
 
 func _populate_scale() -> void:
+	var cur := _scale_option.selected
 	_scale_option.clear()
 	for label in UIScaleService.get_mode_labels():
 		_scale_option.add_item(label)
+	if cur >= 0 and cur < _scale_option.item_count:
+		_scale_option.selected = cur
 	_sync_scale()
 	if not _scale_option.item_selected.is_connected(_on_scale_item_selected):
 		_scale_option.item_selected.connect(_on_scale_item_selected)
 	if not _quizless_mode.toggled.is_connected(_on_quizless_toggled):
 		_quizless_mode.toggled.connect(_on_quizless_toggled)
+	_lang_option.clear()
 	for l in SettingsService.LANGUAGES:
 		_lang_option.add_item(str(l["name"]))
 	_sync_language()
@@ -409,8 +445,8 @@ func _sync_frame_pacing() -> void:
 	_fps_slider.editable = not WindowService.vsync_enabled
 	_fps_slider.get_parent().modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
 	_fps_label.modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
-	var limit := "bez limitu" if WindowService.max_fps <= 0 else "%d FPS" % WindowService.max_fps
-	_fps_label.text = "Limit FPS (przy wylaczonym V-Sync): %s" % limit
+	var limit := I18nService.t("host.options.fps_unlimited", "bez limitu") if WindowService.max_fps <= 0 else I18nService.tf("host.options.fps_val", {"fps": WindowService.max_fps}, "%d FPS" % WindowService.max_fps)
+	_fps_label.text = I18nService.tf("host.options.fps_limit_label", {"limit": limit}, "Limit FPS (przy wylaczonym V-Sync): {limit}")
 
 
 func _on_vsync_toggled(on: bool) -> void:
@@ -628,7 +664,7 @@ func _on_brightness_changed(value: float) -> void:
 
 
 func _update_brightness_label() -> void:
-	_lbl_brightness.text = "Jasnosc motywu: %d%%" % roundi(_slider_brightness.value)
+	_lbl_brightness.text = I18nService.tf("host.options.brightness_val", {"val": roundi(_slider_brightness.value)}, "Jasnosc motywu: {val}%")
 
 
 ## Zakładka „Pytania”: zestawy (QuestionBank) z zaznaczeniem — aktywne trafiają do puli pytań w grze
@@ -641,8 +677,12 @@ func _populate_question_sets() -> void:
 		var id := str(s["id"])
 		var cb := CheckBox.new()
 		var count := (s["questions"] as Array).size()
-		var tag: String = {"builtin": "", "edited": "  (edytowany)", "user": "  (wlasny)"}.get(str(s["source"]), "")
-		cb.text = "%s  —  %d pytan%s" % [s["name"], count, tag]
+		var tag: String = ""
+		if str(s["source"]) == "edited":
+			tag = "  " + I18nService.t("host.options.set_edited", "(edytowany)")
+		elif str(s["source"]) == "user":
+			tag = "  " + I18nService.t("host.options.set_user", "(wlasny)")
+		cb.text = "%s  —  %s%s" % [s["name"], I18nService.plural("host.options.questions_count", count), tag]
 		cb.button_pressed = QuestionBank.is_set_enabled(id, sel)
 		cb.add_theme_font_size_override("font_size", _fs(18))
 		cb.toggled.connect(func(on: bool) -> void:
@@ -674,7 +714,7 @@ func _populate_binds() -> void:
 	_lbl_bind_game.visible = pick_game
 	_bind_game_option.visible = pick_game
 	if manifests.is_empty():
-		_lbl_info.text = "Ten tryb nie opisuje sterowania." if active_id != "" else "Brak opisu sterowania w modułach."
+		_lbl_info.text = I18nService.t("host.binds.no_controls_module") if active_id != "" else I18nService.t("host.binds.no_controls_all")
 		return
 	if pick_game:
 		_bind_game_option.clear()
@@ -687,7 +727,7 @@ func _populate_binds() -> void:
 				picked = i
 		_bind_game_option.select(picked)
 		manifests = [manifests[picked]]
-	_lbl_info.text = "Sterowanie: %s — kliknij pole, by zmienić klawisz." % str(manifests[0].get("name", manifests[0].get("id", "")))
+	_lbl_info.text = I18nService.tf("host.binds.info_game", {"game": str(manifests[0].get("name", manifests[0].get("id", "")))})
 	for m in manifests:
 		var module_id := str(m.get("id", ""))
 		_add_control_options(module_id, m.get("control_options", []))
@@ -703,7 +743,7 @@ func _populate_binds() -> void:
 			var actions: Array = entry.get("actions", []) if entry.get("actions", []) is Array else []
 			if actions.is_empty():
 				var lbl_keys := Label.new()
-				lbl_keys.text = "  " + str(entry.get("keys", "(brak)"))
+				lbl_keys.text = "  " + str(entry.get("keys", I18nService.t("host.binds.none")))
 				lbl_keys.add_theme_font_size_override("font_size", _fs(18))
 				lbl_keys.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6))
 				lbl_keys.set_meta(&"bind_size", 18)
@@ -712,7 +752,7 @@ func _populate_binds() -> void:
 			for action in actions:
 				_binds_list.add_child(_bind_row(module_id, str(action)))
 		var btn_reset := Button.new()
-		btn_reset.text = "Przywróć domyślne"
+		btn_reset.text = I18nService.t("host.binds.btn_reset")
 		btn_reset.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		btn_reset.add_theme_font_size_override("font_size", _fs(18))
 		btn_reset.set_meta(&"bind_size", 18)
@@ -792,8 +832,8 @@ func _start_capture(module_id: String, action: String, slot: int, btn: Button) -
 	if not _capture.is_empty() and is_instance_valid(_capture.button):
 		(_capture.button as Button).text = _capture.text
 	_capture = {"module": module_id, "action": action, "slot": slot, "button": btn, "text": btn.text}
-	btn.text = "Naciśnij…"
-	_lbl_info.text = "„%s”: naciśnij klawisz (Esc — anuluj, Backspace — usuń klawisz z pola)." % _action_label(module_id, action)
+	btn.text = I18nService.t("host.binds.btn_press")
+	_lbl_info.text = I18nService.tf("host.binds.info_capture", {"action": _action_label(module_id, action)})
 
 
 ## Klawisz naciśnięty w trybie przechwytywania (z _input, przed obsługą Esc okna).
@@ -832,7 +872,7 @@ func _capture_key(event: InputEventKey) -> void:
 	_play_click()
 	_populate_binds()
 	if moved_from != "":
-		_lbl_info.text = "Klawisz %s zabrany akcji „%s”." % [InputBinds.key_name(code), moved_from]
+		_lbl_info.text = I18nService.tf("host.binds.key_reassigned", {"key": InputBinds.key_name(code), "action": moved_from})
 
 
 func _reset_binds(module_id: String) -> void:
@@ -896,7 +936,7 @@ func _start_confirm() -> void:
 	_countdown = CONFIRM_TIMEOUT
 	_confirming = true
 	_confirm_popup.visible = true
-	_lbl_countdown.text = "Przywrocenie za: %ds" % ceili(_countdown)
+	_lbl_countdown.text = I18nService.tf("host.options.countdown", {"seconds": ceili(_countdown)}, "Przywrocenie za: %ds" % ceili(_countdown))
 
 
 ## Zachowane ustawienia ekranu stają się nowym punktem odniesienia; okno zostaje otwarte.

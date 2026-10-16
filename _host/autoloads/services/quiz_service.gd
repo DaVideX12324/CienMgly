@@ -293,26 +293,24 @@ func get_question_display_text(question: Dictionary) -> String:
 			return str(question.get("prompt", ""))
 		"fill_tiles":
 			# Zdanie z lukami stoi już w wierszu luk pod pytaniem — tu tylko polecenie (albo własna treść pytania).
-			return str(question.get("question", question.get("prompt", "Uzupełnij luki kafelkami")))
+			return str(question.get("question", question.get("prompt", I18nService.t("host.quiz.prompt.fill_tiles"))))
 		"matching":
 			# Pary zwykle bez treści pytania — bez niej nad parami zostawał pusty pas.
-			return str(question.get("question", question.get("prompt", "Połącz w pary")))
+			return str(question.get("question", question.get("prompt", I18nService.t("host.quiz.prompt.matching"))))
 		_:
 			return str(question.get("question", question.get("prompt", "")))
 
 
 func get_question_hint(question: Dictionary) -> String:
 	match str(question.get("type", "multiple_choice")):
-		"multiple_choice":
-			return "W/S/A/D lub strzalki, Enter/Z/Spacja zatwierdza"
-		"true_false":
-			return "W/S/A/D lub strzalki, Enter/Z/Spacja zatwierdza"
+		"multiple_choice", "true_false":
+			return I18nService.t("host.quiz.hint.mc_tf")
 		"fill_text":
-			return "Wpisz odpowiedz i Enter"
+			return I18nService.t("host.quiz.hint.fill_text")
 		"fill_tiles":
-			return "Klikaj kafle, Tab zmienia luke, Enter zatwierdza"
+			return I18nService.t("host.quiz.hint.fill_tiles")
 		"matching":
-			return "Lewa -> prawa, Enter zatwierdza"
+			return I18nService.t("host.quiz.hint.matching")
 		_:
 			return ""
 
@@ -362,12 +360,12 @@ func get_correct_answer_text(question: Dictionary) -> String:
 			var values: Array[String] = [str(question.get("answer", ""))]
 			for alt in question.get("accepted_alternatives", []):
 				values.append(str(alt))
-			return "Poprawne: %s" % ", ".join(values)
+			return I18nService.tf("host.quiz.correct_prefix", {"answers": ", ".join(values)})
 		"fill_tiles":
 			var values: Array[String] = []
 			for gap in question.get("gaps", []):
 				values.append(str(gap.get("correct", "")))
-			return "Poprawna kolejnosc: %s" % ", ".join(values)
+			return I18nService.tf("host.quiz.correct_order_prefix", {"order": ", ".join(values)})
 		"matching":
 			var left_items: Array = question.get("left_items", [])
 			var right_items: Array = question.get("right_items", [])
@@ -377,7 +375,7 @@ func get_correct_answer_text(question: Dictionary) -> String:
 				var right_index := int(pair.get("right_index", -1))
 				if left_index >= 0 and left_index < left_items.size() and right_index >= 0 and right_index < right_items.size():
 					lines.append("%s -> %s" % [str(left_items[left_index]), str(right_items[right_index])])
-			return "Poprawne:\n%s" % "\n".join(lines)
+			return I18nService.tf("host.quiz.correct_pairs_prefix", {"pairs": "\n".join(lines)})
 		_:
 			return ""
 

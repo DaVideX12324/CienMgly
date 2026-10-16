@@ -58,6 +58,15 @@ func max_mode_for_height(height: int) -> int:
 
 
 func get_mode_labels() -> Array[String]:
+	var i18n := get_node_or_null("/root/I18nService")
+	if i18n and i18n.has_method("t"):
+		return [
+			str(i18n.call("t", "host.options.scale_xsmall", SCALE_LABELS[ScaleMode.XSMALL])),
+			str(i18n.call("t", "host.options.scale_small", SCALE_LABELS[ScaleMode.SMALL])),
+			str(i18n.call("t", "host.options.scale_normal", SCALE_LABELS[ScaleMode.NORMAL])),
+			str(i18n.call("t", "host.options.scale_large", SCALE_LABELS[ScaleMode.LARGE])),
+			str(i18n.call("t", "host.options.scale_xlarge", SCALE_LABELS[ScaleMode.XLARGE])),
+		]
 	return [
 		SCALE_LABELS[ScaleMode.XSMALL],
 		SCALE_LABELS[ScaleMode.SMALL],

@@ -399,12 +399,12 @@ func show_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
 	correct_answer_label.visible = false
 	_show_correct_answer()
 	if bool(result.get("correct", false)):
-		result_label.text = "Poprawnie!"
+		result_label.text = I18nService.t("host.quiz.correct")
 		result_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
 	else:
-		result_label.text = "Błędna odpowiedź!"
+		result_label.text = I18nService.t("host.quiz.wrong_answer")
 		if bool(result.get("timed_out", false)):
-			result_label.text = "Czas minął!"
+			result_label.text = I18nService.t("host.quiz.time_out")
 		result_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
 
 	match str(_current_question.get("type", "multiple_choice")):
@@ -539,7 +539,7 @@ func _build_mc(question: Dictionary) -> void:
 func _build_tf() -> void:
 	tf_box.visible = true
 	_tf_selected_idx = 0
-	var tf_texts := ["[1] Prawda", "[2] Fałsz"] if show_index_prefix else ["Prawda", "Fałsz"]
+	var tf_texts := ["[1] " + I18nService.t("host.quiz.true"), "[2] " + I18nService.t("host.quiz.false")] if show_index_prefix else [I18nService.t("host.quiz.true"), I18nService.t("host.quiz.false")]
 	for i in range(2):
 		tf_buttons[i].text = tf_texts[i]
 		tf_buttons[i].set_meta("base_text", tf_texts[i])
@@ -642,7 +642,7 @@ func _on_tf_button_hover(index: int) -> void:
 func _build_fill_text(question: Dictionary) -> void:
 	fill_text_box.visible = true
 	var pattern := str(question.get("prefilled_pattern", ""))
-	pattern_label.text = "Podpowiedź: %s" % pattern
+	pattern_label.text = I18nService.tf("host.quiz.pattern_hint", {"pattern": pattern})
 	pattern_label.visible = pattern != ""
 	fill_input.text = ""
 	fill_input.grab_focus()
@@ -742,7 +742,7 @@ func _show_correct_answer() -> void:
 		answer_text = str(_current_question.get("answer", ""))
 	if answer_text == "":
 		return
-	correct_answer_label.text = "Poprawna odpowiedź: %s" % answer_text
+	correct_answer_label.text = I18nService.tf("host.quiz.correct_answer_revealed", {"answer": answer_text})
 	correct_answer_label.visible = true
 
 

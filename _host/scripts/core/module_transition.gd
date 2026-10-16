@@ -17,22 +17,29 @@ const DOTS_STEP := 0.4
 
 var _target := 0.0
 var _shown := 0.0
-var _stage_text := "Ładowanie"
+var _stage_text := ""
 var _title_text := ""
 var _t := 0.0
 var _closing := false
 
 
 ## Dodaje ekran na korzeń drzewa (przeżywa wymianę scen i wyłączenie modułu).
-static func open(tree: SceneTree, title: String, stage: String = "Ładowanie") -> ModuleTransition:
+static func open(tree: SceneTree, title: String, stage: String = "") -> ModuleTransition:
 	var overlay := SCENE.instantiate() as ModuleTransition
-	overlay._stage_text = stage
+	var default_stage: String = "Loading"
+	var i18n := tree.root.get_node_or_null("I18nService")
+	if i18n and i18n.has_method("t"):
+		default_stage = str(i18n.call("t", "host.transition.loading"))
+	overlay._stage_text = stage if stage != "" else default_stage
 	overlay._title_text = title
 	tree.root.add_child(overlay)
 	return overlay
 
 
 func _ready() -> void:
+	if _stage_text == "":
+		var i18n := get_node_or_null("/root/I18nService")
+		_stage_text = str(i18n.call("t", "host.transition.loading")) if (i18n and i18n.has_method("t")) else "Loading"
 	_title.text = _title_text
 	_apply_stage()
 

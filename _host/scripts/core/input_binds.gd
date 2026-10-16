@@ -85,7 +85,13 @@ static func reset_module(settings: Node, module_id: String, actions: Array) -> v
 static func key_name(code: int) -> String:
 	var label := DisplayServer.keyboard_get_keycode_from_physical(code as Key)
 	var name := OS.get_keycode_string(label if label != KEY_NONE else code as Key)
-	var names := {"Space": "Spacja", "Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Escape": "Esc",
+	var space_str: String = "Spacja"
+	var loop := Engine.get_main_loop()
+	if loop is SceneTree:
+		var i18n := (loop as SceneTree).root.get_node_or_null("I18nService")
+		if i18n and i18n.has_method("t"):
+			space_str = str(i18n.call("t", "host.binds.key.space", "Spacja"))
+	var names := {"Space": space_str, "Up": "↑", "Down": "↓", "Left": "←", "Right": "→", "Escape": "Esc",
 		"Backspace": "Backspace", "Kp Enter": "Num Enter", "Kp Add": "Num +", "Kp Subtract": "Num -",
 		"Kp Multiply": "Num *", "Kp Divide": "Num /", "Kp Period": "Num ,"}
 	if names.has(name):

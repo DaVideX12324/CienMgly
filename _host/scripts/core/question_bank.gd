@@ -20,11 +20,11 @@ const GAP_MARK := "___"
 
 const TYPES: Array[String] = ["multiple_choice", "true_false", "fill_text", "fill_tiles", "matching"]
 const TYPE_NAMES := {
-	"multiple_choice": "Wybór odpowiedzi",
-	"true_false": "Prawda / fałsz",
-	"fill_text": "Wpisz odpowiedź",
-	"fill_tiles": "Uzupełnij kafelkami",
-	"matching": "Dopasuj pary",
+	"multiple_choice": "Multiple Choice",
+	"true_false": "True / False",
+	"fill_text": "Fill Text",
+	"fill_tiles": "Fill Tiles",
+	"matching": "Matching Pairs",
 }
 const ID_PREFIX := {
 	"multiple_choice": "mc",
@@ -33,6 +33,29 @@ const ID_PREFIX := {
 	"fill_tiles": "ft",
 	"matching": "match",
 }
+
+
+static func _t(key: String, fallback: String = "") -> String:
+	var loop := Engine.get_main_loop()
+	if loop is SceneTree:
+		var i18n := (loop as SceneTree).root.get_node_or_null("I18nService")
+		if i18n and i18n.has_method("t"):
+			return str(i18n.call("t", key, fallback))
+	return fallback if fallback != "" else key
+
+
+static func _tf(key: String, args: Dictionary, fallback: String = "") -> String:
+	var loop := Engine.get_main_loop()
+	if loop is SceneTree:
+		var i18n := (loop as SceneTree).root.get_node_or_null("I18nService")
+		if i18n and i18n.has_method("tf"):
+			return str(i18n.call("tf", key, args, fallback))
+	return fallback.format(args) if fallback != "" else key
+
+
+static func get_type_name(type: String) -> String:
+	return _t("host.quiz.type." + type, TYPE_NAMES.get(type, type))
+
 
 
 # --- Zestawy ---------------------------------------------------------------------------------------
@@ -117,11 +140,11 @@ static func import_file(path: String) -> Dictionary:
 	var result := {"ok": false, "id": "", "name": "", "imported": 0, "skipped": [], "error": ""}
 	var text := FileAccess.get_file_as_string(path)
 	if text == "":
-		result["error"] = "Nie udało się odczytać pliku."
+		result["error"] = _t("host.quiz.err.cannot_read_file")
 		return result
 	var json := JSON.new()
 	if json.parse(text) != OK:
-		result["error"] = "Błędny JSON (linia %d): %s" % [json.get_error_line(), json.get_error_message()]
+		result["error"] = _tf("host.quiz.err.invalid_json", {"line": json.get_error_line(), "msg": json.get_error_message()})
 		return result
 	var raw: Array = []
 	var name := path.get_file().get_basename()
@@ -133,14 +156,14 @@ static func import_file(path: String) -> Dictionary:
 	elif json.data is Array:
 		raw = json.data
 	else:
-		result["error"] = "Nieobsługiwany format: oczekiwano {\"questions\": [...]} albo tablicy pytań."
+		result["error"] = _t("host.quiz.err.unsupported_format")
 		return result
 	var questions: Array = []
 	var used_ids := {}
 	for i in range(raw.size()):
 		var q: Variant = raw[i]
 		if not (q is Dictionary):
-			result["skipped"].append({"index": i + 1, "reason": "to nie jest obiekt pytania"})
+			result["skipped"].append({"index": i + 1, "reason": _t("host.quiz.err.not_an_object")})
 			continue
 		var question := (q as Dictionary).duplicate(true)
 		if not question.has("type"):
@@ -156,11 +179,11 @@ static func import_file(path: String) -> Dictionary:
 		used_ids[qid] = true
 		questions.append(question)
 	if questions.is_empty():
-		result["error"] = "Brak poprawnych pytań w pliku."
+		result["error"] = _t("host.quiz.err.no_valid_questions")
 		return result
 	var id := new_set_id(name)
 	if not save_set(id, {"name": name, "description": description, "questions": questions}):
-		result["error"] = "Nie udało się zapisać zestawu."
+		result["error"] = _t("host.quiz.err.cannot_save_set")
 		return result
 	result["ok"] = true
 	result["id"] = id
@@ -183,74 +206,74 @@ static func export_set(id: String, path: String) -> bool:
 
 # --- Pytania ----------------------------------------------------------------------------------------
 
-## "" gdy pytanie poprawne, inaczej powód (po polsku) — te same wymagania co QuizService + spójność
+## "" gdy pytanie poprawne, inaczej powód — te same wymagania co QuizService + spójność
 ## (indeksy w zakresie, liczba luk, pary).
 static func validate_question(q: Dictionary) -> String:
 	var t := str(q.get("type", ""))
 	if not TYPES.has(t):
-		return "nieznany typ „%s”" % t
+		return _tf("host.quiz.err.unknown_type", {"type": t})
 	var diff := int(q.get("difficulty", 1))
 	if diff < 1 or diff > 5:
-		return "trudność poza zakresem 1–5"
+		return _t("host.quiz.err.diff_out_of_range")
 	match t:
 		"multiple_choice":
 			if str(q.get("question", "")).strip_edges() == "":
-				return "brak treści pytania"
+				return _t("host.quiz.err.no_question_text")
 			var answers: Variant = q.get("answers", [])
 			if not (answers is Array) or (answers as Array).size() < 2:
-				return "potrzebne co najmniej 2 odpowiedzi"
+				return _t("host.quiz.err.min_answers")
 			for a in answers:
 				if str(a).strip_edges() == "":
-					return "pusta odpowiedź"
+					return _t("host.quiz.err.empty_answer")
 			var ci := int(q.get("correct_index", -1))
 			if ci < 0 or ci >= (answers as Array).size():
-				return "nie wskazano poprawnej odpowiedzi"
+				return _t("host.quiz.err.no_correct_choice")
 		"true_false":
 			if str(q.get("statement", "")).strip_edges() == "":
-				return "brak twierdzenia"
+				return _t("host.quiz.err.no_statement")
 			if not q.has("correct_answer"):
-				return "brak poprawnej odpowiedzi (prawda / fałsz)"
+				return _t("host.quiz.err.no_tf_answer")
 		"fill_text":
 			if str(q.get("prompt", "")).strip_edges() == "":
-				return "brak treści pytania"
+				return _t("host.quiz.err.no_question_text")
 			if str(q.get("answer", "")).strip_edges() == "":
-				return "brak odpowiedzi"
+				return _t("host.quiz.err.no_answer")
 		"fill_tiles":
 			var text := str(q.get("text_with_gaps", ""))
 			var gap_count := text.count(GAP_MARK)
 			if gap_count == 0:
-				return "tekst bez luk (wstaw %s w miejscu luki)" % GAP_MARK
+				return _tf("host.quiz.err.no_gaps", {"gap": GAP_MARK})
 			var gaps: Variant = q.get("gaps", [])
 			if not (gaps is Array) or (gaps as Array).size() != gap_count:
-				return "liczba luk (%d) nie zgadza się z liczbą odpowiedzi" % gap_count
+				return _tf("host.quiz.err.gap_count_mismatch", {"count": gap_count})
 			var tiles: Variant = q.get("tiles", [])
 			if not (tiles is Array):
-				return "brak kafelków"
+				return _t("host.quiz.err.no_tiles")
 			for g in gaps:
 				if not (g is Dictionary) or str(g.get("correct", "")).strip_edges() == "":
-					return "pusta odpowiedź w luce"
+					return _t("host.quiz.err.empty_gap")
 				if not (tiles as Array).has(g["correct"]):
-					return "kafelki nie zawierają odpowiedzi „%s”" % g["correct"]
+					return _tf("host.quiz.err.missing_tile_answer", {"correct": g["correct"]})
 		"matching":
 			var left: Variant = q.get("left_items", [])
 			var right: Variant = q.get("right_items", [])
 			var pairs: Variant = q.get("pairs", [])
 			if not (left is Array) or not (right is Array) or not (pairs is Array):
-				return "brak elementów do dopasowania"
+				return _t("host.quiz.err.no_matching_items")
 			if (left as Array).size() < 2:
-				return "potrzebne co najmniej 2 pary"
+				return _t("host.quiz.err.min_pairs")
 			if (left as Array).size() != (right as Array).size() or (pairs as Array).size() != (left as Array).size():
-				return "liczba elementów i par się nie zgadza"
+				return _t("host.quiz.err.pair_count_mismatch")
 			for p in pairs:
 				if not (p is Dictionary):
-					return "błędna para"
+					return _t("host.quiz.err.invalid_pair")
 				var li := int(p.get("left_index", -1))
 				var ri := int(p.get("right_index", -1))
 				if li < 0 or li >= (left as Array).size() or ri < 0 or ri >= (right as Array).size():
-					return "para wskazuje poza listę"
+					return _t("host.quiz.err.pair_out_of_bounds")
 			for item in (left as Array) + (right as Array):
 				if str(item).strip_edges() == "":
-					return "pusty element pary"
+					return _t("host.quiz.err.empty_pair_item")
 	return ""
 
 

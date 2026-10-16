@@ -77,15 +77,15 @@ func set_god_mode(enabled: bool) -> void:
 	god_mode = enabled
 	god_mode_toggled.emit(god_mode)
 	if god_mode:
-		show_toast("🛡️ CHEAT: God Mode WŁĄCZONY (Brak obrażeń)", Color(1.0, 0.9, 0.3))
+		show_toast(I18nService.t("host.cheat.god_mode_on"), Color(1.0, 0.9, 0.3))
 	else:
-		show_toast("🛡️ CHEAT: God Mode WYŁĄCZONY", Color(0.7, 0.7, 0.7))
+		show_toast(I18nService.t("host.cheat.god_mode_off"), Color(0.7, 0.7, 0.7))
 
 
 func set_speed_mult(mult: float) -> void:
 	player_speed_mult = maxf(0.2, mult)
 	speed_mult_changed.emit(player_speed_mult)
-	show_toast("👟 CHEAT: Prędkość gracza: %.1fx" % player_speed_mult, Color(0.4, 0.8, 1.0))
+	show_toast(I18nService.tf("host.cheat.speed", {"speed": "%.1f" % player_speed_mult}), Color(0.4, 0.8, 1.0))
 
 
 func _setup_dev_menu() -> void:
@@ -98,9 +98,9 @@ func toggle_enemies() -> bool:
 	enemies_disabled = not enemies_disabled
 	enemies_toggled.emit(enemies_disabled)
 	if enemies_disabled:
-		show_toast("🛑 CHEAT: Przeciwnicy WYŁĄCZENI (Brak agresji/walk)", Color(1.0, 0.45, 0.45))
+		show_toast(I18nService.t("host.cheat.enemies_off"), Color(1.0, 0.45, 0.45))
 	else:
-		show_toast("⚔️ CHEAT: Przeciwnicy WŁĄCZENI (Normalny tryb)", Color(0.45, 1.0, 0.45))
+		show_toast(I18nService.t("host.cheat.enemies_on"), Color(0.45, 1.0, 0.45))
 	return enemies_disabled
 
 
@@ -114,24 +114,24 @@ func toggle_quizzes() -> bool:
 		settings_service.call("set_quizless_mode_enabled", new_quizless)
 	quizzes_toggled.emit(new_quizless)
 	if new_quizless:
-		show_toast("⚡ CHEAT: Quizy WYŁĄCZONE (Auto-pass bez pytań)", Color(1.0, 0.85, 0.3))
+		show_toast(I18nService.t("host.cheat.quizzes_off"), Color(1.0, 0.85, 0.3))
 	else:
-		show_toast("📖 CHEAT: Quizy WŁĄCZONE (Pytania aktywne)", Color(0.4, 0.85, 1.0))
+		show_toast(I18nService.t("host.cheat.quizzes_on"), Color(0.4, 0.85, 1.0))
 	return new_quizless
 
 
 func trigger_instant_win() -> void:
 	instant_win_triggered.emit()
-	show_toast("🏆 CHEAT: Natychmiastowe Zwycięstwo (Instant Win)!", Color(1.0, 0.95, 0.2))
+	show_toast(I18nService.t("host.cheat.instant_win"), Color(1.0, 0.95, 0.2))
 
 
 func set_quiz_ui_mode(mode: String) -> void:
 	quiz_ui_mode = mode
 	quiz_ui_mode_changed.emit(quiz_ui_mode)
 	if mode == "popup":
-		show_toast("🖼️ Układ quizu: Modal / Popup w centrum", Color(0.4, 0.85, 1.0))
+		show_toast(I18nService.t("host.cheat.layout_modal"), Color(0.4, 0.85, 1.0))
 	else:
-		show_toast("📏 Układ quizu: Dolny pasek (100% szerokości)", Color(0.4, 0.85, 1.0))
+		show_toast(I18nService.t("host.cheat.layout_bottom"), Color(0.4, 0.85, 1.0))
 
 
 func show_toast(text: String, accent_color: Color = Color.WHITE) -> void:
