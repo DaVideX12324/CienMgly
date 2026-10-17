@@ -16,6 +16,7 @@ const TileSetFieldScript = preload("../generation/core/tileset_field.gd")
 const GenProgress = preload("../generation/core/gen_progress.gd")
 const FrameSlicer = preload("../generation/core/frame_slicer.gd")
 const MapPrefetch = preload("map_prefetch.gd")
+const MapDiskCache = preload("map_disk_cache.gd")
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
@@ -94,6 +95,10 @@ var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu
 var loading_background: Texture2D = null
 
 var last_result: RefCounted = null
+## Zapis mapy na dysk (MapDiskCache): plik i podpis bieżącej generacji, bajty migawki po malowaniu kafli.
+var _cache_path := ""
+var _cache_sig := ""
+var _cache_bytes := PackedByteArray()
 var is_generating: bool = false
 var _transitioning: bool = false
 var _task_id: int = -1
@@ -286,6 +291,16 @@ func generate_level_async(seed_val: int = 0) -> void:
 	overlay.track(progress)
 	GenProgress.start(progress)
 
+	# Mapa zapisana na dysku (ten sam seed zapisu, konfiguracja i tileset): bez generowania, od razu kafle z pliku.
+	_setup_disk_cache(job)
+	var snap: Dictionary = MapDiskCache.read(_cache_path, _cache_sig) if not _cache_path.is_empty() else {}
+	if not snap.is_empty():
+		MapPrefetch.unqueue(job.level_key)
+		await get_tree().process_frame  # generation_finished zawsze po wyjściu z _ready (jak przy generowaniu w wątku)
+		await _apply_cached_async(job, snap)
+		_finish_generation(progress, overlay, job)
+		return
+
 	# Dane mapy policzone już w tle (MapPrefetch, ten sam klucz = te same dane) albo liczone teraz.
 	var pre: Dictionary = MapPrefetch.take(MapPrefetch.key_of(job)) if _prefetch_allowed() else {}
 	if not pre.is_empty():
@@ -304,6 +319,11 @@ func generate_level_async(seed_val: int = 0) -> void:
 		_task_id = -1
 
 	await _apply_job_async(job)
+	_finish_generation(progress, overlay, job)
+
+
+## Koniec generowania (z pliku albo świeżego): pasek, ekran ładowania, sygnał, zapis na dysk, mapy z wyprzedzeniem.
+func _finish_generation(progress, overlay, job: GenJob) -> void:
 	progress.finish()
 	GenProgress.stop()
 	overlay.close()
@@ -311,9 +331,47 @@ func generate_level_async(seed_val: int = 0) -> void:
 	if job.debug_report:
 		print(map_report(job, progress))
 	generation_finished.emit()
+	if not _cache_bytes.is_empty():
+		MapDiskCache.save_async(_cache_path, _cache_bytes)
+		_cache_bytes = PackedByteArray()
 	if _prefetch_allowed():
 		MapPrefetch.request(next_level_path)
 		MapPrefetch.request(previous_level_path)
+
+
+## Zapis map na dysk tylko w grze (jak mapy z wyprzedzeniem) i dla jaskiń / ścieków (układ z planem kafli).
+func _setup_disk_cache(job: GenJob) -> void:
+	_cache_path = ""
+	_cache_sig = ""
+	_cache_bytes = PackedByteArray()
+	if not job.is_cave or not MapDiskCache.enabled() or not _prefetch_allowed():
+		return
+	var lsm = _get_level_state_manager()
+	if lsm == null or job.level_key.is_empty():
+		return
+	MapDiskCache.sweep_once()
+	var files: Array = [_resolve_behaviour_json_path()]
+	if job.flags != null and not str(job.flags.objects_catalog).is_empty():
+		files.append(job.flags.objects_catalog)
+	var ts_path: String = custom_tileset.resource_path if custom_tileset != null else str(_palette().get("tileset_path", ""))
+	files.append(ts_path)
+	_cache_path = MapDiskCache.path_for(lsm.get_world_seed(), job.level_key)
+	_cache_sig = MapDiskCache.signature(MapPrefetch.key_of(job), files)
+
+
+## Jak _apply_job_async, ale warstwy kafli i wynik z pliku — encje, obiekty, nawigacja i wyjścia liczone jak zawsze.
+func _apply_cached_async(job: GenJob, snap: Dictionary) -> void:
+	var catalog = null
+	if job.flags != null and not str(job.flags.objects_catalog).is_empty():
+		catalog = ObjectCatalog.load_path(job.flags.objects_catalog)
+	job.result = MapDiskCache.restore_result(snap.r, catalog)
+	job.debug_report = false
+	last_result = job.result
+	var layers := _prepare_layers(job)
+	MapDiskCache.apply_tiles(layers, snap.tiles)
+	seed(job.result.seed_used)  # jak przy malowaniu (job.rng.seed): encje dostają ten sam ciąg losowań
+	_cache_path = ""
+	await _finish_level(job, FrameSlicer.new())
 
 
 ## Mapy z wyprzedzeniem tylko w grze: seed zapisu i flagi z JSON-a (eksplorator map podaje własne).
@@ -661,6 +719,8 @@ func _apply_job_async(job: GenJob) -> void:
 					GenProgress.sub(float(done) / maxf(total, 1))
 					await slicer.next_frame(get_tree())
 		GenProgress.end(&"paint")
+		if not _cache_path.is_empty():
+			_cache_bytes = MapDiskCache.encode(MapDiskCache.snapshot(layers, job.result, _cache_sig))
 	else:
 		_apply_grid_layers(job, layers)
 	await _finish_level(job, slicer)
