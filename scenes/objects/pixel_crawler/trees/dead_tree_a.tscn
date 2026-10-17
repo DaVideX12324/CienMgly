@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_rmggr"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ny3ca"]
+atlas = ExtResource("1_rmggr")
+region = Rect2(197, 65, 34, 31)
+filter_clip = true
+
+[node name="DeadTreeA" type="StaticBody2D" unique_id=1856891343]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "trees_small"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1937436860]
+texture = SubResource("AtlasTexture_ny3ca")
+centered = false
+offset = Vector2(-17, -29)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1477712408]
+polygon = PackedVector2Array(-3, -3, -2, -4, 2, -4, 3, -3, 3, 1, 2, 2, -2, 2, -3, 1)

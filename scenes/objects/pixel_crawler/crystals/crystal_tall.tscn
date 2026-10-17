@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://b2ucl3g1v68o8" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Rocks.png" id="1_xbbcv"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g645j"]
+atlas = ExtResource("1_xbbcv")
+region = Rect2(146, 279, 12, 25)
+filter_clip = true
+
+[node name="CrystalTall" type="StaticBody2D" unique_id=1072793254]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "crystals"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1458191010]
+texture = SubResource("AtlasTexture_g645j")
+centered = false
+offset = Vector2(-6, -23)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1892476056]
+polygon = PackedVector2Array(-4, -2, -3, -3, 3, -3, 4, -2, 4, 1, 3, 2, -3, 2, -4, 1)

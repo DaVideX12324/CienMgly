@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://ck5wubgm4wfyp" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_02.png" id="1_60kvj"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_50ce9"]
+atlas = ExtResource("1_60kvj")
+region = Rect2(80, 32, 16, 32)
+filter_clip = true
+
+[node name="SaplingM1S2R0c11" type="StaticBody2D" unique_id=1673767654]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "trees_small"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1730407201]
+texture = SubResource("AtlasTexture_50ce9")
+centered = false
+offset = Vector2(-8, -30)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1752002365]
+polygon = PackedVector2Array(-3, -2, -2, -3, 2, -3, 3, -2, 3, 1, 2, 2, -2, 2, -3, 1)

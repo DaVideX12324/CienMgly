@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://b2ucl3g1v68o8" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Rocks.png" id="1_8aku3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5s3x1"]
+atlas = ExtResource("1_8aku3")
+region = Rect2(48, 147, 15, 10)
+filter_clip = true
+
+[node name="RockDarkSmall" type="StaticBody2D" unique_id=1899402249]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "rocks"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1161912384]
+texture = SubResource("AtlasTexture_5s3x1")
+centered = false
+offset = Vector2(-8, -8)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1387661541]
+polygon = PackedVector2Array(-5, -2, -4, -3, 4, -3, 5, -2, 5, 1, 4, 2, -4, 2, -5, 1)

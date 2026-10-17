@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_7j29u"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k32qo"]
+atlas = ExtResource("1_7j29u")
+region = Rect2(146, 5, 29, 28)
+filter_clip = true
+
+[node name="BushRustSmall" type="StaticBody2D" unique_id=1270705441]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "bushes"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1717374975]
+texture = SubResource("AtlasTexture_k32qo")
+centered = false
+offset = Vector2(-14, -26)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1992176043]
+polygon = PackedVector2Array(-10, -4, -9, -5, 9, -5, 10, -4, 10, 1, 9, 2, -9, 2, -10, 1)

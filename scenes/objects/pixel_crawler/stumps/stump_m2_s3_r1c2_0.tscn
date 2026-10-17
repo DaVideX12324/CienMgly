@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://6odhx4fvwfgd" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_03.png" id="1_tiq71"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hget7"]
+atlas = ExtResource("1_tiq71")
+region = Rect2(117, 135, 6, 9)
+filter_clip = true
+
+[node name="StumpM2S3R1c20" type="StaticBody2D" unique_id=1411676404]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stumps"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1833399647]
+texture = SubResource("AtlasTexture_hget7")
+centered = false
+offset = Vector2(-3, -7)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1560239580]
+polygon = PackedVector2Array(-3, -2, -2, -3, 2, -3, 3, -2, 3, 1, 2, 2, -2, 2, -3, 1)
