@@ -49,6 +49,14 @@ ROOF_B = {
     "brown": (16, 80, 96, 96, (64, 100), [(48, 144, 32, 16), (32, 160, 64, 16)]),
     "teal": (144, 80, 96, 96, (191, 100), [(160, 160, 64, 16)]),
 }
+# Domy złożone z kilku brył stojących obok siebie (od lewej): (preset, cofnięcie w górę w px). Drzwi bierze bryła "door".
+COMPOSITES = {
+    "dom_l_prawy": {"parts": [("chata_duza", 0), ("chata_mala", 16)], "door": 0},
+    "dom_l_lewy": {"parts": [("chata_zielona_mala", 16), ("chata_zielona", 0)], "door": 1},
+    "dom_szeregowy": {"parts": [("chata_brazowa_prawa", 24), ("chata_zielona_mala", 0)], "door": 1},
+    "dom_t": {"parts": [("chata_mala", 20), ("chata_wysoka", 0), ("chata_zielona_mala", 20)], "door": 1},
+    "dom_schodkowy": {"parts": [("chata_wysoka", 32), ("chata_duza", 16), ("chata_mala", 0)], "door": 2},
+}
 ROOF_SLOPE = 1.0
 SLICE = 16
 SHADOW_NEAR, SHADOW_FAR = 8, 6     # grubość ciemnego i jaśniejszego pasma cienia pod dachem (px)
@@ -191,6 +199,73 @@ def build(spec):
     return body.crop(union), roof_layer.crop(union), anchor, door_cx, wb
 
 
+def build_composite(spec):
+    """Skleja bryły obok siebie (ściany stykają się); dachy i korpusy osobno, od tyłu do przodu."""
+    parts = []
+    x = 0
+    for preset, up in spec["parts"]:
+        body, roof, (ax, ay), door_cx, wb = build(PRESETS[preset])
+        parts.append({"body": body, "roof": roof, "ax": ax, "ay": ay, "wb": wb, "up": up, "cx": x + wb // 2, "door": door_cx})
+        x += wb
+    mid = x // 2
+    xs0 = min(q["cx"] - mid - q["ax"] for q in parts)
+    ys0 = min(-q["up"] - q["ay"] for q in parts)
+    xs1 = max(q["cx"] - mid - q["ax"] + q["body"].width for q in parts)
+    W, H = xs1 - xs0, max(-q["up"] for q in parts) * 0 + (0 - ys0) + 4
+    body_l, roof_l = Image.new("RGBA", (W, H), (0, 0, 0, 0)), Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for q in sorted(parts, key=lambda q: -q["up"]):
+        pos = (q["cx"] - mid - q["ax"] - xs0, -q["up"] - q["ay"] - ys0)
+        body_l.alpha_composite(q["body"], pos)
+    for q in sorted(parts, key=lambda q: -q["up"]):
+        pos = (q["cx"] - mid - q["ax"] - xs0, -q["up"] - q["ay"] - ys0)
+        roof_l.alpha_composite(q["roof"], pos)
+    anchor = (-xs0, -ys0)
+    d = parts[spec["door"]]
+    return body_l, roof_l, anchor, d["cx"] - mid + d["door"], parts, mid
+
+
+def composite_scene(name, anchor, door_cx, door_up, parts, mid):
+    ax, ay = anchor
+    title = "".join(p.capitalize() for p in name.split("_"))
+    subs, nodes = "", ""
+    for i, q in enumerate(parts):
+        subs += ('[sub_resource type="RectangleShape2D" id="RectangleShape2D_%d"]\nsize = Vector2(%d, 16)\n\n' % (i, q["wb"]))
+        nodes += ('[node name="BaseCollision%d" type="CollisionShape2D" parent="."]\n'
+                  'position = Vector2(%d, %d)\nshape = SubResource("RectangleShape2D_%d")\n\n' % (i, q["cx"] - mid, -q["up"] - 8, i))
+    return f'''[gd_scene load_steps={4 + len(parts)} format=3]
+
+[ext_resource type="Texture2D" path="{TEX_RES}{name}_body.png" id="1_body"]
+[ext_resource type="Texture2D" path="{TEX_RES}{name}_roof.png" id="2_roof"]
+
+{subs}[sub_resource type="CircleShape2D" id="CircleShape2D_door"]
+radius = 14.0
+
+[node name="{title}" type="StaticBody2D"]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("1_body")
+centered = false
+offset = Vector2({-ax}, {-ay})
+
+[node name="Roof" type="Sprite2D" parent="."]
+texture = ExtResource("2_roof")
+centered = false
+offset = Vector2({-ax}, {-ay})
+
+{nodes}[node name="DoorArea" type="Area2D" parent="."]
+position = Vector2({door_cx}, {8 - door_up})
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea"]
+shape = SubResource("CircleShape2D_door")
+
+[node name="DoorSpot" type="Marker2D" parent="."]
+position = Vector2({door_cx}, {12 - door_up})
+'''
+
+
 def scene_text(name, body_size, anchor, door_cx, wb):
     ax, ay = anchor
     title = "".join(p.capitalize() for p in name.split("_"))
@@ -238,7 +313,16 @@ position = Vector2({door_cx}, 12)
 def main(names):
     os.makedirs(TEX_DIR, exist_ok=True)
     os.makedirs(SCENE_DIR, exist_ok=True)
-    for name in names or PRESETS:
+    for name in names or list(PRESETS) + list(COMPOSITES):
+        if name in COMPOSITES:
+            spec = COMPOSITES[name]
+            body, roof, anchor, door_cx, parts, mid = build_composite(spec)
+            body.save(os.path.join(TEX_DIR, name + "_body.png"))
+            roof.save(os.path.join(TEX_DIR, name + "_roof.png"))
+            with open(os.path.join(SCENE_DIR, name + ".tscn"), "w", newline="\n") as f:
+                f.write(composite_scene(name, anchor, door_cx, parts[spec["door"]]["up"], parts, mid))
+            print(name, body.size, "kotwica", anchor)
+            continue
         body, roof, anchor, door_cx, wb = build(PRESETS[name])
         body.save(os.path.join(TEX_DIR, name + "_body.png"))
         roof.save(os.path.join(TEX_DIR, name + "_roof.png"))

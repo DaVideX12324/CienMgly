@@ -1,0 +1,52 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/buildings/dom_t_body.png" id="1_body"]
+[ext_resource type="Texture2D" path="res://modules/quiz_rpg/assets/textures/buildings/dom_t_roof.png" id="2_roof"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0"]
+size = Vector2(112, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(144, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2"]
+size = Vector2(112, 16)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_door"]
+radius = 14.0
+
+[node name="DomT" type="StaticBody2D"]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Body" type="Sprite2D" parent="."]
+texture = ExtResource("1_body")
+centered = false
+offset = Vector2(-192, -198)
+
+[node name="Roof" type="Sprite2D" parent="."]
+texture = ExtResource("2_roof")
+centered = false
+offset = Vector2(-192, -198)
+
+[node name="BaseCollision0" type="CollisionShape2D" parent="."]
+position = Vector2(-128, -28)
+shape = SubResource("RectangleShape2D_0")
+
+[node name="BaseCollision1" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_1")
+
+[node name="BaseCollision2" type="CollisionShape2D" parent="."]
+position = Vector2(128, -28)
+shape = SubResource("RectangleShape2D_2")
+
+[node name="DoorArea" type="Area2D" parent="."]
+position = Vector2(-40, 8)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea"]
+shape = SubResource("CircleShape2D_door")
+
+[node name="DoorSpot" type="Marker2D" parent="."]
+position = Vector2(-40, 12)
