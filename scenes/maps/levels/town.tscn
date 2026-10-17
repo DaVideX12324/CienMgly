@@ -5,9 +5,13 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_medium.tscn" id="t_1"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_small.tscn" id="t_2"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_olive_small.tscn" id="t_3"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/chata_duza.tscn" id="t_4"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/chata_mala.tscn" id="t_5"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/chata_zielona.tscn" id="t_6"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_chata_8.tscn" id="b_1"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_deski_12.tscn" id="b_2"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_chata_12.tscn" id="b_3"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_pionowe_8.tscn" id="b_4"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_wysoki_8.tscn" id="b_5"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_dluga_16.tscn" id="b_6"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_k_tynk_12.tscn" id="b_7"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_brown_pair.tscn" id="t_7"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_brown_small.tscn" id="t_8"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_brown_tall.tscn" id="t_9"]
@@ -85,25 +89,25 @@ intro_lines = PackedStringArray("Mgła zabiera wspomnienia, ale wiedza zostaje."
 [node name="Buildings" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="House_Desert_RedStone_7" parent="Buildings" instance=ExtResource("t_6")]
+[node name="House_Desert_RedStone_7" parent="Buildings" instance=ExtResource("b_7")]
 position = Vector2(911, 186)
 
-[node name="House_Desert_RedStone_3" parent="Buildings" instance=ExtResource("t_4")]
+[node name="House_Desert_RedStone_3" parent="Buildings" instance=ExtResource("b_3")]
 position = Vector2(1176, 297)
 
-[node name="House_Desert_RedStone_4" parent="Buildings" instance=ExtResource("t_5")]
+[node name="House_Desert_RedStone_4" parent="Buildings" instance=ExtResource("b_4")]
 position = Vector2(716, 178)
 
-[node name="House_Desert_RedStone_1" parent="Buildings" instance=ExtResource("t_5")]
+[node name="House_Desert_RedStone_1" parent="Buildings" instance=ExtResource("b_1")]
 position = Vector2(668, 916)
 
-[node name="House_Desert_RedStone_2" parent="Buildings" instance=ExtResource("t_6")]
+[node name="House_Desert_RedStone_2" parent="Buildings" instance=ExtResource("b_2")]
 position = Vector2(770, 410)
 
-[node name="House_Desert_RedStone_5" parent="Buildings" instance=ExtResource("t_5")]
+[node name="House_Desert_RedStone_5" parent="Buildings" instance=ExtResource("b_5")]
 position = Vector2(1063, 472)
 
-[node name="House_Desert_RedStone_6" parent="Buildings" instance=ExtResource("t_4")]
+[node name="House_Desert_RedStone_6" parent="Buildings" instance=ExtResource("b_6")]
 position = Vector2(233, 202)
 
 [node name="Trees" type="Node2D" parent="."]
