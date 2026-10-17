@@ -36,6 +36,12 @@ PRESETS = {
     "chata_mala": {"extra": 16, "eave": 56, "roof": "brown"},
     "chata_duza": {"extra": 48, "eave": 56, "roof": "brown"},
     "chata_zielona": {"extra": 32, "eave": 56, "roof": "teal"},
+    "chata_zielona_mala": {"extra": 16, "eave": 56, "roof": "teal", "door": "right"},
+    "chata_zielona_duza": {"extra": 64, "eave": 56, "roof": "teal", "door": "right"},
+    "chata_brazowa_prawa": {"extra": 32, "eave": 56, "roof": "brown", "door": "right"},
+    "chata_wysoka": {"extra": 32, "eave": 72, "roof": "brown"},
+    "chata_wysoka_zielona": {"extra": 48, "eave": 72, "roof": "teal", "door": "right"},
+    "dom_dlugi": {"extra": 80, "eave": 64, "roof": "brown"},
 }
 
 # Gdzie leży dach "B" (stromy dwuspad) w Roofs.png: (x, y, szer., wys., ziarno kalenicy, wycięcia).
@@ -158,11 +164,14 @@ def build(spec):
     gable_y = ry + int(roof.height * 0.55)
     for dx in (-18, 6):
         wall.alpha_composite(GREY_WIN, (mid + dx, gable_y))
-    door_x = bx + 16
+    right = spec.get("door") == "right"                         # drzwi po prawej, okiennice po lewej
+    door_x = bx + wb - 16 - DOOR.width if right else bx + 16
     wall.alpha_composite(DOOR, (door_x, base - DOOR.height))
-    shut_x = bx + wb - 44
-    if mid + 4 + WIN_MESH.width + 6 <= shut_x:                 # okno z kratą tylko, gdy nie nachodzi na okiennice
-        wall.alpha_composite(WIN_MESH, (mid + 4, base - eave + 8))
+    shut_x = bx + 20 if right else bx + wb - 44
+    mesh_x = mid - 4 - WIN_MESH.width if right else mid + 4
+    ok = mesh_x >= shut_x + WIN_SHUT.width + 6 if right else mesh_x + WIN_MESH.width + 6 <= shut_x
+    if ok:                                                      # okno z kratą tylko, gdy nie nachodzi na okiennice
+        wall.alpha_composite(WIN_MESH, (mesh_x, base - eave + 8))
     wall.alpha_composite(WIN_SHUT, (shut_x, base - eave + 4))
     wa = np.array(wall).astype(float)
     for col in range(cw):                                       # cień dachu: pasma pod dolną krawędzią płatów
