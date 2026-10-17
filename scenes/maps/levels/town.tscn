@@ -2,8 +2,40 @@
 
 [ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_d6a3d"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/companion_npc.tscn" id="2_71fwf"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_medium.tscn" id="t_1"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_small.tscn" id="t_2"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_olive_small.tscn" id="t_3"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/chata_duza.tscn" id="t_4"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/chata_mala.tscn" id="t_5"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/chata_zielona.tscn" id="t_6"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_brown_pair.tscn" id="t_7"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_brown_small.tscn" id="t_8"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_brown_tall.tscn" id="t_9"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_big.tscn" id="t_10"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_pair.tscn" id="t_11"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_small.tscn" id="t_12"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_tall.tscn" id="t_13"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s2_r0c1.tscn" id="t_14"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s2_r1c0.tscn" id="t_15"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s3_r0c0.tscn" id="t_16"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s3_r0c1.tscn" id="t_17"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s3_r1c0.tscn" id="t_18"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s3_r1c1.tscn" id="t_19"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m1_s4_r1c0.tscn" id="t_20"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s2_r0c0.tscn" id="t_21"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s2_r1c0.tscn" id="t_22"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s3_r0c0.tscn" id="t_23"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s3_r0c1.tscn" id="t_24"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s3_r1c0.tscn" id="t_25"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s3_r1c1.tscn" id="t_26"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s4_r0c0.tscn" id="t_27"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s2_r0c0.tscn" id="t_28"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c0.tscn" id="t_29"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c1.tscn" id="t_30"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r1c0.tscn" id="t_31"]
 
 [node name="Town" type="Node2D" unique_id=1399112909]
+y_sort_enabled = true
 
 [node name="Ground" type="TileMapLayer" parent="." unique_id=426862110]
 z_index = -3
@@ -43,3 +75,755 @@ position = Vector2(792, 648)
 hero_id = "kaplan"
 quest_count = 10
 intro_lines = PackedStringArray("Mgła zabiera wspomnienia, ale wiedza zostaje.", "Odpowiedz poprawnie na {count} pytań — pomogę ci przetrwać, co nadejdzie.")
+
+[node name="Buildings" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="House_Desert_RedStone_7" parent="Buildings" instance=ExtResource("t_6")]
+position = Vector2(911, 186)
+
+[node name="House_Desert_RedStone_3" parent="Buildings" instance=ExtResource("t_4")]
+position = Vector2(1176, 297)
+
+[node name="House_Desert_RedStone_4" parent="Buildings" instance=ExtResource("t_5")]
+position = Vector2(716, 178)
+
+[node name="House_Desert_RedStone_1" parent="Buildings" instance=ExtResource("t_5")]
+position = Vector2(668, 916)
+
+[node name="House_Desert_RedStone_2" parent="Buildings" instance=ExtResource("t_6")]
+position = Vector2(770, 410)
+
+[node name="House_Desert_RedStone_5" parent="Buildings" instance=ExtResource("t_5")]
+position = Vector2(1063, 472)
+
+[node name="House_Desert_RedStone_6" parent="Buildings" instance=ExtResource("t_4")]
+position = Vector2(233, 202)
+
+[node name="Trees" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Palm_Red_1" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(1043, 193)
+
+[node name="Palm_Red_2" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(1109, 437)
+
+[node name="Palm_Red_3" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(631, 605)
+
+[node name="Palm_Red_4" parent="Trees" instance=ExtResource("t_20")]
+position = Vector2(544, 801)
+
+[node name="Palm_Red_5" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(163, 455)
+
+[node name="Palm_Red_6" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(398, 401)
+
+[node name="Palm_Red_7" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(419, 588)
+
+[node name="Palm_Red_8" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(100, 226)
+
+[node name="Palm_Red_9" parent="Trees" instance=ExtResource("t_20")]
+position = Vector2(502, 912)
+
+[node name="Palm_Red_10" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(72, 93)
+
+[node name="Palm_Red_11" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(88, 132)
+
+[node name="Palm_Red_12" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(-31, 244)
+
+[node name="Palm_Red_13" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(-17, 299)
+
+[node name="Palm_Red_14" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(-26, 510)
+
+[node name="Palm_Red_15" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(-21, 745)
+
+[node name="Palm_Red_16" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(0, 850)
+
+[node name="Palm_Red_17" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(-18, 896)
+
+[node name="Palm_Red_18" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(-16, 1042)
+
+[node name="Palm_Red_19" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(22, 1164)
+
+[node name="Palm_Red_20" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(112, 1170)
+
+[node name="Palm_Red_21" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(146, 1268)
+
+[node name="Palm_Red_22" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(7, 1246)
+
+[node name="Palm_Red_23" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(106, 1319)
+
+[node name="Palm_Red_24" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(591, 1325)
+
+[node name="Palm_Red_25" parent="Trees" instance=ExtResource("t_18")]
+position = Vector2(1130, 200)
+
+[node name="Palm_Red_26" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(1188, 295)
+
+[node name="Palm_Red_27" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(1191, 512)
+
+[node name="Palm_Red_28" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(1255, 732)
+
+[node name="Palm_Red_29" parent="Trees" instance=ExtResource("t_20")]
+position = Vector2(1219, 968)
+
+[node name="Palm_Red_30" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(1216, 1088)
+
+[node name="Palm_Red_31" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(1151, 1113)
+
+[node name="Palm_Red_32" parent="Trees" instance=ExtResource("t_15")]
+position = Vector2(1128, 1163)
+
+[node name="Palm_Red_33" parent="Trees" instance=ExtResource("t_20")]
+position = Vector2(1074, 1273)
+
+[node name="Palm_Red_34" parent="Trees" instance=ExtResource("t_19")]
+position = Vector2(749, 700)
+
+[node name="Palm_Dark_1" parent="Trees" instance=ExtResource("t_27")]
+position = Vector2(981, 149)
+
+[node name="Palm_Dark_2" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1027, 148)
+
+[node name="Palm_Dark_3" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1116, 406)
+
+[node name="Palm_Dark_4" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1134, 461)
+
+[node name="Palm_Dark_5" parent="Trees" instance=ExtResource("t_27")]
+position = Vector2(640, 333)
+
+[node name="Palm_Dark_6" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(678, 590)
+
+[node name="Palm_Dark_7" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(245, 364)
+
+[node name="Palm_Dark_8" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(73, 513)
+
+[node name="Palm_Dark_9" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(277, 595)
+
+[node name="Palm_Dark_10" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(165, 763)
+
+[node name="Palm_Dark_11" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(337, 133)
+
+[node name="Palm_Dark_12" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(154, 240)
+
+[node name="Palm_Dark_13" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(31, 147)
+
+[node name="Palm_Dark_14" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(66, 161)
+
+[node name="Palm_Dark_15" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(14, 266)
+
+[node name="Palm_Dark_16" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(-41, 426)
+
+[node name="Palm_Dark_17" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(-14, 594)
+
+[node name="Palm_Dark_18" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(-26, 810)
+
+[node name="Palm_Dark_19" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(64, 1134)
+
+[node name="Palm_Dark_20" parent="Trees" instance=ExtResource("t_27")]
+position = Vector2(77, 1264)
+
+[node name="Palm_Dark_21" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(-26, 1301)
+
+[node name="Palm_Dark_22" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(261, 1312)
+
+[node name="Palm_Dark_23" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(511, 1308)
+
+[node name="Palm_Dark_24" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(675, 1297)
+
+[node name="Palm_Dark_25" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1126, 124)
+
+[node name="Palm_Dark_26" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(1219, 357)
+
+[node name="Palm_Dark_27" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1242, 409)
+
+[node name="Palm_Dark_28" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1236, 556)
+
+[node name="Palm_Dark_29" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1235, 593)
+
+[node name="Palm_Dark_30" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(1263, 883)
+
+[node name="Palm_Dark_31" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(1242, 926)
+
+[node name="Palm_Dark_32" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1217, 1025)
+
+[node name="Palm_Dark_33" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1169, 1059)
+
+[node name="Palm_Dark_34" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1183, 1145)
+
+[node name="Palm_Dark_35" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1007, 1315)
+
+[node name="Palm_Dark_36" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(659, 1063)
+
+[node name="Palm_Dark_37" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(690, 1113)
+
+[node name="Palm_Dark_38" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(762, 993)
+
+[node name="Palm_Dark_39" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(590, 1172)
+
+[node name="Palm_Dark_40" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(748, 1192)
+
+[node name="Palm_Dark_41" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(580, 542)
+
+[node name="Palm_Dark_42" parent="Trees" instance=ExtResource("t_27")]
+position = Vector2(801, 888)
+
+[node name="Palm_Dark_43" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1232, 1138)
+
+[node name="Palm_Dark_44" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1221, 1186)
+
+[node name="Palm_Dark_45" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1232, 1294)
+
+[node name="Palm_Dark_46" parent="Trees" instance=ExtResource("t_27")]
+position = Vector2(1187, 1319)
+
+[node name="Palm_Dark_47" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1136, 1302)
+
+[node name="Palm_Dark_48" parent="Trees" instance=ExtResource("t_23")]
+position = Vector2(1177, 1213)
+
+[node name="Palm_Dark_49" parent="Trees" instance=ExtResource("t_21")]
+position = Vector2(1229, 23)
+
+[node name="Palm_Dark_50" parent="Trees" instance=ExtResource("t_24")]
+position = Vector2(1256, 91)
+
+[node name="Palm_Emerald_1" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(1150, 434)
+
+[node name="Palm_Emerald_2" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(1006, 182)
+
+[node name="Palm_Emerald_3" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(599, 193)
+
+[node name="Palm_Emerald_4" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(784, 134)
+
+[node name="Palm_Emerald_5" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(612, 352)
+
+[node name="Palm_Emerald_6" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(195, 385)
+
+[node name="Palm_Emerald_7" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(107, 689)
+
+[node name="Palm_Emerald_8" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(213, 542)
+
+[node name="Palm_Emerald_9" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(96, 265)
+
+[node name="Palm_Emerald_10" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(416, 150)
+
+[node name="Palm_Emerald_11" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(-13, 171)
+
+[node name="Palm_Emerald_12" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(14, 203)
+
+[node name="Palm_Emerald_13" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(-11, 28)
+
+[node name="Palm_Emerald_14" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(19, 58)
+
+[node name="Palm_Emerald_15" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(168, 23)
+
+[node name="Palm_Emerald_16" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(323, 14)
+
+[node name="Palm_Emerald_17" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(577, 8)
+
+[node name="Palm_Emerald_18" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(405, 12)
+
+[node name="Palm_Emerald_19" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(12, 323)
+
+[node name="Palm_Emerald_20" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(-22, 636)
+
+[node name="Palm_Emerald_21" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(36, 894)
+
+[node name="Palm_Emerald_22" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(14, 936)
+
+[node name="Palm_Emerald_23" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(24, 1093)
+
+[node name="Palm_Emerald_24" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(-13, 1097)
+
+[node name="Palm_Emerald_25" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(119, 1108)
+
+[node name="Palm_Emerald_26" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(108, 1232)
+
+[node name="Palm_Emerald_27" parent="Trees" instance=ExtResource("t_16")]
+position = Vector2(30, 1306)
+
+[node name="Palm_Emerald_28" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(695, 1334)
+
+[node name="Palm_Emerald_29" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(1190, 224)
+
+[node name="Palm_Emerald_30" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(1230, 265)
+
+[node name="Palm_Emerald_31" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(1257, 643)
+
+[node name="Palm_Emerald_32" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(1243, 675)
+
+[node name="Palm_Emerald_33" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(1095, 1137)
+
+[node name="Palm_Emerald_34" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(1070, 1159)
+
+[node name="Palm_Emerald_35" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(693, 1086)
+
+[node name="Palm_Emerald_36" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(697, 1051)
+
+[node name="Palm_Emerald_37" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(652, 1104)
+
+[node name="Palm_Emerald_38" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(594, 1130)
+
+[node name="Palm_Emerald_39" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(500, 620)
+
+[node name="Palm_Emerald_40" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(1244, 1234)
+
+[node name="Palm_Emerald_41" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(1210, 1246)
+
+[node name="Palm_Emerald_42" parent="Trees" instance=ExtResource("t_26")]
+position = Vector2(1158, 1266)
+
+[node name="Palm_Emerald_43" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(1224, 56)
+
+[node name="Palm_Emerald_44" parent="Trees" instance=ExtResource("t_22")]
+position = Vector2(1183, 27)
+
+[node name="Palm_Emerald_45" parent="Trees" instance=ExtResource("t_25")]
+position = Vector2(1154, 19)
+
+[node name="Palm_Light_1" parent="Trees" instance=ExtResource("t_29")]
+position = Vector2(-13, 681)
+
+[node name="Palm_Light_2" parent="Trees" instance=ExtResource("t_29")]
+position = Vector2(-18, 361)
+
+[node name="Palm_Light_3" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(-37, 559)
+
+[node name="Palm_Light_4" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(6, 784)
+
+[node name="Palm_Light_5" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(72, 1186)
+
+[node name="Palm_Light_6" parent="Trees" instance=ExtResource("t_28")]
+position = Vector2(207, 1290)
+
+[node name="Palm_Light_7" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(541, 1307)
+
+[node name="Palm_Light_8" parent="Trees" instance=ExtResource("t_28")]
+position = Vector2(1168, 162)
+
+[node name="Palm_Light_9" parent="Trees" instance=ExtResource("t_29")]
+position = Vector2(1215, 198)
+
+[node name="Palm_Light_10" parent="Trees" instance=ExtResource("t_28")]
+position = Vector2(1209, 454)
+
+[node name="Palm_Light_11" parent="Trees" instance=ExtResource("t_29")]
+position = Vector2(1247, 818)
+
+[node name="Palm_Light_12" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(1254, 1054)
+
+[node name="Palm_Light_13" parent="Trees" instance=ExtResource("t_28")]
+position = Vector2(1099, 1197)
+
+[node name="Palm_Light_14" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(1074, 1319)
+
+[node name="Palm_Light_15" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(770, 1264)
+
+[node name="Palm_Light_16" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(476, 546)
+
+[node name="Palm_Light_17" parent="Trees" instance=ExtResource("t_30")]
+position = Vector2(865, 826)
+
+[node name="Palm_Yellow_1" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(7, 398)
+
+[node name="Palm_Yellow_2" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(-26, 470)
+
+[node name="Palm_Yellow_3" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(18, 704)
+
+[node name="Palm_Yellow_4" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(48, 824)
+
+[node name="Palm_Yellow_5" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(-14, 980)
+
+[node name="Palm_Yellow_6" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(18, 1018)
+
+[node name="Palm_Yellow_7" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(-14, 1184)
+
+[node name="Palm_Yellow_8" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(36, 1229)
+
+[node name="Palm_Yellow_9" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(168, 1308)
+
+[node name="Palm_Yellow_10" parent="Trees" instance=ExtResource("t_14")]
+position = Vector2(624, 1308)
+
+[node name="Palm_Yellow_11" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(100, 761)
+
+[node name="Palm_Yellow_12" parent="Trees" instance=ExtResource("t_14")]
+position = Vector2(1183, 140)
+
+[node name="Palm_Yellow_13" parent="Trees" instance=ExtResource("t_14")]
+position = Vector2(1238, 323)
+
+[node name="Palm_Yellow_14" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(1241, 493)
+
+[node name="Palm_Yellow_15" parent="Trees" instance=ExtResource("t_31")]
+position = Vector2(1246, 764)
+
+[node name="Palm_Yellow_16" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(1253, 1005)
+
+[node name="Palm_Yellow_17" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(1252, 1102)
+
+[node name="Palm_Yellow_18" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(1072, 1229)
+
+[node name="Palm_Yellow_19" parent="Trees" instance=ExtResource("t_14")]
+position = Vector2(1038, 1285)
+
+[node name="Palm_Yellow_20" parent="Trees" instance=ExtResource("t_17")]
+position = Vector2(816, 750)
+
+[node name="Rocks" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Skala_1" parent="Rocks" instance=ExtResource("t_13")]
+position = Vector2(246, 1030)
+
+[node name="Skala_2" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(482, 1162)
+
+[node name="Skala_3" parent="Rocks" instance=ExtResource("t_13")]
+position = Vector2(380, 388)
+
+[node name="Skala_4" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(1167, 678)
+
+[node name="Skala_5" parent="Rocks" instance=ExtResource("t_10")]
+position = Vector2(210, 438)
+
+[node name="Skala_6" parent="Rocks" instance=ExtResource("t_10")]
+position = Vector2(356, 731)
+
+[node name="Skala_7" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(140, 868)
+
+[node name="Skala_8" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(550, 702)
+
+[node name="Skala_9" parent="Rocks" instance=ExtResource("t_10")]
+position = Vector2(626, 803)
+
+[node name="Skala_10" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(534, 787)
+
+[node name="Skala_11" parent="Rocks" instance=ExtResource("t_13")]
+position = Vector2(565, 867)
+
+[node name="Skala_12" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(667, 699)
+
+[node name="Skala_13" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(615, 709)
+
+[node name="Skala_14" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(494, 673)
+
+[node name="Skala_15" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(552, 88)
+
+[node name="Skala_16" parent="Rocks" instance=ExtResource("t_13")]
+position = Vector2(575, 1066)
+
+[node name="Skala_17" parent="Rocks" instance=ExtResource("t_10")]
+position = Vector2(220, 926)
+
+[node name="Skala_18" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(174, 785)
+
+[node name="Skala_19" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(351, 724)
+
+[node name="Skala_20" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(357, 1064)
+
+[node name="Skala_21" parent="Rocks" instance=ExtResource("t_8")]
+position = Vector2(121, 656)
+
+[node name="Skala_22" parent="Rocks" instance=ExtResource("t_7")]
+position = Vector2(172, 487)
+
+[node name="Skala_23" parent="Rocks" instance=ExtResource("t_8")]
+position = Vector2(309, 511)
+
+[node name="Skala_24" parent="Rocks" instance=ExtResource("t_9")]
+position = Vector2(385, 479)
+
+[node name="Skala_25" parent="Rocks" instance=ExtResource("t_7")]
+position = Vector2(289, 635)
+
+[node name="Skala_26" parent="Rocks" instance=ExtResource("t_9")]
+position = Vector2(176, 591)
+
+[node name="Skala_27" parent="Rocks" instance=ExtResource("t_7")]
+position = Vector2(419, 410)
+
+[node name="Skala_28" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(69, 207)
+
+[node name="Skala_29" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(32, 445)
+
+[node name="Skala_30" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(86, 605)
+
+[node name="Skala_31" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(160, 1182)
+
+[node name="Skala_32" parent="Rocks" instance=ExtResource("t_13")]
+position = Vector2(750, 1253)
+
+[node name="Skala_33" parent="Rocks" instance=ExtResource("t_11")]
+position = Vector2(726, 1232)
+
+[node name="Skala_34" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(78, 954)
+
+[node name="Skala_35" parent="Rocks" instance=ExtResource("t_10")]
+position = Vector2(137, 716)
+
+[node name="Skala_36" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(321, 1174)
+
+[node name="Skala_37" parent="Rocks" instance=ExtResource("t_12")]
+position = Vector2(1148, 486)
+
+[node name="Bushes" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Krzak_1" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(1059, 772)
+
+[node name="Krzak_2" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(1139, 684)
+
+[node name="Krzak_3" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(1132, 858)
+
+[node name="Krzak_4" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(769, 606)
+
+[node name="Krzak_5" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(984, 758)
+
+[node name="Krzak_6" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(529, 710)
+
+[node name="Krzak_7" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(525, 811)
+
+[node name="Krzak_8" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(656, 666)
+
+[node name="Krzak_9" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(576, 858)
+
+[node name="Krzak_10" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(485, 747)
+
+[node name="Krzak_11" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(389, 75)
+
+[node name="Krzak_12" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(462, 94)
+
+[node name="Krzak_13" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(525, 86)
+
+[node name="Krzak_14" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(608, 77)
+
+[node name="Krzak_15" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(877, 41)
+
+[node name="Krzak_16" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(510, 1109)
+
+[node name="Krzak_17" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(334, 863)
+
+[node name="Krzak_18" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(-2, 74)
+
+[node name="Krzak_19" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(875, 969)
+
+[node name="Krzak_20" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(977, 1050)
+
+[node name="Krzak_21" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(978, 1170)
+
+[node name="Krzak_22" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(75, 1005)
+
+[node name="Krzak_23" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(471, 1299)
+
+[node name="Krzak_24" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(1130, 936)
+
+[node name="Krzak_25" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(1202, 580)
+
+[node name="Krzak_26" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(1027, 1232)
+
+[node name="Krzak_27" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(833, 806)
+
+[node name="Krzak_28" parent="Bushes" instance=ExtResource("t_1")]
+position = Vector2(1077, 944)
+
+[node name="Krzak_29" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(1040, 564)
+
+[node name="Krzak_30" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(769, 1280)
+
+[node name="Krzak_31" parent="Bushes" instance=ExtResource("t_3")]
+position = Vector2(333, 1191)
+
+[node name="Krzak_32" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(500, 16)
+
+[node name="Krzak_33" parent="Bushes" instance=ExtResource("t_2")]
+position = Vector2(1183, 317)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="Spawn" type="Marker2D" parent="Spawns"]
+position = Vector2(869, 1204)
+
+[node name="Cave-Town" type="Marker2D" parent="Spawns"]
+position = Vector2(869, 1204)
+
+[node name="Sewer-Town" type="Marker2D" parent="Spawns"]
+position = Vector2(551, 191)
