@@ -1066,6 +1066,10 @@ func _rebuild_party_rows(_selectable: bool) -> void:
 
 func _refresh_party_rows() -> void:
 	_set_row_selection(_party_rows, _party_index if _party_rows_selectable else -1)
+	# Więcej członków niż mieści panel: lista się przewija, wybrany wiersz zostaje widoczny.
+	var scroll := party_list_vbox.get_parent() as ScrollContainer if party_list_vbox else null
+	if scroll and _party_rows_selectable and _party_index >= 0 and _party_index < _party_rows.size():
+		scroll.ensure_control_visible.call_deferred(_party_rows[_party_index])
 
 
 func _rebuild_item_tabs() -> void:
