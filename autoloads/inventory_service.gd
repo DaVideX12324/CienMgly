@@ -72,6 +72,7 @@ func get_menu_entries(raw_inventory: Array) -> Array[Dictionary]:
 			"def_bonus": item_data.def_bonus,
 			"mat_bonus": item_data.mat_bonus,
 			"mdf_bonus": item_data.mdf_bonus,
+			"agi_bonus": item_data.agi_bonus,
 			"usable_in_menu": item_data.usable_in_menu,
 			"usable_in_combat": item_data.usable_in_combat,
 			"effect_summary": item_data.get_effect_summary(),

@@ -1066,6 +1066,9 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 						"icon": item_data.icon,
 						"atk_bonus": item_data.atk_bonus,
 						"def_bonus": item_data.def_bonus,
+						"mat_bonus": item_data.mat_bonus,
+						"mdf_bonus": item_data.mdf_bonus,
+						"agi_bonus": item_data.agi_bonus,
 						"equipped": true,
 					})
 	var empty_entry: Dictionary = {
@@ -1076,6 +1079,9 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 		"equip_slot": slot_name,
 		"atk_bonus": 0,
 		"def_bonus": 0,
+		"mat_bonus": 0,
+		"mdf_bonus": 0,
+		"agi_bonus": 0,
 	}
 	options.insert(0, empty_entry)
 	return options
@@ -1148,15 +1154,28 @@ func set_member_equipment(member_index: int, slot_name: String, item_id: String)
 	return true
 
 
+## Ocena przedmiotu przy automatycznym doborze: główna statystyka ataku klasy (ATK dla wojownika i łotrzyka,
+## MAT dla maga i kapłana) liczy się w całości, druga w połowie; DEF i MDF w całości, AGI w połowie.
+func _equipment_score(entry: Dictionary, magic_class: bool) -> float:
+	var atk := float(entry.get("atk_bonus", 0))
+	var mat := float(entry.get("mat_bonus", 0))
+	var offense := (mat + 0.5 * atk) if magic_class else (atk + 0.5 * mat)
+	return offense + float(entry.get("def_bonus", 0)) + float(entry.get("mdf_bonus", 0)) + 0.5 * float(entry.get("agi_bonus", 0))
+
+
 func optimize_member_equipment(member_index: int) -> void:
 	if member_index < 0 or member_index >= party.size():
 		return
+	var char_class: String = str(party[member_index].get("character_class", ""))
+	if char_class == "":
+		char_class = hero_for_member(party[member_index]).character_class
+	var magic_class: bool = char_class == "mage" or char_class == "priest"
 	for slot_name: String in EQUIPMENT_SLOTS:
 		var best_item_id: String = ""
-		var best_score: int = -999999
+		var best_score: float = -999999.0
 		var options: Array[Dictionary] = get_equippable_entries_for_slot(member_index, slot_name)
 		for entry: Dictionary in options:
-			var score: int = int(entry.get("atk_bonus", 0)) + int(entry.get("def_bonus", 0))
+			var score: float = _equipment_score(entry, magic_class)
 			if score > best_score:
 				best_score = score
 				best_item_id = str(entry.get("item_id", ""))
