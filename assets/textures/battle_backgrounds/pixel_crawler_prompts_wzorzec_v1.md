@@ -27,7 +27,7 @@ Wszystkie tła walki w grze muszą spełniać poniższe kryteria kompozycyjne:
 
 #### Prompt (EN - zalecany do Gemini / Midjourney / DALL-E):
 ```text
-A 16-bit pixel art JRPG battle background of a grand medieval castle throne chamber, low-angle first-person battle perspective. In the foreground and lower half, a spacious polished stone tiled floor with subtle reflections and battle space. In the background, towering dark stone brick walls, gothic arched doorways, hanging royal red and purple banners with gold trim, iron torch sconces casting warm flickering light, subtle dust motes in the air. 16:9 aspect ratio, retro pixel art, crisp pixels, no characters, no monsters, no UI, clean scenery.
+A 16-bit pixel art JRPG battle background of a grand medieval castle throne chamber, low-angle first-person battle perspective. In the foreground and lower half, a spacious polished stone tiled floor with subtle reflections and battle space. In the background, towering dark stone brick walls, gothic arched doorways, hanging royal red and purple banners with gold trim, iron torch sconces casting warm flickering light, subtle dust motes in the air. 16:9 aspect ratio, retro pixel art, crisp pixels, no characters, no monsters, no UI, clean scenery. Use the reference images MockUp_castle_01.png and MockUp_castle_02.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -38,7 +38,7 @@ A 16-bit pixel art JRPG battle background of a grand medieval castle throne cham
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background inside a deep cavern and crystal mine, first-person battle perspective. The bottom half features a flat rocky gravel cave floor ready for combat encounters. The background shows rugged dark stone cavern walls, stalactites hanging from the ceiling, glowing cyan and azure magical mineral crystals illuminating the darkness, old wooden support beams, and faint turquoise ambient mist. 16:9 aspect ratio, retro pixel art, clean pixel shading, no characters, no monsters, no UI, empty background.
+A 16-bit pixel art JRPG battle background inside a deep cavern and crystal mine, first-person battle perspective. The bottom half features a flat rocky gravel cave floor ready for combat encounters. The background shows rugged dark stone cavern walls, stalactites hanging from the ceiling, glowing cyan and azure magical mineral crystals illuminating the darkness, old wooden support beams, and faint turquoise ambient mist. 16:9 aspect ratio, retro pixel art, clean pixel shading, no characters, no monsters, no UI, empty background. Use the reference image MockUp_cave_01.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -49,7 +49,7 @@ A 16-bit pixel art JRPG battle background inside a deep cavern and crystal mine,
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of an expansive open desert landscape with ancient sandstone temple ruins, low eye-level battle perspective. The lower half is a wide flat golden sand battle ground with gentle wind-blown dunes and scattered sandstone debris. The horizon features weathered sandstone pillars, hieroglyph carvings, distant pyramid silhouettes, and a warm golden-orange sunset sky with soft haze. 16:9 aspect ratio, retro pixel art, detailed pixel clusters, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of an expansive open desert landscape with ancient sandstone temple ruins, low eye-level battle perspective. The lower half is a wide flat golden sand battle ground with gentle wind-blown dunes and scattered sandstone debris. The horizon features weathered sandstone pillars, hieroglyph carvings, distant pyramid silhouettes, and a warm golden-orange sunset sky with soft haze. 16:9 aspect ratio, retro pixel art, detailed pixel clusters, no characters, no monsters, no UI. Use the reference images MockUp_desert_01.png, MockUp_desert_02.png and MockUp_desert_03.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -60,7 +60,7 @@ A 16-bit pixel art JRPG battle background of an expansive open desert landscape 
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of an enchanting fairy forest clearing at twilight, low eye-level battle perspective. The lower half consists of a flat mossy dirt ground with glowing violet mushrooms, tiny blue wildflowers, and patches of soft grass. The background features ancient gnarled tree trunks, hanging weeping willow vines, floating magical fireflies and pink glowing spores, and a soft mystical purple and cyan canopy glow. 16:9 aspect ratio, retro pixel art style, high quality pixel aesthetic, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of an enchanting fairy forest clearing at twilight, low eye-level battle perspective. The lower half consists of a flat mossy dirt ground with glowing violet mushrooms, tiny blue wildflowers, and patches of soft grass. The background features ancient gnarled tree trunks, hanging weeping willow vines, floating magical fireflies and pink glowing spores, and a soft mystical purple and cyan canopy glow. 16:9 aspect ratio, retro pixel art style, high quality pixel aesthetic, no characters, no monsters, no UI. Use the reference images MockUp_fairy_forest_01.png, MockUp_fairy_forest_02.png and MockUp_fairy_forest_03.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -71,7 +71,7 @@ A 16-bit pixel art JRPG battle background of an enchanting fairy forest clearing
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of a subterranean blacksmith forge and lava armory, first-person battle perspective. The lower half is a heat-resistant dark basalt stone slab floor with glowing lava cracks. The background displays massive anvils, weapon racks with glowing blades, hanging heavy iron chains, blast furnaces, and streams of molten orange lava illuminating the dark volcanic brick walls with fierce orange and crimson lighting. 16:9 aspect ratio, retro pixel art, clean pixel art, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of a subterranean blacksmith forge and lava armory, first-person battle perspective. The lower half is a heat-resistant dark basalt stone slab floor with glowing lava cracks. The background displays massive anvils, weapon racks with glowing blades, hanging heavy iron chains, blast furnaces, and streams of molten orange lava illuminating the dark volcanic brick walls with fierce orange and crimson lighting. 16:9 aspect ratio, retro pixel art, clean pixel art, no characters, no monsters, no UI. Use the reference images MockUp_forge_00.png, MockUp_forge_01.png and MockUp_forge_02.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -82,7 +82,7 @@ A 16-bit pixel art JRPG battle background of a subterranean blacksmith forge and
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of an overgrown royal ancient garden sanctuary, eye-level battle perspective. In the lower half, a cracked antique white marble paved courtyard surrounded by lush manicured grass and stone borders. In the background, classical marble pillars wrapped in ivy and red roses, ornate stone arches, tranquil fountains, cypress trees, and soft daylight filtering through the foliage. 16:9 aspect ratio, retro pixel art, crisp pixel detailing, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of an overgrown royal ancient garden sanctuary, eye-level battle perspective. In the lower half, a cracked antique white marble paved courtyard surrounded by lush manicured grass and stone borders. In the background, classical marble pillars wrapped in ivy and red roses, ornate stone arches, tranquil fountains, cypress trees, and soft daylight filtering through the foliage. 16:9 aspect ratio, retro pixel art, crisp pixel detailing, no characters, no monsters, no UI. Use the reference image MockUp_garden_01.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -93,7 +93,7 @@ A 16-bit pixel art JRPG battle background of an overgrown royal ancient garden s
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of a secret underground smugglers' hideout, first-person battle perspective. The lower half features a rugged wooden plank and cobblestone floor with room for battle encounters. The background is filled with wooden barrels, stacked treasure chests, weapon crates, rolled nautical maps on tables, hanging rope coils, candlelight on rough brick cellar walls, and wooden support arches. 16:9 aspect ratio, retro pixel art, clean pixel cluster shading, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of a secret underground smugglers' hideout, first-person battle perspective. The lower half features a rugged wooden plank and cobblestone floor with room for battle encounters. The background is filled with wooden barrels, stacked treasure chests, weapon crates, rolled nautical maps on tables, hanging rope coils, candlelight on rough brick cellar walls, and wooden support arches. 16:9 aspect ratio, retro pixel art, clean pixel cluster shading, no characters, no monsters, no UI. Use the reference image MockUp_hideout_v1_01.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -104,7 +104,7 @@ A 16-bit pixel art JRPG battle background of a secret underground smugglers' hid
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of an ancient arcane grand library, low-angle battle perspective. The lower half is an ornate dark polished wood parquet floor with decorative carpet runners. In the background, towering wooden bookshelves overflowing with glowing grimoires, rolling library ladders, floating magical books, stained glass windows casting colorful light beams, and candlelight sconces. 16:9 aspect ratio, retro pixel art, rich pixel detailing, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of an ancient arcane grand library, low-angle battle perspective. The lower half is an ornate dark polished wood parquet floor with decorative carpet runners. In the background, towering wooden bookshelves overflowing with glowing grimoires, rolling library ladders, floating magical books, stained glass windows casting colorful light beams, and candlelight sconces. 16:9 aspect ratio, retro pixel art, rich pixel detailing, no characters, no monsters, no UI. Use the reference image MockUp_library_01.png as the source of the color palette, materials and props.
 ```
 
 ---
@@ -115,7 +115,7 @@ A 16-bit pixel art JRPG battle background of an ancient arcane grand library, lo
 
 #### Prompt (EN):
 ```text
-A 16-bit pixel art JRPG battle background of a dark subterranean city sewer canal, first-person battle perspective. The lower half features a stone walkway and brick bank alongside a murky water channel. The background showcases damp arched stone walls, dripping iron drainage pipes with toxic green glow, iron portcullis grates, hanging lanterns casting eerie sickly green and yellow highlights on slimy wet bricks. 16:9 aspect ratio, retro pixel art, detailed pixel art, no characters, no monsters, no UI.
+A 16-bit pixel art JRPG battle background of a dark subterranean city sewer canal, first-person battle perspective. The lower half features a stone walkway and brick bank alongside a murky water channel. The background showcases damp arched stone walls, dripping iron drainage pipes with toxic green glow, iron portcullis grates, hanging lanterns casting eerie sickly green and yellow highlights on slimy wet bricks. 16:9 aspect ratio, retro pixel art, detailed pixel art, no characters, no monsters, no UI. Use the reference images MockUp_sewer_old_01.png and MockUp_sewer_old_02.png as the source of the color palette, materials and props.
 ```
 
 ---
