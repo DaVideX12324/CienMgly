@@ -165,11 +165,11 @@ A 16-bit pixel art JRPG battle background of a half-collapsed underground hideou
 ---
 
 ### 4. Kanały (sewer)
-- **Referencja z paczki:** `assets/pixel_crawler/environments/sewer/Social/MockUp_sewer_01.png`, `MockUp_sewer_02.png`, `MockUp_sewer_Extended.png` (wersja rozszerzona — suche kanały bez ścieków)
+- **Referencja z paczki:** `assets/pixel_crawler/environments/sewer/Social/MockUp_sewer_01.png`, `MockUp_sewer_old_02.png`, `MockUp_sewer_old_Extended.png` (wersja rozszerzona — suche kanały bez ścieków)
 - **Materiały i paleta:** posadzka z **ciemnobrązowej cegły**, prawie czarne ściany z panelami ciemnozielonych kafli, łupkowe filary z małymi miedzianymi lampkami, **półokrągłe miedziane kraty odpływów**, okrągłe miedziane wyloty rur, miedziane barierki, wysokie pionowe rury, duże prostokątne miedziane kratki w posadzce, kładki z desek, skrzynie, beczki z niebieskimi obręczami, worki i gliniane dzbany, schody/drabina do włazu, stół z krzesłami, drobne odpływy w romby, ciemnozielone kępy liści w kątach.
   - **Dwa typy kanałów do wyboru:**
     - **Kanały ze ściekami (`MockUp_sewer_01.png`):** koryta z **jaskrawym limonkowym szlamem**,
-    - **Suche kanały odpływowe (`MockUp_sewer_Extended.png`, `MockUp_sewer_02.png`):** koryta bez ścieków, wyłożone **ciemnoturkusowymi/morskimi kafelkami**, z głębokimi otworami odpływowymi i drewnianymi kładkami.
+    - **Suche kanały odpływowe (`MockUp_sewer_old_Extended.png`, `MockUp_sewer_old_02.png`):** koryta bez ścieków, wyłożone **ciemnoturkusowymi/morskimi kafelkami**, z głębokimi otworami odpływowymi i drewnianymi kładkami.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/sewer/`
 
 #### Wariant 1: Skrzyżowanie Kanałów (Canal Junction — ze szlamem)
@@ -179,21 +179,21 @@ A 16-bit pixel art JRPG battle background of a subterranean city sewer canal jun
 ```
 
 #### Wariant 2: Hala Krat (Grate Hall — suche kanały)
-*Referencja:* `MockUp_sewer_02.png`
+*Referencja:* `MockUp_sewer_old_02.png`
 ```text
-A 16-bit pixel art JRPG battle background of a subterranean sewer drainage hall, eye-level battle perspective. The lower half is a flat floor of dark brown bricks embedded with large rectangular copper floor grates and diamond-pattern drainage holes. In the background, a repeating row of semicircular copper-arched drain grates set into a near-black brick wall lined with dark green ceramic tiles, dark slate pillars mounted with small copper wall lamps, an iron-framed maintenance hatch, stacked wooden storage crates and a chest, and green moss creeping along the damp stone base, dry floor with no sludge. 16:9 aspect ratio, retro pixel art, moody subterranean depth, no characters, no monsters, no UI, clean empty scenery. Use the reference image MockUp_sewer_02.png as the source of the color palette, materials and props.
+A 16-bit pixel art JRPG battle background of a subterranean sewer drainage hall, eye-level battle perspective. The lower half is a flat floor of dark brown bricks embedded with large rectangular copper floor grates and diamond-pattern drainage holes. In the background, a repeating row of semicircular copper-arched drain grates set into a near-black brick wall lined with dark green ceramic tiles, dark slate pillars mounted with small copper wall lamps, an iron-framed maintenance hatch, stacked wooden storage crates and a chest, and green moss creeping along the damp stone base, dry floor with no sludge. 16:9 aspect ratio, retro pixel art, moody subterranean depth, no characters, no monsters, no UI, clean empty scenery. Use the reference image MockUp_sewer_old_02.png as the source of the color palette, materials and props.
 ```
 
 #### Wariant 3: Posterunek w Kanałach (Sewer Outpost — suche kanały)
-*Referencja:* `MockUp_sewer_Extended.png` (lewa dolna część) lub `MockUp_sewer_02.png`
+*Referencja:* `MockUp_sewer_old_Extended.png` (lewa dolna część) lub `MockUp_sewer_old_02.png`
 ```text
-A 16-bit pixel art JRPG battle background of a dry maintenance outpost alcove in the subterranean sewers, first-person battle perspective. The lower half features a flat floor of dark brown bricks with diamond drainage perforations. In the background, a crude wooden table with chairs, clay urns and earthenware pots, wooden barrels bound with blue iron hoops, grain sacks, a wooden staircase leading up to an exit hatch between slate pillars with copper sconces, near-black walls with dark green tiles, round copper pipe outlets, tall vertical copper pipes, stacked crates, and damp dark green leaves creeping along masonry, completely dry with no sludge. 16:9 aspect ratio, retro pixel art, crisp pixel cluster shading, no characters, no monsters, no UI, clean empty scenery. Use the reference images MockUp_sewer_Extended.png and MockUp_sewer_02.png as the source of the color palette, materials and props.
+A 16-bit pixel art JRPG battle background of a dry maintenance outpost alcove in the subterranean sewers, first-person battle perspective. The lower half features a flat floor of dark brown bricks with diamond drainage perforations. In the background, a crude wooden table with chairs, clay urns and earthenware pots, wooden barrels bound with blue iron hoops, grain sacks, a wooden staircase leading up to an exit hatch between slate pillars with copper sconces, near-black walls with dark green tiles, round copper pipe outlets, tall vertical copper pipes, stacked crates, and damp dark green leaves creeping along masonry, completely dry with no sludge. 16:9 aspect ratio, retro pixel art, crisp pixel cluster shading, no characters, no monsters, no UI, clean empty scenery. Use the reference images MockUp_sewer_old_Extended.png and MockUp_sewer_old_02.png as the source of the color palette, materials and props.
 ```
 
 #### Wariant 4 (wielopoziomowy): Suche Koryto z Kładką (Dry Tiled Canal & Bridge)
-*Referencja:* `MockUp_sewer_Extended.png`
+*Referencja:* `MockUp_sewer_old_Extended.png`
 ```text
-A 16-bit pixel art JRPG battle background of a subterranean dry sewer drainage canal with stepped walkways, low eye-level battle perspective looking straight ahead from the brick walkway floor. The front lower level is a flat floor of dark brown bricks with a large rectangular copper floor grate and diamond drainage perforations. Across a wide dry sunken drainage channel paved with dark teal ceramic tiles and crossed by a sturdy wooden plank bridge, rises a raised brick walkway a few steps higher with a copper pipe railing. In the background against near-black brick walls, dark green tile wainscoting panels, semicircular copper-arched drain grates, vertical copper pipes, slate pillars mounted with glowing copper oil lamps, and dark green leaves creeping in damp corners, with completely dry channels and no green sludge. 16:9 aspect ratio, retro pixel art, crisp pixel cluster shading, stepped battle arena, no characters, no monsters, no UI, clean empty scenery. Use the reference image MockUp_sewer_Extended.png as the source of the color palette, materials and props.
+A 16-bit pixel art JRPG battle background of a subterranean dry sewer drainage canal with stepped walkways, low eye-level battle perspective looking straight ahead from the brick walkway floor. The front lower level is a flat floor of dark brown bricks with a large rectangular copper floor grate and diamond drainage perforations. Across a wide dry sunken drainage channel paved with dark teal ceramic tiles and crossed by a sturdy wooden plank bridge, rises a raised brick walkway a few steps higher with a copper pipe railing. In the background against near-black brick walls, dark green tile wainscoting panels, semicircular copper-arched drain grates, vertical copper pipes, slate pillars mounted with glowing copper oil lamps, and dark green leaves creeping in damp corners, with completely dry channels and no green sludge. 16:9 aspect ratio, retro pixel art, crisp pixel cluster shading, stepped battle arena, no characters, no monsters, no UI, clean empty scenery. Use the reference image MockUp_sewer_old_Extended.png as the source of the color palette, materials and props.
 ```
 
 #### Wariant 5 (wielopoziomowy): Podest Konserwatorów (Maintenance Platform — ze szlamem)
