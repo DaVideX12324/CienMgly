@@ -73,7 +73,7 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 
 ### 2. Cave (cave — jaskinie generowane)
 - **Referencja (mockup autora):** `assets/pixel_crawler/_versions_archive/cave_v1/Pixel Crawler - Cave/Social/MockUp_01.png`
-  (wersja paczki używana przez jaskinie w grze; `environments/cave/Social/MockUp_01.png` to ten sam obraz) —
+  (wersja paczki używana przez jaskinie w grze; `environments/cave/Social/MockUp_cave_01.png` to ten sam obraz) —
   wszystkie warianty bazują na nim: fioletowe grzyby-parasole ociekające błękitem, czerwone grzyby-trąbki,
   brązowa ziemia z plamami mchu, skalne ściany z korzeniami i kolcami, kamienne stopnie, kamyki.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/cave/`
@@ -123,26 +123,26 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 4. Sewer (sewer)
-- **Mockupy autora:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp_sewer_old_01.png`, `MockUp_sewer_old_02.png`
 - **Wspólne z mockupów:** jaskrawozielony toksyczny szlam, ciemna cegła z zielonymi kaflami przy ścianach, miedziane barierki i rury, łukowe kraty odpływów, żelazne kratki w posadzce, kamienne filary z lampkami, drewniane kładki z desek.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/sewer/`
 
 #### Wariant 1: Skrzyżowanie Kanałów (Canal Crossroads)
-*Referencja:* `MockUp-01.png` — skrzyżowanie kanałów w kształcie T, kładki z desek, miedziane barierki, pionowe miedziane rury.
+*Referencja:* `MockUp_sewer_old_01.png` — skrzyżowanie kanałów w kształcie T, kładki z desek, miedziane barierki, pionowe miedziane rury.
 *Opis scenerii:* Trzy kanały szlamu zbiegają się w jednym miejscu, nad nimi drewniane kładki; na brzegach kratki, miedziane barierki i okrągłe wyloty rur w ścianach.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of an underground sewer junction where three canals of glowing lime-green toxic sludge meet in a T-shape, standing on the brick walkway at the edge of the canal and looking across the junction. Wooden plank bridges spanning the canals, copper pipe railings along dark brick walkways, round copper pipe outlets and arched copper drain grates in dark brick walls with dark green tiles, tall vertical copper pipes, stone pillars with small wall lamps, iron floor grates, a few crates and sacks by the wall. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2: Magazyn nad Kanałem (Storage Hall by the Canal)
-*Referencja:* `MockUp-02.png` — długa hala z rzędem łukowych krat odpływów, beczki, skrzynie, stół z krzesłami, szeroki kanał z kładką.
+*Referencja:* `MockUp_sewer_old_02.png` — długa hala z rzędem łukowych krat odpływów, beczki, skrzynie, stół z krzesłami, szeroki kanał z kładką.
 *Opis scenerii:* Długa, kamienna hala kanałów z rzędem łukowych krat w ścianie, beczkami i skrzyniami przemytników, a u dołu szeroki kanał szlamu przecięty kładką.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a long sewer storage hall. A row of large arched copper drain grates in a dark brick wall with dark green tiles, stone pillars with small lamps, big iron floor grates, stacks of wooden crates and barrels, a rough wooden table with chairs, a wooden ladder to an upper hatch, and along the front a wide channel of glowing lime-green sludge crossed by a narrow wooden plank bridge behind a copper railing. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 3: Wyjście ku Cmentarzowi (Grate to the Cemetery)
-*Referencja:* `MockUp-01.png` — ceglane ściany, miedziane rury i kraty jako rama kadru.
+*Referencja:* `MockUp_sewer_old_01.png` — ceglane ściany, miedziane rury i kraty jako rama kadru.
 *Opis scenerii:* Koniec tunelu kanałów: przez zardzewiałą kratę widać mglisty, nocny cmentarz.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of the end of a sewer tunnel with a large arched copper grate opening onto a misty night graveyard. Dark wet brick walls with dark green tiles and copper pipes framing the view, a thin stream of lime-green sludge running toward the grate, pale moonlight falling through the bars, silhouettes of crooked gravestones and a dead tree outside in blue fog. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
@@ -172,33 +172,33 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 6. Fairy Forest (fairy_forest)
-- **Mockupy autora:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png` … `MockUp_04.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_fairy_forest_01.png` … `MockUp_fairy_forest_04.png`
 - **Wspólne z mockupów:** gęste zielone i fioletowe korony drzew, pomarańczowe krzewy, świecące turkusowe kamienie runiczne w błękitnej poświacie, świecące fioletowe dzwonki, błękitny potok, skarpy z odsłoniętą ziemią.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/fairy_forest/`
 
 #### Wariant 1: Rozstaje Trzech Bram (Crossroads of Three Gates)
-*Referencja:* `MockUp_01.png` — polany ze świecącymi kamieniami runicznymi w błękitnej mgiełce, wielkie dęby, fioletowe drzewa, pień.
+*Referencja:* `MockUp_fairy_forest_01.png` — polany ze świecącymi kamieniami runicznymi w błękitnej mgiełce, wielkie dęby, fioletowe drzewa, pień.
 *Opis scenerii:* Hub-skrzyżowanie: polana z kamieniami runicznymi i trzema starymi łukami prowadzącymi w różne strony (piasek, żar, śnieg w prześwitach) oraz ledwie widoczną czwartą ścieżką.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of an enchanted forest crossroads glade. Glowing teal runestones standing in pools of soft blue mist, huge green oaks and trees with purple foliage, orange shrubs and an old tree stump; three ancient moss-covered stone archways around the clearing, each glimpsing a different land: golden desert dunes, glowing red volcanic light, and snowy pines; a barely visible fourth overgrown path hidden among ferns, fireflies. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2: Magiczny Potok (Enchanted Stream)
-*Referencja:* `MockUp_02.png` — błękitny potok przecinający las po skosie, polany z ziemią, świecące kamienie runiczne.
+*Referencja:* `MockUp_fairy_forest_02.png` — błękitny potok przecinający las po skosie, polany z ziemią, świecące kamienie runiczne.
 *Opis scenerii:* Błękitny potok wijący się przez las, na brzegach skarpy i polanki, przy wodzie świecące kamienie.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a bright blue stream winding diagonally through a magical forest. Grassy banks with small earthen cliffs and bare dirt clearings, trees with green and purple foliage, orange shrubs, tree stumps, glowing teal runestones in blue mist near the water, tiny white flowers, soft dusk light. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 3: Fioletowe Drzewo i Dzwonki (Violet Tree & Bellflowers)
-*Referencja:* `MockUp_03.png` — wielkie drzewo o fioletowych liściach, świecące fioletowe dzwonki, potok, pnącza z pomarańczowymi kwiatami, skarpy.
+*Referencja:* `MockUp_fairy_forest_03.png` — wielkie drzewo o fioletowych liściach, świecące fioletowe dzwonki, potok, pnącza z pomarańczowymi kwiatami, skarpy.
 *Opis scenerii:* Pradawne drzewo o fioletowej koronie nad potokiem, wokół świecące dzwonki i skręcone pnącza.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a colossal ancient tree with a violet canopy standing above a forest stream. Clusters of glowing purple bellflowers, twisting green vines with orange trumpet flowers, rocky earthen ledges, a bright blue stream curving past the roots, drifting glowing pollen, deep green and violet palette. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 4: Zacieniony Gąszcz (Sunbeam Thicket)
-*Referencja:* `MockUp_04.png` — ciemny, gęsty las, skośne smugi światła, wysokie pnące łodygi, czerwone grzyby, szare kamienie, fioletowe dzwonki.
+*Referencja:* `MockUp_fairy_forest_04.png` — ciemny, gęsty las, skośne smugi światła, wysokie pnące łodygi, czerwone grzyby, szare kamienie, fioletowe dzwonki.
 *Opis scenerii:* Mroczny gąszcz, do którego wpadają skośne smugi słońca; mała polanka z grzybami i świecącymi kwiatami.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a dark dense fairy forest thicket pierced by diagonal sunbeams. A small mossy clearing surrounded by thick shadowy canopies, tall curling vine stalks with orange buds, little red-capped mushrooms, grey stones, glowing purple bellflowers, floating light motes in the beams. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
@@ -207,28 +207,28 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 7. Desert → Desert Temple (desert, desert_temple)
-- **Mockupy autora:** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png`, `MockUp-02.png`, `MockUp-03.png`;
+- **Mockupy autora:** `assets/pixel_crawler/environments/desert/Social/MockUp_desert_01.png`, `MockUp_desert_02.png`, `MockUp_desert_03.png`;
   świątynia: `assets/textures/legacy_amonra/atlases/ArenaFinalAssets/Desert_Dungeon_Pack/Desert_Dungeon_Preview.png`
 - **Wspólne z mockupów:** pomarańczowy piasek z ciemniejszymi plamami, grzbiety i ostańce z czerwonej skały, gigantyczne kły/kości, kaktusy, suche krzaki, otwory jaskiń w skałach; świątynia z piaskowca z filarami i schodami.
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/desert/` (otwarta mapa),
   `modules/quiz_rpg/assets/textures/loading_screens/desert_temple/` (świątynia)
 
 #### Wariant 1 (desert): Morze Wydm i Ostańców (Dunes & Red Mesas)
-*Referencja:* `MockUp-01.png` — piasek, grzbiety czerwonej skały, otwory jaskiń, kły, kaktusy, suche drzewka.
+*Referencja:* `MockUp_desert_01.png` — piasek, grzbiety czerwonej skały, otwory jaskiń, kły, kaktusy, suche drzewka.
 *Opis scenerii:* Bezkresna pustynia o zachodzie, grzbiety czerwonych skał z otworami jaskiń, na horyzoncie sylwetka świątyni.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a vast orange desert at sunset. Sand with darker patches, winding ridges and pillars of red rock with dark cave openings, giant pale curved tusks half-buried in the sand, green cacti, dry thorny bushes and dead trees, and on the far horizon the silhouette of a great sandstone temple, orange and magenta sky with heat haze. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2 (desert): Kanion Kłów (Canyon of Tusks)
-*Referencja:* `MockUp-02.png` — koliste zagłębienie otoczone skałą, ogromne kły, kaktusy, samotne kolumny z piaskowca.
+*Referencja:* `MockUp_desert_02.png` — koliste zagłębienie otoczone skałą, ogromne kły, kaktusy, samotne kolumny z piaskowca.
 *Opis scenerii:* Kotlina w czerwonym kanionie z ogromnymi kłami wystającymi z piasku i resztkami kolumn dawnej drogi do świątyni.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a red rock canyon basin in the desert. A ring of low red rock ridges around a sandy hollow, enormous pale curved tusks and bones jutting from the sand, green cacti and dry red shrubs, a few lonely broken sandstone columns marking an ancient road, harsh afternoon sun with long shadows. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 3 (desert_temple): Ruiny u Wrót Świątyni (Temple Ruins)
-*Referencja:* `MockUp-03.png` — ruiny z piaskowca, filary, szerokie schody, wyłom w murze, obelisk, dzbany i posągi.
+*Referencja:* `MockUp_desert_03.png` — ruiny z piaskowca, filary, szerokie schody, wyłom w murze, obelisk, dzbany i posągi.
 *Opis scenerii:* Wejście do świątyni: szerokie schody, filary, wyłom w murze prowadzący w ciemność, obelisk i posągi strażników.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of sandstone temple ruins at the edge of the desert. Wide stone stairs leading up between carved sandstone pillars, a broken wall with a dark breach into the temple, a tall obelisk, guardian statues, clay pots and a small chest among rubble, red rock ridges with giant tusks in the foreground sand, harsh midday light. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
@@ -244,27 +244,27 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 8. Volcano → Forge (volcano, forge)
-- **Mockupy autora:** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/forge/Social/MockUp_forge_00.png`, `MockUp_forge_01.png`, `MockUp_forge_02.png`
 - **Wspólne z mockupów:** ciemnofioletowo-szara posadzka, ściany z czerwonej cegły z pomarańczowo żarzącymi się szczelinami i łukowymi wrotami w jodełkę, kanały i baseny lawy, metalowe kraty-mosty nad lawą, kamienne posągi krasnoludów, piece i kowadła na postumentach.
 - **Foldery docelowe:** `modules/quiz_rpg/assets/textures/loading_screens/volcano/`,
   `modules/quiz_rpg/assets/textures/loading_screens/forge/`
 
 #### Wariant 1 (volcano): Kraty nad Lawą (Grated Lava Walkways)
-*Referencja:* `MockUp-01.png` — jezioro lawy z posągami krasnoludów, metalowe kraty-mosty nad kanałem lawy, piece na postumentach.
+*Referencja:* `MockUp_forge_01.png` — jezioro lawy z posągami krasnoludów, metalowe kraty-mosty nad kanałem lawy, piece na postumentach.
 *Opis scenerii:* Rozżarzona hala nad jeziorem lawy: posągi krasnoludów stoją w lawie, przez kanał prowadzą metalowe kraty.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a volcanic hall above a glowing lake of molten lava. Stone dwarf statues standing in the lava, a lava channel crossed by heavy metal grate walkways, dark purple-grey stone floor with small forge furnaces on square pedestals, red brick walls with glowing orange slit vents and chevron-patterned arched gates, rising embers and heat shimmer. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2 (forge): Sala Wielkiego Pieca (Great Furnace Hall)
-*Referencja:* `MockUp-00.png` — symetryczna sala, łukowe wrota z żarzącą się jodełką, dwa baseny lawy, kratowany pomost, czerwone filary.
+*Referencja:* `MockUp_forge_00.png` — symetryczna sala, łukowe wrota z żarzącą się jodełką, dwa baseny lawy, kratowany pomost, czerwone filary.
 *Opis scenerii:* Symetryczna hala kuźni: pośrodku kratowany pomost prowadzący do wielkich łukowych wrót, po bokach baseny lawy.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a grand symmetrical forge hall. A central metal grate walkway leading to a huge arched gate glowing with orange chevron patterns, two rectangular basins of bright molten lava on both sides, red brick pillars and walls with glowing orange rune slits, stone buttresses with glowing lines, dark purple-grey stone floor with scattered rubble. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 3 (forge): Wrota Zbrojowni (Armory Gates)
-*Referencja:* `MockUp-02.png` — łukowe wrota, kraty z pomarańczowymi pierścieniami, posągi krasnoludów, skrzynie, kałuże ciemnej wody, kraty-mosty nad lawą.
+*Referencja:* `MockUp_forge_02.png` — łukowe wrota, kraty z pomarańczowymi pierścieniami, posągi krasnoludów, skrzynie, kałuże ciemnej wody, kraty-mosty nad lawą.
 *Opis scenerii:* Korytarze zbrojowni z zakratowanymi wrotami, posągami i skrzyniami; u dołu kanał lawy pod kratami.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of an ancient dwarven armory with massive barred gates. Red brick walls with gothic arched doors glowing orange, iron portcullis gates decorated with glowing orange rings, stone dwarf statues, treasure chests and weapon racks, dark puddles of cooled water on the purple-grey stone floor, and along the bottom a lava channel under heavy metal grates. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
@@ -295,7 +295,7 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 10. Library (library)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/library/Social/MockUp_library_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/library/`
 
 #### Wariant 1: Wielka Nawa Biblioteki (Grand Library Nave)
@@ -316,7 +316,7 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 11. Garden (garden)
-- **Referencja (mockup autora):** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`
+- **Referencja (mockup autora):** `assets/pixel_crawler/environments/garden/Social/MockUp_garden_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/garden/`
 
 #### Wariant 1: Labirynt Żywopłotów (Hedge Maze)
@@ -337,33 +337,33 @@ A 16-bit pixel art JRPG loading screen illustration, first-person view from the 
 ---
 
 ### 12. Castle (castle — finał)
-- **Mockupy autora:** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
+- **Mockupy autora:** `assets/pixel_crawler/environments/castle/Social/MockUp_castle_01.png`, `MockUp_castle_02.png`
 - **Wspólne z mockupów:** ciemnoszary kamień, posadzka w granatową szachownicę, czerwone dywany ze złotym obszyciem, fioletowe proporce, kamienne popiersia na cokołach, rośliny w donicach, świeczniki, bursztynowe witraże.
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/loading_screens/castle/`
 
 #### Wariant 1: Zamek Arcymaga (The Archmage's Castle)
-*Referencja:* brak mockupu z zewnątrz — paleta i detale z `MockUp_01.png` (kamień, fioletowe proporce, bursztynowe okna).
+*Referencja:* brak mockupu z zewnątrz — paleta i detale z `MockUp_castle_01.png` (kamień, fioletowe proporce, bursztynowe okna).
 *Opis scenerii:* Mroczny zamek na klifie nocą, nad najwyższą wieżą wirujący krąg magii urządzenia.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a towering dark grey stone castle on a cliff, night. Gothic spires and battlements, purple banners with gold trim, warm amber stained glass windows, a long stone bridge leading to the main gate, a swirling violet magical glow and a giant rotating arcane circle above the highest tower, storm clouds lit by purple lightning. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 2: Sala Tronowa (Throne Hall)
-*Referencja:* `MockUp_01.png` — tron pod bursztynowym witrażem, popiersia, fioletowe proporce, czerwony dywan, drzewka w donicach, komnata z kominkiem, tarcze herbowe.
+*Referencja:* `MockUp_castle_01.png` — tron pod bursztynowym witrażem, popiersia, fioletowe proporce, czerwony dywan, drzewka w donicach, komnata z kominkiem, tarcze herbowe.
 *Opis scenerii:* Sala tronowa: czerwony dywan prowadzi do tronu pod bursztynowym witrażem, po bokach popiersia i proporce.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a gothic castle throne hall, deep one-point perspective into the distance. A long red carpet with gold trim across a dark blue checkerboard floor, purple banners with gold trim on grey stone pillars, potted topiary trees in clay pots, marble busts on pedestals flanking an empty ornate throne beneath a glowing amber stained glass window, a side chamber with a roaring fireplace, red and yellow heraldic shields on the walls. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 3: Galeria Popiersi (Hall of Busts)
-*Referencja:* `MockUp_02.png` — dywan w kształcie litery U, popiersia na cokołach, kamienne słupki, świece, fioletowe proporce, ławy.
+*Referencja:* `MockUp_castle_02.png` — dywan w kształcie litery U, popiersia na cokołach, kamienne słupki, świece, fioletowe proporce, ławy.
 *Opis scenerii:* Galeria bohaterów: czerwony dywan okrąża podwójny rząd popiersi, przy ścianach świece i proporce.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a castle gallery of heroes. A red carpet with gold trim forming a U around two rows of marble portrait busts on stone pedestals, small carved stone posts between them, dark blue checkerboard floor, grey stone walls with purple banners and wall candles casting warm light, red cushioned benches, potted cypress trees. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.
 ```
 
 #### Wariant 4: Komnata Urządzenia (The Device Chamber)
-*Referencja:* brak mockupu — paleta z `MockUp_01.png` / `MockUp_02.png`.
+*Referencja:* brak mockupu — paleta z `MockUp_castle_01.png` / `MockUp_castle_02.png`.
 *Opis scenerii:* Okrągła komnata na szczycie wieży z wielką magiczną maszyną — cel całej gry.
 ```text
 A 16-bit pixel art JRPG loading screen illustration, first-person view from the ground at eye level, of a circular arcane chamber at the top of a castle tower. A huge magical machine of brass rings and floating crystals in the center, glowing violet runic circles on a dark blue checkerboard floor, purple banners, beams of violet energy rising through an open dome into a stormy sky, scattered scrolls and instruments. First-person ground-level perspective: camera at human eye height or lower, looking straight ahead or slightly upward, ground in the lower part of the frame, horizon and vanishing point in the upper half, walls and objects rising vertically. NOT top-down, NOT bird's-eye view, NOT isometric, NOT an overhead game map, NOT a tilemap. If a reference image is attached, it is a top-down game map: use it only for color palette, materials and props, never for the camera angle. 16:9 aspect ratio, 16-bit pixel art, crisp pixels, clean pixel cluster shading, calm darker strip along the bottom edge, no characters, no monsters, no text, no logo, no UI.

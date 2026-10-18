@@ -6,7 +6,7 @@ Użycie:
     python tools/mockup_extract.py \\
         --atlas T="assets/pixel_crawler/environments/sewer_old/Assets/Tiles.png" \\
         --atlas P="assets/pixel_crawler/environments/sewer_old/Assets/Props.png" \\
-        --input "assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.aseprite" \\
+        --input "assets/pixel_crawler/environments/sewer_old/Social/MockUp_sewer_old_01.aseprite" \\
         --output-dir "modules/quiz_rpg/resources/maps/mockups"
 """
 

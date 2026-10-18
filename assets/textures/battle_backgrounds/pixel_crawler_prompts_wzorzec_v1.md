@@ -22,7 +22,7 @@ Wszystkie tła walki w grze muszą spełniać poniższe kryteria kompozycyjne:
 ---
 
 ### 1. Zamek / Komnata Zamkowa (Castle)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/castle/Social/MockUp_castle_01.png`, `MockUp_castle_02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/castle/`
 
 #### Prompt (EN - zalecany do Gemini / Midjourney / DALL-E):
@@ -33,7 +33,7 @@ A 16-bit pixel art JRPG battle background of a grand medieval castle throne cham
 ---
 
 ### 2. Jaskinia / Kopalnia Kryształów (Cave)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/cave/Social/MockUp_01.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/cave/Social/MockUp_cave_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/`
 
 #### Prompt (EN):
@@ -44,7 +44,7 @@ A 16-bit pixel art JRPG battle background inside a deep cavern and crystal mine,
 ---
 
 ### 3. Pustynia / Zewnętrzne Ruiny Pustynne (Desert)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png`, `MockUp-02.png`, `MockUp-03.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/desert/Social/MockUp_desert_01.png`, `MockUp_desert_02.png`, `MockUp_desert_03.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/desert/`
 
 #### Prompt (EN):
@@ -55,7 +55,7 @@ A 16-bit pixel art JRPG battle background of an expansive open desert landscape 
 ---
 
 ### 4. Baśniowy Las (Fairy Forest)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png`, `MockUp_02.png`, `MockUp_03.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_fairy_forest_01.png`, `MockUp_fairy_forest_02.png`, `MockUp_fairy_forest_03.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/fairy_forest/`
 
 #### Prompt (EN):
@@ -66,7 +66,7 @@ A 16-bit pixel art JRPG battle background of an enchanting fairy forest clearing
 ---
 
 ### 5. Kuźnia / Wulkaniczna Zbrojownia (Forge)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/forge/Social/MockUp_forge_00.png`, `MockUp_forge_01.png`, `MockUp_forge_02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/forge/`
 
 #### Prompt (EN):
@@ -77,7 +77,7 @@ A 16-bit pixel art JRPG battle background of a subterranean blacksmith forge and
 ---
 
 ### 6. Starożytny Ogród (Garden Environment)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/garden/Social/MockUp_garden_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/garden/`
 
 #### Prompt (EN):
@@ -88,7 +88,7 @@ A 16-bit pixel art JRPG battle background of an overgrown royal ancient garden s
 ---
 
 ### 7. Kryjówka / Gildia Złodziei (Hideout)
-- **Referencja w projekcie:** `assets/pixel_crawler/_versions_archive/hideout_v1/Social/MockUp_01.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/_versions_archive/hideout_v1/Social/MockUp_hideout_v1_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/hideout/`
 
 #### Prompt (EN):
@@ -99,7 +99,7 @@ A 16-bit pixel art JRPG battle background of a secret underground smugglers' hid
 ---
 
 ### 8. Starożytna Biblioteka (Library)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/library/Social/MockUp_library_01.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/library/`
 
 #### Prompt (EN):
@@ -110,7 +110,7 @@ A 16-bit pixel art JRPG battle background of an ancient arcane grand library, lo
 ---
 
 ### 9. Miejskie Kanały (Sewer)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp_sewer_old_01.png`, `MockUp_sewer_old_02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/sewer/`
 
 #### Prompt (EN):

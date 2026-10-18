@@ -23,7 +23,7 @@ Wszystkie tła walki w grze muszą spełniać poniższe kryteria kompozycyjne:
 ---
 
 ### 1. Zamek / Komnata Zamkowa (Castle)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/castle/Social/MockUp_01.png`, `MockUp_02.png`, `Assets/Tiles.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/castle/Social/MockUp_castle_01.png`, `MockUp_castle_02.png`, `Assets/Tiles.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/castle/`
 
 #### Wariant 1: Sala Tronowa (Throne Chamber)
@@ -53,7 +53,7 @@ A 16-bit pixel art JRPG battle background of an open castle fortress battlement 
 ---
 
 ### 2. Jaskinia / Kopalnia Kryształów (Cave)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/cave/Social/MockUp_01.png`, `Assets/Props.png`, `Social/Spore_Roots.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/cave/Social/MockUp_cave_01.png`, `Assets/Props.png`, `Social/Spore_Roots.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/`
 
 #### Wariant 1: Grota Świecących Grzybów (Bioluminescent Fungal Hollow)
@@ -83,7 +83,7 @@ A 16-bit pixel art JRPG battle background of an abandoned underground mine drift
 ---
 
 ### 3. Pustynia / Zewnętrzne Ruiny Pustynne (Desert)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/desert/Social/MockUp-01.png`, `MockUp-02.png`, `MockUp-03.png`, `Social/Desert-Gold.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/desert/Social/MockUp_desert_01.png`, `MockUp_desert_02.png`, `MockUp_desert_03.png`, `Social/Desert-Gold.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/desert/`
 
 #### Wariant 1: Starożytna Świątynia z Piaskowca (Sandstone Temple Ruins)
@@ -113,7 +113,7 @@ A 16-bit pixel art JRPG battle background of a tranquil desert oasis at sunset, 
 ---
 
 ### 4. Baśniowy Las (Fairy Forest)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_01.png`, `MockUp_02.png`, `MockUp_03.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/fairy_forest/Pixel Crawler - Fairy Forest 1.7/Social/MockUp_fairy_forest_01.png`, `MockUp_fairy_forest_02.png`, `MockUp_fairy_forest_03.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/fairy_forest/`
 
 #### Wariant 1: Polana Mistycznych Runów (Enchanted Runestone Glade)
@@ -143,7 +143,7 @@ A 16-bit pixel art JRPG battle background in the shadow of a gargantuan elder tr
 ---
 
 ### 5. Kuźnia / Wulkaniczna Zbrojownia (Forge)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/forge/Social/MockUp-00.png`, `MockUp-01.png`, `MockUp-02.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/forge/Social/MockUp_forge_00.png`, `MockUp_forge_01.png`, `MockUp_forge_02.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/forge/`
 
 #### Wariant 1: Główna Sala Kowalska i Kowadło (Grand Foundry & Anvil)
@@ -173,7 +173,7 @@ A 16-bit pixel art JRPG battle background of a volcanic rune sanctum, low-angle 
 ---
 
 ### 6. Starożytny Ogród (Garden Environment)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/garden/Social/MockUp_01.png`, `Assets/Tiles.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/garden/Social/MockUp_garden_01.png`, `Assets/Tiles.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/garden/`
 
 #### Wariant 1: Dziedziniec Dwukondygnacyjnej Fontanny (Grand Tiered Fountain Courtyard)
@@ -203,7 +203,7 @@ A 16-bit pixel art JRPG battle background of a secluded sunken garden sanctuary,
 ---
 
 ### 7. Kryjówka / Gildia Złodziei (Hideout)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Social/MockUp_01.png`, `Assets/Tiles.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Social/MockUp_hideout_01.png`, `Assets/Tiles.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/hideout/`
 
 #### Wariant 1: Piwnica Szmuglerów i Szynk (Smugglers' Cellar Den)
@@ -233,7 +233,7 @@ A 16-bit pixel art JRPG battle background of a clandestine underground canal doc
 ---
 
 ### 8. Starożytna Biblioteka (Library)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/library/Social/MockUp_01.png`, `Assets/Tiles.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/library/Social/MockUp_library_01.png`, `Assets/Tiles.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/library/`
 
 #### Wariant 1: Wielka Sala Czytelniana (Grand Reading Nave)
@@ -263,7 +263,7 @@ A 16-bit pixel art JRPG battle background of an astronomer scholar's observatory
 ---
 
 ### 9. Miejskie Kanały (Sewer)
-- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp-01.png`, `MockUp-02.png`, `Assets/Props.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/environments/sewer_old/Social/MockUp_sewer_old_01.png`, `MockUp_sewer_old_02.png`, `Assets/Props.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/sewer/`
 
 #### Wariant 1: Główny Kanał Toksycznego Szlamu (Toxic Sludge Canal & Walkway)
@@ -323,7 +323,7 @@ A 16-bit pixel art JRPG battle background inside the roofless ruins of a gothic 
 ---
 
 ### 11. Karczma / Gospoda (Tavern / Inn) - *Bonus Biom*
-- **Referencja w projekcie:** `assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/MockUps/Tavern.png`
+- **Referencja w projekcie:** `assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/MockUps/MockUp_free_pack_Tavern.png`
 - **Folder docelowy:** `modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/tavern/`
 
 #### Wariant 1: Główna Sala Biesiadna (Main Tavern Hall & Hearth)
