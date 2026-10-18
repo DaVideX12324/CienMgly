@@ -10,7 +10,7 @@ metadata={
 
 [deps]
 
-source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/tutorial_area_barrels_gate.png"
+source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/MockUp_tutorial_area_barrels_gate.png"
 dest_files=["res://.godot/imported/tutorial_area_barrels_gate.png-e5d0fcd176cf6305e4081ec898bab734.ctex"]
 
 [params]

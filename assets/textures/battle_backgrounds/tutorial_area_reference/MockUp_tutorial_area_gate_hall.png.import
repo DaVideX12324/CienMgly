@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2lkg4bent0eh"
-path="res://.godot/imported/wycinek_mapy_grzyby.png-18f6353a2d4015cbb451523c704dde85.ctex"
+uid="uid://crlv2a1b5skew"
+path="res://.godot/imported/tutorial_area_gate_hall.png-d875846482b2594c9063f8b335d944f7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave_reference/wycinek_mapy_grzyby.png"
-dest_files=["res://.godot/imported/wycinek_mapy_grzyby.png-18f6353a2d4015cbb451523c704dde85.ctex"]
+source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/MockUp_tutorial_area_gate_hall.png"
+dest_files=["res://.godot/imported/tutorial_area_gate_hall.png-d875846482b2594c9063f8b335d944f7.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bem3apyixa12l"
-path="res://.godot/imported/tutorial_area_overview.png-f299ca1c4134fe31fe00f03b1d9b7463.ctex"
+uid="uid://gan6nkrhkqgn"
+path="res://.godot/imported/tutorial_area_braziers.png-8c3d4e447b7cf4937f3a8f82c57d31d5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/tutorial_area_overview.png"
-dest_files=["res://.godot/imported/tutorial_area_overview.png-f299ca1c4134fe31fe00f03b1d9b7463.ctex"]
+source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/MockUp_tutorial_area_braziers.png"
+dest_files=["res://.godot/imported/tutorial_area_braziers.png-8c3d4e447b7cf4937f3a8f82c57d31d5.ctex"]
 
 [params]
 

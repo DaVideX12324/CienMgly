@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://udwgdhnyil6u"
-path="res://.godot/imported/tutorial_area_stairs.png-7ad5a14097685721f3be8d37ca2a5dee.ctex"
+uid="uid://bem3apyixa12l"
+path="res://.godot/imported/tutorial_area_overview.png-f299ca1c4134fe31fe00f03b1d9b7463.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/tutorial_area_stairs.png"
-dest_files=["res://.godot/imported/tutorial_area_stairs.png-7ad5a14097685721f3be8d37ca2a5dee.ctex"]
+source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/MockUp_tutorial_area_overview.png"
+dest_files=["res://.godot/imported/tutorial_area_overview.png-f299ca1c4134fe31fe00f03b1d9b7463.ctex"]
 
 [params]
 
