@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://crlv2a1b5skew"
-path="res://.godot/imported/tutorial_area_gate_hall.png-d875846482b2594c9063f8b335d944f7.ctex"
+path="res://.godot/imported/MockUp_tutorial_area_gate_hall.png-40fa6bc98a9875fce3e36e39f209e11b.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area_reference/MockUp_tutorial_area_gate_hall.png"
-dest_files=["res://.godot/imported/tutorial_area_gate_hall.png-d875846482b2594c9063f8b335d944f7.ctex"]
+dest_files=["res://.godot/imported/MockUp_tutorial_area_gate_hall.png-40fa6bc98a9875fce3e36e39f209e11b.ctex"]
 
 [params]
 

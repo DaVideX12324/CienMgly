@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2lkg4bent0eh"
-path="res://.godot/imported/wycinek_mapy_grzyby.png-18f6353a2d4015cbb451523c704dde85.ctex"
+path="res://.godot/imported/MockUp_cave_wycinek_grzyby.png-1dde5f223d24697dae7ddfd0fa48c01b.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave_reference/MockUp_cave_wycinek_grzyby.png"
-dest_files=["res://.godot/imported/wycinek_mapy_grzyby.png-18f6353a2d4015cbb451523c704dde85.ctex"]
+dest_files=["res://.godot/imported/MockUp_cave_wycinek_grzyby.png-1dde5f223d24697dae7ddfd0fa48c01b.ctex"]
 
 [params]
 
