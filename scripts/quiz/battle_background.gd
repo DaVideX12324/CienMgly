@@ -89,13 +89,15 @@ func _has_background(key: String) -> bool:
 	return key != "" and (GENERATORS.has(key) or not FolderGenerator.variant_paths(_folder_key(key)).is_empty())
 
 
-## Klucz mapy — ten sam co folder ekranu ładowania: get_map_key() mapy (ProceduralLevel: loading_screen_key
-## albo biom z typu poziomu), właściwości biome / theme…, nazwa pliku sceny mapy ręcznej (tutorial_area),
-## na końcu słowa w ścieżce skryptu / nazwie węzła. Pierwszy klucz, który ma tło.
+## Klucz mapy — jak folder ekranu ładowania: najpierw nazwa pliku sceny mapy (tutorial_area, sewer — mapa generowana
+## typu jaskini z własnym folderem), potem get_map_key() (ProceduralLevel: loading_screen_key albo biom z typu
+## poziomu), właściwości biome / theme…, na końcu słowa w ścieżce skryptu / nazwie węzła. Pierwszy klucz, który ma tło.
 func _map_key(map_node: Node) -> String:
 	if map_node == null:
 		return "default"
 	var candidates: Array[String] = []
+	if map_node.scene_file_path != "":
+		candidates.append(map_node.scene_file_path.get_file().get_basename())
 	if map_node.has_method("get_map_key"):
 		candidates.append(str(map_node.call("get_map_key")))
 	for prop in ["biome", "theme", "dungeon_theme", "dungeon_type", "background_type"]:
@@ -103,8 +105,6 @@ func _map_key(map_node: Node) -> String:
 			candidates.append(str(map_node.get(prop)).to_snake_case())
 		if map_node.has_meta(prop):
 			candidates.append(str(map_node.get_meta(prop)).to_snake_case())
-	if map_node.scene_file_path != "":
-		candidates.append(map_node.scene_file_path.get_file().get_basename())
 	candidates.append(str(map_node.name).to_snake_case())
 	for key in candidates:
 		if _has_background(key):
