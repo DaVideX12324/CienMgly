@@ -319,7 +319,8 @@ func generate_level_async(seed_val: int = 0) -> void:
 	if loading_background != null:
 		overlay.background = loading_background
 	else:
-		overlay.set_background_for(get_map_key())
+		# Folder o nazwie sceny (np. sewer/), gdy ma grafiki, inaczej folder klucza mapy (biom) — jak nazwa wyżej.
+		overlay.set_background_for([scene_name, map_k])
 	add_child(overlay)
 	overlay.track(progress)
 	GenProgress.start(progress)
