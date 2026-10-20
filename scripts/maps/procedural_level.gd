@@ -61,6 +61,7 @@ var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
 var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device bossów mapy
+var _rare_rooms: Dictionary = {}  # companion-JSON "rare_rooms": skrzynie specjalne w rzadkich pokojach (TreasurePlanner.plan_rare)
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -158,6 +159,7 @@ class GenJob extends RefCounted:
 			var raw: Dictionary = behaviour.get("raw", {})
 			NicheContentPlanner.plan(result, raw.get("niche_content", {}))
 			TreasurePlanner.plan(result, raw.get("treasure", {}))
+			TreasurePlanner.plan_rare(result, raw.get("rare_rooms", {}))
 			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym,
 			# w kawałkach (cała mapa naraz: minuty przy 500×500).
 			GenProgress.begin(&"navmesh")
@@ -595,6 +597,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
 	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
 	_boss_cfg = cfg.raw.get("boss", {}) if cfg != null else {}
+	_rare_rooms = cfg.raw.get("rare_rooms", {}) if cfg != null else {}
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -875,6 +878,7 @@ func _apply_niche_content(result) -> void:
 ## ("boss": story_id, counts_toward_device) — np. strażnik relikwii bez kroku postępu urządzenia.
 func _apply_treasure() -> void:
 	_apply_special_chests(String(TreasurePlanner.CHEST_DEF_ID) + "_", _treasure)
+	_apply_special_chests(String(TreasurePlanner.RARE_DEF_ID) + "_", _rare_rooms)
 	if _treasure.get("kind", "chest") == "relic":
 		var flag := str(_treasure.get("flag", "relic." + QuizRpgPaths.level_scene(_level_key()).get_file().get_basename()))
 		for node in get_tree().get_nodes_in_group("ground_items"):

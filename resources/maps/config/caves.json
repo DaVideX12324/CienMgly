@@ -112,6 +112,22 @@
       {"item_id": "lucky_charm", "weight": 4}
     ]
   },
+  "rare_rooms": {
+    "count": [1, 2],
+    "min_detour": 12,
+    "chest_tier": 3,
+    "chest_loot": [
+      {"item_id": "iron_sword", "weight": 12},
+      {"item_id": "leather_hood", "weight": 10},
+      {"item_id": "reinforced_tunic", "weight": 10},
+      {"item_id": "iron_buckler", "weight": 10},
+      {"item_id": "lucky_charm", "weight": 10},
+      {"item_id": "key_tier2", "weight": 8},
+      {"item_id": "potion_1l", "weight": 14, "count": 2},
+      {"item_id": "ether_1l", "weight": 10},
+      {"item_id": "potion_1m", "weight": 10, "count": 3}
+    ]
+  },
   "secret_room": {
     "generation": {"width": 56, "height": 56, "min_room_size": 8, "max_room_size": 16, "max_rooms": 0},
     "rooms": [1, 3],
