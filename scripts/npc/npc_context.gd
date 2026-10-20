@@ -3,13 +3,15 @@ extends RefCounted
 
 ## Wspólne pomocniki NPC i ich usług: singletony modułu (przez CoreManager), flagi fabularne, przedmioty, tekst.
 
+## Singleton modułu; `node` null (okno otwarte bez NPC, np. podgląd / test sceny) — przez korzeń drzewa.
 static func singleton(node: Node, singleton_name: String) -> Node:
-	var cm := node.get_node_or_null("/root/CoreManager")
+	var root: Node = node.get_tree().root if node != null and node.is_inside_tree() else (Engine.get_main_loop() as SceneTree).root
+	var cm := root.get_node_or_null("CoreManager")
 	if cm and cm.has_method("get_singleton"):
 		var s: Variant = cm.call("get_singleton", singleton_name)
 		if s is Node:
 			return s
-	return node.get_node_or_null("/root/%s" % singleton_name)
+	return root.get_node_or_null(singleton_name)
 
 
 static func player_stats(node: Node) -> Node:

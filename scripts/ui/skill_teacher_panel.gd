@@ -60,7 +60,7 @@ func _refresh(focus_index: int) -> void:
 			_list.remove_child(c)
 			c.queue_free()
 	_rows.clear()
-	_offers = teacher.offers(npc) if teacher else []
+	_offers.assign(teacher.offers(npc) if teacher else [])
 	for o in _offers:
 		var member: Dictionary = ps.party[int(o.member)]
 		var sk: QuizRpgSkillData = o.skill
