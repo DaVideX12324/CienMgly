@@ -44,6 +44,9 @@ var protected_floor: Dictionary = {}
 var passage_cells: Dictionary = {}
 # Nisze out (sekretne, NichePlacer): lewa kolumna pary w rzędzie stopy ściany — zawartość stawia NicheContentPlanner.
 var out_niches: Array[Vector2i] = []
+# Pierwsze miejsce, w którym nisza out może stanąć, dostaje ją bez losowania (mapa z relikwią bez żadnej niszy out —
+# plan_cave_tiles powtarza wtedy plan kafli). Zerowane po postawieniu.
+var force_out_niche := false
 # Prostokąt skanowania EdgeAnalyzera i placerów ścian (pusty = cała mapa). PlateauRenderer
 # zawęża nim drugi przebieg pipeline'u do okolicy płaskowyżów — współrzędne zostają globalne.
 var scan_rect: Rect2i = Rect2i()

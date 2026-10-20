@@ -4,10 +4,16 @@ extends RefCounted
 ## Skarb sekretnego pokoju ("treasure" w JSON mapy — nakładka "secret_room"): "count" skrzyń w pokoju najdalszym (po
 ## podłodze) od wejścia, jak najbliżej jego środka, na otwartej podłodze (wszyscy sąsiedzi chodliwi, bez barier
 ## płaskowyżów, stref portali, obiektów z kolizją i obiektów interaktywnych), co najmniej 2 kratki od spawnów wrogów i od
-## siebie. Obiekty bez kolizji na kratce skrzyni i wokół niej zdjęte. Tier i łup — ProceduralLevel (_apply_special_chests,
+## siebie. Obiekty bez kolizji na kratce skrzyni i wokół niej zdjęte. Tier i łup — ProceduralLevel (_apply_treasure,
 ## prefiks unique_id "treasure_chest_"). Po planie kafli, przed siatką nawigacji i zapisem mapy. Bez losowania.
+## "kind": "relic" (pokój relikwii) — zamiast skrzyni relikwia (relic_item.tscn, przedmiot i flaga z _apply_treasure).
+## "guard_tier" > 0 — wróg tego tieru (4 = boss) na drodze od wejścia, GUARD_BACK kratek przed ostatnim pokojem.
 
-const DEF_ID := &"treasure_chest"
+const CHEST_DEF_ID := &"treasure_chest"
+const RELIC_DEF_ID := &"treasure_relic"
+const RELIC_SCENE := "scenes/objects/relic_item.tscn"
+const GUARD_BACK := 2
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 
@@ -52,10 +58,11 @@ static func plan(result, cfg: Dictionary) -> void:
 	var avoid: Array[Vector2i] = []
 	for e in result.enemy_spawns:
 		avoid.append(e["pos"])
+	var relic: bool = cfg.get("kind", "chest") == "relic"
 	var def := ObjectDef.new()
-	def.id = DEF_ID
+	def.id = RELIC_DEF_ID if relic else CHEST_DEF_ID
 	def.klass = ObjectDef.Klass.INTERACTIVE
-	def.scene = "chest"
+	def.scene = QuizRpgPaths.path(RELIC_SCENE) if relic else "chest"
 	def.footprint.assign([Vector2i.ZERO])
 	var clear := {}   # idx kratek skrzyń i ich sąsiadów — bez obiektów bez kolizji
 	var added: Array[ObjectPlacement] = []
@@ -82,7 +89,12 @@ static func plan(result, cfg: Dictionary) -> void:
 				clear[(c.y + dy) * objs.width + c.x + dx] = true
 	if added.is_empty():
 		return
-	objs.stats[DEF_ID] = int(objs.stats.get(DEF_ID, 0)) + added.size()
+	objs.stats[def.id] = int(objs.stats.get(def.id, 0)) + added.size()
+	var guard_tier := int(cfg.get("guard_tier", 0))
+	if guard_tier > 0:
+		var g := _guard_cell(result, room, added[0].cell, walk)
+		if g.x >= 0:
+			result.enemy_spawns.append({"pos": g, "tier": guard_tier})
 	var kept: Array[ObjectPlacement] = []
 	for pl in objs.placements:
 		var hit := false
@@ -98,6 +110,38 @@ static func plan(result, cfg: Dictionary) -> void:
 			kept.append(pl)
 	kept.append_array(added)
 	objs.placements = kept
+
+
+## Kratka strażnika: na najkrótszej drodze wejście -> skarb ostatnia kratka przed wejściem do pokoju skarbu (prostokąt + 1),
+## cofnięta o GUARD_BACK; poza strefą portali. Droga cała w pokoju — jej środek. (-1, -1) = brak drogi.
+static func _guard_cell(result, room: Rect2i, goal: Vector2i, walk: Callable) -> Vector2i:
+	var parent := {result.entrance_pos: result.entrance_pos}
+	var queue: Array[Vector2i] = [result.entrance_pos]
+	var head := 0
+	while head < queue.size() and not parent.has(goal):
+		var p := queue[head]
+		head += 1
+		for d in DIRS4:
+			var n := p + d
+			if not parent.has(n) and walk.call(n):
+				parent[n] = p
+				queue.append(n)
+	if not parent.has(goal):
+		return Vector2i(-1, -1)
+	var path: Array[Vector2i] = [goal]   # od skarbu do wejścia
+	while path.back() != result.entrance_pos:
+		path.append(parent[path.back()])
+	var area := room.grow(1)
+	var out := -1
+	for i in range(path.size()):
+		if not area.has_point(path[i]):
+			out = i
+			break
+	var k := mini(out + GUARD_BACK, path.size() - 1) if out >= 0 else path.size() / 2
+	var objs: ObjectPlan = result.objects
+	while k > 0 and (result.portal_zone.has(path[k]) or objs.occupancy[path[k].y * objs.width + path[k].x] & ObjectPlan.SOLID):
+		k -= 1
+	return path[k]
 
 
 ## Kratka i jej 8 sąsiadów chodliwi, bez stref portali, kratka bez FORBID / obiektu z kolizją / obiektu interaktywnego.

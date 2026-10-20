@@ -59,7 +59,8 @@ var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga -> [
 var _chest_loot: Array = []  # companion-JSON "chest_loot": [{item_id, weight, count}] (skrzynie wygenerowane na mapie)
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
-var _treasure: Dictionary = {}  # companion-JSON "treasure": skrzynie skarbu (TreasurePlanner) — tier i łup
+var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
+var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device bossów mapy
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -592,6 +593,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
 	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
 	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
+	_boss_cfg = cfg.raw.get("boss", {}) if cfg != null else {}
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -837,24 +839,27 @@ func _apply_loot_tables() -> void:
 ## Zawartość nisz out (NicheContentPlanner, "niche_content" w JSON mapy): skrzynie nisz dostają własny tier ("chest_tier",
 ## domyślnie tier mapy) i łup ("chest_loot"), przedmioty na ziemi — wpis z "item_loot" wylosowany z hash(seed mapy, id),
 ## więc ta sama mapa ma w tej samej niszy ten sam przedmiot. Przejścia do sekretnych pokoi: cel = scena "secret_scene"
-## z argumentem (ten poziom i kratka niszy), przed niszą marker powrotu (secret_marker). Skrzynie skarbu ("treasure").
+## (nisza pokoju relikwii — "relic_scene") z argumentem (ten poziom i kratka niszy), przed niszą marker powrotu
+## (secret_marker).
 func _apply_niche_content(result) -> void:
-	_apply_special_chests("treasure_chest_", _treasure)
+	_apply_treasure()
 	var cfg: Dictionary = _niche_content
 	if cfg.is_empty() or result == null:
 		return
 	_apply_special_chests("niche_chest_", cfg)
 	var item_loot: Array = cfg.get("item_loot", [])
 	var secret_scene := QuizRpgPaths.path(str(cfg.get("secret_scene", "")))
+	var relic_scene := QuizRpgPaths.path(str(cfg.get("relic_scene", "")))
 	for node in get_tree().get_nodes_in_group("secret_passages"):
 		if not is_ancestor_of(node):
 			continue
 		var cell: Vector2i = node.get("niche_cell")
-		var target := "%s%s%s@%d,%d" % [secret_scene, QuizRpgPaths.LEVEL_ARG_SEP, _level_key(), cell.x, cell.y]
+		var scene := relic_scene if String(node.get("unique_id")).begins_with(String(NicheContentPlanner.RELIC_ID) + "_") else secret_scene
+		var target := "%s%s%s@%d,%d" % [scene, QuizRpgPaths.LEVEL_ARG_SEP, _level_key(), cell.x, cell.y]
 		node.set("on_enter", _change_level.bind(target, "Spawn"))
 		LevelPortal.place_marker(self, secret_marker(cell), Vector2((cell.x + 1) * CELL_PX, (cell.y + 1) * CELL_PX))
 	for node in get_tree().get_nodes_in_group("ground_items"):
-		if not is_ancestor_of(node) or item_loot.is_empty():
+		if not is_ancestor_of(node) or item_loot.is_empty() or String(node.get("unique_id")).begins_with(String(TreasurePlanner.RELIC_DEF_ID)):
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash([result.seed_used, String(node.get("unique_id"))])
@@ -862,6 +867,25 @@ func _apply_niche_content(result) -> void:
 		if not picked.is_empty():
 			node.set("item_id", str(picked.get("item_id", "potion")))
 			node.set("count", maxi(int(picked.get("count", 1)), 1))
+
+
+## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup) albo relikwia — przedmiot "item_id" ×"count" z flagą
+## fabularną "flag" (domyślnie relic.<scena mapy>; stała przy rerollu — podniesiona relikwia nie wraca). Boss mapy
+## ("boss": story_id, counts_toward_device) — np. strażnik relikwii bez kroku postępu urządzenia.
+func _apply_treasure() -> void:
+	_apply_special_chests(String(TreasurePlanner.CHEST_DEF_ID) + "_", _treasure)
+	if _treasure.get("kind", "chest") == "relic":
+		var flag := str(_treasure.get("flag", "relic." + QuizRpgPaths.level_scene(_level_key()).get_file().get_basename()))
+		for node in get_tree().get_nodes_in_group("ground_items"):
+			if is_ancestor_of(node) and String(node.get("unique_id")).begins_with(String(TreasurePlanner.RELIC_DEF_ID) + "_"):
+				node.set("item_id", str(_treasure.get("item_id", "")))
+				node.set("count", maxi(int(_treasure.get("count_items", 1)), 1))
+				node.set("story_flag", flag)
+	if not _boss_cfg.is_empty():
+		for node in get_tree().get_nodes_in_group("enemies"):
+			if is_ancestor_of(node) and bool(node.get("is_boss")):
+				node.set("boss_story_id", str(_boss_cfg.get("story_id", "")))
+				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", true)))
 
 
 ## Skrzynie o unique_id z prefiksem (nisze, skarb): tier ("chest_tier", domyślnie tier mapy) i łup ("chest_loot") z `cfg`.

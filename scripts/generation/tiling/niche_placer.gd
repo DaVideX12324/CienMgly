@@ -110,8 +110,10 @@ static func try_place_legacy(
 
 	var can_place_out_niche := state.can_place_out_niche(pos)
 
-	# 1. Nisza sekretna (para modułów OUT + OUT)
-	if can_place_out_niche and ctx.tile_rng.randf() < ctx.flags.secret_niche_spawn_chance:
+	# 1. Nisza sekretna (para modułów OUT + OUT); force_out_niche — bez losowania (losowanie i tak zużyte: reszta mapy
+	# bez zmian)
+	if can_place_out_niche and (ctx.tile_rng.randf() < ctx.flags.secret_niche_spawn_chance or ctx.force_out_niche):
+		ctx.force_out_niche = false
 		if not _place_niche(ctx, plan, pos, TileModuleRole.Id.NICHE_SECRET, vid, table, force_id):
 			var l_crown := CaveTileConstants.CRNR_SW_IN if not use_roots else CaveTileConstants.ROOT_CRNR_SW_IN
 			_queue(plan, pos + Vector2i(0, -3), l_crown, &"FACADE", table)

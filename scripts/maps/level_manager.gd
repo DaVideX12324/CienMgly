@@ -15,6 +15,7 @@ const LOCATION_NAMES := {
 	"tutorial_area": "Starożytne Ruiny",
 	"cave": "Jaskinia",
 	"cave_secret": "Ukryta grota",
+	"cave_relic": "Zapomniana krypta",
 	"sewer": "Ścieki",
 	"town": "Miasto",
 }

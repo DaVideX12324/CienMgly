@@ -381,10 +381,12 @@ static func plan_cave_tiles(
 	flags: GenerationFlags = null,
 	map_tile_profile: MapTileProfile = null,
 	tileset_field: TileSetField = null,
-	generator_behaviour: Dictionary = {}
+	generator_behaviour: Dictionary = {},
+	force_out_niche: bool = false
 ) -> Dictionary:
 	if flags == null:
 		flags = GenerationFlags.new()
+	var rng_state := rng.state
 
 	var portal_zone: Dictionary = {}
 	for p in result.entrance_zone:
@@ -436,8 +438,15 @@ static func plan_cave_tiles(
 	GenProgress.begin(&"edges")
 	var analysis := EdgeAnalyzer.analyze(ctx)
 	GenProgress.end(&"edges")
+	ctx.force_out_niche = force_out_niche
 	var plans := TilePlacementPlanner.plan(ctx, analysis)
 	result.out_niches = ctx.out_niches
+	# Mapa z pokojem relikwii ("niche_content.relic_scene") zawsze ma niszę out: gdy żadna nie wypadła, plan od nowa (ten
+	# sam stan RNG) z niszą w pierwszym możliwym miejscu.
+	var nc: Variant = generator_behaviour.get("niche_content")
+	if ctx.out_niches.is_empty() and not force_out_niche and nc is Dictionary and NicheContentPlanner.has_relic_room(nc):
+		rng.state = rng_state
+		return plan_cave_tiles(result, rng, theme_override, flags, map_tile_profile, tileset_field, generator_behaviour, true)
 	return plans
 
 
