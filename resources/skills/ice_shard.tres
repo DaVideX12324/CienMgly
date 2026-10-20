@@ -17,3 +17,6 @@ inflict_status = "agi_down"
 status_chance = 0.4
 sp_cost = 45
 learn_level = 5
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"damage_multiplier": 1.35, "status_chance": 0.5}, 3: {"damage_multiplier": 1.5, "status_chance": 0.6}}

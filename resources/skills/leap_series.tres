@@ -20,3 +20,6 @@ inflict_status = "stun"
 status_chance = 0.04
 status_per_hit = true
 sp_cost = 20
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"hits": 6, "status_chance": 0.07}, 3: {"hits": 7, "status_chance": 0.1}}

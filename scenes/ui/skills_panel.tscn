@@ -114,6 +114,11 @@ custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "50/100"
 
+[node name="SlotsLabel" type="Label" parent="." unique_id=254739768]
+layout_mode = 2
+text = "Sloty: 2/3 · aktywne 2/6 · maks. tier T1"
+autowrap_mode = 3
+
 [node name="HelpLabel" type="Label" parent="." unique_id=1373655860]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
@@ -479,5 +484,215 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow9/Margin/ContentRow" unique_id=1531044417]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SkillRow10" type="PanelContainer" parent="ListVBoxFrame/ListVBox" unique_id=891470003]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBoxFrame/ListVBox/SkillRow10" unique_id=567642034]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBoxFrame/ListVBox/SkillRow10/Control" unique_id=1075928405]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBoxFrame/ListVBox/SkillRow10" unique_id=1916433755]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBoxFrame/ListVBox/SkillRow10/Margin" unique_id=525465654]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow10/Margin/ContentRow" unique_id=502687837]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow10/Margin/ContentRow" unique_id=851406772]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SkillRow11" type="PanelContainer" parent="ListVBoxFrame/ListVBox" unique_id=1755815071]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBoxFrame/ListVBox/SkillRow11" unique_id=1449149300]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBoxFrame/ListVBox/SkillRow11/Control" unique_id=571847108]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBoxFrame/ListVBox/SkillRow11" unique_id=220720029]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBoxFrame/ListVBox/SkillRow11/Margin" unique_id=1495326519]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow11/Margin/ContentRow" unique_id=306082980]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow11/Margin/ContentRow" unique_id=1188741341]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SkillRow12" type="PanelContainer" parent="ListVBoxFrame/ListVBox" unique_id=700755788]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBoxFrame/ListVBox/SkillRow12" unique_id=1942377870]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBoxFrame/ListVBox/SkillRow12/Control" unique_id=794323448]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBoxFrame/ListVBox/SkillRow12" unique_id=1329142593]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBoxFrame/ListVBox/SkillRow12/Margin" unique_id=937281309]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow12/Margin/ContentRow" unique_id=1972784235]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow12/Margin/ContentRow" unique_id=1685769403]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SkillRow13" type="PanelContainer" parent="ListVBoxFrame/ListVBox" unique_id=1073291104]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBoxFrame/ListVBox/SkillRow13" unique_id=333492288]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBoxFrame/ListVBox/SkillRow13/Control" unique_id=1324381645]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBoxFrame/ListVBox/SkillRow13" unique_id=771307296]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBoxFrame/ListVBox/SkillRow13/Margin" unique_id=1471215568]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow13/Margin/ContentRow" unique_id=472013361]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow13/Margin/ContentRow" unique_id=1561571379]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SkillRow14" type="PanelContainer" parent="ListVBoxFrame/ListVBox" unique_id=455577950]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBoxFrame/ListVBox/SkillRow14" unique_id=815849396]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBoxFrame/ListVBox/SkillRow14/Control" unique_id=1361181779]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBoxFrame/ListVBox/SkillRow14" unique_id=869225772]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBoxFrame/ListVBox/SkillRow14/Margin" unique_id=1367232094]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow14/Margin/ContentRow" unique_id=2134674163]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow14/Margin/ContentRow" unique_id=1669738464]
+layout_mode = 2
+horizontal_alignment = 2
+
+[node name="SkillRow15" type="PanelContainer" parent="ListVBoxFrame/ListVBox" unique_id=497336942]
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="ListVBoxFrame/ListVBox/SkillRow15" unique_id=2049341904]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="ListVBoxFrame/ListVBox/SkillRow15/Control" unique_id=1761003527]
+visible = false
+layout_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="ListVBoxFrame/ListVBox/SkillRow15" unique_id=113331505]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="ListVBoxFrame/ListVBox/SkillRow15/Margin" unique_id=821061061]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow15/Margin/ContentRow" unique_id=307793651]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RightLabel" type="Label" parent="ListVBoxFrame/ListVBox/SkillRow15/Margin/ContentRow" unique_id=1706446129]
 layout_mode = 2
 horizontal_alignment = 2

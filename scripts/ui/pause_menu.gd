@@ -38,6 +38,7 @@ var skills_panel: VBoxContainer
 var skills_actor_header: HBoxContainer
 var skills_list_vbox: Container
 var skills_footer_label: Label
+var skills_slots_label: Label
 var equipment_panel: VBoxContainer
 var equipment_actor_header: HBoxContainer
 var equipment_stats_label: Label
@@ -204,6 +205,7 @@ func _cache_panel_nodes() -> void:
 	skills_actor_header = skills_panel.find_child("ActorHeader", true, false) as HBoxContainer if skills_panel else null
 	skills_list_vbox = skills_panel.find_child("ListVBox", true, false) as Container if skills_panel else null
 	skills_footer_label = skills_panel.find_child("HelpLabel", true, false) as Label if skills_panel else null
+	skills_slots_label = skills_panel.find_child("SlotsLabel", true, false) as Label if skills_panel else null
 	equipment_actor_header = equipment_panel.find_child("ActorHeader", true, false) as HBoxContainer if equipment_panel else null
 	equipment_stats_label = equipment_panel.find_child("EquipStatsLabel", true, false) as Label if equipment_panel else null
 	equip_actions_row = equipment_panel.find_child("EquipActionRow", true, false) as HBoxContainer if equipment_panel else null
@@ -245,6 +247,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if _mode == "items_list" and _handle_item_tab_input(event):
 		_play_click()
+		get_viewport().set_input_as_handled()
+		return
+	if _mode == "skills_list" and (_is_prev_tab(event) or _is_next_tab(event)):
+		_play_click()
+		_step_selected_skill_tier(-1 if _is_prev_tab(event) else 1)
 		get_viewport().set_input_as_handled()
 		return
 	var grid_list: bool = _mode == "items_list" or _mode == "skills_list"
@@ -1142,11 +1149,17 @@ func _rebuild_skill_rows() -> void:
 				disabled = disabled or member_tp < tp_cost
 			disabled = disabled or not bool(skill.get("usable_in_menu", false))  # tylko walka -> przygaszona
 			disabled = disabled or (_ps != null and not _ps.member_meets_weapon_requirement(_selected_member_index, skill))
-			_set_simple_row(row, str(skill.get("name", "---")), cost_text, disabled)
+			disabled = disabled or not bool(skill.get("active", true))  # poza slotem
+			var tier: int = int(skill.get("tier", 0))
+			var tier_text: String = ""
+			if not bool(skill.get("free", false)):
+				tier_text = "  T%d" % tier if tier > 0 else "  · " + QuizRpgI18n.t("pause.skill_unslotted", "poza slotem")
+			_set_simple_row(row, str(skill.get("name", "---")) + tier_text, cost_text, disabled)
 			(row.get_node("Margin/ContentRow/RightLabel") as Label).add_theme_color_override("font_color", cost_color)
 			var skill_copy: Dictionary = skill.duplicate(true)
 			skill_copy["disabled"] = disabled
 			_current_skill_entries.append(skill_copy)
+	_refresh_slots_label()
 	if _current_skill_entries.is_empty():
 		skills_footer_label.text = QuizRpgI18n.t("pause.no_skills", "Brak umiejętności.")
 		return
@@ -1157,7 +1170,47 @@ func _rebuild_skill_rows() -> void:
 func _refresh_skill_rows() -> void:
 	_set_row_selection(_skill_rows, _skills_index)
 	if _skills_index >= 0 and _skills_index < _current_skill_entries.size():
-		skills_footer_label.text = str(_current_skill_entries[_skills_index].get("description", ""))
+		skills_footer_label.text = _skill_footer_text(_current_skill_entries[_skills_index])
+
+
+## Pasek slotów nad listą: budżet, aktywne, maks. tier członka i podpowiedź klawiszy.
+func _refresh_slots_label() -> void:
+	if skills_slots_label == null or _ps == null or not _ps.has_method("get_member_slot_info"):
+		return
+	var info: Dictionary = _ps.get_member_slot_info(_selected_member_index)
+	skills_slots_label.text = QuizRpgI18n.tf("pause.slots_info", info, "Sloty: {used}/{budget} · aktywne {active}/{max_active} · maks. tier T{max_tier}") \
+		+ "\n" + QuizRpgI18n.t("pause.slots_hint", "Q / E: tier w dół / w górę (zejście poniżej startowego zdejmuje ze slotu).")
+
+
+## Opis skilla + zakres tierów i to, co daje bieżący tier.
+func _skill_footer_text(entry: Dictionary) -> String:
+	var text: String = str(entry.get("description", ""))
+	if bool(entry.get("free", false)):
+		return text + "\n" + QuizRpgI18n.t("pause.skill_free", "Poza budżetem — zawsze dostępna.")
+	var tier: int = int(entry.get("tier", 0))
+	var now: String = "T%d" % tier if tier > 0 else QuizRpgI18n.t("pause.skill_unslotted", "poza slotem")
+	text += "\n" + QuizRpgI18n.tf("pause.skill_tier_range", {"min": int(entry.get("tier_min", 1)), "max": int(entry.get("tier_max", 1)), "now": now}, "Tiery T{min}–T{max}, teraz {now}.")
+	var res := entry.get("resource") as QuizRpgSkillData
+	var summary: String = res.tier_summary(tier) if res != null and tier > 0 else ""
+	return text + (" " + summary if summary != "" else "")
+
+
+## Q / E na liście umiejętności: tier wybranego skilla w dół / w górę (poniżej startowego = poza slotem).
+func _step_selected_skill_tier(delta: int) -> void:
+	if _skills_index < 0 or _skills_index >= _current_skill_entries.size() or _ps == null:
+		return
+	var entry: Dictionary = _current_skill_entries[_skills_index]
+	if bool(entry.get("free", false)):
+		return
+	var tier: int = int(entry.get("tier", 0))
+	var lo: int = int(entry.get("tier_min", 1))
+	var next: int = (lo if tier <= 0 else tier + 1) if delta > 0 else (0 if tier <= lo else tier - 1)
+	if next == tier or (delta < 0 and tier <= 0):
+		return
+	if not _ps.set_member_skill_tier(_selected_member_index, str(entry.get("skill_id", "")), next):
+		_show_toast(QuizRpgI18n.t("pause.slot_failed", "Nie mieści się: budżet slotów, limit aktywnych albo maks. tier."))
+		return
+	_rebuild_skill_rows()
 
 
 func _rebuild_equip_action_rows() -> void:

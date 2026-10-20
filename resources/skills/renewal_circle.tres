@@ -16,3 +16,6 @@ inflict_status = "regen"
 status_chance = 1.0
 sp_cost = 60
 learn_level = 5
+tier_min = 1
+tier_max = 2
+tier_overrides = {2: {"sp_cost": 40}}

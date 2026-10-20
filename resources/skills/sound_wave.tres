@@ -24,3 +24,6 @@ learn_level = 10
 target = 1
 success_rate = 0.5
 hit_ignores_quiz = true
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"success_rate": 0.65}, 3: {"success_rate": 0.8}}

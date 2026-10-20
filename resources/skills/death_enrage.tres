@@ -20,3 +20,5 @@ target = 1
 sp_cost = 450
 tp_cost = 100
 learn_level = 20
+tier_min = 4
+tier_max = 4

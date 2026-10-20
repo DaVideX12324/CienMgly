@@ -16,3 +16,6 @@ heal_amount = 250
 sp_cost = 100
 occasion = 0
 heal_percent = 0.3
+tier_min = 2
+tier_max = 4
+tier_overrides = {3: {"heal_percent": 0.5}, 4: {"heal_percent": 0.7}}

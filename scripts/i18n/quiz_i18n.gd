@@ -64,17 +64,23 @@ static func has(key: String) -> bool:
 
 ## Klucz nazwy umiejętności z pliku zasobu: "skill.<nazwa pliku .tres bez rozszerzenia>.name".
 static func skill_name_key(res: Resource) -> String:
-	return "skill.%s.name" % res.resource_path.get_file().get_basename()
+	return "skill.%s.name" % _source_base(res)
 
 
 ## Klucz opisu umiejętności: "skill.<nazwa pliku .tres>.desc".
 static func skill_desc_key(res: Resource) -> String:
-	return "skill.%s.desc" % res.resource_path.get_file().get_basename()
+	return "skill.%s.desc" % _source_base(res)
+
+
+## Nazwa pliku zasobu bez rozszerzenia; kopia skilla na wyższym tierze (QuizRpgSkillData.at_tier) — z meta source_path.
+static func _source_base(res: Resource) -> String:
+	var p := res.resource_path if res.resource_path != "" else str(res.get_meta(&"source_path", ""))
+	return p.get_file().get_basename()
 
 
 ## Klucz tekstu z logu walki użycia umiejętności wroga: "skill.<plik .tres>.log" ({enemy}, {skill} jak w log_text).
 static func skill_log_key(res: Resource) -> String:
-	return "skill.%s.log" % res.resource_path.get_file().get_basename()
+	return "skill.%s.log" % _source_base(res)
 
 
 ## Klucze nazwy i opisu statusu z pliku zasobu: "status.<plik>.name" / "status.<plik>.desc".

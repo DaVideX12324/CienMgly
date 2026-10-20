@@ -16,3 +16,6 @@ mdf_coeff = 2.0
 damage_multiplier = 1.9
 sp_cost = 80
 learn_level = 10
+tier_min = 2
+tier_max = 4
+tier_overrides = {3: {"damage_multiplier": 2.2}, 4: {"damage_multiplier": 2.6}}

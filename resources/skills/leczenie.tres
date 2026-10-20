@@ -16,3 +16,6 @@ heal_percent = 0.3
 sp_cost = 40
 occasion = 0
 learn_level = 1
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"heal_percent": 0.4}, 3: {"heal_percent": 0.55}}

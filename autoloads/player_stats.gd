@@ -381,20 +381,35 @@ func hero_by_id(hero_id: String) -> QuizRpgHeroData:
 	return _hero_cache[hero_id]
 
 
-## Odblokowane umiejętności członka w kolejności puli postaci — słowniki QuizRpgSkillData.to_entry().
+## Odblokowane umiejętności członka w kolejności puli postaci — słowniki QuizRpgSkillData.to_entry() z zasobem na
+## tierze ze slotu (nieaktywne: tier startowy) i polami slotów: tier (0 = poza slotem), active, free (skan), tier_min / tier_max.
 func get_member_skills(member_index: int) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if member_index < 0 or member_index >= party.size():
 		return out
 	var member: Dictionary = party[member_index]
 	var unlocked: Array = member.get("skills", [])
+	var loadout: Dictionary = member.get("loadout", {})
 	var hero := hero_for_member(member)
 	if hero == null:
 		return out
 	for sk: QuizRpgSkillData in hero.skills:
 		if sk != null and unlocked.has(sk.skill_id):
-			out.append(sk.to_entry(int(member.get("max_sp", 0))))
+			var free := QuizRpgSkillSlots.is_free(sk)
+			var tier := int(loadout.get(sk.skill_id, 0))
+			var e := sk.at_tier(tier).to_entry(int(member.get("max_sp", 0)))
+			e["tier"] = tier
+			e["active"] = free or tier > 0
+			e["free"] = free
+			e["tier_min"] = sk.tier_min
+			e["tier_max"] = sk.tier_max
+			out.append(e)
 	return out
+
+
+## Umiejętności dostępne w walce i w menu: tylko aktywne (w slotach) i poza budżetem (skan).
+func get_member_battle_skills(member_index: int) -> Array[Dictionary]:
+	return get_member_skills(member_index).filter(func(e: Dictionary) -> bool: return bool(e.active))
 
 
 ## Pula umiejętności postaci członka (także zablokowane) — sklep NPC, podgląd.
@@ -422,6 +437,8 @@ func use_skill_on_member(user_index: int, skill_id: String, target_index: int) -
 		if e.get("skill_id") == skill_id:
 			entry = e
 			skill = e.get("resource") as QuizRpgSkillBase
+	if skill != null and not bool(entry.get("active", false)):
+		return {"success": false, "message": QuizRpgI18n.t("party.skill_not_slotted", "Umiejętność nie jest w slocie.")}
 	if skill == null or not bool(entry.get("usable_in_menu", false)):
 		return {"success": false, "message": QuizRpgI18n.t("party.skill_combat_only", "Tej umiejętności używa się tylko w walce.")}
 	if not skill.is_heal():
@@ -489,6 +506,8 @@ func learn_level_skills() -> Array[String]:
 			if sk.learn_level > 0 and sk.learn_level <= lvl and not unlocked.has(sk.skill_id):
 				unlocked.append(sk.skill_id)
 				out.append(sk.localized_name())
+				member["skills"] = unlocked
+				_try_activate(i, sk)  # ten sam słownik członka: dopisuje "loadout"
 				skill_learned.emit(i, sk.localized_name())
 		member["skills"] = unlocked
 		party[i] = member
@@ -512,8 +531,120 @@ func unlock_skill(member_index: int, skill_id: String) -> bool:
 	unlocked.append(skill_id)
 	member["skills"] = unlocked
 	party[member_index] = member
+	_try_activate(member_index, _pool_skill(member_index, skill_id))
 	party_changed.emit()
 	return true
+
+
+# --- Sloty umiejętności (QuizRpgSkillSlots, docs/kontekst/sloty_umiejetnosci_szkic.md) ----------------------
+
+## Aktywne skille członka: {skill_id: tier}. Skan (poza budżetem) tu nie trafia — jest zawsze dostępny.
+func get_member_loadout(member_index: int) -> Dictionary:
+	if member_index < 0 or member_index >= party.size():
+		return {}
+	return ((party[member_index] as Dictionary).get("loadout", {}) as Dictionary).duplicate()
+
+
+## Stan slotów członka: {budget, used, active, max_active, max_tier} (budżet i maks. tier z poziomu + sprzętu).
+func get_member_slot_info(member_index: int) -> Dictionary:
+	if member_index < 0 or member_index >= party.size():
+		return {}
+	var lvl := int((party[member_index] as Dictionary).get("level", 1))
+	var loadout := get_member_loadout(member_index)
+	var used := 0
+	for id: String in loadout:
+		used += QuizRpgSkillSlots.cost(int(loadout[id]))
+	return {
+		"budget": QuizRpgSkillSlots.budget(lvl, _member_slot_bonus(member_index, "slot_budget")),
+		"used": used,
+		"active": loadout.size(),
+		"max_active": QuizRpgSkillSlots.MAX_ACTIVE,
+		"max_tier": QuizRpgSkillSlots.max_tier(lvl, _member_slot_bonus(member_index, "max_tier_bonus")),
+	}
+
+
+## Ustawia tier skilla w slocie (0 = zdejmuje ze slotu). false = skill nieznany albo poza budżetem, poza zakresem
+## tierów [tier_min, maks. tier członka], ponad limit aktywnych albo skan (poza budżetem).
+func set_member_skill_tier(member_index: int, skill_id: String, tier: int) -> bool:
+	if member_index < 0 or member_index >= party.size():
+		return false
+	var member: Dictionary = party[member_index]
+	var sk := _pool_skill(member_index, skill_id)
+	if sk == null or QuizRpgSkillSlots.is_free(sk) or not (member.get("skills", []) as Array).has(skill_id):
+		return false
+	var loadout: Dictionary = (member.get("loadout", {}) as Dictionary).duplicate()
+	if tier <= 0:
+		if not loadout.has(skill_id):
+			return false
+		loadout.erase(skill_id)
+	else:
+		var info := get_member_slot_info(member_index)
+		var r := QuizRpgSkillSlots.tier_range(sk, int(info.max_tier))
+		var used := int(info.used) - QuizRpgSkillSlots.cost(int(loadout.get(skill_id, 0))) + QuizRpgSkillSlots.cost(tier)
+		if tier < r.x or tier > r.y or used > int(info.budget):
+			return false
+		if not loadout.has(skill_id) and loadout.size() >= QuizRpgSkillSlots.MAX_ACTIVE:
+			return false
+		loadout[skill_id] = tier
+	member["loadout"] = loadout
+	party[member_index] = member
+	party_changed.emit()
+	return true
+
+
+## Nowo nauczony skill wchodzi do slotu na tierze startowym, jeśli się mieści (inaczej czeka w menu Umiejętności).
+func _try_activate(member_index: int, sk: QuizRpgSkillData) -> void:
+	if sk != null and not QuizRpgSkillSlots.is_free(sk):
+		set_member_skill_tier(member_index, sk.skill_id, sk.tier_min)
+
+
+## Stary zapis bez slotów: znane skille po kolei w sloty, ile się zmieści.
+func _autofill_loadout(member_index: int) -> void:
+	var known: Array = (party[member_index] as Dictionary).get("skills", [])
+	for sk in get_member_skill_pool(member_index):
+		if known.has(sk.skill_id):
+			_try_activate(member_index, sk)
+
+
+## Po zmianie sprzętu (mniejszy budżet / maks. tier): tiery ponad limit w dół, a nadmiar od końca puli ze slotów.
+func _fit_loadout(member_index: int) -> void:
+	var member: Dictionary = party[member_index]
+	var loadout: Dictionary = (member.get("loadout", {}) as Dictionary).duplicate()
+	var info := get_member_slot_info(member_index)
+	var pool := get_member_skill_pool(member_index)
+	pool.reverse()
+	var used := 0
+	for sk in pool:
+		if loadout.has(sk.skill_id):
+			var t := mini(int(loadout[sk.skill_id]), int(info.max_tier))
+			if t < sk.tier_min:
+				loadout.erase(sk.skill_id)
+			else:
+				loadout[sk.skill_id] = t
+				used += QuizRpgSkillSlots.cost(t)
+	for sk in pool:
+		if used <= int(info.budget) and loadout.size() <= QuizRpgSkillSlots.MAX_ACTIVE:
+			break
+		if loadout.has(sk.skill_id):
+			used -= QuizRpgSkillSlots.cost(int(loadout[sk.skill_id]))
+			loadout.erase(sk.skill_id)
+	member["loadout"] = loadout
+	party[member_index] = member
+
+
+func _pool_skill(member_index: int, skill_id: String) -> QuizRpgSkillData:
+	for sk in get_member_skill_pool(member_index):
+		if sk.skill_id == skill_id:
+			return sk
+	return null
+
+
+## Suma pola sprzętu członka ("slot_budget" / "max_tier_bonus").
+func _member_slot_bonus(member_index: int, field: String) -> int:
+	var sum := 0
+	for slot_name: String in EQUIPMENT_SLOTS:
+		sum += _get_equipped_stat_bonus(party[member_index], slot_name, field)
+	return sum
 
 
 # --- Statusy -----------------------------------------------------------------------------
@@ -833,11 +964,17 @@ func load_save_data(data: Dictionary) -> void:
 	rng_bonus     = data.get("rng_bonus", 0.0)
 	inventory = _to_dictionary_array(data.get("inventory", inventory.duplicate(true)))
 	party = _to_dictionary_array(data.get("party", party.duplicate(true)))
+	var no_slots: Array[int] = []  # zapis sprzed slotów umiejętności
+	for i in range(party.size()):
+		if not party[i].has("loadout"):
+			no_slots.append(i)
 	var cq: Variant = data.get("companion_quests", {})
 	companion_quests = (cq as Dictionary).duplicate(true) if cq is Dictionary else {}
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
+	for i in no_slots:
+		_autofill_loadout(i)
 	learn_level_skills()
 
 
@@ -1167,6 +1304,7 @@ func set_member_equipment(member_index: int, slot_name: String, item_id: String)
 	equipment[slot_name] = item_id
 	member["equipment"] = equipment
 	party[member_index] = member
+	_fit_loadout(member_index)  # akcesorium mogło zmienić budżet slotów
 	inventory_changed.emit()
 	party_changed.emit()
 	return true
@@ -1183,6 +1321,7 @@ func replace_equipped_item(member_index: int, slot_name: String, new_item_id: St
 	equipment[slot_name] = new_item_id
 	member["equipment"] = equipment
 	party[member_index] = member
+	_fit_loadout(member_index)
 	party_changed.emit()
 	return true
 
@@ -1238,6 +1377,10 @@ func _ensure_party_defaults() -> void:
 		var member: Dictionary = party[index]
 		if not (member.get("skills") is Array):
 			member["skills"] = []
+		var loadout := {}  # sloty: tiery jako int (JSON zapisuje liczby jako float)
+		for id in (member.get("loadout") if member.get("loadout") is Dictionary else {}):
+			loadout[str(id)] = int(member.loadout[id])
+		member["loadout"] = loadout
 		if not member.has("equipment") or not (member.get("equipment") is Dictionary):
 			member["equipment"] = {}
 		if not member.has("default_equipment") or not (member.get("default_equipment") is Dictionary):

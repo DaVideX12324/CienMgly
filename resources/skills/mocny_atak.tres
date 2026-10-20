@@ -13,3 +13,6 @@ damage_multiplier = 1.5
 tp_cost = 25
 learn_level = 1
 sp_cost = 50
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"damage_multiplier": 1.8}, 3: {"damage_multiplier": 2.2}}

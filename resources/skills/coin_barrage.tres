@@ -20,3 +20,6 @@ random_count = 3
 sp_cost = 40
 tp_cost = 0
 learn_level = 5
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"hits": 4, "random_count": 4}, 3: {"hits": 5, "random_count": 5}}

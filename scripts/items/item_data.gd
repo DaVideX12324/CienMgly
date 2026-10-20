@@ -26,6 +26,9 @@ class_name QuizRpgItemData
 @export var mat_bonus: int = 0
 @export var mdf_bonus: int = 0
 @export var agi_bonus: int = 0
+## Sloty umiejętności (QuizRpgSkillSlots): zmiana budżetu (jednostki, może być ujemna) i maks. tieru członka, który to nosi.
+@export var slot_budget: int = 0
+@export var max_tier_bonus: int = 0
 ## Cena w sklepie (złoto); sprzedaż za połowę. 0 = nie do kupienia ani sprzedania (klucze, przedmioty fabularne).
 @export var price: int = 0
 

@@ -14,3 +14,6 @@ def_coeff = 0.0
 mdf_coeff = 2.0
 sp_cost = 30
 learn_level = 1
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"mat_coeff": 4.0}, 3: {"mat_coeff": 4.5}}

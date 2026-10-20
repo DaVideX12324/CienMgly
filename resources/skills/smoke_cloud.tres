@@ -16,3 +16,6 @@ status_chance = 0.5
 sp_cost = 30
 tp_cost = 0
 learn_level = 15
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"status_chance": 0.65}, 3: {"status_chance": 0.8}}

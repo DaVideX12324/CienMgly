@@ -17,3 +17,6 @@ variance = 0.2
 inflict_status = "paralysis"
 status_chance = 0.5
 sp_cost = 50
+tier_min = 2
+tier_max = 4
+tier_overrides = {3: {"status_chance": 0.65}, 4: {"status_chance": 0.8}}

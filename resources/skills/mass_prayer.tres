@@ -16,3 +16,6 @@ heal_mat_coeff = 2.5
 sp_cost = 110
 occasion = 0
 learn_level = 10
+tier_min = 2
+tier_max = 4
+tier_overrides = {3: {"heal_mat_coeff": 3.0}, 4: {"heal_mat_coeff": 3.5}}

@@ -17,3 +17,6 @@ status_chance = 1.0
 sp_cost = 60
 tp_cost = 20
 learn_level = 20
+tier_min = 2
+tier_max = 3
+tier_overrides = {3: {"target": 5}}

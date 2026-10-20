@@ -16,3 +16,6 @@ heal_amount = 0
 sp_cost = 65
 occasion = 0
 heal_mat_coeff = 4.0
+tier_min = 1
+tier_max = 3
+tier_overrides = {2: {"heal_mat_coeff": 5.0}, 3: {"heal_mat_coeff": 6.0}}

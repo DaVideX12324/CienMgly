@@ -18,3 +18,6 @@ status_chance = 0.7
 status_per_hit = true
 tp_cost = 25
 learn_level = 15
+tier_min = 2
+tier_max = 4
+tier_overrides = {3: {"hits": 11, "status_chance": 0.8}, 4: {"hits": 13, "status_chance": 0.9}}

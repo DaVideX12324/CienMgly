@@ -15,3 +15,6 @@ inflict_status = "agi_up"
 status_chance = 1.0
 sp_cost = 25
 learn_level = 0
+tier_min = 3
+tier_max = 4
+tier_overrides = {4: {"sp_cost": 15}}

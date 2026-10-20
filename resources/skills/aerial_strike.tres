@@ -15,3 +15,6 @@ mat_coeff = 2.0
 mdf_coeff = 1.0
 variance = 0.2
 sp_cost = 30
+tier_min = 2
+tier_max = 4
+tier_overrides = {3: {"damage_multiplier": 0.8}, 4: {"damage_multiplier": 1.0}}

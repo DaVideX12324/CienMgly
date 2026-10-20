@@ -893,8 +893,8 @@ func _open_skills_menu() -> void:
 		result_label.add_theme_color_override("font_color", QuizRpgStatusCatalog.color_of("silence"))
 		return
 	var entries: Array[Dictionary] = []
-	if _ps and _ps.has_method("get_member_skills"):
-		entries = _ps.get_member_skills(_active_actor_index)
+	if _ps and _ps.has_method("get_member_battle_skills"):
+		entries = _ps.get_member_battle_skills(_active_actor_index)  # tylko skille w slotach (+ skan)
 	_open_list_menu("skills", entries)
 
 

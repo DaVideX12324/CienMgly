@@ -13,3 +13,6 @@ atk_coeff = 8.0
 sp_cost = 100
 required_weapon_type = "sword"
 consumes_weapon = true
+tier_min = 3
+tier_max = 4
+tier_overrides = {4: {"atk_coeff": 12.0}}
