@@ -111,6 +111,15 @@ func open_pause_menu() -> void:
 		_toggle_pause()
 
 
+## Menu pauzy od razu na zakładce zapisu (karczma NPC: „Zapisać grę?”).
+func open_save_menu() -> void:
+	if not _paused:
+		_toggle_pause()
+	_mode = "save_slots"
+	_save_slot_index = 0
+	_show_save_panel()
+
+
 func open_confirm_exit() -> void:
 	if not _paused:
 		_toggle_pause()
