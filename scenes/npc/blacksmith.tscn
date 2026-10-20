@@ -1,0 +1,69 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/blacksmith_frames.tres" id="2_th7q5"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_vxe2y"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_05lib"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_fejpd"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/training_sword.tres" id="6_7vkc5"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/scout_dagger.tres" id="7_84n1m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/woodcutter_axe.tres" id="8_nb7fw"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/guard_spear.tres" id="9_htgpo"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/priest_mace.tres" id="10_w3ctk"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/apprentice_staff.tres" id="11_6jab6"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/hunter_bow.tres" id="12_7qmvl"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_sword.tres" id="13_o58t1"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_blade.tres" id="14_kcu86"]
+
+[sub_resource type="Resource" id="Resource_0nkv3"]
+script = ExtResource("5_fejpd")
+item = ExtResource("6_7vkc5")
+
+[sub_resource type="Resource" id="Resource_pr84e"]
+script = ExtResource("5_fejpd")
+item = ExtResource("7_84n1m")
+
+[sub_resource type="Resource" id="Resource_jr2eo"]
+script = ExtResource("5_fejpd")
+item = ExtResource("8_nb7fw")
+
+[sub_resource type="Resource" id="Resource_akqrx"]
+script = ExtResource("5_fejpd")
+item = ExtResource("9_htgpo")
+
+[sub_resource type="Resource" id="Resource_8gqc1"]
+script = ExtResource("5_fejpd")
+item = ExtResource("10_w3ctk")
+
+[sub_resource type="Resource" id="Resource_ogi4h"]
+script = ExtResource("5_fejpd")
+item = ExtResource("11_6jab6")
+
+[sub_resource type="Resource" id="Resource_ok8pr"]
+script = ExtResource("5_fejpd")
+item = ExtResource("12_7qmvl")
+
+[sub_resource type="Resource" id="Resource_r7bor"]
+script = ExtResource("5_fejpd")
+item = ExtResource("13_o58t1")
+
+[sub_resource type="Resource" id="Resource_hts7l"]
+script = ExtResource("5_fejpd")
+item = ExtResource("14_kcu86")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_6ktd1"]
+script = ExtResource("4_05lib")
+stock = Array[ExtResource("5_fejpd")]([SubResource("Resource_0nkv3"), SubResource("Resource_pr84e"), SubResource("Resource_jr2eo"), SubResource("Resource_akqrx"), SubResource("Resource_8gqc1"), SubResource("Resource_ogi4h"), SubResource("Resource_ok8pr"), SubResource("Resource_r7bor"), SubResource("Resource_hts7l")])
+intro_lines = PackedStringArray()
+label = "Handel"
+label_key = "npc.service.shop"
+
+[node name="Blacksmith" instance=ExtResource("0_base")]
+npc_name = "Kowal"
+npc_name_key = "npc.blacksmith.name"
+sprite_frames = ExtResource("2_th7q5")
+sprite_offset = Vector2(0, -30)
+greeting = PackedStringArray("Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.")
+greeting_key = "npc.blacksmith.greeting"
+services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1")])

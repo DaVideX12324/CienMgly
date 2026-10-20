@@ -1,91 +1,52 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/shopkeeper_frames.tres" id="2_pbv05"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_asm72"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_ksago"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_xqeu1"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="6_hm6iv"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="7_8t3o7"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/focus_tonic.tres" id="8_1xkqs"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="9_krtuy"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="10_ujakb"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_sword.tres" id="11_fgq4u"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_buckler.tres" id="12_3bl5i"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/reinforced_tunic.tres" id="13_35i4k"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/leather_hood.tres" id="14_pldaq"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_blade.tres" id="15_22r0f"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_kite_shield.tres" id="16_kegfa"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_chainmail.tres" id="17_6lnae"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_helmet.tres" id="18_1rcrn"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/shopkeeper_frames.tres" id="2_cg8oe"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_bjecs"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_ynlsj"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_2msha"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="6_hanfq"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="7_iibr6"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/focus_tonic.tres" id="8_232td"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="9_pbv05"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="10_asm72"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lucky_charm.tres" id="11_ksago"]
 
-[sub_resource type="Resource" id="Resource_hkdrx"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("6_hm6iv")
+[sub_resource type="Resource" id="Resource_xqeu1"]
+script = ExtResource("5_2msha")
+item = ExtResource("6_hanfq")
 
-[sub_resource type="Resource" id="Resource_n17dq"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("7_8t3o7")
+[sub_resource type="Resource" id="Resource_hm6iv"]
+script = ExtResource("5_2msha")
+item = ExtResource("7_iibr6")
 
-[sub_resource type="Resource" id="Resource_besem"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("8_1xkqs")
+[sub_resource type="Resource" id="Resource_8t3o7"]
+script = ExtResource("5_2msha")
+item = ExtResource("8_232td")
 
-[sub_resource type="Resource" id="Resource_4uys2"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("9_krtuy")
+[sub_resource type="Resource" id="Resource_1xkqs"]
+script = ExtResource("5_2msha")
+item = ExtResource("9_pbv05")
 
-[sub_resource type="Resource" id="Resource_5wx45"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("10_ujakb")
+[sub_resource type="Resource" id="Resource_krtuy"]
+script = ExtResource("5_2msha")
+item = ExtResource("10_asm72")
 
-[sub_resource type="Resource" id="Resource_110vu"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("11_fgq4u")
+[sub_resource type="Resource" id="Resource_ujakb"]
+script = ExtResource("5_2msha")
+item = ExtResource("11_ksago")
 
-[sub_resource type="Resource" id="Resource_806em"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("12_3bl5i")
-
-[sub_resource type="Resource" id="Resource_asx15"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("13_35i4k")
-
-[sub_resource type="Resource" id="Resource_nelkn"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("14_pldaq")
-
-[sub_resource type="Resource" id="Resource_i7q60"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("15_22r0f")
-required_flag = "boss:sewer"
-
-[sub_resource type="Resource" id="Resource_nly2b"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("16_kegfa")
-required_flag = "boss:sewer"
-
-[sub_resource type="Resource" id="Resource_db6jy"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("17_6lnae")
-required_flag = "boss:sewer"
-
-[sub_resource type="Resource" id="Resource_1wbxc"]
-script = ExtResource("5_xqeu1")
-item = ExtResource("18_1rcrn")
-required_flag = "boss:sewer"
-
-[sub_resource type="Resource" id="Resource_xk0r0"]
-script = ExtResource("4_ksago")
-stock = Array[ExtResource("5_xqeu1")]([SubResource("Resource_hkdrx"), SubResource("Resource_n17dq"), SubResource("Resource_besem"), SubResource("Resource_4uys2"), SubResource("Resource_5wx45"), SubResource("Resource_110vu"), SubResource("Resource_806em"), SubResource("Resource_asx15"), SubResource("Resource_nelkn"), SubResource("Resource_i7q60"), SubResource("Resource_nly2b"), SubResource("Resource_db6jy"), SubResource("Resource_1wbxc")])
+[sub_resource type="Resource" id="Resource_fgq4u"]
+script = ExtResource("4_ynlsj")
+stock = Array[ExtResource("5_2msha")]([SubResource("Resource_xqeu1"), SubResource("Resource_hm6iv"), SubResource("Resource_8t3o7"), SubResource("Resource_1xkqs"), SubResource("Resource_krtuy"), SubResource("Resource_ujakb")])
 intro_lines = PackedStringArray()
 label = "Handel"
 label_key = "npc.service.shop"
 
 [node name="Shopkeeper" instance=ExtResource("0_base")]
-npc_name = "Sklepikarka"
+npc_name = "Zielarka"
 npc_name_key = "npc.shopkeeper.name"
-sprite_frames = ExtResource("2_pbv05")
-greeting = PackedStringArray("Witaj! Mikstury, eliksiry, trochę żelaza — czego ci trzeba?")
+sprite_frames = ExtResource("2_cg8oe")
+greeting = PackedStringArray("Zioła, mikstury, odtrutki — wszystko, co trzyma przy życiu.")
 greeting_key = "npc.shopkeeper.greeting"
-services = Array[ExtResource("3_asm72")]([SubResource("Resource_xk0r0")])
+services = Array[ExtResource("3_bjecs")]([SubResource("Resource_fgq4u")])

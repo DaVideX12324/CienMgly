@@ -18,6 +18,12 @@ const DialogBox = preload("../ui/dialog_box.gd")
 		sprite_frames = v
 		if is_node_ready():
 			_apply_look()
+## Przesunięcie sprite'a: stopy postaci ok. 2 px pod punktem NPC (klatki z mieszkańcami: -14; royal / elf crew: -30).
+@export var sprite_offset: Vector2 = Vector2(0, -14):
+	set(v):
+		sprite_offset = v
+		if is_node_ready():
+			_apply_look()
 @export var face_left: bool = false:
 	set(v):
 		face_left = v
@@ -44,6 +50,7 @@ func _apply_look() -> void:
 		return
 	sprite.sprite_frames = sprite_frames
 	sprite.flip_h = face_left
+	sprite.offset = sprite_offset
 	if sprite_frames != null and sprite_frames.has_animation(&"idle"):
 		sprite.play(&"idle")
 

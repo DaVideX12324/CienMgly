@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/armorer_frames.tres" id="2_0xb6a"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_tgmt6"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_s0kr6"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_5mc3i"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/wooden_shield.tres" id="6_uobjd"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/cloth_cap.tres" id="7_725n4"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/adventurer_tunic.tres" id="8_f4pbb"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_buckler.tres" id="9_d4dse"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/leather_hood.tres" id="10_xwonf"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/reinforced_tunic.tres" id="11_0xfp7"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_kite_shield.tres" id="12_hjsra"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_helmet.tres" id="13_nvclj"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_chainmail.tres" id="14_1dtev"]
+
+[sub_resource type="Resource" id="Resource_vg6sq"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("6_uobjd")
+
+[sub_resource type="Resource" id="Resource_2so06"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("7_725n4")
+
+[sub_resource type="Resource" id="Resource_flms7"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("8_f4pbb")
+
+[sub_resource type="Resource" id="Resource_5dut5"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("9_d4dse")
+
+[sub_resource type="Resource" id="Resource_5ev0l"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("10_xwonf")
+
+[sub_resource type="Resource" id="Resource_2yt02"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("11_0xfp7")
+
+[sub_resource type="Resource" id="Resource_xdq2x"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("12_hjsra")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_8gox0"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("13_nvclj")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_wf7tc"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("14_1dtev")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_6b1sk"]
+script = ExtResource("4_s0kr6")
+stock = Array[ExtResource("5_5mc3i")]([SubResource("Resource_vg6sq"), SubResource("Resource_2so06"), SubResource("Resource_flms7"), SubResource("Resource_5dut5"), SubResource("Resource_5ev0l"), SubResource("Resource_2yt02"), SubResource("Resource_xdq2x"), SubResource("Resource_8gox0"), SubResource("Resource_wf7tc")])
+intro_lines = PackedStringArray()
+label = "Handel"
+label_key = "npc.service.shop"
+
+[node name="Armorer" instance=ExtResource("0_base")]
+npc_name = "Płatnerz"
+npc_name_key = "npc.armorer.name"
+sprite_frames = ExtResource("2_0xb6a")
+sprite_offset = Vector2(0, -30)
+greeting = PackedStringArray("Tarcza i dobry hełm uratowały więcej głów niż najlepszy miecz.")
+greeting_key = "npc.armorer.greeting"
+services = Array[ExtResource("3_tgmt6")]([SubResource("Resource_6b1sk")])
