@@ -12,6 +12,8 @@ const MAX_TOASTS := 8
 ## max_items to tylko zabezpieczenie. Rodzic beczek może podać własne wartości (metadane "barrel_loot").
 var barrel_scale: float = 1.5
 var barrel_max_items: int = 8
+## Sztuki jednego przedmiotu z beczki: k-ta z szansą min(1, scale / k) (1,0: 2. sztuka 50 %, 3. 33 %; mikstura średnio ≈ 1,67).
+var barrel_amount_scale: float = 1.0
 var _rng := RandomNumberGenerator.new()
 var _popup_layer: CanvasLayer
 var _popup_root: Control
@@ -173,14 +175,19 @@ func _roll_weighted_item_id(entries: Array[Dictionary]) -> String:
 	return ""
 
 
+## Liczba sztuk jednego przedmiotu z beczki: k-ta sztuka (k ≥ 2) z szansą min(1, barrel_amount_scale / k), o ile
+## wypadły poprzednie, do limitu przedmiotu (mikstura 3, eter / tonik / odtrutka / wytrych 2, reszta 1).
 func _roll_item_count(item_id: String) -> int:
+	var cap := 1
 	match item_id:
 		"potion":
-			return _rng.randi_range(1, 3)
+			cap = 3
 		"ether", "focus_tonic", "antidote", "lockpick":
-			return _rng.randi_range(1, 2)
-		_:
-			return 1
+			cap = 2
+	var n := 1
+	while n < cap and _rng.randf() < minf(1.0, barrel_amount_scale / float(n + 1)):
+		n += 1
+	return n
 
 
 func _get_barrel_loot_table() -> Array[Dictionary]:
