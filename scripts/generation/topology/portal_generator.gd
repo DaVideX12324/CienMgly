@@ -69,10 +69,12 @@ static func place_portals_in_rooms(
 	_apply_portal(ctx, result, entrance_data, true)
 
 	var exit_room := rooms[exit_room_idx]
-	var exit_data: Dictionary = carve_portal_at_wall(ctx, exit_room, wall_style) if wall_style != "" \
-		else carve_portal_alcove(ctx, exit_room, int(entrance_data["edge"]))
-	register_wall_portal(result, exit_data, flags)
-	_apply_portal(ctx, result, exit_data, false)
+	var exit_data: Dictionary = {}
+	if flags.portal_exit:
+		exit_data = carve_portal_at_wall(ctx, exit_room, wall_style) if wall_style != "" \
+			else carve_portal_alcove(ctx, exit_room, int(entrance_data["edge"]))
+		register_wall_portal(result, exit_data, flags)
+		_apply_portal(ctx, result, exit_data, false)
 
 	# Dodatkowa gwarancja spójności po wycięciu portali
 	ConnectivityRepair.repair(ctx, corridor_width)
@@ -82,8 +84,9 @@ static func place_portals_in_rooms(
 	if flags.portal_style == "alcove_stairs":
 		register_alcove_stairs(ctx, result, entrance_data, true)
 		_apply_portal(ctx, result, entrance_data, true)
-		register_alcove_stairs(ctx, result, exit_data, false)
-		_apply_portal(ctx, result, exit_data, false)
+		if not exit_data.is_empty():
+			register_alcove_stairs(ctx, result, exit_data, false)
+			_apply_portal(ctx, result, exit_data, false)
 
 	return {"entrance_room_idx": entrance_room_idx, "exit_room_idx": exit_room_idx}
 

@@ -17,11 +17,13 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 
 	var exit_room := rooms[exit_room_idx]
 
-	# Boss w pokoju wyjściowym
-	result.enemy_spawns.append({
-		"pos": exit_room.get_center() + Vector2i(0, -2),
-		"tier": 4  # boss końcowy; tier 3 = miniboss (pula "enemies" mapy: wpis o indeksie 2, spawny z tier3_chance)
-	})
+	# Boss w pokoju wyjściowym (flaga exit_enemy_tier: 4 = boss, 3 = miniboss, 0 = nikt; nie w pokoju wejścia)
+	var exit_tier: int = ctx.flags.exit_enemy_tier if ctx.flags != null else 4
+	if exit_tier > 0 and exit_room_idx != entrance_room_idx:
+		result.enemy_spawns.append({
+			"pos": exit_room.get_center() + Vector2i(0, -2),
+			"tier": exit_tier  # 4 = boss końcowy; 3 = miniboss (pula "enemies" mapy: wpis o indeksie 2, spawny z tier3_chance)
+		})
 
 	# Skrzynie stawia generator obiektów, gdy jego katalog je ma (INTERACTIVE ze sceną "chest").
 	var chests_by_objects: bool = result.objects != null and result.objects.interactive_scenes.has("chest")
@@ -29,7 +31,7 @@ static func plan_spawns(ctx: GenerationContext, result: MapGeneratorBase.Generat
 	var spread: Dictionary = ctx.flags.spawn_config if ctx.flags != null else {}
 	# Boss z głównej (pierwszej) frakcji mapy.
 	var factions: Dictionary = spread.get("factions", {})
-	if not factions.is_empty():
+	if not factions.is_empty() and not result.enemy_spawns.is_empty():
 		result.enemy_spawns[0]["faction"] = String(factions.keys()[0])
 
 	# Wrogowie i skrzynie w pokojach pośrednich (wrogowie tylko w starym trybie — spread rozkłada ich po mapie)

@@ -42,6 +42,26 @@ static func canonical(p: String) -> String:
 	return p
 
 
+## Ścieżka poziomu z argumentem: osobna mapa z jednej sceny, np. sekretny pokój "<scena>#<argument>". Stan poziomu
+## (LevelStateManager) trzyma się całej ścieżki, scenę wczytuje się z części przed separatorem.
+const LEVEL_ARG_SEP := "#"
+
+
+static func level_scene(p: String) -> String:
+	return p.get_slice(LEVEL_ARG_SEP, 0)
+
+
+static func level_arg(p: String) -> String:
+	return p.substr(p.find(LEVEL_ARG_SEP) + 1) if p.contains(LEVEL_ARG_SEP) else ""
+
+
+## Nazwa mapy (seed mapy, plik mapy na dysku): nazwa pliku sceny, z argumentem "<nazwa>~<nazwa pliku argumentu>".
+static func level_name(p: String) -> String:
+	var n := level_scene(p).get_file().get_basename()
+	var arg := level_arg(p)
+	return n if arg.is_empty() else "%s~%s" % [n, arg.get_file().validate_filename()]
+
+
 ## Zasób hosta (res://assets/…, res://scenes/ui/…) -> jego kopia w wersji samodzielnej.
 static func host(p: String) -> String:
 	if is_standalone() and p.begins_with(STANDALONE_ROOT) and not p.begins_with(HOST_COPIES_ROOT):

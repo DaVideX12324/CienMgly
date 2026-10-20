@@ -198,6 +198,8 @@ func _build(result) -> void:
 	room_count = result.rooms.size()
 	# Pokój wejścia / wyjścia = najbliższy portalowi (alkowa portalu leży zwykle za prostokątem pokoju).
 	for p in [result.entrance_pos, result.exit_pos]:
+		if p == Vector2i.ZERO:
+			continue  # mapa bez wyjścia (sekretny pokój)
 		var best := -1
 		var best_d := 1 << 30
 		for r_i in range(result.rooms.size()):

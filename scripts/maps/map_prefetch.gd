@@ -101,14 +101,16 @@ static func _pump() -> void:
 
 ## GenJob sceny poziomu (wczytanej w tle), bez dodawania jej do drzewa; null = nie ProceduralLevel.
 static func _prepare(path: String, tree: SceneTree):
-	if not ResourceLoader.exists(path) or ResourceLoader.load_threaded_request(path, "PackedScene") != OK:
+	var scene := QuizRpgPaths.level_scene(path)
+	if not ResourceLoader.exists(scene) or ResourceLoader.load_threaded_request(scene, "PackedScene") != OK:
 		return null
-	while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+	while ResourceLoader.load_threaded_get_status(scene) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 		await tree.process_frame
-	var packed := ResourceLoader.load_threaded_get(path) as PackedScene
+	var packed := ResourceLoader.load_threaded_get(scene) as PackedScene
 	if packed == null or not _is_procedural(packed):
 		return null
 	var lvl := packed.instantiate()
+	lvl.set("level_path", path)
 	var job = null
 	if lvl.has_method("_prepare_job") and bool(lvl.get("async_generation")):
 		job = lvl.call("_prepare_job", 0)

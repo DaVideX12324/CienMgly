@@ -14,6 +14,7 @@ const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 const LOCATION_NAMES := {
 	"tutorial_area": "Starożytne Ruiny",
 	"cave": "Jaskinia",
+	"cave_secret": "Ukryta grota",
 	"sewer": "Ścieki",
 	"town": "Miasto",
 }
@@ -71,7 +72,7 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		current_level.queue_free()
 		await get_tree().process_frame
 
-	var packed := await _load_level_scene(level_path, overlay)
+	var packed := await _load_level_scene(QuizRpgPaths.level_scene(level_path), overlay)
 	if packed == null:
 		push_warning("[QuizRpgLevelManager] Cannot load level: %s" % level_path)
 		if is_instance_valid(player):
@@ -86,6 +87,9 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	# ProceduralLevel zastępuje ten ekran własnym (z postępem generowania) — niech pokaże to samo tło.
 	if is_instance_valid(_loading_screen) and _loading_screen.background != null and "loading_background" in current_level:
 		current_level.loading_background = _loading_screen.background
+	# Pełna ścieżka (z argumentem mapy, np. sekretny pokój) przed _ready — klucz seeda i stanu poziomu.
+	if "level_path" in current_level:
+		current_level.set("level_path", level_path)
 	add_child(current_level)
 	current_level_path = level_path
 	current_spawn_name = spawn_name
@@ -128,7 +132,7 @@ func _show_loading_screen(level_path: String) -> Node:
 		return _loading_screen
 	_loading_screen = LoadingScreenScene.instantiate()
 	_loading_screen.process_mode = Node.PROCESS_MODE_ALWAYS
-	var level_key := level_path.get_file().get_basename()
+	var level_key := QuizRpgPaths.level_scene(level_path).get_file().get_basename()
 	var loc_name: String = str(LOCATION_NAMES.get(level_key, ""))
 	_loading_screen.location = QuizRpgI18n.t("map." + level_key + ".name", loc_name) if loc_name != "" else ""
 	_loading_screen.set_background_for(level_key)
@@ -151,7 +155,7 @@ func _play_level_music(level_path: String, level_node: Node) -> void:
 	if audio_service == null or not audio_service.has_method("play_music"):
 		return
 	var track := "world_map"
-	var p := level_path.to_lower()
+	var p := QuizRpgPaths.level_scene(level_path).to_lower()
 	if p.contains("tutorial"):
 		track = "tutorial"
 	elif p.contains("desert"):

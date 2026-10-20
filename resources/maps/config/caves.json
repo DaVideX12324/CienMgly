@@ -85,6 +85,7 @@
   ],
   "niche_content": {
     "weights": {"item": 50, "chest": 35, "secret_room": 15},
+    "secret_scene": "scenes/maps/levels/cave_secret.tscn",
     "chest_tier": 2,
     "chest_loot": [
       {"item_id": "potion", "weight": 14, "count": 3},
@@ -106,6 +107,28 @@
       {"item_id": "key_tier1", "weight": 6},
       {"item_id": "lucky_charm", "weight": 4}
     ]
+  },
+  "secret_room": {
+    "generation": {"width": 56, "height": 56, "min_room_size": 8, "max_room_size": 16, "max_rooms": 0},
+    "rooms": [1, 3],
+    "flags": {"portal_exit": false, "exit_enemy_tier": 3, "enable_platforms": false},
+    "niche_content": {"weights": {"secret_room": 0}},
+    "treasure": {
+      "count": 1,
+      "chest_tier": 2,
+      "chest_loot": [
+        {"item_id": "steel_blade", "weight": 12},
+        {"item_id": "steel_kite_shield", "weight": 10},
+        {"item_id": "iron_chainmail", "weight": 10},
+        {"item_id": "iron_helmet", "weight": 8},
+        {"item_id": "hunter_bow", "weight": 8},
+        {"item_id": "guard_spear", "weight": 8},
+        {"item_id": "lucky_charm", "weight": 10},
+        {"item_id": "key_tier2", "weight": 8},
+        {"item_id": "potion", "weight": 14, "count": 3},
+        {"item_id": "ether", "weight": 12, "count": 3}
+      ]
+    }
   },
   "enemy_loot": {
     "1": [{"item_id": "potion", "chance": 0.12}, {"item_id": "key_tier1", "chance": 0.04}],

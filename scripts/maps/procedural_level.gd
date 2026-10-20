@@ -59,6 +59,7 @@ var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga -> [
 var _chest_loot: Array = []  # companion-JSON "chest_loot": [{item_id, weight, count}] (skrzynie wygenerowane na mapie)
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
+var _treasure: Dictionary = {}  # companion-JSON "treasure": skrzynie skarbu (TreasurePlanner) — tier i łup
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -94,6 +95,12 @@ var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tie
 ## Tło ekranu ładowania przekazane przez level_manager przed add_child — to samo, co na jego ekranie sprzed
 ## generowania (inaczej drugie losowanie podmieniało obraz w chwili ruszenia paska). null = losowe z folderu mapy.
 var loading_background: Texture2D = null
+## Pełna ścieżka poziomu (level_manager przed add_child) — z argumentem mapy (QuizRpgPaths.level_arg), gdy jedna scena
+## daje wiele map: sekretny pokój "<scena>#<poziom niszy>@<x>,<y>" (powrót do markera przed niszą). Pusta = scene_file_path.
+var level_path: String = ""
+## Sekcja companion-JSON nakładana na resztę pliku (słowniki scalane w głąb, inne wartości zastępowane) — np. "secret_room":
+## mniejsza mapa, bez wyjścia, skarb. Dodatkowo "rooms": [min, max] — liczba pokoi losowana z seeda mapy.
+@export var config_overlay: String = ""
 
 var last_result: RefCounted = null
 ## Zapis mapy na dysk (MapDiskCache): plik i podpis bieżącej generacji, bajty migawki po malowaniu kafli.
@@ -146,8 +153,10 @@ class GenJob extends RefCounted:
 			rng = base_script.create_rng(result.seed_used)
 			plans = gen_script.plan_cave_tiles(result, rng, -1, flags,
 				behaviour.get("profile"), behaviour.get("field"), behaviour.get("raw", {}))
-			# Zawartość nisz out (powstają przy kaflach) — przed siatką nawigacji i zapisem mapy.
-			NicheContentPlanner.plan(result, (behaviour.get("raw", {}) as Dictionary).get("niche_content", {}))
+			# Zawartość nisz out (powstają przy kaflach) i skarb (sekretny pokój) — przed siatką nawigacji i zapisem mapy.
+			var raw: Dictionary = behaviour.get("raw", {})
+			NicheContentPlanner.plan(result, raw.get("niche_content", {}))
+			TreasurePlanner.plan(result, raw.get("treasure", {}))
 			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym,
 			# w kawałkach (cała mapa naraz: minuty przy 500×500).
 			GenProgress.begin(&"navmesh")
@@ -169,7 +178,22 @@ func _load_behaviour_config():
 		push_warning("[TileBehaviour] " + w)
 	for e in cfg.errors:
 		push_error("[TileBehaviour] " + e)
+	if not config_overlay.is_empty():
+		var over: Variant = cfg.raw.get(config_overlay)
+		if over is Dictionary:
+			_merge_deep(cfg.raw, over)
+		else:
+			push_warning("[TileBehaviour] brak sekcji '%s' w %s" % [config_overlay, json_path])
 	return cfg
+
+
+## Scala `over` w `base` w głąb: słowniki rekurencyjnie, inne wartości (też tablice) zastępowane.
+static func _merge_deep(base: Dictionary, over: Dictionary) -> void:
+	for k in over:
+		if over[k] is Dictionary and base.get(k) is Dictionary:
+			_merge_deep(base[k], over[k])
+		else:
+			base[k] = over[k]
 
 
 ## Jawna ścieżka z @export wygrywa; inaczej (tylko jaskinie) companion-JSON używanego tilesetu.
@@ -200,6 +224,7 @@ func _build_tile_behaviour(cfg, gen_width: int, gen_height: int) -> Dictionary:
 
 func _ready() -> void:
 	y_sort_enabled = true
+	_apply_return_point()
 	_ensure_default_resources()
 	if async_generation:
 		generate_level_async(map_seed)
@@ -285,7 +310,11 @@ func generate_level_async(seed_val: int = 0) -> void:
 	overlay.title = _loading_title()
 	var raw_loc: String = location_name if not location_name.is_empty() else str(LOCATION_NAMES.get(level_type, ""))
 	var map_k := get_map_key()
-	overlay.location = QuizRpgI18n.t("map." + map_k + ".name", raw_loc) if map_k != "" else raw_loc
+	var loc := QuizRpgI18n.t("map." + map_k + ".name", raw_loc) if map_k != "" else raw_loc
+	# Własna nazwa sceny (map.<scena>.name, jak na ekranie level_managera) przed nazwą klucza mapy — np. sekretny pokój
+	# ma tła jaskini, ale inną nazwę.
+	var scene_name := QuizRpgPaths.level_scene(_level_key()).get_file().get_basename()
+	overlay.location = QuizRpgI18n.t("map." + scene_name + ".name", loc) if scene_name != "" else loc
 	if loading_background != null:
 		overlay.background = loading_background
 	else:
@@ -562,6 +591,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_enemy_loot = cfg.raw.get("enemy_loot", {}) if cfg != null else {}
 	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
 	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
+	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -618,6 +648,12 @@ func _prepare_job(seed_val: int) -> GenJob:
 			job.max_room = cfg.gen_int("max_room_size", 24) if cfg != null else 24
 			job.corridor = cfg.gen_int("corridor_width", 3) if cfg != null else 3
 			var rooms_count: int = cave_max_rooms
+			var rooms_range: Variant = cfg.raw.get("rooms") if cfg != null else null
+			if rooms_count <= 0 and rooms_range is Array and (rooms_range as Array).size() == 2:
+				# "rooms": [min, max] (nakładka sekretnego pokoju) — z seeda mapy, ta sama mapa = tyle samo pokoi
+				var rr := RandomNumberGenerator.new()
+				rr.seed = hash([actual_seed, "rooms"])
+				rooms_count = rr.randi_range(int(rooms_range[0]), int(rooms_range[1]))
 			if rooms_count <= 0 and cfg != null:
 				rooms_count = cfg.gen_int("max_rooms", 0)
 			if rooms_count <= 0:
@@ -800,19 +836,23 @@ func _apply_loot_tables() -> void:
 
 ## Zawartość nisz out (NicheContentPlanner, "niche_content" w JSON mapy): skrzynie nisz dostają własny tier ("chest_tier",
 ## domyślnie tier mapy) i łup ("chest_loot"), przedmioty na ziemi — wpis z "item_loot" wylosowany z hash(seed mapy, id),
-## więc ta sama mapa ma w tej samej niszy ten sam przedmiot.
+## więc ta sama mapa ma w tej samej niszy ten sam przedmiot. Przejścia do sekretnych pokoi: cel = scena "secret_scene"
+## z argumentem (ten poziom i kratka niszy), przed niszą marker powrotu (secret_marker). Skrzynie skarbu ("treasure").
 func _apply_niche_content(result) -> void:
+	_apply_special_chests("treasure_chest_", _treasure)
 	var cfg: Dictionary = _niche_content
 	if cfg.is_empty() or result == null:
 		return
-	var tier := clampi(int(cfg.get("chest_tier", _chest_tier)), 1, 4)
-	var chest_loot: Array = cfg.get("chest_loot", [])
+	_apply_special_chests("niche_chest_", cfg)
 	var item_loot: Array = cfg.get("item_loot", [])
-	for node in get_tree().get_nodes_in_group("chests"):
-		if is_ancestor_of(node) and String(node.get("unique_id")).begins_with("niche_chest_"):
-			node.set("tier", tier)
-			if not chest_loot.is_empty():
-				node.set("loot_table", chest_loot)
+	var secret_scene := QuizRpgPaths.path(str(cfg.get("secret_scene", "")))
+	for node in get_tree().get_nodes_in_group("secret_passages"):
+		if not is_ancestor_of(node):
+			continue
+		var cell: Vector2i = node.get("niche_cell")
+		var target := "%s%s%s@%d,%d" % [secret_scene, QuizRpgPaths.LEVEL_ARG_SEP, _level_key(), cell.x, cell.y]
+		node.set("on_enter", _change_level.bind(target, "Spawn"))
+		LevelPortal.place_marker(self, secret_marker(cell), Vector2((cell.x + 1) * CELL_PX, (cell.y + 1) * CELL_PX))
 	for node in get_tree().get_nodes_in_group("ground_items"):
 		if not is_ancestor_of(node) or item_loot.is_empty():
 			continue
@@ -822,6 +862,37 @@ func _apply_niche_content(result) -> void:
 		if not picked.is_empty():
 			node.set("item_id", str(picked.get("item_id", "potion")))
 			node.set("count", maxi(int(picked.get("count", 1)), 1))
+
+
+## Skrzynie o unique_id z prefiksem (nisze, skarb): tier ("chest_tier", domyślnie tier mapy) i łup ("chest_loot") z `cfg`.
+func _apply_special_chests(prefix: String, cfg: Dictionary) -> void:
+	if cfg.is_empty():
+		return
+	var tier := clampi(int(cfg.get("chest_tier", _chest_tier)), 1, 4)
+	var loot: Array = cfg.get("chest_loot", [])
+	for node in get_tree().get_nodes_in_group("chests"):
+		if is_ancestor_of(node) and String(node.get("unique_id")).begins_with(prefix):
+			node.set("tier", tier)
+			if not loot.is_empty():
+				node.set("loot_table", loot)
+
+
+## Nazwa markera powrotu przed niszą z przejściem do sekretnego pokoju.
+static func secret_marker(cell: Vector2i) -> String:
+	return "Secret_%d_%d" % [cell.x, cell.y]
+
+
+## Mapa z argumentem "<poziom>@<x>,<y>" (sekretny pokój): wejście prowadzi z powrotem na ten poziom, do markera przed niszą.
+func _apply_return_point() -> void:
+	var arg := QuizRpgPaths.level_arg(level_path)
+	var at := arg.rfind("@")
+	if at < 0:
+		return
+	var xy := arg.substr(at + 1).split(",")
+	if xy.size() != 2:
+		return
+	previous_level_path = QuizRpgPaths.localize(arg.substr(0, at))
+	previous_spawn_name = secret_marker(Vector2i(int(xy[0]), int(xy[1])))
 
 
 ## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.
@@ -872,13 +943,13 @@ func _connect_exit_trigger() -> void:
 		_change_level.bind(previous_level_path, previous_spawn_name), previous_portal_use_key, previous_portal_prompt)
 
 
-func _change_level(level_path: String, spawn_name: String) -> void:
-	if _transitioning or level_path.is_empty():
+func _change_level(path: String, spawn_name: String) -> void:
+	if _transitioning or path.is_empty():
 		return
 	var level_manager := _find_level_manager()
 	if level_manager and level_manager.has_method("change_level"):
 		_transitioning = true
-		level_manager.call("change_level", level_path, spawn_name)
+		level_manager.call("change_level", path, spawn_name)
 
 
 func _find_level_manager() -> Node:
@@ -895,9 +966,11 @@ func _find_level_manager() -> Node:
 	return null
 
 
-## Klucz poziomu do zapisu seeda/stanu. scene_file_path jest ustawiony już w _ready
-## (niezależnie od timingu level_managera) i równy ścieżce używanej przez skrzynie itd.
+## Klucz poziomu do zapisu seeda/stanu: level_path (z argumentem mapy) albo scene_file_path — ustawione już w _ready
+## (niezależnie od timingu level_managera) i równe ścieżce używanej przez skrzynie itd.
 func _level_key() -> String:
+	if not level_path.is_empty():
+		return level_path
 	if not scene_file_path.is_empty():
 		return scene_file_path
 	var lm := _find_level_manager()

@@ -28,7 +28,7 @@ static func enabled() -> bool:
 
 
 static func path_for(world_seed: int, level_key: String) -> String:
-	var name := level_key.get_file().get_basename()
+	var name := QuizRpgPaths.level_name(level_key)
 	return "%s/%d/%s.map" % [ROOT, world_seed, name]
 
 

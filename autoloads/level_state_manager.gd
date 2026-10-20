@@ -64,9 +64,10 @@ func get_world_seed() -> int:
 
 
 ## Seed mapy poziomu: z seeda zapisu i nazwy sceny (np. "cave" dla levels/cave.tscn) — przeniesienie
-## pliku sceny nie zmienia mapy. String.hash jest stały między uruchomieniami.
+## pliku sceny nie zmienia mapy; mapa z argumentem (sekretny pokój) — z nazwy z argumentem (QuizRpgPaths.level_name).
+## String.hash jest stały między uruchomieniami.
 func get_level_seed(level_path: String) -> int:
-	var name := level_path.get_file().get_basename()
+	var name := QuizRpgPaths.level_name(level_path)
 	return absi(("%d:%s" % [get_world_seed(), name]).hash()) % 1000000 + 1
 
 

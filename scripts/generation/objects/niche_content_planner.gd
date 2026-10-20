@@ -2,16 +2,17 @@ class_name NicheContentPlanner
 extends RefCounted
 
 ## Zawartość nisz out (sekretnych, NichePlacer) — po planie kafli, bo nisze powstają dopiero przy fasadach. Każda nisza
-## losuje rodzaj z wag "niche_content.weights" w JSON mapy: przedmiot na ziemi (GroundItem) albo skrzynia; tier i łup
-## skrzyni nisz, łup przedmiotu — ProceduralLevel (_apply_niche_content). Rodzaje jeszcze niezrobione (sekretny pokój)
-## wypadają z losowania — wagi reszty liczą się proporcjonalnie, więc każda nisza ma zawartość.
+## losuje rodzaj z wag "niche_content.weights" w JSON mapy: przedmiot na ziemi (GroundItem), skrzynia albo przejście do
+## sekretnego pokoju (SecretPassage — osobna mapa, "secret_scene"); tier i łup skrzyni nisz, łup przedmiotu, cel przejścia —
+## ProceduralLevel (_apply_niche_content). Rodzaj bez wagi (> 0) wypada z losowania — reszta proporcjonalnie.
 ## Obiekt stoi w głębi niszy (między kolumnami pary, nad rzędem stopy); gracz sięga go z podłogi przed niszą.
 ## Deterministycznie: RNG z hash(seed mapy, kratka niszy).
 
 const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 
-const KINDS := {&"item": &"niche_item", &"chest": &"niche_chest"}
+const KINDS := {&"item": &"niche_item", &"chest": &"niche_chest", &"secret_room": &"niche_secret"}
 const ITEM_SCENE := "scenes/objects/ground_item.tscn"
+const PASSAGE_SCENE := "scenes/objects/secret_passage.tscn"
 ## Przesunięcie punktu obiektu względem środka dołu kratki kotwicy (lewa kolumna, rząd stopy): x na granicę kolumn,
 ## y w głąb niszy (px).
 const OFFSET := Vector2(8, -14)
@@ -22,7 +23,9 @@ const CLEAR_ROWS := 2
 static func plan(result, cfg: Dictionary) -> void:
 	if cfg.is_empty() or result.objects == null or result.out_niches.is_empty():
 		return
-	var weights: Dictionary = cfg.get("weights", {})
+	var weights: Dictionary = (cfg.get("weights", {}) as Dictionary).duplicate()
+	if str(cfg.get("secret_scene", "")).is_empty():
+		weights.erase("secret_room")  # bez sceny sekretnego pokoju nie ma dokąd prowadzić
 	var objs: ObjectPlan = result.objects
 	var defs := {}
 	var front := {}   # idx kratki przed niszą z zawartością -> true
@@ -67,7 +70,7 @@ static func plan(result, cfg: Dictionary) -> void:
 	objs.placements = kept
 
 
-## Rodzaj z wag (tylko zrobione rodzaje); &"" gdy żadna waga > 0.
+## Rodzaj z wag (tylko znane rodzaje); &"" gdy żadna waga > 0.
 static func _pick_kind(weights: Dictionary, rng: RandomNumberGenerator) -> StringName:
 	var total := 0.0
 	for k in KINDS:
@@ -98,6 +101,9 @@ static func _def(kind: StringName) -> ObjectDef:
 	var d := ObjectDef.new()
 	d.id = KINDS[kind]
 	d.klass = ObjectDef.Klass.INTERACTIVE
-	d.scene = "chest" if kind == &"chest" else QuizRpgPaths.path(ITEM_SCENE)
+	match kind:
+		&"chest": d.scene = "chest"
+		&"secret_room": d.scene = QuizRpgPaths.path(PASSAGE_SCENE)
+		_: d.scene = QuizRpgPaths.path(ITEM_SCENE)
 	d.footprint.assign([Vector2i.ZERO])
 	return d

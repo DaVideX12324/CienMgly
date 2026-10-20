@@ -35,6 +35,10 @@ var entrance_mode: String = "edge"
 # (wnęki przy krawędzi mapy), w każdej wnęce schody od jej połowy do końca (portal_stairs_tiles.N / S / E / W).
 var portal_style: String = ""
 var portal_scene: String = ""
+# false = mapa bez wyjścia (sekretny pokój: tylko wejście, którym się wraca). Pokój „wyjścia” zostaje — najdalszy od wejścia.
+var portal_exit: bool = true
+# Tier wroga w pokoju wyjścia: 4 = boss (jak dotąd), 3 = miniboss, 0 = nikt. Nie w pokoju wejścia (mapa z jednym pokojem).
+var exit_enemy_tier: int = 4
 # Układ pomieszczeń: interior (pokoje organiczne / jaskiniowe) | structured (układ strukturalny / architektoniczny).
 var layout: String = "interior"
 ## Opcje zaawansowane układu structured z sekcji "structured_layout" companion-JSON
