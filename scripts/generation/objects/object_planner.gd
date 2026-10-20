@@ -1204,6 +1204,10 @@ func _collect_gates(result) -> void:
 			var lock: Vector2i = canals.gate_locks[gi]
 			if f.in_bounds(key) and f.in_bounds(lock):
 				sets.append(PackedInt32Array([f.idx(key), f.idx(lock)]))
+		elif opener == "lever":
+			var lever: Vector2i = canals.levers[gi]
+			if f.in_bounds(lever):
+				sets.append(PackedInt32Array([f.idx(lever)]))
 		if "gate_plates" in canals:
 			for pe in canals.gate_plates:
 				var pc: Vector2i = pe.cell

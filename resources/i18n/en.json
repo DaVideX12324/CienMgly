@@ -347,6 +347,7 @@
   "pause.title_status": "Status",
   "prompt.insert_key": "Insert key",
   "prompt.lock_no_key": "Lock (no key)",
+  "prompt.pull_lever": "Pull lever",
   "prompt.no_key": "No key",
   "prompt.open": "Open",
   "prompt.open_key_lockpick": "Open (key / lockpick)",

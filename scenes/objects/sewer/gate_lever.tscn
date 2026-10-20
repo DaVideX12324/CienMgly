@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/interactables/gate_lever.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://ewrwn30a75go" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Dungeon_Props.png" id="2_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_left"]
+atlas = ExtResource("2_props")
+region = Rect2(72, 0, 24, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_up"]
+atlas = ExtResource("2_props")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_right"]
+atlas = ExtResource("2_props")
+region = Rect2(32, 0, 24, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 14.0
+
+[node name="GateLever" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Left" type="Sprite2D" parent="."]
+position = Vector2(-4, -8)
+texture = SubResource("AtlasTexture_left")
+
+[node name="Up" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -8)
+texture = SubResource("AtlasTexture_up")
+
+[node name="Right" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(4, -8)
+texture = SubResource("AtlasTexture_right")
+
+[node name="InteractionArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="Shape" type="CollisionShape2D" parent="InteractionArea"]
+shape = SubResource("CircleShape2D_interaction")

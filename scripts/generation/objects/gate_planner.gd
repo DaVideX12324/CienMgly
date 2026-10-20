@@ -5,19 +5,22 @@ extends RefCounted
 ## - „klucz -> zamek": zamek na licu ściany (scena "lock") najbliżej bramy po stronie wejścia (BFS do LOCK_RADIUS
 ##   kratek; kratka podłogi pod licem = dojście), klucz (scena "key") w miejscu canals.levers. Klucze wspólne dla
 ##   poziomu (podniesione - użyte), zamek po włożeniu klucza otwiera swoją bramę;
-## - płyta naciskowa (scena "plate") w miejscu canals.levers: gracz staje -> płyta wciśnięta na stałe, brama otwarta.
+## - płyta naciskowa (scena "plate") w miejscu canals.levers: gracz staje -> płyta wciśnięta na stałe, brama otwarta;
+## - dźwignia (scena "lever") w miejscu canals.levers: gracz pociąga (klawisz interakcji) -> brama otwarta. Zamiast
+##   płyty z szansą `lever_chance`; dźwignia otwiera tylko swoją bramę (nie jest wspólna jak płyta).
 ## Miejsce dźwigni (canals.levers) leży w pokoju / sali osiągalnej z wejścia bez przechodzenia przez bramy, ~18 kratek
 ## od bramy — zagadka zawsze rozwiązywalna. Bramy są też na zwykłych korytarzach (decyzja usera — nie tylko serwisowe):
 ## gdy bram jest mniej niż `min_gates`, _add_corridor_gates dokłada je w poprzek prostych odcinków korytarzy, których
 ## zamknięcie odcina od wejścia część mapy z pokojem (>= CUT_MIN kratek). Z szansą `plate_chance` (katalog
 ## "gates") płyta, inaczej zamek; bez miejsca na zamek — płyta; bez sceny płyty i bez zamka — brama nie powstaje.
 ##
-## select() — w generatorze układu przed planerem obiektów: canals.gate_openers ("lock" / "plate" / "", wyrównane
-## z gates) i canals.gate_locks (kratka lica, (-1, -1) = brak). ObjectPlanner trzyma z dala obiekty,
+## select() — w generatorze układu przed planerem obiektów: canals.gate_openers ("lock" / "plate" / "lever" / "",
+## wyrównane z gates) i canals.gate_locks (kratka lica, (-1, -1) = brak). ObjectPlanner trzyma z dala obiekty,
 ## WallDecorPlanner — ozdoby lica.
 ## emit() — po planerach: sceny w ObjectPlan (ObjectPlacement.link = id bramy).
 ## Katalog obiektów: "gates": {"barrier": "res://…", "barrier_column": "res://…", "lock": "res://…", "key": "res://…",
-##   "plate": "res://…", "plate_chance": 0.5, "min_gates": 2, "barrier_offset": "res://…", "barrier_offset_chance": 0.5}
+##   "plate": "res://…", "plate_chance": 0.5, "lever": "res://…", "lever_chance": 0.5, "min_gates": 2,
+##   "barrier_offset": "res://…", "barrier_offset_chance": 0.5}
 ##   — barrier_offset (opcjonalnie): brama w rzędzie z kolcami przesuniętymi o pół kratki, na granicach kratek i na
 ##   krawędziach podłogi przy murze (z szansą barrier_offset_chance).
 ## — barrier_column (opcjonalnie): brama w kolumnie kratek (korytarz poziomy) — niskie kolce, żeby wysokie nie
@@ -42,6 +45,7 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 	canals.gate_openers = []
 	var has_plate := not String(cfg.get("plate", "")).is_empty()
 	var has_lock := not String(cfg.get("lock", "")).is_empty() and not String(cfg.get("key", "")).is_empty()
+	var has_lever := not String(cfg.get("lever", "")).is_empty()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([result.seed_used, "gates"])
 	var grid: Dictionary = result.grid
@@ -104,6 +108,10 @@ static func select(result, on_wall: bool, cfg: Dictionary = {}) -> int:
 					lock = lock + Vector2i(0, -1) if on_wall else lock   # kotwica jak ozdoby lica (facade_base_on_wall)
 				elif has_plate:
 					opener = "plate"
+		# dźwignia zamiast płyty — osobny hash (nie z rng): bez dźwigni w katalogu reszta wyborów bez zmian
+		if opener == "plate" and has_lever \
+				and float(hash([result.seed_used, gi, "gate_lever"]) & 0xFFFF) / 65536.0 < float(cfg.get("lever_chance", 0.5)):
+			opener = "lever"
 		if not opener.is_empty():
 			made += 1
 		canals.gate_locks.append(lock)
@@ -633,6 +641,7 @@ static func emit(result, scenes: Dictionary, objects: ObjectPlan) -> int:
 	var lock_def := _def(&"gate_lock", String(scenes.get("lock", "")), &"facade")
 	var key_def := _def(&"gate_key", String(scenes.get("key", "")), &"")
 	var plate_def := _def(&"gate_plate", String(scenes.get("plate", "")), &"")
+	var lever_def := _def(&"gate_lever", String(scenes.get("lever", "")), &"")
 	var column_def := _def(&"gate_barrier", String(scenes.get("barrier_column", scenes.get("barrier", ""))), &"")
 	var offset_def := _def(&"gate_barrier", String(scenes.get("barrier_offset", "")), &"")
 	var offset_chance := float(scenes.get("barrier_offset_chance", 0.5))
@@ -666,6 +675,8 @@ static func emit(result, scenes: Dictionary, objects: ObjectPlan) -> int:
 		if opener == "lock":
 			_add(objects, lock_def, canals.gate_locks[gi], id)
 			_add(objects, key_def, canals.levers[gi], id)
+		elif opener == "lever":
+			_add(objects, lever_def, canals.levers[gi], id)
 		made += 1
 	if "gate_plates" in canals and not plate_def.scene.is_empty():
 		for pe in canals.gate_plates:

@@ -347,6 +347,7 @@
   "pause.title_status": "Status",
   "prompt.insert_key": "Włóż klucz",
   "prompt.lock_no_key": "Zamek (brak klucza)",
+  "prompt.pull_lever": "Pociągnij dźwignię",
   "prompt.no_key": "Brak klucza",
   "prompt.open": "Otwórz",
   "prompt.open_key_lockpick": "Otwórz (klucz / wytrych)",
