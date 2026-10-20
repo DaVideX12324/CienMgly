@@ -24,6 +24,10 @@ var device_total_bosses: int = 0        # łączna liczba bossów = 100% (ustawi
 # (np. po złożeniu klucza z fragmentów urządzenie "zamarza" do walki z arcymagiem).
 var device_counting_enabled: bool = true
 
+# --- Flagi fabularne (rozmowy z NPC, zadania, odblokowania usług) ---
+# GLOBALNE, per-save, MONOTONICZNE jak postęp urządzenia, ale NIE liczą się do paska urządzenia.
+var _story_flags: Dictionary = {}   # flaga -> true
+
 func _ready() -> void:
 	print("[LevelStateManager] ✓ Initialized")
 
@@ -336,6 +340,25 @@ func is_device_complete() -> bool:
 	return device_total_bosses > 0 and get_device_progress() >= device_total_bosses
 
 
+## Ustawia flagę fabularną (np. „rozmawiał z kowalem”). Zwraca true, jeśli nowa.
+func set_story_flag(flag: String) -> bool:
+	if flag.is_empty() or _story_flags.has(flag):
+		return false
+	_story_flags[flag] = true
+	return true
+
+
+## Cofa flagę (np. punkt zapisu ustawia ją przed zapisem, żeby trafiła do pliku, i cofa, gdy gracz nie zapisał).
+func clear_story_flag(flag: String) -> void:
+	_story_flags.erase(flag)
+
+
+## Flaga fabularna albo krok postępu urządzenia o tym id (pokonany story-boss) — wymagania usług NPC
+## (np. tier sklepu po bossie) sprawdzają oba rodzaje jednym wywołaniem.
+func has_story_flag(flag: String) -> bool:
+	return _story_flags.has(flag) or _device_progress.has(flag)
+
+
 ## Stan poziomów zapisany pod dawnymi ścieżkami scen -> obecne. procedural_level.tscn był jedyną sceną
 ## poziomu proceduralnego (jaskinia); teraz to baza, a jaskinia to levels/cave.tscn (2026-10-03) — seed mapy,
 ## pokonani bossowie i skrzynie przechodzą na nową scenę.
@@ -356,6 +379,7 @@ func serialize() -> Dictionary:
 		"device_progress": _device_progress.duplicate(true),
 		"device_total_bosses": device_total_bosses,
 		"device_counting_enabled": device_counting_enabled,
+		"story_flags": _story_flags.duplicate(true),
 	}
 
 func deserialize(data: Dictionary) -> void:
@@ -365,6 +389,7 @@ func deserialize(data: Dictionary) -> void:
 		_device_progress = (data.get("device_progress", {}) as Dictionary).duplicate(true)
 		device_total_bosses = int(data.get("device_total_bosses", 0))
 		device_counting_enabled = bool(data.get("device_counting_enabled", true))
+		_story_flags = (data.get("story_flags", {}) as Dictionary).duplicate(true)
 	else:
 		# Stary format zapisu: cały dict to level_states.
 		level_states = data.duplicate(true)
@@ -372,6 +397,7 @@ func deserialize(data: Dictionary) -> void:
 		_device_progress = {}
 		device_total_bosses = 0
 		device_counting_enabled = true
+		_story_flags = {}
 	_migrate_level_paths()
 	print("[LevelStateManager] ✓ Restored %d levels, device %d/%d" % [level_states.keys().size(), get_device_progress(), device_total_bosses])
 	device_progress_changed.emit(get_device_progress(), device_total_bosses)
@@ -391,5 +417,6 @@ func reset() -> void:
 	_device_progress.clear()
 	device_total_bosses = 0
 	device_counting_enabled = true
+	_story_flags.clear()
 	print("[LevelStateManager] ✓ All states cleared")
 	device_progress_changed.emit(0, 0)

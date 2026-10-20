@@ -565,6 +565,18 @@ func cure_statuses(member_index: int, status_ids: Array) -> Array:
 	return out
 
 
+## Odpoczynek (karczma NPC): cała drużyna do pełna — HP (także nieprzytomni), SP, bez statusów. TP bez zmian.
+func rest_party() -> void:
+	_ensure_party_defaults()
+	for i in range(party.size()):
+		_set_member_hp(i, _member_max_hp(i))
+		var m: Dictionary = party[i]
+		m["sp"] = int(m.get("max_sp", 0))
+		m["statuses"] = {}
+		party[i] = m
+	party_changed.emit()
+
+
 ## Wszystkie znane statusy {id, name} posortowane po nazwie (menu deweloperskie).
 func get_status_catalog() -> Array:
 	var out: Array = []
