@@ -994,6 +994,7 @@ func reset() -> void:
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
+	learn_level_skills()  # skille z lv 1 (Skan, Uleczenie, Ciężki Cios) od startu nowej gry, nie po pierwszym awansie
 
 
 func get_inventory_entries() -> Array[Dictionary]:
