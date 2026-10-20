@@ -16,3 +16,4 @@ consumable = true
 usable_in_menu = true
 usable_in_combat = true
 heal_amount = 100
+price = 8

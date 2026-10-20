@@ -16,3 +16,4 @@ consumable = true
 usable_in_menu = false
 usable_in_combat = true
 tp_restore = 25
+price = 15

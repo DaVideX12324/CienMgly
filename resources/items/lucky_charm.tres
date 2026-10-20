@@ -19,3 +19,4 @@ usable_in_combat = false
 equip_slot = "accessory"
 atk_bonus = 2
 def_bonus = 2
+price = 60

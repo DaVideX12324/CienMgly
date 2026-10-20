@@ -19,3 +19,4 @@ usable_in_combat = false
 equip_slot = "weapon"
 weapon_type = "sword"
 atk_bonus = 320
+price = 800

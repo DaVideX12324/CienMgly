@@ -20,3 +20,4 @@ equip_slot = "weapon"
 weapon_type = "staff"
 atk_bonus = 4
 mat_bonus = 10
+price = 25

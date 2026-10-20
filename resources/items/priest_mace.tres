@@ -19,3 +19,4 @@ usable_in_combat = false
 equip_slot = "weapon"
 weapon_type = "mace"
 atk_bonus = 10
+price = 25

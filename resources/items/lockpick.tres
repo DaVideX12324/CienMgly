@@ -15,3 +15,4 @@ max_stack = 99
 consumable = false
 usable_in_menu = false
 usable_in_combat = false
+price = 20

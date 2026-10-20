@@ -16,3 +16,4 @@ consumable = true
 usable_in_menu = true
 usable_in_combat = true
 sp_restore = 40
+price = 10

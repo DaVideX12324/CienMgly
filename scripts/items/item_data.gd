@@ -26,6 +26,13 @@ class_name QuizRpgItemData
 @export var mat_bonus: int = 0
 @export var mdf_bonus: int = 0
 @export var agi_bonus: int = 0
+## Cena w sklepie (złoto); sprzedaż za połowę. 0 = nie do kupienia ani sprzedania (klucze, przedmioty fabularne).
+@export var price: int = 0
+
+
+## Cena odkupu przez sklep (połowa ceny, co najmniej 1 dla przedmiotów z ceną).
+func sell_price() -> int:
+	return maxi(price / 2, 1) if price > 0 else 0
 
 
 ## Czy przedmiot może założyć postać danej klasy.
