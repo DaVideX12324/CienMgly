@@ -1172,6 +1172,21 @@ func set_member_equipment(member_index: int, slot_name: String, item_id: String)
 	return true
 
 
+## Zamienia założony przedmiot na inny bez przechodzenia przez ekwipunek (ulepszenie broni u kowala: etap N -> N+1).
+func replace_equipped_item(member_index: int, slot_name: String, new_item_id: String) -> bool:
+	if member_index < 0 or member_index >= party.size() or not EQUIPMENT_SLOTS.has(slot_name):
+		return false
+	var member: Dictionary = party[member_index]
+	var equipment: Dictionary = member.get("equipment", {}).duplicate(true)
+	if str(equipment.get(slot_name, "")) == "":
+		return false
+	equipment[slot_name] = new_item_id
+	member["equipment"] = equipment
+	party[member_index] = member
+	party_changed.emit()
+	return true
+
+
 ## Ocena przedmiotu przy automatycznym doborze: główna statystyka ataku klasy (ATK dla wojownika i łotrzyka,
 ## MAT dla maga i kapłana) liczy się w całości, druga w połowie; DEF i MDF w całości, AGI w połowie.
 func _equipment_score(entry: Dictionary, magic_class: bool) -> float:

@@ -29,6 +29,15 @@ class_name QuizRpgItemData
 ## Cena w sklepie (złoto); sprzedaż za połowę. 0 = nie do kupienia ani sprzedania (klucze, przedmioty fabularne).
 @export var price: int = 0
 
+@export_group("Ulepszenie u kowala")
+## Broń z potencjałem (ekwipunek_szkic.md sekcje 4, 10): etap = osobny przedmiot; kowal (QuizRpgNpcUpgrade) zamienia ten
+## przedmiot na `upgrade_to` za dukaty i opcjonalny materiał, gdy jest flaga fabularna (kowal „przypomina sobie”). Puste = bez ulepszenia.
+@export var upgrade_to: String = ""
+@export var upgrade_gold: int = 0
+@export var upgrade_flag: String = ""
+@export var upgrade_item_id: String = ""
+@export_range(1, 99, 1) var upgrade_item_count: int = 1
+
 
 ## Cena odkupu przez sklep (połowa ceny, co najmniej 1 dla przedmiotów z ceną).
 func sell_price() -> int:
