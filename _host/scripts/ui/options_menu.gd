@@ -893,10 +893,11 @@ func _module_actions(module_id: String) -> Array:
 	return out
 
 
-## Nazwa akcji z "action_labels" manifestu, inaczej jej id.
+## Nazwa akcji w wybranym języku: klucz host.action.<moduł>.<akcja>, zapasowo etykieta z manifestu modułu (po polsku).
 func _action_label(module_id: String, action: String) -> String:
 	var labels: Variant = ModuleRegistry.get_by_id(module_id).get("action_labels", {})
-	return str(labels.get(action, action)) if labels is Dictionary else action
+	var fallback := str(labels.get(action, action)) if labels is Dictionary else action
+	return I18nService.t("host.action.%s.%s" % [module_id, action], fallback)
 
 
 ## „Zastosuj” tylko na zakładce Ekran — pozostałe zakładki zapisują zmiany od razu.
