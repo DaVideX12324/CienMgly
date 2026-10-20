@@ -54,7 +54,7 @@ func _process(delta: float) -> void:
 
 func _refresh(focus_index: int) -> void:
 	var ps := QuizRpgNpcContext.player_stats(npc)
-	_gold.text = QuizRpgI18n.tf("shop.gold", {"gold": int(ps.gold) if ps else 0}, "Złoto: {gold}")
+	_gold.text = QuizRpgI18n.tf("shop.gold", {"gold": int(ps.gold) if ps else 0}, "Dukaty: {gold}")
 	for c in _list.get_children():
 		if c is Button:
 			_list.remove_child(c)
@@ -75,11 +75,11 @@ func _refresh(focus_index: int) -> void:
 	_rows[clampi(focus_index, 0, _rows.size() - 1)].call_deferred("grab_focus")
 
 
-## Koszt lekcji: „50 zł”, „Żeton ×1”, „50 zł + Żeton ×1”, „za darmo”.
+## Koszt lekcji: „50 D”, „Żeton ×1”, „50 D + Żeton ×1”, „za darmo”.
 static func cost_text(node: Node, ls: QuizRpgSkillLesson) -> String:
 	var parts: Array[String] = []
 	if ls.gold > 0:
-		parts.append(QuizRpgI18n.tf("shop.price", {"price": ls.gold}, "{price} zł"))
+		parts.append(QuizRpgI18n.tf("shop.price", {"price": ls.gold}, "{price} D"))
 	if ls.item_id != "":
 		parts.append("%s ×%d" % [QuizRpgNpcContext.item_name(node, ls.item_id), ls.item_count])
 	return " + ".join(parts) if not parts.is_empty() else QuizRpgI18n.t("teacher.free", "za darmo")
@@ -142,7 +142,7 @@ static func status_text(node: Node, st: int, ls: QuizRpgSkillLesson) -> String:
 		Status.LEVEL:
 			return QuizRpgI18n.tf("teacher.status_level", {"level": ls.min_level}, "Wymaga poziomu {level}.")
 		Status.GOLD:
-			return QuizRpgI18n.t("shop.no_gold", "Za mało złota.")
+			return QuizRpgI18n.t("shop.no_gold", "Za mało dukatów.")
 		Status.ITEM:
 			return QuizRpgI18n.tf("teacher.status_item", {"item": QuizRpgNpcContext.item_name(node, ls.item_id)}, "Brakuje: {item}.")
 	return ""

@@ -69,7 +69,7 @@ unique_name_in_owner = true
 auto_translate_mode = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "Złoto: 0"
+text = "Dukaty: 0"
 
 [node name="Body" type="HBoxContainer" parent="Root/Window/Margin/VBox"]
 layout_mode = 2
@@ -140,7 +140,7 @@ unique_name_in_owner = true
 auto_translate_mode = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
-text = "Koszt: 50 zł"
+text = "Koszt: 50 D"
 
 [node name="Message" type="Label" parent="Root/Window/Margin/VBox"]
 unique_name_in_owner = true

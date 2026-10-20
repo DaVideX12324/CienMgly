@@ -2141,7 +2141,7 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 		]
 		lines.append(QuizRpgI18n.tf("combat.gained_exp", {"amount": total_xp_reward}, "Zdobyto {amount} EXP!"))
 		if total_gold > 0:
-			lines.append(QuizRpgI18n.tf("combat.gained_gold", {"amount": total_gold}, "Zdobyto {amount} złota!"))
+			lines.append(QuizRpgI18n.tf("combat.gained_gold", {"amount": total_gold}, "Zdobyto {amount} D!"))
 		if _ps and _ps.level > lvl_before:
 			lines.append(QuizRpgI18n.tf("combat.hero_level_up", {"name": _ps.player_name, "level": _ps.level}, "{name} osiąga poziom {level}!"))
 		for i: int in member_levels:

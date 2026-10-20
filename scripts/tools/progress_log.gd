@@ -43,7 +43,7 @@ static func map_entered(ps: Node, level_path: String) -> void:
 static func combat_end(ps: Node, outcome: String, enemies: String, boss: bool, xp: int, turns: int, seconds: float, gold: int = 0) -> void:
 	_fights += 1
 	_map_fights += 1
-	record(ps, "walka-" + outcome, "%s%s | xp +%d | zł +%d | tury %d | %.0f s | walka nr %d" % ["BOSS " if boss else "", enemies, xp, gold, turns, seconds, _fights])
+	record(ps, "walka-" + outcome, "%s%s | xp +%d | D +%d | tury %d | %.0f s | walka nr %d" % ["BOSS " if boss else "", enemies, xp, gold, turns, seconds, _fights])
 
 
 ## Awans (PlayerStats.level_up).

@@ -1633,7 +1633,7 @@ func _refresh_score() -> void:
 		return
 	score_label.visible = _ps != null
 	if _ps:
-		score_label.text = QuizRpgI18n.tf("pause.score_summary", {"points": int(_ps.points), "streak": int(_ps.streak), "gold": int(_ps.gold)}, "Punkty {points}\nSeria x{streak}\nZłoto {gold}")
+		score_label.text = QuizRpgI18n.tf("pause.score_summary", {"points": int(_ps.points), "streak": int(_ps.streak), "gold": int(_ps.gold)}, "Punkty {points}\nSeria x{streak}\nDukaty {gold}")
 
 
 func _on_player_hp_changed(_new_hp: int, _new_max_hp: int) -> void:

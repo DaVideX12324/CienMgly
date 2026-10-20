@@ -73,7 +73,7 @@ func _set_mode(sell: bool) -> void:
 ## Lista od nowa (po zakupie / sprzedaży), fokus na wierszu `focus_index` (przycięty do listy).
 func _refresh(focus_index: int) -> void:
 	var ps := QuizRpgNpcContext.player_stats(npc)
-	_gold.text = QuizRpgI18n.tf("shop.gold", {"gold": int(ps.gold) if ps else 0}, "Złoto: {gold}")
+	_gold.text = QuizRpgI18n.tf("shop.gold", {"gold": int(ps.gold) if ps else 0}, "Dukaty: {gold}")
 	for c in _list.get_children():
 		if c is Button:
 			_list.remove_child(c)
@@ -135,7 +135,7 @@ func _add_row(text: String, right: String, icon: Texture2D, affordable: bool, pa
 
 
 static func _price_text(p: int) -> String:
-	return QuizRpgI18n.tf("shop.price", {"price": p}, "{price} zł")
+	return QuizRpgI18n.tf("shop.price", {"price": p}, "{price} D")
 
 
 func _on_row_focus(idx: int) -> void:
@@ -176,7 +176,7 @@ func _activate(idx: int) -> void:
 		var entry := p as QuizRpgShopEntry
 		ok = shop.buy(npc, entry)
 		_message.text = QuizRpgI18n.tf("shop.bought", {"item": entry.item.localized_name()}, "Kupiono: {item}.") if ok \
-				else QuizRpgI18n.t("shop.no_gold", "Za mało złota.")
+				else QuizRpgI18n.t("shop.no_gold", "Za mało dukatów.")
 	else:
 		var name := QuizRpgNpcContext.item_name(npc, str(p))
 		ok = shop.sell(npc, str(p))

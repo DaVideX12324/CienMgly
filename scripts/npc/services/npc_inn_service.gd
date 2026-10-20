@@ -22,7 +22,7 @@ func run(npc: Node) -> void:
 	var ps := QuizRpgNpcContext.player_stats(npc)
 	if ps == null:
 		return
-	var q := QuizRpgI18n.tf("npc.inn.offer", {"price": price, "gold": ps.gold}, "Odpoczynek kosztuje {price} zł (masz {gold} zł). Zostajesz na noc?")
+	var q := QuizRpgI18n.tf("npc.inn.offer", {"price": price, "gold": ps.gold}, "Odpoczynek kosztuje {price} D (masz {gold} D). Zostajesz na noc?")
 	var yes := QuizRpgI18n.t("npc.inn.yes", "Odpocznij")
 	var no := QuizRpgI18n.t("npc.inn.no", "Nie teraz")
 	var pick: int = await npc.ask(q, [yes, no])
