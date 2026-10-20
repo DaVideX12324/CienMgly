@@ -1005,7 +1005,8 @@ func get_equipment_label(slot_name: String) -> String:
 	return QuizRpgI18n.t("equip.slot." + slot_name, fallback)
 
 
-## Staty członka: baza + poziom × przyrost postaci + bonusy ekwipunku (<stat>_bonus przedmiotów).
+## Staty członka: wartość z poziomu (ATK / DEF / MAT / MDF — skala FNaFB, QuizRpgStatScale.stat; AGI — baza + poziom × przyrost)
+## + bonusy ekwipunku (<stat>_bonus przedmiotów).
 const STATS: Array[String] = ["atk", "def", "mat", "mdf", "agi"]
 
 
@@ -1013,7 +1014,12 @@ func get_member_total_stat(member_index: int, stat: String) -> int:
 	if member_index < 0 or member_index >= party.size():
 		return 0
 	var member: Dictionary = party[member_index]
-	var total: int = int(member.get("base_" + stat, 0)) + _get_member_level_bonus(member, float(member.get(stat + "_per_level", 0.0)))
+	var per_level := float(member.get(stat + "_per_level", 0.0))
+	var total: int
+	if stat == "agi":
+		total = int(member.get("base_" + stat, 0)) + _get_member_level_bonus(member, per_level)
+	else:
+		total = roundi(QuizRpgStatScale.stat(float(member.get("base_" + stat, 0)), per_level, int(member.get("level", 1))))
 	for slot_name: String in EQUIPMENT_SLOTS:
 		total += int(_get_equipped_stat_bonus(member, slot_name, stat + "_bonus"))
 	return total

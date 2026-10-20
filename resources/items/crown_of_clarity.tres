@@ -17,5 +17,5 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "head"
-def_bonus = 64
-price = 192
+def_bonus = 169
+price = 1690

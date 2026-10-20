@@ -17,5 +17,5 @@ consumable = false
 usable_in_menu = false
 usable_in_combat = false
 equip_slot = "body"
-def_bonus = 4
-price = 12
+def_bonus = 2
+price = 15

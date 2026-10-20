@@ -38,8 +38,10 @@ class_name QuizRpgHeroData
 @export_range(0.0, 3.0, 0.05) var tp_charge_rate: float = 1.0
 ## TP na koniec każdej rundy (TRG w FNaFB, np. Dreadbear +5).
 @export_range(0, 50, 1) var tp_regen: int = 0
-## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na poziom (do ~30–60 na poziomie 20); resztę dają przedmioty.
-## ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).
+## Staty jak w FNaFB1: poziom 1 ~11–21, wzrost ~+1–2 na **poziom FNaFB** (do ~30–60 na jego lv 20); nasze lv 1–100 to rozciągnięte
+## lv 1–20 FNaFB, a wartość rośnie dodatkowo z krzywą HP (QuizRpgStatScale.stat; lv 100 ≈ 35,7 × wartość FNaFB z lv 20). Resztę dają
+## przedmioty. ATK / DEF — fizyczne, MAT / MDF — magiczne (wzory umiejętności: baza + ATK × a + MAT × m − DEF × d − MDF × md).
+## AGI: baza + przyrost × (poziom − 1), bez skali.
 @export_range(5, 30) var base_atk: int = 21
 @export_range(5, 30) var base_def: int = 11
 @export_range(5, 30) var base_mat: int = 21

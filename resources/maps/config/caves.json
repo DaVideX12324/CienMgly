@@ -93,11 +93,11 @@
       {"item_id": "ether", "weight": 10, "count": 2},
       {"item_id": "key_tier1", "weight": 8, "count": 2},
       {"item_id": "lucky_charm", "weight": 8},
-      {"item_id": "iron_sword", "weight": 10},
-      {"item_id": "iron_helmet", "weight": 10},
-      {"item_id": "iron_chainmail", "weight": 10},
-      {"item_id": "steel_kite_shield", "weight": 10},
-      {"item_id": "steel_blade", "weight": 6}
+      {"item_id": "iron_sword", "weight": 12},
+      {"item_id": "leather_hood", "weight": 10},
+      {"item_id": "reinforced_tunic", "weight": 10},
+      {"item_id": "iron_buckler", "weight": 10},
+      {"item_id": "key_tier2", "weight": 4}
     ],
     "item_loot": [
       {"item_id": "potion", "weight": 30},
@@ -118,12 +118,10 @@
       "count": 1,
       "chest_tier": 2,
       "chest_loot": [
-        {"item_id": "steel_blade", "weight": 12},
-        {"item_id": "steel_kite_shield", "weight": 10},
-        {"item_id": "iron_chainmail", "weight": 10},
-        {"item_id": "iron_helmet", "weight": 8},
-        {"item_id": "hunter_bow", "weight": 8},
-        {"item_id": "guard_spear", "weight": 8},
+        {"item_id": "iron_sword", "weight": 14},
+        {"item_id": "iron_buckler", "weight": 10},
+        {"item_id": "reinforced_tunic", "weight": 10},
+        {"item_id": "leather_hood", "weight": 10},
         {"item_id": "lucky_charm", "weight": 10},
         {"item_id": "key_tier2", "weight": 8},
         {"item_id": "potion", "weight": 14, "count": 3},
@@ -136,7 +134,7 @@
     "rooms": [2, 3],
     "flags": {"portal_exit": false, "exit_enemy_tier": 0, "enable_platforms": false},
     "niche_content": {"weights": {"secret_room": 0}, "relic_scene": ""},
-    "treasure": {"count": 1, "kind": "relic", "item_id": "steel_blade", "flag": "relic.cave", "guard_tier": 4},
+    "treasure": {"count": 1, "kind": "relic", "item_id": "iron_sword", "flag": "relic.cave", "guard_tier": 4},
     "boss": {"story_id": "cave_relic", "counts_toward_device": false}
   },
   "enemy_loot": {
