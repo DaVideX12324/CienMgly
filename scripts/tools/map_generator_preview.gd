@@ -39,6 +39,7 @@ var _layer_visibility: Dictionary = {}  # nazwa węzła -> widoczny (zostaje mi�
 @onready var check_gen_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckGenMask
 @onready var check_edge_mask: CheckBox = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/CheckEdgeMask
 var check_height_mask: CheckBox = null  # tworzony w kodzie pod CheckEdgeMask (_ensure_height_mask_check)
+var check_objects_mask: CheckBox = null  # tworzony w kodzie pod maską wysokości (_ensure_objects_mask_check)
 @onready var btn_generate: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/BtnGenerate
 
 @onready var btn_fit_all: Button = $CanvasLayer/Panel/ScrollContainer/MarginContainer/VBoxContainer/HBoxCamera1/BtnFitAll
@@ -382,6 +383,132 @@ func _hide_height_mask() -> void:
 	_height_mask_sprite = null
 
 
+## --- Nakładka zajętości obiektów (generator obiektów, ObjectPlan.occupancy) ---
+## Kolor kratki wg najważniejszej flagi: obiekt interaktywny > obiekt z kolizją > inny obiekt > zarezerwowane przejście
+## > bez drobnicy > zakaz (ściana, portal, schody, spawn…). Legenda w podpowiedzi przełącznika.
+var _objects_mask_sprite: Sprite2D = null
+const OBJ_INTERACTIVE := Color(1.0, 1.0, 1.0, 0.85)
+const OBJ_SOLID := Color(1.0, 0.55, 0.1, 0.65)
+const OBJ_USED := Color(0.3, 0.95, 0.35, 0.45)
+const OBJ_RESERVED := Color(0.2, 0.85, 1.0, 0.45)
+const OBJ_NO_DECAL := Color(0.75, 0.35, 1.0, 0.3)
+const OBJ_FORBID := Color(1.0, 0.15, 0.15, 0.22)
+
+
+func _ensure_objects_mask_check() -> void:
+	var anchor: Control = check_height_mask if check_height_mask else check_edge_mask
+	if check_objects_mask or not anchor:
+		return
+	check_objects_mask = CheckBox.new()
+	check_objects_mask.name = "CheckObjectsMask"
+	check_objects_mask.text = "Pokaż zajętość obiektów"
+	check_objects_mask.tooltip_text = "biały — obiekt interaktywny (skrzynia, dźwignia…), pomarańczowy — obiekt z kolizją,\nzielony — obiekt bez kolizji, błękitny — zarezerwowane przejście (tylko obiekty bez kolizji),\nfioletowy — bez drobnicy (kratownica), czerwony — zakaz (ściana, portal, schody, spawn)"
+	var box := anchor.get_parent()
+	box.add_child(check_objects_mask)
+	box.move_child(check_objects_mask, anchor.get_index() + 1)
+
+
+func _on_objects_mask_toggled(enabled: bool) -> void:
+	if enabled:
+		_show_objects_mask()
+	elif is_instance_valid(_objects_mask_sprite):
+		_objects_mask_sprite.queue_free()
+		_objects_mask_sprite = null
+
+
+func _show_objects_mask() -> void:
+	if is_instance_valid(_objects_mask_sprite):
+		_objects_mask_sprite.visible = true
+		return
+	if not level_container or level_container.get_child_count() == 0:
+		return
+	var proc_level := level_container.get_child(0)
+	var res: Variant = proc_level.get("last_result") if proc_level else null
+	var img := objects_mask_image(res) if res else null
+	if img == null:
+		push_warning("Zajętość obiektów niedostępna (mapa bez generatora obiektów).")
+		return
+	_objects_mask_sprite = Sprite2D.new()
+	_objects_mask_sprite.name = "ObjectsMask"
+	_objects_mask_sprite.texture = ImageTexture.create_from_image(img)
+	_objects_mask_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_objects_mask_sprite.scale = Vector2.ONE * 16.0  # 1 px obrazu = kratka
+	_objects_mask_sprite.centered = false
+	_objects_mask_sprite.z_index = 103
+	level_container.add_child(_objects_mask_sprite)
+
+
+## Obraz 1 px / kratkę z zajętości planu obiektów; null = brak planu.
+static func objects_mask_image(res) -> Image:
+	var objs = res.objects if "objects" in res else null
+	if objs == null or objs.occupancy.is_empty():
+		return null
+	var w: int = objs.width
+	var data := PackedByteArray()
+	data.resize(w * objs.height * 4)
+	var interactive := {}
+	for pl in objs.placements:
+		if pl.def.klass == ObjectDef.Klass.INTERACTIVE:
+			interactive[pl.cell.y * w + pl.cell.x] = true
+			for j in pl.cells:
+				interactive[j] = true
+	for i in range(objs.occupancy.size()):
+		var o: int = objs.occupancy[i]
+		var c := Color(0, 0, 0, 0)
+		if interactive.has(i):
+			c = OBJ_INTERACTIVE
+		elif o & ObjectPlan.SOLID:
+			c = OBJ_SOLID
+		elif o & ObjectPlan.USED:
+			c = OBJ_USED
+		elif o & ObjectPlan.RESERVED:
+			c = OBJ_RESERVED
+		elif o & ObjectPlan.NO_DECAL:
+			c = OBJ_NO_DECAL
+		elif o & ObjectPlan.FORBID:
+			c = OBJ_FORBID
+		_put(data, i, _rgba8(c))
+	return Image.create_from_data(w, objs.height, false, Image.FORMAT_RGBA8, data)
+
+
+## Statystyki planu obiektów do panelu: liczba wg klasy, czas planu, zdjęte dla osiągalności, najliczniejsze obiekty.
+static func objects_stats_text(res) -> String:
+	var objs = res.objects if "objects" in res else null
+	if objs == null:
+		return ""
+	var by_klass := [0, 0, 0]
+	for pl in objs.placements:
+		by_klass[int(pl.def.klass)] += 1
+	var ids: Array = objs.stats.keys().filter(func(k): return int(objs.stats[k]) > 0)
+	ids.sort_custom(func(a, b): return int(objs.stats[a]) > int(objs.stats[b]))
+	var top := PackedStringArray()
+	for k in ids.slice(0, 5):
+		top.append("%s %d" % [k, int(objs.stats[k])])
+	return "\n[b]Obiekty:[/b] %d (drobnica %d / przeszkody %d / interaktywne %d), plan %.1f ms, zdjęte dla osiągalności %d\n[b]Najczęstsze:[/b] %s" % [
+		objs.placements.size(), by_klass[0], by_klass[1], by_klass[2], objs.time_usec / 1000.0, objs.removed_for_reach, ", ".join(top)]
+
+
+## Flagi zajętości i obiekty na kratce (inspektor).
+static func objects_cell_text(res, c: Vector2i) -> String:
+	var objs = res.objects if "objects" in res else null
+	if objs == null or c.x < 0 or c.y < 0 or c.x >= objs.width or c.y >= objs.height:
+		return ""
+	var i: int = c.y * objs.width + c.x
+	var o: int = objs.occupancy[i]
+	var flags := PackedStringArray()
+	for pair in [[ObjectPlan.FORBID, "zakaz"], [ObjectPlan.RESERVED, "przejście"], [ObjectPlan.SOLID, "kolizja"],
+			[ObjectPlan.USED, "zajęta"], [ObjectPlan.NO_DECAL, "bez drobnicy"]]:
+		if o & int(pair[0]):
+			flags.append(pair[1])
+	var here := PackedStringArray()
+	for pl in objs.placements:
+		if pl.cell == c or pl.cells.has(i):
+			here.append(String(pl.def.id))
+	if flags.is_empty() and here.is_empty():
+		return ""
+	return "\n[b]Zajętość obiektów:[/b] %s%s" % [", ".join(flags) if not flags.is_empty() else "wolna", (" — " + ", ".join(here)) if not here.is_empty() else ""]
+
+
 ## Obraz HEIGHT_MASK_PX px / kratkę: pole mapy wysokości na całej mapie podzielone na pasma — doły
 ## (-1, -2…), wysokość bazowa (0, tam gdzie szum nie przekracza żadnego progu), poziom 1, 2… — każde
 ## z półprzezroczystym kolorem i konturem na granicy. Na wierzchu faktyczne kratki wysokości i schody.
@@ -556,6 +683,9 @@ func _setup_ui() -> void:
 	_ensure_height_mask_check()
 	if check_height_mask:
 		check_height_mask.toggled.connect(_on_height_mask_toggled)
+	_ensure_objects_mask_check()
+	if check_objects_mask:
+		check_objects_mask.toggled.connect(_on_objects_mask_toggled)
 
 	# 6. Kamera
 	btn_fit_all.pressed.connect(fit_to_screen)
@@ -859,6 +989,7 @@ func _generate_current_map_impl() -> void:
 	_mask_sprite = null
 	_edge_mask_sprite = null
 	_height_mask_sprite = null
+	_objects_mask_sprite = null
 
 	if spin_seed:
 		current_seed = int(spin_seed.value)
@@ -931,6 +1062,7 @@ func _generate_current_map_impl() -> void:
 						elif int(pl.heights[c]) < 0:
 							n_pit += 1
 					extra_stats += "\n[b]Poziomy:[/b] %d..%d, poziom 2+: %d kratek, zagłębienia: %d kratek" % [pl.min_level, pl.max_level, n_high, n_pit]
+			extra_stats += objects_stats_text(res)
 
 		info_label.text = """[b]Typ:[/b] %s
 [b]Seed:[/b] [color=#ffdd66]%d[/color]
@@ -963,6 +1095,8 @@ func _generate_current_map_impl() -> void:
 			_show_edge_mask()
 		if check_height_mask and check_height_mask.button_pressed:
 			_show_height_mask()
+		if check_objects_mask and check_objects_mask.button_pressed:
+			_show_objects_mask()
 
 	if spin_coord_x:
 		spin_coord_x.max_value = float(maxi(0, current_width - 1))
@@ -1205,6 +1339,7 @@ func _get_tile_info(tile_pos: Vector2i) -> Dictionary:
 					info.tags.append("👾 Wróg (Tier %s)" % str(esp.get("tier", 1)))
 		if "doors" in res and tile_pos in res.doors:
 			info.tags.append("🚪 Drzwi")
+		info["objects_text"] = objects_cell_text(res, tile_pos)
 		if "entrance_zone" in res and tile_pos in res.entrance_zone:
 			info.tags.append("🟢 Strefa Wejścia")
 		if "exit_zone" in res and tile_pos in res.exit_zone:
@@ -1297,6 +1432,7 @@ func _update_tile_inspector_ui() -> void:
 			layers_text += "\n[b]Warstwa Barierek:[/b] %s" % active_info.rails_layer
 		if not active_info.platforms_layer.is_empty():
 			layers_text += "\n[b]Warstwa Platform:[/b] %s" % active_info.platforms_layer
+		layers_text += active_info.get("objects_text", "")
 
 		var relative_sel_text := ""
 		if has_selection and hover_info.in_bounds and _hovered_tile != _selected_tile:
