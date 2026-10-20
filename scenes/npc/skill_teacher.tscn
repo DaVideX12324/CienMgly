@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/teacher_frames.tres" id="2_teut8"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_ltc1i"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/skill_lesson.gd" id="4_sv87o"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_skill_teacher_service.gd" id="5_xj2xr"]
+
+[sub_resource type="Resource" id="Resource_ffo8h"]
+script = ExtResource("4_sv87o")
+skill_id = "shove"
+gold = 60
+
+[sub_resource type="Resource" id="Resource_tl47v"]
+script = ExtResource("4_sv87o")
+skill_id = "hearty_meal"
+gold = 80
+
+[sub_resource type="Resource" id="Resource_2fnwu"]
+script = ExtResource("4_sv87o")
+skill_id = "share_tempo"
+gold = 100
+
+[sub_resource type="Resource" id="Resource_qoakc"]
+script = ExtResource("4_sv87o")
+skill_id = "aerial_strike"
+gold = 120
+
+[sub_resource type="Resource" id="Resource_fmili"]
+script = ExtResource("4_sv87o")
+skill_id = "revive_tonic"
+gold = 150
+
+[sub_resource type="Resource" id="Resource_frb7o"]
+script = ExtResource("4_sv87o")
+skill_id = "onslaught"
+gold = 150
+required_flag = "teacher_desert"
+
+[sub_resource type="Resource" id="Resource_fsprj"]
+script = ExtResource("4_sv87o")
+skill_id = "reckless_blow"
+gold = 150
+required_flag = "teacher_forge"
+
+[sub_resource type="Resource" id="Resource_rouuh"]
+script = ExtResource("4_sv87o")
+skill_id = "leap_series"
+gold = 150
+required_flag = "teacher_forest"
+
+[sub_resource type="Resource" id="Resource_lphh1"]
+script = ExtResource("4_sv87o")
+skill_id = "final_strike"
+gold = 300
+min_level = 20
+
+[sub_resource type="Resource" id="Resource_f25eb"]
+script = ExtResource("5_xj2xr")
+lessons = Array[ExtResource("4_sv87o")]([SubResource("Resource_ffo8h"), SubResource("Resource_tl47v"), SubResource("Resource_2fnwu"), SubResource("Resource_qoakc"), SubResource("Resource_fmili"), SubResource("Resource_frb7o"), SubResource("Resource_fsprj"), SubResource("Resource_rouuh"), SubResource("Resource_lphh1")])
+intro_lines = PackedStringArray()
+label = "Nauka"
+label_key = "npc.service.learn"
+
+[node name="SkillTeacher" instance=ExtResource("0_base")]
+npc_name = "Mistrz Fechtunku"
+npc_name_key = "npc.teacher.name"
+sprite_frames = ExtResource("2_teut8")
+greeting = PackedStringArray("Formuły przekażę. Osobistej techniki — nie; tę każdy szlifuje sam.")
+greeting_key = "npc.teacher.greeting"
+services = Array[ExtResource("3_ltc1i")]([SubResource("Resource_f25eb")])

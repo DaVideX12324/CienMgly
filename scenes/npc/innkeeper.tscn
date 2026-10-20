@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/innkeeper_frames.tres" id="2_4aiv6"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_vlmv8"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_inn_service.gd" id="4_qeccd"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="5_bxffi"]
+
+[sub_resource type="Resource" id="Resource_mlrpp"]
+script = ExtResource("4_qeccd")
+label = "Odpoczynek"
+label_key = "npc.service.rest"
+
+[sub_resource type="Resource" id="Resource_8rjdw"]
+script = ExtResource("5_bxffi")
+lines = PackedStringArray("Mgła gęstnieje z każdym dniem. Ludzie zapominają imiona sąsiadów.", "Ale mojej zupy nikt nie zapomina.")
+lines_key = "npc.innkeeper.talk"
+repeat_lines = PackedStringArray()
+label = "Rozmowa"
+label_key = "npc.service.talk"
+
+[node name="Innkeeper" instance=ExtResource("0_base")]
+npc_name = "Karczmarka"
+npc_name_key = "npc.innkeeper.name"
+sprite_frames = ExtResource("2_4aiv6")
+greeting = PackedStringArray("Zmęczony? U mnie wyśpisz się jak u matki.")
+greeting_key = "npc.innkeeper.greeting"
+services = Array[ExtResource("3_vlmv8")]([SubResource("Resource_mlrpp"), SubResource("Resource_8rjdw")])

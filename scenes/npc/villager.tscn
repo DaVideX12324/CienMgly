@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/villager_frames.tres" id="2_2orwn"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_kgtq6"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="4_mshdv"]
+
+[sub_resource type="Resource" id="Resource_0fws8"]
+script = ExtResource("4_mshdv")
+lines = PackedStringArray("Dzień dobry, wędrowcze.", "Słyszałam, że pod miastem ktoś widział światło w kanałach.")
+lines_key = "npc.villager.talk"
+repeat_lines = PackedStringArray()
+label = "Rozmowa"
+label_key = "npc.service.talk"
+
+[node name="Villager" instance=ExtResource("0_base")]
+npc_name = "Mieszkanka"
+npc_name_key = "npc.villager.name"
+sprite_frames = ExtResource("2_2orwn")
+greeting = PackedStringArray()
+services = Array[ExtResource("3_kgtq6")]([SubResource("Resource_0fws8")])
