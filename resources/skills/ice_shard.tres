@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "ice_shard"
+display_name = "Lodowy Odłamek"
+description = "Przebija wroga lodowym odłamkiem (obrażenia magiczne ×1,2), z 40% szansą na spowolnienie (AGI w dół)."
+color = Color(0.6, 0.9, 1, 1)
+atk_coeff = 0.0
+mat_coeff = 4.0
+def_coeff = 0.0
+mdf_coeff = 2.0
+damage_multiplier = 1.2
+inflict_status = "agi_down"
+status_chance = 0.4
+sp_cost = 45
+learn_level = 5

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+speed = 1000
+tp_gain = 0
+skill_id = "renewal_circle"
+display_name = "Krąg Odnowy"
+description = "Otacza całą drużynę kręgiem odnowy: każdy sojusznik co turę odzyskuje część HP (regeneracja)."
+color = Color(0.5, 1, 0.7, 1)
+damage_mode = 2
+target = 5
+inflict_status = "regen"
+status_chance = 1.0
+sp_cost = 60
+learn_level = 5

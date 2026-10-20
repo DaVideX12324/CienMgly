@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+speed = -25
+skill_id = "chain_lightning"
+display_name = "Łańcuch Błyskawic"
+description = "Błyskawica przeskakuje między wrogami, trafiając losowe cele 3 razy (obrażenia magiczne ×0,9), z 15% szansą na paraliż przy każdym trafieniu."
+color = Color(0.95, 0.95, 0.4, 1)
+atk_coeff = 0.0
+mat_coeff = 4.0
+def_coeff = 0.0
+mdf_coeff = 2.0
+damage_multiplier = 0.9
+hits = 3
+target = 2
+random_count = 3
+inflict_status = "paralysis"
+status_chance = 0.15
+status_per_hit = true
+sp_cost = 110
+learn_level = 15

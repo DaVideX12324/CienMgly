@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+speed = 1000
+skill_id = "resurrection"
+display_name = "Łaska Powrotu"
+description = "Przywraca do życia poległego sojusznika z 50% maksymalnego HP. Działa także w menu."
+color = Color(0.7, 1, 0.9, 1)
+damage_mode = 2
+target = 6
+heal_mode = 2
+heal_percent = 0.5
+sp_cost = 120
+occasion = 0
+learn_level = 15

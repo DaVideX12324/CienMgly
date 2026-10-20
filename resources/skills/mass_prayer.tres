@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+speed = 1000
+skill_id = "mass_prayer"
+display_name = "Zbiorowa Modlitwa"
+description = "Wspólna modlitwa leczy każdego żywego sojusznika o MAT × 2,5 HP. Działa także w menu."
+color = Color(0.45, 1, 0.55, 1)
+damage_mode = 2
+target = 5
+heal_mode = 1
+heal_mat_coeff = 2.5
+sp_cost = 110
+occasion = 0
+learn_level = 10

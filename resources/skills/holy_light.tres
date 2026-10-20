@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "holy_light"
+display_name = "Święte Światło"
+description = "Razi wroga promieniem świętego światła. Obrażenia magiczne (MAT przeciw MDF)."
+color = Color(1, 0.95, 0.6, 1)
+atk_coeff = 0.0
+mat_coeff = 3.5
+def_coeff = 0.0
+mdf_coeff = 2.0
+sp_cost = 30
+learn_level = 1

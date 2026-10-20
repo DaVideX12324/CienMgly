@@ -10,6 +10,10 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/nurturing_care.tres" id="8_v1us2"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/share_tempo.tres" id="9_6mxb2"]
 [ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_priest.tres" id="10_j7utp"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/holy_light.tres" id="11_holy"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/renewal_circle.tres" id="12_renewal"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/mass_prayer.tres" id="13_prayer"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/resurrection.tres" id="14_resurrect"]
 
 [resource]
 script = ExtResource("2_g6gsc")
@@ -33,7 +37,7 @@ mat_per_level = 1.8
 mdf_per_level = 1.6
 base_agi = 12
 agi_per_level = 0.9
-skills = Array[ExtResource("3_up32r")]([ExtResource("4_hmpse"), ExtResource("5_7ct4q"), ExtResource("6_bb07p"), ExtResource("7_x8ynh"), ExtResource("8_v1us2"), ExtResource("9_6mxb2")])
+skills = Array[ExtResource("3_up32r")]([ExtResource("4_hmpse"), ExtResource("11_holy"), ExtResource("5_7ct4q"), ExtResource("6_bb07p"), ExtResource("12_renewal"), ExtResource("13_prayer"), ExtResource("14_resurrect"), ExtResource("7_x8ynh"), ExtResource("8_v1us2"), ExtResource("9_6mxb2")])
 default_weapon_id = "priest_mace"
 default_head_id = "cloth_cap"
 default_body_id = "adventurer_tunic"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuizRpgSkillData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/skill_data.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = "arc_spark"
+display_name = "Iskra"
+description = "Ciska we wroga iskrą czystej many. Obrażenia magiczne (MAT przeciw MDF)."
+color = Color(0.55, 0.75, 1, 1)
+atk_coeff = 0.0
+mat_coeff = 4.0
+def_coeff = 0.0
+mdf_coeff = 2.0
+sp_cost = 25
+learn_level = 1
