@@ -63,7 +63,7 @@ label = "Nauka"
 label_key = "npc.service.learn"
 
 [node name="SkillTeacher" instance=ExtResource("0_base")]
-npc_name = "Mistrz Fechtunku"
+npc_name = "Corvus"
 npc_name_key = "npc.teacher.name"
 sprite_frames = ExtResource("2_teut8")
 greeting = PackedStringArray("Formuły przekażę. Osobistej techniki — nie; tę każdy szlifuje sam.")

@@ -62,7 +62,7 @@ label = "Handel"
 label_key = "npc.service.shop"
 
 [node name="Armorer" instance=ExtResource("0_base")]
-npc_name = "Płatnerz"
+npc_name = "Kastor"
 npc_name_key = "npc.armorer.name"
 sprite_frames = ExtResource("2_0xb6a")
 sprite_offset = Vector2(0, -30)

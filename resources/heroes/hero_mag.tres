@@ -18,7 +18,7 @@
 [resource]
 script = ExtResource("2_bu3x7")
 hero_id = "mag"
-display_name = "Mag"
+display_name = "Eldon"
 character_class = "mage"
 actor_scene = ExtResource("1_2cya6")
 sprite_frames = ExtResource("11_lt2o8")

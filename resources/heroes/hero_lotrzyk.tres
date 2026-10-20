@@ -18,7 +18,7 @@
 [resource]
 script = ExtResource("2_l4it0")
 hero_id = "lotrzyk"
-display_name = "Łotrzyk"
+display_name = "Kael"
 character_class = "rogue"
 actor_scene = ExtResource("1_3pxth")
 sprite_frames = ExtResource("12_k3lrj")

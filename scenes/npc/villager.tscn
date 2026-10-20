@@ -7,14 +7,14 @@
 
 [sub_resource type="Resource" id="Resource_0fws8"]
 script = ExtResource("4_mshdv")
-lines = PackedStringArray("Dzień dobry, wędrowcze.", "Słyszałam, że pod miastem ktoś widział światło w kanałach.")
+lines = PackedStringArray("Czasem wydaje mi się, że pamiętam śpiew ptaków… ale Mgła zabiera wszystko.", "Uważaj na siebie. Słyszałam, że pod miastem ktoś widział światło w kanałach.")
 lines_key = "npc.villager.talk"
 repeat_lines = PackedStringArray()
 label = "Rozmowa"
 label_key = "npc.service.talk"
 
 [node name="Villager" instance=ExtResource("0_base")]
-npc_name = "Mieszkanka"
+npc_name = "Lina"
 npc_name_key = "npc.villager.name"
 sprite_frames = ExtResource("2_2orwn")
 greeting = PackedStringArray()

@@ -208,7 +208,7 @@ label = "Handel"
 label_key = "npc.service.shop"
 
 [node name="Shopkeeper" instance=ExtResource("0_base")]
-npc_name = "Zielarka"
+npc_name = "Fenna"
 npc_name_key = "npc.shopkeeper.name"
 sprite_frames = ExtResource("2_cg8oe")
 greeting = PackedStringArray("Zioła, mikstury, odtrutki — wszystko, co trzyma przy życiu.")

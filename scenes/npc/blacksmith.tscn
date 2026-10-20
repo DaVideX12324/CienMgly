@@ -67,7 +67,7 @@ label = "Ulepsz broń"
 label_key = "npc.service.upgrade"
 
 [node name="Blacksmith" instance=ExtResource("0_base")]
-npc_name = "Kowal"
+npc_name = "Brann"
 npc_name_key = "npc.blacksmith.name"
 sprite_frames = ExtResource("2_th7q5")
 sprite_offset = Vector2(0, -30)

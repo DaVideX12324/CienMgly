@@ -20,7 +20,7 @@ label = "Rozmowa"
 label_key = "npc.service.talk"
 
 [node name="Innkeeper" instance=ExtResource("0_base")]
-npc_name = "Karczmarka"
+npc_name = "Greta"
 npc_name_key = "npc.innkeeper.name"
 sprite_frames = ExtResource("2_4aiv6")
 greeting = PackedStringArray("Zmęczony? U mnie wyśpisz się jak u matki.")

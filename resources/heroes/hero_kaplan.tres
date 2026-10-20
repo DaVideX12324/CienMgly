@@ -18,7 +18,7 @@
 [resource]
 script = ExtResource("2_g6gsc")
 hero_id = "kaplan"
-display_name = "Kapłan"
+display_name = "Selene"
 character_class = "priest"
 actor_scene = ExtResource("1_untre")
 sprite_frames = ExtResource("10_j7utp")
