@@ -35,19 +35,19 @@ gold = 150
 script = ExtResource("4_sv87o")
 skill_id = "onslaught"
 gold = 150
-required_flag = "teacher_desert"
+required_flag = "boss:fairy_forest"
 
 [sub_resource type="Resource" id="Resource_fsprj"]
 script = ExtResource("4_sv87o")
 skill_id = "reckless_blow"
 gold = 150
-required_flag = "teacher_forge"
+required_flag = "boss:fairy_forest"
 
 [sub_resource type="Resource" id="Resource_rouuh"]
 script = ExtResource("4_sv87o")
 skill_id = "leap_series"
 gold = 150
-required_flag = "teacher_forest"
+required_flag = "boss:fairy_forest"
 
 [sub_resource type="Resource" id="Resource_lphh1"]
 script = ExtResource("4_sv87o")

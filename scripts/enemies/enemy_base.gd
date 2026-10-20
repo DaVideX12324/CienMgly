@@ -980,6 +980,11 @@ func _persist_boss_defeat() -> void:
 	# 1) Respawn: pod tym seedem boss zostaje pokonany (czyszczone rerollem).
 	if not level_path.is_empty():
 		lsm.mark_boss_defeated(level_path, unique_id)
+	# Flaga fabularna boss:<id> (id = boss_story_id albo nazwa sceny mapy, np. boss:cave) — zawsze, także gdy boss
+	# nie liczy się do urządzenia; odblokowuje tiery sklepu i lekcje NPC (QuizRpgNpcService.required_flag).
+	var flag_id := boss_story_id if not boss_story_id.is_empty() else level_path.get_file().get_basename()
+	if not flag_id.is_empty() and lsm.has_method("set_story_flag"):
+		lsm.set_story_flag("boss:" + flag_id)
 	# 2) Postęp urządzenia arcymaga: monotoniczny, nieodwracalny, per story-boss.
 	#    Fallback story_id = level_path (jeden krok na mapę), gdy nie ustawiono jawnie.
 	#    Globalna bramka (device_counting_enabled) jest sprawdzana w managerze.
