@@ -17,6 +17,7 @@ const GenProgress = preload("../generation/core/gen_progress.gd")
 const FrameSlicer = preload("../generation/core/frame_slicer.gd")
 const MapPrefetch = preload("map_prefetch.gd")
 const MapDiskCache = preload("map_disk_cache.gd")
+const MapLinks = preload("map_links.gd")
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
@@ -109,6 +110,8 @@ var last_result: RefCounted = null
 var _cache_path := ""
 var _cache_sig := ""
 var _cache_bytes := PackedByteArray()
+## Spójna trasa map (MapLinks.constraints) z _prepare_job — zapisywana w LevelStateManager po wygenerowaniu.
+var _link_constraints: Dictionary = {}
 var is_generating: bool = false
 var _transitioning: bool = false
 var _task_id: int = -1
@@ -295,6 +298,7 @@ func generate_level(seed_val: int = 0) -> void:
 		GenProgress.stop()
 	if job.debug_report:
 		print(map_report(job, progress))
+	_record_link(job)
 	generation_finished.emit()
 
 
@@ -370,6 +374,7 @@ func _finish_generation(progress, overlay, job: GenJob) -> void:
 	if not _cache_bytes.is_empty():
 		MapDiskCache.save_async(_cache_path, _cache_bytes)
 		_cache_bytes = PackedByteArray()
+	_record_link(job)  # przed zleceniem sąsiednich map — następna liczy wejście z tego wpisu
 	if _prefetch_allowed():
 		MapPrefetch.request(next_level_path)
 		MapPrefetch.request(previous_level_path)
@@ -636,6 +641,13 @@ func _prepare_job(seed_val: int) -> GenJob:
 	if cave_flags != null:
 		for k in flag_overrides:
 			cave_flags.set(k, flag_overrides[k])
+	# Spójna trasa map: wejście naprzeciw wyjścia poprzedniej mapy, wyjście nie w stronę odwiedzonych (MapLinks).
+	_link_constraints = {}
+	var link_name := _link_name(lsm)
+	if cave_flags != null and not link_name.is_empty():
+		_link_constraints = MapLinks.constraints(lsm.map_links, link_name, QuizRpgPaths.level_name(previous_level_path))
+		cave_flags.entrance_edge = int(_link_constraints.in)
+		cave_flags.exit_edges.assign(_link_constraints.allow)
 
 	var job := GenJob.new()
 	job.is_cave = level_type == LevelType.CAVE_DUNGEON
@@ -1006,6 +1018,25 @@ func _level_key() -> String:
 	if lm != null and lm.get("current_level_path") != null:
 		return str(lm.get("current_level_path"))
 	return ""
+
+
+## Zapisuje mapę w trasie (MapLinks.record): ograniczenia z _prepare_job i faktyczna krawędź wyjścia.
+func _record_link(job: GenJob) -> void:
+	var lsm := _get_level_state_manager()
+	var link_name := _link_name(lsm)
+	if not link_name.is_empty() and job.result != null:
+		MapLinks.record(lsm.map_links, link_name, _link_constraints, int(job.result.exit_edge))
+
+
+## Nazwa mapy w trasie (MapLinks) albo "": tylko mapy głównego łańcucha w grze — seed zapisu, bez nadpisań eksploratora
+## map i bez argumentu mapy (sekretne pokoje nie).
+func _link_name(lsm: Node) -> String:
+	if lsm == null or map_seed > 0 or not flag_overrides.is_empty():
+		return ""
+	var key := _level_key()
+	if key.is_empty() or not QuizRpgPaths.level_arg(key).is_empty():
+		return ""
+	return QuizRpgPaths.level_name(key)
 
 
 func _get_level_state_manager() -> Node:

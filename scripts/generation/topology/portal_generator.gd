@@ -10,6 +10,10 @@ const CENTER_ENTRANCE_MIN_SIDE := 10
 ## Schody wnęki (alcove_stairs, decyzja usera 2026-10-11): od linii ściany (tam, gdzie stałaby podstawa lica / ściana
 ## za wnęką) tyle kratek w głąb, za nimi void.
 const ALCOVE_STAIRS_DEPTH := 4
+## Wnęka przy krawędzi (carve_portal_alcove): promień wnęki 5 × 5, ramka mapy, najkrótszy tunel ku krawędzi.
+const ALCOVE_RADIUS := 2
+const ALCOVE_MAP_BORDER := 2
+const MIN_TUNNEL_LENGTH := 5
 
 
 ## Wybiera pokoje wejścia i wyjścia, rzeźbi portale i rejestruje je w ctx i result.
@@ -58,23 +62,61 @@ static func place_portals_in_rooms(
 					entrance_room_idx = i
 					exit_room_idx = j
 
-	var entrance_room := rooms[entrance_room_idx]
 	var wall_style := flags.portal_style if flags.portal_style in ["ladder", "stairs"] else ""
 	var entrance_data: Dictionary
 	if wall_style != "":
-		entrance_data = carve_portal_at_wall(ctx, entrance_room, wall_style)
+		entrance_data = carve_portal_at_wall(ctx, rooms[entrance_room_idx], wall_style)
+	elif center_entrance:
+		entrance_data = carve_portal_in_room(ctx, rooms[entrance_room_idx])
 	else:
-		entrance_data = carve_portal_in_room(ctx, entrance_room) if center_entrance else carve_portal_alcove(ctx, entrance_room)
+		# Spójna trasa map (flags.entrance_edge): wnęka wejścia na wymuszonej krawędzi — w pokoju najbliżej niej, w którym
+		# się mieści; wyjście wtedy w pokoju najdalszym od wejścia. Brak miejsca w każdym pokoju — jak bez wymuszenia.
+		var plan := {}
+		if flags.entrance_edge >= 0 and rooms.size() >= 2:
+			for i in _rooms_by_edge(ctx, rooms, flags.entrance_edge, -1):
+				plan = plan_alcove_on_edge(ctx, rooms[i], flags.entrance_edge)
+				if not plan.is_empty():
+					entrance_room_idx = i
+					exit_room_idx = _room_farthest(rooms, i)
+					break
+		entrance_data = _carve_alcove(ctx, rooms[entrance_room_idx], plan) if not plan.is_empty() \
+			else carve_portal_alcove(ctx, rooms[entrance_room_idx])
 	register_wall_portal(result, entrance_data, flags)
 	_apply_portal(ctx, result, entrance_data, true)
+	result.entrance_edge = int(entrance_data.get("edge", -1))
 
-	var exit_room := rooms[exit_room_idx]
 	var exit_data: Dictionary = {}
 	if flags.portal_exit:
-		exit_data = carve_portal_at_wall(ctx, exit_room, wall_style) if wall_style != "" \
-			else carve_portal_alcove(ctx, exit_room, int(entrance_data["edge"]))
+		if wall_style != "":
+			exit_data = carve_portal_at_wall(ctx, rooms[exit_room_idx], wall_style)
+		else:
+			# Dozwolone krawędzie wyjścia (flags.exit_edges): po trzy pokoje najbliżej każdej, w których wnęka się mieści;
+			# wygrywa najdalszy od wejścia. Żaden się nie mieści — jak bez wymuszenia.
+			var plan := {}
+			if not flags.exit_edges.is_empty() and rooms.size() >= 2:
+				var c := Vector2(rooms[entrance_room_idx].get_center())
+				var best_d := -1.0
+				for e in flags.exit_edges:
+					if e == result.entrance_edge:
+						continue
+					var tried := 0
+					for i in _rooms_by_edge(ctx, rooms, e, entrance_room_idx):
+						var p := plan_alcove_on_edge(ctx, rooms[i], e)
+						if p.is_empty():
+							continue
+						var d := c.distance_squared_to(Vector2(rooms[i].get_center()))
+						if d > best_d:
+							best_d = d
+							plan = p
+							exit_room_idx = i
+						tried += 1
+						if tried >= 3:
+							break
+			exit_data = _carve_alcove(ctx, rooms[exit_room_idx], plan) if not plan.is_empty() \
+				else carve_portal_alcove(ctx, rooms[exit_room_idx], int(entrance_data["edge"]))
 		register_wall_portal(result, exit_data, flags)
 		_apply_portal(ctx, result, exit_data, false)
+		result.exit_edge = int(exit_data.get("edge", -1))
 
 	# Dodatkowa gwarancja spójności po wycięciu portali
 	ConnectivityRepair.repair(ctx, corridor_width)
@@ -89,6 +131,43 @@ static func place_portals_in_rooms(
 			_apply_portal(ctx, result, exit_data, false)
 
 	return {"entrance_room_idx": entrance_room_idx, "exit_room_idx": exit_room_idx}
+
+
+## Odległość pokoju od krawędzi mapy (0 N, 1 E, 2 S, 3 W) — od jego boku po tej stronie.
+static func _edge_dist(ctx: GenerationContext, r: Rect2i, edge: int) -> int:
+	match edge:
+		0:
+			return r.position.y
+		1:
+			return ctx.width - r.end.x
+		2:
+			return ctx.height - r.end.y
+	return r.position.x
+
+
+## Indeksy pokoi (bez `skip`) od najbliższego krawędzi `edge`.
+static func _rooms_by_edge(ctx: GenerationContext, rooms: Array[Rect2i], edge: int, skip: int) -> Array[int]:
+	var order: Array[int] = []
+	for i in range(rooms.size()):
+		if i != skip:
+			order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool:
+		var da := _edge_dist(ctx, rooms[a], edge)
+		var db := _edge_dist(ctx, rooms[b], edge)
+		return da < db if da != db else a < b)
+	return order
+
+
+static func _room_farthest(rooms: Array[Rect2i], from_idx: int) -> int:
+	var c := Vector2(rooms[from_idx].get_center())
+	var best := from_idx
+	var best_d := -1.0
+	for i in range(rooms.size()):
+		var d := c.distance_squared_to(Vector2(rooms[i].get_center()))
+		if i != from_idx and d > best_d:
+			best_d = d
+			best = i
+	return best
 
 
 ## Punkt i strefa portalu z danych wnęki / ściany (po register_alcove_stairs — szczyt schodów i strefa ze schodami).
@@ -318,141 +397,153 @@ static func _stairs_tunnel_length(ctx: GenerationContext, start: Vector2i, dir: 
 	return best
 
 
+## Środek wnęki od krawędzi mapy: promień + ramka; przy schodach wnęki dodatkowo miejsce na ALCOVE_STAIRS_DEPTH warstw
+## ściany i void za nimi.
+static func _alcove_margin(ctx: GenerationContext) -> int:
+	var margin := ALCOVE_RADIUS + ALCOVE_MAP_BORDER
+	if ctx.flags != null and ctx.flags.portal_style == "alcove_stairs":
+		margin = maxi(margin, ALCOVE_RADIUS + ALCOVE_STAIRS_DEPTH + 1)
+	return margin
+
+
+## Tunel wnęki z pokoju ku krawędzi `edge` (bez drążenia): kierunek, start, maks. długość, most od środka pokoju; {} gdy
+## tunel krótszy niż min_len.
+static func _alcove_edge(ctx: GenerationContext, room: Rect2i, edge: int, min_len: int) -> Dictionary:
+	var margin := _alcove_margin(ctx)
+	var center := room.get_center()
+	var dir := Vector2i.ZERO
+	var tunnel_start := Vector2i.ZERO
+	var perp := Vector2i.ZERO
+	var max_length := 0
+	var bridge_steps := 0
+	match edge:
+		0:
+			dir = Vector2i(0, -1)
+			tunnel_start = Vector2i(center.x, room.position.y - 1)
+			perp = Vector2i(1, 0)
+			max_length = tunnel_start.y - margin
+			bridge_steps = center.y - tunnel_start.y
+		1:
+			dir = Vector2i(1, 0)
+			tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
+			perp = Vector2i(0, 1)
+			max_length = ctx.width - 1 - margin - tunnel_start.x
+			bridge_steps = tunnel_start.x - center.x
+		2:
+			dir = Vector2i(0, 1)
+			tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
+			perp = Vector2i(1, 0)
+			max_length = ctx.height - 1 - margin - tunnel_start.y
+			bridge_steps = tunnel_start.y - center.y
+		3:
+			dir = Vector2i(-1, 0)
+			tunnel_start = Vector2i(room.position.x - 1, center.y)
+			perp = Vector2i(0, 1)
+			max_length = tunnel_start.x - margin
+			bridge_steps = center.x - tunnel_start.x
+	if max_length < min_len:
+		return {}
+	return {"edge": edge, "dir": dir, "start": tunnel_start, "perp": perp, "max": max_length, "bridge": bridge_steps, "len": -1}
+
+
+## Wnęka tylko na krawędzi `edge` (spójna trasa map) — bez drążenia, wynik dla _carve_alcove. {} gdy tunel się nie
+## mieści, a przy schodach wnęki — gdy za wnęką nie ma choć 1 schodka + void + 2 warstw ochronnych.
+static func plan_alcove_on_edge(ctx: GenerationContext, room: Rect2i, edge: int) -> Dictionary:
+	var cand := _alcove_edge(ctx, room, edge, MIN_TUNNEL_LENGTH)
+	if cand.is_empty() or ctx.flags == null or ctx.flags.portal_style != "alcove_stairs":
+		return cand
+	var fit: Array = _stairs_tunnel_length(ctx, cand.start, cand.dir, cand.perp, int(cand.max), ctx.rng)
+	if int(fit[1]) < 4:
+		return {}
+	cand["len"] = int(fit[0])
+	return cand
+
+
 ## Zwraca Dictionary {"center": Vector2i, "edge": int (0=N, 1=E, 2=S, 3=W), "cells": Array[Vector2i]}
 static func carve_portal_alcove(ctx: GenerationContext, room: Rect2i, avoid_edge: int = -1) -> Dictionary:
-	const ALCOVE_RADIUS := 2
-	const MAP_BORDER := 2
-	const MIN_TUNNEL_LENGTH := 5
-	# Środek wnęki od krawędzi mapy: promień + ramka; przy schodach wnęki dodatkowo miejsce na ALCOVE_STAIRS_DEPTH
-	# warstw ściany i void za nimi.
-	var alcove_center_margin := ALCOVE_RADIUS + MAP_BORDER
-	if ctx.flags != null and ctx.flags.portal_style == "alcove_stairs":
-		alcove_center_margin = maxi(alcove_center_margin, ALCOVE_RADIUS + ALCOVE_STAIRS_DEPTH + 1)
-
-	var grid := ctx.grid
-	var map_w := ctx.width
-	var map_h := ctx.height
-	var rng := ctx.rng
-
 	var center := room.get_center()
 	var edge_dists: Array[Dictionary] = [
 		{"edge": 0, "dist": center.y},
-		{"edge": 1, "dist": map_w - 1 - center.x},
-		{"edge": 2, "dist": map_h - 1 - center.y},
+		{"edge": 1, "dist": ctx.width - 1 - center.x},
+		{"edge": 2, "dist": ctx.height - 1 - center.y},
 		{"edge": 3, "dist": center.x},
 	]
 	edge_dists.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["dist"]) < int(b["dist"]))
 
-	var chosen_edge := -1
-	var chosen_dir := Vector2i.ZERO
-	var chosen_start := Vector2i.ZERO
-	var chosen_perp := Vector2i.ZERO
-	var chosen_max_length := 0
-	var chosen_room_bridge_steps := 0
-	var chosen_tunnel_length := -1  # alcove_stairs: długość z miejscem na schody za wnęką (-1 = losowa)
+	var chosen: Dictionary = {}
 	var stairs_style := ctx.flags != null and ctx.flags.portal_style == "alcove_stairs"
 	var fallback: Dictionary = {}   # krawędź z największym zapasem ściany, gdy żadna nie ma miejsca na pełne schody
 
 	# Runda 0: zwykłe zasady. Runda 1 (tylko schody wnęki, gdy żadna krawędź nie mieści choć 1 schodka + void + 2 warstw
 	# ochronnych): także krawędź wejścia i krótszy tunel (od 3) — inaczej void schodów lądował na podłodze sali obok.
 	for pass_i in range(2 if stairs_style else 1):
-		if pass_i == 1 and (chosen_edge != -1 or int(fallback.get("layers", -1)) >= 4):
+		if pass_i == 1 and (not chosen.is_empty() or int(fallback.get("layers", -1)) >= 4):
 			break
 		for edge_data in edge_dists:
 			var edge := int(edge_data["edge"])
 			if edge == avoid_edge and pass_i == 0:
 				continue
+			var cand := _alcove_edge(ctx, room, edge, MIN_TUNNEL_LENGTH if pass_i == 0 else 3)
+			if cand.is_empty():
+				continue
+			if stairs_style:
+				var fit: Array = _stairs_tunnel_length(ctx, cand.start, cand.dir, cand.perp, int(cand.max), ctx.rng)
+				if int(fit[1]) < ALCOVE_STAIRS_DEPTH + 3:
+					cand["fit_len"] = int(fit[0])
+					cand["layers"] = int(fit[1])
+					if fallback.is_empty() or int(fit[1]) > int(fallback.get("layers", -1)):
+						fallback = cand
+					continue
+				cand["len"] = int(fit[0])
+			chosen = cand
+			break
 
-			var dir := Vector2i.ZERO
-			var tunnel_start := Vector2i.ZERO
-			var perp := Vector2i.ZERO
-			var max_length := 0
-
-			var bridge_steps := 0
-			match edge:
-				0:
-					dir = Vector2i(0, -1)
-					tunnel_start = Vector2i(center.x, room.position.y - 1)
-					perp = Vector2i(1, 0)
-					max_length = tunnel_start.y - alcove_center_margin
-					bridge_steps = center.y - tunnel_start.y
-				1:
-					dir = Vector2i(1, 0)
-					tunnel_start = Vector2i(room.position.x + room.size.x, center.y)
-					perp = Vector2i(0, 1)
-					max_length = map_w - 1 - alcove_center_margin - tunnel_start.x
-					bridge_steps = tunnel_start.x - center.x
-				2:
-					dir = Vector2i(0, 1)
-					tunnel_start = Vector2i(center.x, room.position.y + room.size.y)
-					perp = Vector2i(1, 0)
-					max_length = map_h - 1 - alcove_center_margin - tunnel_start.y
-					bridge_steps = tunnel_start.y - center.y
-				3:
-					dir = Vector2i(-1, 0)
-					tunnel_start = Vector2i(room.position.x - 1, center.y)
-					perp = Vector2i(0, 1)
-					max_length = tunnel_start.x - alcove_center_margin
-					bridge_steps = center.x - tunnel_start.x
-
-			if max_length >= (MIN_TUNNEL_LENGTH if pass_i == 0 else 3):
-				var cand := {"edge": edge, "dir": dir, "start": tunnel_start, "perp": perp, "max": max_length, "bridge": bridge_steps}
-				if stairs_style:
-					var fit: Array = _stairs_tunnel_length(ctx, tunnel_start, dir, perp, max_length, rng)
-					if int(fit[1]) < ALCOVE_STAIRS_DEPTH + 3:
-						cand["len"] = int(fit[0])
-						cand["layers"] = int(fit[1])
-						if fallback.is_empty() or int(fit[1]) > int(fallback.get("layers", -1)):
-							fallback = cand
-						continue
-					chosen_tunnel_length = int(fit[0])
-				chosen_edge = edge
-				chosen_dir = dir
-				chosen_start = tunnel_start
-				chosen_perp = perp
-				chosen_max_length = max_length
-				chosen_room_bridge_steps = bridge_steps
-				break
-
-	if chosen_edge == -1 and not fallback.is_empty():
+	if chosen.is_empty() and not fallback.is_empty():
+		chosen = fallback
 		if int(fallback.get("layers", -1)) >= 4:   # co najmniej 1 schodek + void + 2 ochronne
-			chosen_tunnel_length = int(fallback["len"])
-		chosen_edge = int(fallback["edge"])
-		chosen_dir = fallback["dir"]
-		chosen_start = fallback["start"]
-		chosen_perp = fallback["perp"]
-		chosen_max_length = int(fallback["max"])
-		chosen_room_bridge_steps = int(fallback["bridge"])
-	if chosen_edge == -1:
+			chosen["len"] = int(fallback["fit_len"])
+	if chosen.is_empty():
 		push_error("PortalGenerator: no safe edge for portal alcove.")
 		return {"center": center, "edge": -1, "cells": []}
+	return _carve_alcove(ctx, room, chosen)
+
+
+## Drąży wnękę z planu (_alcove_edge / plan_alcove_on_edge): most od środka pokoju, tunel ku krawędzi mapy (długość z
+## planu albo losowa 5–7), wnęka 5 × 5.
+static func _carve_alcove(ctx: GenerationContext, room: Rect2i, plan: Dictionary) -> Dictionary:
+	var grid := ctx.grid
+	var map_w := ctx.width
+	var map_h := ctx.height
+	var b := ALCOVE_MAP_BORDER
+	var dir: Vector2i = plan.dir
+	var perp: Vector2i = plan.perp
 
 	# 1. Ciągły most od centrum pokoju do punktu startowego tunelu
-	var bridge_pos := center
-	for i in range(chosen_room_bridge_steps):
+	var bridge_pos := room.get_center()
+	for i in range(int(plan.bridge)):
 		for w in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
-			var p := bridge_pos + chosen_perp * w
-			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
+			var p := bridge_pos + perp * w
+			if p.x >= b and p.x < map_w - b and p.y >= b and p.y < map_h - b:
 				grid[p] = CellType.FLOOR
-		bridge_pos += chosen_dir
+		bridge_pos += dir
 
 	# 2. Tunel portalowy ku krawędzi mapy
-	var tunnel_length := chosen_tunnel_length if chosen_tunnel_length >= 0 else mini(rng.randi_range(5, 7), chosen_max_length)
-	var current := chosen_start
+	var tunnel_length: int = int(plan.len) if int(plan.len) >= 0 else mini(ctx.rng.randi_range(5, 7), int(plan.max))
+	var current: Vector2i = plan.start
 	for i in range(tunnel_length):
 		for w in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
-			var p := current + chosen_perp * w
-			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
+			var p := current + perp * w
+			if p.x >= b and p.x < map_w - b and p.y >= b and p.y < map_h - b:
 				grid[p] = CellType.FLOOR
-		current += chosen_dir
+		current += dir
 
 	var alcove_cells: Array[Vector2i] = []
 	for dy in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
 		for dx in range(-ALCOVE_RADIUS, ALCOVE_RADIUS + 1):
 			var p := current + Vector2i(dx, dy)
-			if p.x >= MAP_BORDER and p.x < map_w - MAP_BORDER and p.y >= MAP_BORDER and p.y < map_h - MAP_BORDER:
+			if p.x >= b and p.x < map_w - b and p.y >= b and p.y < map_h - b:
 				grid[p] = CellType.FLOOR
 				if dy >= -ALCOVE_RADIUS + 1:
 					alcove_cells.append(p)
 
-	return {"center": current, "edge": chosen_edge, "cells": alcove_cells}
+	return {"center": current, "edge": int(plan.edge), "cells": alcove_cells}

@@ -99,6 +99,7 @@ static func _pack_result(r) -> Dictionary:
 		"width": r.width, "height": r.height, "seed_used": r.seed_used, "player_spawn": r.player_spawn,
 		"rooms": Array(r.rooms), "enemy_spawns": Array(r.enemy_spawns), "chest_spawns": Array(r.chest_spawns),
 		"doors": Array(r.doors), "entrance_pos": r.entrance_pos, "exit_pos": r.exit_pos,
+		"entrance_edge": r.entrance_edge, "exit_edge": r.exit_edge,
 		"portal_stairs": Array(r.portal_stairs), "portal_ladders": Array(r.portal_ladders), "portal_scene": r.portal_scene,
 		"portal_void": Array(r.portal_void), "nav_excluded": r.nav_excluded, "nav_chunk_keys": Array(r.nav_chunk_keys),
 		"grid": grid, "nav": nav,
@@ -240,6 +241,8 @@ static func restore_result(r: Dictionary, catalog):
 	res.doors.assign(r.doors)
 	res.entrance_pos = r.entrance_pos
 	res.exit_pos = r.exit_pos
+	res.entrance_edge = int(r.get("entrance_edge", -1))
+	res.exit_edge = int(r.get("exit_edge", -1))
 	res.portal_stairs.assign(r.portal_stairs)
 	res.portal_ladders.assign(r.portal_ladders)
 	res.portal_scene = r.portal_scene

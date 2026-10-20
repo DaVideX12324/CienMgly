@@ -33,6 +33,8 @@ class GenerationResult:
 	var doors: Array[Vector2i] = []
 	var entrance_pos: Vector2i = Vector2i.ZERO
 	var exit_pos: Vector2i = Vector2i.ZERO
+	var entrance_edge: int = -1  # krawędź mapy wnęki wejścia / wyjścia (0 N, 1 E, 2 S, 3 W; -1 = w pokoju, drabina, schody w ścianie)
+	var exit_edge: int = -1
 	var decoration_spawns: Array[Dictionary] = [] # { pos: Vector2i, id: int }
 	var entrance_zone: Array[Vector2i] = []  # komórki strefy wejściowej
 	var exit_zone: Array[Vector2i] = []  # komórki strefy wyjściowej

@@ -9,11 +9,17 @@ const NEXT_SPAWN_NAME := "Spawn"
 const FROM_CAVES_SPAWN := "Tutorial-Caves"
 const LevelPortal = preload("level_portal.gd")
 const MapPrefetch = preload("map_prefetch.gd")
+const MapLinks = preload("map_links.gd")
+
+## Krawędź mapy, którą wychodzi się do jaskini (spójna trasa map, MapLinks): schody na górze ruin = N. Jaskinia ma wtedy
+## wejście od południa.
+@export_enum("N", "E", "S", "W") var exit_edge: int = 0
 
 var _transitioning: bool = false
 
 
 func _ready() -> void:
+	_record_link()
 	# Jaskinia liczy się w tle, gdy gracz jest w ruinach — wejście bez czekania na generowanie.
 	MapPrefetch.request.call_deferred(NEXT_LEVEL_PATH)
 	var next_level_area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
@@ -40,6 +46,18 @@ func _on_enter_next_level() -> void:
 		return
 	_transitioning = true
 	await level_manager.call("change_level", NEXT_LEVEL_PATH, NEXT_SPAWN_NAME)
+
+
+## Ruiny w trasie map (przed zleceniem jaskini w tle — jaskinia liczy wejście z tego wpisu).
+func _record_link() -> void:
+	var lsm: Node = null
+	var core_manager := get_node_or_null("/root/CoreManager")
+	if core_manager and core_manager.has_method("get_singleton"):
+		lsm = core_manager.call("get_singleton", "LevelStateManager") as Node
+	if lsm == null:
+		lsm = get_node_or_null("/root/LevelStateManager")
+	if lsm != null and not scene_file_path.is_empty():
+		MapLinks.record(lsm.map_links, QuizRpgPaths.level_name(scene_file_path), {}, exit_edge)
 
 
 func _get_level_manager() -> Node:

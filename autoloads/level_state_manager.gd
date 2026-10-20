@@ -14,6 +14,9 @@ var level_states: Dictionary = {}
 ## liczy z niego własny seed (get_level_seed) — cały świat zapisu wynika z jednej liczby. 0 = jeszcze brak.
 var world_seed: int = 0
 
+## Spójna trasa map (scripts/maps/map_links.gd): nazwa sceny -> {in, allow, pos, out}. Per-save, czyszczona z mapami.
+var map_links: Dictionary = {}
+
 # --- Postęp urządzenia arcymaga (fabuła) ---
 # GLOBALNY, per-save, MONOTONICZNY, nieodwracalny. NIE jest częścią level_states,
 # więc reroll mapy / clear_defeated_bosses go NIE ruszają. Klucz = stabilne story-id
@@ -84,6 +87,7 @@ func clear_level_state(level_path: String) -> void:
 ## od zera). Postęp urządzenia zostaje (osobny od level_states). Zwraca nowy seed zapisu.
 func reroll_world_seed(new_seed: int = 0) -> int:
 	level_states.clear()
+	map_links.clear()  # nowe mapy = nowa trasa
 	world_seed = new_seed if new_seed > 0 else int(randi() % 1000000) + 1
 	print("[LevelState] World seed rerolled: %d" % world_seed)
 	return world_seed
@@ -389,6 +393,7 @@ func serialize() -> Dictionary:
 	return {
 		"levels": level_states.duplicate(true),
 		"world_seed": world_seed,
+		"map_links": map_links.duplicate(true),
 		"device_progress": _device_progress.duplicate(true),
 		"device_total_bosses": device_total_bosses,
 		"device_counting_enabled": device_counting_enabled,
@@ -399,6 +404,7 @@ func deserialize(data: Dictionary) -> void:
 	if data.has("levels"):
 		level_states = (data.get("levels", {}) as Dictionary).duplicate(true)
 		world_seed = int(data.get("world_seed", 0))  # stary zapis bez seeda zapisu -> nowy przy pierwszej mapie
+		map_links = (data.get("map_links", {}) as Dictionary).duplicate(true)  # stary zapis: trasa od następnej nowej mapy
 		_device_progress = (data.get("device_progress", {}) as Dictionary).duplicate(true)
 		device_total_bosses = int(data.get("device_total_bosses", 0))
 		device_counting_enabled = bool(data.get("device_counting_enabled", true))
@@ -407,6 +413,7 @@ func deserialize(data: Dictionary) -> void:
 		# Stary format zapisu: cały dict to level_states.
 		level_states = data.duplicate(true)
 		world_seed = 0
+		map_links = {}
 		_device_progress = {}
 		device_total_bosses = 0
 		device_counting_enabled = true
@@ -427,6 +434,7 @@ func print_state(level_path: String = "") -> void:
 func reset() -> void:
 	level_states.clear()
 	world_seed = 0
+	map_links.clear()
 	_device_progress.clear()
 	device_total_bosses = 0
 	device_counting_enabled = true

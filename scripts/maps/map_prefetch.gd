@@ -16,9 +16,12 @@ static var _entries: Array = []             # {path, key, job, task, waited, sta
 static var _pumping := false
 
 
-## Klucz danych mapy: poziom, seed, rozmiar.
+## Klucz danych mapy: poziom, seed, rozmiar i krawędzie trasy map (MapLinks — inna trasa = inna mapa).
 static func key_of(job) -> String:
-	return "%s|%d|%dx%d" % [job.level_key, job.seed_value, job.width, job.height]
+	var links := ""
+	if job.flags != null and (job.flags.entrance_edge >= 0 or not job.flags.exit_edges.is_empty()):
+		links = "|e%d>%s" % [job.flags.entrance_edge, ",".join(Array(job.flags.exit_edges).map(func(e): return str(e)))]
+	return "%s|%d|%dx%d%s" % [job.level_key, job.seed_value, job.width, job.height, links]
 
 
 ## Zleca w tle dane mapy sceny `level_path` (bez efektu, gdy już są albo czekają, albo scena nie jest

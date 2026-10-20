@@ -39,6 +39,10 @@ var portal_scene: String = ""
 var portal_exit: bool = true
 # Tier wroga w pokoju wyjścia: 4 = boss (jak dotąd), 3 = miniboss, 0 = nikt. Nie w pokoju wejścia (mapa z jednym pokojem).
 var exit_enemy_tier: int = 4
+# Spójna trasa map (QuizRpgMapLinks, ustawia ProceduralLevel z zapisu): krawędź mapy wejścia (0 N, 1 E, 2 S, 3 W; -1 = dowolna)
+# i dozwolone krawędzie wyjścia (puste = dowolne). Tylko wnęki przy krawędzi (portal_style "" / "alcove_stairs").
+var entrance_edge: int = -1
+var exit_edges: Array[int] = []
 # Układ pomieszczeń: interior (pokoje organiczne / jaskiniowe) | structured (układ strukturalny / architektoniczny).
 var layout: String = "interior"
 ## Opcje zaawansowane układu structured z sekcji "structured_layout" companion-JSON
