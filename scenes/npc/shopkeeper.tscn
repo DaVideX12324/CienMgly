@@ -11,6 +11,34 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="9_pbv05"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="10_asm72"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lucky_charm.tres" id="11_ksago"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_1m.tres" id="p1_potion_1m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_1m.tres" id="p2_ether_1m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_1l.tres" id="p3_potion_1l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_1l.tres" id="p4_ether_1l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_2s.tres" id="p5_potion_2s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_2s.tres" id="p6_ether_2s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_2m.tres" id="p7_potion_2m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_2m.tres" id="p8_ether_2m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_2l.tres" id="p9_potion_2l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_2l.tres" id="p10_ether_2l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_3s.tres" id="p11_potion_3s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_3s.tres" id="p12_ether_3s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_3m.tres" id="p13_potion_3m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_3m.tres" id="p14_ether_3m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_3l.tres" id="p15_potion_3l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_3l.tres" id="p16_ether_3l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_4s.tres" id="p17_potion_4s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_4s.tres" id="p18_ether_4s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_4m.tres" id="p19_potion_4m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_4m.tres" id="p20_ether_4m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_4l.tres" id="p21_potion_4l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_4l.tres" id="p22_ether_4l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_5s.tres" id="p23_potion_5s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_5s.tres" id="p24_ether_5s"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_5m.tres" id="p25_potion_5m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_5m.tres" id="p26_ether_5m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_5l.tres" id="p27_potion_5l"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether_5l.tres" id="p28_ether_5l"]
 
 [sub_resource type="Resource" id="Resource_xqeu1"]
 script = ExtResource("5_2msha")
@@ -36,9 +64,145 @@ item = ExtResource("10_asm72")
 script = ExtResource("5_2msha")
 item = ExtResource("11_ksago")
 
+[sub_resource type="Resource" id="Resource_pot1"]
+script = ExtResource("5_2msha")
+item = ExtResource("p1_potion_1m")
+
+[sub_resource type="Resource" id="Resource_pot2"]
+script = ExtResource("5_2msha")
+item = ExtResource("p2_ether_1m")
+
+[sub_resource type="Resource" id="Resource_pot3"]
+script = ExtResource("5_2msha")
+item = ExtResource("p3_potion_1l")
+
+[sub_resource type="Resource" id="Resource_pot4"]
+script = ExtResource("5_2msha")
+item = ExtResource("p4_ether_1l")
+
+[sub_resource type="Resource" id="Resource_pot5"]
+script = ExtResource("5_2msha")
+item = ExtResource("p5_potion_2s")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_pot6"]
+script = ExtResource("5_2msha")
+item = ExtResource("p6_ether_2s")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_pot7"]
+script = ExtResource("5_2msha")
+item = ExtResource("p7_potion_2m")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_pot8"]
+script = ExtResource("5_2msha")
+item = ExtResource("p8_ether_2m")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_pot9"]
+script = ExtResource("5_2msha")
+item = ExtResource("p9_potion_2l")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_pot10"]
+script = ExtResource("5_2msha")
+item = ExtResource("p10_ether_2l")
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Resource_pot11"]
+script = ExtResource("5_2msha")
+item = ExtResource("p11_potion_3s")
+required_flag = "boss:forge"
+
+[sub_resource type="Resource" id="Resource_pot12"]
+script = ExtResource("5_2msha")
+item = ExtResource("p12_ether_3s")
+required_flag = "boss:forge"
+
+[sub_resource type="Resource" id="Resource_pot13"]
+script = ExtResource("5_2msha")
+item = ExtResource("p13_potion_3m")
+required_flag = "boss:forge"
+
+[sub_resource type="Resource" id="Resource_pot14"]
+script = ExtResource("5_2msha")
+item = ExtResource("p14_ether_3m")
+required_flag = "boss:forge"
+
+[sub_resource type="Resource" id="Resource_pot15"]
+script = ExtResource("5_2msha")
+item = ExtResource("p15_potion_3l")
+required_flag = "boss:forge"
+
+[sub_resource type="Resource" id="Resource_pot16"]
+script = ExtResource("5_2msha")
+item = ExtResource("p16_ether_3l")
+required_flag = "boss:forge"
+
+[sub_resource type="Resource" id="Resource_pot17"]
+script = ExtResource("5_2msha")
+item = ExtResource("p17_potion_4s")
+required_flag = "boss:library"
+
+[sub_resource type="Resource" id="Resource_pot18"]
+script = ExtResource("5_2msha")
+item = ExtResource("p18_ether_4s")
+required_flag = "boss:library"
+
+[sub_resource type="Resource" id="Resource_pot19"]
+script = ExtResource("5_2msha")
+item = ExtResource("p19_potion_4m")
+required_flag = "boss:library"
+
+[sub_resource type="Resource" id="Resource_pot20"]
+script = ExtResource("5_2msha")
+item = ExtResource("p20_ether_4m")
+required_flag = "boss:library"
+
+[sub_resource type="Resource" id="Resource_pot21"]
+script = ExtResource("5_2msha")
+item = ExtResource("p21_potion_4l")
+required_flag = "boss:library"
+
+[sub_resource type="Resource" id="Resource_pot22"]
+script = ExtResource("5_2msha")
+item = ExtResource("p22_ether_4l")
+required_flag = "boss:library"
+
+[sub_resource type="Resource" id="Resource_pot23"]
+script = ExtResource("5_2msha")
+item = ExtResource("p23_potion_5s")
+required_flag = "boss:garden"
+
+[sub_resource type="Resource" id="Resource_pot24"]
+script = ExtResource("5_2msha")
+item = ExtResource("p24_ether_5s")
+required_flag = "boss:garden"
+
+[sub_resource type="Resource" id="Resource_pot25"]
+script = ExtResource("5_2msha")
+item = ExtResource("p25_potion_5m")
+required_flag = "boss:garden"
+
+[sub_resource type="Resource" id="Resource_pot26"]
+script = ExtResource("5_2msha")
+item = ExtResource("p26_ether_5m")
+required_flag = "boss:garden"
+
+[sub_resource type="Resource" id="Resource_pot27"]
+script = ExtResource("5_2msha")
+item = ExtResource("p27_potion_5l")
+required_flag = "boss:garden"
+
+[sub_resource type="Resource" id="Resource_pot28"]
+script = ExtResource("5_2msha")
+item = ExtResource("p28_ether_5l")
+required_flag = "boss:garden"
+
 [sub_resource type="Resource" id="Resource_fgq4u"]
 script = ExtResource("4_ynlsj")
-stock = Array[ExtResource("5_2msha")]([SubResource("Resource_xqeu1"), SubResource("Resource_hm6iv"), SubResource("Resource_8t3o7"), SubResource("Resource_1xkqs"), SubResource("Resource_krtuy"), SubResource("Resource_ujakb")])
+stock = Array[ExtResource("5_2msha")]([SubResource("Resource_xqeu1"), SubResource("Resource_hm6iv"), SubResource("Resource_8t3o7"), SubResource("Resource_1xkqs"), SubResource("Resource_krtuy"), SubResource("Resource_ujakb"), SubResource("Resource_pot1"), SubResource("Resource_pot2"), SubResource("Resource_pot3"), SubResource("Resource_pot4"), SubResource("Resource_pot5"), SubResource("Resource_pot6"), SubResource("Resource_pot7"), SubResource("Resource_pot8"), SubResource("Resource_pot9"), SubResource("Resource_pot10"), SubResource("Resource_pot11"), SubResource("Resource_pot12"), SubResource("Resource_pot13"), SubResource("Resource_pot14"), SubResource("Resource_pot15"), SubResource("Resource_pot16"), SubResource("Resource_pot17"), SubResource("Resource_pot18"), SubResource("Resource_pot19"), SubResource("Resource_pot20"), SubResource("Resource_pot21"), SubResource("Resource_pot22"), SubResource("Resource_pot23"), SubResource("Resource_pot24"), SubResource("Resource_pot25"), SubResource("Resource_pot26"), SubResource("Resource_pot27"), SubResource("Resource_pot28")])
 intro_lines = PackedStringArray()
 label = "Handel"
 label_key = "npc.service.shop"
