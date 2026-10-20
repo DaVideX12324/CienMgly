@@ -42,6 +42,8 @@ var protected_floor: Dictionary = {}
 # Kratki nisz-przejść (NichePlacer): kafle OUT obu kolumn i szczyt nad płytszą — przy wstawianiu
 # alternatywa NichePlacer.PASSAGE_ALT (inne kolizje), gdy TileSet ją ma.
 var passage_cells: Dictionary = {}
+# Nisze out (sekretne, NichePlacer): lewa kolumna pary w rzędzie stopy ściany — zawartość stawia NicheContentPlanner.
+var out_niches: Array[Vector2i] = []
 # Prostokąt skanowania EdgeAnalyzera i placerów ścian (pusty = cała mapa). PlateauRenderer
 # zawęża nim drugi przebieg pipeline'u do okolicy płaskowyżów — współrzędne zostają globalne.
 var scan_rect: Rect2i = Rect2i()

@@ -53,6 +53,7 @@ class GenerationResult:
 	var nav_excluded: Dictionary = {}  # Vector2i -> true: bez nawigacji wrogów (pokoje wejścia / wyjścia, pierwszy za wejściem, portale)
 	var canals: RefCounted = null  # CanalLayout — kanały ścieków jako nakładka (komórki zostają FLOOR)
 	var terrain_masks: Dictionary = {}  # {seed, mud, grass} — maski terenu z etapu obiektów (planer kafli je używa)
+	var out_niches: Array[Vector2i] = []  # nisze out z planu kafli (lewa kolumna, rząd stopy ściany) — NicheContentPlanner
 
 
 # --- Inicjalizacja RNG ---

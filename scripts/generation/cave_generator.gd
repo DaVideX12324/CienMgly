@@ -436,7 +436,9 @@ static func plan_cave_tiles(
 	GenProgress.begin(&"edges")
 	var analysis := EdgeAnalyzer.analyze(ctx)
 	GenProgress.end(&"edges")
-	return TilePlacementPlanner.plan(ctx, analysis)
+	var plans := TilePlacementPlanner.plan(ctx, analysis)
+	result.out_niches = ctx.out_niches
+	return plans
 
 
 ## Wykonuje plan na warstwach (główny wątek): Floor, teren, FloorDecor, Bridges, Walls, Rails, Platforms.

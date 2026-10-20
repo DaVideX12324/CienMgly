@@ -83,6 +83,30 @@
     {"item_id": "leather_hood", "weight": 4},
     {"item_id": "reinforced_tunic", "weight": 4}
   ],
+  "niche_content": {
+    "weights": {"item": 50, "chest": 35, "secret_room": 15},
+    "chest_tier": 2,
+    "chest_loot": [
+      {"item_id": "potion", "weight": 14, "count": 3},
+      {"item_id": "ether", "weight": 10, "count": 2},
+      {"item_id": "key_tier1", "weight": 8, "count": 2},
+      {"item_id": "lucky_charm", "weight": 8},
+      {"item_id": "iron_sword", "weight": 10},
+      {"item_id": "iron_helmet", "weight": 10},
+      {"item_id": "iron_chainmail", "weight": 10},
+      {"item_id": "steel_kite_shield", "weight": 10},
+      {"item_id": "steel_blade", "weight": 6}
+    ],
+    "item_loot": [
+      {"item_id": "potion", "weight": 30},
+      {"item_id": "ether", "weight": 18},
+      {"item_id": "lockpick", "weight": 16},
+      {"item_id": "antidote", "weight": 14},
+      {"item_id": "focus_tonic", "weight": 12},
+      {"item_id": "key_tier1", "weight": 6},
+      {"item_id": "lucky_charm", "weight": 4}
+    ]
+  },
   "enemy_loot": {
     "1": [{"item_id": "potion", "chance": 0.12}, {"item_id": "key_tier1", "chance": 0.04}],
     "2": [

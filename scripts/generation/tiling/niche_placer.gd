@@ -125,6 +125,7 @@ static func try_place_legacy(
 			_queue(plan, pos_next, CaveTileConstants.MOD_CRNR_NW_OUT_BASE if not use_roots else CaveTileConstants.ROOT_MOD_CRNR_NW_OUT_BASE, &"FACADE", table)
 		_mark8(state, pos, pos_next)
 		state.register_out_niche(pos)
+		ctx.out_niches.append(pos)
 		return true
 
 	# 2. Nisza standardowa (para modułów IN + IN)

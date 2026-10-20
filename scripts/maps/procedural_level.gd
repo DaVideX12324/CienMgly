@@ -58,6 +58,7 @@ var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [mi
 var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga -> [{item_id, chance, count}]
 var _chest_loot: Array = []  # companion-JSON "chest_loot": [{item_id, weight, count}] (skrzynie wygenerowane na mapie)
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
+var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
 @export var next_level_path: String = ""
@@ -145,6 +146,8 @@ class GenJob extends RefCounted:
 			rng = base_script.create_rng(result.seed_used)
 			plans = gen_script.plan_cave_tiles(result, rng, -1, flags,
 				behaviour.get("profile"), behaviour.get("field"), behaviour.get("raw", {}))
+			# Zawartość nisz out (powstają przy kaflach) — przed siatką nawigacji i zapisem mapy.
+			NicheContentPlanner.plan(result, (behaviour.get("raw", {}) as Dictionary).get("niche_content", {}))
 			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym,
 			# w kawałkach (cała mapa naraz: minuty przy 500×500).
 			GenProgress.begin(&"navmesh")
@@ -558,6 +561,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_chest_tier = clampi(int(cfg.raw.get("chest_tier", 1)) if cfg != null else 1, 1, 4)
 	_enemy_loot = cfg.raw.get("enemy_loot", {}) if cfg != null else {}
 	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
+	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -758,6 +762,7 @@ func _finish_level(job: GenJob, slicer: FrameSlicer = null) -> void:
 		GenProgress.end(&"props")
 		_apply_chest_tier()
 		_apply_loot_tables()
+		_apply_niche_content(job.result)
 	GenProgress.end(&"entities")  # spawn_entities_enabled = false
 	_setup_height_veil(job.result)
 
@@ -791,6 +796,32 @@ func _apply_loot_tables() -> void:
 		for node in get_tree().get_nodes_in_group("chests"):
 			if is_ancestor_of(node) and "loot_table" in node:
 				node.set("loot_table", _chest_loot)
+
+
+## Zawartość nisz out (NicheContentPlanner, "niche_content" w JSON mapy): skrzynie nisz dostają własny tier ("chest_tier",
+## domyślnie tier mapy) i łup ("chest_loot"), przedmioty na ziemi — wpis z "item_loot" wylosowany z hash(seed mapy, id),
+## więc ta sama mapa ma w tej samej niszy ten sam przedmiot.
+func _apply_niche_content(result) -> void:
+	var cfg: Dictionary = _niche_content
+	if cfg.is_empty() or result == null:
+		return
+	var tier := clampi(int(cfg.get("chest_tier", _chest_tier)), 1, 4)
+	var chest_loot: Array = cfg.get("chest_loot", [])
+	var item_loot: Array = cfg.get("item_loot", [])
+	for node in get_tree().get_nodes_in_group("chests"):
+		if is_ancestor_of(node) and String(node.get("unique_id")).begins_with("niche_chest_"):
+			node.set("tier", tier)
+			if not chest_loot.is_empty():
+				node.set("loot_table", chest_loot)
+	for node in get_tree().get_nodes_in_group("ground_items"):
+		if not is_ancestor_of(node) or item_loot.is_empty():
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash([result.seed_used, String(node.get("unique_id"))])
+		var picked := QuizRpgLootTable.pick_weighted(item_loot, rng)
+		if not picked.is_empty():
+			node.set("item_id", str(picked.get("item_id", "potion")))
+			node.set("count", maxi(int(picked.get("count", 1)), 1))
 
 
 ## Nawigacja przez otwarte bramy (GateNav): przebudowa kawałków siatki po otwarciu bramy.

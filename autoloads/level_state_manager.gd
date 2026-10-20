@@ -138,6 +138,18 @@ func is_chest_opened(level_path: String, chest_id: String) -> bool:
 	var state = get_level_state(level_path)
 	return chest_id in state["opened_chests"]
 
+## PRZEDMIOTY NA ZIEMI (nisze out — GroundItem)
+func mark_item_picked(level_path: String, item_uid: String) -> void:
+	var state = get_level_state(level_path)
+	if not state.has("picked_items"):
+		state["picked_items"] = []
+	if item_uid not in state["picked_items"]:
+		state["picked_items"].append(item_uid)
+
+func is_item_picked(level_path: String, item_uid: String) -> bool:
+	var state = get_level_state(level_path)
+	return state.has("picked_items") and item_uid in state["picked_items"]
+
 ## BARRELS
 func mark_barrel_destroyed(level_path: String, barrel_id: String) -> void:
 	var state = get_level_state(level_path)
