@@ -20,6 +20,8 @@ const STATE_KEY := "fog"
 @export var color_cliff := Color(0.36, 0.3, 0.24)
 @export var color_entrance := Color(0.35, 0.65, 1.0)
 @export var color_exit := Color(1.0, 0.82, 0.25)
+## Pustka za krawędzią mapy (koniec wnęki portalu, wypełnienie pustki).
+@export var color_void := Color(0.02, 0.02, 0.03)
 
 @onready var _corner: Control = $Corner
 @onready var _corner_clip: Control = $Corner/Clip
@@ -131,7 +133,7 @@ func _build(level: Node, level_key: String) -> void:
 		if saved is String and saved != "":
 			data.mask_from_string(saved)
 	_image = Image.create(data.width, data.height, false, Image.FORMAT_RGBA8)
-	_image.fill(Color(0, 0, 0, 0))
+	_image.fill(color_void)  # cała mapa na starcie to pustka — odkrywanie ją nadpisuje (decyzja usera 2026-10-21)
 	for i in data.revealed.size():
 		if data.revealed[i] != 0:
 			_image.set_pixel(i % data.width, i / data.width, _color_at(data.origin + Vector2i(i % data.width, i / data.width)))
@@ -146,16 +148,22 @@ func _paint(p: Vector2i) -> void:
 	_image.set_pixel(q.x, q.y, _color_at(p))
 
 
-## Kolor kratki: podłoga z kafli na niej (trawa, ścieżki, dekoracje — QuizRpgMinimapData.color_at), góra płaskowyżu nieco
-## jaśniejsza; wejście / wyjście jako znaczniki; ściany i uskoki ze średnich mapy.
+## Kolor kratki jak na mapie (QuizRpgMinimapData.color_at): podłoga z kafla najwyższej warstwy (trawa, ścieżki), ściana
+## z kafla warstwy ścian (kafel pustki = pustka), ściana bez kafla = pustka; góra płaskowyżu nieco jaśniejsza; wejście
+## i wyjście jako znaczniki.
 func _color_at(p: Vector2i) -> Color:
 	var kind := data.kind_at(p)
 	var c := data.color_at(p)
-	if c.a > 0.0:
-		if kind == QuizRpgMinimapData.FLOOR:
-			return c
-		if kind == QuizRpgMinimapData.HIGH:
-			return c.lightened(0.12)
+	match kind:
+		QuizRpgMinimapData.FLOOR:
+			if c.a > 0.0:
+				return c
+		QuizRpgMinimapData.HIGH:
+			if c.a > 0.0:
+				return c.lightened(0.12)
+		QuizRpgMinimapData.WALL, QuizRpgMinimapData.VOID:
+			if data.has_colors:
+				return c if c.a > 0.0 else color_void
 	return _color(kind)
 
 
@@ -169,13 +177,15 @@ func _color(kind: int) -> Color:
 		QuizRpgMinimapData.HIGH:
 			return fl.lightened(0.22) if data != null and data.has_colors else color_high
 		QuizRpgMinimapData.WALL:
-			return data.wall_color if data != null and data.has_colors else color_wall
+			return color_wall
 		QuizRpgMinimapData.CLIFF:
 			return fl.darkened(0.35) if data != null and data.has_colors else color_cliff
 		QuizRpgMinimapData.ENTRANCE:
 			return color_entrance
 		QuizRpgMinimapData.EXIT:
 			return color_exit
+		QuizRpgMinimapData.VOID:
+			return color_void
 	return Color(0, 0, 0, 0)
 
 

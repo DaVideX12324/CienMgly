@@ -1,14 +1,16 @@
 class_name QuizRpgMinimapData
 extends RefCounted
 
-## Dane minimapy jednej mapy: rodzaj każdej kratki (podłoga, płaskowyż, ściana, uskok, wejście / wyjście), jej kolor i maska
-## odkrycia (fog of war). Mapa generowana: rodzaje z wyniku generacji (ProceduralLevel.last_result — siatka, płaskowyże,
-## portale); mapa ręczna: z warstw TileMapLayer — podłoga = warstwy z z_index < 0 (teren, trawa, ścieżki, dekoracje
-## podłogi), ściana = kafel z kolizją na warstwie Walls / Cliffs albo na warstwie nad podłogą (z_index >= 0: ściany budynków);
-## kafle bez kolizji nad podłogą (dachy, drzwi, propsy, sztandary, wypełnienie pustki) się nie liczą.
-## Kolor kratki podłogi: średni kolor kafla z najwyżej rysowanej warstwy podłogi na niej (np. trawa nad terenem — decyzja
-## usera 2026-10-21, bez mieszania z warstwami pod spodem). Ściany: średnia z kafli ścian mapy.
-## Odkrywanie: kratki w promieniu od gracza z linią wzroku — ściany zasłaniają (same się odkrywają), uskoki płaskowyżów nie.
+## Dane minimapy jednej mapy: rodzaj każdej kratki (podłoga, płaskowyż, ściana, uskok, wejście / wyjście, pustka), kolory
+## z kafli i maska odkrycia (fog of war). Mapa generowana: rodzaje z wyniku generacji (ProceduralLevel.last_result — siatka,
+## płaskowyże, portale, pustka za wnęką portalu); mapa ręczna: z warstw TileMapLayer — podłoga = warstwy z z_index < 0
+## (teren, trawa, ścieżki, dekoracje podłogi), ściana = kafel z kolizją na warstwie nad podłogą (z_index >= 0: ściany
+## budynków) albo dowolny kafel na warstwie Walls / Cliffs (z wypełnieniem pustki); dachy, drzwi i propsy się nie liczą.
+## Kolory jak na mapie: kratka podłogi — średni kolor kafla z najwyżej rysowanej warstwy podłogi (decyzja usera 2026-10-21);
+## kratka ściany — średni kolor najwyższego kafla warstw ścian. Pustka (VOID): kratka bez podłogi z prawie czarnym kaflem
+## (lita skała, wypełnienie pustki) albo bez kafla (koniec wnęki portalu) — w kolorze kafla / pustki, nie zasłania widoku.
+## Odkrywanie: kratki w promieniu od gracza z linią wzroku; wzrok przechodzi przez SOLID_SIGHT - 1 kratek ściany (lico
+## i pustka nad nim, jak na ekranie), ale podłogę widać tylko bez ściany po drodze — pokoje za ścianą zostają ukryte.
 
 const CELL := 16
 const UNKNOWN := 0
@@ -18,21 +20,25 @@ const WALL := 3      # ściana przy podłodze (obrys)
 const CLIFF := 4     # bariera płaskowyżu (rim, lico)
 const ENTRANCE := 5
 const EXIT := 6
+const VOID := 7      # pustka: bez podłogi, z kaflem pustki / litej skały albo bez kafla (koniec wnęki portalu) — nie zasłania
 ## Warstwy ścian po nazwie węzła (bez wielkości liter) — także gdy leżą pod podłogą w kolejności rysowania.
 const WALL_LAYERS := ["walls", "cliffs"]
-const MAX_SAMPLES := 160
-const MIN_CONTRAST := 0.12
+## Ile kratek ściany na linii wzroku jeszcze się odkrywa (lico 2–3 rzędy).
+const SOLID_SIGHT := 4
+## Kafel ściany ciemniejszy niż to (średnia jasność) = kafel pustki / litej skały (SOLID_FILL jaskiń, wypełnienie pustki
+## samouczka) — na minimapie pustka, nie ściana.
+const VOID_LUMA := 0.09
 
 var width := 0
 var height := 0
 var origin := Vector2i.ZERO   # kratka mapy odpowiadająca (0, 0) danych
 var kinds := PackedByteArray()
 var revealed := PackedByteArray()
-## Kolor kratki podłogi z kafli (indeks jak kinds; alfa 0 = brak kafli — minimapa bierze floor_color).
+## Kolor kratki podłogi / ściany z kafli (indeks jak kinds; alfa 0 = brak kafla).
 var cell_colors := PackedColorArray()
-## Średni kolor podłogi / ścian tej mapy (has_colors = policzone; inaczej minimapa bierze swoje domyślne).
+var solid_colors := PackedColorArray()
+## Średni kolor podłogi mapy (has_colors = policzony; inaczej minimapa bierze swój domyślny).
 var floor_color := Color(0.56, 0.5, 0.42)
-var wall_color := Color(0.12, 0.1, 0.09)
 var has_colors := false
 
 var _images := {}       # Texture2D -> Image (zdekompresowany obraz atlasu)
@@ -74,6 +80,9 @@ static func from_result(result) -> QuizRpgMinimapData:
 	for z: Vector2i in result.exit_zone:
 		if d.has_cell(z) and d.kinds[d.index(z)] != UNKNOWN:
 			d.kinds[d.index(z)] = EXIT
+	for v: Vector2i in result.portal_void:
+		if d.has_cell(v):
+			d.kinds[d.index(v)] = VOID
 	return d
 
 
@@ -82,15 +91,16 @@ static func from_layers(level: Node) -> QuizRpgMinimapData:
 	var walls := {}
 	for layer in _layers(level):
 		var is_floor := _is_floor_layer(layer)
-		var no_physics := layer.tile_set.get_physics_layers_count() == 0
+		var named_wall := _is_named_wall(layer)
 		for c in layer.get_used_cells():
-			if not is_floor and not (no_physics and _is_named_wall(layer)) and not _blocks(layer, c):
-				continue   # nad podłogą liczy się tylko kafel z kolizją
-			for p in _cells_of(layer, c):
-				if is_floor:
+			if is_floor:
+				for p in _cells_of(layer, c):
 					floors[p] = true
-				else:
+			elif _blocks(layer, c) or (named_wall and layer.tile_set.get_physics_layers_count() == 0):
+				for p in _cells_of(layer, c):
 					walls[p] = true
+			# Kafle bez kolizji: na Walls / Cliffs (wypełnienie pustki, sztandary) — kratka zostaje podłogą albo skałą
+			# z kolorem kafla (solid_colors); nad podłogą (dachy, drzwi, propsy) — pomijane.
 	if floors.is_empty():
 		return null
 	# Prostokąt z samej podłogi (+1 na obrys ścian) — ściany daleko od podłogi nie powiększają mapy.
@@ -151,46 +161,60 @@ static func _cells_of(layer: TileMapLayer, c: Vector2i) -> Array[Vector2i]:
 	return out
 
 
-## Kolory z kafli: każda kratka podłogi — kafel najwyżej rysowanej warstwy podłogi (warstwy od dołu, wyższa nadpisuje);
-## średnia podłogi z kratek, średnia ścian z kafli z kolizją (warstwy ścian i nad podłogą).
+## Kolory z kafli: kratka podłogi — kafel najwyżej rysowanej warstwy podłogi, kratka ściany — kafel najwyżej rysowanej
+## warstwy ścian (Walls / Cliffs); warstwy od dołu, wyższa nadpisuje. Średnia podłogi z kratek podłogi.
 func _paint_layers(level: Node) -> void:
 	cell_colors.resize(width * height)
 	cell_colors.fill(Color(0, 0, 0, 0))
-	var wall_layers: Array[TileMapLayer] = []
+	solid_colors.resize(width * height)
+	solid_colors.fill(Color(0, 0, 0, 0))
 	for layer in _layers(level):
-		if not _is_floor_layer(layer):
-			wall_layers.append(layer)
+		if _is_floor_layer(layer):
+			_paint_layer(layer, false)
+		elif _is_named_wall(layer):
+			_paint_layer(layer, true)
+	# Pustka: bez podłogi, z kaflem pustki / litej skały albo bez żadnego kafla — nie zasłania widoku.
+	for i in kinds.size():
+		if kinds[i] != UNKNOWN or cell_colors[i].a > 0.0:
 			continue
-		for c in layer.get_used_cells():
-			var avg := _tile_color(layer, c)
-			if avg.is_empty():
-				continue
-			var top: Color = avg[0]
-			for p in _cells_of(layer, c):
-				if has_cell(p):
-					cell_colors[index(p)] = top
+		var sc := solid_colors[i]
+		if sc.a == 0.0 or sc.get_luminance() < VOID_LUMA:
+			kinds[i] = VOID
 	var sum := Vector3.ZERO
 	var n := 0
 	for i in cell_colors.size():
-		if cell_colors[i].a > 0.0 and kinds[i] != UNKNOWN:
+		var k := kinds[i]
+		if cell_colors[i].a > 0.0 and k != UNKNOWN and k != WALL and k != VOID:
 			sum += Vector3(cell_colors[i].r, cell_colors[i].g, cell_colors[i].b)
 			n += 1
 	if n > 0:
 		floor_color = Color(sum.x / n, sum.y / n, sum.z / n)
 		has_colors = true
-	var w: Variant = _average_walls(wall_layers)
-	if w != null:
-		wall_color = w
-		has_colors = true
-	# Czytelność: ściany o podobnej jasności co podłoga (np. samouczek) przyciemnione, odcień ze średniej zostaje.
-	if absf(wall_color.get_luminance() - floor_color.get_luminance()) < MIN_CONTRAST:
-		wall_color = wall_color.darkened(0.5)
 	_images.clear()
 
 
-## Kolor kratki podłogi z kafli (alfa 0 = brak kafli).
+## Kafle warstwy do cell_colors (podłoga) albo solid_colors (ściany) — tablice to typy wartościowe, więc wprost w polach.
+func _paint_layer(layer: TileMapLayer, solid: bool) -> void:
+	for c in layer.get_used_cells():
+		var avg := _tile_color(layer, c)
+		if avg.is_empty():
+			continue
+		var col: Color = avg[0]
+		for p in _cells_of(layer, c):
+			if not has_cell(p):
+				continue
+			if solid:
+				solid_colors[index(p)] = col
+			else:
+				cell_colors[index(p)] = col
+
+
+## Kolor kratki z kafli: podłoga — z warstw podłogi, ściana / skała — z warstw ścian (alfa 0 = brak kafla, czyli pustka).
 func color_at(p: Vector2i) -> Color:
-	return cell_colors[index(p)] if has_cell(p) and not cell_colors.is_empty() else Color(0, 0, 0, 0)
+	if not has_cell(p) or cell_colors.is_empty():
+		return Color(0, 0, 0, 0)
+	var k := kind_at(p)
+	return solid_colors[index(p)] if k == WALL or k == UNKNOWN or k == VOID else cell_colors[index(p)]
 
 
 ## [średni kolor nieprzezroczystych pikseli, pokrycie] kafla w komórce; [] = brak tekstury.
@@ -233,28 +257,6 @@ func _image_of(src: TileSetAtlasSource) -> Image:
 	return im
 
 
-## Średnia ścian: próbka do MAX_SAMPLES kafli z kolizją na warstwę (bez wypełnienia pustki i dekoracji), gdy TileSet ma
-## fizykę; kafel waży tyle, ile ma pokrycia.
-func _average_walls(layers: Array[TileMapLayer]) -> Variant:
-	var sum := Vector3.ZERO
-	var w := 0.0
-	for layer in layers:
-		var cells := layer.get_used_cells()
-		if layer.tile_set.get_physics_layers_count() > 0:
-			cells = cells.filter(func(c: Vector2i) -> bool: return _blocks(layer, c))
-		var step := maxi(1, cells.size() / MAX_SAMPLES)
-		for k in range(0, cells.size(), step):
-			var avg := _tile_color(layer, cells[k])
-			if avg.is_empty():
-				continue
-			var col: Color = avg[0]
-			sum += Vector3(col.r, col.g, col.b) * float(avg[1])
-			w += float(avg[1])
-	if w <= 0.0:
-		return null
-	return Color(sum.x / w, sum.y / w, sum.z / w)
-
-
 func _alloc(w: int, h: int, o: Vector2i) -> void:
 	width = w
 	height = h
@@ -263,16 +265,6 @@ func _alloc(w: int, h: int, o: Vector2i) -> void:
 	kinds.fill(UNKNOWN)
 	revealed.resize(w * h)
 	revealed.fill(0)
-
-
-## Pusta kratka przy podłodze (8-sąsiedztwo) = ściana; liczone leniwie przy odkrywaniu (bez przebiegu po całej mapie).
-func _touches_floor(p: Vector2i) -> bool:
-	for dy in range(-1, 2):
-		for dx in range(-1, 2):
-			var k := kind_at(p + Vector2i(dx, dy))
-			if k != UNKNOWN and k != WALL:
-				return true
-	return false
 
 
 func has_cell(p: Vector2i) -> bool:
@@ -319,18 +311,18 @@ func reveal(center: Vector2i, radius: int) -> Array[Vector2i]:
 			var i := index(p)
 			if revealed[i] != 0:
 				continue
-			if kinds[i] == UNKNOWN:
-				if not _touches_floor(p):
-					continue
-				kinds[i] = WALL
-			if _line_clear(center, p):
+			var solid := kinds[i] == UNKNOWN or kinds[i] == WALL
+			var crossed := _walls_between(center, p, SOLID_SIGHT)
+			if crossed == 0 or (solid and crossed < SOLID_SIGHT):
+				if kinds[i] == UNKNOWN:
+					kinds[i] = WALL
 				revealed[i] = 1
 				out.append(p)
 	return out
 
 
-## Linia wzroku (Bresenham) z `a` do `b`: żadna kratka pośrednia nie zasłania (cel może być ścianą).
-func _line_clear(a: Vector2i, b: Vector2i) -> bool:
+## Liczba kratek ściany na linii wzroku (Bresenham) między `a` i `b`, bez końców; liczenie kończy się na `limit`.
+func _walls_between(a: Vector2i, b: Vector2i, limit: int) -> int:
 	var x := a.x
 	var y := a.y
 	var dx := absi(b.x - a.x)
@@ -338,11 +330,12 @@ func _line_clear(a: Vector2i, b: Vector2i) -> bool:
 	var sx := 1 if a.x < b.x else -1
 	var sy := 1 if a.y < b.y else -1
 	var err := dx + dy
-	while true:
-		if x == b.x and y == b.y:
-			return true
+	var n := 0
+	while not (x == b.x and y == b.y):
 		if (x != a.x or y != a.y) and _blocks_sight(Vector2i(x, y)):
-			return false
+			n += 1
+			if n >= limit:
+				return n
 		var e2 := 2 * err
 		if e2 >= dy:
 			err += dy
@@ -350,7 +343,7 @@ func _line_clear(a: Vector2i, b: Vector2i) -> bool:
 		if e2 <= dx:
 			err += dx
 			y += sy
-	return true
+	return n
 
 
 ## Maska odkrycia do zapisu (skompresowana, base64) i z powrotem; inny rozmiar mapy = maska odrzucona.
