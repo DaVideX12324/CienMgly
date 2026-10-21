@@ -261,9 +261,10 @@ func fraction() -> float:
 
 func label() -> String:
 	_mutex.lock()
-	var l: String = _labels.get(_stage if _stage != &"" else _last_stage, "")
+	var st: StringName = _stage if _stage != &"" else _last_stage
+	var l: String = _labels.get(st, "")
 	_mutex.unlock()
-	return l
+	return QuizRpgI18n.t("gen.stage.%s" % st, l) if l != "" else l
 
 
 ## Zakończenie całości: pasek na 100%.
