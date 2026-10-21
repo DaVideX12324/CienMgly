@@ -179,6 +179,8 @@ var _input_queue: Array[int] = []    # postacie wybierające komendy w tej rundz
 var _input_pos := -1                 # która z nich wybiera teraz (-1 = Walcz / Uciekaj)
 var _executing := false              # faza wykonania (akcje z _plans) — inaczej wybór akcji tylko ją zapisuje
 signal _round_question_answered(correct: bool)
+signal _notice_confirmed
+var _awaiting_notice := false              # komunikat w logu czeka na potwierdzenie gracza (Enter / Z / klik)
 var _round_questions := false              # pytania rundy przed wykonaniem (odpowiedź zapisana w planie, bez akcji)
 var _round_running := false               # faza wykonania rundy trwa (bezpiecznik przed drugim _execute_round)
 var _acted_enemies: Dictionary = {}       # indeksy wrogów, którzy już działali w tej rundzie (bezpiecznik: raz na rundę)
@@ -473,6 +475,10 @@ func _input(event: InputEvent) -> void:
 	if _is_focus_click(event):
 		get_viewport().set_input_as_handled()
 		return
+	if _awaiting_notice and (_is_menu_accept(event) or (event is InputEventMouseButton and event.pressed 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT)):
+		confirm_notice()
+		get_viewport().set_input_as_handled()
+		return
 	if _handle_hovered_enemy_click(event) or _handle_actor_row_mouse(event):
 		get_viewport().set_input_as_handled()
 
@@ -649,6 +655,8 @@ func _begin_input() -> void:
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	if _input_queue.is_empty():
+		if surprised:
+			await _wait_notice_confirm()  # „Zaskoczenie!” — gracz musi to przeczytać, zanim wrogowie ruszą
 		_execute_round()
 		return
 	phase = Phase.ACTION_SELECT
@@ -740,6 +748,24 @@ func _execute_round() -> void:
 	_turn_queue = _turn_order()
 	_acted_enemies.clear()
 	_next_turn()
+
+
+## Komunikat w logu czeka na gracza (decyzja usera 2026-10-21: zaskoczenie wymaga potwierdzenia): podpowiedź w logu,
+## dalej po Enter / Z / kliknięciu (confirm_notice).
+func _wait_notice_confirm() -> void:
+	phase = Phase.ENEMY_TURN
+	if action_panel:
+		action_panel.visible = false
+	_push_log(QuizRpgI18n.t("log.combat.press_continue", "Enter / Z / klik — dalej"), Color(0.7, 0.72, 0.82))
+	_awaiting_notice = true
+	await _notice_confirmed
+
+
+func confirm_notice() -> void:
+	if not _awaiting_notice:
+		return
+	_awaiting_notice = false
+	_notice_confirmed.emit()
 
 
 ## Pytania rundy (decyzja usera 2026-10-21): po wyborze akcji całej drużyny najpierw pytania quizu — po jednym na

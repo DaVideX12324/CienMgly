@@ -354,6 +354,7 @@
   "item.wooden_shield.name": "Wooden Shield",
   "log.combat.member_cannot_move": "{name} cannot move!",
   "log.combat.preemptive": "Advantage! The monsters won't react in time this turn.",
+  "log.combat.press_continue": "Enter / Z / click — continue",
   "log.combat.silenced": "{name}: silenced — skills blocked.",
   "log.combat.surprise": "Surprise! The party loses the first turn.",
   "log.combat.turn_move": "Turn {turn} - move: {name}",

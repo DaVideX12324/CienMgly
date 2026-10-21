@@ -354,6 +354,7 @@
   "item.wooden_shield.name": "Drewniana Tarcza",
   "log.combat.member_cannot_move": "{name} nie może się ruszyć!",
   "log.combat.preemptive": "Przewaga! Potwory nie zdążą zareagować w tej turze.",
+  "log.combat.press_continue": "Enter / Z / klik — dalej",
   "log.combat.silenced": "{name}: cisza — umiejętności zablokowane.",
   "log.combat.surprise": "Zaskoczenie! Drużyna traci pierwszą turę.",
   "log.combat.turn_move": "Tura {turn} - ruch: {name}",
