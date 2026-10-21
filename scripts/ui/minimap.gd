@@ -134,7 +134,7 @@ func _build(level: Node, level_key: String) -> void:
 	_image.fill(Color(0, 0, 0, 0))
 	for i in data.revealed.size():
 		if data.revealed[i] != 0:
-			_image.set_pixel(i % data.width, i / data.width, _color(data.kinds[i]))
+			_image.set_pixel(i % data.width, i / data.width, _color_at(data.origin + Vector2i(i % data.width, i / data.width)))
 	_tex = ImageTexture.create_from_image(_image)
 	_corner_map.texture = _tex
 	_full_map.texture = _tex
@@ -143,11 +143,24 @@ func _build(level: Node, level_key: String) -> void:
 
 func _paint(p: Vector2i) -> void:
 	var q := p - data.origin
-	_image.set_pixel(q.x, q.y, _color(data.kind_at(p)))
+	_image.set_pixel(q.x, q.y, _color_at(p))
 
 
-## Kolory rodzajów kratek: podłoga i ściany ze średniej tekstur mapy (QuizRpgMinimapData), góra płaskowyżu i uskok
-## pochodne podłogi; bez kolorów mapy — eksporty sceny.
+## Kolor kratki: podłoga z kafli na niej (trawa, ścieżki, dekoracje — QuizRpgMinimapData.color_at), góra płaskowyżu nieco
+## jaśniejsza; wejście / wyjście jako znaczniki; ściany i uskoki ze średnich mapy.
+func _color_at(p: Vector2i) -> Color:
+	var kind := data.kind_at(p)
+	var c := data.color_at(p)
+	if c.a > 0.0:
+		if kind == QuizRpgMinimapData.FLOOR:
+			return c
+		if kind == QuizRpgMinimapData.HIGH:
+			return c.lightened(0.12)
+	return _color(kind)
+
+
+## Kolory rodzajów kratek bez koloru z kafli: podłoga i ściany ze średniej tekstur mapy, góra płaskowyżu i uskok pochodne
+## podłogi; bez kolorów mapy — eksporty sceny.
 func _color(kind: int) -> Color:
 	var fl := data.floor_color if data != null and data.has_colors else color_floor
 	match kind:
