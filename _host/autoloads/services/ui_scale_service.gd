@@ -36,15 +36,19 @@ var current_mode: int = ScaleMode.NORMAL:
 
 var scale_factor := 1.0
 var user_picked := false
+## Ręczny wybór gracza bez przycięcia do ekranu (-1 = auto) — po powrocie do większego okna wraca w całości.
+var picked_mode := -1
 
 
 func set_mode(mode: int) -> void:
 	user_picked = true
-	current_mode = _clamp_mode_to_screen(mode)
+	picked_mode = clampi(mode, ScaleMode.XSMALL, ScaleMode.XLARGE)
+	current_mode = _clamp_mode_to_screen(picked_mode)
 
 
 func reset_to_auto() -> void:
 	user_picked = false
+	picked_mode = -1
 	current_mode = max_mode_for_height(_screen_height())
 
 
@@ -93,23 +97,24 @@ func load_from_cfg(cfg: ConfigFile) -> void:
 	if not is_auto:
 		var saved: int = cfg.get_value("ui", "ui_scale_mode", -1)
 		if saved >= ScaleMode.XSMALL and saved <= ScaleMode.XLARGE:
-			user_picked = true
-			current_mode = _clamp_mode_to_screen(saved)
+			set_mode(saved)
 			return
-	user_picked = false
-	current_mode = max_mode_for_height(_screen_height())
+	reset_to_auto()
 
 
 func save_to_cfg(cfg: ConfigFile) -> void:
-	cfg.set_value("ui", "ui_scale_mode", current_mode)
+	cfg.set_value("ui", "ui_scale_mode", picked_mode if user_picked and picked_mode >= 0 else current_mode)
 	cfg.set_value("ui", "ui_scale_auto", not user_picked)
 
 
-## Nowa rozdzielczość (opcje, przeciągnięte okno): największa skala, jaka się mieści — także po ręcznym wyborze
-## (prośba usera 2026-10-16). Ręczny wybór razem ze zmianą rozdzielczości opcje ustawiają po niej (set_mode).
+## Nowa rozdzielczość (opcje, przeciągnięte okno, dopasowanie okna po starcie): skala auto — największa, jaka się
+## mieści; ręczny wybór gracza zostaje, przycięty do ekranu, gdy się nie mieści (decyzja usera 2026-10-21 — wcześniej
+## każda zmiana rozdzielczości przełączała na auto).
 func on_resolution_changed(_new_resolution: Vector2i) -> void:
-	user_picked = false
-	current_mode = max_mode_for_height(_screen_height())
+	if user_picked and picked_mode >= 0:
+		current_mode = _clamp_mode_to_screen(picked_mode)
+	else:
+		current_mode = max_mode_for_height(_screen_height())
 
 
 func _screen_height() -> int:

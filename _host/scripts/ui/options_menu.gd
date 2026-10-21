@@ -341,11 +341,17 @@ func _refresh_scale_items(height: int) -> void:
 		_scale_option.set_item_disabled(index, index > max_mode)
 
 
-## Inna rozdzielczość / tryb / monitor w opcjach: skala od razu na największą, jaka się zmieści (można zmniejszyć).
+## Inna rozdzielczość / tryb / monitor w opcjach: skala auto — największa, jaka się zmieści; ręczny wybór (zapisany
+## albo zmieniony w tym oknie) zostaje, przycięty do nowego ekranu.
 func _on_display_target_changed() -> void:
 	var height := _pending_height()
-	_sel_scale = UIScaleService.max_mode_for_height(height)
-	_scale_manually_changed = false
+	var max_mode: int = UIScaleService.max_mode_for_height(height)
+	if _scale_manually_changed:
+		_sel_scale = mini(_sel_scale, max_mode)
+	elif UIScaleService.user_picked and UIScaleService.picked_mode >= 0:
+		_sel_scale = mini(UIScaleService.picked_mode, max_mode)
+	else:
+		_sel_scale = max_mode
 	_scale_option.selected = _sel_scale
 	_refresh_scale_items(height)
 
