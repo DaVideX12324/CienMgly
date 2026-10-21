@@ -3,8 +3,9 @@ extends RefCounted
 
 ## Dane minimapy jednej mapy: rodzaj każdej kratki (podłoga, płaskowyż, ściana, uskok, wejście / wyjście) i maska odkrycia
 ## (fog of war). Mapa generowana: z wyniku generacji (ProceduralLevel.last_result — siatka, płaskowyże, portale); mapa
-## ręczna: z warstw TileMapLayer (Walls / Cliffs = ściana, reszta = podłoga). Odkrywanie: kratki w promieniu od gracza
-## z linią wzroku — ściany zasłaniają (same się odkrywają), uskoki płaskowyżów nie.
+## ręczna: z warstw TileMapLayer (Walls / Cliffs = ściana — tylko kafle z kolizją, dekoracje bez kolizji to podłoga; reszta
+## warstw = podłoga). Odkrywanie: kratki w promieniu od gracza z linią wzroku — ściany zasłaniają (same się odkrywają),
+## uskoki płaskowyżów nie. Kolory podłogi i ścian: średnia z tekstur kafli mapy (floor_color / wall_color).
 
 const CELL := 16
 const UNKNOWN := 0
@@ -22,6 +23,10 @@ var height := 0
 var origin := Vector2i.ZERO   # kratka mapy odpowiadająca (0, 0) danych
 var kinds := PackedByteArray()
 var revealed := PackedByteArray()
+## Średni kolor kafli podłogi / ścian tej mapy (has_colors = policzone; inaczej minimapa bierze swoje domyślne).
+var floor_color := Color(0.56, 0.5, 0.42)
+var wall_color := Color(0.12, 0.1, 0.09)
+var has_colors := false
 
 
 ## Z węzła poziomu: wynik generacji, gdy jest; inaczej warstwy kafli. null = brak danych (pusta mapa).
@@ -29,9 +34,14 @@ static func from_level(level: Node) -> QuizRpgMinimapData:
 	if level == null:
 		return null
 	var result = level.get("last_result")
+	var d: QuizRpgMinimapData
 	if result != null and "grid" in result and not (result.grid as Dictionary).is_empty():
-		return from_result(result)
-	return from_layers(level)
+		d = from_result(result)
+	else:
+		d = from_layers(level)
+	if d != null:
+		d._average_colors(level)
+	return d
 
 
 static func from_result(result) -> QuizRpgMinimapData:
@@ -66,25 +76,109 @@ static func from_layers(level: Node) -> QuizRpgMinimapData:
 			continue
 		var scale := Vector2(layer.tile_set.tile_size) / float(CELL)
 		var is_wall := WALL_LAYERS.has(String(layer.name).to_lower())
+		var no_physics := layer.tile_set.get_physics_layers_count() == 0
 		for c in layer.get_used_cells():
 			var p := Vector2i((Vector2(c) * scale + layer.position / float(CELL)).floor())
-			if is_wall:
-				walls[p] = true
-			else:
-				floors[p] = true
+			# Kafel wielokratkowy (np. podłoga 2×1, ściana 1×2) jest zapisany tylko w kratce kotwicy — zajmuje też sąsiednie.
+			var src := layer.tile_set.get_source(layer.get_cell_source_id(c)) as TileSetAtlasSource
+			var span := src.get_tile_size_in_atlas(layer.get_cell_atlas_coords(c)) if src != null else Vector2i.ONE
+			# Na warstwie ścian liczy się tylko kafel z kolizją — bez niej to dekoracja (sztandar) albo wypełnienie
+			# pustki; podłoga pod spodem i tak jest na warstwie podłogi.
+			var target: Variant = floors if not is_wall else (walls if no_physics or _blocks(layer, c) else null)
+			if target == null:
+				continue
+			for dy in span.y:
+				for dx in span.x:
+					(target as Dictionary)[p + Vector2i(dx, dy)] = true
 	if floors.is_empty():
 		return null
+	# Prostokąt z samej podłogi (+1 na obrys ścian) — ściany daleko od podłogi nie powiększają mapy.
 	var r := Rect2i(floors.keys()[0], Vector2i.ONE)
 	for p: Vector2i in floors:
 		r = r.expand(p)
-	for p: Vector2i in walls:
-		r = r.expand(p)
+	r = r.grow(1)
 	var d := QuizRpgMinimapData.new()
 	d._alloc(r.size.x + 1, r.size.y + 1, r.position)
 	for p: Vector2i in floors:
 		if not walls.has(p):
 			d.kinds[d.index(p)] = FLOOR
 	return d
+
+
+static func _blocks(layer: TileMapLayer, c: Vector2i) -> bool:
+	var td := layer.get_cell_tile_data(c)
+	return td != null and td.get_collision_polygons_count(0) > 0
+
+
+## Średnie kolory z tekstur kafli: podłoga z warstwy „Floor” (bez niej — ze wszystkich warstw poza ścianami), ściany
+## z warstw Walls / Cliffs. Próbka do MAX_SAMPLES kratek na warstwę, co drugi piksel, bez przezroczystych.
+const MAX_SAMPLES := 160
+const MIN_CONTRAST := 0.12
+
+
+func _average_colors(level: Node) -> void:
+	var floor_layers: Array[TileMapLayer] = []
+	var wall_layers: Array[TileMapLayer] = []
+	var named_floor: TileMapLayer = null
+	for n in level.find_children("*", "TileMapLayer", true, false):
+		var layer := n as TileMapLayer
+		if layer.tile_set == null or not layer.visible:
+			continue
+		var nm := String(layer.name).to_lower()
+		if WALL_LAYERS.has(nm):
+			wall_layers.append(layer)
+		else:
+			floor_layers.append(layer)
+			if nm == "floor":
+				named_floor = layer
+	if named_floor != null:
+		floor_layers = [named_floor]
+	var images := {}
+	var f: Variant = _average_of(floor_layers, images)
+	var w: Variant = _average_of(wall_layers, images, true)
+	if f != null:
+		floor_color = f
+		has_colors = true
+	if w != null:
+		wall_color = w
+		has_colors = true
+	# Czytelność: ściany o podobnej jasności co podłoga (np. samouczek) przyciemnione, odcień ze średniej zostaje.
+	if absf(wall_color.get_luminance() - floor_color.get_luminance()) < MIN_CONTRAST:
+		wall_color = wall_color.darkened(0.5)
+
+
+## solid_only: tylko kafle z kolizją (warstwa ścian bez wypełnienia pustki i dekoracji), gdy TileSet ma fizykę.
+static func _average_of(layers: Array[TileMapLayer], images: Dictionary, solid_only := false) -> Variant:
+	var sum := Vector3.ZERO
+	var n := 0
+	for layer in layers:
+		var cells := layer.get_used_cells()
+		if solid_only and layer.tile_set.get_physics_layers_count() > 0:
+			cells = cells.filter(func(c: Vector2i) -> bool: return _blocks(layer, c))
+		var step := maxi(1, cells.size() / MAX_SAMPLES)
+		for k in range(0, cells.size(), step):
+			var c: Vector2i = cells[k]
+			var src := layer.tile_set.get_source(layer.get_cell_source_id(c)) as TileSetAtlasSource
+			if src == null or src.texture == null:
+				continue
+			var im: Image = images.get(src.texture)
+			if im == null:
+				im = src.texture.get_image()
+				if im == null:
+					continue
+				if im.is_compressed():
+					im.decompress()
+				images[src.texture] = im
+			var region := src.get_tile_texture_region(layer.get_cell_atlas_coords(c))
+			for y in range(region.position.y, mini(region.end.y, im.get_height()), 2):
+				for x in range(region.position.x, mini(region.end.x, im.get_width()), 2):
+					var px := im.get_pixel(x, y)
+					if px.a > 0.5:
+						sum += Vector3(px.r, px.g, px.b)
+						n += 1
+	if n == 0:
+		return null
+	return Color(sum.x / n, sum.y / n, sum.z / n)
 
 
 func _alloc(w: int, h: int, o: Vector2i) -> void:

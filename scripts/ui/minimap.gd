@@ -146,16 +146,19 @@ func _paint(p: Vector2i) -> void:
 	_image.set_pixel(q.x, q.y, _color(data.kind_at(p)))
 
 
+## Kolory rodzajów kratek: podłoga i ściany ze średniej tekstur mapy (QuizRpgMinimapData), góra płaskowyżu i uskok
+## pochodne podłogi; bez kolorów mapy — eksporty sceny.
 func _color(kind: int) -> Color:
+	var fl := data.floor_color if data != null and data.has_colors else color_floor
 	match kind:
 		QuizRpgMinimapData.FLOOR:
-			return color_floor
+			return fl
 		QuizRpgMinimapData.HIGH:
-			return color_high
+			return fl.lightened(0.22) if data != null and data.has_colors else color_high
 		QuizRpgMinimapData.WALL:
-			return color_wall
+			return data.wall_color if data != null and data.has_colors else color_wall
 		QuizRpgMinimapData.CLIFF:
-			return color_cliff
+			return fl.darkened(0.35) if data != null and data.has_colors else color_cliff
 		QuizRpgMinimapData.ENTRANCE:
 			return color_entrance
 		QuizRpgMinimapData.EXIT:
