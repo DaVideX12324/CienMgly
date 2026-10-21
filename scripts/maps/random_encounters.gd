@@ -23,6 +23,7 @@ var min_distance := DEFAULT_MIN
 var max_distance := DEFAULT_MAX
 var max_chance := DEFAULT_MAX_CHANCE
 var tier_weights: Dictionary = {}   # tier (int) -> waga
+var enemy_loot: Dictionary = {}     # tier (int) -> QuizRpgLootTableData (tabele strefy, "enemy_loot" w JSON mapy)
 var _pool: Array = []
 var _faction_pools: Dictionary = {}
 var _levels: Dictionary = {}
@@ -167,6 +168,8 @@ func trigger() -> Node2D:
 	if band is Array and (band as Array).size() == 2 and enemy.has_method("set_enemy_level"):
 		var lo := int(band[0])
 		enemy.call("set_enemy_level", _rng.randi_range(lo, maxi(int(band[1]), lo)), 1.0)
+	if enemy.get("loot_data") == null and enemy_loot.has(tier):
+		enemy.set("loot_data", enemy_loot[tier])  # łup strefy wg wylosowanego tieru
 	get_parent().add_child(enemy)
 	enemy.remove_from_group("enemies")
 	enemy.call("start_combat", _player)

@@ -2,11 +2,9 @@ class_name Barrel
 extends CharacterBody2D
 
 @export var health: float = 5.0
-## Skala łupu beczki (n-te losowanie z szansą min(1, scale / n)); ujemna = domyślna z LootManager (barrel_scale). 1. przedmiot jest zawsze.
-@export_range(-1.0, 6.0, 0.1) var loot_scale: float = -1.0
 @export var remove_after_interaction: bool = true
-## Tabela łupu tej beczki (plik .tres, resources/loot/); brak = tabela strefy z JSON mapy ("barrel_loot"), a bez niej
-## domyślna (resources/loot/barrel_default.tres).
+## Tabela łupu tej beczki (plik .tres, resources/loot/: wpisy + szanse na kolejne przedmioty i sztuki); brak = tabela
+## strefy z JSON mapy ("barrel_loot"), a bez niej domyślna (resources/loot/barrel_default.tres).
 @export var loot_data: QuizRpgLootTableData
 @export var unique_id: String = ""
 
@@ -68,16 +66,16 @@ func _interact() -> void:
 		if level_state_manager:
 			level_state_manager.mark_barrel_destroyed(level_path, unique_id)
 
-	# Łup: 1 przedmiot gwarantowany, kolejne z malejącą szansą (LootManager.search_barrel); rodzic beczek może podać własne
-	# (metadane "barrel_loot" na węźle, np. Destructibles w tutorial_area: {scale, max_items}).
-	var rolls: Dictionary = {}
+	# Łup: szanse na kolejne przedmioty z tabeli (LootManager.search_barrel); rodzic beczek może podać własne ze wzoru
+	# min(1, scale / n) (metadane "barrel_loot" na węźle, np. Destructibles w tutorial_area: {scale, max_items}).
+	var chances := PackedFloat32Array()
 	if get_parent() != null and get_parent().has_meta("barrel_loot"):
-		rolls = get_parent().get_meta("barrel_loot") as Dictionary
+		var rolls := get_parent().get_meta("barrel_loot") as Dictionary
+		chances = QuizRpgLootTableData.scale_chances(float(rolls.get("scale", 1.5)), int(rolls.get("max_items", 8)))
 	var loot_result: Dictionary = {"found": false}
 	var loot_manager := _get_loot_manager()
 	if loot_manager and loot_manager.has_method("search_barrel"):
-		var raw_result: Variant = loot_manager.call("search_barrel", float(rolls.get("scale", loot_scale)), int(rolls.get("max_items", -1)),
-			loot_data.to_table() if loot_data != null else [] as Array[Dictionary])
+		var raw_result: Variant = loot_manager.call("search_barrel", loot_data, chances)
 		if raw_result is Dictionary:
 			loot_result = raw_result
 

@@ -34,8 +34,9 @@ var _variant_ratio: Dictionary = {}  # stosunek statystyk wariantu do bazy tieru
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
 ## Złoto za pokonanie (QuizRpgEnemyGold z poziomu i tieru; poziom 0 = jak poziom 1); liczone przy ustawianiu poziomu.
 var gold_reward: int = 0
-## Łup przedmiotów po wygranej: [{item_id, chance, count}] z mapy ("enemy_loot" w JSON, klucz = tier wroga); każdy wpis losowany osobno.
-var loot_table: Array = []
+## Łup przedmiotów po wygranej (plik .tres, resources/loot/; każdy wpis osobno ze swoją szansą); brak = tabela strefy z JSON
+## mapy ("enemy_loot": tier wroga -> ścieżka .tres), a bez niej tylko klucz z szansą wg tieru.
+@export var loot_data: QuizRpgLootTableData
 @export_range(1, 5, 1) var encounter_tier: int = 2
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3

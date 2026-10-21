@@ -9,13 +9,6 @@ const MAX_TOASTS := 8
 const DEFAULT_BARREL_LOOT := "resources/loot/barrel_default.tres"
 const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
 
-## Beczka: n-te losowanie udaje się z szansą min(1, scale / n), o ile udały się poprzednie (wzór usera 3 / (2n), czyli scale 1,5):
-## 1. gwarantowane, 2. 75 %, 3. 50 %, 4. 37,5 %… (P(1 przedmiot) 25 %, 2: 37,5 %, 3: 23 %, 4: 10 %; średnio ≈ 2,3). Tail znika szybko,
-## max_items to tylko zabezpieczenie. Rodzic beczek może podać własne wartości (metadane "barrel_loot").
-var barrel_scale: float = 1.5
-var barrel_max_items: int = 8
-## Sztuki jednego przedmiotu z beczki: k-ta z szansą min(1, scale / k) (1,0: 2. sztuka 50 %, 3. 33 %; mikstura średnio ≈ 1,67).
-var barrel_amount_scale: float = 1.0
 var _rng := RandomNumberGenerator.new()
 var _popup_layer: CanvasLayer
 var _popup_root: Control
@@ -33,30 +26,22 @@ func _ready() -> void:
 	_rng.randomize()
 
 
-## Liczba losowań z beczki: n-te (n ≥ 2) wypada z szansą min(1, scale / n) pod warunkiem, że wypadły poprzednie; pierwsze zawsze
-## (dla scale ≥ 1). Bez przekroczenia max_rolls.
-func barrel_roll_count(scale: float, max_rolls: int) -> int:
-	var n := 1
-	while n < max_rolls and _rng.randf() < minf(1.0, scale / float(n + 1)):
-		n += 1
-	return n
-
-
-## Przeszukanie beczki: liczba losowań z tabeli wg barrel_roll_count (ujemne wartości = domyślne z menedżera). Powtórzone
-## przedmioty sumują się w liczbę kopii. found = coś wypadło; items = [{item_id, item_name, count}].
-## table: tabela beczki (QuizRpgLootTableData.to_table — waga i liczba sztuk z wpisu); pusta = domyślna
-## (resources/loot/barrel_default.tres). Liczba sztuk wpisu od count_min, każda kolejna do count_max z malejącą szansą.
-func search_barrel(scale: float = -1.0, max_items: int = -1, table: Array[Dictionary] = []) -> Dictionary:
-	var s := barrel_scale if scale < 0.0 else scale
-	var rolls := maxi(barrel_max_items if max_items < 0 else max_items, 1)
+## Przeszukanie beczki z tabeli data (null = domyślna, resources/loot/barrel_default.tres): n-ty przedmiot z szansą
+## data.item_chances[n - 1], gdy wypadły poprzednie (item_chances niepuste zastępuje szanse tabeli, np. metadane rodzica
+## beczek), wpis wagowo, liczba sztuk wpisu wg data.amount_chances. Powtórzone przedmioty sumują się w liczbę kopii.
+## found = coś wypadło; items = [{item_id, item_name, count}].
+func search_barrel(data: QuizRpgLootTableData = null, item_chances := PackedFloat32Array()) -> Dictionary:
+	if data == null:
+		data = load(QuizRpgPaths.path(DEFAULT_BARREL_LOOT)) as QuizRpgLootTableData
+	if data == null:
+		return {"found": false, "items": []}
+	var table := data.to_table()
 	var counts := {}
-	if table.is_empty():
-		table = _default_barrel_table()
-	for _k in range(barrel_roll_count(s, rolls)):
+	for _k in range(QuizRpgLootTableData.roll_chain(item_chances if not item_chances.is_empty() else data.item_chances, _rng)):
 		var picked := QuizRpgLootTable.pick_weighted(table, _rng)
 		if not picked.is_empty():
 			var pid := str(picked.get("item_id", ""))
-			counts[pid] = int(counts.get(pid, 0)) + _roll_count(int(picked.get("count_min", 1)), int(picked.get("count_max", 1)))
+			counts[pid] = int(counts.get(pid, 0)) + data.roll_amount(int(picked.get("count_min", 1)), int(picked.get("count_max", 1)), _rng)
 	var items: Array[Dictionary] = []
 	for item_id: String in counts:
 		var item_data := _get_item_data(item_id)
@@ -164,21 +149,6 @@ func _award_item(item_id: String, count: int) -> void:
 	if player_stats and player_stats.has_method("add_item"):
 		player_stats.call("add_item", item_id, count)
 		loot_awarded.emit(item_id, count)
-
-
-## Liczba sztuk z wpisu beczki: count_min, każda kolejna do count_max z szansą min(1, barrel_amount_scale / k) dla k-tej
-## (przy 1,0: 2. sztuka 50 %, 3. — 33 %).
-func _roll_count(lo: int, hi: int) -> int:
-	var n := maxi(lo, 1)
-	while n < hi and _rng.randf() < minf(1.0, barrel_amount_scale / float(n + 1)):
-		n += 1
-	return n
-
-
-## Domyślna tabela beczek (resources/loot/barrel_default.tres).
-func _default_barrel_table() -> Array[Dictionary]:
-	var data := load(QuizRpgPaths.path(DEFAULT_BARREL_LOOT)) as QuizRpgLootTableData
-	return data.to_table() if data != null else [] as Array[Dictionary]
 
 
 func _ensure_popup() -> void:

@@ -146,23 +146,7 @@
     "treasure": {"count": 1, "kind": "relic", "item_id": "mist_blade_1", "flag": "relic.cave", "guard_tier": 4},
     "boss": {"story_id": "cave_relic", "counts_toward_device": false}
   },
-  "enemy_loot": {
-    "1": [{"item_id": "potion", "chance": 0.12}, {"item_id": "key_tier1", "chance": 0.04}],
-    "2": [
-      {"item_id": "potion", "chance": 0.18}, {"item_id": "ether", "chance": 0.08}, {"item_id": "key_tier1", "chance": 0.07},
-      {"item_id": "iron_sword", "chance": 0.012}, {"item_id": "iron_buckler", "chance": 0.012},
-      {"item_id": "leather_hood", "chance": 0.012}, {"item_id": "reinforced_tunic", "chance": 0.012}
-    ],
-    "3": [
-      {"item_id": "potion", "chance": 0.5, "count": 2}, {"item_id": "ether", "chance": 0.3}, {"item_id": "key_tier1", "chance": 0.11},
-      {"item_id": "iron_sword", "chance": 0.06}, {"item_id": "iron_buckler", "chance": 0.06},
-      {"item_id": "leather_hood", "chance": 0.06}, {"item_id": "reinforced_tunic", "chance": 0.06}
-    ],
-    "4": [
-      {"item_id": "iron_sword", "chance": 1.0}, {"item_id": "potion", "chance": 1.0, "count": 3},
-      {"item_id": "ether", "chance": 1.0, "count": 2}, {"item_id": "key_tier2", "chance": 0.3}
-    ]
-  },
+  "enemy_loot": {"1": "resources/loot/caves_enemies_t1.tres", "2": "resources/loot/caves_enemies_t2.tres", "3": "resources/loot/caves_enemies_t3.tres", "4": "resources/loot/caves_enemies_t4.tres"},
   "enemies": [
     ["scenes/enemies/pixel_crawler/fungus_immature.tscn", "scenes/enemies/pixel_crawler/bat_small.tscn",
       "scenes/enemies/slime_1.tscn", "scenes/enemies/slime_2.tscn"],

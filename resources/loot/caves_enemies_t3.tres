@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="3_potion"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="4_ether"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier1.tres" id="5_key_tier1"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_sword.tres" id="6_iron_sword"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_buckler.tres" id="7_iron_buckler"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/leather_hood.tres" id="8_leather_hood"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/reinforced_tunic.tres" id="9_reinforced_tunic"]
+
+[sub_resource type="Resource" id="Entry_0_potion"]
+script = ExtResource("2_entry")
+item = ExtResource("3_potion")
+count_min = 2
+count_max = 2
+chance = 0.5
+
+[sub_resource type="Resource" id="Entry_1_ether"]
+script = ExtResource("2_entry")
+item = ExtResource("4_ether")
+count_min = 1
+count_max = 1
+chance = 0.3
+
+[sub_resource type="Resource" id="Entry_2_key_tier1"]
+script = ExtResource("2_entry")
+item = ExtResource("5_key_tier1")
+count_min = 1
+count_max = 1
+chance = 0.11
+
+[sub_resource type="Resource" id="Entry_3_iron_sword"]
+script = ExtResource("2_entry")
+item = ExtResource("6_iron_sword")
+count_min = 1
+count_max = 1
+chance = 0.06
+
+[sub_resource type="Resource" id="Entry_4_iron_buckler"]
+script = ExtResource("2_entry")
+item = ExtResource("7_iron_buckler")
+count_min = 1
+count_max = 1
+chance = 0.06
+
+[sub_resource type="Resource" id="Entry_5_leather_hood"]
+script = ExtResource("2_entry")
+item = ExtResource("8_leather_hood")
+count_min = 1
+count_max = 1
+chance = 0.06
+
+[sub_resource type="Resource" id="Entry_6_reinforced_tunic"]
+script = ExtResource("2_entry")
+item = ExtResource("9_reinforced_tunic")
+count_min = 1
+count_max = 1
+chance = 0.06
+
+[resource]
+script = ExtResource("1_table")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_ether"), SubResource("Entry_2_key_tier1"), SubResource("Entry_3_iron_sword"), SubResource("Entry_4_iron_buckler"), SubResource("Entry_5_leather_hood"), SubResource("Entry_6_reinforced_tunic")])
