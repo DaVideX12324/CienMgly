@@ -406,25 +406,65 @@ func _has_line_of_sight_to_player() -> bool:
 	if distance > detection_radius:
 		return false
 
-	if _raycast != null:
-		var target := player_ref.global_position
-		var shape := player_ref.get_node_or_null("CollisionShape2D") as Node2D
-		if shape:
-			target = shape.global_position
-		_raycast.target_position = _raycast.to_local(target)
-		_raycast.force_raycast_update()
-		# is_colliding, nie sam collider: przeszkody z generatora obiektów to ciała PhysicsServer2D bez
-		# węzła — get_collider() zwraca dla nich null mimo trafienia.
-		if _raycast.is_colliding():
-			var collider := _raycast.get_collider()
-			# Towarzysz idący obok bohatera (ta sama warstwa, poza grupą player) to też drużyna — nie zasłania.
-			if collider != player_ref and not ((collider is Node) and ((collider as Node).is_in_group("player") 					or bool((collider as Node).get("is_party_follower")))):
-				return false
-
+	var target := player_ref.global_position
+	var shape := player_ref.get_node_or_null("CollisionShape2D") as Node2D
+	if shape:
+		target = shape.global_position
 	var grid := _map_grid()
 	if not grid.is_empty() and not GridSight.has_line(grid, global_position, player_ref.global_position):
-		return false
-	return true
+		return false  # siatka mapy jest dokładna dla ścian (lita skała nie ma kolizji)
+	match _ray_hit(target):
+		RayHit.CLEAR:
+			return true
+		RayHit.OBJECT:
+			return false
+	# Promień trafił w kafel ściany. Na mapie z siatką linia po siatce jest już wolna — to otarcie o krawędź kolizji
+	# przy bieganiu wzdłuż ściany (gracz na widoku): promień jeszcze raz z pominięciem otartej ściany — obiekt dalej na
+	# linii nadal zasłania. Bez siatki (mapy ręczne): promienie do boków sylwetki.
+	if not grid.is_empty():
+		return _ray_past_walls(target)
+	var side := (target - global_position).orthogonal().normalized() * SIGHT_SPREAD
+	return _ray_hit(target + side) == RayHit.CLEAR or _ray_hit(target - side) == RayHit.CLEAR
+
+
+## Promień do punktu z pominięciem trafionych kafli ścian (do 4 otarć): czy dalej nic poza ścianą nie zasłania.
+func _ray_past_walls(point: Vector2) -> bool:
+	var hit := RayHit.WALL
+	for _i in 4:
+		_raycast.add_exception_rid(_raycast.get_collider_rid())
+		hit = _ray_hit(point)
+		if hit != RayHit.WALL:
+			break
+	_raycast.clear_exceptions()
+	return hit == RayHit.CLEAR
+
+
+enum RayHit { CLEAR, WALL, OBJECT }
+const SIGHT_SPREAD := 7.0   # px w bok od środka gracza (promienie zapasowe przy otarciu o ścianę na mapach ręcznych)
+
+
+## Promień fizyki do punktu: CLEAR — nic albo drużyna (bohater, towarzysz); WALL — kafel warstwy Walls; OBJECT — inna
+## przeszkoda (obiekty z generatora obiektów, ciała ze scen).
+func _ray_hit(point: Vector2) -> RayHit:
+	if _raycast == null:
+		return RayHit.CLEAR
+	_raycast.target_position = _raycast.to_local(point)
+	_raycast.force_raycast_update()
+	# is_colliding, nie sam collider: przeszkody z generatora obiektów to ciała PhysicsServer2D bez
+	# węzła — get_collider() zwraca dla nich null mimo trafienia.
+	if not _raycast.is_colliding():
+		return RayHit.CLEAR
+	var collider := _raycast.get_collider()
+	if collider == player_ref:
+		return RayHit.CLEAR
+	if collider is Node:
+		var n := collider as Node
+		# Towarzysz idący obok bohatera (ta sama warstwa, poza grupą player) to też drużyna — nie zasłania.
+		if n.is_in_group("player") or n.get("is_party_follower") == true:
+			return RayHit.CLEAR
+		if n is TileMapLayer and String(n.name) == "Walls":
+			return RayHit.WALL  # tylko ściany — kafle z kolizją na innych warstwach (Props, Platforms) zasłaniają jak obiekty
+	return RayHit.OBJECT
 
 
 ## Zauważenie gracza (start pościgu): widoczność + pole widzenia w kierunku patrzenia. Pościg dalej tylko z widoczności.
