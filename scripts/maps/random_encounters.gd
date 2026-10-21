@@ -1,11 +1,12 @@
 class_name QuizRpgRandomEncounters
 extends Node
 
-## Losowe spotkania jak w JRPG (obok widocznych wrogów): gracz przechodzi losowy dystans, a walka zaczyna się nagle
-## z niewidzialnym wrogiem z puli mapy (ProceduralLevel: enemy_pool / faction_pools / enemy_levels). Konfiguracja z
+## Losowe spotkania jak w JRPG (obok widocznych wrogów): po przejściu min_distance z każdym krokiem (kratką) rośnie szansa
+## na spotkanie, aż do pewności przy max_distance — walka zaczyna się nagle z niewidzialnym wrogiem z puli mapy (ProceduralLevel: enemy_pool / faction_pools / enemy_levels). Konfiguracja z
 ## companion-JSON mapy, klucz "random_encounters":
 ##   mode          "off" (domyślnie) | "always" | "cleared" (dopiero gdy na mapie nie ma już zwykłych wrogów)
-##   min_distance / max_distance   dystans w px między spotkaniami (losowany po każdej walce)
+##   min_distance / max_distance   px od ostatniej walki: do min_distance spotkania nie ma, od max_distance jest pewne
+##   max_chance    szansa na krok tuż przed max_distance (rośnie liniowo od 0 przy min_distance), domyślnie 0,12
 ##   tiers         {"1": waga, "2": waga…} — tier wroga wg wag (domyślnie najniższy tier puli)
 ## Nie liczy się dystans w azylu startowym, w walce, w dialogu ani podczas nietykalności po walce.
 
@@ -14,10 +15,13 @@ const MODE_ALWAYS := "always"
 const MODE_CLEARED := "cleared"
 const DEFAULT_MIN := 480.0
 const DEFAULT_MAX := 1100.0
+const DEFAULT_MAX_CHANCE := 0.12
+const STEP := 16.0   # px = jedna kratka = jeden „krok” losowania
 
 var mode := MODE_OFF
 var min_distance := DEFAULT_MIN
 var max_distance := DEFAULT_MAX
+var max_chance := DEFAULT_MAX_CHANCE
 var tier_weights: Dictionary = {}   # tier (int) -> waga
 var _pool: Array = []
 var _faction_pools: Dictionary = {}
@@ -26,7 +30,7 @@ var _rng := RandomNumberGenerator.new()
 var _player: Node2D
 var _last_pos := Vector2.ZERO
 var _walked := 0.0
-var _threshold := 0.0
+var _step_acc := 0.0
 
 
 ## Tworzy komponent z configu mapy; null, gdy tryb wyłączony albo brak puli wrogów.
@@ -40,7 +44,8 @@ static func create(cfg: Dictionary, pool: Array, faction_pools: Dictionary, leve
 	re.name = "RandomEncounters"
 	re.mode = m
 	re.min_distance = maxf(float(cfg.get("min_distance", DEFAULT_MIN)), 16.0)
-	re.max_distance = maxf(float(cfg.get("max_distance", DEFAULT_MAX)), re.min_distance)
+	re.max_distance = maxf(float(cfg.get("max_distance", DEFAULT_MAX)), re.min_distance + STEP)
+	re.max_chance = clampf(float(cfg.get("max_chance", DEFAULT_MAX_CHANCE)), 0.0, 1.0)
 	var tw: Variant = cfg.get("tiers", {})
 	if tw is Dictionary:
 		for k in tw:
@@ -53,12 +58,21 @@ static func create(cfg: Dictionary, pool: Array, faction_pools: Dictionary, leve
 
 func _ready() -> void:
 	_rng.randomize()
-	_roll_threshold()
+	reset_walk()
 
 
-func _roll_threshold() -> void:
-	_threshold = _rng.randf_range(min_distance, max_distance)
+func reset_walk() -> void:
 	_walked = 0.0
+	_step_acc = 0.0
+
+
+## Szansa na spotkanie przy kolejnym kroku po przejściu `walked` px od ostatniej walki.
+func chance_at(walked: float) -> float:
+	if walked < min_distance:
+		return 0.0
+	if walked >= max_distance:
+		return 1.0
+	return max_chance * (walked - min_distance) / (max_distance - min_distance)
 
 
 func _physics_process(_delta: float) -> void:
@@ -75,9 +89,13 @@ func _physics_process(_delta: float) -> void:
 	if step > 64.0 or not _can_count():
 		return   # teleport (przejście, powrót z sekretnego pokoju) albo stan, w którym spotkania nie liczą dystansu
 	_walked += step
-	if _walked >= _threshold:
-		_roll_threshold()
-		trigger()
+	_step_acc += step
+	while _step_acc >= STEP:
+		_step_acc -= STEP
+		if _rng.randf() < chance_at(_walked):
+			reset_walk()
+			trigger()
+			return
 
 
 ## Czy w tej chwili dystans się liczy (eksploracja, poza azylem i nietykalnością, tryb „cleared” po wyczyszczeniu).
