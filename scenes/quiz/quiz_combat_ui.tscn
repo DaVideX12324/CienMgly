@@ -87,6 +87,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=1837799062]
+mouse_filter = 2
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 0.507
@@ -113,6 +114,7 @@ text = "Przeciwnicy"
 horizontal_alignment = 1
 
 [node name="EnemySprite" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=637457849]
+mouse_filter = 2
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -121,17 +123,20 @@ size_flags_vertical = 3
 [node name="EnemyDisplayCanvas" type="Node2D" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=1973957803]
 
 [node name="EnemyRow2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=550312785]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2" unique_id=1801887481]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 450
 theme_override_constants/margin_right = 450
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer" unique_id=971464970]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20
@@ -331,18 +336,21 @@ show_percentage = false
 script = ExtResource("quiz_bar")
 
 [node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=189913761]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 alignment = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1" unique_id=1801887480]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/margin_left = 120
 theme_override_constants/margin_right = 120
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer" unique_id=701350609]
+mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 20

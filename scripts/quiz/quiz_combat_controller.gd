@@ -605,15 +605,41 @@ func _handle_hovered_enemy_click(event: InputEvent) -> bool:
 	var mouse_event: InputEventMouseButton = event as InputEventMouseButton
 	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_LEFT:
 		return false
-	if _hovered_enemy_slot_index < 0:
+	# Wróg pod kursorem liczony z pozycji kliknięcia (prostokąty slotów) — bez zależności od sygnałów najechania, które
+	# gubiły się, gdy coś przykryło slot; ostatnio najechany tylko gdy kursor nie trafia w żaden slot.
+	var slot_index := _enemy_slot_at(mouse_event.position)
+	if slot_index < 0:
+		slot_index = _hovered_enemy_slot_index
+	if slot_index < 0:
 		return false
-	var hovered_target_index: int = _find_target_row_index_for_enemy(_hovered_enemy_slot_index)
+	var hovered_target_index: int = _find_target_row_index_for_enemy(slot_index)
 	if hovered_target_index < 0:
 		return false
 	_target_selected_idx = hovered_target_index
 	_refresh_target_selection()
 	_confirm_target_selection()
 	return true
+
+
+## Indeks żywego wroga, którego slot (wrapper ze sprite'em) zawiera punkt ekranu `screen_pos` — przy nakładających się
+## slotach ten, którego środek jest najbliżej; -1 = żaden.
+func _enemy_slot_at(screen_pos: Vector2) -> int:
+	var best := -1
+	var best_d := INF
+	for i in range(mini(_enemy_units.size(), _enemy_wrapper_pool.size())):
+		if int(_enemy_units[i].get("hp", 0)) <= 0:
+			continue
+		for key in ["wrapper", "slot"]:
+			var c := _enemy_wrapper_pool[i].get(key) as Control
+			if c == null or not c.is_visible_in_tree():
+				continue
+			var local: Vector2 = c.get_global_transform_with_canvas().affine_inverse() * screen_pos
+			if Rect2(Vector2.ZERO, c.size).has_point(local):
+				var d := local.distance_squared_to(c.size * 0.5)
+				if d < best_d:
+					best_d = d
+					best = i
+	return best
 
 
 ## Runda jak w RPG Makerze / FNaFB (decyzja usera 2026-10-16): faza wyboru — Walcz / Uciekaj, potem komendy każdej
@@ -2620,6 +2646,12 @@ func _refresh_enemy_slot_highlight() -> void:
 func _bind_enemy_slot_target_input(slot: Control, slot_index: int) -> void:
 	if slot == null:
 		return
+	# Podświetlenie celu (kursor, wypełnienie, narożniki) i inne dzieci nie łapią myszy — inaczej po najechaniu przykrywały
+	# slot: mouse_exited kasowało najechanego wroga, a klik trafiał w podświetlenie zamiast w slot.
+	for child in slot.find_children("*", "Control", true, false):
+		if not child.has_meta(&"enemy_slot"):
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.set_meta(&"enemy_slot", true)
 	slot.mouse_filter = Control.MOUSE_FILTER_STOP
 	var parent_control: Control = slot.get_parent() as Control
 	if parent_control:
