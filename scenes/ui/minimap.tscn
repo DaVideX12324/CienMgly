@@ -94,5 +94,5 @@ color = Color(1, 0.25, 0.2, 1)
 [node name="Hint" type="Label" parent="Full/Box"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 27
-text = "M / Esc: zamknij"
+text = "M / Esc: zamknij    = / - albo kółko: zoom"
 horizontal_alignment = 1

@@ -38,7 +38,7 @@
     },
     {
       "label": "Mapa (pełny widok)",
-      "keys": "M"
+      "keys": "M; zoom: = / - albo kółko nad mapą"
     },
     {
       "label": "Wybór w menu i walce",

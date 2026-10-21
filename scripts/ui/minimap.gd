@@ -4,11 +4,15 @@ extends Control
 ## akcji `minimap` (domyślnie M) cała mapa. Dane: QuizRpgMinimapData z bieżącego poziomu (level_manager obok gracza);
 ## odkrywanie w promieniu reveal_radius z linią wzroku przy każdej zmianie kratki gracza. Maska odkrycia per mapa
 ## w zapisie gry (LevelStateManager: stan poziomu, klucz "fog"), zapisywana co FLUSH_INTERVAL i przy zmianie mapy.
-## Widoczna tylko w eksploracji.
+## Widoczna tylko w eksploracji. Zoom: klawisze = / - (też + / - na klawiaturze numerycznej) albo kółko myszy nad mapą —
+## w rogu zmienia skalę wycinka, na pełnej mapie przybliża wokół gracza.
 
 const ACTION := "minimap"
 const FLUSH_INTERVAL := 1.0
 const STATE_KEY := "fog"
+const ZOOM_STEP := 1.25
+const CORNER_ZOOM_RANGE := Vector2(1.0, 12.0)
+const FULL_ZOOM_RANGE := Vector2(1.0, 8.0)
 
 ## Promień odkrywania w kratkach.
 @export var reveal_radius := 12
@@ -42,6 +46,7 @@ var _last_cell := Vector2i(-99999, -99999)
 var _tex_dirty := false
 var _mask_dirty := false
 var _flush_left := FLUSH_INTERVAL
+var _full_zoom := 1.0   # przybliżenie pełnej mapy (1 = cała mapa w oknie)
 
 
 func _ready() -> void:
@@ -99,9 +104,48 @@ func _process(delta: float) -> void:
 	_layout()
 
 
+## Kółko myszy nad minimapą (róg albo pełna mapa) — przed innymi odbiorcami (kamera, listy), tylko gdy kursor nad mapą.
+func _input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if data == null or mb == null or not mb.pressed:
+		return
+	if mb.button_index != MOUSE_BUTTON_WHEEL_UP and mb.button_index != MOUSE_BUTTON_WHEEL_DOWN:
+		return
+	var over_full := _full.visible and _mouse_over(_full_area)
+	var over_corner := _corner.visible and not _full.visible and _mouse_over(_corner)
+	if over_full or over_corner:
+		_zoom(1 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else -1)
+		get_viewport().set_input_as_handled()
+
+
+func _mouse_over(c: Control) -> bool:
+	return Rect2(Vector2.ZERO, c.size).has_point(c.get_local_mouse_position())
+
+
+## Przybliżenie (+1) / oddalenie (-1) widocznej mapy: pełnej, gdy otwarta, inaczej rogu.
+func _zoom(dir: int) -> void:
+	var f := ZOOM_STEP if dir > 0 else 1.0 / ZOOM_STEP
+	if _full.visible:
+		_full_zoom = clampf(_full_zoom * f, FULL_ZOOM_RANGE.x, FULL_ZOOM_RANGE.y)
+	else:
+		corner_zoom = clampf(corner_zoom * f, CORNER_ZOOM_RANGE.x, CORNER_ZOOM_RANGE.y)
+	_layout()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if data == null or not InputMap.has_action(ACTION):
 		return
+	var key := event as InputEventKey
+	if key != null and key.pressed and (_exploring() or _full.visible):
+		var code := key.physical_keycode if key.physical_keycode != KEY_NONE else key.keycode
+		if code in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
+			_zoom(1)
+			get_viewport().set_input_as_handled()
+			return
+		if code in [KEY_MINUS, KEY_KP_SUBTRACT]:
+			_zoom(-1)
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action_pressed(ACTION) and (_exploring() or _full.visible):
 		_full.visible = not _full.visible
 		get_viewport().set_input_as_handled()
@@ -210,8 +254,14 @@ func _layout() -> void:
 		_corner_dot.position = _corner_clip.size * 0.5 - _corner_dot.size * 0.5
 	if _full.visible:
 		var avail := _full_area.size
-		var s := minf(avail.x / float(data.width), avail.y / float(data.height))
+		var s := minf(avail.x / float(data.width), avail.y / float(data.height)) * _full_zoom
 		var sz := Vector2(data.width, data.height) * s
 		_full_map.size = sz
-		_full_map.position = (avail - sz) * 0.5
+		# Bez przybliżenia mapa na środku; przybliżona — gracz na środku, ale bez wyjeżdżania mapy poza okno.
+		var pos := (avail - sz) * 0.5
+		if _full_zoom > 1.0:
+			pos = avail * 0.5 - rel * s
+			pos.x = clampf(pos.x, minf(avail.x - sz.x, 0.0), maxf(0.0, (avail.x - sz.x) * 0.5)) if sz.x > avail.x else (avail.x - sz.x) * 0.5
+			pos.y = clampf(pos.y, minf(avail.y - sz.y, 0.0), maxf(0.0, (avail.y - sz.y) * 0.5)) if sz.y > avail.y else (avail.y - sz.y) * 0.5
+		_full_map.position = pos
 		_full_dot.position = _full_map.position + rel * s - _full_dot.size * 0.5
