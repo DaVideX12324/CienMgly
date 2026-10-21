@@ -141,6 +141,7 @@
       },
       {
         "id": "beczki",
+        "per_room": 0.08,
         "flip_h": true,
         "parts": [
           {
@@ -225,8 +226,7 @@
         "patterns": [
           "sklad_pod_licem",
           "stos_skrzyn",
-          "kat_skrzyn",
-          "beczki"
+          "kat_skrzyn"
         ],
         "pattern_chance": 0.6
       },
@@ -799,15 +799,15 @@
       "class": "INTERACTIVE",
       "placement": "grid",
       "scene": "res://modules/quiz_rpg/scenes/objects/barrel.tscn",
-      "density": 0.9,
+      "density": 0.12,
       "cluster": {
         "size": [
-          2,
-          5
+          1,
+          2
         ],
         "radius": 1
       },
-      "room_density": 4,
+      "room_density": 1,
       "priority": 300
     },
     {
