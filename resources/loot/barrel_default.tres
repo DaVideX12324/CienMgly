@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="3_potion"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="4_ether"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/focus_tonic.tres" id="5_focus_tonic"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="6_antidote"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="7_lockpick"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lucky_charm.tres" id="8_lucky_charm"]
+
+[sub_resource type="Resource" id="Entry_potion"]
+script = ExtResource("2_entry")
+item = ExtResource("3_potion")
+weight = 55.0
+count_min = 1
+count_max = 3
+
+[sub_resource type="Resource" id="Entry_ether"]
+script = ExtResource("2_entry")
+item = ExtResource("4_ether")
+weight = 25.0
+count_min = 1
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_focus_tonic"]
+script = ExtResource("2_entry")
+item = ExtResource("5_focus_tonic")
+weight = 15.0
+count_min = 1
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_antidote"]
+script = ExtResource("2_entry")
+item = ExtResource("6_antidote")
+weight = 15.0
+count_min = 1
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_lockpick"]
+script = ExtResource("2_entry")
+item = ExtResource("7_lockpick")
+weight = 30.0
+count_min = 1
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_lucky_charm"]
+script = ExtResource("2_entry")
+item = ExtResource("8_lucky_charm")
+weight = 5.0
+count_min = 1
+count_max = 1
+
+[resource]
+script = ExtResource("1_table")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_potion"), SubResource("Entry_ether"), SubResource("Entry_focus_tonic"), SubResource("Entry_antidote"), SubResource("Entry_lockpick"), SubResource("Entry_lucky_charm")])

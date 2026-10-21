@@ -71,19 +71,8 @@
   },
   "chest_tier": 1,
   "enemy_levels": {"1": [1, 3], "2": [3, 7], "3": [8, 9], "4": [9, 9], "ref_spawns": 34},
-  "chest_loot": [
-    {"item_id": "potion", "weight": 36, "count": 2},
-    {"item_id": "potion_1m", "weight": 10},
-    {"item_id": "ether", "weight": 18},
-    {"item_id": "focus_tonic", "weight": 10},
-    {"item_id": "antidote", "weight": 10},
-    {"item_id": "lockpick", "weight": 10},
-    {"item_id": "key_tier1", "weight": 6},
-    {"item_id": "iron_sword", "weight": 4},
-    {"item_id": "iron_buckler", "weight": 4},
-    {"item_id": "leather_hood", "weight": 4},
-    {"item_id": "reinforced_tunic", "weight": 4}
-  ],
+  "chest_loot": "resources/loot/caves_chests.tres",
+  "barrel_loot": "resources/loot/caves_barrels.tres",
   "niche_content": {
     "weights": {"item": 50, "chest": 35, "secret_room": 15},
     "secret_scene": "scenes/maps/levels/cave_secret.tscn",

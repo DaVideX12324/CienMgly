@@ -57,7 +57,8 @@ var _enemy_pool: Array = []
 var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [min, max] poziomu wroga
 var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga -> [{item_id, chance, count}]
-var _chest_loot: Array = []  # companion-JSON "chest_loot": [{item_id, weight, count}] (skrzynie wygenerowane na mapie)
+var _chest_loot: Variant = []  # companion-JSON "chest_loot": [{item_id, weight, count}] albo ścieżka .tres (skrzynie mapy)
+var _barrel_loot: QuizRpgLootTableData = null  # companion-JSON "barrel_loot": ścieżka .tres — tabela beczek strefy
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
@@ -600,6 +601,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_chest_tier = clampi(int(cfg.raw.get("chest_tier", 1)) if cfg != null else 1, 1, 4)
 	_enemy_loot = cfg.raw.get("enemy_loot", {}) if cfg != null else {}
 	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
+	_barrel_loot = QuizRpgLootTableData.from_json(cfg.raw.get("barrel_loot", "")) if cfg != null else null
 	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
 	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
 	_boss_cfg = cfg.raw.get("boss", {}) if cfg != null else {}
@@ -851,7 +853,9 @@ func _apply_chest_tier() -> void:
 			node.set("tier", _chest_tier)
 
 
-## Tabele łupu z JSON mapy ("enemy_loot" po tierze wroga, "chest_loot" dla skrzyń) na wrogach i skrzyniach wygenerowanych na tej mapie.
+## Tabele łupu z JSON mapy na wrogach, skrzyniach i beczkach wygenerowanych na tej mapie: "enemy_loot" po tierze wroga,
+## "chest_loot" (lista wpisów albo ścieżka .tres — tabela strefy) i "barrel_loot" (ścieżka .tres). Tabela .tres trafia
+## tylko do obiektów bez własnej (loot_data ustawione w Inspectorze sceny wygrywa).
 func _apply_loot_tables() -> void:
 	if not _enemy_loot.is_empty():
 		for node in get_tree().get_nodes_in_group("enemies"):
@@ -859,10 +863,18 @@ func _apply_loot_tables() -> void:
 				var table: Variant = _enemy_loot.get(str(int(node.get("encounter_tier"))))
 				if table is Array:
 					node.set("loot_table", table)
-	if not _chest_loot.is_empty():
-		for node in get_tree().get_nodes_in_group("chests"):
-			if is_ancestor_of(node) and "loot_table" in node:
-				node.set("loot_table", _chest_loot)
+	var chest_data := QuizRpgLootTableData.from_json(_chest_loot)
+	for node in get_tree().get_nodes_in_group("chests"):
+		if not is_ancestor_of(node):
+			continue
+		if chest_data != null and "loot_data" in node and node.get("loot_data") == null:
+			node.set("loot_data", chest_data)
+		elif _chest_loot is Array and not (_chest_loot as Array).is_empty() and "loot_table" in node:
+			node.set("loot_table", _chest_loot)
+	if _barrel_loot != null:
+		for node in get_tree().get_nodes_in_group("destructible"):
+			if is_ancestor_of(node) and "loot_data" in node and node.get("loot_data") == null:
+				node.set("loot_data", _barrel_loot)
 
 
 ## Zawartość nisz out (NicheContentPlanner, "niche_content" w JSON mapy): skrzynie nisz dostają własny tier ("chest_tier",
@@ -929,6 +941,8 @@ func _apply_special_chests(prefix: String, cfg: Dictionary) -> void:
 			node.set("tier", tier)
 			if not loot.is_empty():
 				node.set("loot_table", loot)
+				if "loot_data" in node:
+					node.set("loot_data", null)  # specjalny łup (nisza / skarb) zamiast tabeli strefy z _apply_loot_tables
 
 
 ## Nazwa markera powrotu przed niszą z przejściem do sekretnego pokoju.
