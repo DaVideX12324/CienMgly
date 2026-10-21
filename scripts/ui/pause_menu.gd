@@ -154,6 +154,7 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
+	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę (brakowało — menu pauzy się nie skalowało)
 	var core_mgr: Node = get_node_or_null("/root/CoreManager")
 	if core_mgr and core_mgr.has_method("get_singleton"):
 		_gm = core_mgr.call("get_singleton", "GameManager")
