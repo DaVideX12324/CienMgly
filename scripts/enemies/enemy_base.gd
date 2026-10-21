@@ -417,7 +417,8 @@ func _has_line_of_sight_to_player() -> bool:
 		# węzła — get_collider() zwraca dla nich null mimo trafienia.
 		if _raycast.is_colliding():
 			var collider := _raycast.get_collider()
-			if collider != player_ref and not ((collider is Node) and (collider as Node).is_in_group("player")):
+			# Towarzysz idący obok bohatera (ta sama warstwa, poza grupą player) to też drużyna — nie zasłania.
+			if collider != player_ref and not ((collider is Node) and ((collider as Node).is_in_group("player") 					or bool((collider as Node).get("is_party_follower")))):
 				return false
 
 	var grid := _map_grid()
@@ -531,6 +532,7 @@ func _draw_polygon_shape(center: Vector2, radius: float, sides: int, color: Colo
 
 
 func _patrol(delta: float) -> void:
+	_find_player_in_range()
 	if is_instance_valid(player_ref) and not defeated and _can_spot_player():
 		state = State.CHASING
 		last_seen_player_pos = player_ref.global_position
@@ -541,6 +543,16 @@ func _patrol(delta: float) -> void:
 		_follow_patrol_path(delta)
 	else:
 		_idle_wander(delta)
+
+
+## Gracz w promieniu wykrywania bez referencji (był już w obszarze, gdy wróg się pojawił albo wrogowie zostali
+## włączeni z menu deweloperskiego — body_entered się wtedy nie powtarza): wróg i tak go namierza.
+func _find_player_in_range() -> void:
+	if is_instance_valid(player_ref) or not is_inside_tree():
+		return
+	var p := get_tree().get_first_node_in_group("player") as Node2D
+	if p != null and global_position.distance_to(p.global_position) <= detection_radius:
+		player_ref = p
 
 
 func _idle_wander(delta: float) -> void:
