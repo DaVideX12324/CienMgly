@@ -37,6 +37,10 @@
       ]
     },
     {
+      "label": "Mapa (pełny widok)",
+      "keys": "M"
+    },
+    {
       "label": "Wybór w menu i walce",
       "keys": "Strzałki, W / S"
     },

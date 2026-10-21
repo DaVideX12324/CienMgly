@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/minimap.gd" id="1_mm"]
+
+[node name="Minimap" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_mm")
+
+[node name="Corner" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -252.0
+offset_top = 60.0
+offset_right = -16.0
+offset_bottom = 296.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"QuizWindow"
+
+[node name="Clip" type="Control" parent="Corner"]
+clip_contents = true
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Map" type="TextureRect" parent="Corner/Clip"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 200.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="PlayerDot" type="ColorRect" parent="Corner/Clip"]
+layout_mode = 0
+offset_left = 97.0
+offset_top = 97.0
+offset_right = 103.0
+offset_bottom = 103.0
+mouse_filter = 2
+color = Color(1, 0.25, 0.2, 1)
+
+[node name="Full" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_left = 0.12
+anchor_top = 0.08
+anchor_right = 0.88
+anchor_bottom = 0.92
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_type_variation = &"QuizWindow"
+
+[node name="Box" type="VBoxContainer" parent="Full"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Full/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Mapa"
+horizontal_alignment = 1
+
+[node name="Area" type="Control" parent="Full/Box"]
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="Map" type="TextureRect" parent="Full/Box/Area"]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 400.0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="PlayerDot" type="ColorRect" parent="Full/Box/Area"]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+mouse_filter = 2
+color = Color(1, 0.25, 0.2, 1)
+
+[node name="Hint" type="Label" parent="Full/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 27
+text = "M / Esc: zamknij"
+horizontal_alignment = 1

@@ -375,6 +375,8 @@
   "map.sewer.name": "Ścieki",
   "map.town.name": "Miasto",
   "map.tutorial_area.name": "Starożytne Ruiny",
+  "minimap.hint": "M / Esc: zamknij",
+  "minimap.title": "Mapa",
   "npc.armorer.greeting_1": "Tarcza i dobry hełm uratowały więcej głów niż najlepszy miecz.",
   "npc.armorer.name": "Kastor",
   "npc.blacksmith.greeting_1": "Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.",

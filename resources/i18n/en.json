@@ -375,6 +375,8 @@
   "map.sewer.name": "Sewers",
   "map.town.name": "Town",
   "map.tutorial_area.name": "Ancient Ruins",
+  "minimap.hint": "M / Esc: close",
+  "minimap.title": "Map",
   "npc.armorer.greeting_1": "A shield and a good helmet have saved more heads than the finest sword.",
   "npc.armorer.name": "Kastor",
   "npc.blacksmith.greeting_1": "Blades, axes, spears. I can't recall how to forge better steel… yet.",

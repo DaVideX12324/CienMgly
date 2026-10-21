@@ -28,6 +28,7 @@ func _ready() -> void:
 		_scene_root.name = "SceneRoot"
 		add_child(_scene_root)
 	_register_singletons()
+	_ensure_input_actions()
 	if OS.is_debug_build():
 		add_child(preload("scripts/tools/perf_monitor.gd").new())  # F3 = nakładka, zacięcia w user://perf_log.txt
 	_start_progress_log()
@@ -42,6 +43,15 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	QuizTheme.restore()
+
+
+## Akcje modułu spoza project.godot hosta (domyślne klawisze; zmiana w opcjach hosta jak inne akcje).
+func _ensure_input_actions() -> void:
+	if not InputMap.has_action("minimap"):
+		InputMap.add_action("minimap")
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_M
+		InputMap.action_add_event("minimap", ev)
 
 
 ## Motywy UI dla zakładki „Motyw” w opcjach hosta: [{id, name}], zapis w ustawieniach modułu

@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://hud001"]
 
 [ext_resource type="Script" uid="uid://ocegqk0qpov2" path="res://modules/quiz_rpg/scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/ui/minimap.tscn" id="2_minimap"]
 
 [node name="HUD" type="CanvasLayer" unique_id=1090747133]
 layer = 10
@@ -16,6 +17,8 @@ offset_right = 150.0
 offset_bottom = 110.0
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Minimap" parent="." instance=ExtResource("2_minimap")]
 
 [node name="FadeOverlay" type="ColorRect" parent="." unique_id=1343108672]
 anchors_preset = 15
