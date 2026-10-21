@@ -15,6 +15,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_sword.tres" id="13_o58t1"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_blade.tres" id="14_kcu86"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_upgrade_service.gd" id="15_upgr"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="16_recl"]
 
 [sub_resource type="Resource" id="Resource_0nkv3"]
 script = ExtResource("5_fejpd")
@@ -66,6 +67,14 @@ intro_lines = PackedStringArray()
 label = "Ulepsz broń"
 label_key = "npc.service.upgrade"
 
+[sub_resource type="Resource" id="Resource_recl1"]
+script = ExtResource("16_recl")
+lines = PackedStringArray("Czekaj… coś mi wraca. Wiem już, jak hartować stal! Zajrzyj do mnie — mam dla ciebie lepsze ostrza.")
+lines_key = "npc.blacksmith.recall"
+set_flag = "recall:blacksmith:sewer"
+auto_once = true
+required_flag = "boss:sewer"
+
 [node name="Blacksmith" instance=ExtResource("0_base")]
 npc_name = "Brann"
 npc_name_key = "npc.blacksmith.name"
@@ -73,4 +82,4 @@ sprite_frames = ExtResource("2_th7q5")
 sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.")
 greeting_key = "npc.blacksmith.greeting"
-services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1")])
+services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Resource_recl1")])

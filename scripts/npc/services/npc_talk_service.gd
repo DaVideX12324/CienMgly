@@ -13,6 +13,19 @@ extends QuizRpgNpcService
 @export var repeat_lines_key: String = ""
 ## Flaga fabularna ustawiana po rozmowie (np. „rozmawiał z kowalem” — odblokowuje usługę innego NPC).
 @export var set_flag: String = ""
+## Wspomnienie: nie ma pozycji w menu, tylko odtwarza się raz, na początku najbliższej rozmowy po spełnieniu
+## required_flag (np. kowal po pokonaniu bossa: „Przypomniałem sobie, jak hartować stal…”). Wymaga set_flag
+## (po odtworzeniu flaga ją wycisza).
+@export var auto_once: bool = false
+
+
+func is_available(npc: Node) -> bool:
+	return not auto_once and super.is_available(npc)
+
+
+## Czy wspomnienie czeka na odtworzenie.
+func is_pending_recall(npc: Node) -> bool:
+	return auto_once and set_flag != "" and super.is_available(npc) and not QuizRpgNpcContext.has_flag(npc, set_flag)
 
 
 func run(npc: Node) -> void:

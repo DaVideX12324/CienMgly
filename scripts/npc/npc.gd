@@ -4,7 +4,7 @@ extends StaticBody2D
 
 ## NPC miasta (scena-szablon scenes/npc/npc.tscn i dziedziczące: sklepikarka, karczmarka, nauczyciel, mieszkaniec):
 ## klawisz interakcji -> powitanie, potem menu usług (QuizRpgNpcService: sklep, odpoczynek, nauka umiejętności,
-## rozmowa) i „Do widzenia”; po usłudze menu wraca. NPC z jedną rozmową i bez innych usług mówi ją od razu.
+## rozmowa; wspomnienia `auto_once` odtwarzają się raz przed menu) i „Do widzenia”; po usłudze menu wraca. NPC z jedną rozmową i bez innych usług mówi ją od razu.
 ## Przez całą rozmowę gra jest w stanie CUTSCENE (wrogowie i gracz stoją). Wygląd: sprite_frames (animacja
 ## „idle”), widoczny też w edytorze. Niezależny od układu mapy — wstawia się go w dowolną scenę.
 
@@ -82,6 +82,9 @@ func interact(_player: Node2D) -> void:
 
 
 func _session() -> void:
+	for s in services:
+		if s is QuizRpgNpcTalk and s.is_pending_recall(self):
+			await s.run(self)
 	var avail := available_services()
 	var only_talk := avail.size() == 1 and avail[0] is QuizRpgNpcTalk
 	if not greeting.is_empty():
