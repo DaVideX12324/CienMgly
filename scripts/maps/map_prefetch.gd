@@ -131,8 +131,23 @@ static func _prepare(path: String, tree: SceneTree) -> Array:
 	var packed := ResourceLoader.load_threaded_get(scene) as PackedScene
 	if packed == null or not _is_procedural(packed):
 		return []
+	# Sceny wrogów z pul map (~0,4 s) wczytane w tle przed _prepare_job — inaczej enemy_scene() czeka albo wczytuje je
+	# na głównym wątku (zacięcie zaraz po wejściu na mapę, np. tutorial zleca jaskinię od razu po starcie).
+	var level_script: Script = load(QuizRpgPaths.path("scripts/maps/procedural_level.gd"))
+	level_script.call("warm_enemy_scenes")
+	while not bool(level_script.call("enemy_scenes_ready")):
+		await tree.process_frame
 	var lvl := packed.instantiate()
 	lvl.set("level_path", path)
+	# Zasoby .tres z companion-JSON (tabele łupu z przedmiotami) też w tle — trzymane do końca _prepare_job.
+	var held: Array = []
+	for res_path in _json_resources(str(lvl.call("_resolve_behaviour_json_path"))):
+		if ResourceLoader.load_threaded_request(res_path) == OK:
+			held.append(res_path)
+	for res_path in held:
+		while ResourceLoader.load_threaded_get_status(res_path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			await tree.process_frame
+	held = held.map(func(p): return ResourceLoader.load_threaded_get(p))
 	var job = null
 	if lvl.has_method("_prepare_job") and bool(lvl.get("async_generation")):
 		job = lvl.call("_prepare_job", 0)
@@ -140,6 +155,28 @@ static func _prepare(path: String, tree: SceneTree) -> Array:
 		lvl.free()
 		return []
 	return [job, lvl]
+
+
+## Ścieżki .tres z companion-JSON mapy (wartości tekstowe w głąb, względem modułu albo res://), które istnieją.
+static func _json_resources(json_path: String) -> Array:
+	var out: Array = []
+	if json_path.is_empty() or not FileAccess.file_exists(json_path):
+		return out
+	_collect_tres(JSON.parse_string(FileAccess.get_file_as_string(json_path)), out)
+	return out
+
+
+static func _collect_tres(v: Variant, out: Array) -> void:
+	if v is Dictionary:
+		for k in v:
+			_collect_tres(v[k], out)
+	elif v is Array:
+		for e in v:
+			_collect_tres(e, out)
+	elif v is String and String(v).ends_with(".tres"):
+		var p := String(v) if String(v).begins_with("res://") else QuizRpgPaths.path(String(v))
+		if not out.has(p) and ResourceLoader.exists(p):
+			out.append(p)
 
 
 ## Czy scena dziedziczy po procedural_level.tscn (bez tworzenia jej węzłów — mapy ręczne bywają duże).

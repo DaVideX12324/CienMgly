@@ -557,6 +557,14 @@ static func enemy_scene(path: String) -> PackedScene:
 	return p
 
 
+## Czy sceny wrogów zlecone w tle (warm_enemy_scenes) już się wczytały — wtedy enemy_scene() nie czeka na głównym wątku.
+static func enemy_scenes_ready() -> bool:
+	for path in _enemy_requested:
+		if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return false
+	return true
+
+
 ## Zleca wczytanie w tle scen wrogów ze wszystkich companion-JSON map ("enemies": tiery albo frakcje -> tiery).
 static func warm_enemy_scenes() -> void:
 	var dir := QuizRpgPaths.path("resources/maps/config")
