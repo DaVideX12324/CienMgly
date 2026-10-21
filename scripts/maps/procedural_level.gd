@@ -975,6 +975,7 @@ func _apply_treasure() -> void:
 			if is_ancestor_of(node) and bool(node.get("is_boss")):
 				node.set("boss_story_id", str(_boss_cfg.get("story_id", "")))
 				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", true)))
+				node.set("ends_game", bool(_boss_cfg.get("ends_game", false)))
 
 
 ## Skrzynie o unique_id z prefiksem (nisze, skarb): tier ("chest_tier", domyślnie tier mapy) i łup ("chest_loot": ścieżka .tres)

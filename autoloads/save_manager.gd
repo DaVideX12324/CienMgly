@@ -324,7 +324,7 @@ func _build_slot_summary(slot_index: int, slot_data: Dictionary) -> Dictionary:
 		"exists": true,
 		"title": "%s  LV %d" % [player_name, level],
 		"subtitle": map_name,
-		"detail": "%s  |  %s  |  %d poprawnych" % [play_time_text, saved_text, total_correct],
+		"detail": "%s  |  %s  |  %d poprawnych%s" % [play_time_text, saved_text, total_correct, _completed_tag(slot_data)],
 		"time_text": play_time_text,
 		"saved_text": saved_text,
 		"saved_at_unix": saved_at_unix,
@@ -339,6 +339,15 @@ func _format_map_name(scene_path: String) -> String:
 		return "Kraina Wiedzy"
 	var file_name: String = scene_path.get_file().get_basename().replace("_", " ")
 	return file_name.capitalize()
+
+
+## „  |  Ukończono”, gdy zapis ma flagę końca gry (EnemyBase.ends_game).
+func _completed_tag(slot_data: Dictionary) -> String:
+	var ls: Variant = slot_data.get("level_states", {})
+	var flags: Variant = (ls as Dictionary).get("story_flags", {}) if ls is Dictionary else {}
+	if flags is Dictionary and (flags as Dictionary).has("game:completed"):
+		return "  |  " + QuizRpgI18n.t("ui.end.completed_tag", "Ukończono")
+	return ""
 
 
 func _format_play_time(play_time_seconds: int) -> String:

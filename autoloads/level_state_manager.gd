@@ -365,6 +365,15 @@ func set_story_flag(flag: String) -> bool:
 	return true
 
 
+## Liczba flag fabularnych z prefiksem (np. "boss:" — pokonani bossowie na ekranie końca gry).
+func count_story_flags(prefix: String) -> int:
+	var n := 0
+	for f: String in _story_flags:
+		if f.begins_with(prefix):
+			n += 1
+	return n
+
+
 ## Cofa flagę (np. punkt zapisu ustawia ją przed zapisem, żeby trafiła do pliku, i cofa, gdy gracz nie zapisał).
 func clear_story_flag(flag: String) -> void:
 	_story_flags.erase(flag)

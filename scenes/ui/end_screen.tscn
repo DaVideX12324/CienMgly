@@ -1,0 +1,149 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/end_screen.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="2_theme"]
+
+[node name="EndScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 50
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Dim" type="ColorRect" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.03, 0.06, 0.9)
+
+[node name="Center" type="CenterContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Root/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="Title" type="Label" parent="Root/Center/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.82, 0.36, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 54
+text = "Koniec gry"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Root/Center/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.84, 0.86, 0.9, 1)
+theme_override_font_sizes/font_size = 27
+text = "Strażnik ścieków padł, a Mgła na chwilę się przerzedziła.
+Dziękujemy za grę!"
+horizontal_alignment = 1
+
+[node name="StatsPanel" type="PanelContainer" parent="Root/Center/Box"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"QuizWindow"
+
+[node name="Stats" type="GridContainer" parent="Root/Center/Box/StatsPanel"]
+layout_mode = 2
+theme_override_constants/h_separation = 48
+theme_override_constants/v_separation = 8
+columns = 2
+
+[node name="TimeLabel" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+layout_mode = 2
+text = "Czas gry"
+
+[node name="TimeValue" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+unique_name_in_owner = true
+auto_translate_mode = 2
+layout_mode = 2
+text = "0:00:00"
+horizontal_alignment = 2
+
+[node name="LevelLabel" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+layout_mode = 2
+text = "Poziom"
+
+[node name="LevelValue" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+unique_name_in_owner = true
+auto_translate_mode = 2
+layout_mode = 2
+text = "1"
+horizontal_alignment = 2
+
+[node name="BossesLabel" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+layout_mode = 2
+text = "Pokonani bossowie"
+
+[node name="BossesValue" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+unique_name_in_owner = true
+auto_translate_mode = 2
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="CorrectLabel" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+layout_mode = 2
+text = "Poprawne odpowiedzi"
+
+[node name="CorrectValue" type="Label" parent="Root/Center/Box/StatsPanel/Stats"]
+unique_name_in_owner = true
+auto_translate_mode = 2
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+
+[node name="SavedLabel" type="Label" parent="Root/Center/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.86, 0.62, 1)
+theme_override_font_sizes/font_size = 22
+text = "Gra zapisana jako ukończona."
+horizontal_alignment = 1
+
+[node name="Panel" type="PanelContainer" parent="Root/Center/Box"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"QuizWindow"
+
+[node name="List" type="VBoxContainer" parent="Root/Center/Box/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ContinueButton" type="Button" parent="Root/Center/Box/Panel/List"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+text = "Graj dalej"
+
+[node name="MenuButton" type="Button" parent="Root/Center/Box/Panel/List"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+text = "Menu główne"
