@@ -57,7 +57,7 @@ var _enemy_pool: Array = []
 var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [min, max] poziomu wroga
 var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga (int) -> QuizRpgLootTableData (ścieżka .tres)
-var _chest_loot: Variant = []  # companion-JSON "chest_loot": [{item_id, weight, count}] albo ścieżka .tres (skrzynie mapy)
+var _chest_loot: QuizRpgLootTableData = null  # companion-JSON "chest_loot": ścieżka .tres — tabela skrzyń strefy
 var _barrel_loot: QuizRpgLootTableData = null  # companion-JSON "barrel_loot": ścieżka .tres — tabela beczek strefy
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
@@ -606,7 +606,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 			var data := QuizRpgLootTableData.from_json(enemy_loot[tier])
 			if data != null:
 				_enemy_loot[int(str(tier))] = data
-	_chest_loot = cfg.raw.get("chest_loot", []) if cfg != null else []
+	_chest_loot = QuizRpgLootTableData.from_json(cfg.raw.get("chest_loot", "")) if cfg != null else null
 	_barrel_loot = QuizRpgLootTableData.from_json(cfg.raw.get("barrel_loot", "")) if cfg != null else null
 	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
 	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
@@ -861,21 +861,17 @@ func _apply_chest_tier() -> void:
 
 
 ## Tabele łupu z JSON mapy na wrogach, skrzyniach i beczkach wygenerowanych na tej mapie: "enemy_loot" (tier wroga ->
-## ścieżka .tres), "chest_loot" (lista wpisów albo ścieżka .tres — tabela strefy) i "barrel_loot" (ścieżka .tres). Tabela .tres trafia
-## tylko do obiektów bez własnej (loot_data ustawione w Inspectorze sceny wygrywa).
+## ścieżka .tres), "chest_loot" i "barrel_loot" (ścieżki .tres — tabele strefy). Tabela trafia tylko do obiektów bez własnej
+## (loot_data ustawione w Inspectorze sceny wygrywa).
 func _apply_loot_tables() -> void:
 	if not _enemy_loot.is_empty():
 		for node in get_tree().get_nodes_in_group("enemies"):
 			if is_ancestor_of(node) and "loot_data" in node and node.get("loot_data") == null and "encounter_tier" in node:
 				node.set("loot_data", _enemy_loot.get(int(node.get("encounter_tier"))))
-	var chest_data := QuizRpgLootTableData.from_json(_chest_loot)
-	for node in get_tree().get_nodes_in_group("chests"):
-		if not is_ancestor_of(node):
-			continue
-		if chest_data != null and "loot_data" in node and node.get("loot_data") == null:
-			node.set("loot_data", chest_data)
-		elif _chest_loot is Array and not (_chest_loot as Array).is_empty() and "loot_table" in node:
-			node.set("loot_table", _chest_loot)
+	if _chest_loot != null:
+		for node in get_tree().get_nodes_in_group("chests"):
+			if is_ancestor_of(node) and "loot_data" in node and node.get("loot_data") == null:
+				node.set("loot_data", _chest_loot)
 	if _barrel_loot != null:
 		for node in get_tree().get_nodes_in_group("destructible"):
 			if is_ancestor_of(node) and "loot_data" in node and node.get("loot_data") == null:
@@ -883,7 +879,7 @@ func _apply_loot_tables() -> void:
 
 
 ## Zawartość nisz out (NicheContentPlanner, "niche_content" w JSON mapy): skrzynie nisz dostają własny tier ("chest_tier",
-## domyślnie tier mapy) i łup ("chest_loot"), przedmioty na ziemi — wpis z "item_loot" wylosowany z hash(seed mapy, id),
+## domyślnie tier mapy) i łup ("chest_loot", .tres), przedmioty na ziemi — wpis z "item_loot" (.tres) wylosowany z hash(seed mapy, id),
 ## więc ta sama mapa ma w tej samej niszy ten sam przedmiot. Przejścia do sekretnych pokoi: cel = scena "secret_scene"
 ## (nisza pokoju relikwii — "relic_scene") z argumentem (ten poziom i kratka niszy), przed niszą marker powrotu
 ## (secret_marker).
@@ -893,7 +889,8 @@ func _apply_niche_content(result) -> void:
 	if cfg.is_empty() or result == null:
 		return
 	_apply_special_chests("niche_chest_", cfg)
-	var item_loot: Array = cfg.get("item_loot", [])
+	var item_data := QuizRpgLootTableData.from_json(cfg.get("item_loot", ""))
+	var item_loot: Array[Dictionary] = item_data.to_table() if item_data != null else [] as Array[Dictionary]
 	var secret_scene := QuizRpgPaths.path(str(cfg.get("secret_scene", "")))
 	var relic_scene := QuizRpgPaths.path(str(cfg.get("relic_scene", "")))
 	for node in get_tree().get_nodes_in_group("secret_passages"):
@@ -912,7 +909,7 @@ func _apply_niche_content(result) -> void:
 		var picked := QuizRpgLootTable.pick_weighted(item_loot, rng)
 		if not picked.is_empty():
 			node.set("item_id", str(picked.get("item_id", "potion")))
-			node.set("count", maxi(int(picked.get("count", 1)), 1))
+			node.set("count", QuizRpgLootEntry.roll_count(picked, rng))
 
 
 ## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup) albo relikwia — przedmiot "item_id" ×"count" z flagą
@@ -935,19 +932,18 @@ func _apply_treasure() -> void:
 				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", true)))
 
 
-## Skrzynie o unique_id z prefiksem (nisze, skarb): tier ("chest_tier", domyślnie tier mapy) i łup ("chest_loot") z `cfg`.
+## Skrzynie o unique_id z prefiksem (nisze, skarb): tier ("chest_tier", domyślnie tier mapy) i łup ("chest_loot": ścieżka .tres)
+## z `cfg` — zamiast tabeli strefy.
 func _apply_special_chests(prefix: String, cfg: Dictionary) -> void:
 	if cfg.is_empty():
 		return
 	var tier := clampi(int(cfg.get("chest_tier", _chest_tier)), 1, 4)
-	var loot: Array = cfg.get("chest_loot", [])
+	var loot := QuizRpgLootTableData.from_json(cfg.get("chest_loot", ""))
 	for node in get_tree().get_nodes_in_group("chests"):
 		if is_ancestor_of(node) and String(node.get("unique_id")).begins_with(prefix):
 			node.set("tier", tier)
-			if not loot.is_empty():
-				node.set("loot_table", loot)
-				if "loot_data" in node:
-					node.set("loot_data", null)  # specjalny łup (nisza / skarb) zamiast tabeli strefy z _apply_loot_tables
+			if loot != null:
+				node.set("loot_data", loot)
 
 
 ## Nazwa markera powrotu przed niszą z przejściem do sekretnego pokoju.

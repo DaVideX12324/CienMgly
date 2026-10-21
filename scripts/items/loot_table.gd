@@ -1,8 +1,8 @@
 class_name QuizRpgLootTable
 extends RefCounted
 
-## Losowanie z tabel łupu (słowniki z QuizRpgLootTableData.to_table albo listy z JSON nisz / skarbu): skrzynie i beczki —
-## jeden wpis wybierany wagowo, wrogowie — każdy wpis osobno ze swoją szansą. Wpis bez count = 1 sztuka.
+## Losowanie z tabel łupu (słowniki z QuizRpgLootTableData.to_table): skrzynie, beczki i przedmioty nisz — jeden wpis
+## wybierany wagowo, wrogowie — każdy wpis osobno ze swoją szansą.
 
 
 ## Jeden wpis wybrany wagowo (weight; brak = 1) albo {} dla pustej tabeli.

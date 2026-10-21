@@ -13,10 +13,8 @@ extends Resource
 @export_range(0.0, 1.0, 0.001) var chance: float = 1.0
 
 
-## Liczba sztuk wpisu tabeli: count_min..count_max, albo count (tabele z JSON), albo 1.
+## Liczba sztuk wpisu tabeli (słownik z QuizRpgLootTableData.to_table): równomiernie count_min..count_max.
 static func roll_count(entry: Dictionary, rng: RandomNumberGenerator = null) -> int:
-	if entry.has("count_min"):
-		var lo := maxi(int(entry["count_min"]), 1)
-		var hi := maxi(int(entry.get("count_max", lo)), lo)
-		return rng.randi_range(lo, hi) if rng else randi_range(lo, hi)
-	return maxi(int(entry.get("count", 1)), 1)
+	var lo := maxi(int(entry.get("count_min", 1)), 1)
+	var hi := maxi(int(entry.get("count_max", lo)), lo)
+	return rng.randi_range(lo, hi) if rng else randi_range(lo, hi)

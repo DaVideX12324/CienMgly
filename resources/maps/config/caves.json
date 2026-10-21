@@ -78,44 +78,14 @@
     "secret_scene": "scenes/maps/levels/cave_secret.tscn",
     "relic_scene": "scenes/maps/levels/cave_relic.tscn",
     "chest_tier": 2,
-    "chest_loot": [
-      {"item_id": "potion", "weight": 14, "count": 3},
-      {"item_id": "potion_1m", "weight": 10, "count": 2},
-      {"item_id": "ether", "weight": 10, "count": 2},
-      {"item_id": "key_tier1", "weight": 8, "count": 2},
-      {"item_id": "lucky_charm", "weight": 8},
-      {"item_id": "iron_sword", "weight": 12},
-      {"item_id": "leather_hood", "weight": 10},
-      {"item_id": "reinforced_tunic", "weight": 10},
-      {"item_id": "iron_buckler", "weight": 10},
-      {"item_id": "key_tier2", "weight": 4}
-    ],
-    "item_loot": [
-      {"item_id": "potion", "weight": 30},
-      {"item_id": "potion_1m", "weight": 12},
-      {"item_id": "ether", "weight": 18},
-      {"item_id": "lockpick", "weight": 16},
-      {"item_id": "antidote", "weight": 14},
-      {"item_id": "focus_tonic", "weight": 12},
-      {"item_id": "key_tier1", "weight": 6},
-      {"item_id": "lucky_charm", "weight": 4}
-    ]
+    "chest_loot": "resources/loot/caves_niche_chests.tres",
+    "item_loot": "resources/loot/caves_niche_items.tres"
   },
   "rare_rooms": {
     "count": [1, 2],
     "min_detour": 12,
     "chest_tier": 3,
-    "chest_loot": [
-      {"item_id": "iron_sword", "weight": 12},
-      {"item_id": "leather_hood", "weight": 10},
-      {"item_id": "reinforced_tunic", "weight": 10},
-      {"item_id": "iron_buckler", "weight": 10},
-      {"item_id": "lucky_charm", "weight": 10},
-      {"item_id": "key_tier2", "weight": 8},
-      {"item_id": "potion_1l", "weight": 14, "count": 2},
-      {"item_id": "ether_1l", "weight": 10},
-      {"item_id": "potion_1m", "weight": 10, "count": 3}
-    ]
+    "chest_loot": "resources/loot/caves_rare_chests.tres"
   },
   "secret_room": {
     "generation": {"width": 56, "height": 56, "min_room_size": 8, "max_room_size": 16, "max_rooms": 0},
@@ -125,17 +95,7 @@
     "treasure": {
       "count": 1,
       "chest_tier": 2,
-      "chest_loot": [
-        {"item_id": "iron_sword", "weight": 14},
-        {"item_id": "iron_buckler", "weight": 10},
-        {"item_id": "reinforced_tunic", "weight": 10},
-        {"item_id": "leather_hood", "weight": 10},
-        {"item_id": "lucky_charm", "weight": 10},
-        {"item_id": "key_tier2", "weight": 8},
-        {"item_id": "potion", "weight": 14, "count": 3},
-        {"item_id": "potion_1l", "weight": 10, "count": 2},
-        {"item_id": "ether", "weight": 12, "count": 3}
-      ]
+      "chest_loot": "resources/loot/caves_secret_treasure.tres"
     }
   },
   "relic_room": {

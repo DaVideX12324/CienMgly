@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=23 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="3_potion"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_1m.tres" id="4_potion_1m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="5_ether"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier1.tres" id="6_key_tier1"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lucky_charm.tres" id="7_lucky_charm"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_sword.tres" id="8_iron_sword"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/leather_hood.tres" id="9_leather_hood"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/reinforced_tunic.tres" id="10_reinforced_tunic"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_buckler.tres" id="11_iron_buckler"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier2.tres" id="12_key_tier2"]
+
+[sub_resource type="Resource" id="Entry_0_potion"]
+script = ExtResource("2_entry")
+item = ExtResource("3_potion")
+weight = 14.0
+count_min = 3
+count_max = 3
+
+[sub_resource type="Resource" id="Entry_1_potion_1m"]
+script = ExtResource("2_entry")
+item = ExtResource("4_potion_1m")
+weight = 10.0
+count_min = 2
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_2_ether"]
+script = ExtResource("2_entry")
+item = ExtResource("5_ether")
+weight = 10.0
+count_min = 2
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_3_key_tier1"]
+script = ExtResource("2_entry")
+item = ExtResource("6_key_tier1")
+weight = 8.0
+count_min = 2
+count_max = 2
+
+[sub_resource type="Resource" id="Entry_4_lucky_charm"]
+script = ExtResource("2_entry")
+item = ExtResource("7_lucky_charm")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_5_iron_sword"]
+script = ExtResource("2_entry")
+item = ExtResource("8_iron_sword")
+weight = 12.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_6_leather_hood"]
+script = ExtResource("2_entry")
+item = ExtResource("9_leather_hood")
+weight = 10.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_7_reinforced_tunic"]
+script = ExtResource("2_entry")
+item = ExtResource("10_reinforced_tunic")
+weight = 10.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_8_iron_buckler"]
+script = ExtResource("2_entry")
+item = ExtResource("11_iron_buckler")
+weight = 10.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_9_key_tier2"]
+script = ExtResource("2_entry")
+item = ExtResource("12_key_tier2")
+weight = 4.0
+count_min = 1
+count_max = 1
+
+[resource]
+script = ExtResource("1_table")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_potion_1m"), SubResource("Entry_2_ether"), SubResource("Entry_3_key_tier1"), SubResource("Entry_4_lucky_charm"), SubResource("Entry_5_iron_sword"), SubResource("Entry_6_leather_hood"), SubResource("Entry_7_reinforced_tunic"), SubResource("Entry_8_iron_buckler"), SubResource("Entry_9_key_tier2")])

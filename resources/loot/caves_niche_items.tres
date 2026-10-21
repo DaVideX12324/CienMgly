@@ -1,0 +1,72 @@
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="3_potion"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_1m.tres" id="4_potion_1m"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="5_ether"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="6_lockpick"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="7_antidote"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/focus_tonic.tres" id="8_focus_tonic"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier1.tres" id="9_key_tier1"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lucky_charm.tres" id="10_lucky_charm"]
+
+[sub_resource type="Resource" id="Entry_0_potion"]
+script = ExtResource("2_entry")
+item = ExtResource("3_potion")
+weight = 30.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_1_potion_1m"]
+script = ExtResource("2_entry")
+item = ExtResource("4_potion_1m")
+weight = 12.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_2_ether"]
+script = ExtResource("2_entry")
+item = ExtResource("5_ether")
+weight = 18.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_3_lockpick"]
+script = ExtResource("2_entry")
+item = ExtResource("6_lockpick")
+weight = 16.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_4_antidote"]
+script = ExtResource("2_entry")
+item = ExtResource("7_antidote")
+weight = 14.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_5_focus_tonic"]
+script = ExtResource("2_entry")
+item = ExtResource("8_focus_tonic")
+weight = 12.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_6_key_tier1"]
+script = ExtResource("2_entry")
+item = ExtResource("9_key_tier1")
+weight = 6.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_7_lucky_charm"]
+script = ExtResource("2_entry")
+item = ExtResource("10_lucky_charm")
+weight = 4.0
+count_min = 1
+count_max = 1
+
+[resource]
+script = ExtResource("1_table")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_potion_1m"), SubResource("Entry_2_ether"), SubResource("Entry_3_lockpick"), SubResource("Entry_4_antidote"), SubResource("Entry_5_focus_tonic"), SubResource("Entry_6_key_tier1"), SubResource("Entry_7_lucky_charm")])

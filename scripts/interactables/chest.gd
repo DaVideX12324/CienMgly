@@ -8,10 +8,8 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @export var unique_id: String = ""
 @export var chest_item_id: String = "potion"
 @export_range(1, 99, 1) var chest_item_count: int = 1
-## Tabela łupu z mapy ("chest_loot" w JSON: [{item_id, weight, count}]); niepusta = skrzynia losuje z niej zamiast chest_item_id.
-var loot_table: Array = []
-## Tabela łupu tej skrzyni (plik .tres, resources/loot/; jeden wpis wybierany wagowo) — ma pierwszeństwo przed loot_table
-## z JSON mapy i przed chest_item_id. Tabela strefy ("chest_loot" w JSON jako ścieżka .tres) trafia tutaj, gdy pusta.
+## Tabela łupu tej skrzyni (plik .tres, resources/loot/; jeden wpis wybierany wagowo) — ma pierwszeństwo przed chest_item_id.
+## Pusta = tabela strefy ("chest_loot" w JSON mapy); skrzynie nisz / skarbu / rzadkich pokoi dostają tabelę ze swojej sekcji.
 @export var loot_data: QuizRpgLootTableData
 ## Poziom skrzyni: wyznacza trudność quizu przy otwieraniu wytrychem (pytań: 2 + tier, wymagane: o jedno mniej), klucz
 ## (KEY_ITEMS: klucz tieru ≥ tier skrzyni) i wygląd (tier_frames).
@@ -203,8 +201,6 @@ func drop_item() -> void:
 	var item_id := chest_item_id
 	var item_count := chest_item_count
 	var table: Array = loot_data.to_table() if loot_data != null else []
-	if table.is_empty():
-		table = loot_table
 	if not table.is_empty():
 		var picked := QuizRpgLootTable.pick_weighted(table)
 		if not picked.is_empty():
