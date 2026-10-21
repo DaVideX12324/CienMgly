@@ -7,6 +7,8 @@ const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
 
 ## Emitowany po każdym nowym kroku postępu urządzenia arcymaga (dla UI paska).
 signal device_progress_changed(count: int, total: int)
+## Flaga fabularna ustawiona (value = true) albo cofnięta — świat reaguje od razu (QuizRpgFlagGate).
+signal story_flag_changed(flag: String, value: bool)
 
 var level_states: Dictionary = {}
 
@@ -362,6 +364,7 @@ func set_story_flag(flag: String) -> bool:
 	if flag.is_empty() or _story_flags.has(flag):
 		return false
 	_story_flags[flag] = true
+	story_flag_changed.emit(flag, true)
 	return true
 
 
@@ -376,7 +379,8 @@ func count_story_flags(prefix: String) -> int:
 
 ## Cofa flagę (np. punkt zapisu ustawia ją przed zapisem, żeby trafiła do pliku, i cofa, gdy gracz nie zapisał).
 func clear_story_flag(flag: String) -> void:
-	_story_flags.erase(flag)
+	if _story_flags.erase(flag):
+		story_flag_changed.emit(flag, false)
 
 
 ## Flaga fabularna albo krok postępu urządzenia o tym id (pokonany story-boss) — wymagania usług NPC

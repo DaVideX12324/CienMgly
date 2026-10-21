@@ -157,7 +157,10 @@ func _play_level_music(level_path: String, level_node: Node) -> void:
 		return
 	var track := "world_map"
 	var p := QuizRpgPaths.level_scene(level_path).to_lower()
-	if p.contains("tutorial"):
+	var own := str(level_node.get("music_track")) if level_node != null and "music_track" in level_node else ""
+	if not own.is_empty():
+		track = own   # mapa ręczna z własnym utworem (QuizRpgHandmadeLevel.music_track)
+	elif p.contains("tutorial"):
 		track = "tutorial"
 	elif p.contains("desert"):
 		track = "desert_town"

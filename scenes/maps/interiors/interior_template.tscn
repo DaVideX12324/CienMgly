@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/handmade_level.gd" id="1_level"]
+[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="2_tiles"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/level_door.tscn" id="3_door"]
+
+[node name="Interior" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_level")
+in_route = false
+music_track = "desert_town"
+
+[node name="Floor" type="TileMapLayer" parent="."]
+z_index = -2
+texture_filter = 1
+tile_set = ExtResource("2_tiles")
+
+[node name="Walls" type="TileMapLayer" parent="."]
+texture_filter = 1
+y_sort_enabled = true
+tile_set = ExtResource("2_tiles")
+
+[node name="Npcs" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="Spawn" type="Marker2D" parent="Spawns"]
+position = Vector2(0, -24)
+
+[node name="ExitDoor" parent="." instance=ExtResource("3_door")]
+target_level = "res://modules/quiz_rpg/scenes/maps/levels/town.tscn"
+target_spawn = "Spawn"
+prompt_key = "prompt.exit"

@@ -76,6 +76,9 @@ var _rare_rooms: Dictionary = {}  # companion-JSON "rare_rooms": skrzynie specja
 ## Powrót przez wejście (enter_previous_level): poziom i spawn, w którym się pojawia (marker przy jego wyjściu).
 @export var previous_level_path: String = ""
 @export var previous_spawn_name: String = LevelPortal.FROM_NEXT_SPAWN
+## Krawędź, którą następna mapa (ręczna, o stałym układzie — np. miasto) ma wejście: wyjście tej mapy wypada po
+## przeciwnej stronie (spójna trasa, MapLinks). Dowolna = wg trasy.
+@export_enum("Dowolna:-1", "N:0", "E:1", "S:2", "W:3") var next_entry_edge: int = -1
 @export_group("Przejścia")
 ## Wyjście / wejście aktywowane klawiszem interakcji (E) zamiast wejścia w obszar — np. drabina w ściekach.
 @export var next_portal_use_key: bool = false
@@ -670,6 +673,9 @@ func _prepare_job(seed_val: int) -> GenJob:
 	if cave_flags != null and not link_name.is_empty():
 		_link_constraints = MapLinks.constraints(lsm.map_links, link_name, QuizRpgPaths.level_name(previous_level_path))
 		cave_flags.entrance_edge = int(_link_constraints.in)
+		var out_edge := MapLinks.opposite(next_entry_edge)
+		if out_edge >= 0 and out_edge != int(_link_constraints.in):
+			_link_constraints.allow = [out_edge] as Array[int]   # następna mapa ma stałe wejście
 		cave_flags.exit_edges.assign(_link_constraints.allow)
 
 	var job := GenJob.new()

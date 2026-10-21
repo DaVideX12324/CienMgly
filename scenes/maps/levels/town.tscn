@@ -37,9 +37,19 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c0.tscn" id="t_29"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c1.tscn" id="t_30"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r1c0.tscn" id="t_31"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/handmade_level.gd" id="h_level"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_portal"]
+size = Vector2(64, 32)
 
 [node name="Town" type="Node2D" unique_id=1399112909]
 y_sort_enabled = true
+script = ExtResource("h_level")
+next_level_path = "res://modules/quiz_rpg/scenes/maps/levels/sewer.tscn"
+previous_level_path = "res://modules/quiz_rpg/scenes/maps/levels/cave.tscn"
+entry_edge = 2
+exit_edge = 0
+music_track = "desert_town"
 
 [node name="Ground" type="TileMapLayer" parent="." unique_id=426862110]
 z_index = -3
@@ -842,3 +852,15 @@ position = Vector2(869, 1204)
 
 [node name="Sewer-Town" type="Marker2D" parent="Spawns"]
 position = Vector2(551, 191)
+
+[node name="enter_previous_level" type="Area2D" parent="."]
+position = Vector2(869, 1260)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="enter_previous_level"]
+shape = SubResource("RectangleShape2D_portal")
+
+[node name="enter_next_level" type="Area2D" parent="."]
+position = Vector2(551, 150)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="enter_next_level"]
+shape = SubResource("RectangleShape2D_portal")
