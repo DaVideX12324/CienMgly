@@ -63,8 +63,9 @@ var loot_table: Array = []
 @export var wander_radius: float = 100.0
 @export var memory_duration: float = 3.0
 ## Pole widzenia (stopnie) w kierunku ruchu: gracza poza nim wróg nie zauważa — można go podejść od tyłu
-## (przewaga w walce). Goniący wróg widzi dookoła. 360 = zawsze widzi (jak dawniej).
-@export_range(30.0, 360.0, 5.0) var vision_angle_deg: float = 120.0
+## (przewaga w walce). Goniący wróg widzi dookoła. Domyślnie 360 = widzi dookoła (decyzja usera 2026-10-21 — stożek 120°
+## był w grze dziwny); mniejszy kąt można ustawić konkretnemu wrogowi w Inspectorze.
+@export_range(30.0, 360.0, 5.0) var vision_angle_deg: float = 360.0
 @export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
 ## 2-way: odbicie w poziomie dopiero, gdy |kierunek.x| (wektor znormalizowany) przekracza próg —
