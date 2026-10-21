@@ -178,6 +178,8 @@ var _plans: Array[Dictionary] = []   # wybrane akcje rundy: {member, action, ski
 var _input_queue: Array[int] = []    # postacie wybierające komendy w tej rundzie (kolejność drużyny)
 var _input_pos := -1                 # która z nich wybiera teraz (-1 = Walcz / Uciekaj)
 var _executing := false              # faza wykonania (akcje z _plans) — inaczej wybór akcji tylko ją zapisuje
+var _round_running := false               # faza wykonania rundy trwa (bezpiecznik przed drugim _execute_round)
+var _acted_enemies: Dictionary = {}       # indeksy wrogów, którzy już działali w tej rundzie (bezpiecznik: raz na rundę)
 var _turn_queue: Array[Dictionary] = []   # reszta rundy: {"party": bool, "index": int}, od najszybszego
 var _party_state: Array[Dictionary] = []
 var _list_menu_mode: String = ""
@@ -620,6 +622,7 @@ func _start_round() -> void:
 ## Faza wyboru: Walcz / Uciekaj; postacie zdolne do ruchu (bez snu / ogłuszenia / paraliżu) w kolejności drużyny.
 func _begin_input() -> void:
 	_executing = false
+	_round_running = false
 	_plans.clear()
 	_guard.clear()
 	_input_queue.clear()
@@ -720,6 +723,10 @@ func _plan_for(member: int) -> Dictionary:
 
 ## Faza wykonania: kolejka wg AGI z wybranymi akcjami.
 func _execute_round() -> void:
+	if _round_running:
+		push_warning("QuizCombat: runda %d już trwa — drugie wykonanie pominięte" % turn_number)
+		return
+	_round_running = true
 	_executing = true
 	_close_actor_select()
 	phase = Phase.ENEMY_TURN
@@ -728,6 +735,7 @@ func _execute_round() -> void:
 	for unit in _enemy_units:  # akcje wrogów na tę rundę (jak w RPG Makerze) — prędkość umiejętności w kolejce
 		unit["planned_skill"] = _pick_enemy_skill(unit) if int(unit.get("hp", 0)) > 0 else null
 	_turn_queue = _turn_order()
+	_acted_enemies.clear()
 	_next_turn()
 
 
@@ -827,6 +835,10 @@ func _next_turn() -> void:
 				_start_member_action(i, plan)
 				return
 			continue
+		if _acted_enemies.has(i):
+			push_warning("QuizCombat: wróg %d (%s) już działał w turze %d — drugi ruch pominięty" % [i, _enemy_units[i].get("name", "?"), turn_number])
+			continue
+		_acted_enemies[i] = true
 		if int(_enemy_units[i].get("hp", 0)) > 0 and await _enemy_act(i):
 			return
 	_regen_party_tp()
