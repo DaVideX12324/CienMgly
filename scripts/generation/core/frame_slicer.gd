@@ -17,10 +17,16 @@ const MAX_MS := 33.0
 
 var _budget_us := int(MIN_MS * 1000.0)
 var _slice_start := 0
+var _fixed := false
 
 
-func _init() -> void:
+## fixed_ms > 0: stały budżet kawałka (praca w tle w trakcie gry — np. zapis mapy z wyprzedzeniem — nie może
+## zabierać klatce 8–33 ms jak na ekranie ładowania).
+func _init(fixed_ms: float = 0.0) -> void:
 	_slice_start = Time.get_ticks_usec()
+	if fixed_ms > 0.0:
+		_fixed = true
+		_budget_us = int(fixed_ms * 1000.0)
 
 
 ## Czy kawałek przekroczył budżet (czas oddać klatkę).
@@ -33,5 +39,6 @@ func next_frame(tree: SceneTree) -> void:
 	var t := Time.get_ticks_usec()
 	await tree.process_frame
 	var now := Time.get_ticks_usec()
-	_budget_us = clampi(now - t, int(MIN_MS * 1000.0), int(MAX_MS * 1000.0))
+	if not _fixed:
+		_budget_us = clampi(now - t, int(MIN_MS * 1000.0), int(MAX_MS * 1000.0))
 	_slice_start = now

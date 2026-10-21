@@ -1,6 +1,7 @@
 extends Node
 
 const QuizRpgPaths = preload("../scripts/quiz_rpg_paths.gd")
+const MapDiskCache = preload("../scripts/maps/map_disk_cache.gd")
 
 signal save_completed(slot_index: int)
 signal load_completed(slot_index: int)
@@ -144,6 +145,7 @@ func delete_save_slot(slot_index: int) -> bool:
 	if dir == null:
 		return false
 	var removed_path: String = _get_slot_path(slot_index)
+	var removed_seed := _slot_world_seed(load_slot_file(slot_index))
 	if FileAccess.file_exists(removed_path):
 		dir.remove(_get_slot_file_name(slot_index))
 	for move_index: int in range(slot_index + 1, slot_count):
@@ -153,8 +155,24 @@ func delete_save_slot(slot_index: int) -> bool:
 	_save_slot_config({"slot_count": slot_count - 1})
 	if current_save_slot >= 0:
 		current_save_slot = clampi(current_save_slot, 0, get_slot_count() - 1)
+	MapDiskCache.clear_seed_if_unused(removed_seed, true)  # zapisane mapy usuniętego slotu (gdy seeda nie ma inny slot)
 	save_slots_changed.emit()
 	return true
+
+
+## Seedy zapisu (mapy) wszystkich slotów z plikiem — MapDiskCache nie kasuje map, których któryś slot używa.
+func used_world_seeds() -> Array[int]:
+	var out: Array[int] = []
+	for slot_index: int in range(get_slot_count()):
+		var s := _slot_world_seed(load_slot_file(slot_index))
+		if s > 0 and not out.has(s):
+			out.append(s)
+	return out
+
+
+func _slot_world_seed(slot_data: Dictionary) -> int:
+	var ls: Variant = slot_data.get("level_states", {})
+	return int((ls as Dictionary).get("world_seed", 0)) if ls is Dictionary else 0
 
 
 func get_save_slots_summary() -> Array[Dictionary]:

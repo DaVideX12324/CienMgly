@@ -4,7 +4,9 @@ extends RefCounted
 ## sąsiednich poziomów (next_level_path, potem previous_level_path), gdy gracz jest na mapie. Wejście na mapę
 ## (ProceduralLevel.generate_level_async) bierze gotowe dane — zostaje tylko kładzenie kafli, encje i obiekty.
 ## Wynik zależy tylko od seeda zapisu, konfiguracji i rozmiaru (klucz), więc liczony wcześniej jest identyczny.
-## Jedno zadanie w tle naraz (jeden rdzeń); gotowe dane trzymane dla MAX_READY ostatnich zleceń.
+## Jedno zadanie w tle naraz (jeden rdzeń); gotowe dane trzymane dla MAX_READY ostatnich zleceń. Policzona mapa
+## trafia też na dysk (ProceduralLevel.save_prefetched_async — kafle malowane w tle), więc po restarcie gry sąsiednie
+## mapy wczytują się z pliku.
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const MAX_READY := 2
@@ -86,39 +88,58 @@ static func _pump() -> void:
 			continue
 		var path: String = _queue[0]
 		_queue.remove_at(0)
-		var job = await _prepare(path, tree)
-		if job == null:
+		var prep: Array = await _prepare(path, tree)
+		if prep.is_empty():
 			continue
+		var job = prep[0]
+		var lvl: Node = prep[1]
 		var key := key_of(job)
 		var known := false
 		for e in _entries:
 			known = known or (e.key == key and not e.stale)
 		if known:
+			lvl.free()
 			continue
 		job.background = true
 		var task := WorkerThreadPool.add_task(job.run, false, "Mapa z wyprzedzeniem")
-		_entries.append({"path": path, "key": key, "job": job, "task": task, "waited": false, "stale": false})
+		var entry := {"path": path, "key": key, "job": job, "task": task, "waited": false, "stale": false}
+		_entries.append(entry)
 		_sweep(MAX_READY + 1)
+		_save_when_ready(entry, lvl, tree)
 	_pumping = false
 
 
-## GenJob sceny poziomu (wczytanej w tle), bez dodawania jej do drzewa; null = nie ProceduralLevel.
-static func _prepare(path: String, tree: SceneTree):
+## Po policzeniu danych: zapis mapy na dysk przez poziom poza drzewem (o ile wejście nie wzięło ich wcześniej).
+static func _save_when_ready(entry: Dictionary, lvl: Node, tree: SceneTree) -> void:
+	# wpis zdjęty (wejście wzięło dane, sprzątanie) albo czekany przez kogoś innego — ID zadania już nieważne
+	while _entries.has(entry) and not entry.waited and not WorkerThreadPool.is_task_completed(entry.task):
+		await tree.process_frame
+	var free := func() -> bool: return not entry.stale and _entries.has(entry)
+	if free.call() and lvl.has_method("save_prefetched_async"):
+		await lvl.call("save_prefetched_async", entry.job, free)
+	lvl.free()
+
+
+## [GenJob, poziom poza drzewem] sceny poziomu (wczytanej w tle), bez dodawania jej do drzewa; [] = nie ProceduralLevel.
+## Poziom zostaje do zapisu mapy na dysk (_save_when_ready) — zwalnia go wołający.
+static func _prepare(path: String, tree: SceneTree) -> Array:
 	var scene := QuizRpgPaths.level_scene(path)
 	if not ResourceLoader.exists(scene) or ResourceLoader.load_threaded_request(scene, "PackedScene") != OK:
-		return null
+		return []
 	while ResourceLoader.load_threaded_get_status(scene) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 		await tree.process_frame
 	var packed := ResourceLoader.load_threaded_get(scene) as PackedScene
 	if packed == null or not _is_procedural(packed):
-		return null
+		return []
 	var lvl := packed.instantiate()
 	lvl.set("level_path", path)
 	var job = null
 	if lvl.has_method("_prepare_job") and bool(lvl.get("async_generation")):
 		job = lvl.call("_prepare_job", 0)
-	lvl.free()
-	return job
+	if job == null:
+		lvl.free()
+		return []
+	return [job, lvl]
 
 
 ## Czy scena dziedziczy po procedural_level.tscn (bez tworzenia jej węzłów — mapy ręczne bywają duże).

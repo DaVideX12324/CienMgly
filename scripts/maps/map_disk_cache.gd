@@ -220,6 +220,25 @@ static func sweep() -> void:
 		clear_dir(dirs[i][1])
 
 
+## Usuwa mapy seeda zapisu `world_seed`, o ile nie używa go żaden slot zapisu ani bieżąca gra (usunięcie slotu,
+## reroll świata). Seedy slotów z SaveManagera (used_world_seeds).
+static func clear_seed_if_unused(world_seed: int, keep_current: bool = false) -> void:
+	if world_seed <= 0:
+		return
+	var tree := Engine.get_main_loop() as SceneTree
+	var core := tree.root.get_node_or_null("CoreManager") if tree != null else null
+	var sm: Variant = core.call("get_singleton", "SaveManager") if core != null and core.has_method("get_singleton") else null
+	if sm is Node and (sm as Node).has_method("used_world_seeds") and world_seed in (sm as Node).call("used_world_seeds"):
+		return
+	if keep_current:
+		var lsm: Variant = core.call("get_singleton", "LevelStateManager") if core != null and core.has_method("get_singleton") else null
+		if lsm is Node and int((lsm as Node).get("world_seed")) == world_seed:
+			return
+	var p := "%s/%d" % [ROOT, world_seed]
+	if DirAccess.dir_exists_absolute(p):
+		clear_dir(p)
+
+
 static func clear_dir(p: String) -> void:
 	for f in DirAccess.get_files_at(p):
 		DirAccess.remove_absolute(p.path_join(f))

@@ -25,6 +25,10 @@ signal generation_finished
 
 ## Kafli wstawianych między sprawdzeniami budżetu klatki (FrameSlicer) przy generowaniu w tle.
 const PAINT_STEP := 512
+## Budżet klatki (ms) malowania kafli mapy z wyprzedzeniem w trakcie gry (zapis na dysk, save_prefetched_async).
+const BACKGROUND_PAINT_MS := 2.0
+## Kafli między sprawdzeniami budżetu przy malowaniu w tle (mniej niż PAINT_STEP — budżet tylko 2 ms).
+const BACKGROUND_PAINT_STEP := 64
 
 enum LevelType {
 	FOREST_OVERWORLD,
@@ -383,11 +387,12 @@ func _finish_generation(progress, overlay, job: GenJob) -> void:
 
 
 ## Zapis map na dysk tylko w grze (jak mapy z wyprzedzeniem) i dla jaskiń / ścieków (układ z planem kafli).
-func _setup_disk_cache(job: GenJob) -> void:
+## `check_game`: false dla poziomu poza drzewem z MapPrefetch (ten liczy mapy tylko w grze).
+func _setup_disk_cache(job: GenJob, check_game: bool = true) -> void:
 	_cache_path = ""
 	_cache_sig = ""
 	_cache_bytes = PackedByteArray()
-	if not job.is_cave or not MapDiskCache.enabled() or not _prefetch_allowed():
+	if not job.is_cave or not MapDiskCache.enabled() or (check_game and not _prefetch_allowed()):
 		return
 	var lsm = _get_level_state_manager()
 	if lsm == null or job.level_key.is_empty():
@@ -765,33 +770,65 @@ func _apply_job_async(job: GenJob) -> void:
 	if level_type == LevelType.CAVE_DUNGEON:
 		seed(job.rng.seed)
 		GenProgress.begin(&"paint")
-		var tiles = job.plans.tiles
-		var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
-		var total := 0
-		for layer_name in order:
-			total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
-		var done := 0
-		for layer_name in order:
-			if layer_name == &"FloorDecor":
-				# Teren (błoto/trawa) między Floor a FloorDecor / Walls — jak execute_cave_tiles.
-				await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, get_tree(), slicer)
-			var layer: TileMapLayer = layers.get(layer_name)
-			var cells: Dictionary = tiles.by_layer.get(layer_name, {})
-			if layer == null or cells.is_empty():
-				continue
-			var positions: Array = cells.keys()
-			for from in range(0, positions.size(), PAINT_STEP):
-				TilePlacementExecutor.place_range(layer, cells, positions, from, from + PAINT_STEP)
-				done += mini(PAINT_STEP, positions.size() - from)
-				if slicer.due():
-					GenProgress.sub(float(done) / maxf(total, 1))
-					await slicer.next_frame(get_tree())
+		await _paint_cave_tiles(job, layers, get_tree(), slicer, PAINT_STEP, true)
 		GenProgress.end(&"paint")
 		if not _cache_path.is_empty():
 			_cache_bytes = MapDiskCache.encode(MapDiskCache.snapshot(layers, job.result, _cache_sig))
 	else:
 		_apply_grid_layers(job, layers)
 	await _finish_level(job, slicer)
+
+
+## Kafle jaskini / ścieków z planu (kolejność jak execute_cave_tiles), porcjami wg `slicer`. Bez losowania — ten sam
+## plan daje te same warstwy (także malowany w tle przez save_prefetched_async). `progress`: pasek GenProgress.
+func _paint_cave_tiles(job: GenJob, layers: Dictionary, tree: SceneTree, slicer, step: int, progress: bool) -> void:
+	var tiles = job.plans.tiles
+	var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
+	var total := 0
+	for layer_name in order:
+		total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
+	var done := 0
+	for layer_name in order:
+		if layer_name == &"FloorDecor":
+			# Teren (błoto/trawa) między Floor a FloorDecor / Walls — jak execute_cave_tiles.
+			await TerrainPaintExecutor.execute_chunked(layers, job.plans.terrain, tree, slicer)
+		var layer: TileMapLayer = layers.get(layer_name)
+		var cells: Dictionary = tiles.by_layer.get(layer_name, {})
+		if layer == null or cells.is_empty():
+			continue
+		var positions: Array = cells.keys()
+		for from in range(0, positions.size(), step):
+			TilePlacementExecutor.place_range(layer, cells, positions, from, from + step)
+			done += mini(step, positions.size() - from)
+			if slicer.due():
+				if progress:
+					GenProgress.sub(float(done) / maxf(total, 1))
+				await slicer.next_frame(tree)
+
+
+## Zapis na dysk mapy policzonej z wyprzedzeniem (MapPrefetch; poziom poza drzewem): kafle malowane małymi porcjami
+## w trakcie gry, potem migawka jak przy wejściu — po restarcie gry sąsiednie mapy wczytują się z pliku. `still_free`:
+## czy dane nadal czekają w MapPrefetch (wejście, które je wzięło, zapisze mapę samo — wynik zmienia już gra).
+## Bez efektu, gdy plik z tym podpisem już jest albo to nie jaskinia / ścieki.
+func save_prefetched_async(job: GenJob, still_free: Callable) -> void:
+	# Kroki po kilka ms rozdzielone klatkami (gra trwa): podpis, sprawdzenie pliku, kafle porcjami, migawka, kodowanie.
+	var tree := Engine.get_main_loop() as SceneTree
+	_setup_disk_cache(job, false)
+	if _cache_path.is_empty() or job.plans == null:
+		return
+	await tree.process_frame
+	if not MapDiskCache.read(_cache_path, _cache_sig).is_empty():
+		return
+	await tree.process_frame
+	var layers := _prepare_layers(job)
+	await _paint_cave_tiles(job, layers, tree, FrameSlicer.new(BACKGROUND_PAINT_MS), BACKGROUND_PAINT_STEP, false)
+	await tree.process_frame
+	if not still_free.call():
+		return
+	var snap := MapDiskCache.snapshot(layers, job.result, _cache_sig)
+	await tree.process_frame
+	if still_free.call():
+		MapDiskCache.save_async(_cache_path, MapDiskCache.encode(snap))
 
 
 func _apply_grid_layers(job: GenJob, layers: Dictionary) -> void:
@@ -1089,8 +1126,10 @@ func reroll(new_seed: int = 0) -> void:
 	if lsm == null:
 		push_warning("[ProceduralLevel] reroll: brak LevelStateManager")
 		return
+	var old_seed: int = lsm.get_world_seed()
 	lsm.reroll_world_seed(new_seed)
 	MapPrefetch.clear()
+	MapDiskCache.clear_seed_if_unused(old_seed)  # stare mapy, o ile żaden slot zapisu nie ma tego seeda
 
 	var lm := _find_level_manager()
 	if lm != null and lm.has_method("change_level"):
