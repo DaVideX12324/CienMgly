@@ -796,6 +796,9 @@
     {
       "id": "barrels",
       "group": "boxes",
+      "class": "INTERACTIVE",
+      "placement": "grid",
+      "scene": "res://modules/quiz_rpg/scenes/objects/barrel.tscn",
       "density": 0.9,
       "cluster": {
         "size": [
@@ -804,17 +807,8 @@
         ],
         "radius": 1
       },
-      "atlas": [
-        3,
-        0
-      ],
-      "source": 1,
-      "size": [
-        1,
-        2
-      ],
-      "stack": true,
-      "room_density": 4
+      "room_density": 4,
+      "priority": 300
     },
     {
       "id": "wrecks",

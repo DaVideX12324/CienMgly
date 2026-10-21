@@ -42,11 +42,18 @@ func barrel_roll_count(scale: float, max_rolls: int) -> int:
 
 ## Przeszukanie beczki: liczba losowań z tabeli wg barrel_roll_count (ujemne wartości = domyślne z menedżera). Powtórzone
 ## przedmioty sumują się w liczbę kopii. found = coś wypadło; items = [{item_id, item_name, count}].
-func search_barrel(scale: float = -1.0, max_items: int = -1) -> Dictionary:
+## table: własna tabela beczki (QuizRpgLootEntry.to_table — waga i liczba sztuk z wpisu); pusta = domyślna tabela beczek.
+func search_barrel(scale: float = -1.0, max_items: int = -1, table: Array[Dictionary] = []) -> Dictionary:
 	var s := barrel_scale if scale < 0.0 else scale
 	var rolls := maxi(barrel_max_items if max_items < 0 else max_items, 1)
 	var counts := {}
 	for _k in range(barrel_roll_count(s, rolls)):
+		if not table.is_empty():
+			var picked := QuizRpgLootTable.pick_weighted(table)
+			if not picked.is_empty():
+				var pid := str(picked.get("item_id", ""))
+				counts[pid] = int(counts.get(pid, 0)) + QuizRpgLootEntry.roll_count(picked, _rng)
+			continue
 		var item_id := _roll_weighted_item_id(_get_barrel_loot_table())
 		if item_id != "":
 			counts[item_id] = int(counts.get(item_id, 0)) + _roll_item_count(item_id)

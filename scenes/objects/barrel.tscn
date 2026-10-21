@@ -1,14 +1,18 @@
 [gd_scene format=3 uid="uid://jppou3a7nbbw"]
 
 [ext_resource type="Script" uid="uid://yy4qagy8712y" path="res://modules/quiz_rpg/scripts/interactables/barrel.gd" id="1_1yh26"]
-[ext_resource type="Texture2D" uid="uid://b3eidl41o3v4d" path="res://assets/textures/legacy_amonra/atlases/tunels_textures/Individual_Props/barrel_open.png" id="4_3ju85"]
+[ext_resource type="Texture2D" uid="uid://5hmnfgtobndb" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png" id="2_l1ma3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_skd5q"]
+atlas = ExtResource("2_l1ma3")
+region = Rect2(752, 64, 16, 32)
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fulqv"]
 radius = 3.0
 height = 16.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
-radius = 12.0
+radius = 14.0
 
 [node name="barrel" type="CharacterBody2D" unique_id=1017334146 groups=["destructible"]]
 y_sort_enabled = true
@@ -20,20 +24,20 @@ health = 6.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1824085561]
 y_sort_enabled = true
-texture = ExtResource("4_3ju85")
+position = Vector2(0, -8)
+texture = SubResource("AtlasTexture_skd5q")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=253495352]
-visible = false
 y_sort_enabled = true
 position = Vector2(0, 3)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_fulqv")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=1308505288]
-visible = false
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=358694874]
+position = Vector2(0, -3)
 shape = SubResource("CircleShape2D_interaction")
 
 [connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
