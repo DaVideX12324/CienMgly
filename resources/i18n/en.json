@@ -529,7 +529,7 @@
   "skill.crushing_blow.desc": "The enemy strikes a hero with a risky blow dealing 25,000 fixed damage, with a 16% chance to hit.",
   "skill.crushing_blow.log": "{enemy} delivers a powerful, risky blow!",
   "skill.crushing_blow.name": "Crushing Blow",
-  "skill.dark_regen.desc": "The enemy channels dark energy, restoring 1,000 of its own HP.",
+  "skill.dark_regen.desc": "The enemy channels dark energy, restoring 25% of its max HP.",
   "skill.dark_regen.log": "{enemy} absorbs dark energy and recovers strength!",
   "skill.dark_regen.name": "Dark Mending",
   "skill.death_enrage.desc": "Enters a destructive battle frenzy, unleashing a deadly series of 9 strikes on all enemies.",

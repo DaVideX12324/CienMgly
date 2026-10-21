@@ -529,7 +529,7 @@
   "skill.crushing_blow.desc": "Wróg wyprowadza ryzykowny cios w bohatera zadający 25 000 stałych obrażeń, lecz trafiający z szansą 16%.",
   "skill.crushing_blow.log": "{enemy} wyprowadza potężny, ryzykowny cios!",
   "skill.crushing_blow.name": "Miażdżący Cios",
-  "skill.dark_regen.desc": "Wróg pochłania mroczną energię, przywracając sobie 1000 HP.",
+  "skill.dark_regen.desc": "Wróg pochłania mroczną energię, przywracając sobie 25 % maks. HP.",
   "skill.dark_regen.log": "{enemy} pochłania mroczną energię i odzyskuje siły!",
   "skill.dark_regen.name": "Mroczna Regeneracja",
   "skill.death_enrage.desc": "Wpada w niszczycielski szał bojowy, atakując wszystkich wrogów serią 9 potężnych ciosów.",
