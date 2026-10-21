@@ -62,9 +62,9 @@ var loot_table: Array = []
 @export_group("AI Behavior")
 @export var wander_radius: float = 100.0
 @export var memory_duration: float = 3.0
-## Pole widzenia (stopnie) w kierunku ruchu: gracza poza nim wróg nie zauważa — można go podejść od tyłu
-## (przewaga w walce). Goniący wróg widzi dookoła. Domyślnie 360 = widzi dookoła (decyzja usera 2026-10-21 — stożek 120°
-## był w grze dziwny); mniejszy kąt można ustawić konkretnemu wrogowi w Inspectorze.
+## Pole widzenia (stopnie) w kierunku ruchu: gracza poza nim wróg nie zauważa (podejście od tyłu). Goniący wróg widzi
+## dookoła. Domyślnie 360 = widzi dookoła (decyzja usera 2026-10-21 — stożek 120° był w grze dziwny); mniejszy kąt można
+## ustawić konkretnemu wrogowi w Inspectorze. Przewaga / zaskoczenie w walce nie zależą od niego (losowanie jak w FNaFB).
 @export_range(30.0, 360.0, 5.0) var vision_angle_deg: float = 360.0
 @export_group("Visual")
 @export var body_color: Color = Color(0.9, 0.2, 0.2)
@@ -76,7 +76,6 @@ var loot_table: Array = []
 @export_range(0.0, 0.9, 0.05) var direction_hysteresis: float = 0.5
 
 enum State { IDLE, PATROL, CHASING, COMBAT, DEFEATED }
-const Encounter = preload("encounter_situation.gd")  # sytuacja na mapie przy starcie walki
 const GROUP_RADIUS := 96.0  # px — wrogowie bliżej dołączają do walki (grupa)
 const GROUP_MAX := 4        # najwyżej tyle jednostek w walce z grupy (pole walki ma 5 miejsc)
 var state: State = State.PATROL
@@ -851,7 +850,6 @@ func start_combat(player: Node2D) -> void:
 	if player.has_method("is_encounter_immune") and player.is_encounter_immune():
 		return
 
-	var situation := _encounter_situation(player)
 	state = State.COMBAT
 	velocity = Vector2.ZERO
 	# Wrogowie obok (w zasięgu wzroku) dołączają do tej walki — zamiast walki zaraz po walce.
@@ -877,27 +875,12 @@ func start_combat(player: Node2D) -> void:
 	var snapshot: Image = get_viewport().get_texture().get_image() if get_viewport() else null
 	var combat_canvas: CanvasLayer = preload("../../scenes/quiz/quiz_combat_ui.tscn").instantiate() as CanvasLayer
 	var combat_ui: Control = combat_canvas.get_node("Root") as Control
-	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners, situation)
+	combat_ui.setup(self, player, quiz_id, diff_range, question_count, encounter_size_range, joiners)
 	var target_parent: Node = get_tree().current_scene if (get_tree() and get_tree().current_scene) else (get_tree().root if get_tree() else null)
 	if target_parent:
 		target_parent.add_child(combat_canvas)
 	get_tree().paused = true
 	combat_ui.call("play_entry_transition", snapshot)
-
-
-## Sytuacja na mapie w chwili kontaktu (przed zmianą stanu na COMBAT): wróg nie zauważył gracza, a gracz jest do niego
-## zwrócony -> UNSEEN; wróg goni, a gracz stoi do niego tyłem -> FROM_BEHIND; inaczej NORMAL (decyzja usera 2026-10-16).
-func _encounter_situation(player: Node2D) -> int:
-	var facing: Variant = player.get("facing_direction")
-	if not (facing is Vector2) or (facing as Vector2) == Vector2.ZERO:
-		return Encounter.NORMAL
-	var to_enemy := global_position - player.global_position
-	if to_enemy.length_squared() < 1.0:
-		return Encounter.NORMAL
-	var faces_enemy := (facing as Vector2).normalized().dot(to_enemy.normalized()) > 0.0
-	if state != State.CHASING:
-		return Encounter.UNSEEN if faces_enemy else Encounter.NORMAL
-	return Encounter.NORMAL if faces_enemy else Encounter.FROM_BEHIND
 
 
 ## Grupowanie walk (decyzja usera 2026-10-11: zawsze działa): do walki dołączają WSZYSCY wrogowie tej samej frakcji

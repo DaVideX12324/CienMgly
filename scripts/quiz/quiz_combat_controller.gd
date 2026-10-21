@@ -1,7 +1,6 @@
 extends Control
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
-const Encounter = preload("../enemies/encounter_situation.gd")
 
 signal combat_finished(player_won: bool)
 
@@ -47,10 +46,12 @@ const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_ti
 
 ## Wygląd i układ ekranu są w scenie (WYSIWYG) i w motywie QuizTheme.THEME_PATH; tutaj tylko to, co
 ## zależy od fazy tury. Szerokości okien dolnego pasa jako część szerokości ekranu.
-## Przewaga / zaskoczenie na start walki (sytuacja z mapy: Encounter.*): szansa = bazowa × stosunek średniego AGI
-## (drużyny do wrogów przy przewadze, wrogów do drużyny przy zaskoczeniu), w granicach. Bossy bez tego.
-@export_range(0.0, 1.0, 0.05) var preemptive_base_chance := 0.75  ## wróg nie zauważył, gracz zwrócony do niego (równe AGI)
-@export_range(0.0, 1.0, 0.05) var surprise_base_chance := 0.6     ## goniący wróg dopadł gracza od tyłu (równe AGI)
+## Przewaga / zaskoczenie na start walki jak w FNaFB (RPG Maker VX Ace BattleManager.on_encounter, decyzja usera
+## 2026-10-21): losowo, wg średniego AGI drużyny względem wrogów; zaskoczenie tylko, gdy nie wypadła przewaga. Bossy bez.
+@export_range(0.0, 1.0, 0.01) var preemptive_rate_faster := 0.05  ## przewaga, gdy AGI drużyny >= AGI wrogów
+@export_range(0.0, 1.0, 0.01) var preemptive_rate_slower := 0.03  ## przewaga, gdy drużyna wolniejsza
+@export_range(0.0, 1.0, 0.01) var surprise_rate_faster := 0.03    ## zaskoczenie, gdy AGI drużyny >= AGI wrogów
+@export_range(0.0, 1.0, 0.01) var surprise_rate_slower := 0.05    ## zaskoczenie, gdy drużyna wolniejsza
 ## Ucieczka z pytaniem: dobra odpowiedź — zwykła szansa (FLEE_SUCCESS_CHANCE), zła — mniejsza o tyle.
 @export_range(0.0, 1.0, 0.05) var flee_wrong_penalty := 0.3
 @export_range(0.08, 0.6, 0.01) var party_command_width := 0.15  ## okno komend drużyny (lewa strona; szersze, gdy treść wymaga)
@@ -91,7 +92,6 @@ const GUARD_DAMAGE_FACTOR_WRONG := 0.5
 const GUARD_STATUS_CHANCE_FACTOR := 0.5
 var turn_number := 0
 enum Initiative { NONE, PREEMPTIVE, SURPRISE }
-var _encounter_situation := 0              # Encounter.* z setup
 var _initiative := Initiative.NONE         # wynik losowania na start walki (dotyczy 1. rundy)
 var _combat_started_msec := Time.get_ticks_msec()  # początek walki (log progresji)
 
@@ -223,11 +223,9 @@ func setup(
 	diff_range: Vector2i,
 	question_count: int,
 	encounter_size_range: Vector2i = Vector2i(1, 1),
-	p_joined: Array = [],
-	p_situation: int = 0
+	p_joined: Array = []
 ) -> void:
 	enemy = p_enemy
-	_encounter_situation = p_situation
 	_joined = p_joined.duplicate()
 	player = p_player
 	quiz_id = p_quiz_id
@@ -873,20 +871,17 @@ static func _roll_speed(agi: int) -> int:
 	return agi + randi_range(0, 4 + maxi(agi, 0) / 4)
 
 
-## Przewaga / zaskoczenie na start walki z sytuacji na mapie; szansa rośnie ze stosunkiem średniego AGI.
+## Przewaga / zaskoczenie na start walki jak w FNaFB (VX Ace: rate_preemptive / rate_surprise): drużyna co najmniej
+## tak szybka jak wrogowie — przewaga 5 %, zaskoczenie 3 %; wolniejsza — 3 % / 5 %. Zaskoczenie tylko bez przewagi.
 func _roll_initiative() -> void:
 	_initiative = Initiative.NONE
 	if _is_boss_encounter():
 		return
-	var party_agi := _average_agi(true)
-	var enemy_agi := _average_agi(false)
-	match _encounter_situation:
-		Encounter.UNSEEN:
-			if randf() < clampf(preemptive_base_chance * party_agi / enemy_agi, 0.25, 0.95):
-				_initiative = Initiative.PREEMPTIVE
-		Encounter.FROM_BEHIND:
-			if randf() < clampf(surprise_base_chance * enemy_agi / party_agi, 0.2, 0.9):
-				_initiative = Initiative.SURPRISE
+	var faster := _average_agi(true) >= _average_agi(false)
+	if randf() < (preemptive_rate_faster if faster else preemptive_rate_slower):
+		_initiative = Initiative.PREEMPTIVE
+	elif randf() < (surprise_rate_faster if faster else surprise_rate_slower):
+		_initiative = Initiative.SURPRISE
 
 
 func _average_agi(party: bool) -> float:
