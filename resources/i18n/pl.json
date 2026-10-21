@@ -357,6 +357,7 @@
   "log.combat.silenced": "{name}: cisza — umiejętności zablokowane.",
   "log.combat.surprise": "Zaskoczenie! Drużyna traci pierwszą turę.",
   "log.combat.turn_move": "Tura {turn} - ruch: {name}",
+  "log.combat.turn_question": "Tura {turn} - pytanie: {name}",
   "loot.continue_hint": "Naciśnij E albo Enter, aby kontynuować.",
   "loot.default_title": "Łup",
   "loot.gate_key_msg": "Pasuje do zamka przy kracie z kolców. Klucze: {count}.",

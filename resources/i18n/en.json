@@ -357,6 +357,7 @@
   "log.combat.silenced": "{name}: silenced — skills blocked.",
   "log.combat.surprise": "Surprise! The party loses the first turn.",
   "log.combat.turn_move": "Turn {turn} - move: {name}",
+  "log.combat.turn_question": "Turn {turn} - question: {name}",
   "loot.continue_hint": "Press E or Enter to continue.",
   "loot.default_title": "Loot",
   "loot.gate_key_msg": "Fits the lock at the spike gate. Keys: {count}.",

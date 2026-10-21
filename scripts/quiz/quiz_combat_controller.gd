@@ -178,6 +178,8 @@ var _plans: Array[Dictionary] = []   # wybrane akcje rundy: {member, action, ski
 var _input_queue: Array[int] = []    # postacie wybierające komendy w tej rundzie (kolejność drużyny)
 var _input_pos := -1                 # która z nich wybiera teraz (-1 = Walcz / Uciekaj)
 var _executing := false              # faza wykonania (akcje z _plans) — inaczej wybór akcji tylko ją zapisuje
+signal _round_question_answered(correct: bool)
+var _round_questions := false              # pytania rundy przed wykonaniem (odpowiedź zapisana w planie, bez akcji)
 var _round_running := false               # faza wykonania rundy trwa (bezpiecznik przed drugim _execute_round)
 var _acted_enemies: Dictionary = {}       # indeksy wrogów, którzy już działali w tej rundzie (bezpiecznik: raz na rundę)
 var _turn_queue: Array[Dictionary] = []   # reszta rundy: {"party": bool, "index": int}, od najszybszego
@@ -734,9 +736,53 @@ func _execute_round() -> void:
 	_refresh_actor_selection()
 	for unit in _enemy_units:  # akcje wrogów na tę rundę (jak w RPG Makerze) — prędkość umiejętności w kolejce
 		unit["planned_skill"] = _pick_enemy_skill(unit) if int(unit.get("hp", 0)) > 0 else null
+	await _ask_round_questions()
 	_turn_queue = _turn_order()
 	_acted_enemies.clear()
 	_next_turn()
+
+
+## Pytania rundy (decyzja usera 2026-10-21): po wyborze akcji całej drużyny najpierw pytania quizu — po jednym na
+## postać, w kolejności drużyny — a dopiero potem akcje wg AGI z zapisanym wynikiem (plan["correct"]). Przedmioty bez
+## pytania; postać, która nie może się ruszyć, też bez pytania.
+func _ask_round_questions() -> void:
+	for plan in _plans:
+		var i := int(plan["member"])
+		if plan.has("item") or plan.has("correct") or _member_hp(i) <= 0 or _member_cannot_act(i):
+			continue
+		_active_actor_index = i
+		_refresh_actor_selection()
+		_clear_battle_log()
+		if turn_number == 1:
+			_push_initiative_notice()
+		if turn_label:
+			turn_label.text = QuizRpgI18n.tf("log.combat.turn_question", {"turn": turn_number, "name": _member_name(i)}, "Tura {turn} - pytanie: {name}")
+		_refresh_stats_panel()
+		plan["correct"] = await _ask_plan_question()
+
+
+## Jedno pytanie rundy -> czy dobra odpowiedź (bez pytań / pusta pula — zaliczone jak dotąd).
+func _ask_plan_question() -> bool:
+	phase = Phase.QUIZ
+	_set_action_buttons_enabled(false)
+	var allowed_types: Array = _get_combat_quiz_types()
+	if _should_auto_resolve_quiz(allowed_types):
+		return true
+	var qm := _get_quiz_manager()
+	var q: Dictionary = qm.start_quiz(quiz_id, _diff_range, 1, allowed_types) if qm and qm.has_method("start_quiz") else {}
+	if q.is_empty():
+		return true
+	if action_panel:
+		action_panel.visible = false
+	if actor_command_panel:
+		actor_command_panel.visible = false
+	_round_questions = true
+	_show_question(q)
+	var correct: bool = await _round_question_answered
+	_round_questions = false
+	_quiz_panel_controller.hide_quiz()
+	_set_quiz_layout_active(false)
+	return correct
 
 
 func _turn_order() -> Array[Dictionary]:
@@ -879,6 +925,9 @@ func _start_member_action(i: int, plan: Dictionary) -> void:
 		return
 	if not _selected_skill_data.is_empty():
 		_consume_skill_cost(_selected_skill_data)
+	if plan.has("correct"):  # odpowiedź z pytań rundy (_ask_round_questions)
+		_resolve_action(bool(plan["correct"]))
+		return
 	_begin_action_quiz()
 
 
@@ -1530,6 +1579,9 @@ func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void
 		_dm.record_answer(category, correct)
 	_show_quiz_feedback(result, submitted_answer)
 	await get_tree().create_timer(1.2).timeout
+	if _round_questions:
+		_round_question_answered.emit(correct)  # pytanie rundy: akcja później, w kolejce AGI
+		return
 	_resolve_action(correct)
 
 
