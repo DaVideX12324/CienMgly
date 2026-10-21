@@ -6,8 +6,8 @@ extends RefCounted
 ## portale); mapa ręczna: z warstw TileMapLayer — podłoga = warstwy z z_index < 0 (teren, trawa, ścieżki, dekoracje
 ## podłogi), ściana = kafel z kolizją na warstwie Walls / Cliffs albo na warstwie nad podłogą (z_index >= 0: ściany budynków);
 ## kafle bez kolizji nad podłogą (dachy, drzwi, propsy, sztandary, wypełnienie pustki) się nie liczą.
-## Kolor kratki podłogi: średni kolor kafli warstw podłogi na niej, od dołu (kafel częściowo przezroczysty — np. kępa trawy —
-## miesza się z tym, co pod spodem, wg pokrycia). Ściany: średnia z kafli ścian mapy.
+## Kolor kratki podłogi: średni kolor kafla z najwyżej rysowanej warstwy podłogi na niej (np. trawa nad terenem — decyzja
+## usera 2026-10-21, bez mieszania z warstwami pod spodem). Ściany: średnia z kafli ścian mapy.
 ## Odkrywanie: kratki w promieniu od gracza z linią wzroku — ściany zasłaniają (same się odkrywają), uskoki płaskowyżów nie.
 
 const CELL := 16
@@ -151,8 +151,8 @@ static func _cells_of(layer: TileMapLayer, c: Vector2i) -> Array[Vector2i]:
 	return out
 
 
-## Kolory z kafli: każda kratka podłogi — warstwy podłogi od dołu, kafel miesza się wg pokrycia; średnia podłogi z kratek,
-## średnia ścian z kafli z kolizją (warstwy ścian i nad podłogą).
+## Kolory z kafli: każda kratka podłogi — kafel najwyżej rysowanej warstwy podłogi (warstwy od dołu, wyższa nadpisuje);
+## średnia podłogi z kratek, średnia ścian z kafli z kolizją (warstwy ścian i nad podłogą).
 func _paint_layers(level: Node) -> void:
 	cell_colors.resize(width * height)
 	cell_colors.fill(Color(0, 0, 0, 0))
@@ -166,13 +166,9 @@ func _paint_layers(level: Node) -> void:
 			if avg.is_empty():
 				continue
 			var top: Color = avg[0]
-			var cov: float = avg[1]
 			for p in _cells_of(layer, c):
-				if not has_cell(p):
-					continue
-				var i := index(p)
-				var under := cell_colors[i]
-				cell_colors[i] = top if under.a == 0.0 else Color(under.lerp(top, cov), 1.0)
+				if has_cell(p):
+					cell_colors[index(p)] = top
 	var sum := Vector3.ZERO
 	var n := 0
 	for i in cell_colors.size():
