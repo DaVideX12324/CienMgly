@@ -62,6 +62,7 @@ var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
 var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device bossów mapy
+var _random_encounters: Dictionary = {}  # companion-JSON "random_encounters": tryb, dystans i tiery losowych spotkań (QuizRpgRandomEncounters)
 var _rare_rooms: Dictionary = {}  # companion-JSON "rare_rooms": skrzynie specjalne w rzadkich pokojach (TreasurePlanner.plan_rare)
 @export var chest_scene: PackedScene = null
 @export var door_scene: PackedScene = null
@@ -603,6 +604,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
 	_boss_cfg = cfg.raw.get("boss", {}) if cfg != null else {}
 	_rare_rooms = cfg.raw.get("rare_rooms", {}) if cfg != null else {}
+	_random_encounters = cfg.raw.get("random_encounters", {}) if cfg != null else {}
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:
@@ -829,6 +831,17 @@ func _finish_level(job: GenJob, slicer: FrameSlicer = null) -> void:
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+	_setup_random_encounters()
+
+
+## Losowe spotkania mapy ("random_encounters" w JSON; tryb "off" albo brak wpisu = bez spotkań).
+func _setup_random_encounters() -> void:
+	var old := get_node_or_null("RandomEncounters")
+	if old != null:
+		old.queue_free()
+	var re := QuizRpgRandomEncounters.create(_random_encounters, _enemy_pool, _faction_pools, _enemy_levels)
+	if re != null:
+		add_child(re)
 
 
 ## Ustawia tier ("chest_tier" z JSON mapy) na skrzyniach wygenerowanych na tej mapie (spawn_entities i generator obiektów).

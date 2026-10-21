@@ -915,6 +915,9 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		_gm.change_state(_gm.GameState.EXPLORING)
 	if player.has_method("grant_encounter_immunity"):
 		player.grant_encounter_immunity()
+	if has_meta("random_encounter"):
+		queue_free()   # niewidzialny wróg losowego spotkania (QuizRpgRandomEncounters) nie zostaje na mapie
+		return
 	state = State.IDLE
 	await get_tree().create_timer(2.0).timeout
 	state = State.PATROL
