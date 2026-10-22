@@ -95,6 +95,25 @@
           "name": "Przełączanie"
         }
       ]
+    },
+    {
+      "key": "minimap",
+      "label": "Minimapa",
+      "default": "corner",
+      "options": [
+        {
+          "id": "corner",
+          "name": "Róg i pełna mapa (M)"
+        },
+        {
+          "id": "full",
+          "name": "Tylko pełna mapa (M)"
+        },
+        {
+          "id": "off",
+          "name": "Wyłączona"
+        }
+      ]
     }
   ]
 }

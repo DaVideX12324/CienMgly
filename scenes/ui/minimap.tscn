@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/minimap.gd" id="1_mm"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/minimap_markers.gd" id="2_marks"]
 
 [node name="Minimap" type="Control"]
 layout_mode = 3
@@ -37,6 +38,16 @@ offset_right = 200.0
 offset_bottom = 200.0
 mouse_filter = 2
 expand_mode = 1
+
+[node name="Markers" type="Control" parent="Corner/Clip/Map"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_marks")
 
 [node name="PlayerDot" type="ColorRect" parent="Corner/Clip"]
 layout_mode = 0
@@ -83,6 +94,16 @@ offset_right = 400.0
 offset_bottom = 400.0
 mouse_filter = 2
 expand_mode = 1
+
+[node name="Markers" type="Control" parent="Full/Box/Area/Map"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_marks")
 
 [node name="PlayerDot" type="ColorRect" parent="Full/Box/Area"]
 layout_mode = 0

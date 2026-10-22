@@ -6,6 +6,9 @@ extends Control
 ## w zapisie gry (LevelStateManager: stan poziomu, klucz "fog"), zapisywana co FLUSH_INTERVAL i przy zmianie mapy.
 ## Widoczna tylko w eksploracji. Zoom: klawisze = / - (też + / - na klawiaturze numerycznej) albo kółko myszy nad mapą —
 ## w rogu zmienia skalę wycinka, na pełnej mapie przybliża wokół gracza.
+## Znaczniki (MinimapMarkers na obu mapach) na odkrytych kratkach: nieotwarte skrzynie, NPC, niepokonani bossowie.
+## Opcja „Minimapa” w zakładce Sterowanie (manifest control_options, klucz minimap): róg i pełna mapa / tylko pełna mapa
+## pod M / wyłączona. Odkrywanie mgły działa w każdym trybie — po włączeniu mapa jest aktualna.
 
 const ACTION := "minimap"
 const FLUSH_INTERVAL := 1.0
@@ -13,6 +16,11 @@ const STATE_KEY := "fog"
 const ZOOM_STEP := 1.25
 const CORNER_ZOOM_RANGE := Vector2(1.0, 12.0)
 const FULL_ZOOM_RANGE := Vector2(1.0, 8.0)
+const MODULE_ID := "quiz_rpg"
+const MODE_KEY := "minimap"
+const MODE_CORNER := "corner"
+const MODE_OFF := "off"
+const MARKER_INTERVAL := 0.5
 
 ## Promień odkrywania w kratkach.
 @export var reveal_radius := 12
@@ -26,6 +34,9 @@ const FULL_ZOOM_RANGE := Vector2(1.0, 8.0)
 @export var color_exit := Color(1.0, 0.82, 0.25)
 ## Pustka za krawędzią mapy (koniec wnęki portalu, wypełnienie pustki).
 @export var color_void := Color(0.02, 0.02, 0.03)
+@export var color_chest := Color(0.95, 0.55, 0.15)
+@export var color_npc := Color(0.35, 0.95, 0.45)
+@export var color_boss := Color(0.8, 0.35, 1.0)
 
 @onready var _corner: Control = $Corner
 @onready var _corner_clip: Control = $Corner/Clip
@@ -35,6 +46,7 @@ const FULL_ZOOM_RANGE := Vector2(1.0, 8.0)
 @onready var _full_area: Control = $Full/Box/Area
 @onready var _full_map: TextureRect = $Full/Box/Area/Map
 @onready var _full_dot: Control = $Full/Box/Area/PlayerDot
+@onready var _marker_layers: Array[Control] = [$Corner/Clip/Map/Markers, $Full/Box/Area/Map/Markers]
 
 var data: QuizRpgMinimapData
 var _image: Image
@@ -47,6 +59,11 @@ var _tex_dirty := false
 var _mask_dirty := false
 var _flush_left := FLUSH_INTERVAL
 var _full_zoom := 1.0   # przybliżenie pełnej mapy (1 = cała mapa w oknie)
+var _mode := MODE_CORNER
+## Znaczniki: [kratka, kolor] — czyta je MinimapMarkers.
+var markers: Array = []
+var _npcs: Array[Node2D] = []
+var _marker_left := 0.0
 
 
 func _ready() -> void:
@@ -55,6 +72,21 @@ func _ready() -> void:
 	_corner.visible = false
 	for tr: TextureRect in [_corner_map, _full_map]:
 		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	for ml in _marker_layers:
+		ml.set("minimap", self)
+	_load_mode()
+	var settings := get_node_or_null("/root/SettingsService")
+	if settings and settings.has_signal("module_setting_changed"):
+		settings.module_setting_changed.connect(func(module_id: String, key: String, _value: Variant) -> void:
+			if module_id == MODULE_ID and key == MODE_KEY:
+				_load_mode())
+
+
+func _load_mode() -> void:
+	var settings := get_node_or_null("/root/SettingsService")
+	_mode = str(settings.get_module(MODULE_ID, MODE_KEY, MODE_CORNER)) if settings != null else MODE_CORNER
+	if _mode == MODE_OFF:
+		_full.visible = false
 
 
 func _exit_tree() -> void:
@@ -97,6 +129,11 @@ func _process(delta: float) -> void:
 	if _tex_dirty:
 		_tex.update(_image)
 		_tex_dirty = false
+		_redraw_markers()
+	_marker_left -= delta
+	if _marker_left <= 0.0:
+		_marker_left = MARKER_INTERVAL
+		_collect_markers()
 	_flush_left -= delta
 	if _flush_left <= 0.0:
 		_flush_left = FLUSH_INTERVAL
@@ -146,7 +183,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_zoom(-1)
 			get_viewport().set_input_as_handled()
 			return
-	if event.is_action_pressed(ACTION) and (_exploring() or _full.visible):
+	if event.is_action_pressed(ACTION) and _mode != MODE_OFF and (_exploring() or _full.visible):
 		_full.visible = not _full.visible
 		get_viewport().set_input_as_handled()
 	elif _full.visible and event.is_action_pressed("ui_cancel"):
@@ -160,7 +197,7 @@ func _exploring() -> bool:
 
 
 func _set_shown(on: bool) -> void:
-	_corner.visible = on
+	_corner.visible = on and _mode == MODE_CORNER
 	if not on:
 		_full.visible = false
 
@@ -185,6 +222,40 @@ func _build(level: Node, level_key: String) -> void:
 	_corner_map.texture = _tex
 	_full_map.texture = _tex
 	_mask_dirty = false
+	_npcs.clear()
+	for n in level.find_children("*", "StaticBody2D", true, false):
+		if n is QuizRpgNpc:
+			_npcs.append(n)
+	_collect_markers()
+
+
+## Znaczniki z bieżącego poziomu: nieotwarte skrzynie, NPC, niepokonani bossowie (kratki poza mapą pomijane).
+func _collect_markers() -> void:
+	var out: Array = []
+	if data != null and is_instance_valid(_level):
+		for c in get_tree().get_nodes_in_group("chests"):
+			if _level.is_ancestor_of(c) and not bool(c.get("opened")):
+				_add_marker(out, c, color_chest)
+		for n in _npcs:
+			if is_instance_valid(n) and n.visible:
+				_add_marker(out, n, color_npc)
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if _level.is_ancestor_of(e) and bool(e.get("is_boss")) and not bool(e.get("defeated")) and (e as Node2D).visible:
+				_add_marker(out, e, color_boss)
+	if out != markers:
+		markers = out
+		_redraw_markers()
+
+
+func _add_marker(out: Array, node: Node2D, color: Color) -> void:
+	var p := QuizRpgMinimapData.cell_of(_level.to_local(node.global_position))
+	if data.has_cell(p):
+		out.append([p, color])
+
+
+func _redraw_markers() -> void:
+	for ml in _marker_layers:
+		ml.queue_redraw()
 
 
 func _paint(p: Vector2i) -> void:
