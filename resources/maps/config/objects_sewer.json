@@ -911,8 +911,8 @@
     {
       "id": "debris",
       "group": "clutter",
-      "density": 3.5,
-      "cluster": {"size": [3, 7], "radius": 2},
+      "density": 13,
+      "cluster": {"size": [4, 10], "radius": 2},
       "prefer": ["wall_any", "corner"],
       "atlas": [
         4,
