@@ -37,13 +37,13 @@ tile_set = ExtResource("1_d7wmb")
 [node name="TileMapLayer3" type="TileMapLayer" parent="." unique_id=21980085]
 position = Vector2(336, 96)
 y_sort_enabled = true
-tile_map_data = PackedByteArray("AADr//f/BwACAAEAABDr//j/BwACAAIAABDr//n/BwACAAMAABDq//f/BwADAAEAABDq//j/BwADAAIAABDq//n/BwADAAMAABDr//r/BwACAAQAABDq//r/BwADAAQAABA=")
+tile_map_data = PackedByteArray("AADr//f/CwACABEAABDr//j/CwACABIAABDr//n/CwACABMAABDq//f/CwADABEAABDq//j/CwADABIAABDq//n/CwADABMAABDr//r/CwACABQAABDq//r/CwADABQAABA=")
 tile_set = ExtResource("1_d7wmb")
 
 [node name="TileMapLayer4" type="TileMapLayer" parent="." unique_id=1303034571]
 position = Vector2(336, 96)
 y_sort_enabled = true
-tile_map_data = PackedByteArray("AADr//f/BwAIAAEAABDr//j/BwAIAAIAABDr//n/BwAIAAMAABDq//f/BwAJAAEAABDq//j/BwAJAAIAABDq//n/BwAJAAMAABDv//T/BwADAAgAABDm//b/BwAEAAgAABDs//P/BwAEAAgAABDt//P/BwADAAgAABDz//T/BwADAAgAABDp//f/BwAGAAQAABDp//j/BwAGAAUAABDo//f/BwAHAAQAABDo//j/BwAHAAUAABDt//f/BwAGAAQAABDt//j/BwAGAAUAABDs//f/BwAHAAQAABDs//j/BwAHAAUAABDq//T/BwAIAAYAABDq//X/BwAIAAcAABDp//T/BwAJAAYAABDp//X/BwAJAAcAABDs//T/BwAIAAYAABDs//X/BwAIAAcAABDr//T/BwAJAAYAABDr//X/BwAJAAcAABDx//X/BwAEAAQAABDx//b/BwAEAAUAABDw//X/BwAFAAQAABDw//b/BwAFAAUAABDy/+7/BwAAAAQAABDy/+//BwAAAAUAABDy//D/BwAAAAYAABDy//H/BwAAAAcAABDx/+7/BwABAAQAABDx/+//BwABAAUAABDx//D/BwABAAYAABDx//H/BwABAAcAABA=")
+tile_map_data = PackedByteArray("AADr//f/CwAKABEAABDr//j/CwAKABIAABDr//n/CwAKABMAABDq//f/CwALABEAABDq//j/CwALABIAABDq//n/CwALABMAABDv//T/CwADABgAABDm//b/CwAEABgAABDs//P/CwAEABgAABDt//P/CwADABgAABDz//T/CwADABgAABDp//f/CwAGABQAABDp//j/CwAGABUAABDo//f/CwAHABQAABDo//j/CwAHABUAABDt//f/CwAGABQAABDt//j/CwAGABUAABDs//f/CwAHABQAABDs//j/CwAHABUAABDq//T/CwAIABYAABDq//X/CwAIABcAABDp//T/CwAJABYAABDp//X/CwAJABcAABDs//T/CwAIABYAABDs//X/CwAIABcAABDr//T/CwAJABYAABDr//X/CwAJABcAABDx//X/CwAEABQAABDx//b/CwAEABUAABDw//X/CwAFABQAABDw//b/CwAFABUAABDy/+7/CwAAABQAABDy/+//CwAAABUAABDy//D/CwAAABYAABDy//H/CwAAABcAABDx/+7/CwABABQAABDx/+//CwABABUAABDx//D/CwABABYAABDx//H/CwABABcAABA=")
 tile_set = ExtResource("1_d7wmb")
 
 [node name="BaseCollisionMain" type="CollisionShape2D" parent="." unique_id=1372149911]

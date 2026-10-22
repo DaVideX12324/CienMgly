@@ -23,7 +23,7 @@ tile_map_data = PackedByteArray("AAAEAP//BQAUAAgAAAAHAP//BQAUAAgAAAAFAP//BQAVAAg
 tile_set = ExtResource("1_tiles")
 
 [node name="WallsDetail" type="TileMapLayer" parent="Walls" unique_id=1552283142]
-tile_map_data = PackedByteArray("AAANAAAABQAUAAYAAAANAPz/BQAUAAUAAAADAPz/BQAVAAUAAAAJAP3/BwAEAAgAAAANAP3/BwADAAgAAQA=")
+tile_map_data = PackedByteArray("AAANAAAABQAUAAYAAAANAPz/BQAUAAUAAAADAPz/BQAVAAUAAAAJAP3/CwAEABgAAAANAP3/CwADABgAAQA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="Roof" type="TileMapLayer" parent="." unique_id=1245258536]
@@ -48,7 +48,7 @@ tile_set = ExtResource("1_tiles")
 z_index = 1
 y_sort_enabled = true
 position = Vector2(-96, -16)
-tile_map_data = PackedByteArray("AAADAPT/BwAAAAYAAAADAPX/BwAAAAcAAAAEAPT/BwABAAYAAAAEAPX/BwABAAcAAAADAPP/BwAAAAQAAAAEAPP/BwABAAQAAAAFAPr/BwACAAYAAAAFAPv/BwACAAcAAAAGAPr/BwADAAYAAAAGAPv/BwADAAcAAAAKAPr/BwAEAAYAAAAKAPv/BwAEAAcAAAALAPr/BwAFAAYAAAALAPv/BwAFAAcAAAA=")
+tile_map_data = PackedByteArray("AAADAPT/CwAAABYAAAADAPX/CwAAABcAAAAEAPT/CwABABYAAAAEAPX/CwABABcAAAADAPP/CwAAABQAAAAEAPP/CwABABQAAAAFAPr/CwACABYAAAAFAPv/CwACABcAAAAGAPr/CwADABYAAAAGAPv/CwADABcAAAAKAPr/CwAEABYAAAAKAPv/CwAEABcAAAALAPr/CwAFABYAAAALAPv/CwAFABcAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="ChimneyRoof" type="TileMapLayer" parent="Chimney" unique_id=231281026]
