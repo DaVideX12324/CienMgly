@@ -4,6 +4,7 @@
 [ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/villager_frames.tres" id="2_2orwn"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_kgtq6"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="4_mshdv"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_quest_service.gd" id="5_quest"]
 
 [sub_resource type="Resource" id="Resource_0fws8"]
 script = ExtResource("4_mshdv")
@@ -13,9 +14,31 @@ repeat_lines = PackedStringArray()
 label = "Rozmowa"
 label_key = "npc.service.talk"
 
+[sub_resource type="Resource" id="Resource_rats"]
+script = ExtResource("5_quest")
+quest_id = "lina_rats"
+title = "Szczury w kanałach"
+title_key = "quest.lina_rats.title"
+goal_count = 5
+goal_target = "rat_*"
+goal_text = "Pokonaj szczury w kanałach"
+goal_key = "quest.lina_rats.goal"
+reward_gold = 150
+reward_items = Dictionary[String, int]({
+"potion": 2
+})
+offer_lines = PackedStringArray("Z kanałów pod miastem wyłażą szczury. Coraz większe i coraz śmielsze.", "Przegoń {count} z nich, a odwdzięczę się — {reward}.")
+offer_key = "quest.lina_rats.offer"
+progress_lines = PackedStringArray("Jeszcze {left}. Wejście do kanałów jest na północy miasta.")
+progress_key = "quest.lina_rats.progress"
+done_lines = PackedStringArray("Naprawdę to zrobiłeś? Dziękuję! Proszę, weź to.")
+done_key = "quest.lina_rats.done"
+after_lines = PackedStringArray("Od kiedy przegoniłeś szczury, śpię spokojniej.")
+after_key = "quest.lina_rats.after"
+
 [node name="Villager" instance=ExtResource("0_base")]
 npc_name = "Lina"
 npc_name_key = "npc.villager.name"
 sprite_frames = ExtResource("2_2orwn")
 greeting = PackedStringArray()
-services = Array[ExtResource("3_kgtq6")]([SubResource("Resource_0fws8")])
+services = Array[ExtResource("3_kgtq6")]([SubResource("Resource_0fws8"), SubResource("Resource_rats")])

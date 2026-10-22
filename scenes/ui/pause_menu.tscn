@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://bpuxary8ukqnd" path="res://modules/quiz_rpg/scenes/ui/status_panel.tscn" id="7_kuvrd"]
 [ext_resource type="PackedScene" uid="uid://c4mhyedx4g1d2" path="res://modules/quiz_rpg/scenes/ui/confirm_panel.tscn" id="8_ddwuj"]
 [ext_resource type="PackedScene" uid="uid://ddsk0jw6shqvq" path="res://modules/quiz_rpg/scenes/ui/save_panel.tscn" id="9_vaqrp"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/ui/quest_panel.tscn" id="11_quest"]
 [ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="10_theme"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=716895248]
@@ -139,6 +140,11 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 
 [node name="SavePanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=2119516108 instance=ExtResource("9_vaqrp")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QuestPanel" parent="PauseRoot/MainRow/RightPanel/Margin/RightVBox/ContextBody" unique_id=1840332101 instance=ExtResource("11_quest")]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3

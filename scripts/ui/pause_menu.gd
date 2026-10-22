@@ -59,6 +59,11 @@ var save_panel: VBoxContainer
 var save_hint_label: Label
 var save_slots_vbox: VBoxContainer
 var save_footer_label: Label
+var quest_panel: VBoxContainer
+var quest_hint_label: Label
+var quest_list_vbox: VBoxContainer
+var quest_empty_label: Label
+var quest_row_template: Control
 
 var _gm: Node = null
 var _ps: Node = null
@@ -187,6 +192,8 @@ func _ready() -> void:
 			_ps.points_changed.connect(func(_p: int) -> void: _refresh_score())
 		if _ps.has_signal("gold_changed"):
 			_ps.gold_changed.connect(func(_g: int) -> void: _refresh_score())
+		if _ps.has_signal("quests_changed"):
+			_ps.quests_changed.connect(_on_player_data_changed)
 
 
 func _cache_panel_nodes() -> void:
@@ -197,6 +204,7 @@ func _cache_panel_nodes() -> void:
 	status_panel = pause_root.find_child("StatusPanel", true, false) as VBoxContainer
 	confirm_panel = pause_root.find_child("ConfirmPanel", true, false) as VBoxContainer
 	save_panel = pause_root.find_child("SavePanel", true, false) as VBoxContainer
+	quest_panel = pause_root.find_child("QuestPanel", true, false) as VBoxContainer
 
 	party_hint_label = party_panel.find_child("PartyHintLabel", true, false) as Label if party_panel else null
 	party_list_vbox = party_panel.find_child("PartyListVBox", true, false) as VBoxContainer if party_panel else null
@@ -223,6 +231,10 @@ func _cache_panel_nodes() -> void:
 	save_hint_label = save_panel.find_child("SaveHintLabel", true, false) as Label if save_panel else null
 	save_slots_vbox = save_panel.find_child("SaveSlotsVBox", true, false) as VBoxContainer if save_panel else null
 	save_footer_label = save_panel.find_child("FooterLabel", true, false) as Label if save_panel else null
+	quest_hint_label = quest_panel.find_child("QuestHintLabel", true, false) as Label if quest_panel else null
+	quest_list_vbox = quest_panel.find_child("QuestListVBox", true, false) as VBoxContainer if quest_panel else null
+	quest_empty_label = quest_panel.find_child("EmptyLabel", true, false) as Label if quest_panel else null
+	quest_row_template = quest_panel.find_child("QuestRow0", true, false) as Control if quest_panel else null
 
 
 func _input(event: InputEvent) -> void:
@@ -325,7 +337,7 @@ func _handle_close_input(event: InputEvent) -> bool:
 	match _mode:
 		"left_menu":
 			_toggle_pause()
-		"save_slots":
+		"save_slots", "quest_log":
 			_mode = "left_menu"
 			_show_default_party_panel()
 		"items_list":
@@ -572,6 +584,9 @@ func _accept_left_menu() -> void:
 			_party_index = 0
 			_formation_pick = -1
 			_show_formation_panel()
+		"MenuRowQuests":
+			_mode = "quest_log"
+			_show_quest_panel()
 		"MenuRow4":
 			_mode = "save_slots"
 			_save_slot_index = 0
@@ -867,6 +882,55 @@ func _show_save_panel() -> void:
 	_rebuild_save_slots()
 
 
+## Dziennik zadań NPC (QuizRpgQuestLog): gotowe do oddania, w toku, ukończone (przygaszone). Wiersze = kopie QuestRow0.
+func _show_quest_panel() -> void:
+	_show_panel("quests")
+	context_title_label.text = QuizRpgI18n.t("pause.title_quests", "Zadania")
+	quest_hint_label.text = QuizRpgI18n.t("pause.quests_hint", "X/Esc: wróć")
+	var lsm: Node = null
+	var core_mgr := get_node_or_null("/root/CoreManager")
+	if core_mgr and core_mgr.has_method("get_singleton"):
+		lsm = core_mgr.call("get_singleton", "LevelStateManager")
+	var ids: Array[String] = []
+	if _ps and "quests" in _ps:
+		ids = QuizRpgQuestLog.sorted_ids(_ps, lsm)
+	var rows: Array[Control] = []
+	for c in quest_list_vbox.get_children():
+		if c.name.begins_with("QuestRow"):
+			rows.append(c)
+	while rows.size() < ids.size():
+		var row := quest_row_template.duplicate() as Control
+		row.name = "QuestRow%d" % rows.size()
+		quest_list_vbox.add_child(row)
+		rows.append(row)
+	quest_empty_label.visible = ids.is_empty()
+	quest_empty_label.text = QuizRpgI18n.t("pause.quests_empty", "Brak zadań. Porozmawiaj z mieszkańcami.")
+	for i in rows.size():
+		var row := rows[i]
+		row.visible = i < ids.size()
+		if not row.visible:
+			continue
+		var e: Dictionary = _ps.quests[ids[i]]
+		var done := str(e.get("state", "")) == QuizRpgQuestLog.DONE
+		var ready := not done and QuizRpgQuestLog.is_complete(_ps, lsm, e)
+		var title_label := row.find_child("TitleLabel", true, false) as Label
+		var giver_label := row.find_child("GiverLabel", true, false) as Label
+		var goal_label := row.find_child("GoalLabel", true, false) as Label
+		title_label.text = QuizRpgQuestLog.title(e)
+		giver_label.text = QuizRpgQuestLog.giver(e)
+		if done:
+			goal_label.text = QuizRpgI18n.t("pause.quest_done", "Ukończone")
+		elif ready:
+			goal_label.text = QuizRpgI18n.tf("pause.quest_ready", {"giver": QuizRpgQuestLog.giver(e)}, "Gotowe — wróć do: {giver}")
+		else:
+			goal_label.text = QuizRpgQuestLog.goal_line(self, _ps, lsm, e)
+		row.modulate = Color(1, 1, 1, 0.5) if done else Color.WHITE
+		title_label.add_theme_font_size_override("font_size", QuizTheme.snap(18))
+		giver_label.add_theme_font_size_override("font_size", QuizTheme.snap(16))
+		goal_label.add_theme_font_size_override("font_size", QuizTheme.snap(16))
+		goal_label.add_theme_color_override("font_color", Color(0.55, 0.95, 0.45) if ready else Color.WHITE)
+
+
 func _show_panel(panel_name: String) -> void:
 	# Opcje wbudowane w prawy panel: inna pozycja menu chowa je bez sygnału closed.
 	if panel_name != "options" and _options_menu != null and is_instance_valid(_options_menu) \
@@ -879,6 +943,7 @@ func _show_panel(panel_name: String) -> void:
 	status_panel.visible = panel_name == "status"
 	confirm_panel.visible = panel_name == "confirm"
 	save_panel.visible = panel_name == "save"
+	quest_panel.visible = panel_name == "quests"
 
 
 func _cache_scene_rows() -> void:
@@ -1679,6 +1744,8 @@ func _on_player_data_changed() -> void:
 				_show_party_select_panel(QuizRpgI18n.t("pause.party_select_status", "Wybierz postać do statusu"))
 		"save_slots":
 			_show_save_panel()
+		"quest_log":
+			_show_quest_panel()
 
 
 ## Punkty i seria (dawniej w HUD) — na dole lewego panelu.

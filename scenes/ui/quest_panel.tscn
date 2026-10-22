@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/quiz_frame.gd" id="frame_script"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_row"]
+
+[node name="QuestPanel" type="VBoxContainer" unique_id=1840332101]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="QuestHintLabel" type="Label" parent="." unique_id=1840332102]
+layout_mode = 2
+autowrap_mode = 3
+text = "X/Esc: wróć"
+
+[node name="QuestListFrame" type="PanelContainer" parent="." unique_id=1840332103]
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"QuizFrame"
+script = ExtResource("frame_script")
+
+[node name="QuestListScroll" type="ScrollContainer" parent="QuestListFrame" unique_id=1840332104]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="QuestListVBox" type="VBoxContainer" parent="QuestListFrame/QuestListScroll" unique_id=1840332105]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="EmptyLabel" type="Label" parent="QuestListFrame/QuestListScroll/QuestListVBox" unique_id=1840332106]
+layout_mode = 2
+text = "Brak zadań. Porozmawiaj z mieszkańcami."
+
+[node name="QuestRow0" type="PanelContainer" parent="QuestListFrame/QuestListScroll/QuestListVBox" unique_id=1840332107]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Margin" type="MarginContainer" parent="QuestListFrame/QuestListScroll/QuestListVBox/QuestRow0" unique_id=1840332108]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="Lines" type="VBoxContainer" parent="QuestListFrame/QuestListScroll/QuestListVBox/QuestRow0/Margin" unique_id=1840332109]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="TitleRow" type="HBoxContainer" parent="QuestListFrame/QuestListScroll/QuestListVBox/QuestRow0/Margin/Lines" unique_id=1840332110]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="QuestListFrame/QuestListScroll/QuestListVBox/QuestRow0/Margin/Lines/TitleRow" unique_id=1840332111]
+auto_translate_mode = 2
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Szczury w kanałach"
+
+[node name="GiverLabel" type="Label" parent="QuestListFrame/QuestListScroll/QuestListVBox/QuestRow0/Margin/Lines/TitleRow" unique_id=1840332112]
+auto_translate_mode = 2
+modulate = Color(1, 1, 1, 0.7)
+layout_mode = 2
+horizontal_alignment = 2
+text = "Lina"
+
+[node name="GoalLabel" type="Label" parent="QuestListFrame/QuestListScroll/QuestListVBox/QuestRow0/Margin/Lines" unique_id=1840332113]
+auto_translate_mode = 2
+modulate = Color(1, 1, 1, 0.85)
+layout_mode = 2
+autowrap_mode = 3
+text = "Pokonaj: Szczur (2/5)"

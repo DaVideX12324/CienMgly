@@ -938,6 +938,7 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 	if player_won:
 		defeated = true
 		state = State.DEFEATED
+		_record_kill()
 		if is_boss:
 			_persist_boss_defeat()
 			if ends_game:
@@ -1055,6 +1056,15 @@ func _finish_game() -> void:
 	var screen := EndScreenScene.instantiate()
 	screen.set("saved", saved)
 	get_tree().root.add_child(screen)
+
+
+## Licznik pokonanych (zadania NPC): id = nazwa pliku danych wroga (jak klucze tłumaczeń enemy.<id>.name).
+func _record_kill() -> void:
+	var core := _core()
+	var ps: Variant = core.get_singleton("PlayerStats") if core else null
+	if ps is Node and (ps as Node).has_method("record_kill"):
+		var id := enemy_data.resource_path.get_file().get_basename() if enemy_data != null else ""
+		(ps as Node).call("record_kill", id)
 
 
 func _core() -> Node:

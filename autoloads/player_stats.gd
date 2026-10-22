@@ -20,6 +20,8 @@ signal member_recruited(member_index: int, hero_id: String)
 signal skill_learned(member_index: int, skill_name: String)
 ## Obrażenia od statusu (trucizna): członek drużyny, status, utracone HP — świat (co POISON_WORLD_INTERVAL) i walka.
 signal status_tick(member_index: int, status_id: String, amount: int)
+## Dziennik zadań NPC zmieniony (przyjęte / oddane zadanie, nowy pokonany wróg).
+signal quests_changed()
 
 ## Maks. HP bohatera: QuizRpgHeroData.hp_for_level (z hero_party_data[0] — jego pola).
 ## 100 poziomów = 15 map (wyczyszczenie 120 % wrogów z każdej mapy daje razem lv 100, QuizRpgEnemyXp). HP: lv 1 334, lv 20 1402
@@ -108,6 +110,11 @@ var inventory: Array[Dictionary] = [
 var party: Array[Dictionary] = []
 ## Zadania towarzyszy (NPC rekrutacji): hero_id -> {"state": "active" / "done", "start": licznik przy przyjęciu}.
 var companion_quests: Dictionary = {}
+## Zadania NPC (QuizRpgNpcQuest): quest_id -> wpis dziennika (QuizRpgQuestLog: stan, cel, licznik przy przyjęciu).
+var quests: Dictionary = {}
+## Pokonani wrogowie: id wroga (nazwa pliku danych, np. rat_base) -> liczba; klucz ALL_KILLS = wszyscy.
+var enemy_kills: Dictionary = {}
+const ALL_KILLS := "*"
 
 
 func _ready() -> void:
@@ -941,6 +948,8 @@ func get_save_data() -> Dictionary:
 		"inventory": inventory.duplicate(true),
 		"party": party.duplicate(true),
 		"companion_quests": companion_quests.duplicate(true),
+		"quests": quests.duplicate(true),
+		"enemy_kills": enemy_kills.duplicate(),
 	}
 
 
@@ -970,6 +979,10 @@ func load_save_data(data: Dictionary) -> void:
 			no_slots.append(i)
 	var cq: Variant = data.get("companion_quests", {})
 	companion_quests = (cq as Dictionary).duplicate(true) if cq is Dictionary else {}
+	var qs: Variant = data.get("quests", {})
+	quests = (qs as Dictionary).duplicate(true) if qs is Dictionary else {}
+	var kills: Variant = data.get("enemy_kills", {})
+	enemy_kills = (kills as Dictionary).duplicate() if kills is Dictionary else {}
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
@@ -991,6 +1004,8 @@ func reset() -> void:
 	]
 	party.clear()
 	companion_quests.clear()
+	quests.clear()
+	enemy_kills.clear()
 	_normalize_inventory()
 	_ensure_party_defaults()
 	_sync_primary_party_member()
@@ -1031,6 +1046,28 @@ func add_item(item_ref: String, count: int = 1, _description: String = "") -> vo
 	if inventory_service and inventory_service.has_method("add_item_to_inventory"):
 		inventory = inventory_service.call("add_item_to_inventory", inventory, item_ref, count)
 		inventory_changed.emit()
+
+
+## Pokonany wróg (po wygranej walce, każdy wróg grupy) — liczniki dla zadań NPC.
+func record_kill(enemy_id: String) -> void:
+	if enemy_id != "":
+		enemy_kills[enemy_id] = int(enemy_kills.get(enemy_id, 0)) + 1
+	enemy_kills[ALL_KILLS] = int(enemy_kills.get(ALL_KILLS, 0)) + 1
+	quests_changed.emit()
+
+
+## Ilu wrogów pokonano: `target` = id (rat_base), prefiks z gwiazdką (rat_* — wszystkie szczury) albo pusty = wszyscy.
+func kill_count(target: String = "") -> int:
+	if target == "" or target == ALL_KILLS:
+		return int(enemy_kills.get(ALL_KILLS, 0))
+	if not target.ends_with("*"):
+		return int(enemy_kills.get(target, 0))
+	var prefix := target.trim_suffix("*")
+	var n := 0
+	for id: String in enemy_kills:
+		if id != ALL_KILLS and id.begins_with(prefix):
+			n += int(enemy_kills[id])
+	return n
 
 
 ## Liczba sztuk przedmiotu w ekwipunku (0 = brak / nieznany).

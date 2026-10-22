@@ -231,6 +231,51 @@ text = "Szyk"
 layout_mode = 2
 horizontal_alignment = 2
 
+[node name="MenuRowQuests" type="PanelContainer" parent="." unique_id=1772300200]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_row")
+
+[node name="Control" type="Control" parent="MenuRowQuests" unique_id=1772300201]
+layout_mode = 2
+
+[node name="SelectionUnderline" type="ColorRect" parent="MenuRowQuests/Control" unique_id=1772300202]
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -3.0
+offset_right = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="MenuRowQuests" unique_id=1772300203]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
+
+[node name="ContentRow" type="HBoxContainer" parent="MenuRowQuests/Margin" unique_id=1772300204]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="LeftLabel" type="Label" parent="MenuRowQuests/Margin/ContentRow" unique_id=1772300205]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 27
+text = "Zadania"
+
+[node name="RightLabel" type="Label" parent="MenuRowQuests/Margin/ContentRow" unique_id=1772300206]
+layout_mode = 2
+horizontal_alignment = 2
+
 [node name="MenuRow4" type="PanelContainer" parent="." unique_id=701988744]
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
