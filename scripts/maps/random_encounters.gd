@@ -8,6 +8,8 @@ extends Node
 ##   min_distance / max_distance   px od ostatniej walki: do min_distance spotkania nie ma, od max_distance jest pewne
 ##   max_chance    szansa na krok tuż przed max_distance (rośnie liniowo od 0 przy min_distance), domyślnie 0,12
 ##   tiers         {"1": waga, "2": waga…} — tier wroga wg wag (domyślnie najniższy tier puli)
+##   factions      {"frakcja": waga…} — przy puli z frakcjami ("enemies" jako słownik) frakcja wg wag (domyślnie pierwsza);
+##                 tier ponad pulę frakcji spada do jej najwyższego
 ## Nie liczy się dystans w azylu startowym, w walce, w dialogu ani podczas nietykalności po walce.
 
 const MODE_OFF := "off"
@@ -23,6 +25,7 @@ var min_distance := DEFAULT_MIN
 var max_distance := DEFAULT_MAX
 var max_chance := DEFAULT_MAX_CHANCE
 var tier_weights: Dictionary = {}   # tier (int) -> waga
+var faction_weights: Dictionary = {}   # frakcja (String) -> waga
 var enemy_loot: Dictionary = {}     # tier (int) -> QuizRpgLootTableData (tabele strefy, "enemy_loot" w JSON mapy)
 var _pool: Array = []
 var _faction_pools: Dictionary = {}
@@ -51,6 +54,11 @@ static func create(cfg: Dictionary, pool: Array, faction_pools: Dictionary, leve
 	if tw is Dictionary:
 		for k in tw:
 			re.tier_weights[int(str(k))] = float(tw[k])
+	var fw: Variant = cfg.get("factions", {})
+	if fw is Dictionary:
+		for k in fw:
+			if faction_pools.has(String(k)):
+				re.faction_weights[String(k)] = float(fw[k])
 	re._pool = pool
 	re._faction_pools = faction_pools
 	re._levels = levels
@@ -128,28 +136,42 @@ func _live_regular_enemies() -> int:
 
 ## Tier wroga wg wag (bez wag — najniższy tier puli).
 func pick_tier() -> int:
+	var t: Variant = _pick_weighted(tier_weights)
+	return 1 if t == null else int(t)
+
+
+## Pula spotkania: frakcja wg wag (bez wag — pula domyślna mapy albo pierwsza frakcja).
+func pick_pool() -> Array:
+	var f: Variant = _pick_weighted(faction_weights)
+	if f != null:
+		return _faction_pools[f]
+	if _pool.is_empty() and not _faction_pools.is_empty():
+		return _faction_pools[_faction_pools.keys()[0]]
+	return _pool
+
+
+## Klucz słownika klucz -> waga wylosowany wg wag; null, gdy suma wag 0.
+func _pick_weighted(weights: Dictionary) -> Variant:
 	var total := 0.0
-	for t in tier_weights:
-		total += maxf(float(tier_weights[t]), 0.0)
+	for k in weights:
+		total += maxf(float(weights[k]), 0.0)
 	if total <= 0.0:
-		return 1
+		return null
 	var r := _rng.randf() * total
-	for t in tier_weights:
-		r -= maxf(float(tier_weights[t]), 0.0)
-		if r <= 0.0:
-			return int(t)
-	return int(tier_weights.keys()[0])
+	for k in weights:
+		r -= maxf(float(weights[k]), 0.0)
+		if r <= 0.0 and float(weights[k]) > 0.0:
+			return k
+	return weights.keys()[0]
 
 
 ## Tworzy niewidzialnego wroga i zaczyna walkę. Zwraca go (null — nic nie wylosowano).
 func trigger() -> Node2D:
-	var pool: Array = _pool
-	if pool.is_empty() and not _faction_pools.is_empty():
-		pool = _faction_pools[_faction_pools.keys()[0]]
+	var pool := pick_pool()
 	if pool.is_empty() or _player == null:
 		return null
-	var tier := pick_tier()
-	var idx := clampi(tier - 1, 0, pool.size() - 1)
+	var idx := clampi(pick_tier() - 1, 0, pool.size() - 1)
+	var tier := idx + 1
 	var entry: Variant = pool[idx]
 	var packed: PackedScene
 	if entry is Array:
