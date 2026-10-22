@@ -67,74 +67,75 @@ required_flag = "boss:sewer"
 [sub_resource type="Resource" id="Entry_tempered_sword"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_tempered_sword")
-required_flag = "quest:brann_tempering"
+required_flag = "quest:brann_ore"
 
 [sub_resource type="Resource" id="Entry_tempered_dagger"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_tempered_dagger")
-required_flag = "quest:brann_tempering"
+required_flag = "quest:brann_ore"
 
 [sub_resource type="Resource" id="Entry_oak_staff"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_oak_staff")
-required_flag = "quest:brann_tempering"
+required_flag = "quest:brann_ore"
 
 [sub_resource type="Resource" id="Entry_iron_mace"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_iron_mace")
-required_flag = "quest:brann_tempering"
+required_flag = "quest:brann_ore"
 
 [sub_resource type="Resource" id="Entry_guardsman_sword"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_guardsman_sword")
-required_flag = "quest:brann_runes"
+required_flag = "quest:brann_steel"
 
 [sub_resource type="Resource" id="Entry_stiletto"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_stiletto")
-required_flag = "quest:brann_runes"
+required_flag = "quest:brann_steel"
 
 [sub_resource type="Resource" id="Entry_runed_staff"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_runed_staff")
-required_flag = "quest:brann_runes"
+required_flag = "quest:brann_steel"
 
 [sub_resource type="Resource" id="Entry_flanged_mace"]
 script = ExtResource("5_fejpd")
 item = ExtResource("mid_flanged_mace")
-required_flag = "quest:brann_runes"
+required_flag = "quest:brann_steel"
 
-[sub_resource type="Resource" id="Quest_brann_tempering"]
+[sub_resource type="Resource" id="Quest_brann_ore"]
 script = ExtResource("quest_svc")
-quest_id = "brann_tempering"
-title = "Hartowanie"
-title_key = "quest.brann_tempering.title"
-goal = 0
-goal_count = 10
-offer_lines = PackedStringArray("Hartowanie… to słowo coś mi mówi, ale nic więcej. Mgła wyżarła mi z głowy całe rzemiosło.", "Ty masz głowę na karku. Odpowiedz poprawnie na {count} pytań — może przy tobie i mnie coś wróci.")
-offer_key = "quest.brann_tempering.offer"
-progress_lines = PackedStringArray("Jeszcze {left}. Czuję, że już blisko…")
-progress_key = "quest.brann_tempering.progress"
-done_lines = PackedStringArray("Jest! Olej, ogień, woda — tak się hartuje żelazo! Zajrzyj do mojego towaru.")
-done_key = "quest.brann_tempering.done"
+quest_id = "brann_ore"
+title = "Lepsza ruda"
+title_key = "quest.brann_ore.title"
+goal = 2
+goal_count = 5
+goal_target = "iron_ore"
+offer_lines = PackedStringArray("Z żelaza, które mi zostało, lepszego ostrza nie wykuję — same żużle i rdza. Kopalnie stoją, odkąd przyszła Mgła.", "Stwory z jaskiń i kanałów wloką ze sobą bryły rudy. Przynieś mi {count}, a wykuję hartowane ostrza.")
+offer_key = "quest.brann_ore.offer"
+progress_lines = PackedStringArray("Brakuje jeszcze {left} brył rudy. Szukaj u stworów w jaskiniach i kanałach.")
+progress_key = "quest.brann_ore.progress"
+done_lines = PackedStringArray("Porządna ruda! Wytopię ją jeszcze dziś. Zajrzyj do mojego towaru — hartowane ostrza czekają.")
+done_key = "quest.brann_ore.done"
 required_flag = "boss:cave_relic"
 
-[sub_resource type="Resource" id="Quest_brann_runes"]
+[sub_resource type="Resource" id="Quest_brann_steel"]
 script = ExtResource("quest_svc")
-quest_id = "brann_runes"
-title = "Runy na stali"
-title_key = "quest.brann_runes.title"
-goal = 0
-goal_count = 20
-offer_lines = PackedStringArray("Ojciec rył runy na rękojeściach. Pamiętam kształty, nie pamiętam znaczeń.", "Pomóż mi jeszcze raz — {count} poprawnych odpowiedzi i spróbuję je odczytać.")
-offer_key = "quest.brann_runes.offer"
-progress_lines = PackedStringArray("Jeszcze {left}. Runy już prawie mówią.")
-progress_key = "quest.brann_runes.progress"
-done_lines = PackedStringArray("Rozumiem je! Mam dla ciebie lepszą broń — wykutą jak dawniej.")
-done_key = "quest.brann_runes.done"
-after_lines = PackedStringArray("Runy trzymają się stali. Ja też już się trzymam.")
-after_key = "quest.brann_runes.after"
-required_flag = "quest:brann_tempering"
+quest_id = "brann_steel"
+title = "Węgiel i stal"
+title_key = "quest.brann_steel.title"
+goal = 4
+goal_count = 300
+offer_lines = PackedStringArray("Ruda to połowa sukcesu. Na lepszą broń potrzebuję węgla drzewnego i kilku sztabek dobrej stali.", "Handlarz z bramy sprzeda mi je za {count} D. Zrzucisz się? Wykuję z nich broń, jakiej to miasto dawno nie widziało.")
+offer_key = "quest.brann_steel.offer"
+progress_lines = PackedStringArray("Handlarz chce {count} D. Wróć, gdy uzbierasz.")
+progress_key = "quest.brann_steel.progress"
+done_lines = PackedStringArray("Dziękuję! Za węgiel i stal wykuję ci najlepsze, co umiem. Rzuć okiem na towar.")
+done_key = "quest.brann_steel.done"
+after_lines = PackedStringArray("Dobry węgiel, dobra stal — i od razu ręka pewniejsza.")
+after_key = "quest.brann_steel.after"
+required_flag = "quest:brann_ore"
 
 [sub_resource type="Resource" id="Resource_6ktd1"]
 script = ExtResource("4_05lib")
@@ -164,4 +165,4 @@ sprite_frames = ExtResource("2_th7q5")
 sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.")
 greeting_key = "npc.blacksmith.greeting"
-services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Resource_recl1"), SubResource("Quest_brann_tempering"), SubResource("Quest_brann_runes")])
+services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Resource_recl1"), SubResource("Quest_brann_ore"), SubResource("Quest_brann_steel")])

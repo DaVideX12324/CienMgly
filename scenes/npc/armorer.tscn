@@ -67,17 +67,17 @@ required_flag = "boss:sewer"
 [sub_resource type="Resource" id="Entry_studded_hood"]
 script = ExtResource("5_5mc3i")
 item = ExtResource("mid_studded_hood")
-required_flag = "quest:kastor_studs"
+required_flag = "quest:kastor_hides"
 
 [sub_resource type="Resource" id="Entry_studded_jerkin"]
 script = ExtResource("5_5mc3i")
 item = ExtResource("mid_studded_jerkin")
-required_flag = "quest:kastor_studs"
+required_flag = "quest:kastor_hides"
 
 [sub_resource type="Resource" id="Entry_banded_buckler"]
 script = ExtResource("5_5mc3i")
 item = ExtResource("mid_banded_buckler")
-required_flag = "quest:kastor_studs"
+required_flag = "quest:kastor_hides"
 
 [sub_resource type="Resource" id="Entry_iron_coif"]
 script = ExtResource("5_5mc3i")
@@ -94,37 +94,39 @@ script = ExtResource("5_5mc3i")
 item = ExtResource("mid_iron_round_shield")
 required_flag = "quest:kastor_scales"
 
-[sub_resource type="Resource" id="Quest_kastor_studs"]
+[sub_resource type="Resource" id="Quest_kastor_hides"]
 script = ExtResource("quest_svc")
-quest_id = "kastor_studs"
-title = "Ćwieki z pola walki"
-title_key = "quest.kastor_studs.title"
-goal = 1
-goal_count = 8
-offer_lines = PackedStringArray("Kiedyś nabijałem kaftany ćwiekami — palce to pamiętają, głowa nie.", "Pokonaj {count} wrogów. Jak zobaczę, czym walczą stwory spod Mgły, przypomnę sobie, czym się przed nimi bronić.")
-offer_key = "quest.kastor_studs.offer"
-progress_lines = PackedStringArray("Jeszcze {left}. Opowiadaj, jak walczą.")
-progress_key = "quest.kastor_studs.progress"
-done_lines = PackedStringArray("Tak! Ćwieki w rzędach, gęsto przy sercu. Mam dla ciebie lepszy pancerz.")
-done_key = "quest.kastor_studs.done"
+quest_id = "kastor_hides"
+title = "Surowe skóry"
+title_key = "quest.kastor_hides.title"
+goal = 2
+goal_count = 5
+goal_target = "raw_hide"
+offer_lines = PackedStringArray("Na porządny kaftan potrzebuję skór, a zapasy dawno się skończyły.", "Stwory w kanałach mają grube skóry. Przynieś mi {count}, a uszyję ci ćwiekowany pancerz.")
+offer_key = "quest.kastor_hides.offer"
+progress_lines = PackedStringArray("Jeszcze {left} skór. Szukaj ich w kanałach.")
+progress_key = "quest.kastor_hides.progress"
+done_lines = PackedStringArray("Dobre skóry! Wyprawię je i nabiję ćwiekami. Zajrzyj do mojego towaru.")
+done_key = "quest.kastor_hides.done"
 required_flag = "boss:cave_relic"
 
 [sub_resource type="Resource" id="Quest_kastor_scales"]
 script = ExtResource("quest_svc")
 quest_id = "kastor_scales"
-title = "Łuski"
+title = "Żelazne łuski"
 title_key = "quest.kastor_scales.title"
-goal = 1
-goal_count = 15
-offer_lines = PackedStringArray("Łuski… zachodzące na siebie łuski. Widzę je we śnie, ale nie wiem, jak je szyć.", "Pokonaj jeszcze {count} wrogów, a ja będę patrzył na twój pancerz po każdej walce.")
+goal = 2
+goal_count = 8
+goal_target = "iron_ore"
+offer_lines = PackedStringArray("Zbroja łuskowa to setki żelaznych łusek, a z rdzy ich nie wyklepię.", "Przynieś mi {count} brył rudy żelaza. Brann pomoże ją wytopić.")
 offer_key = "quest.kastor_scales.offer"
-progress_lines = PackedStringArray("Jeszcze {left}. Prawie widzę wzór.")
+progress_lines = PackedStringArray("Brakuje jeszcze {left} brył rudy.")
 progress_key = "quest.kastor_scales.progress"
-done_lines = PackedStringArray("Mam wzór! Zbroja łuskowa, czepiec i tarcza — gotowe dla ciebie.")
+done_lines = PackedStringArray("Tyle żelaza! Starczy na zbroję łuskową, czepiec i tarczę. Są twoje — za uczciwą cenę.")
 done_key = "quest.kastor_scales.done"
-after_lines = PackedStringArray("Łuska do łuski. Tak się trzyma i zbroja, i pamięć.")
+after_lines = PackedStringArray("Łuska do łuski — tak się trzyma dobra zbroja.")
 after_key = "quest.kastor_scales.after"
-required_flag = "quest:kastor_studs"
+required_flag = "quest:kastor_hides"
 
 [sub_resource type="Resource" id="Resource_6b1sk"]
 script = ExtResource("4_s0kr6")
@@ -140,4 +142,4 @@ sprite_frames = ExtResource("2_0xb6a")
 sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Tarcza i dobry hełm uratowały więcej głów niż najlepszy miecz.")
 greeting_key = "npc.armorer.greeting"
-services = Array[ExtResource("3_tgmt6")]([SubResource("Resource_6b1sk"), SubResource("Quest_kastor_studs"), SubResource("Quest_kastor_scales")])
+services = Array[ExtResource("3_tgmt6")]([SubResource("Resource_6b1sk"), SubResource("Quest_kastor_hides"), SubResource("Quest_kastor_scales")])

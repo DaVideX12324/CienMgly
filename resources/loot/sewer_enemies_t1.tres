@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" format=3]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="3_potion"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier2.tres" id="4_key_tier2"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_ore.tres" id="mat_iron_ore"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/raw_hide.tres" id="mat_raw_hide"]
 
 [sub_resource type="Resource" id="Entry_0_potion"]
 script = ExtResource("2_entry")
@@ -19,6 +21,20 @@ count_min = 1
 count_max = 1
 chance = 0.04
 
+[sub_resource type="Resource" id="Entry_mat_iron_ore"]
+script = ExtResource("2_entry")
+item = ExtResource("mat_iron_ore")
+count_min = 1
+count_max = 1
+chance = 0.12
+
+[sub_resource type="Resource" id="Entry_mat_raw_hide"]
+script = ExtResource("2_entry")
+item = ExtResource("mat_raw_hide")
+count_min = 1
+count_max = 1
+chance = 0.3
+
 [resource]
 script = ExtResource("1_table")
-entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_key_tier2")])
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_key_tier2"), SubResource("Entry_mat_iron_ore"), SubResource("Entry_mat_raw_hide")])

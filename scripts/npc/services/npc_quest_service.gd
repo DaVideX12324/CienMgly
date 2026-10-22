@@ -5,7 +5,8 @@ extends QuizRpgNpcService
 ## Zadanie od NPC (pozycja menu rozmowy): propozycja -> przyjęcie (wpis w dzienniku, menu pauzy „Zadania”) -> postęp ->
 ## oddanie z nagrodą (dukaty, XP drużyny, przedmioty) i flagą `quest:<quest_id>` (QuizRpgFlagGate, required_flag usług
 ## i drzwi). Cele (QuizRpgQuestLog.Goal): poprawne odpowiedzi, pokonani wrogowie (id pliku danych, np. rat_base, albo
-## prefiks rat_*; pusty = dowolni), przedmiot (zabierany przy oddaniu), flaga fabularna (np. boss:sewer).
+## prefiks rat_*; pusty = dowolni), przedmiot (zabierany przy oddaniu), flaga fabularna (np. boss:sewer), dukaty
+## (PAY_GOLD — goal_count D pobierane przy oddaniu, np. rzemieślnik kupuje surowce).
 ## W liniach: {count} — wymagana liczba, {left} — ile jeszcze, {target} — nazwa celu, {reward} — nagroda.
 
 ## Identyfikator zadania (unikalny w grze) — klucz wpisu w zapisie i flaga po oddaniu: quest:<quest_id>.
@@ -98,6 +99,8 @@ func _accept(npc: Node, ps: Node) -> void:
 func _complete(npc: Node, ps: Node, e: Dictionary) -> void:
 	if goal == QuizRpgQuestLog.Goal.BRING_ITEM and goal_target != "":
 		ps.consume_item(goal_target, goal_count)
+	elif goal == QuizRpgQuestLog.Goal.PAY_GOLD:
+		ps.spend_gold(goal_count)
 	if reward_gold > 0:
 		ps.add_gold(reward_gold)
 	for id: String in reward_items:

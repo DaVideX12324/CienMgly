@@ -5,7 +5,7 @@ extends RefCounted
 ## nie potrzebuje sceny NPC. Wpis: {state, goal, count, target, start, title, title_key, giver, giver_key, goal_text,
 ## goal_key}. Po oddaniu zadania flaga fabularna `quest:<id>` (DONE_FLAG_PREFIX) — pod QuizRpgFlagGate, usługi NPC, drzwi.
 
-enum Goal { ANSWER_CORRECT, DEFEAT_ENEMIES, BRING_ITEM, STORY_FLAG }
+enum Goal { ANSWER_CORRECT, DEFEAT_ENEMIES, BRING_ITEM, STORY_FLAG, PAY_GOLD }
 
 const ACTIVE := "active"
 const DONE := "done"
@@ -41,6 +41,8 @@ static func progress(ps: Node, lsm: Node, e: Dictionary) -> int:
 			done = counter(ps, goal, target) - int(e.get("start", 0))
 		Goal.BRING_ITEM:
 			done = int(ps.get_item_count(target))
+		Goal.PAY_GOLD:
+			done = int(ps.gold)
 		Goal.STORY_FLAG:
 			done = count if lsm != null and bool(lsm.call("has_story_flag", target)) else 0
 	return clampi(done, 0, count)
@@ -87,6 +89,8 @@ static func goal_line(node: Node, ps: Node, lsm: Node, e: Dictionary) -> String:
 			return QuizRpgI18n.tf("quest.goal.defeat", args, "Pokonaj: {target} ({done}/{count})")
 		Goal.BRING_ITEM:
 			return QuizRpgI18n.tf("quest.goal.bring", args, "Przynieś: {target} ({done}/{count})")
+		Goal.PAY_GOLD:
+			return QuizRpgI18n.tf("quest.goal.pay", args, "Zbierz dukaty ({done}/{count} D)")
 	return QuizRpgI18n.t("quest.goal.flag", "Wykonaj zadanie")
 
 
