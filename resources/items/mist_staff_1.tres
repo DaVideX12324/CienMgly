@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+[ext_resource type="Texture2D" uid="uid://crmrmvb0heypd" path="res://modules/quiz_rpg/resources/items/icons/staff_01c.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "mist_staff_1"
+icon = ExtResource("2_icon")
+display_name = "Kostur Mgły"
+description = "Poczerniały kostur z zapomnianej krypty; kamień w głowicy mętnieje jak mgła. Kowal mówi, że to dopiero początek."
+category = "hand"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "weapon"
+weapon_type = "staff"
+atk_bonus = 20
+mat_bonus = 50
+upgrade_to = "mist_staff_2"
+upgrade_gold = 500
+upgrade_flag = "boss:sewer"

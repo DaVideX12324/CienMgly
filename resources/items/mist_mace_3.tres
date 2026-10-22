@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="QuizRpgItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" uid="uid://bkilyvdt3of57" path="res://modules/quiz_rpg/scripts/items/item_data.gd" id="1_qrpg_item"]
+[ext_resource type="Texture2D" uid="uid://d3frnjtoic3i" path="res://assets/item_icons/priest_mace.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_qrpg_item")
+item_id = "mist_mace_3"
+icon = ExtResource("2_icon")
+display_name = "Buława Mgły III"
+description = "Każdy cios rozprasza mgłę i to, co się w niej kryje."
+category = "hand"
+stackable = false
+max_stack = 1
+consumable = false
+usable_in_menu = false
+usable_in_combat = false
+equip_slot = "weapon"
+weapon_type = "mace"
+atk_bonus = 773
+upgrade_to = "mist_mace_4"
+upgrade_gold = 16900
+upgrade_flag = "boss:library"
