@@ -44,7 +44,9 @@ extends QuizRpgNpcService
 
 func localized_label() -> String:
 	if label == "" and label_key == "":
-		return QuizRpgI18n.t("npc.service.quest", "Zadanie")
+		if title == "" and title_key == "":
+			return QuizRpgI18n.t("npc.service.quest", "Zadanie")
+		return QuizRpgI18n.tf("npc.service.quest_named", {"title": _title()}, "Zadanie: {title}")
 	return super.localized_label()
 
 

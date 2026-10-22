@@ -14,6 +14,13 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_kite_shield.tres" id="12_hjsra"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_helmet.tres" id="13_nvclj"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_chainmail.tres" id="14_1dtev"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/studded_hood.tres" id="mid_studded_hood"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/studded_jerkin.tres" id="mid_studded_jerkin"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/banded_buckler.tres" id="mid_banded_buckler"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_coif.tres" id="mid_iron_coif"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/scale_armor.tres" id="mid_scale_armor"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_round_shield.tres" id="mid_iron_round_shield"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_quest_service.gd" id="quest_svc"]
 
 [sub_resource type="Resource" id="Resource_vg6sq"]
 script = ExtResource("5_5mc3i")
@@ -30,14 +37,17 @@ item = ExtResource("8_f4pbb")
 [sub_resource type="Resource" id="Resource_5dut5"]
 script = ExtResource("5_5mc3i")
 item = ExtResource("9_d4dse")
+required_flag = "boss:cave_relic"
 
 [sub_resource type="Resource" id="Resource_5ev0l"]
 script = ExtResource("5_5mc3i")
 item = ExtResource("10_xwonf")
+required_flag = "boss:cave_relic"
 
 [sub_resource type="Resource" id="Resource_2yt02"]
 script = ExtResource("5_5mc3i")
 item = ExtResource("11_0xfp7")
+required_flag = "boss:cave_relic"
 
 [sub_resource type="Resource" id="Resource_xdq2x"]
 script = ExtResource("5_5mc3i")
@@ -54,9 +64,71 @@ script = ExtResource("5_5mc3i")
 item = ExtResource("14_1dtev")
 required_flag = "boss:sewer"
 
+[sub_resource type="Resource" id="Entry_studded_hood"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("mid_studded_hood")
+required_flag = "quest:kastor_studs"
+
+[sub_resource type="Resource" id="Entry_studded_jerkin"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("mid_studded_jerkin")
+required_flag = "quest:kastor_studs"
+
+[sub_resource type="Resource" id="Entry_banded_buckler"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("mid_banded_buckler")
+required_flag = "quest:kastor_studs"
+
+[sub_resource type="Resource" id="Entry_iron_coif"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("mid_iron_coif")
+required_flag = "quest:kastor_scales"
+
+[sub_resource type="Resource" id="Entry_scale_armor"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("mid_scale_armor")
+required_flag = "quest:kastor_scales"
+
+[sub_resource type="Resource" id="Entry_iron_round_shield"]
+script = ExtResource("5_5mc3i")
+item = ExtResource("mid_iron_round_shield")
+required_flag = "quest:kastor_scales"
+
+[sub_resource type="Resource" id="Quest_kastor_studs"]
+script = ExtResource("quest_svc")
+quest_id = "kastor_studs"
+title = "Ćwieki z pola walki"
+title_key = "quest.kastor_studs.title"
+goal = 1
+goal_count = 8
+offer_lines = PackedStringArray("Kiedyś nabijałem kaftany ćwiekami — palce to pamiętają, głowa nie.", "Pokonaj {count} wrogów. Jak zobaczę, czym walczą stwory spod Mgły, przypomnę sobie, czym się przed nimi bronić.")
+offer_key = "quest.kastor_studs.offer"
+progress_lines = PackedStringArray("Jeszcze {left}. Opowiadaj, jak walczą.")
+progress_key = "quest.kastor_studs.progress"
+done_lines = PackedStringArray("Tak! Ćwieki w rzędach, gęsto przy sercu. Mam dla ciebie lepszy pancerz.")
+done_key = "quest.kastor_studs.done"
+required_flag = "boss:cave_relic"
+
+[sub_resource type="Resource" id="Quest_kastor_scales"]
+script = ExtResource("quest_svc")
+quest_id = "kastor_scales"
+title = "Łuski"
+title_key = "quest.kastor_scales.title"
+goal = 1
+goal_count = 15
+offer_lines = PackedStringArray("Łuski… zachodzące na siebie łuski. Widzę je we śnie, ale nie wiem, jak je szyć.", "Pokonaj jeszcze {count} wrogów, a ja będę patrzył na twój pancerz po każdej walce.")
+offer_key = "quest.kastor_scales.offer"
+progress_lines = PackedStringArray("Jeszcze {left}. Prawie widzę wzór.")
+progress_key = "quest.kastor_scales.progress"
+done_lines = PackedStringArray("Mam wzór! Zbroja łuskowa, czepiec i tarcza — gotowe dla ciebie.")
+done_key = "quest.kastor_scales.done"
+after_lines = PackedStringArray("Łuska do łuski. Tak się trzyma i zbroja, i pamięć.")
+after_key = "quest.kastor_scales.after"
+required_flag = "quest:kastor_studs"
+
 [sub_resource type="Resource" id="Resource_6b1sk"]
 script = ExtResource("4_s0kr6")
-stock = Array[ExtResource("5_5mc3i")]([SubResource("Resource_vg6sq"), SubResource("Resource_2so06"), SubResource("Resource_flms7"), SubResource("Resource_5dut5"), SubResource("Resource_5ev0l"), SubResource("Resource_2yt02"), SubResource("Resource_xdq2x"), SubResource("Resource_8gox0"), SubResource("Resource_wf7tc")])
+stock = Array[ExtResource("5_5mc3i")]([SubResource("Resource_vg6sq"), SubResource("Resource_2so06"), SubResource("Resource_flms7"), SubResource("Resource_5dut5"), SubResource("Resource_5ev0l"), SubResource("Resource_2yt02"), SubResource("Entry_studded_hood"), SubResource("Entry_studded_jerkin"), SubResource("Entry_banded_buckler"), SubResource("Entry_iron_coif"), SubResource("Entry_scale_armor"), SubResource("Entry_iron_round_shield"), SubResource("Resource_xdq2x"), SubResource("Resource_8gox0"), SubResource("Resource_wf7tc")])
 intro_lines = PackedStringArray()
 label = "Handel"
 label_key = "npc.service.shop"
@@ -68,4 +140,4 @@ sprite_frames = ExtResource("2_0xb6a")
 sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Tarcza i dobry hełm uratowały więcej głów niż najlepszy miecz.")
 greeting_key = "npc.armorer.greeting"
-services = Array[ExtResource("3_tgmt6")]([SubResource("Resource_6b1sk")])
+services = Array[ExtResource("3_tgmt6")]([SubResource("Resource_6b1sk"), SubResource("Quest_kastor_studs"), SubResource("Quest_kastor_scales")])

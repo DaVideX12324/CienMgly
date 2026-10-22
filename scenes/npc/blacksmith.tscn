@@ -16,6 +16,15 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/steel_blade.tres" id="14_kcu86"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_upgrade_service.gd" id="15_upgr"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="16_recl"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/tempered_sword.tres" id="mid_tempered_sword"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/tempered_dagger.tres" id="mid_tempered_dagger"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/oak_staff.tres" id="mid_oak_staff"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_mace.tres" id="mid_iron_mace"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/guardsman_sword.tres" id="mid_guardsman_sword"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/stiletto.tres" id="mid_stiletto"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/runed_staff.tres" id="mid_runed_staff"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/flanged_mace.tres" id="mid_flanged_mace"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_quest_service.gd" id="quest_svc"]
 
 [sub_resource type="Resource" id="Resource_0nkv3"]
 script = ExtResource("5_fejpd")
@@ -48,15 +57,88 @@ item = ExtResource("12_7qmvl")
 [sub_resource type="Resource" id="Resource_r7bor"]
 script = ExtResource("5_fejpd")
 item = ExtResource("13_o58t1")
+required_flag = "boss:cave_relic"
 
 [sub_resource type="Resource" id="Resource_hts7l"]
 script = ExtResource("5_fejpd")
 item = ExtResource("14_kcu86")
 required_flag = "boss:sewer"
 
+[sub_resource type="Resource" id="Entry_tempered_sword"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_tempered_sword")
+required_flag = "quest:brann_tempering"
+
+[sub_resource type="Resource" id="Entry_tempered_dagger"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_tempered_dagger")
+required_flag = "quest:brann_tempering"
+
+[sub_resource type="Resource" id="Entry_oak_staff"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_oak_staff")
+required_flag = "quest:brann_tempering"
+
+[sub_resource type="Resource" id="Entry_iron_mace"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_iron_mace")
+required_flag = "quest:brann_tempering"
+
+[sub_resource type="Resource" id="Entry_guardsman_sword"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_guardsman_sword")
+required_flag = "quest:brann_runes"
+
+[sub_resource type="Resource" id="Entry_stiletto"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_stiletto")
+required_flag = "quest:brann_runes"
+
+[sub_resource type="Resource" id="Entry_runed_staff"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_runed_staff")
+required_flag = "quest:brann_runes"
+
+[sub_resource type="Resource" id="Entry_flanged_mace"]
+script = ExtResource("5_fejpd")
+item = ExtResource("mid_flanged_mace")
+required_flag = "quest:brann_runes"
+
+[sub_resource type="Resource" id="Quest_brann_tempering"]
+script = ExtResource("quest_svc")
+quest_id = "brann_tempering"
+title = "Hartowanie"
+title_key = "quest.brann_tempering.title"
+goal = 0
+goal_count = 10
+offer_lines = PackedStringArray("Hartowanie… to słowo coś mi mówi, ale nic więcej. Mgła wyżarła mi z głowy całe rzemiosło.", "Ty masz głowę na karku. Odpowiedz poprawnie na {count} pytań — może przy tobie i mnie coś wróci.")
+offer_key = "quest.brann_tempering.offer"
+progress_lines = PackedStringArray("Jeszcze {left}. Czuję, że już blisko…")
+progress_key = "quest.brann_tempering.progress"
+done_lines = PackedStringArray("Jest! Olej, ogień, woda — tak się hartuje żelazo! Zajrzyj do mojego towaru.")
+done_key = "quest.brann_tempering.done"
+required_flag = "boss:cave_relic"
+
+[sub_resource type="Resource" id="Quest_brann_runes"]
+script = ExtResource("quest_svc")
+quest_id = "brann_runes"
+title = "Runy na stali"
+title_key = "quest.brann_runes.title"
+goal = 0
+goal_count = 20
+offer_lines = PackedStringArray("Ojciec rył runy na rękojeściach. Pamiętam kształty, nie pamiętam znaczeń.", "Pomóż mi jeszcze raz — {count} poprawnych odpowiedzi i spróbuję je odczytać.")
+offer_key = "quest.brann_runes.offer"
+progress_lines = PackedStringArray("Jeszcze {left}. Runy już prawie mówią.")
+progress_key = "quest.brann_runes.progress"
+done_lines = PackedStringArray("Rozumiem je! Mam dla ciebie lepszą broń — wykutą jak dawniej.")
+done_key = "quest.brann_runes.done"
+after_lines = PackedStringArray("Runy trzymają się stali. Ja też już się trzymam.")
+after_key = "quest.brann_runes.after"
+required_flag = "quest:brann_tempering"
+
 [sub_resource type="Resource" id="Resource_6ktd1"]
 script = ExtResource("4_05lib")
-stock = Array[ExtResource("5_fejpd")]([SubResource("Resource_0nkv3"), SubResource("Resource_pr84e"), SubResource("Resource_jr2eo"), SubResource("Resource_akqrx"), SubResource("Resource_8gqc1"), SubResource("Resource_ogi4h"), SubResource("Resource_ok8pr"), SubResource("Resource_r7bor"), SubResource("Resource_hts7l")])
+stock = Array[ExtResource("5_fejpd")]([SubResource("Resource_0nkv3"), SubResource("Resource_pr84e"), SubResource("Resource_jr2eo"), SubResource("Resource_akqrx"), SubResource("Resource_8gqc1"), SubResource("Resource_ogi4h"), SubResource("Resource_ok8pr"), SubResource("Resource_r7bor"), SubResource("Entry_tempered_sword"), SubResource("Entry_tempered_dagger"), SubResource("Entry_oak_staff"), SubResource("Entry_iron_mace"), SubResource("Entry_guardsman_sword"), SubResource("Entry_stiletto"), SubResource("Entry_runed_staff"), SubResource("Entry_flanged_mace"), SubResource("Resource_hts7l")])
 intro_lines = PackedStringArray()
 label = "Handel"
 label_key = "npc.service.shop"
@@ -82,4 +164,4 @@ sprite_frames = ExtResource("2_th7q5")
 sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.")
 greeting_key = "npc.blacksmith.greeting"
-services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Resource_recl1")])
+services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Resource_recl1"), SubResource("Quest_brann_tempering"), SubResource("Quest_brann_runes")])
