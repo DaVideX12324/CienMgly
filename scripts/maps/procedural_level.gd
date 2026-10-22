@@ -589,7 +589,8 @@ static func warm_enemy_scenes() -> void:
 			for entry in tiers:
 				for e in (entry if entry is Array else [entry]):
 					var path := QuizRpgPaths.path(String(e))
-					if not _enemy_scenes.has(path) and not _enemy_requested.has(path) and ResourceLoader.exists(path) 							and ResourceLoader.load_threaded_request(path) == OK:
+					if not _enemy_scenes.has(path) and not _enemy_requested.has(path) and ResourceLoader.exists(path) \
+							and ResourceLoader.load_threaded_request(path) == OK:
 						_enemy_requested[path] = true
 
 
@@ -953,7 +954,7 @@ func _apply_niche_content(result) -> void:
 		node.set("on_enter", _change_level.bind(target, "Spawn"))
 		LevelPortal.place_marker(self, secret_marker(cell), Vector2((cell.x + 1) * CELL_PX, (cell.y + 1) * CELL_PX))
 	for node in get_tree().get_nodes_in_group("ground_items"):
-		if not is_ancestor_of(node) or item_loot.is_empty() or String(node.get("unique_id")).begins_with(String(TreasurePlanner.RELIC_DEF_ID)):
+		if not is_ancestor_of(node) or item_loot.is_empty():
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash([result.seed_used, String(node.get("unique_id"))])
@@ -963,25 +964,28 @@ func _apply_niche_content(result) -> void:
 			node.set("count", QuizRpgLootEntry.roll_count(picked, rng))
 
 
-## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup) albo relikwia — przedmiot "item_id" ×"count" z flagą
-## fabularną "flag" (domyślnie relic.<scena mapy>; stała przy rerollu — podniesiona relikwia nie wraca). Boss mapy
-## ("boss": story_id, counts_toward_device) — np. strażnik relikwii bez kroku postępu urządzenia.
+## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup). "flag" — skrzynia z jedynym przedmiotem (krypta): flaga
+## ustawiana przy otwarciu, stała przy rerollu (przedmiot nie wraca); "prefer_key" — klucz przed wytrychem. Boss mapy
+## ("boss": story_id, counts_toward_device, ends_game; "story": false — boss poza fabułą, bez flagi boss:<id>; "loot" —
+## własna tabela łupu .tres, np. strażnik krypty z gwarantowanym kluczem do skrzyni skarbu).
 func _apply_treasure() -> void:
 	_apply_special_chests(String(TreasurePlanner.CHEST_DEF_ID) + "_", _treasure)
 	_apply_special_chests(String(TreasurePlanner.RARE_DEF_ID) + "_", _rare_rooms)
-	if _treasure.get("kind", "chest") == "relic":
-		var flag := str(_treasure.get("flag", "relic." + QuizRpgPaths.level_scene(_level_key()).get_file().get_basename()))
-		for node in get_tree().get_nodes_in_group("ground_items"):
-			if is_ancestor_of(node) and String(node.get("unique_id")).begins_with(String(TreasurePlanner.RELIC_DEF_ID) + "_"):
-				node.set("item_id", str(_treasure.get("item_id", "")))
-				node.set("count", maxi(int(_treasure.get("count_items", 1)), 1))
-				node.set("story_flag", flag)
+	if _treasure.has("flag"):
+		for node in get_tree().get_nodes_in_group("chests"):
+			if is_ancestor_of(node) and String(node.get("unique_id")).begins_with(String(TreasurePlanner.CHEST_DEF_ID) + "_"):
+				node.set("story_flag", str(_treasure.flag))
+				node.set("prefer_key", bool(_treasure.get("prefer_key", false)))
 	if not _boss_cfg.is_empty():
+		var boss_loot := QuizRpgLootTableData.from_json(_boss_cfg.get("loot", ""))
 		for node in get_tree().get_nodes_in_group("enemies"):
 			if is_ancestor_of(node) and bool(node.get("is_boss")):
 				node.set("boss_story_id", str(_boss_cfg.get("story_id", "")))
+				node.set("story_boss", bool(_boss_cfg.get("story", true)))
 				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", true)))
 				node.set("ends_game", bool(_boss_cfg.get("ends_game", false)))
+				if boss_loot != null:
+					node.set("loot_data", boss_loot)
 
 
 ## Skrzynie o unique_id z prefiksem (nisze, skarb): tier ("chest_tier", domyślnie tier mapy) i łup ("chest_loot": ścieżka .tres)

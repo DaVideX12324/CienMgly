@@ -21,6 +21,15 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @export var tier_frames: Array[SpriteFrames] = []
 @export var quiz_id: String = "inf_podst"
 @export var quiz_category: String = "ogolne"
+## Skrzynia z jedynym przedmiotem (skarb krypty, np. Ostrze Mgły): flaga fabularna ustawiana przy otwarciu; z nią skrzynia
+## stoi otwarta na każdej wersji mapy (też po rerollu seeda, kiedy pozycyjne unique_id już nie pasuje) — przedmiot nie wraca.
+@export var story_flag: String = "":
+	set(v):
+		story_flag = v
+		if is_node_ready():
+			call_deferred("_check_if_opened")  # poziom ustawia flagę już po _ready (po realizacji obiektów)
+## Klucz pasujący do skrzyni zużywany przed wytrychem (skrzynia krypty: boss dropi do niej klucz).
+@export var prefer_key: bool = false
 
 var is_locked: bool = true
 var opened: bool = false
@@ -67,18 +76,27 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _check_if_opened() -> void:
+	if opened or not is_locked:
+		return   # otwarta przez gracza w trakcie czekania na ścieżkę poziomu
+	var level_state_manager := _get_level_state_manager()
+	if level_state_manager and story_flag != "" and level_state_manager.has_story_flag(story_flag):
+		_show_already_opened()
+		return
 	var level_path := _get_current_level_path()
 	if level_path.is_empty():
 		await get_tree().process_frame
 		_check_if_opened()
 		return
 
-	var level_state_manager := _get_level_state_manager()
 	if level_state_manager and level_state_manager.is_chest_opened(level_path, unique_id):
-		was_already_opened = true
-		opened = true
-		is_locked = false
-		play("open")
+		_show_already_opened()
+
+
+func _show_already_opened() -> void:
+	was_already_opened = true
+	opened = true
+	is_locked = false
+	play("open")
 
 
 func _generate_unique_id() -> String:
@@ -105,10 +123,10 @@ func try_open() -> void:
 	var ps := _get_module_singleton("PlayerStats")
 	if ps == null:
 		return
-	if int(ps.call("get_item_count", LOCKPICK_ITEM)) > 0:
+	var key_id := _usable_key(ps)
+	if int(ps.call("get_item_count", LOCKPICK_ITEM)) > 0 and not (prefer_key and key_id != ""):
 		_start_lockpicking(ps)
 	else:
-		var key_id := _usable_key(ps)
 		if key_id != "":
 			ps.call("consume_item", key_id, 1)
 			_toast(QuizRpgI18n.t("chest.key_opens", "Klucz otwiera skrzynię."))
@@ -183,6 +201,9 @@ func unlock() -> void:
 		var level_state_manager := _get_level_state_manager()
 		if level_state_manager:
 			level_state_manager.mark_chest_opened(level_path, unique_id)
+	var lsm := _get_level_state_manager()
+	if lsm and story_flag != "":
+		lsm.set_story_flag(story_flag)
 
 
 func _on_animation_finished() -> void:

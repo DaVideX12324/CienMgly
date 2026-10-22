@@ -6,15 +6,11 @@ extends RefCounted
 ## płaskowyżów, stref portali, obiektów z kolizją i obiektów interaktywnych), co najmniej 2 kratki od spawnów wrogów i od
 ## siebie. Obiekty bez kolizji na kratce skrzyni i wokół niej zdjęte. Tier i łup — ProceduralLevel (_apply_treasure,
 ## prefiks unique_id "treasure_chest_"). Po planie kafli, przed siatką nawigacji i zapisem mapy. Bez losowania.
-## "kind": "relic" (pokój relikwii) — zamiast skrzyni relikwia (relic_item.tscn, przedmiot i flaga z _apply_treasure).
 ## "guard_tier" > 0 — wróg tego tieru (4 = boss) na drodze od wejścia, GUARD_BACK kratek przed ostatnim pokojem.
 
 const CHEST_DEF_ID := &"treasure_chest"
-const RELIC_DEF_ID := &"treasure_relic"
 const RARE_DEF_ID := &"rare_chest"
-const RELIC_SCENE := "scenes/objects/relic_item.tscn"
 const GUARD_BACK := 2
-const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 
@@ -42,8 +38,7 @@ static func plan(result, cfg: Dictionary) -> void:
 					room = r
 	if far < 0:
 		return
-	var relic: bool = cfg.get("kind", "chest") == "relic"
-	var def := _def(RELIC_DEF_ID if relic else CHEST_DEF_ID, QuizRpgPaths.path(RELIC_SCENE) if relic else "chest")
+	var def := _def(CHEST_DEF_ID, "chest")
 	var avoid := _enemy_cells(result)
 	var added := _place_in_room(result, room, def, count, avoid, walk, dist, interactive)
 	if added.is_empty():

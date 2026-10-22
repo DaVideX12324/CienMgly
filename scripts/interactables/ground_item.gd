@@ -4,8 +4,6 @@ extends Area2D
 ## Przedmiot leżący na ziemi (zawartość niszy out — NicheContentPlanner): ikona przedmiotu z lekkim unoszeniem i błyskiem,
 ## klawisz interakcji (gracz, grupa "interactable") dodaje go do ekwipunku. Podniesiony nie wraca — stan w
 ## LevelStateManager (picked_items, po unique_id). item_id / count ustawia poziom (ProceduralLevel, tabela łupu nisz).
-## Relikwia (relic_item.tscn): story_flag — flaga fabularna ustawiana przy podniesieniu; z nią przedmiot znika na każdej
-## mapie (też po rerollu seeda zapisu, kiedy unique_id pozycyjne już nie pasuje).
 
 @export var item_id: String = "potion":
 	set(v):
@@ -14,11 +12,6 @@ extends Area2D
 			_apply_icon()
 @export_range(1, 99, 1) var count: int = 1
 @export var unique_id: String = ""
-@export var story_flag: String = "":
-	set(v):
-		story_flag = v
-		if is_node_ready():
-			call_deferred("_check_if_picked")  # poziom ustawia flagę już po _ready (po realizacji obiektów)
 
 var _picked := false
 
@@ -50,9 +43,6 @@ func _item_data() -> QuizRpgItemData:
 
 func _check_if_picked() -> void:
 	var lsm := _singleton("LevelStateManager")
-	if lsm and not story_flag.is_empty() and lsm.has_story_flag(story_flag):
-		queue_free()
-		return
 	var level_path := _level_path()
 	if level_path.is_empty():
 		await get_tree().process_frame
@@ -86,8 +76,6 @@ func interact(_player: Node2D = null) -> void:
 	var lsm := _singleton("LevelStateManager")
 	if lsm and level_path != "":
 		lsm.mark_item_picked(level_path, unique_id)
-	if lsm and not story_flag.is_empty():
-		lsm.set_story_flag(story_flag)
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("coin")

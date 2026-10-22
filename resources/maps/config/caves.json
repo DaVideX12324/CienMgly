@@ -103,8 +103,8 @@
     "rooms": [2, 3],
     "flags": {"portal_exit": false, "exit_enemy_tier": 0, "enable_platforms": false},
     "niche_content": {"weights": {"secret_room": 0}, "relic_scene": ""},
-    "treasure": {"count": 1, "kind": "relic", "item_id": "mist_blade_1", "flag": "relic.cave", "guard_tier": 4},
-    "boss": {"story_id": "cave_relic", "counts_toward_device": false}
+    "treasure": {"count": 1, "chest_tier": 3, "chest_loot": "resources/loot/caves_relic_chest.tres", "flag": "relic.cave", "prefer_key": true, "guard_tier": 4},
+    "boss": {"story": false, "counts_toward_device": false, "loot": "resources/loot/caves_relic_boss.tres"}
   },
   "enemy_loot": {"1": "resources/loot/caves_enemies_t1.tres", "2": "resources/loot/caves_enemies_t2.tres", "3": "resources/loot/caves_enemies_t3.tres", "4": "resources/loot/caves_enemies_t4.tres"},
   "enemies": [

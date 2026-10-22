@@ -51,6 +51,9 @@ var gold_reward: int = 0
 ## przy rerollu — dzięki temu ten sam story-boss nie liczy się dwa razy. Puste =>
 ## fallback do level_path (jeden krok postępu na mapę). Ustaw np. "boss_desert_fragment1".
 @export var boss_story_id: String = ""
+## Boss fabularny (flaga boss:<id>, tiery sklepów, postęp urządzenia). false = poza fabułą (strażnik skarbu krypty) —
+## zapamiętane tylko pokonanie pod tym seedem.
+@export var story_boss: bool = true
 ## Czy ten boss dobija pasek postępu urządzenia. Odznacz dla bossów, które nie mają
 ## się liczyć (globalna bramka fazy jest osobno w LevelStateManager).
 @export var counts_toward_device: bool = true
@@ -1029,6 +1032,8 @@ func _persist_boss_defeat() -> void:
 	# 1) Respawn: pod tym seedem boss zostaje pokonany (czyszczone rerollem).
 	if not level_path.is_empty():
 		lsm.mark_boss_defeated(level_path, unique_id)
+	if not story_boss:
+		return
 	# Flaga fabularna boss:<id> (id = boss_story_id albo nazwa sceny mapy, np. boss:cave) — zawsze, także gdy boss
 	# nie liczy się do urządzenia; odblokowuje tiery sklepu i lekcje NPC (QuizRpgNpcService.required_flag).
 	var flag_id := boss_story_id if not boss_story_id.is_empty() else level_path.get_file().get_basename()
