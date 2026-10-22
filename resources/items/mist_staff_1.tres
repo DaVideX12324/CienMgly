@@ -21,4 +21,5 @@ atk_bonus = 20
 mat_bonus = 50
 upgrade_to = "mist_staff_2"
 upgrade_gold = 500
-upgrade_flag = "boss:sewer"
+upgrade_flag = "boss:cave_return"
+upgrade_item_id = "bat_matriarch_fang"
