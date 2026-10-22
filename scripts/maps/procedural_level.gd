@@ -956,6 +956,7 @@ func _apply_niche_content(result) -> void:
 		var scene := relic_scene if String(node.get("unique_id")).begins_with(String(NicheContentPlanner.RELIC_ID) + "_") else secret_scene
 		var target := "%s%s%s@%d,%d" % [scene, QuizRpgPaths.LEVEL_ARG_SEP, _level_key(), cell.x, cell.y]
 		node.set("on_enter", _change_level.bind(target, "Spawn"))
+		node.set_meta(&"target_level", target)   # minimapa: przejście odwiedzone = poziom celu ma stan
 		LevelPortal.place_marker(self, secret_marker(cell), Vector2((cell.x + 1) * CELL_PX, (cell.y + 1) * CELL_PX))
 	for node in get_tree().get_nodes_in_group("ground_items"):
 		if not is_ancestor_of(node) or item_loot.is_empty():

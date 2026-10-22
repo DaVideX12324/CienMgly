@@ -6,7 +6,8 @@ extends Control
 ## w zapisie gry (LevelStateManager: stan poziomu, klucz "fog"), zapisywana co FLUSH_INTERVAL i przy zmianie mapy.
 ## Widoczna tylko w eksploracji. Zoom: klawisze = / - (też + / - na klawiaturze numerycznej) albo kółko myszy nad mapą —
 ## w rogu zmienia skalę wycinka, na pełnej mapie przybliża wokół gracza.
-## Znaczniki (MinimapMarkers na obu mapach) na odkrytych kratkach: nieotwarte skrzynie, NPC, niepokonani bossowie.
+## Znaczniki (MinimapMarkers na obu mapach) na odkrytych kratkach: nieotwarte skrzynie, NPC, niepokonani bossowie,
+## przejścia nisz do sekretnych pokoi / krypty (przygaszone po odwiedzeniu) i niepodniesione przedmioty w niszach.
 ## Opcja „Minimapa” w zakładce Sterowanie (manifest control_options, klucz minimap): róg i pełna mapa / tylko pełna mapa
 ## pod M / wyłączona. Odkrywanie mgły działa w każdym trybie — po włączeniu mapa jest aktualna.
 
@@ -37,6 +38,9 @@ const MARKER_INTERVAL := 0.5
 @export var color_chest := Color(0.95, 0.55, 0.15)
 @export var color_npc := Color(0.35, 0.95, 0.45)
 @export var color_boss := Color(0.8, 0.35, 1.0)
+@export var color_passage := Color(0.3, 0.9, 0.95)
+@export var color_passage_visited := Color(0.3, 0.5, 0.55)
+@export var color_item := Color(1.0, 0.95, 0.6)
 
 @onready var _corner: Control = $Corner
 @onready var _corner_clip: Control = $Corner/Clip
@@ -229,10 +233,19 @@ func _build(level: Node, level_key: String) -> void:
 	_collect_markers()
 
 
-## Znaczniki z bieżącego poziomu: nieotwarte skrzynie, NPC, niepokonani bossowie (kratki poza mapą pomijane).
+## Znaczniki z bieżącego poziomu: nieotwarte skrzynie, NPC, niepokonani bossowie, przejścia nisz, przedmioty na ziemi
+## (kratki poza mapą pomijane).
 func _collect_markers() -> void:
 	var out: Array = []
 	if data != null and is_instance_valid(_level):
+		var lsm := CoreManager.get_singleton("LevelStateManager")
+		for p in get_tree().get_nodes_in_group("secret_passages"):
+			if _level.is_ancestor_of(p) and p.has_meta(&"target_level"):
+				var visited: bool = lsm != null and (lsm.get("level_states") as Dictionary).has(str(p.get_meta(&"target_level")))
+				_add_marker(out, p, color_passage_visited if visited else color_passage)
+		for it in get_tree().get_nodes_in_group("ground_items"):
+			if _level.is_ancestor_of(it) and not it.is_queued_for_deletion():
+				_add_marker(out, it, color_item)
 		for c in get_tree().get_nodes_in_group("chests"):
 			if _level.is_ancestor_of(c) and not bool(c.get("opened")):
 				_add_marker(out, c, color_chest)
