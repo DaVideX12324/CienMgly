@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="QuizRpgEnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="2_skill"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/sonic_blast.tres" id="s_sonic_blast"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/burst_swarm.tres" id="s_burst_swarm"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/dark_regen.tres" id="s_dark_regen"]
+
+[resource]
+script = ExtResource("1_data")
+battle_skills = Array[ExtResource("2_skill")]([ExtResource("s_sonic_blast"), ExtResource("s_burst_swarm"), ExtResource("s_dark_regen")])
+enemy_name = "Matka Nietoperzy"
+scan_text = "Ogromna nietoperzyca, która zleciała w głąb jaskiń, gdy zabrakło Starego Grzyba. Ogłusza wrzaskiem, wzywa rój i leczy się w mroku."
+quiz_id = "ogolne"
+quiz_category = "ogolne"
+is_boss = true
+question_count = 3
+max_hp = 2500
+attack = 155
+defense = 140
+magic_attack = 155
+magic_defense = 140
+xp_reward = 8000
+encounter_tier = 4
+min_encounter_size = 1
+max_encounter_size = 1
+patrol_speed = 60.0
+detection_radius = 110.0
+body_color = Color(0.6, 0.4, 0.8, 1)
+shape_type = 0
+metadata/_custom_type_script = "uid://c2e6oyqepnkc4"

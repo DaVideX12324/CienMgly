@@ -81,6 +81,8 @@
   "enemy.bandit_tracker.scan": "A vigilant tracker hunting from the shadows. Can knock heroes down and inflict dangerous stuns.",
   "enemy.bat_fur.name": "Furry Bat",
   "enemy.bat_fur.scan": "A predatory bat covered in thick fur. Has no special techniques, but attacks without hesitation.",
+  "enemy.bat_matriarch.name": "Bat Matriarch",
+  "enemy.bat_matriarch.scan": "A huge bat that flew into the depths of the caves once the Ancient Spore was gone. Stuns with a screech, calls a swarm and heals in the dark.",
   "enemy.bat_small.name": "Small Bat",
   "enemy.bat_small.scan": "A skittish cave pest. Has low health, but can be troublesome in larger swarms.",
   "enemy.elf_base.name": "Elf",

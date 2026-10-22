@@ -34,6 +34,9 @@ var _transitioning := false
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	var lsm := _level_state_manager()
+	if lsm != null and not scene_file_path.is_empty():
+		lsm.set_story_flag("visited:" + QuizRpgPaths.level_name(scene_file_path))   # np. visited:town (boss powrotu w jaskiniach)
 	if in_route:
 		_record_link()
 	# Sąsiednie mapy generowane liczą się w tle, póki gracz tu jest (MapPrefetch pomija mapy ręczne).

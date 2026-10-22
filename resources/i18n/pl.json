@@ -81,6 +81,8 @@
   "enemy.bandit_tracker.scan": "Czujny tropiciel polujący z ukrycia. Potrafi powalić bohatera i nałożyć groźne ogłuszenie.",
   "enemy.bat_fur.name": "Włochaty Nietoperz",
   "enemy.bat_fur.scan": "Drapieżny nietoperz o gęstym futrze. Nie posiada specjalnych technik, ale atakuje bez wahania.",
+  "enemy.bat_matriarch.name": "Matka Nietoperzy",
+  "enemy.bat_matriarch.scan": "Ogromna nietoperzyca, która zleciała w głąb jaskiń, gdy zabrakło Starego Grzyba. Ogłusza wrzaskiem, wzywa rój i leczy się w mroku.",
   "enemy.bat_small.name": "Mały Nietoperz",
   "enemy.bat_small.scan": "Płochliwy jaskiniowy szkodnik. Ma niewiele zdrowia, lecz bywa uciążliwy w większych grupach.",
   "enemy.elf_base.name": "Elf",

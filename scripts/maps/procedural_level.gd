@@ -172,6 +172,7 @@ class GenJob extends RefCounted:
 			NicheContentPlanner.plan(result, raw.get("niche_content", {}))
 			TreasurePlanner.plan(result, raw.get("treasure", {}))
 			TreasurePlanner.plan_rare(result, raw.get("rare_rooms", {}))
+			TreasurePlanner.plan_return_boss(result, raw.get("return_boss", {}))
 			# Siatka nawigacji z mapy (podłoga bez barier i przeszkód) — wypiekana tu, w wątku roboczym,
 			# w kawałkach (cała mapa naraz: minuty przy 500×500).
 			GenProgress.begin(&"navmesh")
@@ -583,6 +584,9 @@ static func warm_enemy_scenes() -> void:
 			tier_lists.append(en)
 		elif en is Dictionary:
 			tier_lists.append_array((en as Dictionary).values())
+		var rb: Variant = (data as Dictionary).get("return_boss")
+		if rb is Dictionary and str(rb.get("scene", "")) != "":
+			tier_lists.append([str(rb.scene)])   # boss powrotu (TreasurePlanner.plan_return_boss)
 		for tiers in tier_lists:
 			if not tiers is Array:
 				continue

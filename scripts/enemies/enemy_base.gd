@@ -54,6 +54,8 @@ var gold_reward: int = 0
 ## Boss fabularny (flaga boss:<id>, tiery sklepów, postęp urządzenia). false = poza fabułą (strażnik skarbu krypty) —
 ## zapamiętane tylko pokonanie pod tym seedem.
 @export var story_boss: bool = true
+## Wróg pojawia się dopiero z tą flagą fabularną (np. visited:town — boss powrotu do jaskiń); pusta = zawsze.
+@export var requires_flag: String = ""
 ## Czy ten boss dobija pasek postępu urządzenia. Odznacz dla bossów, które nie mają
 ## się liczyć (globalna bramka fazy jest osobno w LevelStateManager).
 @export var counts_toward_device: bool = true
@@ -161,6 +163,11 @@ func _ready() -> void:
 	add_to_group("enemies")
 	add_to_group("interactable")
 
+	if requires_flag != "":
+		var lsm := _get_level_state_manager()
+		if lsm == null or not bool(lsm.call("has_story_flag", requires_flag)):
+			queue_free()   # jeszcze nie czas (np. przed dotarciem do miasta)
+			return
 	# Bossy: przywróć stan pokonania (per-save). Deferred + retry na level_path,
 	# bo current_level_path bywa ustawiany dopiero po _ready (jak w skrzyniach).
 	if is_boss:

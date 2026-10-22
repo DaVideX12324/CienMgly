@@ -357,15 +357,22 @@ static func spawn_entities(
 			if pool.is_empty():
 				continue
 			var scene_idx := mini(tier - 1, pool.size() - 1)
-			var enemy_packed: PackedScene = _pick_enemy_variant(pool[scene_idx], pos)
+			var own_scene := String(spawn_info.get("scene", ""))   # boss powrotu: własna scena (TreasurePlanner.plan_return_boss)
+			var enemy_packed: PackedScene = load(own_scene) as PackedScene if own_scene != "" \
+				else _pick_enemy_variant(pool[scene_idx], pos)
 			if enemy_packed:
 				var enemy_inst := enemy_packed.instantiate() as Node2D
 				if enemy_inst:
 					enemy_inst.position = Vector2(pos.x * cell_size + cell_size * 0.5, pos.y * cell_size + cell_size * 0.5)
 					if "faction" in enemy_inst:
 						enemy_inst.set("faction", StringName(faction))
+					if own_scene != "":
+						enemy_inst.set("boss_story_id", String(spawn_info.get("story_id", "")))
+						enemy_inst.set("requires_flag", String(spawn_info.get("requires_flag", "")))
 					var band: Variant = enemy_levels.get(str(scene_idx + 1))
-					if band is Array and band.size() == 2 and enemy_inst.has_method("set_enemy_level"):
+					if int(spawn_info.get("level", 0)) > 0 and enemy_inst.has_method("set_enemy_level"):
+						enemy_inst.call("set_enemy_level", int(spawn_info.level), 1.0)
+					elif band is Array and band.size() == 2 and enemy_inst.has_method("set_enemy_level"):
 						# poziom z przedziału tieru, deterministycznie z pozycji (ten sam seed = te same poziomy)
 						enemy_inst.call("set_enemy_level", int(band[0]) + absi(hash(pos)) % (int(band[1]) - int(band[0]) + 1), xp_scale if tier < 4 else 1.0)
 					enemies_node.add_child(enemy_inst)

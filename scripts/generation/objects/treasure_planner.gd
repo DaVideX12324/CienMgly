@@ -11,6 +11,7 @@ extends RefCounted
 const CHEST_DEF_ID := &"treasure_chest"
 const RARE_DEF_ID := &"rare_chest"
 const GUARD_BACK := 2
+const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 
@@ -100,6 +101,64 @@ static func plan_rare(result, cfg: Dictionary) -> void:
 		added.append_array(one)
 	if not added.is_empty():
 		_commit(objs, added)
+
+
+## Boss powrotu ("return_boss" w JSON mapy, pomysł usera 2026-10-22): pojawia się dopiero z flagą "requires_flag" (np.
+## visited:town — po dotarciu do miasta trzeba wrócić do jaskiń), jego pokonanie daje flagę boss:<"story_id"> (tier
+## sklepów). Na pierwszym przejściu jest tylko boss przed wyjściem (Stary Grzyb); boss powrotu planowany zawsze (mapa
+## z pliku / z wyprzedzeniem ta sama), ukrywa go wróg (enemy_base.requires_flag). Miejsce: losowy pokój (hash seeda
+## mapy; bez pokoi wejścia i wyjścia), otwarta osiągalna podłoga najbliżej środka, ≥ 2 kratki od wrogów i obiektów
+## interaktywnych. Po plan_rare. Wpis enemy_spawns: tier 4 + "scene", "story_id", "requires_flag", "level".
+static func plan_return_boss(result, cfg: Dictionary) -> void:
+	if cfg.is_empty() or str(cfg.get("scene", "")) == "" or result.objects == null or result.rooms.is_empty() \
+			or result.entrance_pos == Vector2i.ZERO:
+		return
+	var objs: ObjectPlan = result.objects
+	var blocked := {}
+	if result.plateau != null and not result.plateau.is_empty():
+		blocked = result.plateau.blocked
+	var walk := func(c: Vector2i) -> bool:
+		return GridUtils.is_walkable(result.grid, c) and not blocked.has(c)
+	var dist := _floor_dist(result.entrance_pos, walk)
+	var rooms: Array[Rect2i] = []
+	for r: Rect2i in result.rooms:
+		var at_exit: bool = result.exit_pos != Vector2i.ZERO and r.grow(2).has_point(result.exit_pos)
+		if not r.grow(2).has_point(result.entrance_pos) and not at_exit:
+			rooms.append(r)
+	if rooms.is_empty():
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([result.seed_used, "return_boss"])
+	var first := rng.randi_range(0, rooms.size() - 1)
+	var interactive := _interactive_cells(objs)
+	var avoid := _enemy_cells(result)
+	for i: int in interactive:
+		avoid.append(Vector2i(i % objs.width, i / objs.width))
+	# wylosowany pokój, a gdy nie ma w nim miejsca — kolejne
+	for k in rooms.size():
+		var room := rooms[(first + k) % rooms.size()]
+		var center := room.get_center()
+		var cands: Array[Vector2i] = []
+		for y in range(room.position.y - 1, room.end.y + 1):
+			for x in range(room.position.x - 1, room.end.x + 1):
+				var c := Vector2i(x, y)
+				if dist.has(c) and _open(result, objs, c, walk, interactive):
+					cands.append(c)
+		cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			var da := (a - center).length_squared()
+			var db := (b - center).length_squared()
+			return da < db or (da == db and (a.y < b.y or (a.y == b.y and a.x < b.x))))
+		for c in cands:
+			var near := false
+			for q in avoid:
+				if maxi(absi(q.x - c.x), absi(q.y - c.y)) < 2:
+					near = true
+					break
+			if near:
+				continue
+			result.enemy_spawns.append({"pos": c, "tier": 4, "scene": QuizRpgPaths.path(str(cfg.scene)), "story_id": str(cfg.get("story_id", "")),
+				"requires_flag": str(cfg.get("requires_flag", "")), "level": int(cfg.get("level", 0))})
+			return
 
 
 static func _def(id: StringName, scene: String) -> ObjectDef:
