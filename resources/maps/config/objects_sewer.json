@@ -140,6 +140,20 @@
         ]
       },
       {
+        "id": "zakatek",
+        "per_room": 0.2,
+        "density": 0.05,
+        "flip_h": true,
+        "parts": [
+          {"id": "crates", "at": [0, 0], "tags": ["wall_n", "wall_w"]},
+          {"id": "misc_clutter", "at": [1, 0], "tags": ["wall_n"]},
+          {"id": "debris", "at": [2, 0]},
+          {"id": "debris", "at": [1, 1]},
+          {"id": "debris", "at": [0, 1]}
+        ],
+        "clear": [[2, 1]]
+      },
+      {
         "id": "beczki",
         "per_room": 0.08,
         "flip_h": true,
@@ -813,6 +827,7 @@
     {
       "id": "wrecks",
       "group": "wrecks",
+      "companions": [{"id": "debris", "count": [1, 3], "radius": 1}],
       "size": [
         1,
         2
@@ -896,6 +911,9 @@
     {
       "id": "debris",
       "group": "clutter",
+      "density": 3.5,
+      "cluster": {"size": [3, 7], "radius": 2},
+      "prefer": ["wall_any", "corner"],
       "atlas": [
         4,
         11
@@ -1497,6 +1515,7 @@
     {
       "id": "wrecks_small",
       "group": "wrecks",
+      "companions": [{"id": "debris", "count": [1, 3], "radius": 1}],
       "size": [
         1,
         1
