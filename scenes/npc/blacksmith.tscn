@@ -57,6 +57,7 @@ item = ExtResource("12_7qmvl")
 [sub_resource type="Resource" id="Resource_r7bor"]
 script = ExtResource("5_fejpd")
 item = ExtResource("13_o58t1")
+required_flag = "boss:cave"
 
 [sub_resource type="Resource" id="Resource_hts7l"]
 script = ExtResource("5_fejpd")
@@ -117,6 +118,7 @@ progress_lines = PackedStringArray("Brakuje jeszcze {left} brył rudy. Szukaj u 
 progress_key = "quest.brann_ore.progress"
 done_lines = PackedStringArray("Porządna ruda! Wytopię ją jeszcze dziś. Zajrzyj do mojego towaru — hartowane ostrza czekają.")
 done_key = "quest.brann_ore.done"
+required_flag = "boss:cave"
 
 [sub_resource type="Resource" id="Quest_brann_steel"]
 script = ExtResource("quest_svc")
