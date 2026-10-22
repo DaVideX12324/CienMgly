@@ -92,12 +92,14 @@ static func from_layers(level: Node) -> QuizRpgMinimapData:
 	for layer in _layers(level):
 		var is_floor := _is_floor_layer(layer)
 		var named_wall := _is_named_wall(layer)
-		for c in layer.get_used_cells():
+		var kinds_of := _tiles_by_kind(layer)
+		for k: Vector4i in kinds_of:
+			var cells: Array = kinds_of[k]
 			if is_floor:
-				for p in _cells_of(layer, c):
+				for p in _cells_of(layer, cells, k):
 					floors[p] = true
-			elif _blocks(layer, c) or (named_wall and layer.tile_set.get_physics_layers_count() == 0):
-				for p in _cells_of(layer, c):
+			elif _blocks(layer, cells[0]) or (named_wall and layer.tile_set.get_physics_layers_count() == 0):
+				for p in _cells_of(layer, cells, k):
 					walls[p] = true
 			# Kafle bez kolizji: na Walls / Cliffs (wypełnienie pustki, sztandary) — kratka zostaje podłogą albo skałą
 			# z kolorem kafla (solid_colors); nad podłogą (dachy, drzwi, propsy) — pomijane.
@@ -146,18 +148,35 @@ static func _blocks(layer: TileMapLayer, c: Vector2i) -> bool:
 	return td != null and td.get_collision_polygons_count(0) > 0
 
 
-## Kratki minimapy zajęte przez kafel warstwy w komórce `c`: kafel wielokratkowy (np. podłoga 2×1, ściana 1×2) jest zapisany
-## tylko w kratce kotwicy, a zajmuje też sąsiednie; warstwa może być przesunięta i mieć inny rozmiar kafla.
-static func _cells_of(layer: TileMapLayer, c: Vector2i) -> Array[Vector2i]:
+## Komórki warstwy wg rodzaju kafla {Vector4i(źródło, atlas x, atlas y, alternatywa): [komórki]} — zapytania o kafel
+## (rozmiar w atlasie, kolizja, kolor) raz na rodzaj, a nie na każdą komórkę (miasto ma ~60 tys. komórek, ~150 rodzajów).
+static func _tiles_by_kind(layer: TileMapLayer) -> Dictionary:
+	var out := {}
+	for c in layer.get_used_cells():
+		var ac := layer.get_cell_atlas_coords(c)
+		var k := Vector4i(layer.get_cell_source_id(c), ac.x, ac.y, layer.get_cell_alternative_tile(c))
+		var list: Variant = out.get(k)
+		if list == null:
+			out[k] = [c]
+		else:
+			(list as Array).append(c)
+	return out
+
+
+## Kratki minimapy zajęte przez kafle rodzaju `k` w komórkach `cells`: kafel wielokratkowy (np. podłoga 2×1, ściana 1×2)
+## jest zapisany tylko w kratce kotwicy, a zajmuje też sąsiednie; warstwa może być przesunięta i mieć inny rozmiar kafla.
+static func _cells_of(layer: TileMapLayer, cells: Array, k: Vector4i) -> Array[Vector2i]:
 	var scale := Vector2(layer.tile_set.tile_size) / float(CELL)
-	var p := Vector2i((Vector2(c) * scale + layer.position / float(CELL)).floor())
-	var src := layer.tile_set.get_source(layer.get_cell_source_id(c)) as TileSetAtlasSource
-	var ac := layer.get_cell_atlas_coords(c)
+	var off := layer.position / float(CELL)
+	var src := layer.tile_set.get_source(k.x) as TileSetAtlasSource
+	var ac := Vector2i(k.y, k.z)
 	var span := src.get_tile_size_in_atlas(ac) if src != null and src.has_tile(ac) else Vector2i.ONE   # kafel usunięty z atlasu
 	var out: Array[Vector2i] = []
-	for dy in span.y:
-		for dx in span.x:
-			out.append(p + Vector2i(dx, dy))
+	for c: Vector2i in cells:
+		var p := Vector2i((Vector2(c) * scale + off).floor())
+		for dy in span.y:
+			for dx in span.x:
+				out.append(p + Vector2i(dx, dy))
 	return out
 
 
@@ -194,19 +213,34 @@ func _paint_layers(level: Node) -> void:
 
 
 ## Kafle warstwy do cell_colors (podłoga) albo solid_colors (ściany) — tablice to typy wartościowe, więc wprost w polach.
+## Komórki po kolei (get_used_cells) — kafle wielokratkowe nachodzą na sąsiednie kratki, wygrywa później malowany.
 func _paint_layer(layer: TileMapLayer, solid: bool) -> void:
+	var scale := Vector2(layer.tile_set.tile_size) / float(CELL)
+	var off := layer.position / float(CELL)
+	var per_kind := {}   # Vector4i -> [kolor, rozmiar w atlasie] albo [] (brak tekstury)
 	for c in layer.get_used_cells():
-		var avg := _tile_color(layer, c)
-		if avg.is_empty():
+		var ac := layer.get_cell_atlas_coords(c)
+		var k := Vector4i(layer.get_cell_source_id(c), ac.x, ac.y, layer.get_cell_alternative_tile(c))
+		var info: Variant = per_kind.get(k)
+		if info == null:
+			var avg := _tile_color(layer, k)
+			var src := layer.tile_set.get_source(k.x) as TileSetAtlasSource
+			info = [] if avg.is_empty() else [avg[0], src.get_tile_size_in_atlas(ac) if src != null and src.has_tile(ac) else Vector2i.ONE]
+			per_kind[k] = info
+		if (info as Array).is_empty():
 			continue
-		var col: Color = avg[0]
-		for p in _cells_of(layer, c):
-			if not has_cell(p):
-				continue
-			if solid:
-				solid_colors[index(p)] = col
-			else:
-				cell_colors[index(p)] = col
+		var col: Color = info[0]
+		var span: Vector2i = info[1]
+		var base := Vector2i((Vector2(c) * scale + off).floor())
+		for dy in span.y:
+			for dx in span.x:
+				var p := base + Vector2i(dx, dy)
+				if not has_cell(p):
+					continue
+				if solid:
+					solid_colors[index(p)] = col
+				else:
+					cell_colors[index(p)] = col
 
 
 ## Kolor kratki z kafli: podłoga — z warstw podłogi, ściana / skała — z warstw ścian (alfa 0 = brak kafla, czyli pustka).
@@ -217,10 +251,10 @@ func color_at(p: Vector2i) -> Color:
 	return solid_colors[index(p)] if k == WALL or k == UNKNOWN or k == VOID else cell_colors[index(p)]
 
 
-## [średni kolor nieprzezroczystych pikseli, pokrycie] kafla w komórce; [] = brak tekstury.
-func _tile_color(layer: TileMapLayer, c: Vector2i) -> Array:
-	var sid := layer.get_cell_source_id(c)
-	var ac := layer.get_cell_atlas_coords(c)
+## [średni kolor nieprzezroczystych pikseli, pokrycie] kafla rodzaju `k` (_tiles_by_kind); [] = brak tekstury.
+func _tile_color(layer: TileMapLayer, k: Vector4i) -> Array:
+	var sid := k.x
+	var ac := Vector2i(k.y, k.z)
 	var key := "%d:%d:%d:%d" % [layer.tile_set.get_instance_id(), sid, ac.x, ac.y]
 	if _tile_avg.has(key):
 		return _tile_avg[key]
