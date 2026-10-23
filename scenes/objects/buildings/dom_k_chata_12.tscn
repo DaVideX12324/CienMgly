@@ -67,6 +67,7 @@ position = Vector2(0, 8)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1666618756]
+position = Vector2(0, -5)
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=1952000362]
