@@ -40,6 +40,7 @@
   "combat.hero_level_up": "{name} reaches level {level}!",
   "combat.hit_damage": "{target}: hit! -{damage} HP",
   "combat.item_dropped": "Acquired: {item}!",
+  "combat.level_short": "Lv {level}",
   "combat.member_joins_battle": "{name} joins the battle!",
   "combat.miss": "Miss!",
   "combat.new_skill_learned": "New skill: {skill}!",

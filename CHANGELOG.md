@@ -21,6 +21,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Walka: poziom wroga („Lv N”) przy nazwie na liście wyboru celu (wrogowie bez poziomu, np. samouczek — bez znacznika).
+- Ścieki: poziomy wrogów z pasm (`enemy_levels`: t1 9–11, t2 11–13, t3 13–14, Szczurzy Król 15) — statystyki z poziomu jak
+  w jaskiniach (wcześniej szablon tieru, w praktyce poziom 1). Zapisane mapy ścieków generują się od nowa.
 - Przedmioty: w menu Esc po użyciu zostaje wybór postaci (ta sama zaznaczona) — kolejne Enter używa przedmiotu znowu,
   dopóki jest w plecaku. Przedmiotu, który nic by nie dał (pełne HP / SP / TP, brak statusu do wyleczenia), nie da się
   użyć ani w menu, ani w walce — komunikat z powodem, przedmiot nie przepada.
@@ -38,7 +41,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
-- Walka: boss miał HP losowane ±8 % (np. 700 -> do 756); teraz zawsze dokładnie swoje maks. HP. Zwykli wrogowie bez zmian.
+- Walka: wrogowie mieli w walce HP losowane ±8 % (np. boss 700 -> do 756); teraz każdy ma dokładnie swoje maks. HP —
+  statystyki wynikają z poziomu, ten sam wróg na tym samym poziomie jest zawsze taki sam.
 - Kroki prawie niesłyszalne (−22 dB przy cichych próbkach): teraz 0 dB, ok. 9 dB poniżej kliknięcia w menu; dwa kroki
   mogą brzmieć naraz (nie ucinają się).
 - Bohater: przy krótkim stuknięciu ruchu animacja chodu ruszała dopiero po pierwszej klatce (poza stojąca) i postać

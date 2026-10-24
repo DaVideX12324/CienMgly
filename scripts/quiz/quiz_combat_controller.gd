@@ -1058,6 +1058,7 @@ func _open_target_menu() -> void:
 			"name": str(enemy_unit.get("name", enemy_name_str)),
 			"hp": int(enemy_unit.get("hp", 0)),
 			"max_hp": int(enemy_unit.get("max_hp", 1)),
+			"level": int(enemy_unit.get("level", 0)),
 		})
 	_target_selected_idx = 0
 	target_list_vbox.columns = mini(2, maxi(_target_entries.size(), 1))
@@ -1088,6 +1089,14 @@ func _build_target_menu() -> void:
 		name_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
 		name_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
 		row_content.add_child(name_text)  # HP wroga pokazuje umiejętność Skan, nie lista celów
+		var lvl := int(entry.get("level", 0))
+		if lvl > 0:  # poziom wroga (mapa: "enemy_levels"); bez poziomu (samouczek) — bez znacznika
+			var level_text: Label = Label.new()
+			level_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			level_text.text = QuizRpgI18n.tf("combat.level_short", {"level": lvl}, "Lv {level}")
+			level_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
+			level_text.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5))
+			row_content.add_child(level_text)
 		row_margin.add_child(row_content)
 		row.add_child(row_margin)
 		var row_index: int = _target_rows.size()
@@ -3116,7 +3125,7 @@ func _roll_enemy_party() -> void:
 			if int(names[nm]) > 1:
 				seen[nm] = int(seen.get(nm, 0)) + 1
 				nm = "%s %d" % [nm, seen[nm]]
-			var hp_u := maxi(1, roundi(int(src.max_hp) * _hp_spread(src)))
+			var hp_u := maxi(1, int(src.max_hp))  # stałe HP: statystyki z poziomu, bez rozrzutu
 			_enemy_units.append({
 				"name": nm,
 				"hp": hp_u,
@@ -3127,6 +3136,7 @@ func _roll_enemy_party() -> void:
 				"mdf": maxi(0, int(src.magic_defense)),
 				"agi": maxi(1, int(src.get("agility")) if src.get("agility") != null else enemy_base_agility),
 				"tier": _get_encounter_tier(src),
+				"level": int(src.get("enemy_level")) if src.get("enemy_level") != null else 0,
 				"source": src,
 			})
 			if src != enemy:
@@ -3138,7 +3148,7 @@ func _roll_enemy_party() -> void:
 	var encounter_count := randi_range(min_count, max_count)
 	for enemy_index in range(encounter_count):
 		var unit_name := enemy_name_str if encounter_count == 1 else "%s %d" % [enemy_name_str, enemy_index + 1]
-		var unit_hp := maxi(1, roundi(enemy_max_hp * _hp_spread(enemy)))
+		var unit_hp := maxi(1, enemy_max_hp)
 		_enemy_units.append({
 			"name": unit_name,
 			"hp": unit_hp,
@@ -3149,18 +3159,12 @@ func _roll_enemy_party() -> void:
 			"mdf": maxi(0, enemy_base_magic_defense),
 			"agi": maxi(1, enemy_base_agility),
 			"tier": _get_encounter_tier(),
+			"level": int(enemy.get("enemy_level")) if enemy.get("enemy_level") != null else 0,
 		})
 	_active_enemy_index = 0
 	_bonus_xp_reward = maxi(0, encounter_count - 1) * enemy.xp_reward
 	_refresh_enemy_cache()
 
-
-
-## Rozrzut HP jednostki ±8 % — zwykli wrogowie; boss ma zawsze dokładnie swoje maks. HP (decyzja usera 2026-10-25).
-func _hp_spread(src: Variant) -> float:
-	if src is Object and is_instance_valid(src) and bool(src.get("is_boss")):
-		return 1.0
-	return randf_range(0.92, 1.08)
 
 
 func _refresh_enemy_cache() -> void:
