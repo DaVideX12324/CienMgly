@@ -261,12 +261,31 @@ func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
 	var dir_name = _direction_name()
 	var anim_name = state + "_" + dir_name
 	if sprite.sprite_frames.has_animation(anim_name):
-		sprite.play(anim_name)
+		_play_animation(sprite, anim_name)
 	elif sprite.sprite_frames.has_animation(state):
-		sprite.play(state)
+		_play_animation(sprite, state)
 		# Animacje bez kierunku (klatki Pixel Crawlera patrzą w prawo) — w lewo lustrzane odbicie.
 		if absf(facing_direction.x) > 0.01:
 			sprite.flip_h = facing_direction.x < 0.0
+
+
+
+## Chód z bezruchu od klatki 1 (wykrok): klatka 0 to poza stojąca — przy krótkim stuknięciu postać sunęła w niej,
+## zanim animacja ruszyła (150 ms przy 6,67 kl./s). Zmiana kierunku w trakcie chodu zachowuje fazę kroku.
+func _play_animation(sprite: AnimatedSprite2D, anim_name: String) -> void:
+	if sprite.animation == anim_name and sprite.is_playing():
+		return
+	var was_walking := String(sprite.animation).begins_with("walk") and sprite.is_playing()
+	var frame := sprite.frame
+	var progress := sprite.frame_progress
+	sprite.play(anim_name)
+	var count := sprite.sprite_frames.get_frame_count(anim_name)
+	if not anim_name.begins_with("walk") or count < 2:
+		return
+	if was_walking:
+		sprite.set_frame_and_progress(frame % count, progress)
+	else:
+		sprite.frame = 1
 
 
 func _direction_name() -> String:

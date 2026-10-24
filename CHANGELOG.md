@@ -28,6 +28,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
+- Bohater: przy krótkim stuknięciu ruchu animacja chodu ruszała dopiero po pierwszej klatce (poza stojąca) i postać
+  sunęła; teraz chód z bezruchu zaczyna się od wykroku, a zmiana kierunku zachowuje fazę kroku. Kroki na wykrokach
+  (¼ i ¾ pętli), pierwszy od razu.
 - Walka: po wygranej z wrogiem bez tabeli łupu (np. samouczek) błąd „Array[Dictionary]” przerywał losowanie łupu —
   nie wypadał klucz tieru 1. To samo w łupie przedmiotów w niszach jaskiń.
 - Ścieki: na części map (ok. 1/3 seedów) wejście albo wyjście nie miało drabiny — pokój wybrany na przejście nie miał

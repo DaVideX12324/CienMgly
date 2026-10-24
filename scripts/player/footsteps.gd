@@ -1,7 +1,9 @@
 extends AudioStreamPlayer2D
 
 ## Dźwięki kroków gracza (wzór: Amon-Ra, player.gd play_footstep_sfx). Krok na klatkach animacji chodu
-## (walk / walk_<kierunek>): początek i połowa pętli — dwa kroki na cykl, przy biegu szybciej razem z animacją.
+## (walk / walk_<kierunek>) z wykrokiem: ¼ i ¾ pętli (8 klatek: 2 i 6 jak w Amon-Ra, 4 klatki: 1 i 3) — dwa kroki
+## na cykl, przy biegu szybciej razem z animacją; chód z bezruchu zaczyna się od klatki 1 (player.gd), więc
+## pierwszy krok słychać od razu.
 ## Zapas jak w Amon-Ra: gdy postać idzie, a animacja chodu nie gra (np. trafienie), krok co pół pętli z licznika.
 ## Typ podłoża: najwyższa widoczna warstwa kafli pod stopami z rozpoznanym podłożem — dana kafla „ground_type”
 ## (jeśli TileSet ma taką warstwę danych), inaczej nazwa terenu kafla dopasowana do sets[].terrain_keywords
@@ -50,7 +52,7 @@ func _on_frame_changed() -> void:
 	if not _is_walk_anim():
 		return
 	var n := _sprite.sprite_frames.get_frame_count(_sprite.animation)
-	if _sprite.frame == 0 or (n >= 2 and _sprite.frame == n / 2):
+	if n >= 2 and (_sprite.frame == int(n * 0.25) or _sprite.frame == int(n * 0.75)):
 		play_step()
 
 
