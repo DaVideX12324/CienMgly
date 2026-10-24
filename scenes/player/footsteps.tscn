@@ -76,7 +76,8 @@ terrain_keywords = PackedStringArray("ground", "mud", "dirt")
 sounds = Array[AudioStream]([ExtResource("ground_1"), ExtResource("ground_2"), ExtResource("ground_3"), ExtResource("ground_4"), ExtResource("ground_5"), ExtResource("ground_6")])
 
 [node name="Footsteps" type="AudioStreamPlayer2D"]
-volume_db = -22.0
+volume_db = 0.0
+max_polyphony = 2
 max_distance = 1500.0
 bus = &"SFX"
 script = ExtResource("1_script")

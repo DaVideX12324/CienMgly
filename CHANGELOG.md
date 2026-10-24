@@ -32,6 +32,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
+- Kroki prawie niesłyszalne (−22 dB przy cichych próbkach): teraz 0 dB, ok. 9 dB poniżej kliknięcia w menu; dwa kroki
+  mogą brzmieć naraz (nie ucinają się).
 - Bohater: przy krótkim stuknięciu ruchu animacja chodu ruszała dopiero po pierwszej klatce (poza stojąca) i postać
   sunęła; teraz chód z bezruchu zaczyna się od wykroku, a zmiana kierunku zachowuje fazę kroku. Kroki na wykrokach
   (¼ i ¾ pętli), pierwszy od razu.
