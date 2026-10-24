@@ -1134,7 +1134,48 @@ func use_item(item_ref: String) -> Dictionary:
 	return use_item_on_member(item_ref, hero_index())
 
 
-func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
+## Powód blokady przedmiotu dla członka ("" = można użyć): przedmiot odnawiający HP / SP / TP albo leczący status, który
+## nic by nie dał — wszystko, co odnawia, jest pełne, a statusu do wyleczenia brak. Przedmioty bez takich efektów — "".
+## values: wartości z walki ("sp", "max_sp", "tp", "max_tp" — walka trzyma SP / TP u siebie); reszta z drużyny.
+func item_block_reason(item_ref: String, member_index: int, values: Dictionary = {}) -> String:
+	var inventory_service: Node = _get_inventory_service()
+	var item: QuizRpgItemData = inventory_service.call("get_item", item_ref) if inventory_service else null
+	if item == null or member_index < 0 or member_index >= party.size():
+		return ""
+	var heals := item.heal_amount > 0
+	var sp := item.sp_restore > 0
+	var tp := item.tp_restore > 0
+	var cures := not item.cure_statuses.is_empty()
+	if not (heals or sp or tp or cures):
+		return ""
+	var m: Dictionary = party[member_index]
+	var max_hp_m := max_hp if is_hero(member_index) else int(m.get("max_hp", 1))
+	if heals and member_hp(member_index) < max_hp_m:
+		return ""
+	if sp and int(values.get("sp", m.get("sp", 0))) < int(values.get("max_sp", m.get("max_sp", 1))):
+		return ""
+	if tp and int(values.get("tp", m.get("tp", 0))) < int(values.get("max_tp", m.get("max_tp", 1))):
+		return ""
+	if cures:
+		var have := get_statuses(member_index)
+		for sid in item.cure_statuses:
+			if have.has(String(sid)):
+				return ""
+	var who := {"name": str(m.get("name", player_name))}
+	if heals and not (sp or tp or cures):
+		return QuizRpgI18n.tf("party.item_full_hp", who, "{name}: HP jest pełne.")
+	if sp and not (heals or tp or cures):
+		return QuizRpgI18n.tf("party.item_full_sp", who, "{name}: SP jest pełne.")
+	if tp and not (heals or sp or cures):
+		return QuizRpgI18n.tf("party.item_full_tp", who, "{name}: TP jest pełne.")
+	if cures and not (heals or sp or tp):
+		return QuizRpgI18n.tf("party.item_nothing_to_cure", who, "{name}: nie ma czego leczyć.")
+	return QuizRpgI18n.tf("party.item_no_effect", who, "{name}: przedmiot nic by nie dał.")
+
+
+## Użycie przedmiotu na członku. Przedmiot, który nic by nie dał (item_block_reason), nie jest zużywany —
+## {"success": false, "blocked": true, "message": powód}. values — jak w item_block_reason (walka).
+func use_item_on_member(item_ref: String, member_index: int, values: Dictionary = {}) -> Dictionary:
 	var inventory_service: Node = _get_inventory_service()
 	if inventory_service == null or not inventory_service.has_method("use_item"):
 		return {"success": false, "message": QuizRpgI18n.t("inventory.service_unavailable", "InventoryService niedostępny.")}
@@ -1144,6 +1185,9 @@ func use_item_on_member(item_ref: String, member_index: int) -> Dictionary:
 	var item_data: QuizRpgItemData = inventory_service.call("get_item", item_ref)
 	if item_data == null:
 		return {"success": false, "message": QuizRpgI18n.t("inventory.unknown_item", "Nieznany przedmiot.")}
+	var block := item_block_reason(item_ref, member_index, values)
+	if block != "":
+		return {"success": false, "blocked": true, "message": block}
 	var consume_result: Dictionary = inventory_service.call("consume_item_from_inventory", inventory, item_ref, 1)
 	if not bool(consume_result.get("success", false)):
 		return {"success": false, "message": QuizRpgI18n.t("inventory.no_item", "Brak przedmiotu.")}

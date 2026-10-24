@@ -658,10 +658,15 @@ func _use_pending_item_on_member() -> void:
 	if _ps == null or not _ps.has_method("use_item_on_member"):
 		return
 	var result: Dictionary = _ps.use_item_on_member(_pending_item_id, _party_index)
+	_show_toast(str(result.get("message", QuizRpgI18n.t("pause.item_used", "Użyto przedmiotu."))))
+	# Wielokrotne użycie: dopóki przedmiot jest w plecaku, zostaje wybór postaci (ta sama postać zaznaczona) —
+	# kolejne Enter używa go znowu bez ponownego wybierania z listy. Zablokowany (pełne HP itd.) też zostaje.
+	if _ps.has_method("get_item_count") and int(_ps.get_item_count(_pending_item_id)) > 0:
+		_rebuild_party_rows(true)
+		return
 	_pending_item_id = ""
 	_mode = "items_list"
 	_show_items_panel()
-	_show_toast(str(result.get("message", QuizRpgI18n.t("pause.item_used", "Użyto przedmiotu."))))
 
 
 func _use_selected_skill() -> void:

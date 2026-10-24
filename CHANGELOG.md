@@ -21,6 +21,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Przedmioty: w menu Esc po użyciu zostaje wybór postaci (ta sama zaznaczona) — kolejne Enter używa przedmiotu znowu,
+  dopóki jest w plecaku. Przedmiotu, który nic by nie dał (pełne HP / SP / TP, brak statusu do wyleczenia), nie da się
+  użyć ani w menu, ani w walce — komunikat z powodem, przedmiot nie przepada.
 - Walka z bossem: boss jest zawsze jeden (bez kopii bossa) i dostaje stałą świtę (pole sceny `boss_minions` — zawsze
   ci sami przeciwnicy w tej samej liczbie, poziom z dolnej granicy pasma tieru na mapie): szlam-boss samouczka sam,
   stary grzyb + 2 młode grzyby, Matka Nietoperzy + 2 małe nietoperze (jaskinie: tier 1), Szczurzy Król + szczur

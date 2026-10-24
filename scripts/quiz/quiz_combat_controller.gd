@@ -1559,14 +1559,22 @@ func _use_item(item_data: Dictionary) -> void:
 	if not _ps.has_method("use_item"):
 		return
 	if not _executing:
+		# Przedmiot, który nic by nie dał (pełne HP / SP / TP, brak statusu) — nie do wybrania, menu zostaje.
+		var block: String = _ps.item_block_reason(item_id, _active_actor_index, _item_values(_active_actor_index)) if _ps.has_method("item_block_reason") else ""
+		if block != "":
+			result_label.visible = true
+			result_label.text = block
+			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+			return
 		_close_list_menu()
 		_commit_plan({"item": item_data.duplicate(true)})  # przedmiot zużywany w ruchu postaci
 		return
-	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index)
+	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index, _item_values(_active_actor_index))
 	var item_name: String = str(use_result.get("name", item_data.get("name", QuizRpgI18n.t("combat.default_item_name", "Przedmiot"))))
 	if not bool(use_result.get("success", false)):
 		result_label.visible = true
-		result_label.text = QuizRpgI18n.tf("combat.no_item_left", {"name": _member_name(_active_actor_index), "item": item_name}, "{name}: brak przedmiotu — {item}.")
+		# Zablokowany (np. HP wypełniło się przed ruchem) — powód; inaczej brak przedmiotu.
+		result_label.text = str(use_result.get("message", "")) if bool(use_result.get("blocked", false)) else QuizRpgI18n.tf("combat.no_item_left", {"name": _member_name(_active_actor_index), "item": item_name}, "{name}: brak przedmiotu — {item}.")
 		result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
 		await get_tree().create_timer(1.0).timeout
 		_next_turn()
@@ -3547,6 +3555,14 @@ func _gain_party_tp(index: int, amount: int, charge: bool = true) -> void:
 	var member := _party_state[index]
 	member["tp"] = clampi(int(member.get("tp", 0)) + gain, 0, int(member.get("tp_max", PARTY_TP_MAX)))
 	_party_state[index] = member
+
+
+## SP / TP członka z walki (walka trzyma je w _party_state) — do PlayerStats.item_block_reason / use_item_on_member.
+func _item_values(index: int) -> Dictionary:
+	if index < 0 or index >= _party_state.size():
+		return {}
+	var m := _party_state[index]
+	return {"sp": int(m.get("sp", 0)), "max_sp": int(m.get("sp_max", PARTY_SKILL_SP_MAX)), "tp": int(m.get("tp", 0)), "max_tp": int(m.get("tp_max", PARTY_TP_MAX))}
 
 
 func _consume_party_sp(index: int, amount: int) -> void:
