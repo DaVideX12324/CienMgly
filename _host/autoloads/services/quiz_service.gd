@@ -285,6 +285,10 @@ func get_current_question(module_id: String, session_id: String = "default") -> 
 	return {}
 
 
+## Treść wpisywana pytaniom „dopasuj pary” bez własnej (_normalize_questions).
+const MATCHING_DEFAULT_QUESTION := "Dopasuj elementy."
+
+
 func get_question_display_text(question: Dictionary) -> String:
 	match str(question.get("type", "multiple_choice")):
 		"true_false":
@@ -293,10 +297,18 @@ func get_question_display_text(question: Dictionary) -> String:
 			return str(question.get("prompt", ""))
 		"fill_tiles":
 			# Zdanie z lukami stoi już w wierszu luk pod pytaniem — tu tylko polecenie (albo własna treść pytania).
-			return str(question.get("question", question.get("prompt", I18nService.t("host.quiz.prompt.fill_tiles"))))
+			# _normalize_questions wpisuje do "question" samo zdanie z lukami — to nie jest własna treść.
+			var own := str(question.get("question", question.get("prompt", "")))
+			if own == "" or own == str(question.get("text_with_gaps", "")):
+				return I18nService.t("host.quiz.prompt.fill_tiles")
+			return own
 		"matching":
-			# Pary zwykle bez treści pytania — bez niej nad parami zostawał pusty pas.
-			return str(question.get("question", question.get("prompt", I18nService.t("host.quiz.prompt.matching"))))
+			# Pary zwykle bez treści pytania — bez niej nad parami zostawał pusty pas; domyślna treść z
+			# _normalize_questions (MATCHING_DEFAULT_QUESTION) -> polecenie w bieżącym języku.
+			var own := str(question.get("question", question.get("prompt", "")))
+			if own == "" or own == MATCHING_DEFAULT_QUESTION:
+				return I18nService.t("host.quiz.prompt.matching")
+			return own
 		_:
 			return str(question.get("question", question.get("prompt", "")))
 
@@ -606,7 +618,7 @@ func _normalize_questions(raw_questions: Array, path: String) -> Array:
 				if not question.has("left_items") or not question.has("right_items") or not question.has("pairs"):
 					push_warning("QuizService: invalid matching question in %s" % path)
 					continue
-				question["question"] = question.get("question", "Dopasuj elementy.")
+				question["question"] = question.get("question", MATCHING_DEFAULT_QUESTION)
 			_:
 				push_warning("QuizService: unknown question type '%s' in %s" % [qtype, path])
 				continue
