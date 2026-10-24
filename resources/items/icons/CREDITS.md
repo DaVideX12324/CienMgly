@@ -12,7 +12,7 @@ Shiny RPG Potions 16x16, autor: Bonsaiheldin (http://bonsaiheld.org,
 https://opengameart.org/content/shiny-rpg-potions-16x16), licencja CC BY-SA 3.0
 (https://creativecommons.org/licenses/by-sa/3.0/). Wycięte z arkusza, bez zmian pikseli, nowe nazwy — na tej samej licencji:
 
-- `potions/hp_t<tier>_<s|m|l>.png` — mikstury HP: tier 1 czerwona, 2 pomarańczowa, 3 różowa, 4 ciemnoczerwona, 5 biała;
+- `potions/hp_t<tier>_<s|m|l>.png` — mikstury HP: tier 1 czerwona, 2 pomarańczowa, 3 różowa (procentowa);
   rozmiar s / m / l = mała / średnia / duża butelka;
-- `potions/sp_t<tier>_<s|m|l>.png` — etery SP: tier 1 niebieski, 2 turkusowy, 3 fioletowy, 4 granatowy, 5 srebrny;
+- `potions/sp_t<tier>_<s|m|l>.png` — etery SP: tier 1 niebieski, 2 turkusowy, 3 fioletowy (procentowy);
 - `potions/antidote.png` (żółta), `potions/focus_tonic.png` (zielona, TP).

@@ -1142,8 +1142,8 @@ func item_block_reason(item_ref: String, member_index: int, values: Dictionary =
 	var item: QuizRpgItemData = inventory_service.call("get_item", item_ref) if inventory_service else null
 	if item == null or member_index < 0 or member_index >= party.size():
 		return ""
-	var heals := item.heal_amount > 0
-	var sp := item.sp_restore > 0
+	var heals := item.heal_amount > 0 or item.heal_percent > 0.0
+	var sp := item.sp_restore > 0 or item.sp_percent > 0.0
 	var tp := item.tp_restore > 0
 	var cures := not item.cure_statuses.is_empty()
 	if not (heals or sp or tp or cures):
@@ -1193,10 +1193,13 @@ func use_item_on_member(item_ref: String, member_index: int, values: Dictionary 
 		return {"success": false, "message": QuizRpgI18n.t("inventory.no_item", "Brak przedmiotu.")}
 	inventory = consume_result.get("inventory", inventory)
 	var member: Dictionary = party[member_index]
-	if item_data.heal_amount > 0:
-		member["hp"] = mini(int(member.get("hp", 0)) + item_data.heal_amount, int(member.get("max_hp", 1)))
-	if item_data.sp_restore > 0:
-		member["sp"] = mini(int(member.get("sp", 0)) + item_data.sp_restore, int(member.get("max_sp", 1)))
+	# Ile faktycznie (stałe + procent od maks.; SP w walce od maks. SP walki — values).
+	var hp_gain := item_data.hp_restore_for(int(member.get("max_hp", 1)))
+	var sp_gain := item_data.sp_restore_for(int(values.get("max_sp", member.get("max_sp", 1))))
+	if hp_gain > 0:
+		member["hp"] = mini(int(member.get("hp", 0)) + hp_gain, int(member.get("max_hp", 1)))
+	if sp_gain > 0:
+		member["sp"] = mini(int(member.get("sp", 0)) + sp_gain, int(member.get("max_sp", 1)))
 	if item_data.tp_restore > 0:
 		member["tp"] = mini(int(member.get("tp", 0)) + item_data.tp_restore, int(member.get("max_tp", 1)))
 	var cured: Array = []
@@ -1219,8 +1222,8 @@ func use_item_on_member(item_ref: String, member_index: int, values: Dictionary 
 		"item_id": item_data.item_id,
 		"name": item_data.localized_name(),
 		"description": item_data.localized_description(),
-		"heal_amount": item_data.heal_amount,
-		"sp_restore": item_data.sp_restore,
+		"heal_amount": hp_gain,
+		"sp_restore": sp_gain,
 		"tp_restore": item_data.tp_restore,
 		"cured_statuses": cured,
 		"usable_in_menu": item_data.usable_in_menu,

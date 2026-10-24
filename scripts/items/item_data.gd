@@ -17,7 +17,11 @@ class_name QuizRpgItemData
 ## Klasy, które mogą założyć przedmiot (warrior / rogue / mage / priest); pusta lista = każda postać.
 @export var allowed_classes: PackedStringArray = []
 @export var heal_amount: int = 0
+## Leczenie w ułamku maks. HP celu (0–1; mikstury procentowe tieru 3) — dodawane do heal_amount.
+@export_range(0.0, 1.0, 0.05) var heal_percent: float = 0.0
 @export var sp_restore: int = 0
+## Odnowienie SP w ułamku maks. SP celu (0–1; etery procentowe tieru 3) — dodawane do sp_restore.
+@export_range(0.0, 1.0, 0.05) var sp_percent: float = 0.0
 @export var tp_restore: int = 0
 ## Statusy zdejmowane przez przedmiot (np. "poison" — PlayerStats.STATUS_*).
 @export var cure_statuses: PackedStringArray = []
@@ -60,12 +64,26 @@ static func weapon_type_name(type_id: String) -> String:
 	return QuizRpgI18n.t("weapon." + type_id, str(WEAPON_TYPE_NAMES.get(type_id, type_id)))
 
 
+## HP przywracane celowi o maks. HP max_hp (stałe + procent).
+func hp_restore_for(max_hp: int) -> int:
+	return heal_amount + (ceili(max_hp * heal_percent) if heal_percent > 0.0 else 0)
+
+
+## SP przywracane celowi o maks. SP max_sp (stałe + procent).
+func sp_restore_for(max_sp: int) -> int:
+	return sp_restore + (ceili(max_sp * sp_percent) if sp_percent > 0.0 else 0)
+
+
 func get_effect_summary() -> String:
 	var parts: Array[String] = []
 	if heal_amount > 0:
 		parts.append("+%d HP" % heal_amount)
+	if heal_percent > 0.0:
+		parts.append("+%d%% HP" % roundi(heal_percent * 100.0))
 	if sp_restore > 0:
 		parts.append("+%d SP" % sp_restore)
+	if sp_percent > 0.0:
+		parts.append("+%d%% SP" % roundi(sp_percent * 100.0))
 	if tp_restore > 0:
 		parts.append("+%d TP" % tp_restore)
 	if cure_statuses.has("poison"):
