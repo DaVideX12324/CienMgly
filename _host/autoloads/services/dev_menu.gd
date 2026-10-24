@@ -32,6 +32,7 @@ var _spin_item_count: SpinBox
 var _btn_equip_item: Button
 var _opt_status_member: OptionButton
 var _opt_party_hero: OptionButton
+var _opt_party_member: OptionButton
 var _opt_status_id: OptionButton
 var _lbl_fps: Label
 var _lbl_info: Label
@@ -884,7 +885,7 @@ func _on_cheat_clear_statuses() -> void:
 
 
 func _build_party_cheats() -> PanelContainer:
-	var box := _create_card_container("Drużyna", "[ PARTY ]", "Dołącz towarzysza do drużyny (poziom: najwyższy w drużynie − 1, pełne HP / SP, ekwipunek startowy).")
+	var box := _create_card_container("Drużyna", "[ PARTY ]", "Dołącz towarzysza do drużyny (poziom: najwyższy w drużynie − 1, pełne HP / SP, ekwipunek startowy) albo go usuń (jego ekwipunek wraca do plecaka).")
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	_opt_party_hero = OptionButton.new()
@@ -898,6 +899,25 @@ func _build_party_cheats() -> PanelContainer:
 	btn.pressed.connect(_on_cheat_recruit)
 	row.add_child(btn)
 	_get_card_content(box).add_child(row)
+	var row_out := HBoxContainer.new()
+	row_out.add_theme_constant_override("separation", 10)
+	_opt_party_member = OptionButton.new()
+	_opt_party_member.focus_mode = Control.FOCUS_NONE
+	_opt_party_member.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row_out.add_child(_opt_party_member)
+	var btn_out := Button.new()
+	btn_out.text = "➖ Usuń"
+	btn_out.focus_mode = Control.FOCUS_NONE
+	_min_height(btn_out, 36)
+	btn_out.pressed.connect(_on_cheat_dismiss)
+	row_out.add_child(btn_out)
+	var btn_all := Button.new()
+	btn_all.text = "Usuń wszystkich"
+	btn_all.focus_mode = Control.FOCUS_NONE
+	_min_height(btn_all, 36)
+	btn_all.pressed.connect(_on_cheat_dismiss_all)
+	row_out.add_child(btn_all)
+	_get_card_content(box).add_child(row_out)
 	return box
 
 
@@ -910,6 +930,10 @@ func _refresh_party_cheats() -> void:
 	if ps == null or not ps.has_method("recruitable_heroes"):
 		_opt_party_hero.add_item("(brak drużyny — moduł nieaktywny)")
 		_opt_party_hero.disabled = true
+		if _opt_party_member:
+			_opt_party_member.clear()
+			_opt_party_member.add_item("(brak drużyny — moduł nieaktywny)")
+			_opt_party_member.disabled = true
 		return
 	for id: String in ps.recruitable_heroes():
 		var hero = ps.hero_by_id(id)
@@ -918,6 +942,22 @@ func _refresh_party_cheats() -> void:
 	_opt_party_hero.disabled = _opt_party_hero.item_count == 0
 	if _opt_party_hero.item_count == 0:
 		_opt_party_hero.add_item("(wszyscy są już w drużynie)")
+	_refresh_party_members(ps)
+
+
+## Lista towarzyszy w drużynie (bez głównego bohatera) do usunięcia.
+func _refresh_party_members(ps: Node) -> void:
+	if _opt_party_member == null:
+		return
+	_opt_party_member.clear()
+	if ps.has_method("companion_ids"):
+		for id: String in ps.companion_ids():
+			var hero = ps.hero_by_id(id)
+			_opt_party_member.add_item("%s (%s)" % [hero.display_name, hero.class_label(hero.character_class)] if hero else id)
+			_opt_party_member.set_item_metadata(_opt_party_member.item_count - 1, id)
+	_opt_party_member.disabled = _opt_party_member.item_count == 0
+	if _opt_party_member.item_count == 0:
+		_opt_party_member.add_item("(brak towarzyszy w drużynie)")
 
 
 func _on_cheat_recruit() -> void:
@@ -929,6 +969,33 @@ func _on_cheat_recruit() -> void:
 	var cheat_service = _get_service("CheatService")
 	if ps.recruit(id) and cheat_service:
 		cheat_service.show_toast("➕ Dołącza: %s" % label, Color(0.5, 1.0, 0.6))
+	_refresh_party_cheats()
+	_refresh_status_cheats()
+
+
+func _on_cheat_dismiss() -> void:
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or _opt_party_member == null or _opt_party_member.disabled or _opt_party_member.selected < 0:
+		return
+	var id := str(_opt_party_member.get_item_metadata(_opt_party_member.selected))
+	var label := _opt_party_member.get_item_text(_opt_party_member.selected)
+	var cheat_service = _get_service("CheatService")
+	if ps.dismiss(id) and cheat_service:
+		cheat_service.show_toast("➖ Odchodzi: %s" % label, Color(1.0, 0.7, 0.5))
+	_refresh_party_cheats()
+	_refresh_status_cheats()
+
+
+func _on_cheat_dismiss_all() -> void:
+	var ps := _module_singleton("PlayerStats")
+	if ps == null or not ps.has_method("companion_ids"):
+		return
+	var n := 0
+	for id: String in ps.companion_ids():
+		n += int(ps.dismiss(id))
+	var cheat_service = _get_service("CheatService")
+	if cheat_service:
+		cheat_service.show_toast("➖ Usunięto towarzyszy: %d" % n, Color(1.0, 0.7, 0.5))
 	_refresh_party_cheats()
 	_refresh_status_cheats()
 
