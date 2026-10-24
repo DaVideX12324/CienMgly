@@ -3116,7 +3116,7 @@ func _roll_enemy_party() -> void:
 			if int(names[nm]) > 1:
 				seen[nm] = int(seen.get(nm, 0)) + 1
 				nm = "%s %d" % [nm, seen[nm]]
-			var hp_u := maxi(1, roundi(int(src.max_hp) * randf_range(0.92, 1.08)))
+			var hp_u := maxi(1, roundi(int(src.max_hp) * _hp_spread(src)))
 			_enemy_units.append({
 				"name": nm,
 				"hp": hp_u,
@@ -3138,7 +3138,7 @@ func _roll_enemy_party() -> void:
 	var encounter_count := randi_range(min_count, max_count)
 	for enemy_index in range(encounter_count):
 		var unit_name := enemy_name_str if encounter_count == 1 else "%s %d" % [enemy_name_str, enemy_index + 1]
-		var unit_hp := maxi(1, roundi(enemy_max_hp * randf_range(0.92, 1.08)))
+		var unit_hp := maxi(1, roundi(enemy_max_hp * _hp_spread(enemy)))
 		_enemy_units.append({
 			"name": unit_name,
 			"hp": unit_hp,
@@ -3153,6 +3153,14 @@ func _roll_enemy_party() -> void:
 	_active_enemy_index = 0
 	_bonus_xp_reward = maxi(0, encounter_count - 1) * enemy.xp_reward
 	_refresh_enemy_cache()
+
+
+
+## Rozrzut HP jednostki ±8 % — zwykli wrogowie; boss ma zawsze dokładnie swoje maks. HP (decyzja usera 2026-10-25).
+func _hp_spread(src: Variant) -> float:
+	if src is Object and is_instance_valid(src) and bool(src.get("is_boss")):
+		return 1.0
+	return randf_range(0.92, 1.08)
 
 
 func _refresh_enemy_cache() -> void:

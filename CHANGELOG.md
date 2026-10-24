@@ -38,6 +38,7 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
+- Walka: boss miał HP losowane ±8 % (np. 700 -> do 756); teraz zawsze dokładnie swoje maks. HP. Zwykli wrogowie bez zmian.
 - Kroki prawie niesłyszalne (−22 dB przy cichych próbkach): teraz 0 dB, ok. 9 dB poniżej kliknięcia w menu; dwa kroki
   mogą brzmieć naraz (nie ucinają się).
 - Bohater: przy krótkim stuknięciu ruchu animacja chodu ruszała dopiero po pierwszej klatce (poza stojąca) i postać
