@@ -13,10 +13,10 @@ const SCALE_VALUES: Dictionary = {
 }
 
 const SCALE_LABELS: Dictionary = {
-	ScaleMode.XSMALL: "Bardzo male (0.5x)",
-	ScaleMode.SMALL: "Male (0.75x)",
+	ScaleMode.XSMALL: "Bardzo małe (0.5x)",
+	ScaleMode.SMALL: "Małe (0.75x)",
 	ScaleMode.NORMAL: "Normalne (1x)",
-	ScaleMode.LARGE: "Duze (1.5x)",
+	ScaleMode.LARGE: "Duże (1.5x)",
 	ScaleMode.XLARGE: "4K (2x)",
 }
 

@@ -73,7 +73,7 @@ metadata/_tab_index = 0
 
 [node name="QuizlessMode" type="CheckButton" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
-text = "Gra bez quizow (auto-zaliczanie)"
+text = "Gra bez quizów (auto-zaliczanie)"
 
 [node name="SepLang" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ogolne"]
 layout_mode = 2
@@ -129,7 +129,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 15
 toggle_mode = true
-text = "Pelny ekran"
+text = "Pełny ekran"
 
 [node name="Sep1" type="HSeparator" parent="Panel/Margin/VBox/Tabs/Ekran"]
 layout_mode = 2
@@ -152,7 +152,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Rozdzielczosc:"
+text = "Rozdzielczość:"
 
 [node name="ResOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Ekran"]
 layout_mode = 2
@@ -193,7 +193,7 @@ text = "V-Sync (synchronizacja pionowa)"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Limit FPS (przy wylaczonym V-Sync):"
+text = "Limit FPS (przy wyłączonym V-Sync):"
 
 [node name="FpsRow" type="HBoxContainer" parent="Panel/Margin/VBox/Tabs/Ekran"]
 layout_mode = 2
@@ -225,7 +225,7 @@ metadata/_tab_index = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Glosnosc ogolna:"
+text = "Głośność ogólna:"
 
 [node name="SliderMaster" type="HSlider" parent="Panel/Margin/VBox/Tabs/Dzwiek"]
 layout_mode = 2
@@ -251,7 +251,7 @@ value = 1.0
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Efekty dzwiekowe:"
+text = "Efekty dźwiękowe:"
 
 [node name="SliderSfx" type="HSlider" parent="Panel/Margin/VBox/Tabs/Dzwiek"]
 layout_mode = 2
@@ -279,7 +279,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Styl paskow:"
+text = "Styl pasków:"
 
 [node name="BarsOption" type="OptionButton" parent="Panel/Margin/VBox/Tabs/Motyw"]
 layout_mode = 2
@@ -288,7 +288,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Jasnosc motywu: 100%"
+text = "Jasność motywu: 100%"
 
 [node name="SliderBrightness" type="HSlider" parent="Panel/Margin/VBox/Tabs/Motyw"]
 layout_mode = 2
@@ -307,7 +307,7 @@ visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
 theme_override_font_sizes/font_size = 14
-text = "Ten tryb nie ma motywow interfejsu."
+text = "Ten tryb nie ma motywów interfejsu."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -321,7 +321,7 @@ metadata/_tab_index = 4
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
 theme_override_font_sizes/font_size = 16
-text = "Zestawy pytan uzywane w grze:"
+text = "Zestawy pytań używane w grze:"
 
 [node name="SetsScroll" type="ScrollContainer" parent="Panel/Margin/VBox/Tabs/Pytania"]
 layout_mode = 2
@@ -337,7 +337,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
 theme_override_font_sizes/font_size = 14
-text = "Dodawanie, import i edycja pytan: menu glowne -> Pytania."
+text = "Dodawanie, import i edycja pytań: menu główne -> Pytania."
 autowrap_mode = 3
 
 [node name="Sterowanie" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
@@ -350,7 +350,7 @@ metadata/_tab_index = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
 theme_override_font_sizes/font_size = 14
-text = "Sterowanie zalezy od aktywnego modulu."
+text = "Sterowanie zależy od aktywnego modułu."
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -419,7 +419,7 @@ theme_override_constants/separation = 14
 [node name="LblQuestion" type="Label" parent="ConfirmPopup/VBoxConfirm"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
-text = "Zachowac ustawienia wyswietlania?"
+text = "Zachować ustawienia wyświetlania?"
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -427,7 +427,7 @@ autowrap_mode = 3
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
 theme_override_font_sizes/font_size = 22
-text = "Przywrocenie za: 20s"
+text = "Przywrócenie za: 20s"
 horizontal_alignment = 1
 
 [node name="HBoxConfirm" type="HBoxContainer" parent="ConfirmPopup/VBoxConfirm"]
@@ -447,4 +447,4 @@ custom_minimum_size = Vector2(140, 40)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 16
-text = "Przywroc"
+text = "Przywróć"

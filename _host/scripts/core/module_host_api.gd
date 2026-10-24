@@ -2,16 +2,33 @@ extends RefCounted
 class_name ModuleHostApi
 
 signal exit_requested(module_id: String)
+## Moduł skończył sesję (finish_session) — ModuleHost zapisuje wynik w SessionResults.
+signal session_finished(module_id: String, result: Dictionary)
 
 var module_id := ""
 var module_root := ""
 var host_node: Node
+## Ustawienia sesji od hosta (np. liczba graczy, tryb); pusty = moduł startuje ze swoim menu.
+## Klucze opisuje moduł (BitBomber: README modułu, sekcja „Sesja z hosta”).
+var session_config: Dictionary = {}
 
 
-func _init(p_module_id: String = "", p_module_root: String = "", p_host_node: Node = null) -> void:
+func _init(p_module_id: String = "", p_module_root: String = "", p_host_node: Node = null,
+		p_session_config: Dictionary = {}) -> void:
 	module_id = p_module_id
 	module_root = p_module_root
 	host_node = p_host_node
+	session_config = p_session_config.duplicate(true)
+
+
+func get_session_config() -> Dictionary:
+	return session_config.duplicate(true)
+
+
+## Wynik sesji: dowolny słownik modułu; zalecane pola: completed, winner, players, answers
+## {correct, wrong}, duration_s i summary (krótki tekst dla menu hosta).
+func finish_session(result: Dictionary) -> void:
+	session_finished.emit(module_id, result.duplicate(true))
 
 
 func path(relative_path: String) -> String:

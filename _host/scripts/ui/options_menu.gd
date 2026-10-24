@@ -188,7 +188,7 @@ func _process(delta: float) -> void:
 	if _countdown <= 0.0:
 		_on_revert()
 		return
-	_lbl_countdown.text = I18nService.tf("host.options.countdown", {"seconds": ceili(_countdown)}, "Przywrocenie za: %ds" % ceili(_countdown))
+	_lbl_countdown.text = I18nService.tf("host.options.countdown", {"seconds": ceili(_countdown)}, "Przywrócenie za: %ds" % ceili(_countdown))
 
 
 func _input(event: InputEvent) -> void:
@@ -363,7 +363,7 @@ func _populate_monitors() -> void:
 		var size := DisplayServer.screen_get_size(index)
 		var label := I18nService.tf("host.options.monitor_item", {"index": index + 1, "width": size.x, "height": size.y}, "Monitor {index} ({width} x {height})")
 		if index == DisplayServer.get_primary_screen():
-			label += " " + I18nService.t("host.options.monitor_primary", "[glowny]")
+			label += " " + I18nService.t("host.options.monitor_primary", "[główny]")
 		_monitor_option.add_item(label)
 	if cur >= 0 and cur < _monitor_option.item_count:
 		_monitor_option.selected = cur
@@ -452,7 +452,7 @@ func _sync_frame_pacing() -> void:
 	_fps_slider.get_parent().modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
 	_fps_label.modulate.a = 0.5 if WindowService.vsync_enabled else 1.0
 	var limit := I18nService.t("host.options.fps_unlimited", "bez limitu") if WindowService.max_fps <= 0 else I18nService.tf("host.options.fps_val", {"fps": WindowService.max_fps}, "%d FPS" % WindowService.max_fps)
-	_fps_label.text = I18nService.tf("host.options.fps_limit_label", {"limit": limit}, "Limit FPS (przy wylaczonym V-Sync): {limit}")
+	_fps_label.text = I18nService.tf("host.options.fps_limit_label", {"limit": limit}, "Limit FPS (przy wyłączonym V-Sync): {limit}")
 
 
 func _on_vsync_toggled(on: bool) -> void:
@@ -670,7 +670,7 @@ func _on_brightness_changed(value: float) -> void:
 
 
 func _update_brightness_label() -> void:
-	_lbl_brightness.text = I18nService.tf("host.options.brightness_val", {"val": roundi(_slider_brightness.value)}, "Jasnosc motywu: {val}%")
+	_lbl_brightness.text = I18nService.tf("host.options.brightness_val", {"val": roundi(_slider_brightness.value)}, "Jasność motywu: {val}%")
 
 
 ## Zakładka „Pytania”: zestawy (QuestionBank) z zaznaczeniem — aktywne trafiają do puli pytań w grze
@@ -687,7 +687,7 @@ func _populate_question_sets() -> void:
 		if str(s["source"]) == "edited":
 			tag = "  " + I18nService.t("host.options.set_edited", "(edytowany)")
 		elif str(s["source"]) == "user":
-			tag = "  " + I18nService.t("host.options.set_user", "(wlasny)")
+			tag = "  " + I18nService.t("host.options.set_user", "(własny)")
 		cb.text = "%s  —  %s%s" % [s["name"], I18nService.plural("host.options.questions_count", count), tag]
 		cb.button_pressed = QuestionBank.is_set_enabled(id, sel)
 		cb.add_theme_font_size_override("font_size", _fs(18))
@@ -943,7 +943,7 @@ func _start_confirm() -> void:
 	_countdown = CONFIRM_TIMEOUT
 	_confirming = true
 	_confirm_popup.visible = true
-	_lbl_countdown.text = I18nService.tf("host.options.countdown", {"seconds": ceili(_countdown)}, "Przywrocenie za: %ds" % ceili(_countdown))
+	_lbl_countdown.text = I18nService.tf("host.options.countdown", {"seconds": ceili(_countdown)}, "Przywrócenie za: %ds" % ceili(_countdown))
 
 
 ## Zachowane ustawienia ekranu stają się nowym punktem odniesienia; okno zostaje otwarte.

@@ -6,13 +6,15 @@ signal module_exited(module_id: String)
 signal module_failed(module_id: String, reason: String)
 ## Moduł prosi o wyjście, ale jeszcze działa — host zasłania ekran, zanim go wyłączy (potem module_exited).
 signal module_exiting(module_id: String)
+## Wynik sesji modułu (już zapisany w SessionResults, z module_id i finished_at).
+signal module_session_finished(module_id: String, result: Dictionary)
 
 var current_module: Node
 var current_manifest: Dictionary = {}
 var current_api: ModuleHostApi
 
 
-func start_module(manifest: Dictionary, parent: Node) -> void:
+func start_module(manifest: Dictionary, parent: Node, session_config: Dictionary = {}) -> void:
 	stop_module()
 
 	var module_id := str(manifest.get("id", ""))
@@ -27,8 +29,9 @@ func start_module(manifest: Dictionary, parent: Node) -> void:
 		return
 
 	current_manifest = manifest.duplicate(true)
-	current_api = ModuleHostApi.new(module_id, str(manifest.get("root_path", "")), self)
+	current_api = ModuleHostApi.new(module_id, str(manifest.get("root_path", "")), self, session_config)
 	current_api.exit_requested.connect(_on_exit_requested)
+	current_api.session_finished.connect(_on_session_finished)
 
 	current_module = packed.instantiate()
 	var core_manager = get_node_or_null("/root/CoreManager")
@@ -64,6 +67,10 @@ func stop_module() -> void:
 func _fail(module_id: String, reason: String) -> void:
 	push_warning("ModuleHost: %s" % reason)
 	module_failed.emit(module_id, reason)
+
+
+func _on_session_finished(module_id: String, result: Dictionary) -> void:
+	module_session_finished.emit(module_id, SessionResults.record(module_id, result))
 
 
 func _on_exit_requested(module_id: String) -> void:

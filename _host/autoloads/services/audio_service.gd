@@ -128,6 +128,15 @@ func _load_music_tracks_manifest() -> void:
 		music_track_paths[track_key] = track_path
 
 
+## Utwór modułu spoza music_tracks.json (np. BitBomber rejestruje swoje pliki przy starcie).
+## Pętlę pliku .wav ustawia sam plik / import (Ogg zapętla _get_music_stream).
+func register_music_track(track_name: String, path: String) -> void:
+	if music_track_paths.get(track_name, "") == path:
+		return
+	music_track_paths[track_name] = path
+	_music_stream_cache.erase(track_name)
+
+
 func _get_music_stream(track_name: String) -> AudioStream:
 	if _music_stream_cache.has(track_name):
 		return _music_stream_cache[track_name]
