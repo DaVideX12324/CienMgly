@@ -21,6 +21,7 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Walka: sprite wroga ma skalę sprite'a ze swojej sceny (np. boss ×2) — mnożoną przez skalę miejsca na tle.
 - Statystyki wrogów: baza (dane / scena) = statystyki na poziomie 1; na poziomie L baza × wzór(L) / wzór(1), gdzie wzór liczy
   bohatera wzorcowego w rekomendowanym sprzęcie mapy (`gear_tier` w companion-JSON; tiery w `resources/data/gear_tiers.json`:
   0 start / sklep w mieście, 1 po Matce Nietoperzy, 2 po bossie ścieków; jaskinie 0, ścieki 1) zamiast krzywej sklepu. Dane

@@ -90,8 +90,12 @@ func _setup_animated_sprite(source_sprite: AnimatedSprite2D) -> void:
 				var visible_bottom_from_center: float = float(max_y + 1) - (frame_h * 0.5)
 				offset_y = -visible_bottom_from_center
 
+	# Skala sprite'a ze sceny wroga (np. boss ×2) — walka mnoży ją ze skalą miejsca na tle (skala tego węzła);
+	# stopy zostają na linii węzła, więc przesunięcie też w tej skali.
+	var src_scale := source_sprite.scale.abs()
 	_animated_sprite.centered = true
-	_animated_sprite.position = Vector2(0.0, offset_y)
+	_animated_sprite.scale = src_scale
+	_animated_sprite.position = Vector2(0.0, offset_y * src_scale.y)
 	_base_modulate = source_sprite.modulate
 	_animated_sprite.modulate = _base_modulate
 	_animated_sprite.visible = true
