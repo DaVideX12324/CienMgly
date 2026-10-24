@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Zmieniono
+- Wrogowie: gdy cel leży poza siatką nawigacji (wąski pas pod licem płaskowyżu, przy ścianie, między obiektami),
+  wróg dochodzi do końca ścieżki, a ostatni odcinek idzie wprost, jeśli jego ciało przejdzie (test ruchu fizyki).
+  Wcześniej stał na krawędzi siatki.
 - Zakończenie: ekran końca gry pojawia się po wyjściu ze ścieków na cmentarzysko (drabina wyjścia), a nie zaraz po
   pokonaniu bossa ścieków — boss tylko otwiera wyjście (companion-JSON `"exit_ends_game": true`). „Graj dalej” wraca do
   ścieków; ponowne wejście w wyjście znów pokazuje ekran końca. Nowy tekst ekranu końca (PL / EN).

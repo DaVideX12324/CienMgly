@@ -134,6 +134,9 @@ var _grid: Dictionary = {}   # siatka mapy (ProceduralLevel.last_result.grid) �
 const REPATH_INTERVAL := 0.25    # trasa przeliczana najwyżej co tyle s…
 const REPATH_DISTANCE := 8.0     # …albo gdy cel przesunie się o pół kratki
 const ARRIVE_DISTANCE := 6.0
+## Ostatni odcinek wprost (_direct_direction): test ruchu kończy się tyle px przed celem — gracz też jest
+## kolizją wroga, a walkę i tak zaczyna obszar interakcji gracza (promień 11).
+const DIRECT_STOP_SHORT := 12.0
 const STEER_RATE := 10.0         # płynny obrót kierunku (zamiast losowych drgań z Amon-Ra)
 const WANDER_PATH_FACTOR := 1.6  # cel wałęsania odrzucany, gdy ścieżka dłuższa niż promień × to (za ścianą)
 const WANDER_TRIES := 6
@@ -750,6 +753,7 @@ func _has_nav_path() -> bool:
 ## (NavigationServer2D.map_get_path co REPATH_INTERVAL albo gdy cel się przesunie) i sami za nią idziemy:
 ## NavigationAgent2D potrafił trzymać ścieżkę policzoną od (0, 0) — sprzed ustawienia pozycji — i prowadził
 ## wroga „ku górze” (ponowne ustawienie tego samego celu nie wymusza przeliczenia).
+## Koniec ścieżki przed celem (cel poza siatką) — ostatni odcinek wprost, gdy ciało przejdzie (_direct_direction).
 ## Bez ścieżki (mapa jeszcze się wczytuje, poziom bez siatki, cel poza siatką) — prosto, ale tylko przy
 ## czystej linii po siatce mapy. ZERO = u celu (albo u najbliższego osiągalnego punktu) / stój.
 func _nav_direction(target: Vector2, delta: float) -> Vector2:
@@ -767,12 +771,28 @@ func _nav_direction(target: Vector2, delta: float) -> Vector2:
 			while _path_i < _path.size() and global_position.distance_to(_path[_path_i]) <= ARRIVE_DISTANCE:
 				_path_i += 1
 			if _path_i >= _path.size():
-				return Vector2.ZERO
+				return _direct_direction(target)
 			return (_path[_path_i] - global_position).normalized()
 	var grid := _map_grid()
 	if grid.is_empty() or GridSight.has_line(grid, global_position, target):
 		return (target - global_position).normalized()
 	return Vector2.ZERO
+
+
+## Ostatni odcinek wprost do celu poza siatką nawigacji. Siatka jest odchudzona o promień agenta (7 px) od ścian,
+## lic płaskowyżów i obiektów, więc wąskie pasy (np. między licem a ścianą, szczeliny między obiektami) w niej
+## nie istnieją, choć ciało wroga (14×8) się w nich mieści. Fizyka zna dokładną geometrię: test_move całego ciała
+## do punktu tuż przed celem — bez kolizji idziemy prosto, z kolizją (ściana, lico, kanał, obiekt) stoimy jak dotąd.
+## Cel w azylu (QuizRpgSafeZone) — nie wchodzimy.
+func _direct_direction(target: Vector2) -> Vector2:
+	var to := target - global_position
+	var dist := to.length()
+	if dist <= ARRIVE_DISTANCE or QuizRpgSafeZone.contains(get_tree(), target):
+		return Vector2.ZERO
+	var motion := to * maxf(dist - DIRECT_STOP_SHORT, 0.0) / dist
+	if motion != Vector2.ZERO and test_move(global_transform, motion):
+		return Vector2.ZERO
+	return to / dist
 
 
 ## Ruch w kierunku `dir` z płynnym obrotem (zamiast losowych drgań toru z Amon-Ra). ZERO = stój.
