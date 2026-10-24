@@ -53,7 +53,8 @@ static func lines(texts: PackedStringArray, key_prefix: String, args: Dictionary
 	return out
 
 
+## Dźwięki okien NPC (sklep, nauczyciel, kowal, karczma, zadania) — grupa interfejsu (szyna SFX_UI).
 static func play_sfx(node: Node, sfx: String) -> void:
 	var audio := node.get_node_or_null("/root/AudioService")
 	if audio and audio.has_method("play_sfx_by_name"):
-		audio.play_sfx_by_name(sfx)
+		audio.play_sfx_by_name(sfx, 0.0, 1.0, "SFX_UI")

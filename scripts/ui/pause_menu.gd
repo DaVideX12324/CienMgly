@@ -700,7 +700,7 @@ func _use_pending_skill_on_member() -> void:
 func _play_skill_sfx() -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio and audio.has_method("play_sfx_by_name"):
-		audio.play_sfx_by_name("magic")
+		audio.play_sfx_by_name("magic", 0.0, 1.0, "SFX_UI")  # umiejętność z menu Esc — interfejs, nie walka
 
 
 func _accept_equip_action() -> void:

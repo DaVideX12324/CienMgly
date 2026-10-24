@@ -10,6 +10,7 @@ signal language_changed(lang: String)
 const CONFIG_PATH := "user://artefakt_wiedzy_settings.cfg"
 const SEC_DISPLAY := "display"
 const SEC_AUDIO := "audio"
+const AudioServiceScript = preload("audio_service.gd")
 const KEY_QUIZLESS_MODE := "quizless_mode"
 const KEY_LANGUAGE := "language"
 ## Języki tekstów gry (id = nazwa pliku tłumaczeń modułów, np. resources/i18n/<id>.json).
@@ -188,8 +189,12 @@ func _load_defaults() -> void:
 	WindowService.window_mode_idx = WindowService.MODE_FULLSCREEN
 
 
+## Szyny z zapisaną głośnością: główne + grupy efektów (AudioService.SFX_GROUP_BUSES, wysyłają do SFX).
+const AUDIO_BUSES: Array[String] = ["Master", "Music", "SFX", "SFX_UI", "SFX_Combat", "SFX_Env"]
+
+
 func _load_audio() -> void:
-	for bus_name: String in ["Master", "Music", "SFX"]:
+	for bus_name: String in AUDIO_BUSES:
 		var key: String = bus_name.to_lower()
 		var value: float = clampf(float(_cfg.get_value(SEC_AUDIO, key, 1.0)), 0.0, 1.0)
 		var index := _ensure_bus(bus_name)
@@ -200,17 +205,11 @@ func _load_audio() -> void:
 
 
 func _save_audio_to_cfg() -> void:
-	for bus_name: String in ["Master", "Music", "SFX"]:
+	for bus_name: String in AUDIO_BUSES:
 		var key: String = bus_name.to_lower()
 		if not _cfg.has_section_key(SEC_AUDIO, key):
 			_cfg.set_value(SEC_AUDIO, key, get_bus_volume(bus_name))
 
 
 func _ensure_bus(bus_name: String) -> int:
-	var index := AudioServer.get_bus_index(bus_name)
-	if index >= 0:
-		return index
-	AudioServer.add_bus()
-	index = AudioServer.get_bus_count() - 1
-	AudioServer.set_bus_name(index, bus_name)
-	return index
+	return AudioServiceScript.ensure_bus(bus_name)

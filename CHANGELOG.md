@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Grupy efektów dźwiękowych (opcje → Dźwięk, pod „Efekty dźwiękowe”): interfejs, walka, otoczenie. Kroki i kolce
+  grają w otoczeniu, okna NPC (sklep, nauczyciel, kowal, karczma, zadania) i umiejętność z menu Esc w interfejsie;
+  reszta wg nazwy dźwięku (AudioService).
 - Dźwięki kroków bohatera (jak w Amon-Ra): krok na klatkach animacji chodu (dwa na cykl, przy biegu szybciej), dźwięk
   wg podłoża pod stopami — ziemia, trawa, piasek, kamień (ścieki), bruk, metal (kraty); typ z nazwy terenu kafla albo
   danej kafla `ground_type`. Zestawy w `scenes/player/footsteps.tscn`.

@@ -27,7 +27,7 @@ var _base_volume_db := 0.0
 
 func _ready() -> void:
 	_base_volume_db = volume_db
-	bus = &"SFX"
+	bus = &"SFX_Env"
 	_sprite = get_parent().get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	if _sprite:
 		_sprite.frame_changed.connect(_on_frame_changed)

@@ -24,6 +24,9 @@ signal closed
 @onready var _slider_master: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SliderMaster
 @onready var _slider_music: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SliderMusic
 @onready var _slider_sfx: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SliderSfx
+@onready var _slider_sfx_ui: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox/SliderSfxUi
+@onready var _slider_sfx_combat: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox/SliderSfxCombat
+@onready var _slider_sfx_env: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox/SliderSfxEnv
 @onready var _lbl_master: Label = $Panel/Margin/VBox/Tabs/Dzwiek/LblMaster
 @onready var _lbl_music: Label = $Panel/Margin/VBox/Tabs/Dzwiek/LblMusic
 @onready var _lbl_sfx: Label = $Panel/Margin/VBox/Tabs/Dzwiek/LblSfx
@@ -74,6 +77,9 @@ const BASE_PANEL_PADDING := 20
 const BUS_MASTER := "Master"
 const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
+const BUS_SFX_UI := "SFX_UI"
+const BUS_SFX_COMBAT := "SFX_Combat"
+const BUS_SFX_ENV := "SFX_Env"
 
 ## Ustawienia motywu UI w ustawieniach aktywnego modułu (moduł czyta te same klucze).
 const SKIN_KEY := "ui_skin"
@@ -516,12 +522,18 @@ func _setup_audio_sliders() -> void:
 	_slider_master.value_changed.connect(func(value: float): _on_bus_changed(BUS_MASTER, value))
 	_slider_music.value_changed.connect(func(value: float): _on_bus_changed(BUS_MUSIC, value))
 	_slider_sfx.value_changed.connect(func(value: float): _on_bus_changed(BUS_SFX, value))
+	_slider_sfx_ui.value_changed.connect(func(value: float): _on_bus_changed(BUS_SFX_UI, value))
+	_slider_sfx_combat.value_changed.connect(func(value: float): _on_bus_changed(BUS_SFX_COMBAT, value))
+	_slider_sfx_env.value_changed.connect(func(value: float): _on_bus_changed(BUS_SFX_ENV, value))
 
 
 func _sync_audio_sliders() -> void:
 	_slider_master.value = SettingsService.get_bus_volume(BUS_MASTER)
 	_slider_music.value = SettingsService.get_bus_volume(BUS_MUSIC)
 	_slider_sfx.value = SettingsService.get_bus_volume(BUS_SFX)
+	_slider_sfx_ui.value = SettingsService.get_bus_volume(BUS_SFX_UI)
+	_slider_sfx_combat.value = SettingsService.get_bus_volume(BUS_SFX_COMBAT)
+	_slider_sfx_env.value = SettingsService.get_bus_volume(BUS_SFX_ENV)
 
 
 func _on_bus_changed(bus_name: String, value: float) -> void:

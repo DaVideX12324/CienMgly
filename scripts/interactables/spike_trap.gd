@@ -140,7 +140,7 @@ func _on_rise() -> void:
 func _play_sfx(pitch: float) -> void:
 	if _sfx == null:
 		_sfx = AudioStreamPlayer2D.new()
-		_sfx.bus = "SFX"
+		_sfx.bus = "SFX_Env"
 		_sfx.max_distance = SFX_RANGE
 		_sfx.attenuation = 1.5
 		_sfx.volume_db = SFX_DB

@@ -260,6 +260,53 @@ max_value = 1.0
 step = 0.01
 value = 1.0
 
+[node name="SfxGroups" type="MarginContainer" parent="Panel/Margin/VBox/Tabs/Dzwiek"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="LblSfxUi" type="Label" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.62, 0.72, 1)
+theme_override_font_sizes/font_size = 15
+text = "Interfejs (kliknięcia, odpowiedzi):"
+
+[node name="SliderSfxUi" type="HSlider" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="LblSfxCombat" type="Label" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.62, 0.72, 1)
+theme_override_font_sizes/font_size = 15
+text = "Walka:"
+
+[node name="SliderSfxCombat" type="HSlider" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
+[node name="LblSfxEnv" type="Label" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.62, 0.72, 1)
+theme_override_font_sizes/font_size = 15
+text = "Otoczenie (kroki, drzwi, skrzynie):"
+
+[node name="SliderSfxEnv" type="HSlider" parent="Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 1.0
+
 [node name="Motyw" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 visible = false
 layout_mode = 2

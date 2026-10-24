@@ -79,7 +79,7 @@ sounds = Array[AudioStream]([ExtResource("ground_1"), ExtResource("ground_2"), E
 volume_db = 0.0
 max_polyphony = 2
 max_distance = 1500.0
-bus = &"SFX"
+bus = &"SFX_Env"
 script = ExtResource("1_script")
 tileset_defaults = {
 "sewer": "stone"

@@ -28,6 +28,11 @@ signal mute_toggled(is_muted: bool)
 const BUS_MASTER := "Master"
 const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
+## Grupy efektów — podszyny wysyłające do SFX (główny suwak efektów skaluje wszystkie, każda ma też własny suwak).
+const BUS_SFX_UI := "SFX_UI"
+const BUS_SFX_COMBAT := "SFX_Combat"
+const BUS_SFX_ENV := "SFX_Env"
+const SFX_GROUP_BUSES: Array[String] = [BUS_SFX_UI, BUS_SFX_COMBAT, BUS_SFX_ENV]
 
 var music_player: AudioStreamPlayer
 var ambience_player: AudioStreamPlayer
@@ -76,6 +81,8 @@ func _ready() -> void:
 	_ensure_bus(BUS_MASTER)
 	_ensure_bus(BUS_MUSIC)
 	_ensure_bus(BUS_SFX)
+	for group_bus in SFX_GROUP_BUSES:
+		_ensure_bus(group_bus)
 
 	music_player = AudioStreamPlayer.new()
 	music_player.bus = BUS_MUSIC
@@ -102,12 +109,20 @@ func _ready() -> void:
 
 
 func _ensure_bus(bus_name: String) -> int:
+	return ensure_bus(bus_name)
+
+
+## Szyna o nazwie (tworzy brakującą); grupy efektów (SFX_*) zawsze wysyłają do SFX. Używa też SettingsService.
+static func ensure_bus(bus_name: String) -> int:
 	var index := AudioServer.get_bus_index(bus_name)
-	if index >= 0:
-		return index
-	AudioServer.add_bus()
-	index = AudioServer.get_bus_count() - 1
-	AudioServer.set_bus_name(index, bus_name)
+	if index < 0:
+		AudioServer.add_bus()
+		index = AudioServer.get_bus_count() - 1
+		AudioServer.set_bus_name(index, bus_name)
+	if bus_name.begins_with(BUS_SFX + "_"):
+		ensure_bus(BUS_SFX)
+		index = AudioServer.get_bus_index(bus_name)
+		AudioServer.set_bus_send(index, BUS_SFX)
 	return index
 
 
@@ -174,16 +189,37 @@ const DEFAULT_SFX: Dictionary = {
 	"magic": "res://_host/assets/audio/sfx/RPG Sound Pack/battle/magic1.wav",
 }
 
+## Grupa (szyna) efektu z DEFAULT_SFX; nazwy spoza listy — główna szyna SFX. Wołający może podać szynę wprost.
+const SFX_NAME_BUS: Dictionary = {
+	"click": BUS_SFX_UI,
+	"hover": BUS_SFX_UI,
+	"correct": BUS_SFX_UI,
+	"wrong": BUS_SFX_UI,
+	"attack": BUS_SFX_COMBAT,
+	"hit": BUS_SFX_COMBAT,
+	"player_damage": BUS_SFX_COMBAT,
+	"enemy_death": BUS_SFX_COMBAT,
+	"magic": BUS_SFX_COMBAT,
+	"victory": BUS_SFX_COMBAT,
+	"defeat": BUS_SFX_COMBAT,
+	"flee": BUS_SFX_COMBAT,
+	"door_open": BUS_SFX_ENV,
+	"door_close": BUS_SFX_ENV,
+	"chest_open": BUS_SFX_ENV,
+	"coin": BUS_SFX_ENV,
+}
+
 var _sfx_stream_cache: Dictionary = {}
 
 
 ## ============================================
 ## SFX PLAYBACK -- GLOBAL (UI, non-spatial)
 ## ============================================
-func play_sfx_by_name(sfx_name: String, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:
+## bus: szyna wprost (np. BUS_SFX_UI dla monety w sklepie); pusta — grupa z SFX_NAME_BUS, inaczej SFX.
+func play_sfx_by_name(sfx_name: String, volume_db: float = 0.0, pitch_scale: float = 1.0, bus: String = "") -> void:
 	var stream := _get_sfx_stream(sfx_name)
 	if stream:
-		play_sfx(stream, volume_db, pitch_scale)
+		play_sfx(stream, volume_db, pitch_scale, bus if bus != "" else str(SFX_NAME_BUS.get(sfx_name, BUS_SFX)))
 
 
 func _get_sfx_stream(sfx_name: String) -> AudioStream:
@@ -200,12 +236,13 @@ func _get_sfx_stream(sfx_name: String) -> AudioStream:
 	return null
 
 
-func play_sfx(sound: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:
+func play_sfx(sound: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0, bus: String = BUS_SFX) -> void:
 	if not sound:
 		push_warning("[AudioService] Attempted to play null sound!")
 		return
 	var player := _get_free_sfx_player()
 	if player:
+		player.bus = bus
 		player.stream = sound
 		player.volume_db = volume_db
 		player.pitch_scale = pitch_scale
