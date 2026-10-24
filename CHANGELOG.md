@@ -21,6 +21,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Ikony mikstur (Shiny RPG Potions, Bonsaiheldin, CC BY-SA 3.0): tier = kolor (HP czerwona → pomarańczowa → różowa →
+  ciemnoczerwona → biała, SP niebieski → turkus → fiolet → granat → srebrny), rozmiar s / m / l = butelka; odtrutka żółta,
+  Tonik Skupienia zielony. Autorzy w `resources/items/icons/CREDITS.md`.
 - Walka: sprite wroga ma skalę sprite'a ze swojej sceny (np. boss ×2) — mnożoną przez skalę miejsca na tle.
 - Statystyki wrogów: baza (dane / scena) = statystyki na poziomie 1; na poziomie L baza × wzór(L) / wzór(1), gdzie wzór liczy
   bohatera wzorcowego w rekomendowanym sprzęcie mapy (`gear_tier` w companion-JSON; tiery w `resources/data/gear_tiers.json`:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://8hm4okoxyou5"
-path="res://.godot/imported/ether_s.png-0b0ec9f9d5bb0fb42b6e713809504134.ctex"
+uid="uid://cird23bn23fva"
+path="res://.godot/imported/hp_t1_m.png-d0e7daa5c4a4f7a7ba28b58b9f490ab2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/resources/items/icons/potions/ether_s.png"
-dest_files=["res://.godot/imported/ether_s.png-0b0ec9f9d5bb0fb42b6e713809504134.ctex"]
+source_file="res://modules/quiz_rpg/resources/items/icons/potions/hp_t1_m.png"
+dest_files=["res://.godot/imported/hp_t1_m.png-d0e7daa5c4a4f7a7ba28b58b9f490ab2.ctex"]
 
 [params]
 

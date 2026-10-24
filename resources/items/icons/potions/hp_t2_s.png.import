@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://kpahmlsg1ju"
-path="res://.godot/imported/potion_s.png-ef827cabc386d9f5b2c7776219a5411a.ctex"
+uid="uid://r23djadtxchg"
+path="res://.godot/imported/hp_t2_s.png-ae8447e6ba89fb160d467212c490a7f9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://modules/quiz_rpg/resources/items/icons/potions/potion_s.png"
-dest_files=["res://.godot/imported/potion_s.png-ef827cabc386d9f5b2c7776219a5411a.ctex"]
+source_file="res://modules/quiz_rpg/resources/items/icons/potions/hp_t2_s.png"
+dest_files=["res://.godot/imported/hp_t2_s.png-ae8447e6ba89fb160d467212c490a7f9.ctex"]
 
 [params]
 
