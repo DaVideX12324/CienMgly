@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Nowa gra: najpierw imię bohatera (ekran „Nowa gra” w menu; puste = Bohater, do 12 znaków). Easter eggi: reakcje
+  na wybrane imiona (np. Freddy, Bohater, Mgła, Artefakt, Promotor — wymagają potwierdzenia „Tak, to ja”); imiona
+  towarzyszy i NPC miasta są zajęte.
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono

@@ -207,14 +207,15 @@ func _format_saved_at(saved_at_unix: int) -> String:
 	return Time.get_datetime_string_from_unix_time(saved_at_unix, true)
 
 
-func new_game(slot_index: int = 0) -> void:
+func new_game(slot_index: int = 0, player_name: String = "") -> void:
 	var save_manager := CoreManager.get_singleton("SaveManager")
 	if save_manager and save_manager.has_method("start_new_game"):
-		save_manager.call("start_new_game", slot_index)
+		save_manager.call("start_new_game", slot_index, player_name)
 		return
 	var ps := CoreManager.get_singleton("PlayerStats")
 	var dm := CoreManager.get_singleton("DifficultyManager")
 	if ps: ps.reset()
+	if ps and player_name != "": ps.set_player_name(player_name)
 	QuizManager.reset()
 	if dm: dm.reset()
 	total_play_time_seconds = 0.0

@@ -299,6 +299,13 @@ func dismiss(hero_id: String) -> bool:
 	return false
 
 
+## Imię bohatera (ekran nowej gry): pole player_name i wpis bohatera w drużynie.
+func set_player_name(value: String) -> void:
+	player_name = value
+	_sync_primary_party_member()
+	party_changed.emit()
+
+
 ## Towarzysze w drużynie (bez głównego bohatera) — hero_id w kolejności szyku.
 func companion_ids() -> Array[String]:
 	var out: Array[String] = []

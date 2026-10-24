@@ -86,12 +86,16 @@ func load_game(slot_index: int = -1) -> bool:
 	return true
 
 
-func start_new_game(slot_index: int = 0) -> void:
+## player_name: imię bohatera z ekranu nowej gry (puste = domyślne z resetu).
+func start_new_game(slot_index: int = 0, player_name: String = "") -> void:
 	current_save_slot = clampi(slot_index, 0, get_slot_count() - 1)
 	_has_pending_level_load = false
 	_pending_level_path = INITIAL_LEVEL_PATH
 	_pending_spawn_name = "Spawn"
 	_reset_global_state()
+	var ps := _get_singleton("PlayerStats")
+	if ps and player_name != "":
+		ps.set_player_name(player_name)
 	var gm := _get_game_manager()
 	if gm:
 		gm.set("total_play_time_seconds", 0.0)

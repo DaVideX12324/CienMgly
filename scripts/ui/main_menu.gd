@@ -20,11 +20,12 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @onready var stats_label: Label = $ScreenPanel/Margin/RightVBox/ContextBody/StatsLabel
 @onready var background: ColorRect = $BG
 @onready var ver_label: Label = $VerLabel
+@onready var name_entry: VBoxContainer = $ScreenPanel/Margin/RightVBox/ContextBody/NameEntry
 
 var _title_time := 0.0
 var _save_slots_panel: VBoxContainer
 var _save_slots_list: VBoxContainer
-## Treść prawego panelu: "" (ukryty), "load", "stats", "options".
+## Treść prawego panelu: "" (ukryty), "load", "stats", "options", "name" (imię bohatera przed nową grą).
 var _context := ""
 var _slot_mode: String = "load"
 var _options_menu: CanvasLayer = null
@@ -68,6 +69,10 @@ func _process(delta: float) -> void:
 func _connect_buttons() -> void:
 	if not new_game_btn.pressed.is_connected(_on_new_game):
 		new_game_btn.pressed.connect(_on_new_game)
+	name_entry.confirmed.connect(_start_new_game)
+	name_entry.cancelled.connect(func() -> void:
+		_play_click()
+		_show_context(""))
 	if not load_game_btn.pressed.is_connected(_on_load_game):
 		load_game_btn.pressed.connect(_on_load_game)
 	if not stats_btn.pressed.is_connected(_on_stats):
@@ -106,14 +111,25 @@ func _play_click() -> void:
 		audio.play_sfx_by_name("click")
 
 
+## „Nowa gra” — najpierw imię bohatera (NameEntry); start po jego zatwierdzeniu.
 func _on_new_game() -> void:
+	if _context == "name":
+		_show_context("")
+		return
+	context_title.text = QuizRpgI18n.t("main_menu.title_new_game", "Nowa gra")
+	_show_context("name")
+	name_entry.open()
+
+
+func _start_new_game(player_name: String) -> void:
+	_play_click()
 	var save_manager := _get_save_manager()
 	if save_manager and save_manager.has_method("start_new_game"):
-		save_manager.call("start_new_game")
+		save_manager.call("start_new_game", 0, player_name)
 		return
 	var gm := _get_module_singleton("GameManager")
 	if gm and gm.has_method("new_game"):
-		gm.call("new_game")
+		gm.call("new_game", 0, player_name)
 	else:
 		push_warning("MainMenu: GameManager unavailable, cannot start new game.")
 
@@ -164,6 +180,7 @@ func _show_context(kind: String) -> void:
 	right_panel.visible = kind != ""
 	menu_center.visible = kind == ""
 	stats_label.visible = kind == "stats"
+	name_entry.visible = kind == "name"
 	if _save_slots_panel:
 		_save_slots_panel.visible = kind == "load"
 	if kind != "options" and _options_menu != null and is_instance_valid(_options_menu):
