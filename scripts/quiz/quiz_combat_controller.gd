@@ -3888,7 +3888,10 @@ func _roll_item_drops() -> Array[String]:
 		# Łup z tabeli wroga (loot_data, .tres): źródło jednostki (grupa ze świata) albo główny wróg (kopie).
 		var src: Variant = unit.get("source", enemy)
 		var data: QuizRpgLootTableData = src.get("loot_data") if is_instance_valid(src) and src.get("loot_data") != null else enemy.loot_data
-		var table: Array[Dictionary] = data.to_table() if data != null else [] as Array[Dictionary]
+		# Bez wyrażenia warunkowego: „a if … else []” daje zwykłą Array i przypisanie do Array[Dictionary] się wywala.
+		var table: Array[Dictionary] = []
+		if data != null:
+			table = data.to_table()
 		if table.is_empty():
 			var chance := float(KEY_DROP_CHANCE_BY_TIER.get(clampi(int(unit.get("tier", 1)), 1, 4), 0.04))
 			if randf() < chance and _ps and _ps.has_method("add_item"):

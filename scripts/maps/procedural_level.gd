@@ -952,7 +952,9 @@ func _apply_niche_content(result) -> void:
 		return
 	_apply_special_chests("niche_chest_", cfg)
 	var item_data := QuizRpgLootTableData.from_json(cfg.get("item_loot", ""))
-	var item_loot: Array[Dictionary] = item_data.to_table() if item_data != null else [] as Array[Dictionary]
+	var item_loot: Array[Dictionary] = []
+	if item_data != null:
+		item_loot = item_data.to_table()
 	var secret_scene := QuizRpgPaths.path(str(cfg.get("secret_scene", "")))
 	var relic_scene := QuizRpgPaths.path(str(cfg.get("relic_scene", "")))
 	for node in get_tree().get_nodes_in_group("secret_passages"):

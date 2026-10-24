@@ -13,6 +13,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
+- Walka: po wygranej z wrogiem bez tabeli łupu (np. samouczek) błąd „Array[Dictionary]” przerywał losowanie łupu —
+  nie wypadał klucz tieru 1. To samo w łupie przedmiotów w niszach jaskiń.
 - Ścieki: na części map (ok. 1/3 seedów) wejście albo wyjście nie miało drabiny — pokój wybrany na przejście nie miał
   północnej ściany (np. otwarty na kanał). Generator bierze kolejny pokój z tej samej kolejności, w którym drabina się
   mieści; mapy, które miały obie drabiny, są bez zmian. Zapisane mapy ścieków generują się od nowa (zmieniony `sewer.json`).
