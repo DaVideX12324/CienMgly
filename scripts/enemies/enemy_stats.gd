@@ -7,9 +7,13 @@ extends RefCounted
 ##   cios na bohaterze wzorcowym: tier 2 ≈ 14 % HP na lv 1, ≈ 30 % na lv 100 (jak Omega na Freddym lv 20);
 ## - HP i DEF z „bohatera wzorcowego” z poziomu L (statystyki z QuizRpgStatScale + sprzęt ze sklepu): bohater zabija go
 ##   w HITS_TO_KILL[T] zwykłych trafieniach, DEF = DEF_RATIO × ATK bohatera.
-## ATK = MAT, DEF = MDF (jak dotąd). Wróg z poziomem 0 (tutorial) zostaje przy statystykach z danych.
-## Wzorzec wariantu: stosunek statystyk wroga do bazy jego tieru (TIER_BASE) przenosi się na wynik, więc ręcznie strojone odmiany
-## (np. szybszy nietoperz z mniejszym HP) zachowują proporcje.
+## Sprzęt bohatera wzorcowego (2026-10-25, decyzja usera): prawdziwe przedmioty rekomendowanego tieru mapy
+## (resources/data/gear_tiers.json, companion-JSON "gear_tier") zamiast krzywej sprzętu ze sklepu. ATK wroga z krzywej
+## poprawiony o ½ różnicy pancerza (tier vs krzywa) — cios zabiera bohaterowi wzorcowemu tyle HP, co przy krzywej.
+## ATK = MAT, DEF = MDF (jak dotąd). Wróg z poziomem 0 (bez poziomu z mapy ani sceny) zostaje przy statystykach z danych.
+## Statystyki bazowe wroga (dane / scena) = jego statystyki na poziomie 1 (bohater wzorcowy lv 1 w sprzęcie startowym,
+## tier 0 — decyzja usera 2026-10-25): na poziomie L wróg ma bazę × for_level(L, tier, sprzęt mapy) / for_level(1, tier, 0),
+## więc ręcznie strojone odmiany (np. szybszy nietoperz z mniejszym HP) zachowują proporcje względem bohatera.
 
 const MAX_LEVEL := QuizRpgStatScale.MAX_LEVEL
 
@@ -20,39 +24,62 @@ const HITS_TO_KILL := {1: 1.5, 2: 4.0, 3: 6.0, 4: 12.0}
 ## DEF wroga jako ułamek ATK bohatera wzorcowego (zwykłe trafienie bohatera = ATK×4 − DEF×2).
 const DEF_RATIO := 0.7
 
-## AGI wroga w danych dla każdego tieru (wariant 1,0) — szybszy / wolniejszy wróg ma odpowiednio więcej / mniej.
-const AGI_BASE := 15.0
 
-## Bazowe statystyki tieru w danych (HP, ATK, DEF) — odniesienie do wariantów.
-const TIER_BASE := {1: [100, 26, 30], 2: [400, 60, 61], 3: [900, 90, 90], 4: [2500, 155, 140]}
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const GEAR_TIERS_PATH := "resources/data/gear_tiers.json"
 
 static var _hero: QuizRpgHeroData = null
+## tier sprzętu -> {atk, def} (suma premii przedmiotów z gear_tiers.json).
+static var _gear: Dictionary = {}
 
 
-## Bohater wzorcowy z poziomu (sprzęt ze sklepu lokacji): {hp, atk, def, agi}.
-static func hero_ref(level: int) -> Dictionary:
+## Premie rekomendowanego sprzętu tieru: {atk, def}; nieznany tier — najbliższy niższy (brak pliku — zero).
+static func gear(gear_tier: int) -> Dictionary:
+	if _gear.is_empty():
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path(GEAR_TIERS_PATH)))
+		var tiers: Dictionary = data.get("tiers", {}) if data is Dictionary else {}
+		for k in tiers:
+			var sum := {"atk": 0.0, "def": 0.0}
+			for item_id in tiers[k]:
+				var item := load(QuizRpgPaths.path("resources/items/%s.tres" % item_id)) as QuizRpgItemData
+				if item != null:
+					sum["atk"] += float(item.atk_bonus)
+					sum["def"] += float(item.def_bonus)
+			_gear[int(str(k))] = sum
+	for t in range(gear_tier, -1, -1):
+		if _gear.has(t):
+			return _gear[t]
+	return {"atk": 0.0, "def": 0.0}
+
+
+## Bohater wzorcowy z poziomu w rekomendowanym sprzęcie tieru: {hp, atk, def, agi}.
+static func hero_ref(level: int, gear_tier: int = 0) -> Dictionary:
 	if _hero == null:
 		_hero = QuizRpgHeroData.new()
 	var l := clampi(level, 1, MAX_LEVEL)
+	var g := gear(gear_tier)
 	return {
 		"hp": float(_hero.hp_for_level(l, MAX_LEVEL)),
-		"atk": QuizRpgStatScale.stat(_hero.base_atk, _hero.atk_per_level, l) + QuizRpgStatScale.shop_weapon(l),
-		"def": QuizRpgStatScale.stat(_hero.base_def, _hero.def_per_level, l) + QuizRpgStatScale.shop_armor(l),
+		"atk": QuizRpgStatScale.stat(_hero.base_atk, _hero.atk_per_level, l) + float(g["atk"]),
+		"def": QuizRpgStatScale.stat(_hero.base_def, _hero.def_per_level, l) + float(g["def"]),
 		"agi": float(_hero.base_agi) + _hero.agi_per_level * float(l - 1),
 	}
 
 
-## Statystyki bazowe (wariant 1,0) wroga o poziomie i tierze: {hp, atk, def, agi} (AGI jak bohater wzorcowy).
-static func for_level(level: int, tier: int) -> Dictionary:
+## Statystyki bazowe (wariant 1,0) wroga o poziomie, tierze i rekomendowanym tierze sprzętu: {hp, atk, def, agi}
+## (AGI jak bohater wzorcowy).
+static func for_level(level: int, tier: int, gear_tier: int = 0) -> Dictionary:
 	var t := clampi(tier, 1, 4)
-	var h := hero_ref(level)
+	var l := clampi(level, 1, MAX_LEVEL)
+	var h := hero_ref(l, gear_tier)
 	var e_def: float = DEF_RATIO * h["atk"]
 	var hero_hit: float = maxf(4.0 * h["atk"] - 2.0 * e_def, 1.0)
-	var e_atk: float = QuizRpgStatScale.enemy_atk(level) * float(ENEMY_ATK_MULT[t])
-	return {"hp": maxf(hero_hit * float(HITS_TO_KILL[t]), 1.0), "atk": e_atk, "def": e_def, "agi": h["agi"]}
+	var curve_def := QuizRpgStatScale.stat(_hero.base_def, _hero.def_per_level, l) + QuizRpgStatScale.shop_armor(l)
+	var e_atk: float = QuizRpgStatScale.enemy_atk(l) * float(ENEMY_ATK_MULT[t]) + (h["def"] - curve_def) * 0.5
+	return {"hp": maxf(hero_hit * float(HITS_TO_KILL[t]), 1.0), "atk": maxf(e_atk, 1.0), "def": e_def, "agi": h["agi"]}
 
 
-## Stosunek statystyk wariantu do bazy tieru: {hp, atk, def, agi}.
-static func variant_ratio(tier: int, hp: int, atk: int, def: int, agi: int = int(AGI_BASE)) -> Dictionary:
-	var b: Array = TIER_BASE[clampi(tier, 1, 4)]
-	return {"hp": float(hp) / float(b[0]), "atk": float(atk) / float(b[1]), "def": float(def) / float(b[2]), "agi": float(agi) / AGI_BASE}
+## Stosunek statystyk bazowych wroga (= poziom 1) do wzoru na poziomie 1 w sprzęcie startowym: {hp, atk, def, agi}.
+static func variant_ratio(tier: int, hp: int, atk: int, def: int, agi: int) -> Dictionary:
+	var b := for_level(1, tier, 0)
+	return {"hp": float(hp) / b["hp"], "atk": float(atk) / b["atk"], "def": float(def) / b["def"], "agi": float(agi) / b["agi"]}

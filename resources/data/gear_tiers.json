@@ -1,0 +1,23 @@
+{
+  "_opis": "Rekomendowany sprzęt tieru (przedmioty ze sklepu: broń + głowa + korpus + tarcza bohatera). Statystyki wrogów liczą się względem bohatera z poziomu wroga w tym sprzęcie (QuizRpgEnemyStats); mapa wybiera tier polem \"gear_tier\" w companion-JSON (samouczek i mapy ręczne: 0). Tier 0 = start / sklep w mieście, 1 = po Matce Nietoperzy (boss:cave_return), 2 = po bossie ścieków (boss:sewer).",
+  "tiers": {
+    "0": [
+      "training_sword",
+      "cloth_cap",
+      "adventurer_tunic",
+      "wooden_shield"
+    ],
+    "1": [
+      "iron_sword",
+      "leather_hood",
+      "reinforced_tunic",
+      "iron_buckler"
+    ],
+    "2": [
+      "steel_blade",
+      "iron_helmet",
+      "iron_chainmail",
+      "steel_kite_shield"
+    ]
+  }
+}

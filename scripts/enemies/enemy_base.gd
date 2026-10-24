@@ -27,8 +27,11 @@ var _variant_ratio: Dictionary = {}  # stosunek statystyk wariantu do bazy tieru
 @export var agility: int = 15
 ## Umiejętności w walce (QuizRpgEnemySkill: obrażenia, serie ataków, statusy) — zamiast zwykłego ataku z ich szansą.
 @export var battle_skills: Array[QuizRpgEnemySkill] = []
-## Poziom wroga: > 0 = XP z poziomu (QuizRpgEnemyXp.kill_xp), 0 = stałe xp_reward. Ustawia dane albo mapa (set_enemy_level).
+## Poziom wroga: > 0 = statystyki z poziomu (QuizRpgEnemyStats) i XP z poziomu (dane); 0 = stałe statystyki i xp_reward.
+## Ustawia scena / dane albo mapa (set_enemy_level — ma pierwszeństwo).
 @export_range(0, 100) var enemy_level: int = 0
+## Rekomendowany tier sprzętu do statystyk z poziomu: -1 = z mapy (companion-JSON "gear_tier"), mapa bez pola — 0.
+@export_range(-1, 5) var gear_tier: int = -1
 ## Opis dla Skanu (QuizRpgEnemyData.scan_text); pusty = statystyki.
 @export_multiline var scan_text: String = ""
 @export var xp_reward: int = 400  ## XP jak FNaFB1: 200 × 2^(tier - 1), bossy ×5
@@ -227,6 +230,8 @@ func _apply_enemy_data() -> void:
 		hp = mini(hp, max_hp)
 		encounter_tier = clampi(encounter_tier, 1, 5)
 		_ready_applied = true
+		if _spawn_level <= 0 and enemy_level > 0:
+			_apply_level_stats()  # poziom ze sceny (np. samouczek): statystyki z poziomu, XP ze sceny
 		_apply_spawn_level()
 		_update_gold_reward()
 		return
@@ -256,6 +261,8 @@ func _apply_enemy_data() -> void:
 	shape_type = enemy_data.shape_type
 	if enemy_level > 0:
 		xp_reward = QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss)
+		if _spawn_level <= 0:
+			_apply_level_stats()
 	_ready_applied = true
 	_apply_spawn_level()
 	_update_gold_reward()
@@ -292,7 +299,8 @@ func _update_gold_reward() -> void:
 func _apply_level_stats() -> void:
 	if _variant_ratio.is_empty():
 		_variant_ratio = QuizRpgEnemyStats.variant_ratio(encounter_tier, max_hp, attack, defense, agility)
-	var s := QuizRpgEnemyStats.for_level(enemy_level, encounter_tier)
+	var g := gear_tier if gear_tier >= 0 else int(_map_field("_gear_tier", 0))
+	var s := QuizRpgEnemyStats.for_level(enemy_level, encounter_tier, g)
 	max_hp = maxi(roundi(s["hp"] * _variant_ratio["hp"]), 1)
 	hp = max_hp
 	attack = maxi(roundi(s["atk"] * _variant_ratio["atk"]), 1)
@@ -979,13 +987,18 @@ func _spawn_boss_minions() -> Array:
 
 ## Pole mapy (ProceduralLevel) z najbliższego przodka, który je ma — {} poza mapą proceduralną.
 func _map_value(field: String) -> Dictionary:
+	var v: Variant = _map_field(field, {})
+	return v if v is Dictionary else {}
+
+
+## Pole mapy z najbliższego przodka, który je ma; poza mapą (albo przed dodaniem do drzewa) — default.
+func _map_field(field: String, default: Variant) -> Variant:
 	var n := get_parent()
 	while n != null:
 		if field in n:
-			var v: Variant = n.get(field)
-			return v if v is Dictionary else {}
+			return n.get(field)
 		n = n.get_parent()
-	return {}
+	return default
 
 
 ## Linia do innego wroga bez ścian i przeszkód (jak wzrok: SIGHT_RAY_MASK + obiekty).

@@ -63,6 +63,7 @@ var flag_overrides: Dictionary = {}
 var _enemy_pool: Array = []
 var _faction_pools: Dictionary = {}  # frakcja -> pula (companion-JSON "enemies" jako słownik)
 var _enemy_levels: Dictionary = {}  # companion-JSON "enemy_levels": tier -> [min, max] poziomu wroga
+var _gear_tier: int = 0  # companion-JSON "gear_tier": rekomendowany tier sprzętu (QuizRpgEnemyStats, gear_tiers.json)
 var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga (int) -> QuizRpgLootTableData (ścieżka .tres)
 var _chest_loot: QuizRpgLootTableData = null  # companion-JSON "chest_loot": ścieżka .tres — tabela skrzyń strefy
 var _barrel_loot: QuizRpgLootTableData = null  # companion-JSON "barrel_loot": ścieżka .tres — tabela beczek strefy
@@ -639,6 +640,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_exit_ends_game = bool(cfg.raw.get("exit_ends_game", false)) if cfg != null else false
 	_rare_rooms = cfg.raw.get("rare_rooms", {}) if cfg != null else {}
 	_random_encounters = cfg.raw.get("random_encounters", {}) if cfg != null else {}
+	_gear_tier = int(cfg.raw.get("gear_tier", 0)) if cfg != null else 0
 	if enemy_scenes.is_empty() and cfg != null:
 		var en: Variant = cfg.raw.get("enemies")
 		if en is Array:

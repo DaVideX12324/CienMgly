@@ -21,6 +21,11 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Statystyki wrogów: baza (dane / scena) = statystyki na poziomie 1; na poziomie L baza × wzór(L) / wzór(1), gdzie wzór liczy
+  bohatera wzorcowego w rekomendowanym sprzęcie mapy (`gear_tier` w companion-JSON; tiery w `resources/data/gear_tiers.json`:
+  0 start / sklep w mieście, 1 po Matce Nietoperzy, 2 po bossie ścieków; jaskinie 0, ścieki 1) zamiast krzywej sklepu. Dane
+  wszystkich wrogów przeliczone na poziom 1 (balans jaskiń bez zmian), ścieki mocniejsze (sprzęt tieru 1). Samouczek
+  z poziomami (szlam 1), statystyki jak dotąd.
 - Walka: poziom wroga („Lv N”) przy nazwie na liście wyboru celu (wrogowie bez poziomu, np. samouczek — bez znacznika).
 - Ścieki: poziomy wrogów z pasm (`enemy_levels`: t1 9–11, t2 11–13, t3 13–14, Szczurzy Król 15) — statystyki z poziomu jak
   w jaskiniach (wcześniej szablon tieru, w praktyce poziom 1). Zapisane mapy ścieków generują się od nowa.
