@@ -1,7 +1,7 @@
 {
   "id": "quiz_rpg",
   "name": "Cień Mgły",
-  "description": "Edukacyjna gra RPG z quizami uruchamiana jako modul Artefaktu Wiedzy.",
+  "description": "Edukacyjna gra RPG z quizami uruchamiana jako moduł Artefaktu Wiedzy.",
   "version": "0.8.0-alpha",
   "entry_scene": "module_root.tscn",
   "quiz_path": "res://resources/quizzes",
