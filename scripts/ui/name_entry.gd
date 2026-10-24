@@ -3,7 +3,8 @@ extends VBoxContainer
 ## Imię bohatera po „Nowa gra” (ekran treści menu głównego). Wygląd w scenie `scenes/ui/name_entry.tscn`; skrypt
 ## sprawdza imię, pokazuje reakcje na wybrane imiona (easter eggi) i wysyła sygnały. Imię z reakcją wymaga drugiego
 ## potwierdzenia (przycisk zmienia się na „Tak, to ja”); imiona zajęte (towarzysze, NPC miasta) nie przechodzą.
-## Puste pole = domyślne imię (placeholder).
+## Puste pole = domyślne imię (placeholder). Menu deweloperskie („Easter eggi imion”, CheatService.name_eggs_revealed)
+## odsłania sekcję DevEggs: przycisk na każde imię z EGGS (czerwone = zajęte), kliknięcie wpisuje je i zatwierdza.
 
 signal confirmed(player_name: String)
 signal cancelled
@@ -40,6 +41,8 @@ const PL_PLAIN := {"ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": 
 @onready var _reaction: Label = %Reaction
 @onready var _confirm: Button = %ConfirmButton
 @onready var _back: Button = %BackButton
+@onready var _dev_eggs: Control = %DevEggs
+@onready var _egg_list: HFlowContainer = %EggList
 
 ## Imię, dla którego pokazano reakcję — drugie potwierdzenie tego samego imienia rozpoczyna grę.
 var _pending := ""
@@ -52,6 +55,27 @@ func _ready() -> void:
 	_edit.text_changed.connect(func(_t: String) -> void: _reset_prompt())
 	_confirm.pressed.connect(_submit)
 	_back.pressed.connect(func() -> void: cancelled.emit())
+	_build_egg_buttons()
+	var cheats := get_node_or_null("/root/CheatService")
+	if cheats and cheats.has_signal("name_eggs_toggled"):
+		cheats.name_eggs_toggled.connect(func(revealed: bool) -> void: _dev_eggs.visible = revealed)
+		_dev_eggs.visible = bool(cheats.get("name_eggs_revealed"))
+
+
+func _build_egg_buttons() -> void:
+	for key: String in EGGS:
+		var b := Button.new()
+		b.text = " ".join(Array(key.split(" ")).map(func(w: String) -> String: return w.capitalize()))
+		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override("font_size", 18)
+		b.add_theme_color_override("font_color", Color(1.0, 0.5, 0.5) if bool(EGGS[key][2]) else Color(0.95, 0.85, 0.45))
+		b.tooltip_text = str(EGGS[key][1])
+		b.pressed.connect(func() -> void:
+			_edit.text = b.text
+			_reset_prompt()
+			_submit())
+		_egg_list.add_child(b)
 
 
 ## Pokazuje ekran z pustym polem i kursorem w polu.

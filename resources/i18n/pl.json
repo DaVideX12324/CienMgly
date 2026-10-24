@@ -445,6 +445,7 @@
   "name_entry.back": "Wstecz",
   "name_entry.confirm": "▶ Rozpocznij",
   "name_entry.confirm_again": "✔ Tak, to ja",
+  "name_entry.dev_eggs_title": "Easter eggi (menu deweloperskie) — kliknij, żeby wpisać. Czerwone = imię zajęte.",
   "name_entry.egg.admin": "Dostęp przyznany. Żart — zaczynasz od zera jak wszyscy.",
   "name_entry.egg.artifact": "Artefakt Wiedzy się zdobywa, nie nosi. Na pewno?",
   "name_entry.egg.claude": "Brzmi znajomo… Powodzenia na teście.",

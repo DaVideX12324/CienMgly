@@ -54,3 +54,22 @@ theme_override_colors/font_color = Color(0.68, 0.68, 0.76, 1)
 theme_override_font_sizes/font_size = 18
 text = "Enter — zatwierdź, Esc — wróć. Puste pole = imię domyślne."
 autowrap_mode = 3
+
+[node name="DevEggs" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DevEggsTitle" type="Label" parent="DevEggs"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+text = "Easter eggi (menu deweloperskie) — kliknij, żeby wpisać. Czerwone = imię zajęte."
+autowrap_mode = 3
+
+[node name="EggList" type="HFlowContainer" parent="DevEggs"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8

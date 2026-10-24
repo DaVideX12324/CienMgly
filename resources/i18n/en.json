@@ -445,6 +445,7 @@
   "name_entry.back": "Back",
   "name_entry.confirm": "▶ Start",
   "name_entry.confirm_again": "✔ Yes, that's me",
+  "name_entry.dev_eggs_title": "Easter eggs (developer menu) — click to enter. Red = name taken.",
   "name_entry.egg.admin": "Access granted. Just kidding — you start from zero like everyone else.",
   "name_entry.egg.artifact": "The Artifact of Knowledge is earned, not worn. Are you sure?",
   "name_entry.egg.claude": "Sounds familiar… Good luck on the test.",
