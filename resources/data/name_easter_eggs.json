@@ -1,0 +1,143 @@
+{
+  "_opis": "Easter eggi imion bohatera (ekran „Nowa gra”). name: małe litery bez ogonków; taken: imię zajęte (nie przechodzi); pl / en: reakcja, {name} = imię jak wpisane. Edytowalne w grze: menu deweloperskie → „Easter eggi imion”.",
+  "eggs": [
+    {
+      "name": "kael",
+      "taken": true,
+      "pl": "{name}? To imię nosi już ktoś, kogo spotkasz w drodze.",
+      "en": "{name}? Someone you will meet on the road already bears that name."
+    },
+    {
+      "name": "eldon",
+      "taken": true,
+      "pl": "{name}? To imię nosi już ktoś, kogo spotkasz w drodze.",
+      "en": "{name}? Someone you will meet on the road already bears that name."
+    },
+    {
+      "name": "selene",
+      "taken": true,
+      "pl": "{name}? To imię nosi już ktoś, kogo spotkasz w drodze.",
+      "en": "{name}? Someone you will meet on the road already bears that name."
+    },
+    {
+      "name": "fenna",
+      "taken": true,
+      "pl": "{name} czeka na ciebie w mieście. Wymyśl własne imię.",
+      "en": "{name} is waiting for you in town. Pick a name of your own."
+    },
+    {
+      "name": "brann",
+      "taken": true,
+      "pl": "{name} czeka na ciebie w mieście. Wymyśl własne imię.",
+      "en": "{name} is waiting for you in town. Pick a name of your own."
+    },
+    {
+      "name": "kastor",
+      "taken": true,
+      "pl": "{name} czeka na ciebie w mieście. Wymyśl własne imię.",
+      "en": "{name} is waiting for you in town. Pick a name of your own."
+    },
+    {
+      "name": "greta",
+      "taken": true,
+      "pl": "{name} czeka na ciebie w mieście. Wymyśl własne imię.",
+      "en": "{name} is waiting for you in town. Pick a name of your own."
+    },
+    {
+      "name": "corvus",
+      "taken": true,
+      "pl": "{name} czeka na ciebie w mieście. Wymyśl własne imię.",
+      "en": "{name} is waiting for you in town. Pick a name of your own."
+    },
+    {
+      "name": "lina",
+      "taken": true,
+      "pl": "{name} czeka na ciebie w mieście. Wymyśl własne imię.",
+      "en": "{name} is waiting for you in town. Pick a name of your own."
+    },
+    {
+      "name": "quiz",
+      "taken": true,
+      "pl": "Pytanie kontrolne: a jak masz naprawdę na imię?",
+      "en": "Control question: what is your real name?"
+    },
+    {
+      "name": "pytanie",
+      "taken": true,
+      "pl": "Pytanie kontrolne: a jak masz naprawdę na imię?",
+      "en": "Control question: what is your real name?"
+    },
+    {
+      "name": "bohater",
+      "taken": false,
+      "pl": "Skromnie. Niech będzie.",
+      "en": "How modest. So be it."
+    },
+    {
+      "name": "hero",
+      "taken": false,
+      "pl": "Skromnie. Niech będzie.",
+      "en": "How modest. So be it."
+    },
+    {
+      "name": "freddy",
+      "taken": false,
+      "pl": "Freddy? Tym razem walczysz wiedzą, nie mikrofonem.",
+      "en": "Freddy? This time you fight with knowledge, not a microphone."
+    },
+    {
+      "name": "claude",
+      "taken": false,
+      "pl": "Brzmi znajomo… Powodzenia na teście.",
+      "en": "Sounds familiar… Good luck on the test."
+    },
+    {
+      "name": "admin",
+      "taken": false,
+      "pl": "Dostęp przyznany. Żart — zaczynasz od zera jak wszyscy.",
+      "en": "Access granted. Just kidding — you start from zero like everyone else."
+    },
+    {
+      "name": "root",
+      "taken": false,
+      "pl": "Dostęp przyznany. Żart — zaczynasz od zera jak wszyscy.",
+      "en": "Access granted. Just kidding — you start from zero like everyone else."
+    },
+    {
+      "name": "mgla",
+      "taken": false,
+      "pl": "Mgła nie ma imienia. Ty możesz je mieć — na pewno to?",
+      "en": "The Mist has no name. You can have one — are you sure it's this one?"
+    },
+    {
+      "name": "cien",
+      "taken": false,
+      "pl": "Mgła nie ma imienia. Ty możesz je mieć — na pewno to?",
+      "en": "The Mist has no name. You can have one — are you sure it's this one?"
+    },
+    {
+      "name": "cien mgly",
+      "taken": false,
+      "pl": "Mgła nie ma imienia. Ty możesz je mieć — na pewno to?",
+      "en": "The Mist has no name. You can have one — are you sure it's this one?"
+    },
+    {
+      "name": "artefakt",
+      "taken": false,
+      "pl": "Artefakt Wiedzy się zdobywa, nie nosi. Na pewno?",
+      "en": "The Artifact of Knowledge is earned, not worn. Are you sure?"
+    },
+    {
+      "name": "promotor",
+      "taken": false,
+      "pl": "Promotor? Zaliczenie i tak trzeba zdobyć pytaniami.",
+      "en": "Professor? You still have to pass with the questions."
+    },
+    {
+      "name": "profesor",
+      "taken": false,
+      "pl": "Promotor? Zaliczenie i tak trzeba zdobyć pytaniami.",
+      "en": "Professor? You still have to pass with the questions."
+    }
+  ]
+}

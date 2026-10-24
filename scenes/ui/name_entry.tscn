@@ -5,6 +5,7 @@
 [node name="NameEntry" type="VBoxContainer"]
 visible = false
 size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 18
 script = ExtResource("1_script")
 
@@ -59,17 +60,68 @@ autowrap_mode = 3
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 8
 
 [node name="DevEggsTitle" type="Label" parent="DevEggs"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.6, 0.9, 1)
 theme_override_font_sizes/font_size = 18
-text = "Easter eggi (menu deweloperskie) — kliknij, żeby wpisać. Czerwone = imię zajęte."
+text = "Easter eggi (menu deweloperskie): klik w imię wpisuje je i pokazuje reakcję; zajęte = imię nie przechodzi; {name} w reakcji = wpisane imię. Zmiany zapisują się od razu."
 autowrap_mode = 3
 
-[node name="EggList" type="HFlowContainer" parent="DevEggs"]
+[node name="AddRow" type="HBoxContainer" parent="DevEggs"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NewName" type="LineEdit" parent="DevEggs/AddRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "imię"
+
+[node name="NewTaken" type="CheckBox" parent="DevEggs/AddRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "zajęte"
+
+[node name="NewPl" type="LineEdit" parent="DevEggs/AddRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+placeholder_text = "reakcja PL"
+
+[node name="NewEn" type="LineEdit" parent="DevEggs/AddRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+placeholder_text = "reakcja EN"
+
+[node name="AddButton" type="Button" parent="DevEggs/AddRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "➕ Dodaj"
+
+[node name="DevStatus" type="Label" parent="DevEggs"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.76, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Scroll" type="ScrollContainer" parent="DevEggs"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="EggList" type="VBoxContainer" parent="DevEggs/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6

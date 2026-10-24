@@ -9,8 +9,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Nowa gra: najpierw imię bohatera (ekran „Nowa gra” w menu; puste = Bohater, do 12 znaków). Easter eggi: reakcje
   na wybrane imiona (np. Freddy, Bohater, Mgła, Artefakt, Promotor — wymagają potwierdzenia „Tak, to ja”); imiona
   towarzyszy i NPC miasta są zajęte.
-- Menu deweloperskie → „🥚 Easter eggi imion”: odsłania na ekranie „Nowa gra” listę wszystkich imion z reakcjami
-  (czerwone = zajęte); kliknięcie wpisuje imię i pokazuje reakcję.
+- Menu deweloperskie → „🥚 Easter eggi imion”: odsłania na ekranie „Nowa gra” edytor easter eggów — dodawanie,
+  „zajęte”, reakcje PL / EN, usuwanie; kliknięcie w imię wpisuje je i pokazuje reakcję. Easter eggi są w
+  `resources/data/name_easter_eggs.json`; zmiany zapisują się od razu (w wyeksportowanej grze do `user://`).
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono

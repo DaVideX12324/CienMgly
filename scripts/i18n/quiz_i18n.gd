@@ -27,6 +27,12 @@ static func _get_service() -> Node:
 	return null
 
 
+## Bieżący język gry ("pl" / "en"; bez serwisu — "pl").
+static func language() -> String:
+	var svc := _get_service()
+	return str(svc.call("get_current_language")) if svc != null and svc.has_method("get_current_language") else "pl"
+
+
 static func t(key: String, fallback: String = "") -> String:
 	register()
 	var svc := _get_service()
