@@ -442,7 +442,13 @@ static func spawn_entities(
 			inst.position = _cell_center(lad["cell"], cell_size)
 			if "height_cells" in inst:
 				inst.set("height_cells", int(lad.get("height", 3)))
+			if lad["cell"] == result.exit_pos:
+				inst.add_to_group(EXIT_PORTAL_GROUP)
 			objects_node.add_child(inst)
+
+
+## Grupa grafiki wyjścia (drabina) — ProceduralLevel ukrywa snop światła, gdy wyjście jest zamknięte do pokonania bossa.
+const EXIT_PORTAL_GROUP := &"exit_portal_visuals"
 
 
 ## Odległość (w kratkach, w linii prostej) punktu pojawienia się od kratki przejścia — obszar ma 1,5 kratki.

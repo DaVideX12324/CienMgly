@@ -143,7 +143,7 @@
   },
   "spawns": {"per_1000": 8, "spacing": 6, "entrance_clear": 7, "near_entrance": 2, "group_chance": 0.35, "group_size": [2, 3], "tier2_from": 0.35, "tier3_from": 0.7, "tier3_chance": 0.15, "factions": {"beasts": 3, "bandits": 1}, "faction_frequency": 0.025},
   "chest_tier": 2,
-  "boss": {"ends_game": true},
+  "boss": {"ends_game": true, "locks_exit": true},
   "chest_loot": "resources/loot/sewer_chests.tres",
   "barrel_loot": "resources/loot/sewer_barrels.tres",
   "enemy_loot": {"1": "resources/loot/sewer_enemies_t1.tres", "2": "resources/loot/sewer_enemies_t2.tres", "3": "resources/loot/sewer_enemies_t3.tres", "4": "resources/loot/sewer_enemies_t4.tres"},

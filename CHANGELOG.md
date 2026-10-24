@@ -5,6 +5,15 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Zmieniono
+- Ścieki: wyjście zamknięte do pokonania bossa (Szczurzy Król) — obszar wyjścia nie działa, a snop światła nad drabiną
+  wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
+
+### Naprawiono
+- Ścieki: na części map (ok. 1/3 seedów) wejście albo wyjście nie miało drabiny — pokój wybrany na przejście nie miał
+  północnej ściany (np. otwarty na kanał). Generator bierze kolejny pokój z tej samej kolejności, w którym drabina się
+  mieści; mapy, które miały obie drabiny, są bez zmian. Zapisane mapy ścieków generują się od nowa (zmieniony `sewer.json`).
+
 ## [0.8.0-alpha] — 2026-10-24
 
 Pierwsza wersjonowana Alpha — punkt odniesienia. Opisuje stan gry, nie zmiany względem poprzedniego wydania

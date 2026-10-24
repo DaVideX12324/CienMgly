@@ -12,11 +12,19 @@ const CELL := 16
 		height_cells = v
 		_layout()
 
+## Snop światła z włazu — wyłączony, gdy wyjście jest zamknięte (ProceduralLevel._refresh_exit_gate).
+@export var light_on := true:
+	set(v):
+		light_on = v
+		if is_node_ready():
+			_light.visible = v
+
 @onready var _ladder: Sprite2D = $Ladder
 @onready var _light: Sprite2D = $Light
 
 
 func _ready() -> void:
+	_light.visible = light_on
 	_layout()
 
 

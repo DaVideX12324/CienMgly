@@ -95,14 +95,17 @@ static func generate_layout(
 	ctx.rooms = rooms
 	result.rooms = rooms
 
-	# Portale: wejście w pokoju najbliżej środka mapy, wyjście w pokoju najdalszym od wejścia.
+	# Portale: wejście w pokoju najbliżej środka mapy, wyjście w pokoju najdalszym od wejścia. Z drabiną (portal_style) —
+	# pierwszy pokój z tej kolejności, w którym przejście mieści się przy północnej ścianie (pokój otwarty na kanał dawał
+	# przejście bez grafiki — gracz nie widział wyjścia, 2026-10-24); żaden — jak dotąd, przejście na środku pierwszego.
 	GenProgress.begin(&"portals")
-	var picked := _pick_portal_rooms(st, rooms)
-	var entrance_room_idx: int = picked.x
-	var exit_room_idx: int = picked.y
-	if entrance_room_idx >= 0:
-		var ent: Dictionary = PortalGenerator.carve_portal_at_wall(ctx, rooms[entrance_room_idx], flags.portal_style) \
-			if flags.portal_style != "" else PortalGenerator.carve_portal_in_room(ctx, rooms[entrance_room_idx])
+	var order := _portal_room_order(st, rooms)
+	var entrance_room_idx := -1
+	var exit_room_idx := -1
+	if order.size() >= 2:
+		var ent_pick := _carve_first_portal(ctx, rooms, order, flags.portal_style)
+		entrance_room_idx = ent_pick[0]
+		var ent: Dictionary = ent_pick[1]
 		PortalGenerator.register_wall_portal(result, ent, flags)
 		ctx.entrance_pos = ent["center"] as Vector2i
 		result.entrance_pos = ctx.entrance_pos
@@ -111,8 +114,9 @@ static func generate_layout(
 		for p in result.entrance_zone:
 			ctx.grid[p] = CellType.ENTRANCE
 			ctx.portal_zone[p] = true
-		var ex: Dictionary = PortalGenerator.carve_portal_at_wall(ctx, rooms[exit_room_idx], flags.portal_style) \
-			if flags.portal_style != "" else PortalGenerator.carve_portal_in_room(ctx, rooms[exit_room_idx])
+		var ex_pick := _carve_first_portal(ctx, rooms, _exit_room_order(order, ent_pick[2]), flags.portal_style)
+		exit_room_idx = ex_pick[0]
+		var ex: Dictionary = ex_pick[1]
 		PortalGenerator.register_wall_portal(result, ex, flags)
 		ctx.exit_pos = ex["center"] as Vector2i
 		result.exit_pos = ctx.exit_pos
@@ -534,7 +538,8 @@ static func _platform_cells(pl) -> Dictionary:
 	return out
 
 
-static func _pick_portal_rooms(st: State, rooms: Array[Rect2i]) -> Vector2i:
+## Kandydaci na pokój wejścia: [indeks pokoju, środek wolnej podłogi], od najbliższego środka mapy; < 2 — brak portali.
+static func _portal_room_order(st: State, rooms: Array[Rect2i]) -> Array:
 	var cand: Array = []
 	for i in range(rooms.size()):
 		var r := rooms[i]
@@ -554,18 +559,42 @@ static func _pick_portal_rooms(st: State, rooms: Array[Rect2i]) -> Vector2i:
 		for i in range(rooms.size()):
 			cand.append([i, Vector2(rooms[i].get_center())])
 	if cand.size() < 2:
-		return Vector2i(-1, -1)
+		return []
 	var mid := Vector2(st.w, st.h) * 0.5
 	cand.sort_custom(func(a, b) -> bool: return (a[1] as Vector2).distance_squared_to(mid) < (b[1] as Vector2).distance_squared_to(mid))
-	var ent: Vector2 = cand[0][1]
-	var ex: int = cand[1][0]
+	return cand
+
+
+## Kandydaci na pokój wyjścia (bez wejścia — pozycja ent_k w `order`): najdalszy od wejścia najpierw (przy remisie
+## pierwszy w kolejności, jak dotąd), potem malejąco po odległości.
+static func _exit_room_order(order: Array, ent_k: int) -> Array:
+	var ent: Vector2 = order[ent_k][1]
+	var rest: Array = []
+	for k in order.size():
+		if k != ent_k:
+			rest.append(order[k])
+	var best := 0
 	var far := -1.0
-	for c in cand.slice(1):
-		var d := (c[1] as Vector2).distance_squared_to(ent)
+	for k in rest.size():
+		var d := (rest[k][1] as Vector2).distance_squared_to(ent)
 		if d > far:
 			far = d
-			ex = c[0]
-	return Vector2i(cand[0][0], ex)
+			best = k
+	var first: Array = rest.pop_at(best)
+	rest.sort_custom(func(a, b) -> bool: return (a[1] as Vector2).distance_squared_to(ent) > (b[1] as Vector2).distance_squared_to(ent))
+	return [first] + rest
+
+
+## Przejście w pierwszym pokoju z `order`, w którym mieści się przy ścianie (portal_style); żaden albo bez stylu —
+## na środku pierwszego pokoju. Zwraca [indeks pokoju, dane przejścia, pozycja w order].
+static func _carve_first_portal(ctx: GenerationContext, rooms: Array[Rect2i], order: Array, style: String) -> Array:
+	if style != "":
+		for k in order.size():
+			var data := PortalGenerator.try_portal_at_wall(ctx, rooms[order[k][0]], style)
+			if not data.is_empty():
+				return [order[k][0], data, k]
+	var first: int = order[0][0]
+	return [first, PortalGenerator.carve_portal_in_room(ctx, rooms[first]), 0]
 
 
 ## Bezpiecznik spójności po przejściach czyszczących: gdy coś jest nieosiągalne z wejścia, kratki zamurowane

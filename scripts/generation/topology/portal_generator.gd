@@ -207,14 +207,22 @@ static func carve_portal_in_room(ctx: GenerationContext, room: Rect2i) -> Dictio
 ## pokoju zamieniony na podłogę = schody ("stairs": Rect2i, min. 2 rzędy), przejście na ich szczycie, strefa = schody + rząd pod
 ## nimi. Rząd tuż pod ścianą nigdy w strefie (lico nad strefą portalu nie powstaje). Brak miejsca — carve_portal_in_room.
 static func carve_portal_at_wall(ctx: GenerationContext, room: Rect2i, style: String) -> Dictionary:
+	var data := try_portal_at_wall(ctx, room, style)
+	return data if not data.is_empty() else carve_portal_in_room(ctx, room)
+
+
+## Jak carve_portal_at_wall, ale bez miejsca przy ścianie zwraca {} i zostawia siatkę bez zmian — wybór innego pokoju.
+static func try_portal_at_wall(ctx: GenerationContext, room: Rect2i, style: String) -> Dictionary:
 	const MAP_BORDER := 2
 	var c := room.get_center()
 	var grid := ctx.grid
+	var carved := {}   # środek pokoju przekuty na podłogę (kratka -> poprzedni typ) — cofany, gdy miejsca brak
 	for dy in range(-1, 2):
 		for dx in range(-1, 2):
 			var q := c + Vector2i(dx, dy)
 			if q.x >= MAP_BORDER and q.x < ctx.width - MAP_BORDER and q.y >= MAP_BORDER and q.y < ctx.height - MAP_BORDER:
 				if not GridUtils.is_walkable(grid, q):
+					carved[q] = grid.get(q, -1)
 					grid[q] = CellType.FLOOR
 	var stairs := style == "stairs"
 	# W obrębie pokoju (z marginesem na stopę ściany), bez wody i blokad kanałów (woda to w siatce podłoga).
@@ -223,26 +231,40 @@ static func carve_portal_at_wall(ctx: GenerationContext, room: Rect2i, style: St
 	if ctx.canals != null and not ctx.canals.is_empty():
 		blocked.merge(ctx.canals.water)
 		blocked.merge(ctx.canals.blocked)
-	for off in [0, -1, 1, -2, 2, -3, 3]:
-		var x: int = c.x + off
-		var ok_col := func(y: int) -> bool:
-			for k in ([-1, 0, 1] if stairs else [0]):
-				var q := Vector2i(x + k, y)
-				if not GridUtils.is_walkable(grid, q) or not area.has_point(q) or blocked.has(q):
-					return false
-			return true
-		if not ok_col.call(c.y):
-			continue
-		var top := c.y
-		while top - 1 >= MAP_BORDER + 4 and ok_col.call(top - 1):
-			top -= 1
-		if GridUtils.is_walkable(grid, Vector2i(x, top - 1)):
-			continue  # nad górną kratką nie ma ściany (przejście w ścianie) — inna kolumna
-		var wall_ok := true
+	var ok_col := func(x: int, y: int) -> bool:
+		for k in ([-1, 0, 1] if stairs else [0]):
+			var q := Vector2i(x + k, y)
+			if not GridUtils.is_walkable(grid, q) or not area.has_point(q) or blocked.has(q):
+				return false
+		return true
+	# Górna kratka ciągłej podłogi w kolumnie x od rzędu y0 w górę, z co najmniej 3 kratkami ściany nad nią; -1 = brak.
+	var wall_top := func(x: int, y0: int) -> int:
+		if not ok_col.call(x, y0):
+			return -1
+		var t := y0
+		while t - 1 >= MAP_BORDER + 4 and ok_col.call(x, t - 1):
+			t -= 1
 		for k in range(1, 4):
-			if GridUtils.is_walkable(grid, Vector2i(x, top - k)):
-				wall_ok = false
-		if not wall_ok:
+			if GridUtils.is_walkable(grid, Vector2i(x, t - k)):
+				return -1  # nad górną kratką nie ma ściany (przejście w ścianie) — inna kolumna
+		return t
+	# Najpierw kolumny przy środku od środkowego rzędu; zapas (2026-10-24): cała szerokość pokoju i dowolny rząd startu —
+	# w ściekach środek pokoju bywa wodą kanału albo kolumny ±3 nie sięgają ściany, a przejście w pokoju nie ma grafiki
+	# (bez drabiny gracz nie widzi wyjścia). Zapas zmienia tylko mapy, na których pierwsze szukanie zawodzi.
+	var candidates: Array[Vector2i] = []
+	for off in [0, -1, 1, -2, 2, -3, 3]:
+		candidates.append(Vector2i(c.x + off, c.y))
+	var xs: Array = range(room.position.x, room.end.x)
+	xs.sort_custom(func(a: int, b: int) -> bool: return absi(a - c.x) < absi(b - c.x))
+	var ys: Array = range(room.position.y, room.end.y)
+	ys.sort_custom(func(a: int, b: int) -> bool: return absi(a - c.y) < absi(b - c.y))
+	for x in xs:
+		for y in ys:
+			candidates.append(Vector2i(x, y))
+	for cand in candidates:
+		var x: int = cand.x
+		var top: int = wall_top.call(x, cand.y)
+		if top < 0:
 			continue
 		# Rząd tuż pod ścianą (top) poza strefą: EdgeAnalyzer nie stawia lica nad strefą portalu (w jaskiniach stopa lica
 		# leży właśnie na tym rzędzie).
@@ -250,7 +272,7 @@ static func carve_portal_at_wall(ctx: GenerationContext, room: Rect2i, style: St
 		var cells: Array[Vector2i] = []
 		var rect := Rect2i()
 		if stairs:
-			var bottom := maxi(c.y, top + 2)
+			var bottom := maxi(cand.y, top + 2)  # do rzędu startu (pierwsze szukanie: środek pokoju)
 			rect = Rect2i(x - 1, top + 1, 3, bottom - top)
 			portal = Vector2i(x, top + 1)
 			for y in range(rect.position.y, rect.end.y + 1):
@@ -265,7 +287,12 @@ static func carve_portal_at_wall(ctx: GenerationContext, room: Rect2i, style: St
 					if GridUtils.is_walkable(grid, q):
 						cells.append(q)
 		return {"center": portal, "edge": -1, "cells": cells, "stairs": rect, "style": style}
-	return carve_portal_in_room(ctx, room)
+	for q in carved:
+		if carved[q] < 0:
+			grid.erase(q)
+		else:
+			grid[q] = carved[q]
+	return {}
 
 
 ## Zapisuje grafikę przejścia przy ścianie w wyniku: schody (portal_stairs) albo drabinę (portal_ladders, wysokość lica

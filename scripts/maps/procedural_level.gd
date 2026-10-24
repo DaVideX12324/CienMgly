@@ -66,7 +66,7 @@ var _barrel_loot: QuizRpgLootTableData = null  # companion-JSON "barrel_loot": �
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
-var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device bossów mapy
+var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device, ends_game, locks_exit bossów mapy
 var _random_encounters: Dictionary = {}  # companion-JSON "random_encounters": tryb, dystans i tiery losowych spotkań (QuizRpgRandomEncounters)
 var _rare_rooms: Dictionary = {}  # companion-JSON "rare_rooms": skrzynie specjalne w rzadkich pokojach (TreasurePlanner.plan_rare)
 @export var chest_scene: PackedScene = null
@@ -895,6 +895,7 @@ func _finish_level(job: GenJob, slicer: FrameSlicer = null) -> void:
 
 	# 5. Podepnij wyjscie
 	_connect_exit_trigger()
+	_setup_exit_gate()
 	_setup_random_encounters()
 
 
@@ -971,7 +972,7 @@ func _apply_niche_content(result) -> void:
 
 ## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup). "flag" — skrzynia z jedynym przedmiotem (krypta): flaga
 ## ustawiana przy otwarciu, stała przy rerollu (przedmiot nie wraca); "prefer_key" — klucz przed wytrychem. Boss mapy
-## ("boss": story_id, counts_toward_device, ends_game; "story": false — boss poza fabułą, bez flagi boss:<id>; "loot" —
+## ("boss": story_id, counts_toward_device, ends_game, locks_exit — _setup_exit_gate; "story": false — boss poza fabułą, bez flagi boss:<id>; "loot" —
 ## własna tabela łupu .tres, np. strażnik krypty z gwarantowanym kluczem do skrzyni skarbu).
 func _apply_treasure() -> void:
 	_apply_special_chests(String(TreasurePlanner.CHEST_DEF_ID) + "_", _treasure)
@@ -1071,6 +1072,34 @@ func _connect_exit_trigger() -> void:
 		_change_level.bind(next_level_path, next_spawn_name), next_portal_use_key, next_portal_prompt)
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D,
 		_change_level.bind(previous_level_path, previous_spawn_name), previous_portal_use_key, previous_portal_prompt)
+
+
+## Wyjście zamknięte do pokonania bossów mapy (companion-JSON "boss": {"locks_exit": true}, np. ścieki — boss przed
+## ekranem końca): obszar wyjścia nie działa, a snop światła drabiny wyjścia jest ukryty. Otwiera się, gdy ostatni boss
+## zniknie po przegranej walce albo gdy był już pokonany w tym zapisie (usuwa się sam po wczytaniu).
+func _setup_exit_gate() -> void:
+	if not bool(_boss_cfg.get("locks_exit", false)):
+		return
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if is_ancestor_of(node) and bool(node.get("is_boss")):
+			node.tree_exiting.connect(_refresh_exit_gate.bind(node))
+	_refresh_exit_gate()
+
+
+func _refresh_exit_gate(leaving: Node = null) -> void:
+	if not is_inside_tree():
+		return
+	var locked := false
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if node != leaving and is_ancestor_of(node) and bool(node.get("is_boss")) and not bool(node.get("defeated")):
+			locked = true
+			break
+	var area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
+	if area:
+		area.set_deferred("monitoring", not locked)
+	for node in get_tree().get_nodes_in_group(MapGeneratorBaseScript.EXIT_PORTAL_GROUP):
+		if is_ancestor_of(node):
+			node.set("light_on", not locked)
 
 
 func _change_level(path: String, spawn_name: String) -> void:
