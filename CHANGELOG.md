@@ -5,6 +5,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Dodano
+- Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
+
 ### Zmieniono
 - Wrogowie: gdy cel leży poza siatką nawigacji (wąski pas pod licem płaskowyżu, przy ścianie, między obiektami),
   wróg dochodzi do końca ścieżki, a ostatni odcinek idzie wprost, jeśli jego ciało przejdzie (test ruchu fizyki).

@@ -279,6 +279,35 @@ func recruit(hero_id: String, at_level: int = 0) -> bool:
 	return true
 
 
+## Usuwa towarzysza z drużyny (menu deweloperskie). Założony ekwipunek wraca do plecaka; zadanie towarzysza
+## (companion_quests) zostaje, więc NPC rekrutacji w mieście znów go przyjmie. Głównego bohatera nie usuwa —
+## false = nie ma go w drużynie albo to bohater.
+func dismiss(hero_id: String) -> bool:
+	for i in range(party.size()):
+		if str((party[i] as Dictionary).get("hero_id", "")) != hero_id:
+			continue
+		if is_hero(i):
+			return false
+		_sync_primary_party_member()
+		for item_id in ((party[i] as Dictionary).get("equipment", {}) as Dictionary).values():
+			if str(item_id) != "":
+				add_item(str(item_id), 1)
+		party.remove_at(i)
+		inventory_changed.emit()
+		party_changed.emit()
+		return true
+	return false
+
+
+## Towarzysze w drużynie (bez głównego bohatera) — hero_id w kolejności szyku.
+func companion_ids() -> Array[String]:
+	var out: Array[String] = []
+	for i in range(party.size()):
+		if not is_hero(i):
+			out.append(str((party[i] as Dictionary).get("hero_id", "")))
+	return out
+
+
 func add_points(amount: int) -> void:
 	points += amount
 	points_changed.emit(points)
