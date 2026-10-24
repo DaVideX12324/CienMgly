@@ -19,6 +19,7 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @onready var context_body: MarginContainer = $ScreenPanel/Margin/RightVBox/ContextBody
 @onready var stats_label: Label = $ScreenPanel/Margin/RightVBox/ContextBody/StatsLabel
 @onready var background: ColorRect = $BG
+@onready var ver_label: Label = $VerLabel
 
 var _title_time := 0.0
 var _save_slots_panel: VBoxContainer
@@ -39,10 +40,23 @@ func _ready() -> void:
 	_update_load_button()
 	_style_menu()
 	_show_context("")
+	ver_label.text = "Cień Mgły " + _version_label()
 	# Muzyka menu także po powrocie z gry („Zakończ grę” w menu Esc) — poziom zostawiał swoją.
 	var audio := get_node_or_null("/root/AudioService")
 	if audio and audio.has_method("play_music"):
 		audio.play_music("menu")
+
+
+## Wersja z module_manifest.json do wyświetlenia: "0.8.0-alpha" -> "0.8.0 Alpha" (zasady wersjonowania: docs hosta).
+func _version_label() -> String:
+	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path("module_manifest.json")))
+	var version := str(manifest.get("version", "")) if manifest is Dictionary else ""
+	var parts := version.split("-", true, 1)
+	if parts.size() < 2:
+		return version
+	var stage := parts[1]
+	stage = "RC" + stage.substr(2) if stage.begins_with("rc") else stage.left(1).to_upper() + stage.substr(1)
+	return "%s %s" % [parts[0], stage]
 
 
 func _process(delta: float) -> void:

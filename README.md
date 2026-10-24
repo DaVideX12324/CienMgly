@@ -5,14 +5,25 @@ RPG Makera i pytania quizowe wplecione w walkę. Działa jako moduł platformy
 [Artefakt Wiedzy](https://github.com/DaVideX12324/Artefakt-Wiedzy-modular) (`modules/quiz_rpg`, id `quiz_rpg`)
 albo jako samodzielny projekt.
 
+## Wersja
+
+**`0.8.0-alpha`** (Alpha) — systemy działają, ścieżka samouczek → jaskinia → miasto → ścieki → boss ścieków → ekran
+końca jest spięta, mapa miasta jest w budowie. Zmiany: [`CHANGELOG.md`](CHANGELOG.md). Numer jest w
+`module_manifest.json` (`version`), zasady i plan wydań w `docs/wersjonowanie.md` repo hosta:
+
+- **0.9 Beta** — miasto skończone, całą ścieżkę da się przejść od nowej gry do zakończenia;
+- **1.0** — stabilne wydanie zakresu pracy inżynierskiej (pierwszy rozdział, nie cała kampania);
+- **1.x** — poprawki i stopniowa rozbudowa; **2.0** — pełna docelowa kampania.
+
 ## Co jest w grze
 
-- **Świat:** samouczek -> generowana jaskinia -> generowane ścieki (tymczasowo; docelowo jaskinia -> miasto ->
-  ścieki). Jaskinia: pokoje, płaskowyże ze schodami, nisze, obiekty (grzyby, stalagmity, kamienie, skrzynie, beczki);
+- **Świat:** samouczek -> generowana jaskinia -> miasto -> generowane ścieki -> boss ścieków (Szczurzy Król) i ekran
+  końca. Jaskinia: pokoje, płaskowyże ze schodami, nisze, obiekty (grzyby, stalagmity, kamienie, skrzynie, beczki);
   ścieki: układ `structured` z kanałami, kładkami i platformami. Mapy to sceny dziedziczone po
   `scenes/maps/procedural_level.tscn` (`scenes/maps/levels/`); jeden seed na zapis, seed mapy liczony z niego
   i nazwy sceny. Można wracać do poprzedniego poziomu; przejścia działają po wejściu w obszar albo pod klawiszem
-  interakcji (E). Miasto (`town.tscn`) jest w przygotowaniu — mapa malowana ręcznie w LDtk (`town.ldtk`).
+  interakcji (E). Miasto (`town.tscn`, mapa malowana ręcznie w Godocie — w budowie) ma NPC: sklepy, kowala, nauczyciela
+  umiejętności, karczmę i zadania z dziennikiem.
 - **Generator:** zachowanie biomu w JSON-ie obok TileSetu (`resources/maps/config/*.json`: flagi, tileset, obiekty);
   kształt pokoi (`room_shape`: organic / rect / round / poly / mixed) i wejście na środku mapy (`entrance_mode: center`)
   to flagi tego JSON-a.
@@ -20,7 +31,7 @@ albo jako samodzielny projekt.
   do wyboru w opcjach, po wygranej chwila nietykalności.
 - **Postać i postęp:** statystyki i poziomy, klasy postaci, przedmioty, umiejętności i statusy, ekwipunek, złoto,
   skrzynie i klucze wg tieru, sloty zapisu, menu Esc, ekran śmierci drużyny. Teksty w PL i EN (`resources/i18n`).
-  Drużyna z towarzyszami jest w budowie (dziś jeden bohater, `resources/heroes`).
+  Drużyna: bohater + towarzysze Kael, Eldon, Selene (`resources/heroes`), sloty umiejętności wg tieru, minimapa.
 - **Wrogowie:** pościg po siatce nawigacji z generatora, wykrywanie gracza.
 - **Pytania:** zestawy w `resources/quizzes`, wybór aktywnych i edytor pytań (menu główne, Opcje -> Pytania).
 - **Sterowanie:** zmiana klawiszy, chód / bieg (domyślny ruch i tryb klawisza — przytrzymanie albo
