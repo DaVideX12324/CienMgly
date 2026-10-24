@@ -1,10 +1,10 @@
 extends CanvasLayer
 
-## Ekran końca gry (uproszczone zakończenie na inżynierkę, decyzja usera 2026-10-22): po wygranej z bossem oznaczonym
-## ends_game (ścieki: "boss": {"ends_game": true} w sewer.json). Wygląd w scenie `scenes/ui/end_screen.tscn`; skrypt
+## Ekran końca gry (uproszczone zakończenie na inżynierkę, decyzja usera 2026-10-22; od 2026-10-24 po wyjściu ze ścieków
+## na cmentarzysko, nie po bossie): wyjście mapy z "exit_ends_game" (sewer.json; boss zamyka wyjście). Wygląd w scenie `scenes/ui/end_screen.tscn`; skrypt
 ## wpisuje podsumowanie (czas gry, poziom, pokonani bossowie, poprawne odpowiedzi), wprowadza ekran i obsługuje
 ## przyciski. Pauzuje grę i ustawia stan MENU. „Graj dalej” wraca do eksploracji, „Menu główne” — do menu.
-## Zapis (flaga game:completed) robi EnemyBase przed pokazaniem ekranu; `saved` pokazuje napis o zapisie.
+## Zapis (flaga game:completed) robi ProceduralLevel._finish_game przed pokazaniem ekranu; `saved` pokazuje napis o zapisie.
 
 @export var fade_time := 1.2
 @export var leave_immunity := 3.0   ## s: żaden wróg nie zaczyna walki tuż po powrocie do gry

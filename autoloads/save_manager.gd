@@ -341,7 +341,7 @@ func _format_map_name(scene_path: String) -> String:
 	return file_name.capitalize()
 
 
-## „  |  Ukończono”, gdy zapis ma flagę końca gry (EnemyBase.ends_game).
+## „  |  Ukończono”, gdy zapis ma flagę końca gry (ProceduralLevel._finish_game — wyjście ze ścieków).
 func _completed_tag(slot_data: Dictionary) -> String:
 	var ls: Variant = slot_data.get("level_states", {})
 	var flags: Variant = (ls as Dictionary).get("story_flags", {}) if ls is Dictionary else {}

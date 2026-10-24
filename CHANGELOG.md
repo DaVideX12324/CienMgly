@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Zmieniono
+- Zakończenie: ekran końca gry pojawia się po wyjściu ze ścieków na cmentarzysko (drabina wyjścia), a nie zaraz po
+  pokonaniu bossa ścieków — boss tylko otwiera wyjście (companion-JSON `"exit_ends_game": true`). „Graj dalej” wraca do
+  ścieków; ponowne wejście w wyjście znów pokazuje ekran końca. Nowy tekst ekranu końca (PL / EN).
 - Ścieki: wyjście zamknięte do pokonania bossa (Szczurzy Król) — obszar wyjścia nie działa, a snop światła nad drabiną
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
@@ -43,5 +46,5 @@ Pierwsza wersjonowana Alpha — punkt odniesienia. Opisuje stan gry, nie zmiany 
 ### Znane ograniczenia
 - Mapa miasta w budowie (warstwa Walls, część obiektów, domki); wnętrz budynków nie ma — NPC stoją przed domami.
 - **Tymczasowo:** etap 1 → 2 broni z potencjałem odblokowuje Matka Nietoperzy + jej kieł (docelowo boss ścieków).
-- Zakończenie jest krótkie (ekran końca po bossie ścieków); dalsza kampania to zakres 2.0.
+- Zakończenie jest krótkie (ekran końca po bossie ścieków; od [Unreleased] — po wyjściu ze ścieków); dalsza kampania to zakres 2.0.
 - Lista znanych problemów: `docs/znane_problemy.md` w repo hosta.

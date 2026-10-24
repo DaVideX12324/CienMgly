@@ -19,6 +19,9 @@ const MapPrefetch = preload("map_prefetch.gd")
 const MapDiskCache = preload("map_disk_cache.gd")
 const MapLinks = preload("map_links.gd")
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
+const EndScreenScene = preload("../../scenes/ui/end_screen.tscn")
+## Flaga fabularna ukończenia gry (znacznik „Ukończono” w opisie slotu zapisu).
+const GAME_COMPLETED_FLAG := "game:completed"
 
 ## Koniec generowania (także synchronicznego) — mapa, encje i nawigacja są gotowe.
 signal generation_finished
@@ -66,7 +69,8 @@ var _barrel_loot: QuizRpgLootTableData = null  # companion-JSON "barrel_loot": �
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
-var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device, ends_game, locks_exit bossów mapy
+var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device, locks_exit bossów mapy
+var _exit_ends_game := false  # companion-JSON "exit_ends_game": wyjście pokazuje ekran końca zamiast następnej mapy
 var _random_encounters: Dictionary = {}  # companion-JSON "random_encounters": tryb, dystans i tiery losowych spotkań (QuizRpgRandomEncounters)
 var _rare_rooms: Dictionary = {}  # companion-JSON "rare_rooms": skrzynie specjalne w rzadkich pokojach (TreasurePlanner.plan_rare)
 @export var chest_scene: PackedScene = null
@@ -632,6 +636,7 @@ func _prepare_job(seed_val: int) -> GenJob:
 	_niche_content = cfg.raw.get("niche_content", {}) if cfg != null else {}
 	_treasure = cfg.raw.get("treasure", {}) if cfg != null else {}
 	_boss_cfg = cfg.raw.get("boss", {}) if cfg != null else {}
+	_exit_ends_game = bool(cfg.raw.get("exit_ends_game", false)) if cfg != null else false
 	_rare_rooms = cfg.raw.get("rare_rooms", {}) if cfg != null else {}
 	_random_encounters = cfg.raw.get("random_encounters", {}) if cfg != null else {}
 	if enemy_scenes.is_empty() and cfg != null:
@@ -972,7 +977,7 @@ func _apply_niche_content(result) -> void:
 
 ## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup). "flag" — skrzynia z jedynym przedmiotem (krypta): flaga
 ## ustawiana przy otwarciu, stała przy rerollu (przedmiot nie wraca); "prefer_key" — klucz przed wytrychem. Boss mapy
-## ("boss": story_id, counts_toward_device, ends_game, locks_exit — _setup_exit_gate; "story": false — boss poza fabułą, bez flagi boss:<id>; "loot" —
+## ("boss": story_id, counts_toward_device, locks_exit — _setup_exit_gate; "story": false — boss poza fabułą, bez flagi boss:<id>; "loot" —
 ## własna tabela łupu .tres, np. strażnik krypty z gwarantowanym kluczem do skrzyni skarbu).
 func _apply_treasure() -> void:
 	_apply_special_chests(String(TreasurePlanner.CHEST_DEF_ID) + "_", _treasure)
@@ -989,7 +994,6 @@ func _apply_treasure() -> void:
 				node.set("boss_story_id", str(_boss_cfg.get("story_id", "")))
 				node.set("story_boss", bool(_boss_cfg.get("story", true)))
 				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", true)))
-				node.set("ends_game", bool(_boss_cfg.get("ends_game", false)))
 				if boss_loot != null:
 					node.set("loot_data", boss_loot)
 
@@ -1067,11 +1071,31 @@ func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMa
 
 ## Wyjście -> następny poziom, wejście -> poprzedni. Gracz pojawia się przy markerach odsuniętych od obszarów
 ## (Spawn przy wejściu, FromNext przy wyjściu — MapGeneratorBase.arrival_cell), więc od razu nie wraca.
+## "exit_ends_game" (ścieki): wyjście kończy grę — _finish_game zamiast przejścia.
 func _connect_exit_trigger() -> void:
-	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D,
-		_change_level.bind(next_level_path, next_spawn_name), next_portal_use_key, next_portal_prompt)
+	var on_exit := _finish_game if _exit_ends_game else _change_level.bind(next_level_path, next_spawn_name)
+	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D, on_exit,
+		next_portal_use_key, next_portal_prompt)
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D,
 		_change_level.bind(previous_level_path, previous_spawn_name), previous_portal_use_key, previous_portal_prompt)
+
+
+## Koniec gry (uproszczone zakończenie na inżynierkę): wyjście ze ścieków na cmentarzysko — flaga game:completed,
+## zapis w bieżącym slocie (jeśli wybrany) i ekran końca. Każde kolejne wejście w wyjście pokazuje ekran znowu.
+func _finish_game() -> void:
+	if get_tree().root.get_children().any(func(n: Node) -> bool: return n.scene_file_path == EndScreenScene.resource_path):
+		return
+	var lsm := _get_level_state_manager()
+	if lsm != null and lsm.has_method("set_story_flag"):
+		lsm.set_story_flag(GAME_COMPLETED_FLAG)
+	var saved := false
+	var core := get_node_or_null("/root/CoreManager")
+	var sm: Variant = core.get_singleton("SaveManager") if core else null
+	if sm is Node and int((sm as Node).get("current_save_slot")) >= 0:
+		saved = bool((sm as Node).call("save_game"))
+	var screen := EndScreenScene.instantiate()
+	screen.set("saved", saved)
+	get_tree().root.add_child(screen)
 
 
 ## Wyjście zamknięte do pokonania bossów mapy (companion-JSON "boss": {"locks_exit": true}, np. ścieki — boss przed

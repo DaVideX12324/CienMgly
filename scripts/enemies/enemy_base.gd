@@ -5,9 +5,6 @@ class_name EnemyBase
 ## Programmer art: rysowany kodem jesli brak sprite frames.
 
 const QuizRpgEnemyData = preload("enemy_data.gd")
-const EndScreenScene: PackedScene = preload("../../scenes/ui/end_screen.tscn")
-## Flaga fabularna ukończenia gry (EnemyBase.ends_game; znacznik „Ukończono” w opisie slotu).
-const GAME_COMPLETED_FLAG := "game:completed"
 
 @export var enemy_data: QuizRpgEnemyData
 var _spawn_level := 0  # poziom z mapy (set_enemy_level), nakładany po wczytaniu enemy_data
@@ -59,9 +56,6 @@ var gold_reward: int = 0
 ## Czy ten boss dobija pasek postępu urządzenia. Odznacz dla bossów, które nie mają
 ## się liczyć (globalna bramka fazy jest osobno w LevelStateManager).
 @export var counts_toward_device: bool = true
-## Ostatni boss gry (uproszczone zakończenie na inżynierkę): po wygranej flaga game:completed, zapis w bieżącym slocie
-## i ekran końca gry (end_screen.tscn). Mapy proceduralne ustawiają z JSON ("boss": {"ends_game": true}).
-@export var ends_game: bool = false
 @export_group("Movement")
 @export var patrol_speed: float = 80.0
 ## Promień DetectionArea (px). Zmiana (też w trakcie gry, np. ze zdalnego inspektora) od razu zmienia
@@ -951,8 +945,6 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		_record_kill()
 		if is_boss:
 			_persist_boss_defeat()
-			if ends_game:
-				_finish_game()
 		# XP dodaje ekran walki (QuizCombatController._end_combat, razem z komunikatem) — tu już nie.
 		# Gracz rusza od razu (bez czekania na animację znikania) i dostaje nietykalność na kolejne walki.
 		if _gm:
@@ -1053,21 +1045,6 @@ func _persist_boss_defeat() -> void:
 		var story_id := boss_story_id if not boss_story_id.is_empty() else level_path
 		if not story_id.is_empty() and lsm.has_method("register_device_progress"):
 			lsm.register_device_progress(story_id)
-
-
-## Koniec gry po ostatnim bossie: flaga game:completed, zapis w bieżącym slocie (jeśli wybrany) i ekran końca.
-func _finish_game() -> void:
-	var lsm := _get_level_state_manager()
-	if lsm != null and lsm.has_method("set_story_flag"):
-		lsm.set_story_flag(GAME_COMPLETED_FLAG)
-	var saved := false
-	var core := _core()
-	var sm: Variant = core.get_singleton("SaveManager") if core else null
-	if sm is Node and int((sm as Node).get("current_save_slot")) >= 0:
-		saved = bool((sm as Node).call("save_game"))
-	var screen := EndScreenScene.instantiate()
-	screen.set("saved", saved)
-	get_tree().root.add_child(screen)
 
 
 ## Licznik pokonanych (zadania NPC): id = nazwa pliku danych wroga (jak klucze tłumaczeń enemy.<id>.name).

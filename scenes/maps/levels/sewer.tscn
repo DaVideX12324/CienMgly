@@ -6,7 +6,6 @@
 [node name="Sewer" instance=ExtResource("1_base")]
 level_type = 2
 custom_tileset = ExtResource("2_sewer")
-next_level_path = "res://modules/quiz_rpg/scenes/maps/world_map.tscn"
 previous_level_path = "res://modules/quiz_rpg/scenes/maps/levels/town.tscn"
 previous_spawn_name = "Sewer-Town"
 location_name = "Ścieki"

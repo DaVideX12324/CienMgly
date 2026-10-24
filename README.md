@@ -7,8 +7,8 @@ albo jako samodzielny projekt.
 
 ## Wersja
 
-**`0.8.0-alpha`** (Alpha) — systemy działają, ścieżka samouczek → jaskinia → miasto → ścieki → boss ścieków → ekran
-końca jest spięta, mapa miasta jest w budowie. Zmiany: [`CHANGELOG.md`](CHANGELOG.md). Numer jest w
+**`0.8.0-alpha`** (Alpha) — systemy działają, ścieżka samouczek → jaskinia → miasto → ścieki → boss ścieków → wyjście na
+cmentarzysko → ekran końca jest spięta, mapa miasta jest w budowie. Zmiany: [`CHANGELOG.md`](CHANGELOG.md). Numer jest w
 `module_manifest.json` (`version`), zasady i plan wydań w `docs/wersjonowanie.md` repo hosta:
 
 - **0.9 Beta** — miasto skończone, całą ścieżkę da się przejść od nowej gry do zakończenia;
