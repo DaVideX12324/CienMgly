@@ -190,6 +190,8 @@
   "host.quiz.err.cannot_save_set": "Failed to save question set.",
   "host.cheat.god_mode_on": "🛡️ CHEAT: God Mode ENABLED (No damage)",
   "host.cheat.god_mode_off": "🛡️ CHEAT: God Mode DISABLED",
+  "host.cheat.name_eggs_off": "🥚 CHEAT: name easter eggs hidden",
+  "host.cheat.name_eggs_on": "🥚 CHEAT: name easter eggs VISIBLE (“New game” screen)",
   "host.cheat.speed": "👟 CHEAT: Player speed: {speed}x",
   "host.cheat.enemies_off": "🛑 CHEAT: Enemies DISABLED (No encounters/aggro)",
   "host.cheat.enemies_on": "⚔️ CHEAT: Enemies ENABLED (Normal mode)",

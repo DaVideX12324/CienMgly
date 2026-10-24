@@ -27,6 +27,7 @@ var _btn_add_streak: Button
 var _opt_speed: OptionButton
 var _opt_quizzes: OptionButton
 var _opt_quiz_layout: OptionButton
+var _btn_toggle_name_eggs: CheckButton
 var _opt_items: OptionButton
 var _spin_item_count: SpinBox
 var _btn_equip_item: Button
@@ -227,6 +228,10 @@ func _refresh_controls_state() -> void:
 			if _opt_quizzes.get_item_metadata(i) == active_quiz:
 				_opt_quizzes.selected = i
 				break
+
+	if _btn_toggle_name_eggs and cheat_service and "name_eggs_revealed" in cheat_service:
+		_btn_toggle_name_eggs.set_pressed_no_signal(bool(cheat_service.name_eggs_revealed))
+		_btn_toggle_name_eggs.text = "WIDOCZNE" if cheat_service.name_eggs_revealed else "Ukryte"
 
 	if _opt_quiz_layout and cheat_service and "quiz_ui_mode" in cheat_service:
 		_opt_quiz_layout.selected = 1 if cheat_service.quiz_ui_mode == "popup" else 0
@@ -532,6 +537,20 @@ func _build_tab_cheats() -> Control:
 	)
 	_get_card_content(layout_box).add_child(_opt_quiz_layout)
 	grid.add_child(layout_box)
+
+	# 7. Ukryte opcje ekranu imienia (Cień Mgły, „Nowa gra”)
+	var eggs_box := _create_card_container("🥚 Easter eggi imion", "[ NAME ]", "Ekran „Nowa gra”: pokazuje listę imion z reakcjami — kliknięcie wpisuje imię (czerwone = zajęte).")
+	_btn_toggle_name_eggs = CheckButton.new()
+	_btn_toggle_name_eggs.text = "Ukryte"
+	_btn_toggle_name_eggs.focus_mode = Control.FOCUS_NONE
+	_btn_toggle_name_eggs.toggled.connect(func(pressed):
+		var cheat_service := _get_service("CheatService")
+		if cheat_service and cheat_service.has_method("set_name_eggs_revealed"):
+			cheat_service.set_name_eggs_revealed(pressed)
+		_btn_toggle_name_eggs.text = "WIDOCZNE" if pressed else "Ukryte"
+	)
+	_get_card_content(eggs_box).add_child(_btn_toggle_name_eggs)
+	grid.add_child(eggs_box)
 
 	return scroll
 

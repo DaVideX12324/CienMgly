@@ -190,6 +190,8 @@
   "host.quiz.err.cannot_save_set": "Nie udało się zapisać zestawu.",
   "host.cheat.god_mode_on": "🛡️ CHEAT: God Mode WŁĄCZONY (Brak obrażeń)",
   "host.cheat.god_mode_off": "🛡️ CHEAT: God Mode WYŁĄCZONY",
+  "host.cheat.name_eggs_off": "🥚 CHEAT: easter eggi imion ukryte",
+  "host.cheat.name_eggs_on": "🥚 CHEAT: easter eggi imion WIDOCZNE (ekran „Nowa gra”)",
   "host.cheat.speed": "👟 CHEAT: Prędkość gracza: {speed}x",
   "host.cheat.enemies_off": "🛑 CHEAT: Przeciwnicy WYŁĄCZENI (Brak agresji/walk)",
   "host.cheat.enemies_on": "⚔️ CHEAT: Przeciwnicy WŁĄCZENI (Normalny tryb)",

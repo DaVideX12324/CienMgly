@@ -15,11 +15,14 @@ signal instant_win_triggered
 signal god_mode_toggled(enabled: bool)
 signal speed_mult_changed(mult: float)
 signal quiz_ui_mode_changed(mode: String)
+## Ukryte opcje ekranu imienia (lista easter eggów) — menu deweloperskie.
+signal name_eggs_toggled(revealed: bool)
 
 var enemies_disabled: bool = false
 var god_mode: bool = false
 var player_speed_mult: float = 1.0
 var active_quiz_override: String = ""
+var name_eggs_revealed: bool = false
 var quiz_ui_mode: String = "bottom" # "bottom" (100% full-width bar) lub "popup" (modal w centrum)
 
 var _toast_layer: CanvasLayer
@@ -80,6 +83,15 @@ func set_god_mode(enabled: bool) -> void:
 		show_toast(I18nService.t("host.cheat.god_mode_on"), Color(1.0, 0.9, 0.3))
 	else:
 		show_toast(I18nService.t("host.cheat.god_mode_off"), Color(0.7, 0.7, 0.7))
+
+
+func set_name_eggs_revealed(revealed: bool) -> void:
+	name_eggs_revealed = revealed
+	name_eggs_toggled.emit(revealed)
+	if revealed:
+		show_toast(I18nService.t("host.cheat.name_eggs_on"), Color(1.0, 0.6, 0.9))
+	else:
+		show_toast(I18nService.t("host.cheat.name_eggs_off"), Color(0.7, 0.7, 0.7))
 
 
 func set_speed_mult(mult: float) -> void:
