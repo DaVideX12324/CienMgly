@@ -3090,8 +3090,9 @@ func _roll_enemy_party() -> void:
 	var min_count := maxi(1, _encounter_size_range.x)
 	var max_count := maxi(min_count, _encounter_size_range.y)
 	if not _joined.is_empty():
-		# Grupa ze świata: główny wróg + dołączeni, każdy z własnymi statystykami, grafiką i umiejętnościami. Liczba
-		# jednostek i tak losowana z zakresu (grupa to minimum) — brakujące miejsca to kopie głównego wroga.
+		# Grupa ze świata (albo boss + jego stała świta): główny wróg + dołączeni, każdy z własnymi statystykami, grafiką
+		# i umiejętnościami. Liczba jednostek i tak losowana z zakresu (grupa to minimum) — brakujące miejsca to kopie
+		# głównego wroga; boss ma zakres 1..1, więc nigdy nie dostaje kopii.
 		var sources: Array = [enemy] + _joined
 		var extra := maxi(0, randi_range(min_count, maxi(max_count, sources.size())) - sources.size())
 		for _i in range(extra):

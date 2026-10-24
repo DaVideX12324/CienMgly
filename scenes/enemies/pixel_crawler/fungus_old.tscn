@@ -4,6 +4,7 @@
 [ext_resource type="SpriteFrames" uid="uid://du03gyqoagwbu" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/fungus_old.tres" id="2_frames"]
 [ext_resource type="Resource" uid="uid://dgrl7y1a73e3a" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/fungus_old.tres" id="3_data"]
 
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_immature.tscn" id="m_fungus_immature"]
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 16.0
@@ -14,6 +15,7 @@ radius = 70.0
 
 [node name="Enemy" unique_id=1406570050 instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
+boss_minions = Array[PackedScene]([ExtResource("m_fungus_immature"), ExtResource("m_fungus_immature")])
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(2, 3)

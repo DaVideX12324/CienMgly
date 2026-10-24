@@ -5,12 +5,14 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/bat_matriarch.tres" id="3_data"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/loot/caves_return_boss.tres" id="4_loot"]
 
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/pixel_crawler/bat_small.tscn" id="m_bat_small"]
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 6.0
 height = 20.0
 
 [node name="Enemy" instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
+boss_minions = Array[PackedScene]([ExtResource("m_bat_small"), ExtResource("m_bat_small")])
 loot_data = ExtResource("4_loot")
 
 [node name="AnimatedSprite2D" parent="." index="0"]

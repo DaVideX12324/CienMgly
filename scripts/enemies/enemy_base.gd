@@ -38,6 +38,10 @@ var gold_reward: int = 0
 ## mapy ("enemy_loot": tier wroga -> ścieżka .tres), a bez niej tylko klucz z szansą wg tieru.
 @export var loot_data: QuizRpgLootTableData
 @export_range(1, 5, 1) var encounter_tier: int = 2
+## Świta bossa (tylko is_boss, decyzja usera 2026-10-24): zawsze ci sami przeciwnicy w tej samej liczbie (tier 1–2;
+## jaskinie tier 1, arena samouczka — pusto). Walka z bossem = boss (zawsze jeden, bez kopii) + świta; pusta lista —
+## boss walczy sam. Najwyżej GROUP_MAX jednostek razem z bossem.
+@export var boss_minions: Array[PackedScene] = []
 @export var min_encounter_size: int = 1
 @export var max_encounter_size: int = 3
 @export var is_boss: bool = false
@@ -883,8 +887,8 @@ func start_combat(player: Node2D) -> void:
 
 	state = State.COMBAT
 	velocity = Vector2.ZERO
-	# Wrogowie obok (w zasięgu wzroku) dołączają do tej walki — zamiast walki zaraz po walce.
-	var joiners := _group_joiners()
+	# Wrogowie obok (w zasięgu wzroku) dołączają do tej walki — zamiast walki zaraz po walce. Boss: tylko stała świta.
+	var joiners := _spawn_boss_minions() if is_boss else _group_joiners()
 	for j in joiners:
 		j.join_combat()
 
@@ -899,8 +903,9 @@ func start_combat(player: Node2D) -> void:
 		diff_range = _dm.get_difficulty_range(quiz_category)
 	# Liczba przeciwników zawsze losowana z zakresu tego wroga (najwyżej GROUP_MAX); grupa ze świata to minimum —
 	# walka dokłada kopie tego wroga do wylosowanej liczby (QuizCombatController._roll_enemy_party).
-	var lo := clampi(min_encounter_size, 1, GROUP_MAX)
-	var encounter_size_range := Vector2i(lo, clampi(max_encounter_size, lo, GROUP_MAX))
+	# Boss: zawsze jeden — zakres 1..1, więc walka nie dokłada kopii (świta przychodzi jako joiners).
+	var lo := 1 if is_boss else clampi(min_encounter_size, 1, GROUP_MAX)
+	var encounter_size_range := Vector2i(1, 1) if is_boss else Vector2i(lo, clampi(max_encounter_size, lo, GROUP_MAX))
 
 	# Zrzut świata do animacji wejścia (przed dodaniem ekranu walki i pauzą).
 	var snapshot: Image = get_viewport().get_texture().get_image() if get_viewport() else null
@@ -937,6 +942,50 @@ func _group_joiners() -> Array:
 			break
 		out.append(c[1])
 	return out
+
+
+## Świta bossa na czas walki (boss_minions): jak wróg losowego spotkania — niewidzialna, bez kolizji, poza grupą
+## „enemies”, po walce znika (wygrana: pokonani; przegrana / ucieczka: meta random_encounter). Poziom: dolna granica
+## pasma tieru świty na mapie (companion-JSON "enemy_levels"), bez pasm — z danych sceny; łup wg tieru mapy
+## ("enemy_loot"), jeśli scena nie ma własnego. Zawsze ci sami i tylu samo.
+func _spawn_boss_minions() -> Array:
+	var out: Array = []
+	if not is_inside_tree():
+		return out
+	var levels: Dictionary = _map_value("_enemy_levels")
+	var loot: Dictionary = _map_value("_enemy_loot")
+	for packed in boss_minions:
+		if packed == null or out.size() + 1 >= GROUP_MAX:
+			continue
+		var m := packed.instantiate() as EnemyBase
+		if m == null:
+			continue
+		m.set_meta("random_encounter", true)
+		m.visible = false
+		m.collision_layer = 0
+		m.collision_mask = 0
+		get_parent().add_child(m)
+		m.global_position = global_position
+		m.remove_from_group("enemies")
+		var band: Variant = levels.get(str(m.encounter_tier))
+		if band is Array and (band as Array).size() == 2:
+			m.set_enemy_level(int(band[0]), 1.0)
+		if m.loot_data == null and loot.has(m.encounter_tier):
+			m.loot_data = loot[m.encounter_tier]
+		m.join_combat()
+		out.append(m)
+	return out
+
+
+## Pole mapy (ProceduralLevel) z najbliższego przodka, który je ma — {} poza mapą proceduralną.
+func _map_value(field: String) -> Dictionary:
+	var n := get_parent()
+	while n != null:
+		if field in n:
+			var v: Variant = n.get(field)
+			return v if v is Dictionary else {}
+		n = n.get_parent()
+	return {}
 
 
 ## Linia do innego wroga bez ścian i przeszkód (jak wzrok: SIGHT_RAY_MASK + obiekty).

@@ -4,12 +4,15 @@
 [ext_resource type="SpriteFrames" uid="uid://c7uwa1n0auurx" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/rat_warrior.tres" id="2_frames"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/rat_king.tres" id="3_data"]
 
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/pixel_crawler/rat_base.tscn" id="m_rat_base"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/pixel_crawler/rat_rogue.tscn" id="m_rat_rogue"]
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 6.0
 height = 22.0
 
 [node name="Enemy" instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
+boss_minions = Array[PackedScene]([ExtResource("m_rat_base"), ExtResource("m_rat_rogue")])
 
 [node name="AnimatedSprite2D" parent="." index="0"]
 modulate = Color(1, 0.86, 0.7, 1)

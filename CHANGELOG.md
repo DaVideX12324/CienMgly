@@ -18,6 +18,10 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Walka z bossem: boss jest zawsze jeden (bez kopii bossa) i dostaje stałą świtę (pole sceny `boss_minions` — zawsze
+  ci sami przeciwnicy w tej samej liczbie, poziom z dolnej granicy pasma tieru na mapie): szlam-boss samouczka sam,
+  stary grzyb + 2 młode grzyby, Matka Nietoperzy + 2 małe nietoperze (jaskinie: tier 1), Szczurzy Król + szczur
+  i szczur-łotrzyk (tier 1–2).
 - Wrogowie: gdy cel leży poza siatką nawigacji (wąski pas pod licem płaskowyżu, przy ścianie, między obiektami),
   wróg dochodzi do końca ścieżki, a ostatni odcinek idzie wprost, jeśli jego ciało przejdzie (test ruchu fizyki).
   Wcześniej stał na krawędzi siatki.
