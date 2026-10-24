@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/player/footsteps.gd" id="1_script"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/audio/footstep_set.gd" id="2_set"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Grass_HY_PC-001.wav" id="grass_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Grass_HY_PC-002.wav" id="grass_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Grass_HY_PC-003.wav" id="grass_3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Grass_HY_PC-004.wav" id="grass_4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Grass_HY_PC-005.wav" id="grass_5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Grass_HY_PC-006.wav" id="grass_6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Sand_HY_PC-001.wav" id="sand_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Sand_HY_PC-002.wav" id="sand_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Sand_HY_PC-003.wav" id="sand_3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Sand_HY_PC-004.wav" id="sand_4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Sand_HY_PC-005.wav" id="sand_5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Sand_HY_PC-006.wav" id="sand_6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Metal_HY_PC-001.wav" id="metal_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Metal_HY_PC-002.wav" id="metal_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Metal_HY_PC-003.wav" id="metal_3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Metal_HY_PC-004.wav" id="metal_4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Metal_HY_PC-005.wav" id="metal_5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Metal_HY_PC-006.wav" id="metal_6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete Dungeon_HY_PC-001.wav" id="stone_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete Dungeon_HY_PC-002.wav" id="stone_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete Dungeon_HY_PC-003.wav" id="stone_3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete Dungeon_HY_PC-004.wav" id="stone_4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete Dungeon_HY_PC-005.wav" id="stone_5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete Dungeon_HY_PC-006.wav" id="stone_6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete_HY_PC-001.wav" id="road_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete_HY_PC-002.wav" id="road_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete_HY_PC-003.wav" id="road_3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete_HY_PC-004.wav" id="road_4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete_HY_PC-005.wav" id="road_5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Concrete_HY_PC-006.wav" id="road_6"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Generic Ground 1_HY_PC-001.wav" id="ground_1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Generic Ground 1_HY_PC-002.wav" id="ground_2"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Generic Ground 1_HY_PC-003.wav" id="ground_3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Generic Ground 1_HY_PC-004.wav" id="ground_4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Generic Ground 1_HY_PC-005.wav" id="ground_5"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/Helton Yan's Pixel Combat - Single Files/FEETMisc_STEP-Boots on Generic Ground 1_HY_PC-006.wav" id="ground_6"]
+
+[sub_resource type="Resource" id="Set_grass"]
+script = ExtResource("2_set")
+ground_type = "grass"
+terrain_keywords = PackedStringArray("grass", "foliage")
+sounds = Array[AudioStream]([ExtResource("grass_1"), ExtResource("grass_2"), ExtResource("grass_3"), ExtResource("grass_4"), ExtResource("grass_5"), ExtResource("grass_6")])
+
+[sub_resource type="Resource" id="Set_sand"]
+script = ExtResource("2_set")
+ground_type = "sand"
+terrain_keywords = PackedStringArray("sand")
+sounds = Array[AudioStream]([ExtResource("sand_1"), ExtResource("sand_2"), ExtResource("sand_3"), ExtResource("sand_4"), ExtResource("sand_5"), ExtResource("sand_6")])
+
+[sub_resource type="Resource" id="Set_metal"]
+script = ExtResource("2_set")
+ground_type = "metal"
+terrain_keywords = PackedStringArray("grating", "metal", "grate")
+sounds = Array[AudioStream]([ExtResource("metal_1"), ExtResource("metal_2"), ExtResource("metal_3"), ExtResource("metal_4"), ExtResource("metal_5"), ExtResource("metal_6")])
+
+[sub_resource type="Resource" id="Set_stone"]
+script = ExtResource("2_set")
+ground_type = "stone"
+terrain_keywords = PackedStringArray("floor", "ridges", "canal", "brick")
+sounds = Array[AudioStream]([ExtResource("stone_1"), ExtResource("stone_2"), ExtResource("stone_3"), ExtResource("stone_4"), ExtResource("stone_5"), ExtResource("stone_6")])
+
+[sub_resource type="Resource" id="Set_road"]
+script = ExtResource("2_set")
+ground_type = "road"
+terrain_keywords = PackedStringArray("stone", "road", "cobble")
+sounds = Array[AudioStream]([ExtResource("road_1"), ExtResource("road_2"), ExtResource("road_3"), ExtResource("road_4"), ExtResource("road_5"), ExtResource("road_6")])
+
+[sub_resource type="Resource" id="Set_ground"]
+script = ExtResource("2_set")
+ground_type = "ground"
+terrain_keywords = PackedStringArray("ground", "mud", "dirt")
+sounds = Array[AudioStream]([ExtResource("ground_1"), ExtResource("ground_2"), ExtResource("ground_3"), ExtResource("ground_4"), ExtResource("ground_5"), ExtResource("ground_6")])
+
+[node name="Footsteps" type="AudioStreamPlayer2D"]
+volume_db = -22.0
+max_distance = 1500.0
+bus = &"SFX"
+script = ExtResource("1_script")
+tileset_defaults = {
+"sewer": "stone"
+}
+sets = Array[ExtResource("2_set")]([SubResource("Set_grass"), SubResource("Set_sand"), SubResource("Set_metal"), SubResource("Set_stone"), SubResource("Set_road"), SubResource("Set_ground")])

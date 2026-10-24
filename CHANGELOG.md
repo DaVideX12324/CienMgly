@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Dźwięki kroków bohatera (jak w Amon-Ra): krok na klatkach animacji chodu (dwa na cykl, przy biegu szybciej), dźwięk
+  wg podłoża pod stopami — ziemia, trawa, piasek, kamień (ścieki), bruk, metal (kraty); typ z nazwy terenu kafla albo
+  danej kafla `ground_type`. Zestawy w `scenes/player/footsteps.tscn`.
 - Nowa gra: najpierw imię bohatera (ekran „Nowa gra” w menu; puste = Bohater, do 12 znaków). Easter eggi: reakcje
   na wybrane imiona (np. Freddy, Bohater, Mgła, Artefakt, Promotor — wymagają potwierdzenia „Tak, to ja”); imiona
   towarzyszy i NPC miasta są zajęte.

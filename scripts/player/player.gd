@@ -5,6 +5,8 @@ extends CharacterBody2D
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
 const PoisonVignetteScene = preload("../../scenes/ui/poison_vignette.tscn")
+## Dźwięki kroków (footsteps.gd); dokładane w _ready, gdy scena gracza nie ma węzła Footsteps.
+const FootstepsScene = preload("../../scenes/player/footsteps.tscn")
 
 ## Prędkość chodu; bieg = speed * run_speed_mult.
 @export var speed: float = 200.0
@@ -58,6 +60,8 @@ var _ignored_left: float = 0.0
 
 func _ready() -> void:
 	_gm = CoreManager.get_singleton("GameManager")
+	if get_node_or_null("Footsteps") == null:
+		add_child(FootstepsScene.instantiate())
 
 	var sprite = get_node_or_null("AnimatedSprite2D")
 	if sprite and sprite is AnimatedSprite2D and sprite.sprite_frames:
