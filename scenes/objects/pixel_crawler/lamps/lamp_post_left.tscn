@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post.tscn" id="1_lamp"]
+
+[node name="LampPostLeft" instance=ExtResource("1_lamp")]
+
+[node name="Sprite2D" parent="." index="0"]
+flip_h = true
+offset = Vector2(-22, -46)
+
+[node name="LanternHanging" parent="." index="2"]
+position = Vector2(-16, -38)
+flip_h = true

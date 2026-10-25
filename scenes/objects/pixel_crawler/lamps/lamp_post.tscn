@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post_arm.tscn" id="1_post"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lantern_hanging.tscn" id="2_lantern"]
+
+[node name="LampPost" instance=ExtResource("1_post")]
+
+[node name="LanternHanging" parent="." instance=ExtResource("2_lantern")]
+position = Vector2(16, -38)
