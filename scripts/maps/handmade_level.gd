@@ -11,6 +11,7 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const LevelPortal = preload("level_portal.gd")
 const MapPrefetch = preload("map_prefetch.gd")
 const MapLinks = preload("map_links.gd")
+const Freeroam = preload("freeroam.gd")
 
 ## Mapa za wyjściem `enter_next_level` i marker, przy którym gracz się tam pojawia.
 @export_file("*.tscn") var next_level_path: String = ""
@@ -33,6 +34,9 @@ var _transitioning := false
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
+		return
+	if Freeroam.is_standalone(self):   # F6 na scenie mapy: swobodne zwiedzanie, bez zapisu trasy i generowania sąsiednich map
+		Freeroam.start(self)
 		return
 	var lsm := _level_state_manager()
 	if lsm != null and not scene_file_path.is_empty():
