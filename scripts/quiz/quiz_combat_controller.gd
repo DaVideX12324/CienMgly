@@ -41,8 +41,12 @@ const UI_BORDER := Color(0.25, 0.25, 0.35)
 const UI_ACCENT := Color(0.3, 0.6, 1.0)
 const ENEMY_DISPLAY_SCALE_DEFAULT := Vector2(7.2, 7.2)
 const ENEMY_DISPLAY_SCALE_FOCUSED := Vector2(7.9, 7.9)
-const QUIZ_TYPES_STANDARD := ["multiple_choice", "true_false"]
-const QUIZ_TYPES_BOSS := ["multiple_choice", "true_false", "fill_text", "fill_tiles", "matching"]
+## Pytania proste (wybór) i złożone (wpisywanie, kafelki, dopasowanie). Szansa na złożone zależy od tieru atakowanego
+## przeciwnika: 20% × tier (tier 1 = 20%, 2 = 40%, 3 = 60%, 4 i wyżej = 80%).
+const QUIZ_TYPES_SIMPLE := ["multiple_choice", "true_false"]
+const QUIZ_TYPES_COMPLEX := ["fill_text", "fill_tiles", "matching"]
+const COMPLEX_CHANCE_PER_TIER := 0.2
+const COMPLEX_CHANCE_MAX := 0.8
 
 ## Wygląd i układ ekranu są w scenie (WYSIWYG) i w motywie QuizTheme.THEME_PATH; tutaj tylko to, co
 ## zależy od fazy tury. Szerokości okien dolnego pasa jako część szerokości ekranu.
@@ -808,14 +812,14 @@ func _ask_round_questions() -> void:
 		if turn_label:
 			turn_label.text = QuizRpgI18n.tf("log.combat.turn_question", {"turn": turn_number, "name": _member_name(i)}, "Tura {turn} - pytanie: {name}")
 		_refresh_stats_panel()
-		plan["correct"] = await _ask_plan_question()
+		plan["correct"] = await _ask_plan_question(int(plan["enemy"]))
 
 
 ## Jedno pytanie rundy -> czy dobra odpowiedź (bez pytań / pusta pula — zaliczone jak dotąd).
-func _ask_plan_question() -> bool:
+func _ask_plan_question(enemy_index: int) -> bool:
 	phase = Phase.QUIZ
 	_set_action_buttons_enabled(false)
-	var allowed_types: Array = _get_combat_quiz_types()
+	var allowed_types: Array = _get_combat_quiz_types(enemy_index)
 	if _should_auto_resolve_quiz(allowed_types):
 		return true
 	var qm := _get_quiz_manager()
@@ -1286,10 +1290,32 @@ func _begin_action_quiz() -> void:
 	_show_question(q)
 
 
-func _get_combat_quiz_types() -> Array:
-	if _is_boss_encounter():
-		return QUIZ_TYPES_BOSS.duplicate()
-	return QUIZ_TYPES_STANDARD.duplicate()
+## Typy pytania dla tury: złożone z szansą zależną od tieru atakowanego przeciwnika (enemy_index; brak = aktywny),
+## inaczej proste. Gdy w wylosowanej grupie nie ma pytań (zestaw ma np. tylko wybór), pytanie z drugiej — walka
+## nie zalicza się sama.
+func _get_combat_quiz_types(enemy_index := -1) -> Array:
+	var complex_first := randf() < _complex_chance(_enemy_tier(enemy_index))
+	var first: Array = QUIZ_TYPES_COMPLEX if complex_first else QUIZ_TYPES_SIMPLE
+	var second: Array = QUIZ_TYPES_SIMPLE if complex_first else QUIZ_TYPES_COMPLEX
+	var qm := _get_quiz_manager()
+	if qm == null or not qm.has_method("get_questions"):
+		return first.duplicate()
+	for types: Array in [first, second]:
+		if not (qm.get_questions(quiz_id, _diff_range, 1, types) as Array).is_empty():
+			return types.duplicate()
+	return first.duplicate()
+
+
+static func _complex_chance(tier: int) -> float:
+	return minf(float(maxi(tier, 1)) * COMPLEX_CHANCE_PER_TIER, COMPLEX_CHANCE_MAX)
+
+
+## Tier przeciwnika o danym indeksie (jednostki walki); poza zakresem — tier spotkania.
+func _enemy_tier(enemy_index: int) -> int:
+	var idx := _active_enemy_index if enemy_index < 0 else enemy_index
+	if idx >= 0 and idx < _enemy_units.size():
+		return int(_enemy_units[idx].get("tier", 1))
+	return _get_encounter_tier()
 
 
 func _is_boss_encounter() -> bool:
