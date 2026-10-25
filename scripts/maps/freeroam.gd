@@ -8,6 +8,11 @@ extends RefCounted
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const GameManagerScript = preload("../../autoloads/game_manager.gd")
 const PlayerScene = preload("../../scenes/player/player.tscn")
+const PartyFollowers = preload("../player/party_followers.gd")
+
+## Drużyna testowa za graczem (bohater + dwóch towarzyszy), żeby sprawdzić, jak mapa reaguje na drużynę.
+const TEST_PARTY := ["res://modules/quiz_rpg/resources/heroes/hero_bohater.tres", "res://modules/quiz_rpg/resources/heroes/hero_lotrzyk.tres",
+		"res://modules/quiz_rpg/resources/heroes/hero_mag.tres"]
 
 const SPAWN_NODE := "Spawns/Spawn"
 
@@ -30,6 +35,7 @@ static func start(level: Node2D) -> void:
 	var spawn := _spawn_point(level)
 	player.position = spawn.position if spawn != null else Vector2.ZERO
 	level.add_child(player)
+	_add_test_party(player)
 	print("[Freeroam] %s: sterowanie WSAD / strzałki, Shift — bieg; gracz w %s" % [level.name, player.position])
 
 
@@ -44,3 +50,21 @@ static func _spawn_point(level: Node) -> Node2D:
 			if c is Marker2D:
 				return c as Marker2D
 	return null
+
+
+## Towarzysze jak w grze (PartyFollowers.sync), z atrapą PlayerStats zwracającą skład drużyny testowej.
+static func _add_test_party(leader: CharacterBody2D) -> void:
+	var stub := TestParty.new()
+	for path in TEST_PARTY:
+		var hero := load(path) as QuizRpgHeroData
+		if hero != null:
+			stub.members.append(hero.build_member_data())
+	PartyFollowers.sync(leader, stub)
+	stub.free()
+
+
+class TestParty extends Node:
+	var members: Array[Dictionary] = []
+
+	func get_party_members() -> Array[Dictionary]:
+		return members

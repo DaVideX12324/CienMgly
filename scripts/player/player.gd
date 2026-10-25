@@ -389,11 +389,12 @@ func get_trail_position(distance_back: float) -> Vector2:
 
 
 func _setup_as_follower() -> void:
-	# Nie „gracz” dla reszty gry (wrogowie, portale, kamera szukają grupy player) i bez warstwy kolizji —
-	# nie wchodzi w obszary przejść ani walk; ściany (maska) dalej go zatrzymują.
+	# Nie „gracz” dla reszty gry (wrogowie, portale, kamera szukają grupy player) i poza warstwą gracza —
+	# nie wchodzi w obszary przejść ani walk; ściany (maska) dalej go zatrzymują. Własna warstwa PARTY_LAYER:
+	# tylko obszary z QuizRpgPartyMember.watch (drzwi, płyty) go widzą.
 	if is_in_group("player"):
 		remove_from_group("player")
-	collision_layer = 0
+	collision_layer = QuizRpgPartyMember.PARTY_LAYER
 	var camera := get_node_or_null("Camera2D") as Camera2D
 	if camera:
 		camera.enabled = false

@@ -1,6 +1,6 @@
 extends Area2D
 
-## Płyta naciskowa (paczka Sewer: Props (5,13) podniesiona = off, (5,14) wciśnięta = on). Lider wchodzi na płytę ->
+## Płyta naciskowa (paczka Sewer: Props (5,13) podniesiona = off, (5,14) wciśnięta = on). Lider albo towarzysz wchodzi na płytę ->
 ## wciśnięta na stałe (zapis: bramy otwarte), kolce bram z gate_id chowają się (GateState). gate_id = jedna brama albo
 ## kilka po przecinku (płyta wspólna dla bram w okolicy / skrót za bramą).
 
@@ -20,6 +20,7 @@ func _ready() -> void:
 	# płycie rysuje się nad nią
 	position.y -= 7.0
 	add_to_group("pressure_plates")
+	QuizRpgPartyMember.watch(self)
 	body_entered.connect(_on_body_entered)
 	_show(false)
 	call_deferred("_check_state")
@@ -58,7 +59,7 @@ func _show(on: bool) -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if pressed or not GateStateScript.is_player(body):
+	if pressed or not QuizRpgPartyMember.is_member(body):
 		return
 	_show(true)
 	for gid in _ids():
