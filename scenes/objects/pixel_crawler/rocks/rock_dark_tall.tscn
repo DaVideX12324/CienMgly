@@ -1,10 +1,16 @@
 [gd_scene format=3]
 
 [ext_resource type="Texture2D" uid="uid://b2ucl3g1v68o8" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Rocks.png" id="1_sqgjo"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Shadows_Objects.png" id="shadow_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_l2wjn"]
 atlas = ExtResource("1_sqgjo")
 region = Rect2(2, 115, 28, 43)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_shadow"]
+atlas = ExtResource("shadow_tex")
+region = Rect2(270, 164, 28, 13)
 filter_clip = true
 
 [node name="RockDarkTall" type="StaticBody2D" unique_id=1864328507]
@@ -19,3 +25,9 @@ offset = Vector2(-14, -41)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1194144985]
 polygon = PackedVector2Array(-11, -3, -10, -4, 10, -4, 11, -3, 11, 2, 10, 3, -10, 3, -11, 2)
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -1
+texture = SubResource("AtlasTexture_shadow")
+centered = false
+offset = Vector2(-14, -6)

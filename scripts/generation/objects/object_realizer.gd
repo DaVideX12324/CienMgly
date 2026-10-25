@@ -259,6 +259,14 @@ static func _place_baked(parent: Node2D, b: ObjectBake, pl: ObjectPlacement, run
 		RenderingServer.canvas_item_add_texture_rect_region(item, sp["dst"], (sp["tex"] as Texture2D).get_rid(), sp["src"], sp["color"])
 	runtime.items.append(item)
 	runtime.counts["items"] += 1
+	# Cień (z_index < 0 w scenie): osobny item z tym z_index — pod postaciami i obiektami, jak węzeł "Shadow".
+	for sp in b.under_sprites:
+		var under := RenderingServer.canvas_item_create()
+		RenderingServer.canvas_item_set_parent(under, parent.get_canvas_item())
+		RenderingServer.canvas_item_set_z_index(under, sp["z"])
+		RenderingServer.canvas_item_set_transform(under, _origin_xform(pl) * (sp["xform"] as Transform2D))
+		RenderingServer.canvas_item_add_texture_rect_region(under, sp["dst"], (sp["tex"] as Texture2D).get_rid(), sp["src"], sp["color"])
+		runtime.items.append(under)
 
 
 ## Kształty wypieczonej sceny (zasoby Shape2D trzyma cache ObjectBake — runtime ich nie zwalnia).

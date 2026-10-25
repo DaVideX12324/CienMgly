@@ -1,10 +1,16 @@
 [gd_scene format=3]
 
 [ext_resource type="Texture2D" uid="uid://byj6ocuo8w53x" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_03.png" id="1_ns6pu"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Shadows_Objects.png" id="shadow_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_q80id"]
 atlas = ExtResource("1_ns6pu")
 region = Rect2(48, 0, 48, 96)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_shadow"]
+atlas = ExtResource("shadow_tex")
+region = Rect2(55, 139, 48, 22)
 filter_clip = true
 
 [node name="TreeM1S3R0c1" type="StaticBody2D" unique_id=1759745400]
@@ -19,3 +25,9 @@ offset = Vector2(-24, -94)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=2109735450]
 polygon = PackedVector2Array(-5, -3, -4, -4, 4, -4, 5, -3, 5, 1, 4, 2, -4, 2, -5, 1)
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -1
+texture = SubResource("AtlasTexture_shadow")
+centered = false
+offset = Vector2(-24, -11)

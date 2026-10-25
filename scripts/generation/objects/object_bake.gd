@@ -24,6 +24,7 @@ var error := ""
 var static_ok := false
 var reason := ""                    # dlaczego nie da się wypiec (węzeł/skrypt)
 var sprites: Array[Dictionary] = []  # {tex: Texture2D, src: Rect2, dst: Rect2, xform: Transform2D, color: Color}
+var under_sprites: Array[Dictionary] = []  # sprite'y z z_index < 0 (cień "Shadow"): jak sprites + z: int; poza visual
 var shapes: Array[Dictionary] = []   # {shape: Shape2D, xform: Transform2D}
 var collision_layer := 0
 var bounds := Rect2()               # obrys kształtów kolizji względem origin (pusty = brak kolizji)
@@ -102,6 +103,7 @@ func _bake() -> void:
 	root.free()
 	if not static_ok:
 		sprites.clear()
+		under_sprites.clear()
 		shapes.clear()
 		bounds = Rect2()
 
@@ -173,7 +175,13 @@ func _add_sprite(s: Sprite2D, xf: Transform2D) -> void:
 		dst.size.x = -dst.size.x
 	if s.flip_v:
 		dst.size.y = -dst.size.y
-	sprites.append({"tex": tex, "src": src, "dst": dst, "xform": xf, "color": s.modulate * s.self_modulate})
+	var sp := {"tex": tex, "src": src, "dst": dst, "xform": xf, "color": s.modulate * s.self_modulate}
+	# Cień pod obiektem (z_index < 0): osobny canvas item realizera pod postaciami, nie poszerza obrysu.
+	if s.z_index < 0 and s.z_as_relative:
+		sp["z"] = s.z_index
+		under_sprites.append(sp)
+		return
+	sprites.append(sp)
 	var vr := (xf * dst).abs()
 	visual = vr if visual.size == Vector2.ZERO else visual.merge(vr)
 

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/lamp_post.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png" id="2_furn"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Shadows_Objects.png" id="shadow_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_top"]
 atlas = ExtResource("2_furn")
@@ -16,6 +17,11 @@ filter_clip = true
 [sub_resource type="AtlasTexture" id="AtlasTexture_base"]
 atlas = ExtResource("2_furn")
 region = Rect2(148, 466, 8, 28)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_shadow"]
+atlas = ExtResource("shadow_tex")
+region = Rect2(250, 182, 8, 4)
 filter_clip = true
 
 [node name="LampPostArm" type="StaticBody2D"]
@@ -45,3 +51,9 @@ offset = Vector2(-5, -46)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
 polygon = PackedVector2Array(-4, -3, 4, -3, 4, 1, -4, 1)
+
+[node name="Shadow" type="Sprite2D" parent="."]
+z_index = -1
+texture = SubResource("AtlasTexture_shadow")
+centered = false
+offset = Vector2(-4, -4)
