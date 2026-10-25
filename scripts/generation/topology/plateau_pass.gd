@@ -1203,12 +1203,17 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 		if not out.is_empty():
 			break
 		var rows := {}  # y -> Array[x]
+		var near_faces := {}  # kratki lica naprzeciw `near` — schody muszą objąć choć jedną
 		for c in _face_scan(comp, near, Vector2i(0, 1)):
 			if not _is_face(ctx, comp, c, require_two_deep) or not _faces_near(near, c + Vector2i(0, 1)):
 				continue
 			if not rows.has(c.y):
 				rows[c.y] = []
 			rows[c.y].append(c.x)
+			if not near.is_empty():
+				near_faces[c] = true
+		if not near.is_empty():
+			_extend_rows(rows, func(c: Vector2i) -> bool: return _is_face(ctx, comp, c, require_two_deep))
 
 		var runs: Array = []  # [length, a, b, y]
 		for y in rows:
@@ -1224,9 +1229,10 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 				prev = x
 		runs.sort_custom(func(r1, r2): return r1[0] > r2[0] or (r1[0] == r2[0] and (r1[3] < r2[3] or (r1[3] == r2[3] and r1[1] < r2[1]))))
 
-		for flank in [STAIR_FLANK, 1]:
+		for pass_: Vector2i in _stair_passes(allow_1w, 2):
 			if not out.is_empty():
 				break
+			var flank := pass_.x
 			for r in runs:
 				if out.size() >= cap:
 					break
@@ -1234,16 +1240,13 @@ static func _pick_stairs(ctx: GenerationContext, comp: Dictionary, rng: RandomNu
 				var seg := _best_segment(ctx, comp, r[1], r[2], y, false, Vector2i(0, -1 - up), flank, wall_flank)
 				var best_lo: int = seg.x
 				var best_len: int = seg.y
-				if allow_1w:
-					if best_len < 1:
-						continue
-					var s: int = 1 if best_len < 2 else _stair_width(rng, max_w, best_len)
-					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
-				else:
-					if best_len < 2:
-						continue
-					var s: int = _stair_width(rng, max_w, best_len)
-					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
+				if best_len < pass_.y:
+					continue
+				var s: int = 1 if best_len < 2 else _stair_width(rng, max_w, best_len)
+				var x0 := _stair_start(rng, best_lo, best_len, s, y, near_faces)
+				if x0 == NO_START:
+					continue
+				out.append(Vector3i(x0, s, y))
 	return out
 
 
@@ -1273,12 +1276,17 @@ static func _pick_stairs_north(ctx: GenerationContext, comp: Dictionary, rng: Ra
 		if not out.is_empty():
 			break
 		var rows := {}  # y -> Array[x]
+		var near_faces := {}  # kratki lica naprzeciw `near` — schody muszą objąć choć jedną
 		for c in _face_scan(comp, near, Vector2i(0, -1)):
 			if not _is_rim_face(ctx, comp, c, require_two_deep) or not _faces_near(near, c + Vector2i(0, -1)):
 				continue
 			if not rows.has(c.y):
 				rows[c.y] = []
 			rows[c.y].append(c.x)
+			if not near.is_empty():
+				near_faces[c] = true
+		if not near.is_empty():
+			_extend_rows(rows, func(c: Vector2i) -> bool: return _is_rim_face(ctx, comp, c, require_two_deep))
 
 		var runs: Array = []  # [length, a, b, y]
 		for y in rows:
@@ -1294,9 +1302,10 @@ static func _pick_stairs_north(ctx: GenerationContext, comp: Dictionary, rng: Ra
 				prev = x
 		runs.sort_custom(func(r1, r2): return r1[0] > r2[0] or (r1[0] == r2[0] and (r1[3] < r2[3] or (r1[3] == r2[3] and r1[1] < r2[1]))))
 
-		for flank in [STAIR_FLANK, 1]:
+		for pass_: Vector2i in _stair_passes(allow_1w, 2):
 			if not out.is_empty():
 				break
+			var flank := pass_.x
 			for r in runs:
 				if out.size() >= cap:
 					break
@@ -1304,16 +1313,13 @@ static func _pick_stairs_north(ctx: GenerationContext, comp: Dictionary, rng: Ra
 				var seg := _best_segment(ctx, comp, r[1], r[2], y, false, Vector2i(0, 1), flank)
 				var best_lo: int = seg.x
 				var best_len: int = seg.y
-				if allow_1w:
-					if best_len < 1:
-						continue
-					var s: int = 1 if best_len < 2 else _stair_width(rng, max_w, best_len)
-					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
-				else:
-					if best_len < 2:
-						continue
-					var s: int = _stair_width(rng, max_w, best_len)
-					out.append(Vector3i(rng.randi_range(best_lo, best_lo + best_len - s), s, y))
+				if best_len < pass_.y:
+					continue
+				var s: int = 1 if best_len < 2 else _stair_width(rng, max_w, best_len)
+				var x0 := _stair_start(rng, best_lo, best_len, s, y, near_faces)
+				if x0 == NO_START:
+					continue
+				out.append(Vector3i(x0, s, y))
 	return out
 
 
@@ -1379,9 +1385,10 @@ static func _pick_stairs_side(ctx: GenerationContext, comp: Dictionary, rng: Ran
 		runs.sort_custom(func(r1, r2): return r1[0] > r2[0] or (r1[0] == r2[0] and (r1[3] < r2[3] or (r1[3] == r2[3] and r1[1] < r2[1]))))
 
 		var interior_dx: int = -1 if is_east else 1
-		for flank in [STAIR_FLANK, 1]:
+		for pass_: Vector2i in _stair_passes(allow_1h, 3):
 			if not out.is_empty():
 				break
+			var flank := pass_.x
 			for r in runs:
 				if out.size() >= limit:
 					break
@@ -1389,18 +1396,11 @@ static func _pick_stairs_side(ctx: GenerationContext, comp: Dictionary, rng: Ran
 				var seg := _best_segment(ctx, comp, r[1], r[2], x, true, Vector2i(interior_dx, 0), flank)
 				var best_lo: int = seg.x
 				var best_len: int = seg.y
-				if allow_1h:
-					if best_len < 1:
-						continue
-					var height := 1 if best_len < 3 else _side_height(rng, flags, best_len)
-					var top_y := rng.randi_range(best_lo, best_lo + best_len - height)
-					out.append(Vector3i(x, top_y, height))
-				else:
-					if best_len < 3:
-						continue
-					var height := _side_height(rng, flags, best_len)
-					var top_y := rng.randi_range(best_lo, best_lo + best_len - height)
-					out.append(Vector3i(x, top_y, height))
+				if best_len < pass_.y:
+					continue
+				var height := 1 if best_len < 3 else _side_height(rng, flags, best_len)
+				var top_y := rng.randi_range(best_lo, best_lo + best_len - height)
+				out.append(Vector3i(x, top_y, height))
 	return out
 
 
@@ -1835,6 +1835,53 @@ static func _side_height(rng: RandomNumberGenerator, flags: GenerationFlags, bes
 	var hi := mini(maxi(flags.stair_max_width, 3), best_len)
 	var lo := maxi(3, ceili(hi * 2.0 / 3.0))
 	return rng.randi_range(mini(lo, hi), hi)
+
+
+const NO_START := -2147483648
+
+
+## Biegi lica przy `near` (łączenie nieosiągalnego miejsca) rozciągnięte po licu w obie strony wiersza: dotąd bieg
+## kończył się na krawędzi okolicy `near` i na długim licu wychodziły schody szerokości 1 (seed 717142, jaskinia).
+static func _extend_rows(rows: Dictionary, is_face: Callable) -> void:
+	for y in rows:
+		var xs: Array = rows[y]
+		var seen := {}
+		for x in xs:
+			seen[x] = true
+		var extra: Array = []
+		for x in xs:
+			for d in [-1, 1]:
+				var nx: int = x + d
+				while not seen.has(nx) and is_face.call(Vector2i(nx, y)):
+					seen[nx] = true
+					extra.append(nx)
+					nx += d
+		xs.append_array(extra)
+
+
+## Początek schodów szerokości s w odcinku [lo, lo + len - s]; przy `near_faces` tylko pozycje obejmujące choć jedną
+## kratkę lica naprzeciw nieosiągalnego miejsca (losowo z nich), żadnej — NO_START.
+static func _stair_start(rng: RandomNumberGenerator, lo: int, length: int, s: int, y: int, near_faces: Dictionary) -> int:
+	if near_faces.is_empty():
+		return rng.randi_range(lo, lo + length - s)
+	var ok: Array[int] = []
+	for x0 in range(lo, lo + length - s + 1):
+		for k in s:
+			if near_faces.has(Vector2i(x0 + k, y)):
+				ok.append(x0)
+				break
+	return NO_START if ok.is_empty() else ok[rng.randi() % ok.size()]
+
+
+## Kolejne próby doboru schodów: Vector2i(zapas przy końcach biegu, minimalny rozmiar). Najpierw pełne schody
+## (min_full) przy zapasie STAIR_FLANK, potem przy zapasie 1, a dopiero potem 1-kratkowe (allow_narrow) — wcześniej
+## 1-kratkowe przy pełnym zapasie wygrywały, choć z mniejszym zapasem mieściły się szersze (seed z wąskimi schodami
+## na długim licu).
+static func _stair_passes(allow_narrow: bool, min_full: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = [Vector2i(STAIR_FLANK, min_full), Vector2i(1, min_full)]
+	if allow_narrow:
+		out.append_array([Vector2i(STAIR_FLANK, 1), Vector2i(1, 1)])
+	return out
 
 
 ## Szerokość schodów: z górnej części tego, co mieści lico (2..stair_max_width) — szerokie schody.

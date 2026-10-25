@@ -52,6 +52,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
+- Jaskinie: schody szerokości 1 na długim licu płaskowyżu — schody łączące nieosiągalne miejsce brały tylko kawałek lica
+  naprzeciw niego; teraz cały bieg lica (schody muszą tylko objąć to miejsce), a pełne schody mają pierwszeństwo przed
+  wąskimi także przy mniejszym zapasie przy końcach. Zapisane mapy generują się od nowa (`MAP_CACHE_VERSION` 2).
 - Walka: wrogowie mieli w walce HP losowane ±8 % (np. boss 700 -> do 756); teraz każdy ma dokładnie swoje maks. HP —
   statystyki wynikają z poziomu, ten sam wróg na tym samym poziomie jest zawsze taki sam.
 - Kroki prawie niesłyszalne (−22 dB przy cichych próbkach): teraz 0 dB, ok. 9 dB poniżej kliknięcia w menu; dwa kroki
