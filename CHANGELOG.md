@@ -53,7 +53,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ### Naprawiono
 - Menu Esc → zapis: hover / klik działały tylko na pierwszych 3 slotach (kopie wierszy zostawały przy myszy wzoru — też
-  lista drużyny). Usuwanie slotu pod Delete / Backspace z potwierdzeniem (drugie naciśnięcie), już nie pod strzałką.
+  lista drużyny). Usuwanie slotu: przytrzymanie klawisza akcji (E) albo Delete / Backspace przez 5 s (postęp w stopce,
+  puszczenie anuluje), już nie pod strzałką.
 - Jaskinie: schody szerokości 1 na długim licu płaskowyżu — schody łączące nieosiągalne miejsce brały tylko kawałek lica
   naprzeciw niego; teraz cały bieg lica (schody muszą tylko objąć to miejsce), a pełne schody mają pierwszeństwo przed
   wąskimi także przy mniejszym zapasie przy końcach. Zapisane mapy generują się od nowa (`MAP_CACHE_VERSION` 2).

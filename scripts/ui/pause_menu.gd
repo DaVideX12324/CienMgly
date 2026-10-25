@@ -102,8 +102,11 @@ var _save_slot_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
-## Slot czekający na potwierdzenie usunięcia (drugie Delete); -1 = brak.
-var _pending_delete_slot := -1
+## Usuwanie slotu przytrzymaniem klawisza akcji (interact, E) albo Delete / Backspace przez DELETE_HOLD_SEC s.
+const DELETE_HOLD_SEC := 5.0
+var _delete_hold := 0.0
+## Po usunięciu klawisz trzeba puścić, zanim odliczanie ruszy znowu.
+var _delete_hold_done := false
 var _formation_pick: int = -1   # szyk: pierwsza wybrana postać (-1 = jeszcze nie wybrano)
 var _state_before_pause: int = -1
 var _opened_direct_exit: bool = false
@@ -452,27 +455,39 @@ func _handle_item_tab_input(event: InputEvent) -> bool:
 	return false
 
 
-## Prawo / D: nowy slot; Delete / Backspace: usuń zaznaczony slot — dwa razy (pierwsze pyta, drugie usuwa).
+## Prawo / D: nowy slot. Usuwanie — przytrzymanie (_process), nie pojedyncze naciśnięcie.
 func _handle_save_slots_input(event: InputEvent) -> bool:
 	if _is_nav_right(event):
 		_add_save_slot()
 		return true
-	var key := event as InputEventKey
-	if key != null and key.pressed and not key.echo and (key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE):
-		_request_delete_save_slot()
-		return true
 	return false
 
 
-func _request_delete_save_slot() -> void:
-	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
+## Usuwanie slotu: klawisz akcji (interact) albo Delete / Backspace trzymany DELETE_HOLD_SEC s (postęp w stopce;
+## puszczenie wcześniej anuluje) — klawiatury bez Delete też mogą usuwać, a przypadkowe naciśnięcie nic nie robi.
+func _process(delta: float) -> void:
+	if not _paused or _mode != "save_slots":
+		_delete_hold = 0.0
+		_delete_hold_done = false
 		return
-	if _pending_delete_slot == _save_slot_index:
-		_pending_delete_slot = -1
+	var held := Input.is_action_pressed("interact") or Input.is_physical_key_pressed(KEY_DELETE) 			or Input.is_physical_key_pressed(KEY_BACKSPACE)
+	if not held:
+		if _delete_hold > 0.0 or _delete_hold_done:
+			_delete_hold = 0.0
+			_delete_hold_done = false
+			_refresh_save_slot_rows()
+		return
+	if _delete_hold_done or _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
+		return
+	_delete_hold += delta
+	if _delete_hold >= DELETE_HOLD_SEC:
+		_delete_hold = 0.0
+		_delete_hold_done = true
 		_delete_selected_save_slot()
 		return
-	_pending_delete_slot = _save_slot_index
-	save_footer_label.text = QuizRpgI18n.tf("pause.delete_slot_confirm", {"slot": _save_slot_index + 1}, "Usunąć slot {slot}? Naciśnij Delete ponownie, aby potwierdzić (inny klawisz — anuluj).")
+	var filled := int(10.0 * _delete_hold / DELETE_HOLD_SEC)
+	save_footer_label.text = QuizRpgI18n.tf("pause.delete_slot_hold", {"slot": _save_slot_index + 1, "sec": ceili(DELETE_HOLD_SEC - _delete_hold)}, "Usuwanie slotu {slot} — trzymaj jeszcze {sec} s (puść, aby anulować).") 			+ "
+" + "■".repeat(filled) + "□".repeat(10 - filled)
 
 
 func _move_selection(delta: int) -> void:
@@ -898,7 +913,7 @@ func _show_save_panel() -> void:
 	if _is_in_combat():
 		save_hint_label.text = QuizRpgI18n.t("pause.save_disabled_combat", "Zapisywanie jest niedostępne w trakcie walki.    X/Esc: wróć")
 	else:
-		save_hint_label.text = QuizRpgI18n.t("pause.save_hint", "Enter/Z: zapisz    D/Right: dodaj slot    Delete: usuń slot    X/Esc: wróć")
+		save_hint_label.text = QuizRpgI18n.t("pause.save_hint", "Enter/Z: zapisz    D/Right: dodaj slot    trzymaj E (5 s): usuń slot    X/Esc: wróć")
 	_rebuild_save_slots()
 
 
@@ -1427,7 +1442,6 @@ func _rebuild_save_slots() -> void:
 
 
 func _refresh_save_slot_rows() -> void:
-	_pending_delete_slot = -1  # zmiana zaznaczenia / odświeżenie anuluje pytanie o usunięcie
 	_set_row_selection(_save_slot_rows, _save_slot_index)
 	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
 		save_footer_label.text = ""
