@@ -4,10 +4,13 @@
 
 [node name="LampPostLeft" instance=ExtResource("1_lamp")]
 
-[node name="Sprite2D" parent="." index="0"]
+[node name="Base" parent="." index="0"]
+flip_h = true
+
+[node name="Sprite2D" parent="Top" index="0"]
 flip_h = true
 offset = Vector2(-22, -46)
 
-[node name="LanternHanging" parent="." index="2"]
+[node name="LanternHanging" parent="Top" index="1"]
 position = Vector2(-16, -38)
 flip_h = true
