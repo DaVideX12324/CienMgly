@@ -27,7 +27,20 @@ static func start(level: Node2D) -> void:
 		gm.change_state(GameManagerScript.GameState.EXPLORING)
 	var player := PlayerScene.instantiate() as Node2D
 	player.name = "Player"
-	var spawn := level.get_node_or_null(SPAWN_NODE) as Node2D
+	var spawn := _spawn_point(level)
 	player.position = spawn.position if spawn != null else Vector2.ZERO
 	level.add_child(player)
 	print("[Freeroam] %s: sterowanie WSAD / strzałki, Shift — bieg; gracz w %s" % [level.name, player.position])
+
+
+## Punkt Spawns/Spawn albo, gdy go nie ma (mapy z markerami nazwanymi od sąsiednich map), pierwszy Marker2D z Spawns.
+static func _spawn_point(level: Node) -> Node2D:
+	var spawn := level.get_node_or_null(SPAWN_NODE) as Node2D
+	if spawn != null:
+		return spawn
+	var spawns := level.get_node_or_null("Spawns")
+	if spawns != null:
+		for c in spawns.get_children():
+			if c is Marker2D:
+				return c as Marker2D
+	return null
