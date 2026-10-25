@@ -52,6 +52,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
   wyjścia pojawia się dopiero po walce (companion-JSON `"boss": {"locks_exit": true}`).
 
 ### Naprawiono
+- Menu Esc → zapis: hover / klik działały tylko na pierwszych 3 slotach (kopie wierszy zostawały przy myszy wzoru — też
+  lista drużyny). Usuwanie slotu pod Delete / Backspace z potwierdzeniem (drugie naciśnięcie), już nie pod strzałką.
 - Jaskinie: schody szerokości 1 na długim licu płaskowyżu — schody łączące nieosiągalne miejsce brały tylko kawałek lica
   naprzeciw niego; teraz cały bieg lica (schody muszą tylko objąć to miejsce), a pełne schody mają pierwszeństwo przed
   wąskimi także przy mniejszym zapasie przy końcach. Zapisane mapy generują się od nowa (`MAP_CACHE_VERSION` 2).

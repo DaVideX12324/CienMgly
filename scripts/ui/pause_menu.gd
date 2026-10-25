@@ -102,6 +102,8 @@ var _save_slot_entries: Array[Dictionary] = []
 var _toast_reset_text: String = ""
 var _party_rows_selectable: bool = false
 var _save_slot_index: int = 0
+## Slot czekający na potwierdzenie usunięcia (drugie Delete); -1 = brak.
+var _pending_delete_slot := -1
 var _formation_pick: int = -1   # szyk: pierwsza wybrana postać (-1 = jeszcze nie wybrano)
 var _state_before_pause: int = -1
 var _opened_direct_exit: bool = false
@@ -450,14 +452,27 @@ func _handle_item_tab_input(event: InputEvent) -> bool:
 	return false
 
 
+## Prawo / D: nowy slot; Delete / Backspace: usuń zaznaczony slot — dwa razy (pierwsze pyta, drugie usuwa).
 func _handle_save_slots_input(event: InputEvent) -> bool:
 	if _is_nav_right(event):
 		_add_save_slot()
 		return true
-	if _is_nav_left(event):
-		_delete_selected_save_slot()
+	var key := event as InputEventKey
+	if key != null and key.pressed and not key.echo and (key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE):
+		_request_delete_save_slot()
 		return true
 	return false
+
+
+func _request_delete_save_slot() -> void:
+	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
+		return
+	if _pending_delete_slot == _save_slot_index:
+		_pending_delete_slot = -1
+		_delete_selected_save_slot()
+		return
+	_pending_delete_slot = _save_slot_index
+	save_footer_label.text = QuizRpgI18n.tf("pause.delete_slot_confirm", {"slot": _save_slot_index + 1}, "Usunąć slot {slot}? Naciśnij Delete ponownie, aby potwierdzić (inny klawisz — anuluj).")
 
 
 func _move_selection(delta: int) -> void:
@@ -883,7 +898,7 @@ func _show_save_panel() -> void:
 	if _is_in_combat():
 		save_hint_label.text = QuizRpgI18n.t("pause.save_disabled_combat", "Zapisywanie jest niedostępne w trakcie walki.    X/Esc: wróć")
 	else:
-		save_hint_label.text = QuizRpgI18n.t("pause.save_hint", "Enter/Z: zapisz    A/Left: usuń slot    D/Right: dodaj slot    X/Esc: wróć")
+		save_hint_label.text = QuizRpgI18n.t("pause.save_hint", "Enter/Z: zapisz    D/Right: dodaj slot    Delete: usuń slot    X/Esc: wróć")
 	_rebuild_save_slots()
 
 
@@ -978,6 +993,15 @@ func _bind_mouse_interactions() -> void:
 	_bind_rows_mouse(_equip_item_rows, "equip_item")
 	_bind_rows_mouse(_confirm_rows, "confirm")
 	_bind_rows_mouse(_save_slot_rows, "save_slot")
+
+
+## Kopia wiersza-wzoru bez jego połączeń sygnałów i znacznika mouse_bound — inaczej kopia zostawała przy myszy wzoru
+## (hover / klik tylko na wierszach ze sceny, np. pierwsze 3 sloty zapisu).
+func _duplicate_row(template: Control) -> Control:
+	var row := template.duplicate(Node.DUPLICATE_GROUPS | Node.DUPLICATE_SCRIPTS | Node.DUPLICATE_USE_INSTANTIATION) as Control
+	if row != null:
+		row.remove_meta("mouse_bound")
+	return row
 
 
 func _bind_rows_mouse(rows: Array[Control], role: String) -> void:
@@ -1403,6 +1427,7 @@ func _rebuild_save_slots() -> void:
 
 
 func _refresh_save_slot_rows() -> void:
+	_pending_delete_slot = -1  # zmiana zaznaczenia / odświeżenie anuluje pytanie o usunięcie
 	_set_row_selection(_save_slot_rows, _save_slot_index)
 	if _save_slot_index < 0 or _save_slot_index >= _save_slot_entries.size():
 		save_footer_label.text = ""
@@ -1632,7 +1657,7 @@ func _ensure_party_row_capacity(members: Array[Dictionary]) -> void:
 		return
 	var template: Control = _party_rows[0]
 	for index: int in range(_party_rows.size(), members.size()):
-		var new_row: Control = template.duplicate() as Control
+		var new_row: Control = _duplicate_row(template)
 		if new_row == null:
 			continue
 		new_row.name = "PartyRow%d" % index
@@ -1648,7 +1673,7 @@ func _ensure_save_slot_row_capacity(required_count: int) -> void:
 		return
 	var template: Control = _save_slot_rows[0]
 	for index: int in range(_save_slot_rows.size(), required_count):
-		var new_row: Control = template.duplicate() as Control
+		var new_row: Control = _duplicate_row(template)
 		if new_row == null:
 			continue
 		new_row.name = "SaveSlotRow%d" % index
