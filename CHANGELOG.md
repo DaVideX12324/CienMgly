@@ -21,6 +21,7 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Menu deweloperskie → Drużyna: usuwanie towarzyszy (pojedynczo albo wszystkich); ich ekwipunek wraca do plecaka.
 
 ### Zmieniono
+- Wejście w schody-wnękę (przejście do innej mapy): drużyna ciemnieje i znika stopniowo na ostatnich dwóch stopniach (zamiast zniknąć nagle razem z mapą), a po wczytaniu nowej mapy wynurza się z ciemności.
 - Pytania w walce: szansa na zadanie złożone (wpisywanie, kafelki, dopasowanie zamiast wyboru / prawda-fałsz) zależy od tieru atakowanego przeciwnika — tier 1: 20%, 2: 40%, 3: 60%, 4 i boss: 80%. Gdy zestaw nie ma pytań danego rodzaju, pada pytanie z drugiej grupy.
 - Ikony mikstur (Shiny RPG Potions, Bonsaiheldin, CC BY-SA 3.0): tier = kolor (HP czerwona → pomarańczowa →
   procentowa różowa, SP niebieski → turkus → procentowy fiolet), rozmiar s / m / l = butelka; odtrutka żółta, Tonik Skupienia

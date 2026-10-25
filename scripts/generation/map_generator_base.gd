@@ -532,6 +532,7 @@ static func _setup_portal_trigger(target_node: Node2D, area_name: String, cell: 
 	if shape == null:
 		return
 	if cells.has_area():
+		area.set_meta(QuizRpgPortalFade.META, true)  # schody wnęki: postać znika stopniowo, zanim dotknie obszaru
 		# Obszar wchodzi PORTAL_AREA_OVERLAP px w ostatni stopień (po obu stronach cienkiej osi): kolizja gradientu
 		# (ostatnie piksele kafla) zatrzymuje postać tuż przed voidem, więc bez zakładki nie dotykałaby obszaru.
 		shape.size = Vector2(cells.size * cell_size) + Vector2(PORTAL_AREA_OVERLAP * 2 if cells.size.x == 1 else 0, PORTAL_AREA_OVERLAP * 2 if cells.size.y == 1 else 0)

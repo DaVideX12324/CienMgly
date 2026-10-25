@@ -28,6 +28,10 @@ static func connect_area(area: Area2D, on_enter: Callable, use_key: bool = false
 	if bool(area.get_meta(META_USE_KEY, use_key)):
 		_connect_key(area, on_enter, str(area.get_meta(META_PROMPT, prompt)))
 		return
+	if bool(area.get_meta(QuizRpgPortalFade.META, false)):
+		var fade := QuizRpgPortalFade.new()
+		fade.name = "PortalFade"
+		area.add_child(fade)
 	var armed := [false]
 	area.body_exited.connect(func(body: Node2D) -> void:
 		if is_player(body):

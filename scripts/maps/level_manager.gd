@@ -106,6 +106,7 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		player.process_mode = player_mode
 	var spawn_pos := _place_player_at_spawn(spawn_name)
 	_sync_party_followers(true)
+	QuizRpgPortalFade.fade_in(get_tree())
 	_setup_start_safety(spawn_pos)
 	_play_level_music(level_path, current_level)
 	QuizRpgProgressLog.map_entered(_progress_ps(), level_path)
