@@ -254,6 +254,35 @@ def preview(items):
         print('preview', fn, len(lst))
 
 
+SLOT_SCRIPT = 'res://modules/quiz_rpg/scripts/world/station_slot.gd'
+SCENES = 'res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/'
+# Sloty rozbudowy: kolejne tiery tego samego stanowiska (scenes/.../stations/slots/<nazwa>_slot.tscn)
+SLOTS = {
+    'anvil': ['anvil_1_anim', 'anvil_2_anim', 'anvil_3_anim'],
+    'alchemy': ['alchemy_table_1', 'alchemy_table_2', 'alchemy_table_3'],
+    'sawmill': ['sawmill_2_anim', 'sawmill_3_anim'],
+    'furnace_stone': ['furnace_stone_1_on', 'furnace_stone_2_on', 'furnace_stone_3_on'],
+    'furnace_brick': ['furnace_brick_1_on', 'furnace_brick_2_on', 'furnace_brick_3_on'],
+    'furnace_iron': ['furnace_iron_1_on', 'furnace_iron_2_on', 'furnace_iron_3_on'],
+    'workbench_stone': ['workbench_stone_1_tools', 'workbench_stone_2_tools', 'workbench_stone_3_tools'],
+    'workbench_wood': ['workbench_wood_1_tools', 'workbench_wood_2_tools', 'workbench_wood_3_tools'],
+    'workbench_metal': ['workbench_metal_1_tools', 'workbench_metal_2_tools', 'workbench_metal_3_tools'],
+    'cooking': ['cooking_spit_small_anim', 'cooking_grill_ham_anim', 'cooking_kitchen_big_anim'],
+}
+
+
+def write_slot(name, scenes):
+    s = f'[gd_scene format=3]\n\n[ext_resource type="Script" path="{SLOT_SCRIPT}" id="1_slot"]\n'
+    for i, sc in enumerate(scenes):
+        s += f'[ext_resource type="PackedScene" path="{SCENES}{sc}.tscn" id="{i + 2}_tier"]\n'
+    refs = ', '.join(f'ExtResource("{i + 2}_tier")' for i in range(len(scenes)))
+    title = ''.join(p.capitalize() for p in name.split('_')) + 'Slot'
+    s += f'\n[node name="{title}" type="Node2D" unique_id={uniq()}]\nscript = ExtResource("1_slot")\nstation_id = "{name}"\ntiers = Array[PackedScene]([{refs}])\n'
+    os.makedirs(OUT + 'slots/', exist_ok=True)
+    open(OUT + 'slots/' + name + '_slot.tscn', 'w', newline='\n').write(s)
+    print('slot', name, len(scenes))
+
+
 # (nazwa, arkusz, szer. klatki, wys. klatki, fps, wysokość kolizji); klatki puste są pomijane
 ANIMATED = [
     ('alchemy_table_1', 'Alchemy/Alchemy_Table_01-Sheet.png', 32, 64, 10, 8),
@@ -284,3 +313,5 @@ if __name__ == '__main__':
         write_static(name, png, rect, top_h)
     for name, png, fw, fh, fps, top_h in ANIMATED:
         write_animated(name, png, fw, fh, fps, top_h)
+    for name, scenes in SLOTS.items():
+        write_slot(name, scenes)

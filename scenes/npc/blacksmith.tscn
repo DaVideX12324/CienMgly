@@ -25,6 +25,8 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/runed_staff.tres" id="mid_runed_staff"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/flanged_mace.tres" id="mid_flanged_mace"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_quest_service.gd" id="quest_svc"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_station_upgrade_service.gd" id="station_svc"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/station_tier.gd" id="station_tier"]
 
 [sub_resource type="Resource" id="Resource_0nkv3"]
 script = ExtResource("5_fejpd")
@@ -158,6 +160,26 @@ set_flag = "recall:blacksmith:sewer"
 auto_once = true
 required_flag = "boss:sewer"
 
+[sub_resource type="Resource" id="Tier_anvil_2"]
+script = ExtResource("station_tier")
+gold = 150
+item_id = "iron_ore"
+item_count = 5
+required_flag = "boss:cave_return"
+
+[sub_resource type="Resource" id="Tier_anvil_3"]
+script = ExtResource("station_tier")
+gold = 400
+item_id = "iron_ore"
+item_count = 10
+required_flag = "boss:sewer"
+
+[sub_resource type="Resource" id="Service_station"]
+script = ExtResource("station_svc")
+costs = Array[ExtResource("station_tier")]([SubResource("Tier_anvil_2"), SubResource("Tier_anvil_3")])
+label = "Rozbuduj warsztat"
+label_key = "npc.service.station"
+
 [node name="Blacksmith" instance=ExtResource("0_base")]
 npc_name = "Brann"
 npc_name_key = "npc.blacksmith.name"
@@ -165,4 +187,4 @@ sprite_frames = ExtResource("2_th7q5")
 sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.")
 greeting_key = "npc.blacksmith.greeting"
-services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Resource_recl1"), SubResource("Quest_brann_ore"), SubResource("Quest_brann_steel")])
+services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Service_station"), SubResource("Resource_recl1"), SubResource("Quest_brann_ore"), SubResource("Quest_brann_steel")])

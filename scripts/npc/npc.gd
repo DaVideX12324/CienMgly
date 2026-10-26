@@ -36,9 +36,9 @@ const DialogBox = preload("../ui/dialog_box.gd")
 ## Linie na pożegnanie (puste = bez).
 @export var farewell: PackedStringArray = []
 @export var farewell_key: String = ""
-## Stanowisko pracy rzemieślnika (QuizRpgStation w mieście): po usłudze z efektem (np. ulepszeniu) NPC idzie do niego,
+## Stanowisko pracy rzemieślnika (QuizRpgStation albo QuizRpgStationSlot w mieście): po usłudze z efektem (np. ulepszeniu) NPC idzie do niego,
 ## stanowisko gra animację „work” przez work_seconds, NPC wraca na miejsce. Puste = bez wędrówki.
-@export var work_station: QuizRpgStation
+@export var work_station: Node2D
 @export var work_seconds: float = 3.0
 @export var walk_speed: float = 60.0
 
@@ -65,10 +65,10 @@ func work_at_station() -> void:
 	if work_station == null or not is_inside_tree():
 		return
 	var home := global_position
-	await _walk_to(work_station.work_spot())
-	work_station.start_work()
+	await _walk_to(work_station.call("work_spot"))
+	work_station.call("start_work")
 	await get_tree().create_timer(work_seconds).timeout
-	work_station.stop_work()
+	work_station.call("stop_work")
 	await _walk_to(home)
 	_apply_look()
 	await say(PackedStringArray([QuizRpgI18n.t("npc.work.done", "Gotowe.")]))

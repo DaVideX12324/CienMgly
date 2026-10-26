@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station_slot.gd" id="1_slot"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/workbench_metal_1_tools.tscn" id="2_tier"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/workbench_metal_2_tools.tscn" id="3_tier"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/workbench_metal_3_tools.tscn" id="4_tier"]
+
+[node name="WorkbenchMetalSlot" type="Node2D" unique_id=1552808629]
+script = ExtResource("1_slot")
+station_id = "workbench_metal"
+tiers = Array[PackedScene]([ExtResource("2_tier"), ExtResource("3_tier"), ExtResource("4_tier")])

@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station_slot.gd" id="1_slot"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/alchemy_table_1.tscn" id="2_tier"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/alchemy_table_2.tscn" id="3_tier"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/alchemy_table_3.tscn" id="4_tier"]
+
+[node name="AlchemySlot" type="Node2D" unique_id=1653192718]
+script = ExtResource("1_slot")
+station_id = "alchemy"
+tiers = Array[PackedScene]([ExtResource("2_tier"), ExtResource("3_tier"), ExtResource("4_tier")])

@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station_slot.gd" id="1_slot"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/furnace_iron_1_on.tscn" id="2_tier"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/furnace_iron_2_on.tscn" id="3_tier"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/furnace_iron_3_on.tscn" id="4_tier"]
+
+[node name="FurnaceIronSlot" type="Node2D" unique_id=1881395839]
+script = ExtResource("1_slot")
+station_id = "furnace_iron"
+tiers = Array[PackedScene]([ExtResource("2_tier"), ExtResource("3_tier"), ExtResource("4_tier")])
