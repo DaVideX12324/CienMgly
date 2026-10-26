@@ -16,6 +16,8 @@ const FootstepsScene = preload("../../scenes/player/footsteps.tscn")
 @export var follow_stop_distance: float = 6.0
 
 var facing_direction: Vector2 = Vector2.DOWN
+## Mnożnik prędkości od podłoża (np. wysoka trawa wolniej, droga szybciej); ustawia go warstwa terenu mapy.
+var _terrain_speed_mult: float = 1.0
 var can_move: bool = true
 var nearby_interactables: Array = []
 ## Obiekt, dla którego gracz zgłosił podpowiedź interakcji (InteractPrompt).
@@ -149,7 +151,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		input = _get_input()
 	var run_mult := run_speed_mult if is_running() else 1.0
-	velocity = input * speed * run_mult * _get_speed_multiplier()
+	velocity = input * speed * run_mult * _get_speed_multiplier() * _terrain_speed_mult
 
 	if input != Vector2.ZERO:
 		facing_direction = input.normalized()
@@ -477,6 +479,10 @@ func _on_interaction_area_area_entered(area: Area2D) -> void:
 
 func _on_interaction_area_area_exited(area: Area2D) -> void:
 	nearby_interactables.erase(area)
+
+
+func set_terrain_speed_multiplier(value: float) -> void:
+	_terrain_speed_mult = value
 
 
 func _get_speed_multiplier() -> float:
