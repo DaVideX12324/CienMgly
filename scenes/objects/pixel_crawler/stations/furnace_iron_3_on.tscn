@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://bv8o5mpygh80n" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Iron_03-Sheet.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7fmld"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 0, 48, 64)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jl9ru"]
+atlas = ExtResource("1_tex")
+region = Rect2(48, 0, 48, 64)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rcd3d"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 64, 48, 64)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1g4mq"]
+atlas = ExtResource("1_tex")
+region = Rect2(48, 64, 48, 64)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_d9ear"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7fmld")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jl9ru")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rcd3d")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1g4mq")
+}],
+"loop": true,
+"name": &"default",
+"speed": 6.0
+}]
+
+[node name="FurnaceIron3On" type="StaticBody2D" unique_id=1939747238]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1998214374]
+sprite_frames = SubResource("SpriteFrames_d9ear")
+autoplay = "default"
+centered = false
+offset = Vector2(-24, -62)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1274548812]
+polygon = PackedVector2Array(-23, -9, -22, -10, 22, -10, 23, -9, 23, 1, 22, 2, -22, 2, -23, 1)

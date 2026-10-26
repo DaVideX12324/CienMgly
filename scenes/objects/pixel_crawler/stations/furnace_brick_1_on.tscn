@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://c85fhkigok7cd" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Bricks_01-Sheet.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jbr82"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 0, 32, 48)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dfrdp"]
+atlas = ExtResource("1_tex")
+region = Rect2(32, 0, 32, 48)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_zcqm6"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 48, 32, 48)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g1w9d"]
+atlas = ExtResource("1_tex")
+region = Rect2(32, 48, 32, 48)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_e54js"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jbr82")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dfrdp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_zcqm6")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g1w9d")
+}],
+"loop": true,
+"name": &"default",
+"speed": 6.0
+}]
+
+[node name="FurnaceBrick1On" type="StaticBody2D" unique_id=2080235848]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1678637875]
+sprite_frames = SubResource("SpriteFrames_e54js")
+autoplay = "default"
+centered = false
+offset = Vector2(-16, -46)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=2080066051]
+polygon = PackedVector2Array(-14, -9, -13, -10, 13, -10, 14, -9, 14, 1, 13, 2, -13, 2, -14, 1)

@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://k5snm6l685o" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n2qav"]
+atlas = ExtResource("1_tex")
+region = Rect2(112, 260, 77, 60)
+filter_clip = true
+
+[node name="FurnaceBrick3Off" type="StaticBody2D" unique_id=1829293675]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1636352584]
+texture = SubResource("AtlasTexture_n2qav")
+centered = false
+offset = Vector2(-38, -58)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1157622200]
+polygon = PackedVector2Array(-37, -9, -36, -10, 36, -10, 37, -9, 37, 1, 36, 2, -36, 2, -37, 1)

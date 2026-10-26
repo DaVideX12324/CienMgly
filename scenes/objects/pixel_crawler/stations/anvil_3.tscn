@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://b3sqnymewkglu" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_z2ka7"]
+atlas = ExtResource("1_tex")
+region = Rect2(176, 14, 96, 86)
+filter_clip = true
+
+[node name="Anvil3" type="StaticBody2D" unique_id=1127885033]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1135645637]
+texture = SubResource("AtlasTexture_z2ka7")
+centered = false
+offset = Vector2(-48, -84)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1076563762]
+polygon = PackedVector2Array(-47, -7, -46, -8, 46, -8, 47, -7, 47, 1, 46, 2, -46, 2, -47, 1)

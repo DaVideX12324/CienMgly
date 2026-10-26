@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://cbx2q4xjka5k" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Workbench/Workbench.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lsx7i"]
+atlas = ExtResource("1_tex")
+region = Rect2(48, 14, 48, 34)
+filter_clip = true
+
+[node name="WorkbenchStone2Tools" type="StaticBody2D" unique_id=1777700807]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1197981076]
+texture = SubResource("AtlasTexture_lsx7i")
+centered = false
+offset = Vector2(-24, -32)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1297229583]
+polygon = PackedVector2Array(-23, -7, -22, -8, 22, -8, 23, -7, 23, 1, 22, 2, -22, 2, -23, 1)

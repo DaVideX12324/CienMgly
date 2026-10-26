@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://bqloha7bm35vc" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Estructure.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7ugm0"]
+atlas = ExtResource("1_tex")
+region = Rect2(210, 70, 78, 74)
+filter_clip = true
+
+[node name="CookingKitchenBigEmpty" type="StaticBody2D" unique_id=1558824097]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1063166774]
+texture = SubResource("AtlasTexture_7ugm0")
+centered = false
+offset = Vector2(-39, -72)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1278016342]
+polygon = PackedVector2Array(-38, -7, -37, -8, 37, -8, 38, -7, 38, 1, 37, 2, -37, 2, -38, 1)

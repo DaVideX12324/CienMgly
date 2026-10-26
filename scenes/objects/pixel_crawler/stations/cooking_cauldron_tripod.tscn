@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://d1svjey6g2rbp" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooking Station.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2g8xe"]
+atlas = ExtResource("1_tex")
+region = Rect2(11, 67, 42, 54)
+filter_clip = true
+
+[node name="CookingCauldronTripod" type="StaticBody2D" unique_id=1428082446]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1425309824]
+texture = SubResource("AtlasTexture_2g8xe")
+centered = false
+offset = Vector2(-21, -52)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=2020360331]
+polygon = PackedVector2Array(-20, -7, -19, -8, 19, -8, 20, -7, 20, 1, 19, 2, -19, 2, -20, 1)

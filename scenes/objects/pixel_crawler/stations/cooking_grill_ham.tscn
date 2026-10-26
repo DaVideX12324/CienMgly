@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://d1svjey6g2rbp" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooking Station.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rcrwt"]
+atlas = ExtResource("1_tex")
+region = Rect2(144, 20, 57, 44)
+filter_clip = true
+
+[node name="CookingGrillHam" type="StaticBody2D" unique_id=1291802561]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1041047037]
+texture = SubResource("AtlasTexture_rcrwt")
+centered = false
+offset = Vector2(-28, -42)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1870136868]
+polygon = PackedVector2Array(-27, -7, -26, -8, 26, -8, 27, -7, 27, 1, 26, 2, -26, 2, -27, 1)

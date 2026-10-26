@@ -1,0 +1,201 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://dglgsp215cnj0" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Alchemy/Alchemy_Table_03-Sheet.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kl9e3"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 0, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_czlit"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 0, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ybkm0"]
+atlas = ExtResource("1_tex")
+region = Rect2(160, 0, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3cj7y"]
+atlas = ExtResource("1_tex")
+region = Rect2(240, 0, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hzlv7"]
+atlas = ExtResource("1_tex")
+region = Rect2(320, 0, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_iqpvd"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 80, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cjz5g"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 80, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4w00s"]
+atlas = ExtResource("1_tex")
+region = Rect2(160, 80, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5301h"]
+atlas = ExtResource("1_tex")
+region = Rect2(240, 80, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h7v77"]
+atlas = ExtResource("1_tex")
+region = Rect2(320, 80, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10bud"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 160, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s1yut"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 160, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eph2p"]
+atlas = ExtResource("1_tex")
+region = Rect2(160, 160, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6zd4g"]
+atlas = ExtResource("1_tex")
+region = Rect2(240, 160, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7p8tz"]
+atlas = ExtResource("1_tex")
+region = Rect2(320, 160, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pex80"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 240, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ko0he"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 240, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g7ih8"]
+atlas = ExtResource("1_tex")
+region = Rect2(160, 240, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3aspt"]
+atlas = ExtResource("1_tex")
+region = Rect2(240, 240, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bule2"]
+atlas = ExtResource("1_tex")
+region = Rect2(320, 240, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_27zjw"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 320, 80, 80)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_octb3"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 320, 80, 80)
+filter_clip = true
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_utu5j"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kl9e3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_czlit")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ybkm0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3cj7y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hzlv7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_iqpvd")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cjz5g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4w00s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5301h")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h7v77")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10bud")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s1yut")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eph2p")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6zd4g")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7p8tz")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_pex80")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ko0he")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g7ih8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3aspt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bule2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_27zjw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_octb3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 10.0
+}]
+
+[node name="AlchemyTable3" type="StaticBody2D" unique_id=1443472880]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "stations"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2014988264]
+sprite_frames = SubResource("SpriteFrames_utu5j")
+autoplay = "default"
+centered = false
+offset = Vector2(-40, -78)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1435280685]
+polygon = PackedVector2Array(-39, -9, -38, -10, 38, -10, 39, -9, 39, 1, 38, 2, -38, 2, -39, 1)
