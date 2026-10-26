@@ -17,53 +17,55 @@ collision_layer = 32
 collision_mask = 0
 
 [node name="Walls" type="TileMapLayer" parent="." unique_id=1895637990]
-y_sort_enabled = true
-position = Vector2(-96, -16)
+position = Vector2(-96, 0)
 tile_map_data = PackedByteArray("AAAEAP//BQAUAAgAAAAHAP//BQAUAAgAAAAFAP//BQAVAAgAAAAGAP//BQAVAAgAAAADAP//BQATAAgAAAAIAP//BQAWAAgAAAAEAPz/BQAUAAgAAAAHAPz/BQAUAAgAAAADAPz/BQATAAgAAAAFAPz/BQAVAAgAAAAGAPz/BQAVAAgAAAAIAPz/BQAVAAgAAAAJAPz/BQAUAAgAAAAMAPz/BQAUAAgAAAANAPz/BQAWAAgAAAAFAAAABQAHAC8AAAAEAAAABQAHAC8AAAADAAAABQAHAC8AAAAGAAAABQAHAC8AAAAHAAAABQAHAC8AAAAIAAAABQAHAC8AAAAJAAAABQAIAC8AAAAJAP//BQAJAC0AAAAJAP7/BQAJAC0AAAAJAP3/BQAJAC0AAAACAP3/BQAFAC0AAAACAP7/BQAFAC0AAAACAP//BQAFAC0AAAACAAAABQAFAC0AAAACAPz/BQAFACwAAAANAP3/BQAaAAQAAAANAP7/BQAaAAQAAAANAP//BQAaAAQAAAANAAAABQAaAAUAAAALAPz/BQAVAAgAAAAKAPz/BQAVAAgAAAADAPn/BQANAAgAAAAEAPn/BQAOAAgAAAAFAPn/BQAPAAgAAAAGAPn/BQAOAAgAAAAHAPn/BQAPAAgAAAAIAPn/BQAOAAgAAAAJAPn/BQAPAAgAAAAKAPn/BQAOAAgAAAALAPn/BQAPAAgAAAAMAPn/BQAOAAgAAAANAPn/BQAQAAgAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="WallsDetail" type="TileMapLayer" parent="Walls" unique_id=1552283142]
+y_sort_enabled = true
 tile_map_data = PackedByteArray("AAANAAAABQAUAAYAAAANAPz/BQAUAAUAAAADAPz/BQAVAAUAAAAJAP3/CwAEABgAAAANAP3/CwADABgAAQA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="Roof" type="TileMapLayer" parent="." unique_id=1245258536]
 z_index = 1
-position = Vector2(-96, -16)
+y_sort_enabled = true
+position = Vector2(-96, 0)
 tile_map_data = PackedByteArray("AAACAPn/BgAAABAAAAADAPn/BgABABAAAAAEAPn/BgABABAAAAAFAPn/BgABABAAAAAGAPn/BgABABAAAAAHAPn/BgABABAAAAAIAPn/BgABABAAAAAJAPn/BgABABAAAAAKAPn/BgABABAAAAALAPn/BgABABAAAAAMAPn/BgABABAAAAANAPn/BgABABAAAAAOAPn/BgACABAAAAACAPj/BgACAAwAAAADAPj/BgADAAwAAAAEAPj/BgAEAAwAAAAFAPj/BgADAAwAAAAGAPj/BgAEAAwAAAAHAPj/BgADAAwAAAAIAPj/BgAEAAwAAAAJAPj/BgADAAwAAAAKAPj/BgAEAAwAAAALAPj/BgADAAwAAAAMAPj/BgAEAAwAAAANAPj/BgAEAAwAAAAOAPj/BgAFAAwAAAACAPf/BgACAAsAAAADAPf/BgADAAsAAAAEAPf/BgAEAAsAAAAGAPf/BgADAAsAAAAFAPf/BgADAAsAAAAHAPf/BgAEAAsAAAAIAPf/BgADAAsAAAAJAPf/BgAEAAsAAAAKAPf/BgADAAsAAAALAPf/BgAEAAsAAAAMAPf/BgADAAsAAAANAPf/BgAEAAsAAAAOAPf/BgAFAAsAAAACAPb/BgACAAsAAAADAPb/BgADAAsAAAAEAPb/BgAEAAsAAAAFAPb/BgADAAsAAAAGAPb/BgADAAsAAAAHAPb/BgAEAAsAAAAIAPb/BgADAAsAAAAJAPb/BgAEAAsAAAAKAPb/BgADAAsAAAALAPb/BgAEAAsAAAAMAPb/BgADAAsAAAANAPb/BgAEAAsAAAAOAPb/BgAFAAsAAAACAPX/BgACAAoAAAAOAPX/BgAFAAoAAAADAPX/BgADAAoAAAAEAPX/BgAEAAoAAAAFAPX/BgADAAoAAAAGAPX/BgAEAAoAAAAHAPX/BgADAAoAAAAIAPX/BgAEAAoAAAAJAPX/BgADAAoAAAAKAPX/BgAEAAoAAAALAPX/BgADAAoAAAAMAPX/BgADAAoAAAANAPX/BgAEAAoAAAAPAPX/BgAFAA0AAAABAPX/BgACAA0AAAAFAP3/BgACAAoAAAAFAP7/BgACAAwAAAAGAP3/BgAFAAoAAAAGAP7/BgAFAAwAAAAHAP3/BgAFAA0AAAAEAP3/BgACAA0AAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="DoorFrame" type="TileMapLayer" parent="." unique_id=543857472]
 y_sort_enabled = true
-position = Vector2(-96, -16)
+position = Vector2(-96, 0)
 tile_map_data = PackedByteArray("AAAFAP3/CwAGABAAAAAFAP7/CwAGABEAAAAFAP//CwAGABIAAAAFAAAACwAGABMAAAAGAP3/CwAHABAAAAAGAP7/CwAHABEAAAAGAP//CwAHABIAAAAGAAAACwAHABMAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="Props" type="TileMapLayer" parent="." unique_id=192015196]
 y_sort_enabled = true
-position = Vector2(-96, -16)
+position = Vector2(-96, 0)
 tile_map_data = PackedByteArray("AAAFAP7/CwAIABEAAAAFAP//CwAIABIAAAAFAAAACwAIABMAAAAGAP7/CwAJABEAAAAGAP//CwAJABIAAAAGAAAACwAJABMAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="Chimney" type="TileMapLayer" parent="." unique_id=791454792]
 z_index = 1
 y_sort_enabled = true
-position = Vector2(-96, -16)
+position = Vector2(-96, 0)
 tile_map_data = PackedByteArray("AAADAPT/CwAAABYAAAADAPX/CwAAABcAAAAEAPT/CwABABYAAAAEAPX/CwABABcAAAADAPP/CwAAABQAAAAEAPP/CwABABQAAAAFAPr/CwACABYAAAAFAPv/CwACABcAAAAGAPr/CwADABYAAAAGAPv/CwADABcAAAAKAPr/CwAEABYAAAAKAPv/CwAEABcAAAALAPr/CwAFABYAAAALAPv/CwAFABcAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="ChimneyRoof" type="TileMapLayer" parent="Chimney" unique_id=231281026]
+y_sort_enabled = true
 tile_set = ExtResource("1_tiles")
 
 [node name="BaseCollision" type="CollisionShape2D" parent="." unique_id=1139601535]
-position = Vector2(0, -20)
+position = Vector2(0, -4)
 shape = SubResource("Rect_base")
 
 [node name="BaseCollision2" type="CollisionShape2D" parent="." unique_id=2024650575]
-position = Vector2(124, -4)
+position = Vector2(124, 12)
 shape = SubResource("RectangleShape2D_1e7vl")
 
 [node name="DoorArea" type="Area2D" parent="." unique_id=1525362002]
-position = Vector2(0, 8)
+position = Vector2(0, 24)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1666618756]
@@ -71,4 +73,4 @@ position = Vector2(0, -5)
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=1952000362]
-position = Vector2(0, 24)
+position = Vector2(0, 40)
