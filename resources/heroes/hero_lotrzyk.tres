@@ -11,7 +11,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/onslaught.tres" id="9_o2bvm"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/leap_series.tres" id="10_16s2b"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/shove.tres" id="11_5elo5"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/lotrzyk_frames.tres" id="12_k3lrj"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/fk_archer_frames.tres" id="12_k3lrj"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/venom_blade.tres" id="13_venom"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/reckless_blow.tres" id="14_reckless"]
 
@@ -22,7 +22,7 @@ display_name = "Kael"
 character_class = "rogue"
 actor_scene = ExtResource("1_3pxth")
 sprite_frames = ExtResource("12_k3lrj")
-sprite_offset = Vector2(1, -24)
+sprite_offset = Vector2(0, -12)
 base_hp = 290
 hp_ref_value = 1220
 hp_at_max_level = 43500
