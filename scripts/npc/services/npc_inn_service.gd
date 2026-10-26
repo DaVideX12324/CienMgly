@@ -7,6 +7,8 @@ extends QuizRpgNpcService
 ## narzucony zapis tylko w punktach QuizRpgSavePoint, np. przed point of no return).
 
 @export var price: int = 20
+## Po zapłacie karczmarka idzie do swojego stanowiska (QuizRpgNpc.work_station, np. kuchni) i dopiero potem drużyna wstaje wypoczęta.
+@export var work_after_rest: bool = true
 
 
 ## Odpoczynek bez pytań (testy, darmowe łóżko): false, gdy brakuje złota.
@@ -31,5 +33,7 @@ func run(npc: Node) -> void:
 	if not rest(npc):
 		await npc.say([QuizRpgI18n.t("npc.inn.no_gold", "Nie stać cię na nocleg.")])
 		return
+	if work_after_rest and npc.has_method("work_at_station"):
+		await npc.work_at_station()
 	QuizRpgNpcContext.play_sfx(npc, "heal")
 	await npc.say([QuizRpgI18n.t("npc.inn.rested", "Drużyna wypoczęła. HP i SP odnowione.")])

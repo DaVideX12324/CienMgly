@@ -12,6 +12,10 @@ const ShopPanelScript = preload("../../ui/shop_panel.gd")
 ## Linie przed otwarciem sklepu (puste = od razu okno).
 @export var intro_lines: PackedStringArray = []
 @export var intro_lines_key: String = ""
+## Po zamknięciu sklepu z zakupem sprzedawca idzie do swojego stanowiska (QuizRpgNpc.work_station, np. stołu alchemicznego).
+@export var work_on_purchase: bool = false
+
+var _purchases := 0
 
 
 ## Pozycje w sprzedaży (z przedmiotem i odblokowaną flagą).
@@ -31,6 +35,7 @@ func buy(npc: Node, entry: QuizRpgShopEntry, count: int = 1) -> bool:
 	if not ps.spend_gold(entry.final_price() * count):
 		return false
 	ps.add_item(entry.item.item_id, count)
+	_purchases += 1
 	return true
 
 
@@ -49,5 +54,8 @@ func sell(npc: Node, item_id: String, count: int = 1) -> bool:
 func run(npc: Node) -> void:
 	if not intro_lines.is_empty():
 		await npc.say(QuizRpgNpcContext.lines(intro_lines, intro_lines_key))
+	_purchases = 0
 	var panel := ShopPanelScript.open(npc, self)
 	await panel.closed
+	if work_on_purchase and _purchases > 0 and npc.has_method("work_at_station"):
+		await npc.work_at_station()

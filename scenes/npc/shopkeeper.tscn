@@ -132,6 +132,7 @@ required_flag = "boss:forge"
 script = ExtResource("4_ynlsj")
 stock = Array[ExtResource("5_2msha")]([SubResource("Resource_xqeu1"), SubResource("Resource_hm6iv"), SubResource("Resource_8t3o7"), SubResource("Resource_1xkqs"), SubResource("Resource_krtuy"), SubResource("Resource_ujakb"), SubResource("Resource_pot1"), SubResource("Resource_pot2"), SubResource("Resource_pot3"), SubResource("Resource_pot4"), SubResource("Resource_pot5"), SubResource("Resource_pot6"), SubResource("Resource_pot7"), SubResource("Resource_pot8"), SubResource("Resource_pot9"), SubResource("Resource_pot10"), SubResource("Resource_pot11"), SubResource("Resource_pot12"), SubResource("Resource_pot13"), SubResource("Resource_pot14"), SubResource("Resource_pot15"), SubResource("Resource_pot16")])
 intro_lines = PackedStringArray()
+work_on_purchase = true
 label = "Handel"
 label_key = "npc.service.shop"
 
