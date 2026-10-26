@@ -5,7 +5,8 @@
 Cień = sylwetka sprite'ów sceny ściśnięta w pionie do SQUASH * szerokości (jak cienie koron
 z paczki: 105x48 przy drzewie szerokim na 106 px), z wypełnionymi dziurami, środkiem w podstawie
 obiektu (dół sprite'a - 2 px = origin). Wszystkie cienie trafiają do jednego atlasu PNG,
-a każda scena dostaje na końcu węzeł "Shadow" (Sprite2D, z_index = -1 -> pod postaciami i obiektami).
+a każda scena dostaje na końcu węzeł "Shadow" (Sprite2D, z_index 0, show_behind_parent -> pod sprite'ami
+obiektu, w y-sorcie razem z nim).
 
 Duże drzewa (ROTATED: rozmiary s3-s5): cień obrócony o 180° i przesunięty pod drzewo — górna krawędź
 w podstawie, korona cienia pada na południe (wzór usera: tree_m3_s3_r0c0 / r1c0).
@@ -175,6 +176,7 @@ def pack(images):
 
 
 SHADOW_NODE = r'\[node name="Shadow" type="Sprite2D" parent="\."[^\]\n]*\]\n'
+BEHIND = "show_behind_parent = true\n"
 
 
 def patch_scene(text, region, offset, turn=None):
@@ -189,15 +191,17 @@ def patch_scene(text, region, offset, turn=None):
         text = re.sub(r"(%s(?:.*\n)*?offset = )Vector2\([^)]*\)" % SHADOW_NODE,
                       lambda m: m.group(1) + off, text, count=1)
         node = re.search(SHADOW_NODE + r"(?:[^\[\n].*\n?)*", text)
-        if rot and "rotation = " not in node.group(0) and "position = " not in node.group(0):
-            text = text[:node.start()] + node.group(0).replace("z_index = -1\n", "z_index = -1\n" + rot, 1) \
-                + text[node.end():]
-        return text
+        body = node.group(0)
+        if "show_behind_parent = " not in body:
+            body = re.sub(SHADOW_NODE, lambda m: m.group(0) + BEHIND, body, count=1)
+        if rot and "rotation = " not in body and "position = " not in body:
+            body = body.replace(BEHIND, BEHIND + rot, 1)
+        return text[:node.start()] + body + text[node.end():]
     ext_line = '[ext_resource type="Texture2D" path="res://%s" id="%s"]' % (ATLAS, TEX_ID)
     sub = ('[sub_resource type="AtlasTexture" id="%s"]\natlas = ExtResource("%s")\nregion = %s\nfilter_clip = true\n\n'
            % (SUB_ID, TEX_ID, reg))
-    node = ('\n[node name="Shadow" type="Sprite2D" parent="."]\nz_index = -1\n%stexture = SubResource("%s")\n'
-            'centered = false\noffset = %s\n' % (rot, SUB_ID, off))
+    node = ('\n[node name="Shadow" type="Sprite2D" parent="."]\n%s%stexture = SubResource("%s")\n'
+            'centered = false\noffset = %s\n' % (BEHIND, rot, SUB_ID, off))
     exts = list(re.finditer(r"^\[ext_resource [^\n]*\]$", text, re.M))
     text = text[:exts[-1].end()] + "\n" + ext_line + text[exts[-1].end():]
     first_node = re.search(r"^\[node ", text, re.M)
