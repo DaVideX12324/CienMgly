@@ -5,3 +5,5 @@
 
 # _host/assets: kopia assetow hosta generowana przez tools/sync_host_copies.gd - assety sa w prywatnym repo
 /_host/assets/
+
+__pycache__/
