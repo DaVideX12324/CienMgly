@@ -3,12 +3,16 @@
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://b7g5dqmag7gsi" path="res://modules/quiz_rpg/scripts/enemies/plant_1.gd" id="2_script"]
 [ext_resource type="SpriteFrames" uid="uid://3wjddt483e2" path="res://modules/quiz_rpg/resources/enemies/enemy_plant_1.tres" id="3_frames"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="9_skill_script"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/enemies/skills/poison_vine.tres" id="9_poison_vine"]
+[ext_resource type="Script" uid="uid://tc25lu63cisl" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="9_skill_script"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fix"]
 radius = 3.0
 height = 8.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_m1qls"]
+resource_local_to_scene = true
+radius = 70.0
 
 [node name="Enemy" unique_id=696977566 instance=ExtResource("1_base")]
 script = ExtResource("2_script")
@@ -26,10 +30,14 @@ encounter_tier = 1
 patrol_speed = 65.0
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
+position = Vector2(0, 1)
 sprite_frames = ExtResource("3_frames")
 animation = &"attack_down"
+offset = Vector2(0, -14)
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
-position = Vector2(0, 6)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_fix")
+
+[node name="CollisionShape2D" parent="DetectionArea" parent_id_path=PackedInt32Array(2045348945) index="0" unique_id=1963073735]
+shape = SubResource("CircleShape2D_m1qls")

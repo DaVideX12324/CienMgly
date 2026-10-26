@@ -8,8 +8,11 @@
 radius = 5.0
 height = 16.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_k51id"]
+resource_local_to_scene = true
+radius = 70.0
+
 [node name="Enemy" unique_id=1203806039 instance=ExtResource("1_base")]
-y_sort_enabled = true
 script = ExtResource("2_script")
 enemy_name = "Slime 1"
 quiz_id = "ogolne"
@@ -19,6 +22,8 @@ attack = 16
 defense = 22
 magic_attack = 16
 magic_defense = 22
+enemy_level = 5
+xp_reward = 600
 encounter_tier = 1
 patrol_speed = 60.0
 
@@ -36,7 +41,8 @@ shape = SubResource("CapsuleShape2D_fix")
 position = Vector2(-0.5, -8)
 
 [node name="CollisionShape2D" parent="DetectionArea" index="0" unique_id=1963073735]
+shape = SubResource("CircleShape2D_k51id")
 debug_color = Color(0, 0.6, 0.69803923, 0)
 
-[node name="RayCast2D" parent="." index="3"]
+[node name="RayCast2D" parent="." index="3" unique_id=2107681577]
 position = Vector2(-0.5, -8)

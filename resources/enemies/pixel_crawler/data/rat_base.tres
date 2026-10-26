@@ -1,15 +1,13 @@
 [gd_resource type="Resource" script_class="QuizRpgEnemyData" format=3 uid="uid://btk1rubvubia1"]
 
 [ext_resource type="Script" uid="uid://c2e6oyqepnkc4" path="res://modules/quiz_rpg/scripts/enemies/enemy_data.gd" id="1_data"]
+[ext_resource type="Script" uid="uid://tc25lu63cisl" path="res://modules/quiz_rpg/scripts/enemies/enemy_skill.gd" id="1_htiu6"]
 
 [resource]
 script = ExtResource("1_data")
 enemy_name = "Szczur"
-scan_text = "Zwykły gryzoń z kanałów. Mało wytrzymały, lecz zwinny i kąśliwy."
 quiz_id = "ogolne"
-quiz_category = "ogolne"
-is_boss = false
-question_count = 3
+scan_text = "Zwykły gryzoń z kanałów. Mało wytrzymały, lecz zwinny i kąśliwy."
 max_hp = 121
 attack = 16
 defense = 22
@@ -17,10 +15,6 @@ magic_attack = 16
 magic_defense = 22
 xp_reward = 200
 encounter_tier = 1
-min_encounter_size = 1
-max_encounter_size = 3
 patrol_speed = 75.0
 detection_radius = 100.0
-body_color = Color(0.9, 0.2, 0.2, 1)
-shape_type = 0
 metadata/_custom_type_script = "uid://c2e6oyqepnkc4"
