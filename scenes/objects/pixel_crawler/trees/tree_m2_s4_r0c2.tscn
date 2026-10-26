@@ -28,6 +28,8 @@ polygon = PackedVector2Array(-7, -3, -6, -4, 2, -4, 3, -3, 3, 1, 2, 2, -6, 2, -7
 
 [node name="Shadow" type="Sprite2D" parent="."]
 z_index = -1
+position = Vector2(-1, 10)
+rotation = 3.1415927
 texture = SubResource("AtlasTexture_shadow")
 centered = false
 offset = Vector2(-22, -9)

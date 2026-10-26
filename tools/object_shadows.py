@@ -7,7 +7,11 @@ z paczki: 105x48 przy drzewie szerokim na 106 px), z wypełnionymi dziurami, śr
 obiektu (dół sprite'a - 2 px = origin). Wszystkie cienie trafiają do jednego atlasu PNG,
 a każda scena dostaje na końcu węzeł "Shadow" (Sprite2D, z_index = -1 -> pod postaciami i obiektami).
 
-Ponowne uruchomienie przelicza atlas i podmienia region / offset istniejących węzłów "Shadow".
+Duże drzewa (ROTATED: rozmiary s3-s5): cień obrócony o 180° i przesunięty pod drzewo — górna krawędź
+w podstawie, korona cienia pada na południe (wzór usera: tree_m3_s3_r0c0 / r1c0).
+
+Ponowne uruchomienie przelicza atlas i podmienia region / offset istniejących węzłów "Shadow";
+position / rotation już obecne w węźle zostają (ręczne poprawki usera).
 
 Użycie (z katalogu hosta):
     python modules/quiz_rpg/tools/object_shadows.py [--dry-run]
@@ -32,6 +36,7 @@ PAD = 1
 BASE_LIFT = 2  # dół sprite'a leży 2 px pod origin (środek kratki kotwicy)
 # sceny bez cienia (wisząca lampa) albo dziedziczące cień po bazie
 SKIP = {"lamps/lantern_hanging.tscn", "lamps/lamp_post.tscn", "lamps/lamp_post_left.tscn"}
+ROTATED = re.compile(r"^trees/tree_m\d_s[345]_")
 TEX_ID = "shadow_tex"
 SUB_ID = "AtlasTexture_shadow"
 
@@ -126,6 +131,11 @@ def fill_holes(mask):
     return [[not outside[y][x] for x in range(w)] for y in range(h)]
 
 
+def turned(img, off):
+    """position węzła cienia obróconego o 180°: górna krawędź w podstawie (y = 0), ten sam zakres x."""
+    return 2 * off[0] + img.width, off[1] + img.height
+
+
 def shadow_of(text):
     """(obraz cienia, offset względem origin) albo None."""
     s = silhouette(text)
@@ -164,19 +174,30 @@ def pack(images):
     return pos, y + row_h
 
 
-def patch_scene(text, region, offset):
+SHADOW_NODE = r'\[node name="Shadow" type="Sprite2D" parent="\."[^\]\n]*\]\n'
+
+
+def patch_scene(text, region, offset, turn=None):
+    """turn: position cienia obróconego o 180° (duże drzewa) albo None. Istniejących position/rotation
+    węzła nie rusza."""
     reg = "Rect2(%d, %d, %d, %d)" % region
     off = "Vector2(%d, %d)" % offset
+    rot = "position = Vector2(%d, %d)\nrotation = 3.1415927\n" % turn if turn else ""
     if SUB_ID in text:
         text = re.sub(r'(\[sub_resource type="AtlasTexture" id="%s"\]\n(?:.*\n)*?region = )Rect2\([^)]*\)' % SUB_ID,
                       lambda m: m.group(1) + reg, text, count=1)
-        return re.sub(r'(\[node name="Shadow" type="Sprite2D" parent="\."\]\n(?:.*\n)*?offset = )Vector2\([^)]*\)',
+        text = re.sub(r"(%s(?:.*\n)*?offset = )Vector2\([^)]*\)" % SHADOW_NODE,
                       lambda m: m.group(1) + off, text, count=1)
+        node = re.search(SHADOW_NODE + r"(?:[^\[\n].*\n?)*", text)
+        if rot and "rotation = " not in node.group(0) and "position = " not in node.group(0):
+            text = text[:node.start()] + node.group(0).replace("z_index = -1\n", "z_index = -1\n" + rot, 1) \
+                + text[node.end():]
+        return text
     ext_line = '[ext_resource type="Texture2D" path="res://%s" id="%s"]' % (ATLAS, TEX_ID)
     sub = ('[sub_resource type="AtlasTexture" id="%s"]\natlas = ExtResource("%s")\nregion = %s\nfilter_clip = true\n\n'
            % (SUB_ID, TEX_ID, reg))
-    node = ('\n[node name="Shadow" type="Sprite2D" parent="."]\nz_index = -1\ntexture = SubResource("%s")\n'
-            'centered = false\noffset = %s\n' % (SUB_ID, off))
+    node = ('\n[node name="Shadow" type="Sprite2D" parent="."]\nz_index = -1\n%stexture = SubResource("%s")\n'
+            'centered = false\noffset = %s\n' % (rot, SUB_ID, off))
     exts = list(re.finditer(r"^\[ext_resource [^\n]*\]$", text, re.M))
     text = text[:exts[-1].end()] + "\n" + ext_line + text[exts[-1].end():]
     first_node = re.search(r"^\[node ", text, re.M)
@@ -202,7 +223,7 @@ def main():
         img, off = res
         key = img.tobytes() + bytes(str(img.size), "ascii")
         shadows.setdefault(key, img)
-        per_scene[f] = (key, off)
+        per_scene[f] = (key, off, turned(img, off) if ROTATED.match(rel) else None)
     pos, h = pack(shadows)
     atlas = Image.new("RGBA", (ATLAS_W, h), (0, 0, 0, 0))
     for key, img in shadows.items():
@@ -212,10 +233,10 @@ def main():
         atlas.save(os.path.join(os.environ.get("TEMP", "."), "Shadows_Objects_dry.png"))
         return
     atlas.save(os.path.join(HOST, ATLAS))
-    for f, (key, off) in per_scene.items():
+    for f, (key, off, turn) in per_scene.items():
         img = shadows[key]
         text = open(f, encoding="utf-8", newline="").read()
-        new = patch_scene(text, (pos[key][0], pos[key][1], img.width, img.height), off)
+        new = patch_scene(text, (pos[key][0], pos[key][1], img.width, img.height), off, turn)
         if new != text:
             open(f, "w", encoding="utf-8", newline="").write(new)
 
