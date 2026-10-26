@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 [ext_resource type="Texture2D" uid="uid://b7a58vn5brc8w" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Alchemy/Alchemy_Table_01-Sheet.png" id="1_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_di3eg"]
@@ -322,6 +323,14 @@ animations = [{
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_di3eg")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_di3eg")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_uz316")
@@ -510,20 +519,24 @@ animations = [{
 "texture": SubResource("AtlasTexture_3zwvv")
 }],
 "loop": true,
-"name": &"default",
+"name": &"work",
 "speed": 10.0
 }]
 
 [node name="AlchemyTable1" type="StaticBody2D" unique_id=1881768658]
 collision_layer = 32
 collision_mask = 0
+script = ExtResource("2_station")
 metadata/object_group = "stations"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1099301111]
 sprite_frames = SubResource("SpriteFrames_i558e")
-autoplay = "default"
+animation = &"idle"
 centered = false
 offset = Vector2(-16, -62)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1749826869]
 polygon = PackedVector2Array(-15, -7, -14, -8, 14, -8, 15, -7, 15, 1, 14, 2, -14, 2, -15, 1)
+
+[node name="WorkSpot" type="Marker2D" parent="." unique_id=1008306975]
+position = Vector2(0, 7)

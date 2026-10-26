@@ -11,6 +11,9 @@ const UpgradePanelScript = preload("../../ui/upgrade_panel.gd")
 
 enum Status { OK, LOCKED, GOLD, ITEM }
 
+## Liczba ulepszeń wykonanych od ostatniego uruchomienia usługi (po zamknięciu panelu kowal idzie do kowadła).
+var _upgrades_done := 0
+
 @export var intro_lines: PackedStringArray = []
 @export var intro_lines_key: String = ""
 
@@ -65,14 +68,21 @@ func upgrade(npc: Node, offer: Dictionary) -> bool:
 		ps.add_gold(it.upgrade_gold)
 		return false
 	if int(offer.member) >= 0:
-		return ps.replace_equipped_item(int(offer.member), str(offer.slot), it.upgrade_to)
+		var ok: bool = ps.replace_equipped_item(int(offer.member), str(offer.slot), it.upgrade_to)
+		if ok:
+			_upgrades_done += 1
+		return ok
 	ps.consume_item(it.item_id, 1)
 	ps.add_item(it.upgrade_to, 1)
+	_upgrades_done += 1
 	return true
 
 
 func run(npc: Node) -> void:
 	if not intro_lines.is_empty():
 		await npc.say(QuizRpgNpcContext.lines(intro_lines, intro_lines_key))
+	_upgrades_done = 0
 	var panel := UpgradePanelScript.open(npc, self)
 	await panel.closed
+	if _upgrades_done > 0 and npc.has_method("work_at_station"):
+		await npc.work_at_station()

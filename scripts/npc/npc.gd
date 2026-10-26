@@ -36,6 +36,11 @@ const DialogBox = preload("../ui/dialog_box.gd")
 ## Linie na pożegnanie (puste = bez).
 @export var farewell: PackedStringArray = []
 @export var farewell_key: String = ""
+## Stanowisko pracy rzemieślnika (QuizRpgStation w mieście): po usłudze z efektem (np. ulepszeniu) NPC idzie do niego,
+## stanowisko gra animację „work” przez work_seconds, NPC wraca na miejsce. Puste = bez wędrówki.
+@export var work_station: QuizRpgStation
+@export var work_seconds: float = 3.0
+@export var walk_speed: float = 60.0
 
 var _busy := false
 
@@ -53,6 +58,36 @@ func _apply_look() -> void:
 	sprite.offset = sprite_offset
 	if sprite_frames != null and sprite_frames.has_animation(&"idle"):
 		sprite.play(&"idle")
+
+
+## Idzie do stanowiska, pracuje przy nim i wraca (korutyna); bez work_station nic nie robi.
+func work_at_station() -> void:
+	if work_station == null or not is_inside_tree():
+		return
+	var home := global_position
+	await _walk_to(work_station.work_spot())
+	work_station.start_work()
+	await get_tree().create_timer(work_seconds).timeout
+	work_station.stop_work()
+	await _walk_to(home)
+	_apply_look()
+	await say(PackedStringArray([QuizRpgI18n.t("npc.work.done", "Gotowe.")]))
+
+
+## Przejście po prostej (NPC bez animacji chodu: idle, zwrócony w stronę celu); na czas drogi bez kolizji.
+func _walk_to(target: Vector2) -> void:
+	var dist := global_position.distance_to(target)
+	if dist < 1.0:
+		return
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite:
+		sprite.flip_h = target.x < global_position.x
+	var layer := collision_layer
+	collision_layer = 0
+	var tween := create_tween()
+	tween.tween_property(self, "global_position", target, dist / maxf(walk_speed, 1.0))
+	await tween.finished
+	collision_layer = layer
 
 
 func display_name() -> String:

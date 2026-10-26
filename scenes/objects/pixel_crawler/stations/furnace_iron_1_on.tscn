@@ -1,57 +1,62 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 [ext_resource type="Texture2D" uid="uid://gfaq14jpuqcg" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Iron_01-Sheet.png" id="1_tex"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_brgvv"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_8d47p"]
 atlas = ExtResource("1_tex")
 region = Rect2(0, 0, 32, 48)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_dbs8t"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_smxp1"]
 atlas = ExtResource("1_tex")
 region = Rect2(32, 0, 32, 48)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3dvgr"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_uzevd"]
 atlas = ExtResource("1_tex")
 region = Rect2(0, 48, 32, 48)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_n75ec"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_ws780"]
 atlas = ExtResource("1_tex")
 region = Rect2(32, 48, 32, 48)
 filter_clip = true
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_g8d47"]
+[sub_resource type="SpriteFrames" id="SpriteFrames_n0p4f"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_brgvv")
+"texture": SubResource("AtlasTexture_8d47p")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_dbs8t")
+"texture": SubResource("AtlasTexture_smxp1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_3dvgr")
+"texture": SubResource("AtlasTexture_uzevd")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_n75ec")
+"texture": SubResource("AtlasTexture_ws780")
 }],
 "loop": true,
-"name": &"default",
+"name": &"work",
 "speed": 6.0
 }]
 
-[node name="FurnaceIron1On" type="StaticBody2D" unique_id=1619128422]
+[node name="FurnaceIron1On" type="StaticBody2D" unique_id=1921984251]
 collision_layer = 32
 collision_mask = 0
+script = ExtResource("2_station")
 metadata/object_group = "stations"
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1536402407]
-sprite_frames = SubResource("SpriteFrames_g8d47")
-autoplay = "default"
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1261886658]
+sprite_frames = SubResource("SpriteFrames_n0p4f")
+animation = &"work"
 centered = false
 offset = Vector2(-16, -46)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1427858986]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1929827082]
 polygon = PackedVector2Array(-15, -9, -14, -10, 14, -10, 15, -9, 15, 1, 14, 2, -14, 2, -15, 1)
+
+[node name="WorkSpot" type="Marker2D" parent="." unique_id=2022179041]
+position = Vector2(0, 7)

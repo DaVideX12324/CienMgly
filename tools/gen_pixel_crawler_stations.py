@@ -15,6 +15,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 PACK = 'assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/'
 OUT = ROOT + 'modules/quiz_rpg/scenes/objects/pixel_crawler/stations/'
 GROUP = 'stations'
+STATION_SCRIPT = 'res://modules/quiz_rpg/scripts/world/station.gd'
 random.seed(11)
 used = set()
 
@@ -151,7 +152,8 @@ def write_static(name, png, rect, top_h):
     print('static', name, rect)
 
 
-def write_animated(name, png, fw, fh, fps, top_h, flip_empty=True):
+def write_animated(name, png, fw, fh, fps, top_h):
+    """Animowane stanowisko: skrypt QuizRpgStation, animacje „idle” (klatka 0) i „work” (pętla); piec bez „idle” gra stale."""
     a = load(png)
     cols, rows = a.shape[1] // fw, a.shape[0] // fh
     frames = []
@@ -160,19 +162,28 @@ def write_animated(name, png, fw, fh, fps, top_h, flip_empty=True):
             if a[r * fh:(r + 1) * fh, c * fw:(c + 1) * fw].any():
                 frames.append((c * fw, r * fh))
     s, title = head(png, name)
+    s = s.replace('[ext_resource type="Texture2D"', f'[ext_resource type="Script" path="{STATION_SCRIPT}" id="2_station"]\n[ext_resource type="Texture2D"', 1)
     ids = []
     for (x, y) in frames:
         i = f'AtlasTexture_{nid()}'
         ids.append(i)
         s += f'[sub_resource type="AtlasTexture" id="{i}"]\natlas = ExtResource("1_tex")\nregion = Rect2({x}, {y}, {fw}, {fh})\nfilter_clip = true\n\n'
     sf = 'SpriteFrames_' + nid()
-    frame_list = ', '.join('{\n"duration": 1.0,\n"texture": SubResource("%s")\n}' % i for i in ids)
-    s += f'[sub_resource type="SpriteFrames" id="{sf}"]\nanimations = [{{\n"frames": [{frame_list}],\n"loop": true,\n"name": &"default",\n"speed": {fps}.0\n}}]\n\n'
+
+    def anim(anim_name, tex_ids, speed):
+        fl = ', '.join('{\n"duration": 1.0,\n"texture": SubResource("%s")\n}' % i for i in tex_ids)
+        return f'{{\n"frames": [{fl}],\n"loop": true,\n"name": &"{anim_name}",\n"speed": {speed}\n}}'
+    has_idle = not name.endswith('_on')
+    anims = ([anim('idle', ids[:1], '1.0')] if has_idle else []) + [anim('work', ids, f'{fps}.0')]
+    s += f'[sub_resource type="SpriteFrames" id="{sf}"]\nanimations = [' + ', '.join(anims) + ']\n\n'
+    first = 'idle' if has_idle else 'work'
     sprite = (f'[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id={uniq()}]\nsprite_frames = SubResource("{sf}")\n'
-              f'autoplay = "default"\ncentered = false\noffset = Vector2({-fw // 2}, {-(fh - 2)})\n')
-    # podstawa = szerokość treści na dolnych wierszach klatki
+              f'animation = &"{first}"\ncentered = false\noffset = Vector2({-fw // 2}, {-(fh - 2)})\n')
     box = tight(a, frames[0][0], frames[0][1], frames[0][0] + fw, frames[0][1] + fh)
-    save(name, s + body(title, name, sprite, collision((0, 0, box[2], box[3]), top_h)))
+    sc = body(title, name, sprite, collision((0, 0, box[2], box[3]), top_h))
+    sc = sc.replace('metadata/object_group', 'script = ExtResource("2_station")\nmetadata/object_group', 1)
+    sc += f'\n[node name="WorkSpot" type="Marker2D" parent="." unique_id={uniq()}]\nposition = Vector2(0, 7)\n'
+    save(name, s + sc)
     print('animated', name, f'{len(frames)} kl.', (fw, fh))
 
 

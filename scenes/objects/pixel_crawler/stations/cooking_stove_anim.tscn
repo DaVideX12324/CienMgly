@@ -1,57 +1,70 @@
 [gd_scene format=3]
 
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 [ext_resource type="Texture2D" uid="uid://d3v1p2o3t4smt" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooker/Cooker_03-Sheet.png" id="1_tex"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ye1kj"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_iijuc"]
 atlas = ExtResource("1_tex")
 region = Rect2(0, 0, 48, 32)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_enk5o"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_mpip3"]
 atlas = ExtResource("1_tex")
 region = Rect2(48, 0, 48, 32)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_uviij"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_xxhrj"]
 atlas = ExtResource("1_tex")
 region = Rect2(96, 0, 48, 32)
 filter_clip = true
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ucmpi"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_elwdh"]
 atlas = ExtResource("1_tex")
 region = Rect2(144, 0, 48, 32)
 filter_clip = true
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_p3xxh"]
+[sub_resource type="SpriteFrames" id="SpriteFrames_tulhr"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ye1kj")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_enk5o")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_uviij")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_ucmpi")
+"texture": SubResource("AtlasTexture_iijuc")
 }],
 "loop": true,
-"name": &"default",
+"name": &"idle",
+"speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_iijuc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mpip3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xxhrj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elwdh")
+}],
+"loop": true,
+"name": &"work",
 "speed": 6.0
 }]
 
-[node name="CookingStoveAnim" type="StaticBody2D" unique_id=1314482078]
+[node name="CookingStoveAnim" type="StaticBody2D" unique_id=2120931346]
 collision_layer = 32
 collision_mask = 0
+script = ExtResource("2_station")
 metadata/object_group = "stations"
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1586271826]
-sprite_frames = SubResource("SpriteFrames_p3xxh")
-autoplay = "default"
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=2131519528]
+sprite_frames = SubResource("SpriteFrames_tulhr")
+animation = &"idle"
 centered = false
 offset = Vector2(-24, -30)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1153877195]
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1950168338]
 polygon = PackedVector2Array(-22, -7, -21, -8, 21, -8, 22, -7, 22, 1, 21, 2, -21, 2, -22, 1)
+
+[node name="WorkSpot" type="Marker2D" parent="." unique_id=2131160722]
+position = Vector2(0, 7)

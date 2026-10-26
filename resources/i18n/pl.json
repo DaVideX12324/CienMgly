@@ -470,6 +470,7 @@
   "npc.villager.name": "Lina",
   "npc.villager.talk_1": "Czasem wydaje mi się, że pamiętam śpiew ptaków… ale Mgła zabiera wszystko.",
   "npc.villager.talk_2": "Uważaj na siebie. Słyszałam, że pod miastem ktoś widział światło w kanałach.",
+  "npc.work.done": "Gotowe.",
   "party.hp_full": "HP jest pełne.",
   "party.invalid_target": "Nieprawidłowy cel.",
   "party.item_full_hp": "{name}: HP jest pełne.",
