@@ -19,6 +19,13 @@ extends Node2D
 		tiers = v
 		if is_node_ready():
 			refresh()
+## Przesunięcie sceny danego tieru względem slotu (indeks 0 = tier 1; brak wpisu = bez przesunięcia) — wyższe tiery
+## zajmują więcej miejsca, więc można je odsunąć od ściany albo sąsiednich obiektów. Miejsce pracy NPC idzie razem.
+@export var tier_offsets: PackedVector2Array = PackedVector2Array():
+	set(v):
+		tier_offsets = v
+		if is_node_ready():
+			refresh()
 ## Tylko podgląd w edytorze; w grze decyduje zapis.
 @export_range(1, 5) var preview_tier: int = 1:
 	set(v):
@@ -70,6 +77,7 @@ func _show(t: int) -> void:
 	var scene := tiers[_tier - 1]
 	if scene != null:
 		_station = scene.instantiate() as Node2D
+		_station.position = tier_offsets[_tier - 1] if _tier <= tier_offsets.size() else Vector2.ZERO
 		add_child(_station)
 
 
