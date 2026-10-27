@@ -138,6 +138,12 @@
       "taken": false,
       "pl": "Promotor? Zaliczenie i tak trzeba zdobyć pytaniami.",
       "en": "Professor? You still have to pass with the questions."
+    },
+    {
+      "name": "andrzej",
+      "taken": false,
+      "pl": "Nie pytają Cię o imię",
+      "en": "They don't ask for your name"
     }
   ]
 }
