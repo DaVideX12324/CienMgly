@@ -80,6 +80,10 @@ const ANSWERS_GRID := "grid"
 ## Umiejętności i przedmioty w walce: siatka 2 kolumny albo jedna przewijana lista.
 ## Animacja wejścia do walki (zrzut świata wiruje i zamyka się w czerń).
 const SETTING_COMBAT_INTRO := "ui_combat_intro"
+## Styl animacji wejścia/wyjścia z walki: wir z źrenicą albo paski z glitchem.
+const SETTING_COMBAT_INTRO_STYLE := "ui_combat_intro_style"
+const INTRO_SWIRL := "swirl"
+const INTRO_SLICES := "slices"
 const SETTING_LIST_LAYOUT := "ui_list_layout"
 const LIST_GRID := "grid"
 const LIST_SCROLL := "list"
@@ -87,6 +91,8 @@ const LIST_SCROLL := "list"
 const UI_OPTIONS: Array[Dictionary] = [
 	{"key": "ui_combat_compact", "label": "UI walki tylko na szerokość treści", "type": "bool", "default": false},
 	{"key": "ui_combat_intro", "label": "Animacja wejścia do walki", "type": "bool", "default": true},
+	{"key": "ui_combat_intro_style", "label": "Styl animacji wejścia do walki", "type": "choice", "default": "swirl",
+		"choices": [{"id": "swirl", "name": "Wir i źrenica"}, {"id": "slices", "name": "Paski z glitchem"}]},
 	{"key": "ui_pause_compact", "label": "Menu pauzy tylko na szerokość treści", "type": "bool", "default": false},
 	{"key": "ui_question_position", "label": "Pytanie w walce", "type": "choice", "default": "log",
 		"choices": [{"id": "log", "name": "W oknie logu (u góry)"}, {"id": "menu", "name": "W menu walki (nad odpowiedziami)"}]},
@@ -133,6 +139,8 @@ static func get_ui_options() -> Array[Dictionary]:
 					choice_key = "theme.opt.question_pos_" + cid
 				elif k == "answers_layout":
 					choice_key = "theme.opt.layout_" + cid
+				elif k == "combat_intro_style":
+					choice_key = "theme.opt.intro_" + cid
 				elif k == "list_layout":
 					choice_key = "theme.opt.layout_grid" if cid == "grid" else "theme.opt.list_scroll"
 				if choice_key != "":
@@ -380,6 +388,13 @@ static func pause_ui_compact() -> bool:
 static func combat_intro_enabled() -> bool:
 	var settings := _settings_service()
 	return bool(settings.call("get_module", MODULE_ID, SETTING_COMBAT_INTRO, true)) if settings else true
+
+
+## Styl animacji wejścia/wyjścia z walki (INTRO_SWIRL / INTRO_SLICES).
+static func combat_intro_style() -> String:
+	var settings := _settings_service()
+	var v := str(settings.call("get_module", MODULE_ID, SETTING_COMBAT_INTRO_STYLE, INTRO_SWIRL)) if settings else INTRO_SWIRL
+	return v if v == INTRO_SLICES else INTRO_SWIRL
 
 
 static func combat_ui_compact() -> bool:

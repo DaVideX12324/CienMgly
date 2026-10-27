@@ -188,11 +188,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Rozmiary okna i czcionek (skala UI z opcji — cała warstwa, UiLayerScale).
+## Offsetów panelu nie ustawiamy: kotwice i pozycję w ekranie logicznym liczy już UiLayerScale (z wartości ze sceny),
+## a nadpisanie ich tutaj wyrzucało okno pytania w lewy górny róg (środek panelu w punkcie 0,0).
 func _apply_sizes() -> void:
-	panel.offset_left = -340.0
-	panel.offset_top = -300.0
-	panel.offset_right = 340.0
-	panel.offset_bottom = 300.0
 	vbox.add_theme_constant_override("separation", 10)
 	title_label.add_theme_font_size_override("font_size", QuizTheme.snap(24))
 	question_label.add_theme_font_size_override("font_size", QuizTheme.snap(21))

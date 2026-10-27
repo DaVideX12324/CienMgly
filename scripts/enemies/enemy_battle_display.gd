@@ -58,7 +58,19 @@ func setup_from_source(source: Node2D) -> void:
 func _setup_animated_sprite(source_sprite: AnimatedSprite2D) -> void:
 	_use_programmer_art = false
 
-	if _animated_sprite == null:
+	# Ciało z rigiem (SpriteRig: ręce / broń jako dzieci) — kopia całego węzła z dziećmi, bez sygnałów wroga ze świata;
+	# offset zerowany (stopy liczone niżej od środka klatki), kierunek z mapy nie przechodzi do walki.
+	var has_rig := source_sprite.get_children().any(func(c: Node) -> bool: return c is SpriteRig)
+	if has_rig:
+		if _animated_sprite != null:
+			_animated_sprite.queue_free()
+		_animated_sprite = source_sprite.duplicate(Node.DUPLICATE_SCRIPTS) as AnimatedSprite2D
+		_animated_sprite.name = "BattleAnimatedSprite2D"
+		_animated_sprite.offset = Vector2.ZERO
+		_animated_sprite.flip_h = false
+		add_child(_animated_sprite)
+		_animated_sprite.animation_finished.connect(_on_sprite_animation_finished)
+	elif _animated_sprite == null:
 		_animated_sprite = AnimatedSprite2D.new()
 		_animated_sprite.name = "BattleAnimatedSprite2D"
 		add_child(_animated_sprite)

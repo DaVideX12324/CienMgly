@@ -1,12 +1,279 @@
 [gd_scene format=3 uid="uid://dv72ya0lgfeiv"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
+
 [ext_resource type="SpriteFrames" uid="uid://bntoj5e42dmql" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/rat_rogue.tres" id="2_frames"]
+
 [ext_resource type="Resource" uid="uid://dk0vngpelk6yj" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/rat_rogue.tres" id="3_data"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/sprite_rig.gd" id="RatRig_script"]
+
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat Weapons.png" id="RatRig_atlas"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
 height = 16.0
+
+[sub_resource type="Animation" id="RatRig_idle"]
+resource_name = "idle"
+length = 0.6667
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Arrow:visible")
+tracks/0/interp = 0
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Arrow:position")
+tracks/1/interp = 0
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1667, 0.3333, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(13, 45), Vector2(13, 46), Vector2(13, 46), Vector2(13, 46)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("HandBack:visible")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("HandBack:position")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.1667, 0.3333, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(17, 50), Vector2(17, 51), Vector2(17, 51), Vector2(17, 51)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Bow:visible")
+tracks/4/interp = 0
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Bow:position")
+tracks/5/interp = 0
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.1667, 0.3333, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(38, 32), Vector2(38, 33), Vector2(38, 33), Vector2(38, 33)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("HandFront:visible")
+tracks/6/interp = 0
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("HandFront:position")
+tracks/7/interp = 0
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 0.1667, 0.3333, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(47, 47), Vector2(47, 48), Vector2(47, 48), Vector2(47, 48)]
+}
+
+[sub_resource type="Animation" id="RatRig_walk"]
+resource_name = "walk"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Arrow:visible")
+tracks/0/interp = 0
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Arrow:position")
+tracks/1/interp = 0
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(14, 45), Vector2(13, 44), Vector2(13, 44), Vector2(12, 45), Vector2(13, 44), Vector2(13, 44)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("HandBack:visible")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("HandBack:position")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(18, 50), Vector2(17, 49), Vector2(17, 49), Vector2(16, 50), Vector2(17, 49), Vector2(17, 49)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Bow:visible")
+tracks/4/interp = 0
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Bow:position")
+tracks/5/interp = 0
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(39, 32), Vector2(38, 31), Vector2(38, 31), Vector2(37, 32), Vector2(38, 31), Vector2(38, 31)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("HandFront:visible")
+tracks/6/interp = 0
+tracks/6/loop_wrap = true
+tracks/6/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/7/type = "value"
+tracks/7/imported = false
+tracks/7/enabled = true
+tracks/7/path = NodePath("HandFront:position")
+tracks/7/interp = 0
+tracks/7/loop_wrap = true
+tracks/7/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(48, 47), Vector2(47, 46), Vector2(47, 46), Vector2(46, 47), Vector2(47, 46), Vector2(47, 46)]
+}
+
+[sub_resource type="Animation" id="RatRig_death"]
+resource_name = "death"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Arrow:visible")
+tracks/0/interp = 0
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("HandBack:visible")
+tracks/1/interp = 0
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Bow:visible")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("HandFront:visible")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+
+[sub_resource type="AnimationLibrary" id="RatRig_lib"]
+_data = {
+&"idle": SubResource("RatRig_idle"),
+&"walk": SubResource("RatRig_walk"),
+&"death": SubResource("RatRig_death")
+}
 
 [node name="Enemy" unique_id=1430772316 instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
@@ -21,3 +288,45 @@ offset = Vector2(-1, -28)
 position = Vector2(0, 4.0)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_body")
+
+[node name="Rig" type="Node2D" parent="AnimatedSprite2D"]
+script = ExtResource("RatRig_script")
+
+[node name="Arrow" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
+position = Vector2(13, 45)
+texture = ExtResource("RatRig_atlas")
+centered = false
+region_enabled = true
+region_rect = Rect2(16, 0, 16, 16)
+region_filter_clip_enabled = true
+
+[node name="HandBack" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
+position = Vector2(17, 50)
+texture = ExtResource("RatRig_atlas")
+centered = false
+region_enabled = true
+region_rect = Rect2(116, 53, 8, 7)
+region_filter_clip_enabled = true
+
+[node name="Bow" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
+position = Vector2(38, 32)
+texture = ExtResource("RatRig_atlas")
+centered = false
+region_enabled = true
+region_rect = Rect2(48, 48, 16, 32)
+region_filter_clip_enabled = true
+
+[node name="HandFront" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
+position = Vector2(47, 47)
+texture = ExtResource("RatRig_atlas")
+centered = false
+flip_h = true
+region_enabled = true
+region_rect = Rect2(116, 53, 8, 7)
+region_filter_clip_enabled = true
+
+[node name="RigAnim" type="AnimationPlayer" parent="AnimatedSprite2D/Rig"]
+root_node = NodePath("..")
+libraries = {
+&"": SubResource("RatRig_lib")
+}

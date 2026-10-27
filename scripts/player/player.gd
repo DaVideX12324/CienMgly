@@ -27,6 +27,7 @@ var _gm: Node  # GameManager
 var _follow_target: CharacterBody2D = null
 var _trail_points: Array[Vector2] = []
 var _body_color: Color = Color(0.2, 0.6, 1.0)
+var _scene_sprite: Array = []  # [klatki, offset] ze sceny — ułożenie z edytora
 var _outline_color: Color = Color(0.1, 0.3, 0.6)
 var _direction_color: Color = Color(1.0, 1.0, 0.3)
 
@@ -353,10 +354,15 @@ func apply_hero_data(hero_data: Dictionary) -> void:
 	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
 	var custom_frames: SpriteFrames = hero_data.get("sprite_frames") as SpriteFrames
 	if sprite and custom_frames:
+		if _scene_sprite.is_empty():
+			_scene_sprite = [sprite.sprite_frames, sprite.offset]
 		sprite.sprite_frames = custom_frames
 		sprite.visible = true
 		_use_programmer_art = false
-		if hero_data.get("sprite_offset") is Vector2:
+		# Te same klatki co w scenie -> offset z edytora (ułożony względem kolizji), inne -> z danych postaci.
+		if custom_frames == _scene_sprite[0]:
+			sprite.offset = _scene_sprite[1]
+		elif hero_data.get("sprite_offset") is Vector2:
 			sprite.offset = hero_data["sprite_offset"]
 	_body_color = hero_data.get("body_color", _body_color)
 	queue_redraw()
