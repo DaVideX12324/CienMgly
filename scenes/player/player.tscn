@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://player001"]
 
 [ext_resource type="Script" uid="uid://d382dc0bji8wj" path="res://modules/quiz_rpg/scripts/player/player.gd" id="1_player"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/fk_knight_frames.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/tq_warrior_frames.tres" id="2_frames"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_r0dpv"]
 radius = 2.0
@@ -23,7 +23,7 @@ run_speed_mult = 1.4
 y_sort_enabled = true
 sprite_frames = ExtResource("2_frames")
 animation = &"idle_down"
-offset = Vector2(0, -12)
+offset = Vector2(0, -12.5)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=2099671777]
 zoom = Vector2(5, 5)

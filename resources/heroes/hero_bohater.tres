@@ -17,7 +17,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/hearty_meal.tres" id="s_hearty_meal"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/revive_tonic.tres" id="s_revive_tonic"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/final_strike.tres" id="s_final_strike"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/fk_knight_frames.tres" id="f_frames"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/tq_warrior_frames.tres" id="f_frames"]
 
 [resource]
 script = ExtResource("1_hero_data")
@@ -25,7 +25,7 @@ hero_id = "bohater"
 display_name = "Bohater"
 actor_scene = ExtResource("2_player_scene")
 sprite_frames = ExtResource("f_frames")
-sprite_offset = Vector2(0, -12)
+sprite_offset = Vector2(0, -12.5)
 base_level = 1
 base_hp = 334
 hp_ref_level = 20
