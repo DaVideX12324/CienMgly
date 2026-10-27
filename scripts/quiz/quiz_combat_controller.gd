@@ -14,6 +14,7 @@ enum Band { PARTY_COMMAND, ACTOR_COMMAND, STATUS_ONLY, LIST }
 static var QuizPanelController: Script = load(QuizRpgPaths.host("res://scripts/shared/quiz/quiz_panel_controller.gd"))
 const EnemyBattleDisplayScript: Script = preload("../enemies/enemy_battle_display.gd")
 const POISON_COLOR := Color(0.78, 0.35, 0.95)
+const MESSAGE_CHARS_PER_SEC := 60.0  ## tempo wypisywania komunikatów w dolnym pasie (pojawił się, zwycięstwo, łup)
 const PARTY_CURSOR_MIN_PAD := 8.0  ## kursor wiersza drużyny: odstęp ramki od tekstu w poziomie (px)
 const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
@@ -168,6 +169,8 @@ var _enemy_target_highlight_node: Control = null
 var _action_buttons: Array[Button] = []
 var _selected_action_idx: int = 0
 var _victory_skip := false
+var _typing := false                 # komunikat wypisuje się znak po znaku (_type_label)
+var _type_skip := false              # Enter / Z / klik w trakcie wypisywania: reszta tekstu od razu
 var _more_marker_tween: Tween
 var _action_menu_open := false
 var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
@@ -184,7 +187,9 @@ var _input_pos := -1                 # która z nich wybiera teraz (-1 = Walcz /
 var _executing := false              # faza wykonania (akcje z _plans) — inaczej wybór akcji tylko ją zapisuje
 signal _round_question_answered(correct: bool)
 signal _notice_confirmed
-var _awaiting_notice := false              # komunikat w logu czeka na potwierdzenie gracza (Enter / Z / klik)
+var _appeared_shown := false               # „X appeared!” na starcie walki już pokazane
+var _entry_intro: Control                  # animacja wejścia do walki (nil, gdy wyłączona)
+var _awaiting_notice := false             # komunikat w logu czeka na potwierdzenie gracza (Enter / Z / klik)
 var _round_questions := false              # pytania rundy przed wykonaniem (odpowiedź zapisana w planie, bez akcji)
 var _round_running := false               # faza wykonania rundy trwa (bezpiecznik przed drugim _execute_round)
 var _acted_enemies: Dictionary = {}       # indeksy wrogów, którzy już działali w tej rundzie (bezpiecznik: raz na rundę)
@@ -261,13 +266,23 @@ func _exit_tree() -> void:
 		get_tree().paused = false
 
 
-## Animacja wejścia do walki (combat_intro.tscn): nakłada się na gotowy ekran walki i odsłania go po zamknięciu źrenicy.
+## Animacja wejścia do walki (combat_intro.tscn): nakłada się na gotowy ekran walki i odsłania go, gdy obraz jest czarny;
+## sam ekran walki w tym czasie „osiada” (lekki najazd kamery), zamiast pojawić się nagle.
 func play_entry_transition(snapshot: Image) -> void:
 	if snapshot == null or not QuizTheme.combat_intro_enabled():
 		return
 	var intro := preload("../../scenes/quiz/combat_intro.tscn").instantiate() as Control
 	add_child(intro)
-	intro.call("play", snapshot)
+	_entry_intro = intro
+	intro.covered.connect(_settle_in, CONNECT_ONE_SHOT)
+	intro.call("play", snapshot, QuizTheme.combat_intro_style())
+
+
+func _settle_in() -> void:
+	pivot_offset = size * 0.5
+	scale = Vector2.ONE * 1.06
+	create_tween().tween_property(self, "scale", Vector2.ONE, 0.7) \
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## Animacja wyjścia z walki: ta sama „źrenica” co przy wejściu, ale na zrzucie ekranu walki i na warstwie ponad wszystkim
@@ -285,7 +300,7 @@ func _play_exit_transition() -> void:
 	var outro := preload("../../scenes/quiz/combat_intro.tscn").instantiate() as Control
 	layer.add_child(outro)
 	outro.finished.connect(layer.queue_free)
-	outro.call("play", snapshot)
+	outro.call("play", snapshot, QuizTheme.combat_intro_style())
 	await outro.covered
 
 
@@ -477,6 +492,11 @@ func _input(event: InputEvent) -> void:
 	if _is_focus_click(event):
 		get_viewport().set_input_as_handled()
 		return
+	if _typing and (_is_menu_accept(event) or (event is InputEventMouseButton and event.pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT)):
+		_type_skip = true  # dopisuje tekst do końca, nie zatwierdza komunikatu
+		get_viewport().set_input_as_handled()
+		return
 	if _awaiting_notice and (_is_menu_accept(event) or (event is InputEventMouseButton and event.pressed 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT)):
 		confirm_notice()
 		get_viewport().set_input_as_handled()
@@ -657,6 +677,8 @@ func _start_round() -> void:
 
 ## Faza wyboru: Walcz / Uciekaj; postacie zdolne do ruchu (bez snu / ogłuszenia / paraliżu) w kolejności drużyny.
 func _begin_input() -> void:
+	if turn_number == 1 and not _appeared_shown:
+		await _show_appeared_window()
 	_executing = false
 	_round_running = false
 	_plans.clear()
@@ -904,6 +926,56 @@ func _average_agi(party: bool) -> float:
 
 
 ## Komunikat 1. rundy (przewaga / zaskoczenie) — w logu na start i po wyczyszczeniu logu przed ruchem postaci.
+## „X appeared!” na starcie walki (jak w FNaFB): dolny pas zamiast menu walki, jedna linia na rodzaj wroga, kopie jako
+## „Nazwa ×N”. Czeka na zatwierdzenie gracza (Enter / Z / klik), potem okna walki wjeżdżą po kolei (fade ze stopniowaniem).
+func _show_appeared_window() -> void:
+	_appeared_shown = true
+	var counts := {}
+	for unit in _enemy_units:
+		var src: Variant = unit.get("source", enemy)
+		var base: String = src.localized_name() if is_instance_valid(src) and src.has_method("localized_name") else enemy_name_str
+		counts[base] = int(counts.get(base, 0)) + 1
+	var lines: Array[String] = []
+	for base: String in counts:
+		var label: String = base if int(counts[base]) == 1 else "%s ×%d" % [base, int(counts[base])]
+		lines.append(QuizRpgI18n.tf("log.combat.appeared", {"name": label}, "{name} pojawił się!"))
+	phase = Phase.ENEMY_TURN
+	# Układ okien musi się ustalić (pomiar wysokości dolnego pasa w _get_or_create_victory_log).
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var lbl := _get_or_create_victory_log()
+	lbl.text = "\n".join(lines)
+	lbl.visible_characters = 0
+	lbl.visible = true
+	_message_window.modulate.a = 0.0
+	if is_instance_valid(_entry_intro):
+		await _entry_intro.finished  # najpierw pole walki wyłania się z czerni, dopiero potem okna (jak w FNaFB)
+	await _fade_in_message_window()
+	await _type_label(lbl)
+	_set_more_marker(true)
+	_awaiting_notice = true
+	await _notice_confirmed
+	_set_more_marker(false)
+	var fade_out := create_tween()
+	fade_out.tween_property(_message_window, "modulate:a", 0.0, 0.15)
+	await fade_out.finished
+	_message_window.visible = false
+	_message_window.modulate.a = 1.0
+	lbl.text = ""
+	if content_row == null:
+		return
+	content_row.visible = true
+	var windows: Array[Control] = []
+	for c in content_row.get_children():
+		if c is Control and (c as Control).visible:
+			windows.append(c as Control)
+			(c as Control).modulate.a = 0.0
+	var fade_in := create_tween().set_parallel(true)
+	for i in range(windows.size()):
+		fade_in.tween_property(windows[i], "modulate:a", 1.0, 0.3).set_delay(i * 0.08) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
 func _push_initiative_notice() -> void:
 	match _initiative:
 		Initiative.PREEMPTIVE:
@@ -3849,9 +3921,11 @@ func _show_message_sequence(lines: Array[String]) -> void:
 	lbl.text = ""
 	lbl.visible = true
 	_victory_skip = false
+	_message_window.modulate.a = 0.0
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var capacity := _victory_page_capacity(lbl)
+	await _fade_in_message_window()
 	var page := ""
 	for line in lines:
 		var candidate := line if page == "" else page + "\n" + line
@@ -3863,14 +3937,43 @@ func _show_message_sequence(lines: Array[String]) -> void:
 			while not _victory_skip:
 				await get_tree().create_timer(0.05).timeout
 			_set_more_marker(false)
+			page = ""
 			candidate = line
 			lbl.text = candidate
+		if not _victory_skip:
+			await _type_label(lbl, page.length() + (1 if page != "" else 0))  # tylko nowa linia
 		page = candidate
 		if _victory_skip:
 			continue
 		await _wait_for_victory_advance(1.2)
 	if not _victory_skip:
 		await _wait_for_victory_advance(3.0)
+	var fade_out := create_tween()
+	fade_out.tween_property(_message_window, "modulate:a", 0.0, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	await fade_out.finished
+
+
+## Okno komunikatów (dolny pas) wyłania się z przezroczystości.
+func _fade_in_message_window() -> void:
+	_message_window.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(_message_window, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tw.finished
+
+
+## Komunikat wypisuje się znak po znaku od `from` widocznych znaków; Enter / Z / klik dopisuje resztę od razu.
+func _type_label(lbl: Label, from: int = 0) -> void:
+	var total := lbl.get_total_character_count()
+	var shown := float(mini(from, total))
+	lbl.visible_characters = int(shown)
+	_typing = true
+	_type_skip = false
+	while shown < total and not _type_skip and is_inside_tree():
+		await get_tree().process_frame
+		shown += get_process_delta_time() * MESSAGE_CHARS_PER_SEC
+		lbl.visible_characters = mini(int(shown), total)
+	lbl.visible_characters = -1
+	_typing = false
 
 
 ## Ile linii mieści okno komunikatów (po ustawieniu stałej wysokości); minimum 1.

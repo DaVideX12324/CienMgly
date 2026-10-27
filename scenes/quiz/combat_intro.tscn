@@ -6,9 +6,9 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_intro"]
 shader = ExtResource("2_shader")
 shader_parameter/progress = 0.0
-shader_parameter/pixel_size_max = 40.0
-shader_parameter/swirl_turns = 0.9
-shader_parameter/zoom = 0.4
+shader_parameter/bands = 14.0
+shader_parameter/split_max = 0.035
+shader_parameter/punch = 0.12
 
 [node name="CombatIntro" type="Control"]
 process_mode = 3
