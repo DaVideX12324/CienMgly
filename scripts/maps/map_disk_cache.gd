@@ -206,6 +206,8 @@ static func sweep_once() -> void:
 
 
 static func sweep() -> void:
+	if not DirAccess.dir_exists_absolute(ROOT):
+		return  # nic jeszcze nie zapisano (świeża instalacja / wyczyszczony user://)
 	var dirs: Array = []
 	for d in DirAccess.get_directories_at(ROOT):
 		var p := ROOT.path_join(d)
