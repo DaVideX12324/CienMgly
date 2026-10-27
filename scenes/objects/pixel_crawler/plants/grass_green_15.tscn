@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_x7ifx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i2v7i"]
+atlas = ExtResource("1_x7ifx")
+region = Rect2(112, 170, 16, 22)
+filter_clip = true
+
+[node name="GrassGreen15" type="Node2D" unique_id=1075334864]
+metadata/object_group = "grass"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1038427497]
+texture = SubResource("AtlasTexture_i2v7i")
+centered = false
+offset = Vector2(-8, -21)
