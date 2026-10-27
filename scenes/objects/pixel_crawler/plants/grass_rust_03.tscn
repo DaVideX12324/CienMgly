@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_nhzbh"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gpq2z"]
+atlas = ExtResource("1_nhzbh")
+region = Rect2(51, 246, 9, 6)
+filter_clip = true
+
+[node name="GrassRust03" type="Node2D" unique_id=2083966622]
+metadata/object_group = "grass"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1108355427]
+texture = SubResource("AtlasTexture_gpq2z")
+centered = false
+offset = Vector2(-4, -5)

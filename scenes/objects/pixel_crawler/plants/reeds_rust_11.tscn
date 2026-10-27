@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_w7jhx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2i03q"]
+atlas = ExtResource("1_w7jhx")
+region = Rect2(128, 262, 16, 26)
+filter_clip = true
+
+[node name="ReedsRust11" type="Node2D" unique_id=1900937723]
+metadata/object_group = "reeds"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1781726801]
+texture = SubResource("AtlasTexture_2i03q")
+centered = false
+offset = Vector2(-8, -25)

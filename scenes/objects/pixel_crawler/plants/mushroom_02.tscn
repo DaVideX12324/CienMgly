@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_zwvvi"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_558ec"]
+atlas = ExtResource("1_zwvvi")
+region = Rect2(49, 338, 14, 14)
+filter_clip = true
+
+[node name="Mushroom02" type="Node2D" unique_id=1881768658]
+metadata/object_group = "mushrooms"
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1749826869]
+texture = SubResource("AtlasTexture_558ec")
+centered = false
+offset = Vector2(-7, -13)
