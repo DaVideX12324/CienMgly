@@ -1,0 +1,75 @@
+[gd_scene format=4 uid="uid://d3a1gf5k1rh1m"]
+
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_d7wmb"]
+[ext_resource type="PackedScene" uid="uid://b54xoenja4los" path="res://assets/scratch_desert_town/scenes/objects/desert_town/house_desert_red_stone_2.tscn" id="2_rsog6"]
+
+[sub_resource type="CircleShape2D" id="Circle_door"]
+radius = 14.0
+
+[node name="DomLLewy" type="StaticBody2D" unique_id=1372149907]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Tilesets" type="Node2D" parent="." unique_id=1616270924]
+y_sort_enabled = true
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=23554275]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAGAAEABQAIAAEAAAAHAAEABQAIAAgAAAAIAAEABQAIAAEAAAAJAAEABQAKAAgAAAADAAAABQAIAAgAAAACAAAABQAHAAgAAAAEAP7/BQAKAAEAAAAFAP7/BQAHAAcAAAAGAP7/BQAJAAcAAAAHAP7/BQAIAAcAAAAIAP7/BQAJAAcAAAAJAP7/BQAKAAcAAAACAP3/BQAHAAcAAAAEAP3/BQAJAAcAAAACAPz/BQAHAAYAAAADAP3/BQAIAAcAAAABAP//BQAHAAgAAAABAP7/BQAHAAcAAAABAPz/BQAHAAcAAAAFAAIABQAFADEAAAAGAAIABQAGADEAAAAHAAIABQAGADEAAAAJAAIABQAHADEAAAAIAAIABQAGADEAAAACAAEABQAFADEAAAABAAAABQAFADEAAAADAAEABQAGADEAAAAFAAEABQAHAAgAAAAEAAAABQAKAAwAAAAFAP3/BQAHAAYAAAAEAAEABQADADEAAAAGAPz/BQANAAgAAAAJAPz/BQAQAAgAAAAHAPz/BQAPAAgAAAAIAPz/BQAOAAgAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=1014576124]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAEAP7/BgAKAAwAAAAFAP7/BgALAAwAAAAGAP7/BgAMAAwAAAAHAP7/BgALAAwAAAAIAP7/BgAMAAwAAAAJAP7/BgAMAAwAAAAIAP3/BgALAAsAAAAJAP3/BgAMAAsAAAAEAPv/BgALAAsAAAAFAPv/BgAMAAsAAAACAPv/BgALAAsAAAADAPv/BgAMAAsAAAABAPv/BgALAAsAAAABAPz/BgALAAwAAAACAPz/BgALAAsAAAADAPz/BgAMAAsAAAACAP3/BgAKAAwAAAADAP3/BgALAAwAAAAEAP3/BgALAAsAAAAFAP3/BgAMAAsAAAAGAP3/BgALAAsAAAAHAP3/BgAMAAsAAAAEAPz/BgALAAsAAAAFAPz/BgAMAAsAAAABAPr/BgALAAoAAAACAPr/BgALAAoAAAADAPr/BgAMAAoAAAAEAPr/BgALAAoAAAAFAPr/BgAMAAoAAAAAAPr/BgAKAAoAAAAAAPv/BgAKAAsAAAAAAPz/BgAKAAwAAAAAAP3/BgAKAA0AAAACAP7/BgAKAA0AAAAEAP//BgAKAA0AAAAKAP7/BgANAAwAAAAKAP//BgANAA0AAAAKAP3/BgANAAsAAAAKAPz/BgANAAsAAAAGAPr/BgALAAoAAAAKAPv/BgANAAsAAAAKAPr/BgANAAoAAAAGAPz/BgAKAAkAAAAJAPz/BgANAAkAAAAJAPr/BgALAAoAAAAIAPr/BgALAAoAAAAHAPr/BgALAAoAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="Roof2" type="TileMapLayer" parent="Tilesets/Roof" unique_id=634319338]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAGAPr/BgAJAAcAAAAGAPv/BgAJAAkAAAAHAPn/BgALAAUAAAAHAPr/BgALAAYAAAAIAPn/BgAMAAUAAAAIAPr/BgAMAAYAAAAJAPr/BgAOAAcAAAAJAPv/BgAOAAkAAAAGAPz/BgAJAAoAAAAHAPv/BgALAAgAAAAIAPv/BgAMAAgAAAAJAPz/BgAOAAoAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets" unique_id=1924912039]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAHAAEACwAGABAAAAAHAAIACwADABQAAAAGAAIACwACABQAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=317365738]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAEAP//CwACABYAAAABAPf/CwAAABQAAAABAPj/CwAAABUAAAABAPn/CwAAABYAAAABAPr/CwAAABcAAAACAPf/CwABABQAAAACAPj/CwABABUAAAACAPn/CwABABYAAAACAPr/CwABABcAAAAIAPz/CwAEABQAAAAHAAEACwAIABEAAAAJAAAACwACABYAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="Chimney" type="TileMapLayer" parent="Tilesets" unique_id=1224671419]
+y_sort_enabled = true
+position = Vector2(-116, 22)
+tile_set = ExtResource("1_d7wmb")
+
+[node name="Shadow" type="TileMapLayer" parent="Tilesets" unique_id=1528723094]
+z_index = 1
+tile_map_data = PackedByteArray("AAD///7/CAAGAAEAAAAAAP7/CAAGAAEAAAABAP7/CAAGAAEAAAACAP7/CAAGAAEAAAADAP7/CAAGAAEAAAD+//7/CAAEAAMAAAD8//3/CAAGAAEAAAD9//3/CAAGAAEAAAD7//z/CAAGAAEAAAD9//7/CAADAAMAAAD7//3/CAAEAAMAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="DoorArea" type="Area2D" parent="." unique_id=1372149913]
+position = Vector2(33, 4)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1372149914]
+position = Vector2(-16, -1)
+shape = SubResource("Circle_door")
+
+[node name="DoorSpot" type="Marker2D" parent="." unique_id=1372149915]
+position = Vector2(16, 14)
+
+[node name="House_Desert_RedStone_2" parent="." unique_id=1688914537 instance=ExtResource("2_rsog6")]
+visible = false
+z_index = 1
+position = Vector2(-89, 17)
+
+[node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=1305892573]
+visible = false
+z_index = 1
+position = Vector2(-16, -5)
+polygon = PackedVector2Array(96, 18, 96, -59, -96, -59, -96, -15, 14, -14, 15, 18, 54, 18, 54, 3, 74, 3, 75, 18)

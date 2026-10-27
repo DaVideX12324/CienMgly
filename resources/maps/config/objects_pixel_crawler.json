@@ -8,7 +8,9 @@
     "stumps": { "class": "PROP", "placement": "free", "spacing_px": 40, "density": 0.4, "context": ["open"], "flip_h": true },
     "crystals": { "class": "PROP", "placement": "free", "spacing_px": 36, "density": 0.3, "context": ["wall_any"], "flip_h": true },
     "props": { "class": "PROP", "placement": "free", "spacing_px": 48, "density": 0.8, "context": ["open"] },
-    "lamps": { "class": "INTERACTIVE", "placement": "grid", "count": [1, 2], "context": ["wall_any"] }
+    "lamps": { "class": "INTERACTIVE", "placement": "grid", "count": [1, 2], "context": ["wall_any"] },
+    "stations": { "class": "PROP", "placement": "free", "spacing_px": 48, "density": 0.8, "context": ["open"] },
+    "grass": { "class": "DECAL", "placement": "grid_jitter", "jitter": 5, "density": 3 }
   },
   "objects": [
     { "id": "bush_green_large", "group": "bushes", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_large.tscn" },
@@ -147,6 +149,16 @@
     { "id": "tree_m_3_s_5_r_1c_0", "group": "trees_large", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s5_r1c0.tscn" },
     { "id": "tree_m_3_s_5_r_1c_1", "group": "trees_large", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s5_r1c1.tscn" },
     { "id": "crate", "group": "props", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/crate.tscn" },
-    { "id": "lamp_post_left", "group": "lamps", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post_left.tscn" }
+    { "id": "lamp_post_left", "group": "lamps", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post_left.tscn" },
+    { "id": "anvil_1", "group": "stations", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/anvil_1.tscn" },
+    { "id": "anvil_2_anim", "group": "stations", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/anvil_2_anim.tscn" },
+    { "id": "anvil_1_anim", "group": "stations", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/anvil_1_anim.tscn" },
+    { "id": "anvil_2", "group": "stations", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/anvil_2.tscn" },
+    { "id": "anvil_3", "group": "stations", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/anvil_3.tscn" },
+    { "id": "anvil_3_anim", "group": "stations", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/anvil_3_anim.tscn" },
+    { "id": "grass_olive_04", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_olive_04.tscn" },
+    { "id": "grass_rust_04", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_rust_04.tscn" },
+    { "id": "grass_green_04", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_green_04.tscn" },
+    { "id": "grass_rust_05", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_rust_05.tscn" }
   ]
 }

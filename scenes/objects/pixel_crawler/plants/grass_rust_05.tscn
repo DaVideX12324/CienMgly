@@ -1,10 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dqmlya7xjdmrk"]
 
 [ext_resource type="Texture2D" uid="uid://camo4jmig6hok" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png" id="1_7g2e9"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cyky4"]
 atlas = ExtResource("1_7g2e9")
-region = Rect2(80, 243, 31, 25)
+region = Rect2(80, 240, 31, 32)
 filter_clip = true
 
 [node name="GrassRust05" type="Node2D" unique_id=1363188118]

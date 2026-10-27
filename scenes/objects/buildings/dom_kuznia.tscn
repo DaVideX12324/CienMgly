@@ -1,0 +1,87 @@
+[gd_scene format=4 uid="uid://dmvq6201lj0e6"]
+
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_tiles"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/slots/furnace_brick_slot.tscn" id="3_34r5l"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/stations/slots/anvil_slot.tscn" id="4_34r5l"]
+
+[sub_resource type="CircleShape2D" id="Circle_door"]
+radius = 14.0
+
+[node name="DomKuznia" type="StaticBody2D" unique_id=1280774196]
+collision_layer = 32
+collision_mask = 0
+
+[node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=1012602025]
+visible = false
+z_index = 1
+position = Vector2(-16, -5)
+polygon = PackedVector2Array(96, 18, 96, -59, -96, -59, -96, -15, 14, -14, 15, 18, 54, 18, 54, 3, 74, 3, 75, 18)
+
+[node name="DoorArea" type="Area2D" parent="." unique_id=1773663491]
+position = Vector2(48, -12)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1273998540]
+shape = SubResource("Circle_door")
+
+[node name="DoorSpot" type="Marker2D" parent="." unique_id=1641156701]
+position = Vector2(48, -2)
+
+[node name="Tilesets" type="Node2D" parent="." unique_id=1504623960]
+y_sort_enabled = true
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=759079571]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAGAAEABQAAACsAAAAHAAEABQACAC8AAAAIAAEABQACAC8AAAAJAAEABQACAC8AAAAFAAEABQAAAC4AAAAFAAAABQAAAC0AAAAFAP//BQABAC4AAAAEAP//BQAAACsAAAADAP//BQACAC8AAAAGAP3/BQAZAAgAAAAHAP3/BQAaAAgAAAAIAP3/BQAaAAgAAAAJAP3/BQAaAAgAAAAGAPz/BQAeAAUAAAAGAPv/BQAfAAYAAAADAPv/BQAgAAcAAAAEAPv/BQAgAAcAAAAFAPv/BQAgAAcAAAAFAP7/BQAhAAgAAAADAP7/BQAgAAgAAAAEAP7/BQAgAAgAAAAGAAAABQAfAAgAAAAHAAAABQAgAAgAAAAIAAAABQAgAAgAAAAJAAAABQAgAAgAAAD+//z/BQAAACwAAAD+//3/BQAFAC0AAAD+//7/BQAAAC0AAAD+////BQAAAC4AAAD///v/BQAeAAYAAAD///7/BQAfAAgAAAD/////BQAAACsAAAABAP7/BQAgAAgAAAABAP//BQACAC8AAAACAP7/BQAgAAgAAAACAP//BQAAACsAAAAAAP7/BQAgAAgAAAAAAP//BQACAC8AAAALAP3/BQAcAAgAAAALAAAABQAiAAgAAAALAAEABQAAACsAAAAMAPz/BQAEACwAAAAMAP3/BQAEAC0AAAAMAP7/BQAEAC0AAAAMAP//BQAEAC0AAAAMAAAABQAEAC0AAAAMAAEABQADAC8AAAAKAP3/BQAaAAgAAAAKAAAABQAgAAgAAAAKAAEABQACAC8AAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=1858864580]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAADAPv/BgAEAAsAAAADAPz/BgADAAwAAAAEAPv/BgADAAsAAAAEAPz/BgADAAwAAAAFAPv/BgADAAsAAAAFAPz/BgADAAsAAAAGAPv/BgADAAsAAAAGAPz/BgAEAAsAAAAGAP3/BgADAAwAAAAHAPv/BgAEAAsAAAAHAPz/BgACAAgAAAAIAPv/BgADAAsAAAAJAPv/BgADAAsAAAAKAPv/BgAEAAsAAAAKAPz/BgAFAAgAAAALAPv/BgAEAAsAAAALAPz/BgAEAAsAAAALAP3/BgAEAAwAAAACAPr/BgADAAoAAAADAPr/BgAEAAoAAAAEAPr/BgADAAoAAAAFAPr/BgADAAoAAAAGAPr/BgADAAoAAAAHAPr/BgAEAAoAAAAIAPr/BgADAAoAAAAJAPr/BgAEAAoAAAAKAPr/BgAEAAoAAAALAPr/BgAEAAoAAAD+//r/BgACAAoAAAD+//v/BgACAAsAAAD+//z/BgACAAwAAAD///r/BgADAAoAAAD///v/BgADAAsAAAAAAPr/BgADAAoAAAABAPr/BgAEAAoAAAACAPv/BgAEAAsAAAACAPz/BgAEAAwAAAAAAPv/BgADAAsAAAABAPv/BgAEAAsAAAABAPz/BgADAAwAAAAAAPz/BgAEAAwAAAD///z/BgADAAwAAAD+//3/BgACAA0AAAAHAP3/BgACAAkAAAAKAP3/BgAFAAkAAAAIAPz/BgACAAkAAAAJAPz/BgAFAAkAAAAMAP7/BgAFAA0AAAAFAP7/BgACAA0AAAAFAP3/BgACAAwAAAAMAPv/BgAFAAsAAAAMAPz/BgAFAAsAAAAMAP3/BgAFAAwAAAAMAPr/BgAFAAoAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof2" type="TileMapLayer" parent="Tilesets/Roof" unique_id=1014740039]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAHAPz/BgABAAkAAAAHAP3/BgABAAoAAAAIAPv/BgADAAcAAAAIAPz/BgADAAgAAAAJAPv/BgAEAAcAAAAJAPz/BgAEAAgAAAAKAPz/BgAGAAkAAAAKAP3/BgAGAAoAAAAHAPv/BgABAAcAAAAIAPr/BgADAAUAAAAJAPr/BgAEAAUAAAAKAPv/BgAGAAcAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof3" type="TileMapLayer" parent="Tilesets/Roof" unique_id=68883023]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAHAP3/BgAAABEAAAAIAPz/BgACABEAAAAIAP3/BgACABIAAAAJAPz/BgACABEAABAJAP3/BgACABIAABAKAP3/BgAAABEAABA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets" unique_id=727507996]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAJAAAACwAEABEAAAAIAAEACwACABQAAAAJAAEACwADABQAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=1470479067]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAJAP3/CwAIABQAAAAJAAAACwAMABEAAAALAP//CwAEABYAAAAHAP//CwAEABYAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Chimney" type="TileMapLayer" parent="Tilesets" unique_id=214204090]
+y_sort_enabled = true
+position = Vector2(-116, 22)
+tile_map_data = PackedByteArray("AAADAPX/CwAAABQAAAADAPb/CwAAABUAAAADAPf/CwAAABYAAAADAPj/CwAAABcAAAAEAPX/CwABABQAAAAEAPb/CwABABUAAAAEAPf/CwABABYAAAAEAPj/CwABABcAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Shadow" type="TileMapLayer" parent="Tilesets" unique_id=1587688538]
+z_index = 1
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAJAPz/CAABAAAAAAAJAP3/CAABAAEAAAAKAP3/CAABAAAAAAAKAP7/CAABAAEAAAAIAPz/CAAAAAAAAAAIAP3/CAAAAAEAAAAHAP3/CAAAAAAAAAAHAP7/CAAAAAEAAAD///3/CAAGAAEAAAAAAP3/CAAGAAEAAAABAP3/CAAGAAEAAAACAP3/CAAGAAEAAAAEAP3/CAAGAAEAAAAGAP7/CAAGAAEAAAAFAP7/CAAGAAEAAAAFAP//CAABAAEAAAAEAP7/CAABAAEAAAADAP3/CAAGAAEAAAALAP7/CAAGAAEAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="FurnaceBrickSlot" parent="Tilesets" unique_id=2092673265 instance=ExtResource("3_34r5l")]
+y_sort_enabled = true
+position = Vector2(-16, -4)
+tier_offsets = PackedVector2Array(0, 0, -4, 3, -10, 6)
+
+[node name="AnvilSlot" parent="Tilesets" unique_id=1720857935 instance=ExtResource("4_34r5l")]
+position = Vector2(-82, 9)
+tier_offsets = PackedVector2Array(5, 0, -7, 15, 0, 29)

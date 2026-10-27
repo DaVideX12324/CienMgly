@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dt6nhp3b8185"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 [ext_resource type="Texture2D" uid="uid://ddffinlq548u8" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil_02-Sheet.png" id="1_tex"]
+[ext_resource type="Script" uid="uid://b7n0wke161dye" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_znyyd"]
 atlas = ExtResource("1_tex")
@@ -184,7 +184,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_znyyd")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 1.0
 }, {
@@ -294,7 +294,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_d800e")
 }],
-"loop": true,
+"loop": 1,
 "name": &"work",
 "speed": 8.0
 }]
@@ -311,8 +311,10 @@ animation = &"idle"
 centered = false
 offset = Vector2(-40, -78)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1291733528]
-polygon = PackedVector2Array(-38, -7, -37, -8, 37, -8, 38, -7, 38, 1, 37, 2, -37, 2, -38, 1)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=374228229]
+position = Vector2(-7.134, -10.312)
+scale = Vector2(1.153, 3.063)
+polygon = PackedVector2Array(-25.027092, -7.0816326, -23.293102, -8.061224, 29.593596, -8.061224, 39.13054, -8.061224, 39.13054, -3.8163269, 33.061573, -3.8163269, 33.061573, -1.5306127, 38.263542, -0.8775513, 37.39655, 3.0408158, 22.657635, 3.0408158, 22.657635, -0.22449017, 24.391624, -1.2040818, 21.790638, -1.8571432, 21.790638, -3.8163269, 23.52463, -5.77551, 22.657635, -6.1020412, -8.554188, -6.1020412, -12.022167, -5.122449, -10.2881775, -3.1632655, -11.155172, -1.8571432, -13.756157, -1.2040818, -23.293102, -1.2040818, -24.160097, -2.5102046)
 
 [node name="WorkSpot" type="Marker2D" parent="." unique_id=2088939518]
 position = Vector2(0, 7)

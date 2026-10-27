@@ -1,0 +1,78 @@
+[gd_scene format=4 uid="uid://bminfuqusn0u4"]
+
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_tiles"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1e7vl"]
+size = Vector2(8, 35)
+
+[sub_resource type="CircleShape2D" id="Circle_door"]
+radius = 14.0
+
+[node name="DomFancy" type="StaticBody2D" unique_id=1384401751]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Tilesets" type="Node2D" parent="." unique_id=1208713137]
+y_sort_enabled = true
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1895637990]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAACAPz/BQAVAAgAAAACAP//BQAWAAgAAAACAAAABQAHAC8AAAADAPn/BQAPAAgAAAADAPz/BQAUAAgAAAADAP//BQAJAC0AAAADAAAABQAIAC8AAAAEAPn/BQAOAAgAAAAEAPz/BQAVAAgAAAAFAPn/BQAPAAgAAAAFAPz/BQAVAAgAAAAGAPn/BQAOAAgAAAAGAPz/BQAUAAgAAAAHAPn/BQAQAAgAAAAHAPz/BQAWAAgAAAAHAP//BQAaAAQAAAAHAAAABQAaAAUAAAD8//z/BQAFACwAAAD8//3/BQAFAC0AAAD8//7/BQAFAC0AAAD8////BQAFAC0AAAD8/wAABQAFAC0AAAD9//n/BQANAAgAAAD9//z/BQATAAgAAAD9////BQATAAgAAAD9/wAABQAHAC8AAAD+//n/BQAOAAgAAAD+//z/BQAUAAgAAAD+////BQAUAAgAAAD+/wAABQAHAC8AAAD///n/BQAPAAgAAAD///z/BQAVAAgAAAD/////BQAVAAgAAAD//wAABQAHAC8AAAAAAPn/BQAOAAgAAAAAAPz/BQAVAAgAAAAAAP//BQAVAAgAAAAAAAAABQAHAC8AAAABAPn/BQAPAAgAAAABAPz/BQAUAAgAAAABAP//BQAUAAgAAAABAAAABQAHAC8AAAACAPn/BQAOAAgAAAADAP3/BQAJAC0AAAADAP7/BQAJAC0AAAAHAP3/BQAaAAQAAAAHAP7/BQAaAAQAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="WallsDetail" type="TileMapLayer" parent="Tilesets/Walls" unique_id=1552283142]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAD9//z/BQAVAAUAAAADAP3/CwAEABgAAAAHAPz/BQAUAAUAAAAHAP3/CwADABgAAQAHAAAABQAUAAYAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=1245258536]
+z_index = 2
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAABAPX/BgADAAoAAAACAPX/BgAEAAoAAAACAPb/BgADAAsAAAACAPf/BgADAAsAAAACAPj/BgAEAAwAAAACAPn/BgABABAAAAADAPX/BgADAAoAAAADAPb/BgAEAAsAAAADAPf/BgAEAAsAAAADAPj/BgADAAwAAAADAPn/BgABABAAAAAEAPX/BgAEAAoAAAAEAPb/BgADAAsAAAAEAPf/BgADAAsAAAAEAPj/BgAEAAwAAAAEAPn/BgABABAAAAAFAPX/BgADAAoAAAAFAPb/BgAEAAsAAAAFAPf/BgAEAAsAAAAFAPj/BgADAAwAAAAFAPn/BgABABAAAAAGAPX/BgADAAoAAAAGAPb/BgADAAsAAAAGAPf/BgADAAsAAAAGAPj/BgAEAAwAAAAGAPn/BgABABAAAAAHAPX/BgAEAAoAAAAHAPb/BgAEAAsAAAAHAPf/BgAEAAsAAAAHAPj/BgAEAAwAAAAHAPn/BgABABAAAAAIAPX/BgAFAAoAAAAIAPb/BgAFAAsAAAAIAPf/BgAFAAsAAAAIAPj/BgAFAAwAAAAIAPn/BgACABAAAAAJAPX/BgAFAA0AAAD7//X/BgACAA0AAAD8//X/BgACAAoAAAD8//b/BgACAAsAAAD8//f/BgACAAsAAAD8//j/BgACAAwAAAD8//n/BgAAABAAAAD9//X/BgADAAoAAAD9//b/BgADAAsAAAD9//f/BgADAAsAAAD9//j/BgADAAwAAAD9//n/BgABABAAAAD+//X/BgAEAAoAAAD+//b/BgAEAAsAAAD+//f/BgAEAAsAAAD+//j/BgAEAAwAAAD+//n/BgABABAAAAD+//3/BgACAA0AAAD///X/BgADAAoAAAD///b/BgADAAsAAAD///f/BgADAAsAAAD///j/BgADAAwAAAD///n/BgABABAAAAD///3/BgACAAoAAAD///7/BgACAAwAAAAAAPX/BgAEAAoAAAAAAPb/BgADAAsAAAAAAPf/BgADAAsAAAAAAPj/BgAEAAwAAAAAAPn/BgABABAAAAAAAP3/BgAFAAoAAAAAAP7/BgAFAAwAAAABAPb/BgAEAAsAAAABAPf/BgAEAAsAAAABAPj/BgADAAwAAAABAPn/BgABABAAAAABAP3/BgAFAA0AAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets" unique_id=543857472]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAAAAEACwACABEAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=192015196]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAAAPv/CwACABYAAAAFAPv/CwAEABYAAAAAAAAACwAOABEAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Chimney" type="TileMapLayer" parent="Tilesets" unique_id=791454792]
+z_index = 1
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAD+//P/CwAAABQAAAD+//T/CwAAABYAAAD+//X/CwAAABcAAAD///P/CwABABQAAAD///T/CwABABYAAAD///X/CwABABcAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="ChimneyRoof" type="TileMapLayer" parent="Tilesets/Chimney" unique_id=231281026]
+y_sort_enabled = true
+position = Vector2(0, -1)
+tile_set = ExtResource("1_tiles")
+
+[node name="Shadow" type="TileMapLayer" parent="Tilesets/Chimney" unique_id=1987356853]
+z_index = 1
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAADAPr/CAAGAAEAAAAEAPr/CAAGAAEAAAAFAPr/CAAGAAEAAAAGAPr/CAAGAAEAAAAHAPr/CAAGAAEAAAAIAPr/CAAGAAEAAAAJAPr/CAAGAAEAAAAKAPr/CAAGAAEAAAALAPr/CAAGAAEAAAAMAPr/CAAGAAEAAAANAPr/CAAGAAEAAAAFAAAACAACAAEAAAAGAAAACAAEAAEAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=1898177545]
+polygon = PackedVector2Array(-49, 15, -10, 15, -10, -2, 10, -2, 10, 15, 49, 15, 49, -31, -49, -31)
+
+[node name="BaseCollision2" type="CollisionShape2D" parent="." unique_id=2024650575]
+position = Vector2(124, -1.5)
+shape = SubResource("RectangleShape2D_1e7vl")
+
+[node name="DoorArea" type="Area2D" parent="." unique_id=1525362002]
+position = Vector2(0, 11)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1666618756]
+position = Vector2(0, -5)
+shape = SubResource("Circle_door")
+
+[node name="DoorSpot" type="Marker2D" parent="." unique_id=1952000362]
+position = Vector2(0, 14)

@@ -1,7 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dspjq7idoopxl"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 [ext_resource type="Texture2D" uid="uid://bbex6jpdqrr3a" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil_01-Sheet.png" id="1_tex"]
+[ext_resource type="Script" uid="uid://b7n0wke161dye" path="res://modules/quiz_rpg/scripts/world/station.gd" id="2_station"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_uw4bl"]
 atlas = ExtResource("1_tex")
@@ -184,7 +184,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_uw4bl")
 }],
-"loop": true,
+"loop": 1,
 "name": &"idle",
 "speed": 1.0
 }, {
@@ -294,7 +294,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_3foxt")
 }],
-"loop": true,
+"loop": 1,
 "name": &"work",
 "speed": 8.0
 }]
@@ -307,12 +307,15 @@ metadata/object_group = "stations"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1125667562]
 sprite_frames = SubResource("SpriteFrames_vnckz")
-animation = &"idle"
+animation = &"work"
+frame_progress = 0.67439353
 centered = false
 offset = Vector2(-32, -78)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1380704774]
-polygon = PackedVector2Array(-30, -7, -29, -8, 29, -8, 30, -7, 30, 1, 29, 2, -29, 2, -30, 1)
-
 [node name="WorkSpot" type="Marker2D" parent="." unique_id=1993416369]
 position = Vector2(0, 7)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=603624748]
+position = Vector2(0, -9)
+scale = Vector2(0.9375, 1)
+polygon = PackedVector2Array(-25, -7, -24, -8, 29, -8, 30, -7, 24.533335, 1, 20.266668, 1, 18.81761, -2.9999995, 15.496855, -5.9999995, 1.1069185, -5.9999995, -7.7484274, -5.9999995, -11.069182, 0, -24, 2, -25, 1)

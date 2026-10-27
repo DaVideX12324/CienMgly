@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bjfwh5mkqgp6o"]
 
 [ext_resource type="Texture2D" uid="uid://b3sqnymewkglu" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="1_tex"]
 
@@ -13,9 +13,12 @@ collision_mask = 0
 metadata/object_group = "stations"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1304502734]
+position = Vector2(1, 0)
 texture = SubResource("AtlasTexture_4lg2t")
 centered = false
 offset = Vector2(-40, -54)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1089937331]
-polygon = PackedVector2Array(-38, -7, -37, -8, 37, -8, 38, -7, 38, 1, 37, 2, -37, 2, -38, 1)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1547288285]
+position = Vector2(-7.133522, -10.312499)
+scale = Vector2(1.1534091, 3.0625)
+polygon = PackedVector2Array(-25.027092, -7.0816326, -23.293102, -8.061224, 29.593596, -8.061224, 39.13054, -8.061224, 39.13054, -3.8163269, 33.061573, -3.8163269, 33.061573, -1.5306127, 38.263542, -0.8775513, 37.39655, 3.0408158, 22.657635, 3.0408158, 22.657635, -0.22449017, 24.391624, -1.2040818, 21.790638, -1.8571432, 21.790638, -3.8163269, 23.52463, -5.77551, 22.657635, -6.1020412, -8.554188, -6.1020412, -12.022167, -5.122449, -10.2881775, -3.1632655, -11.155172, -1.8571432, -13.756157, -1.2040818, -23.293102, -1.2040818, -24.160097, -2.5102046)

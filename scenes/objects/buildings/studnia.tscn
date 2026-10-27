@@ -1,0 +1,40 @@
+[gd_scene format=4 uid="uid://vt12rq8cdtpy"]
+
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_sqpv0"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_yfsik"]
+radius = 18.0
+height = 46.0
+
+[node name="Studnia" type="StaticBody2D" unique_id=1384401751]
+collision_layer = 32
+collision_mask = 0
+
+[node name="Tilesets" type="Node2D" parent="." unique_id=1208713137]
+y_sort_enabled = true
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1895637990]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAD+//7/BQAPABcAAAD+////BQAPABgAAAD///7/BQAQABcAAAD/////BQAQABgAAAAAAP7/BQARABcAAAAAAP//BQARABgAAAD+//3/BQAPABYAAAD///3/BQAQABYAAAAAAP3/BQARABYAAAA=")
+tile_set = ExtResource("1_sqpv0")
+
+[node name="WallsDetail" type="TileMapLayer" parent="Tilesets/Walls" unique_id=1552283142]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAAAP//BQAOABUAAAD+////BQAMABUAAAA=")
+tile_set = ExtResource("1_sqpv0")
+
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=1245258536]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAAAPz/BgAEAAwAAAABAPz/BgAFAAwAAAD9//v/BgACAAoAAAD+//v/BgADAAoAAAD///v/BgAEAAoAAAAAAPv/BgAEAAoAAAABAPv/BgAFAAoAAAD9//z/BgACAAwAAAD+//z/BgADAAwAAAD///z/BgADAAwAAAA=")
+tile_set = ExtResource("1_sqpv0")
+
+[node name="Shadow" type="TileMapLayer" parent="Tilesets" unique_id=1559578593]
+z_index = 1
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_set = ExtResource("1_sqpv0")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1596829265]
+position = Vector2(-8, -24)
+rotation = 1.5707964
+shape = SubResource("CapsuleShape2D_yfsik")

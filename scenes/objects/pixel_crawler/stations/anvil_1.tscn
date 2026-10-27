@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://beon2nvkrn3d4"]
 
 [ext_resource type="Texture2D" uid="uid://b3sqnymewkglu" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png" id="1_tex"]
 
@@ -17,5 +17,7 @@ texture = SubResource("AtlasTexture_29326")
 centered = false
 offset = Vector2(-31, -39)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=2099315425]
-polygon = PackedVector2Array(-30, -7, -29, -8, 29, -8, 30, -7, 30, 1, 29, 2, -29, 2, -30, 1)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1977920709]
+position = Vector2(-1.0000002, -8)
+scale = Vector2(0.90340906, 1)
+polygon = PackedVector2Array(-25, -7, -24, -8, 29, -8, 30, -7, 27.672955, 1, 22.138365, 2, 18.81761, -2.9999995, 15.496855, -5.9999995, 1.1069185, -5.9999995, -7.7484274, -5.9999995, -11.069182, 0, -24, 2, -25, 1)
