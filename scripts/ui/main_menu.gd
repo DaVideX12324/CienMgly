@@ -31,12 +31,21 @@ var _slot_mode: String = "load"
 var _options_menu: CanvasLayer = null
 static var HOST_OPTIONS_MENU_SCENE: String = QuizRpgPaths.host("res://scenes/ui/options_menu.tscn")
 const MAX_MENU_SAVE_SLOTS := 20
+## Kursor menu (jak walka / pauza): W / S / strzałki, Enter / Z / spacja, mysz przesuwa kursor; prowadzi go ten skrypt,
+## nie fokus Godota.
+var _menu_buttons: Array[Button] = []
+var _cursor := 0
+## Ekrany treści (zapisy, opcje, statystyki, imię) chodzą na fokusie Godota (strzałki / Enter / Esc); WASD / Z / X
+## zamieniane na te akcje — poza polem tekstowym, gdzie to zwykłe litery.
+const KEY_AS_UI_ACTION := {KEY_W: &"ui_up", KEY_S: &"ui_down", KEY_A: &"ui_left", KEY_D: &"ui_right",
+	KEY_Z: &"ui_accept", KEY_X: &"ui_cancel"}
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	_connect_buttons()
+	_setup_menu_cursor()
 	_build_save_slots_panel()
 	_update_load_button()
 	_style_menu()
@@ -172,6 +181,10 @@ func _on_options() -> void:
 		_options_menu.call("open")
 	else:
 		_options_menu.visible = true
+	# Fokus na zakładkach (lewo / prawo zmienia zakładkę, dół wchodzi w opcje).
+	var tabs := context_body.find_children("*", "TabContainer", true, false)
+	if not tabs.is_empty():
+		(tabs[0] as TabContainer).get_tab_bar().grab_focus.call_deferred()
 
 
 ## Ekran treści: kind "" = menu; inaczej ekran na całe okno z tą treścią (sloty / statystyki / opcje).
@@ -186,15 +199,111 @@ func _show_context(kind: String) -> void:
 	if kind != "options" and _options_menu != null and is_instance_valid(_options_menu):
 		_options_menu.visible = false
 	if kind == "":
+		get_viewport().gui_release_focus()  # fokus ze schowanego ekranu nie przejmuje Enter w menu
 		_update_load_button()
+		_move_cursor(0)
+
+
+func _setup_menu_cursor() -> void:
+	_menu_buttons = [new_game_btn, load_game_btn, stats_btn, options_btn, quit_btn]
+	for i in _menu_buttons.size():
+		var btn := _menu_buttons[i]
+		btn.focus_mode = Control.FOCUS_NONE
+		for st: StringName in [&"normal", &"hover", &"pressed"]:
+			btn.set_meta(&"menu_" + st, btn.get_theme_stylebox(st))
+		for fc: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color"]:
+			btn.set_meta(&"menu_" + fc, btn.get_theme_color(fc))
+		btn.mouse_entered.connect(func() -> void:
+			if not btn.disabled:
+				_set_cursor(i))
+	_set_cursor(0)
+
+
+## Wybrana pozycja w stylu „selected” pozycji menu z motywu modułu (jak kursor w walce i pauzie).
+func _set_cursor(index: int) -> void:
+	_cursor = index
+	var selected_sb := QuizTheme.theme().get_stylebox(&"selected", QuizTheme.MENU_ITEM)
+	var selected_font := QuizTheme.theme().get_color(&"font_selected_color", QuizTheme.MENU_ITEM)
+	for i in _menu_buttons.size():
+		var btn := _menu_buttons[i]
+		var on := i == _cursor
+		for st: StringName in [&"normal", &"hover", &"pressed"]:
+			btn.add_theme_stylebox_override(st, selected_sb if on else btn.get_meta(&"menu_" + st))
+		for fc: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color"]:
+			btn.add_theme_color_override(fc, selected_font if on else btn.get_meta(&"menu_" + fc))
+
+
+## Kursor o `step` pozycji z zawinięciem, z pominięciem wyłączonych (np. „Wczytaj grę” bez zapisów); 0 = zostaje,
+## chyba że bieżąca pozycja jest wyłączona.
+func _move_cursor(step: int) -> void:
+	var n := _menu_buttons.size()
+	if n == 0:
+		return
+	var dir := step if step != 0 else 1
+	var start := _cursor + step
+	for k in n:
+		var i := posmod(start + dir * k, n)
+		if not _menu_buttons[i].disabled:
+			_set_cursor(i)
+			return
 
 
 ## Esc wraca do menu (opcje obsługują Esc same i zamykają ekran sygnałem closed).
 func _unhandled_input(event: InputEvent) -> void:
-	if _context != "" and _context != "options" and event.is_action_pressed("ui_cancel"):
+	if _context == "":
+		_handle_menu_input(event)
+		return
+	if _forward_key_as_ui_action(event):
+		get_viewport().set_input_as_handled()
+		return
+	if _context != "options" and event.is_action_pressed("ui_cancel"):
 		_play_click()
 		_show_context("")
 		get_viewport().set_input_as_handled()
+
+
+## WASD / Z / X w ekranie treści -> akcja ui_* (nawigacja fokusu, suwaki, listy, Enter, Esc jak ze strzałek).
+func _forward_key_as_ui_action(event: InputEvent) -> bool:
+	var key := event as InputEventKey
+	if key == null or not KEY_AS_UI_ACTION.has(key.keycode):
+		return false
+	var owner := get_viewport().gui_get_focus_owner()
+	if owner is LineEdit or owner is TextEdit:
+		return false
+	var action := InputEventAction.new()
+	action.action = KEY_AS_UI_ACTION[key.keycode]
+	action.pressed = key.pressed
+	Input.parse_input_event(action)
+	return true
+
+
+## Pierwszy włączony przycisk pod `root` dostaje fokus (wejście do ekranu treści z klawiatury).
+func _focus_first_button(root: Node) -> void:
+	for node in root.find_children("*", "BaseButton", true, false):
+		var btn := node as BaseButton
+		if btn.is_visible_in_tree() and not btn.disabled and btn.focus_mode != Control.FOCUS_NONE:
+			btn.grab_focus()
+			return
+
+
+func _handle_menu_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W]):
+		_move_cursor(-1)
+	elif event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S]):
+		_move_cursor(1)
+	elif event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z]):
+		var btn := _menu_buttons[_cursor]
+		if btn.disabled:
+			return
+		btn.pressed.emit()
+	else:
+		return
+	get_viewport().set_input_as_handled()
+
+
+func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
+	var key_event := event as InputEventKey
+	return key_event != null and key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
 
 
 func _build_save_slots_panel() -> void:
@@ -216,6 +325,7 @@ func _build_save_slots_panel() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	_save_slots_panel.add_child(scroll)
 
 	_save_slots_list = VBoxContainer.new()
@@ -261,6 +371,8 @@ func _populate_save_slots() -> void:
 		add_btn.pressed.connect(_on_add_slot_pressed)
 		_add_click_sfx(add_btn)
 		_save_slots_list.add_child(add_btn)
+	if _context == "load":
+		_focus_first_button.call_deferred(_save_slots_list)
 
 
 ## Wiersz zapisu: cały zapis to jeden przycisk (klik = wczytanie), z boku mała ikona kosza (drugi klik potwierdza usunięcie).
