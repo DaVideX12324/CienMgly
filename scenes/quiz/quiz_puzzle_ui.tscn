@@ -1,65 +1,8 @@
 [gd_scene format=3 uid="uid://bevjdnc0cliyy"]
 
 [ext_resource type="Script" uid="uid://bcsjvn2ktrcl7" path="res://modules/quiz_rpg/scripts/quiz/quiz_puzzle_controller.gd" id="1_puzzle"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.08, 0.08, 0.12, 0.95)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.25, 0.25, 0.35, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
-bg_color = Color(0.18, 0.18, 0.25, 0.9)
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
-bg_color = Color(0.24, 0.24, 0.31, 0.9)
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
-bg_color = Color(0.12, 0.12, 0.18, 0.95)
-content_margin_left = 12.0
-content_margin_top = 8.0
-content_margin_right = 12.0
-content_margin_bottom = 8.0
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
-bg_color = Color(0.3, 0.6, 1, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
-bg_color = Color(0.15, 0.15, 0.2, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="2_theme"]
+[ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="3_bar"]
 
 [node name="QuizPuzzleUI" type="CanvasLayer"]
 layer = 15
@@ -71,6 +14,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_puzzle")
 
 [node name="DimOverlay" type="ColorRect" parent="Root"]
@@ -78,110 +22,248 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="Panel" type="PanelContainer" parent="Root"]
+[node name="Window" type="PanelContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -320.0
-offset_top = -210.0
-offset_right = 320.0
-offset_bottom = 210.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+offset_left = -480.0
+offset_right = 480.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"QuizWindow"
 
-[node name="MarginContainer" type="MarginContainer" parent="Root/Panel"]
+[node name="Margin" type="MarginContainer" parent="Root/Window"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 15
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Root/Panel/MarginContainer"]
+[node name="CommandVBox" type="VBoxContainer" parent="Root/Window/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="Root/Window/Margin/CommandVBox"]
+auto_translate_mode = 2
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-theme_override_font_sizes/font_size = 27
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
 text = "Zagadka"
 horizontal_alignment = 1
 
-[node name="ProgressBar" type="ProgressBar" parent="Root/Panel/MarginContainer/VBoxContainer"]
+[node name="ProgressRow" type="HBoxContainer" parent="Root/Window/Margin/CommandVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 16)
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
-theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
-value = 0.0
+theme_override_constants/separation = 16
 
-[node name="ProgressLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
+[node name="ProgressBar" type="ProgressBar" parent="Root/Window/Margin/CommandVBox/ProgressRow"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"QuizBarTP"
+show_percentage = false
+script = ExtResource("3_bar")
+
+[node name="ProgressLabel" type="Label" parent="Root/Window/Margin/CommandVBox/ProgressRow"]
 auto_translate_mode = 2
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-text = "0 / 3 poprawnych odpowiedzi"
-horizontal_alignment = 1
+text = "0 / 3"
 
-[node name="QuestionLabel" type="RichTextLabel" parent="Root/Panel/MarginContainer/VBoxContainer"]
+[node name="QuestionLabel" type="Label" parent="Root/Window/Margin/CommandVBox"]
 auto_translate_mode = 2
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-custom_minimum_size = Vector2(0, 70)
-bbcode_enabled = true
-theme_override_colors/default_color = Color(0.95, 0.95, 0.98, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "Pytanie..."
-fit_content = true
+autowrap_mode = 3
 
-[node name="AnswersGrid" type="GridContainer" parent="Root/Panel/MarginContainer/VBoxContainer"]
+[node name="TimerRow" type="HBoxContainer" parent="Root/Window/Margin/CommandVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TimerBar" type="ProgressBar" parent="Root/Window/Margin/CommandVBox/TimerRow"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_type_variation = &"QuizBarTimer"
+value = 100.0
+show_percentage = false
+script = ExtResource("3_bar")
+
+[node name="TimerLabel" type="Label" parent="Root/Window/Margin/CommandVBox/TimerRow"]
 auto_translate_mode = 2
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+text = "Czas: 20.0 s"
+
+[node name="QuizPanel" type="VBoxContainer" parent="Root/Window/Margin/CommandVBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HintLabel" type="Label" parent="Root/Window/Margin/CommandVBox/QuizPanel"]
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="MC_Box" type="GridContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel"]
+auto_translate_mode = 2
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 0
+
+[node name="Btn0" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/MC_Box"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+alignment = 0
+autowrap_mode = 3
+
+[node name="Btn1" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/MC_Box"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+alignment = 0
+autowrap_mode = 3
+
+[node name="Btn2" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/MC_Box"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+alignment = 0
+autowrap_mode = 3
+
+[node name="Btn3" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/MC_Box"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+alignment = 0
+autowrap_mode = 3
+
+[node name="TF_Box" type="HBoxContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel"]
+auto_translate_mode = 2
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 24
+
+[node name="BtnTrue" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/TF_Box"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+alignment = 0
+
+[node name="BtnFalse" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/TF_Box"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_type_variation = &"QuizMenuItem"
+alignment = 0
+
+[node name="FillText_Box" type="VBoxContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PatternHint" type="Label" parent="Root/Window/Margin/CommandVBox/QuizPanel/FillText_Box"]
+visible = false
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="Input" type="LineEdit" parent="Root/Window/Margin/CommandVBox/QuizPanel/FillText_Box"]
+auto_translate_mode = 2
+layout_mode = 2
+placeholder_text = "Odpowiedź..."
+
+[node name="Confirm" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/FillText_Box"]
+layout_mode = 2
+text = "Zatwierdź"
+flat = true
+
+[node name="FillTiles_Box" type="VBoxContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="GapRow" type="HFlowContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel/FillTiles_Box"]
+auto_translate_mode = 2
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
+
+[node name="TileRow" type="HFlowContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel/FillTiles_Box"]
+auto_translate_mode = 2
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
+
+[node name="Confirm" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/FillTiles_Box"]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Zatwierdź [Enter]"
+
+[node name="Matching_Box" type="VBoxContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MatchGrid" type="GridContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel/Matching_Box"]
+auto_translate_mode = 2
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 8
 columns = 2
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
 
-[node name="AnswerBtn0" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
+[node name="LeftCol" type="VBoxContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel/Matching_Box/MatchGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(260, 40)
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-text = "Odpowiedz A"
+theme_override_constants/separation = 6
 
-[node name="AnswerBtn1" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
+[node name="RightCol" type="VBoxContainer" parent="Root/Window/Margin/CommandVBox/QuizPanel/Matching_Box/MatchGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(260, 40)
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-text = "Odpowiedz B"
+theme_override_constants/separation = 6
 
-[node name="AnswerBtn2" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
+[node name="Confirm" type="Button" parent="Root/Window/Margin/CommandVBox/QuizPanel/Matching_Box"]
+custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(260, 40)
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-text = "Odpowiedz C"
+size_flags_horizontal = 4
+text = "Zatwierdź [Enter]"
 
-[node name="AnswerBtn3" type="Button" parent="Root/Panel/MarginContainer/VBoxContainer/AnswersGrid"]
+[node name="CorrectAnswerLabel" type="Label" parent="Root/Window/Margin/CommandVBox"]
+auto_translate_mode = 2
+visible = false
 layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(260, 40)
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
-text = "Odpowiedz D"
+theme_override_colors/font_color = Color(0.35, 0.95, 0.45, 1)
+autowrap_mode = 3
 
-[node name="FeedbackLabel" type="Label" parent="Root/Panel/MarginContainer/VBoxContainer"]
+[node name="ResultLabel" type="Label" parent="Root/Window/Margin/CommandVBox"]
+auto_translate_mode = 2
+visible = false
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
 horizontal_alignment = 1
+autowrap_mode = 3
