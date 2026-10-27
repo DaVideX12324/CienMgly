@@ -46,5 +46,5 @@ void fragment() {
 	float flash = exp(-pow((p - 0.12) / 0.06, 2.0));
 	col += vec3(0.8 * flash) * inside(x);
 
-	COLOR = vec4(col, 1.0);
+	COLOR = vec4(col, COLOR.a);  // alfa z modulate rodzica — bez tego fade na końcu nie działa (nakładka znika skokiem)
 }

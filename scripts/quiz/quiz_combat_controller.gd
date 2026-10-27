@@ -957,7 +957,7 @@ func _show_appeared_window() -> void:
 	await _notice_confirmed
 	_set_more_marker(false)
 	var fade_out := create_tween()
-	fade_out.tween_property(_message_window, "modulate:a", 0.0, 0.15)
+	fade_out.tween_property(_message_window, "modulate:a", 0.0, 0.2)
 	await fade_out.finished
 	_message_window.visible = false
 	_message_window.modulate.a = 1.0
@@ -972,7 +972,7 @@ func _show_appeared_window() -> void:
 			(c as Control).modulate.a = 0.0
 	var fade_in := create_tween().set_parallel(true)
 	for i in range(windows.size()):
-		fade_in.tween_property(windows[i], "modulate:a", 1.0, 0.3).set_delay(i * 0.08) \
+		fade_in.tween_property(windows[i], "modulate:a", 1.0, 0.3).set_delay(i * 0.06) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
@@ -3949,7 +3949,7 @@ func _show_message_sequence(lines: Array[String]) -> void:
 	if not _victory_skip:
 		await _wait_for_victory_advance(3.0)
 	var fade_out := create_tween()
-	fade_out.tween_property(_message_window, "modulate:a", 0.0, 0.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	fade_out.tween_property(_message_window, "modulate:a", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await fade_out.finished
 
 
@@ -3957,7 +3957,7 @@ func _show_message_sequence(lines: Array[String]) -> void:
 func _fade_in_message_window() -> void:
 	_message_window.modulate.a = 0.0
 	var tw := create_tween()
-	tw.tween_property(_message_window, "modulate:a", 1.0, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_message_window, "modulate:a", 1.0, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tw.finished
 
 

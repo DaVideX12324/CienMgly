@@ -13,7 +13,7 @@ const SWIRL_SHADER := preload("../../resources/shaders/combat_intro_swirl.gdshad
 ## Czas zamykania w czerń dla każdego stylu.
 const CLOSE_SECONDS := {"swirl": 0.95, "slices": 0.65}
 
-@export var reveal_seconds := 0.55
+@export var reveal_seconds := 0.9
 
 @onready var _swirl: ColorRect = $Swirl
 
@@ -38,7 +38,7 @@ func play(snapshot: Image, style: String = QuizTheme.INTRO_SWIRL) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var reveal_tween := create_tween()
-	reveal_tween.tween_property(self, "modulate:a", 0.0, reveal_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	reveal_tween.tween_property(self, "modulate:a", 0.0, reveal_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)  # EASE_OUT: odsłania od razu, bez „czarnego” początku
 	await reveal_tween.finished
 	finished.emit()
 	queue_free()

@@ -25,5 +25,5 @@ void fragment() {
 	float iris = mix(1.25, 0.0, smoothstep(0.35, 1.0, p));
 	float edge = smoothstep(iris, iris - 0.08, r);
 	col = mix(vec3(0.0), col * mix(1.0, 0.55, p), edge);
-	COLOR = vec4(col, 1.0);
+	COLOR = vec4(col, COLOR.a);  // alfa z modulate rodzica — bez tego fade na końcu nie działa (nakładka znika skokiem)
 }

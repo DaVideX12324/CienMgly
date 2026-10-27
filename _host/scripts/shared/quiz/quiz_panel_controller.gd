@@ -181,6 +181,17 @@ func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, c
 	bar.add_theme_stylebox_override("background", bg)
 
 
+## Etykieta czasu ma stałą szerokość (jak na starcie pytania — czas tylko maleje, więc to najszerszy tekst), inaczej
+## pasek obok niej skacze przy każdej zmianie liczby cyfr (np. „10.0 s” -> „9.9 s”). Tylko rośnie, nie kurczy się.
+func _reserve_timer_label_width() -> void:
+	var font := timer_label.get_theme_font("font")
+	if font == null:
+		return
+	var w := font.get_string_size(timer_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, timer_label.get_theme_font_size("font_size")).x
+	timer_label.custom_minimum_size.x = maxf(timer_label.custom_minimum_size.x, ceilf(w))
+	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+
 func tick(delta: float) -> void:
 	if not _answering:
 		return
@@ -325,6 +336,7 @@ func start_question(question: Dictionary, base_difficulty: int) -> void:
 		_time_left = float(_current_question.get("time_limit", 16.0))
 	_total_time = _time_left
 	timer_label.text = "Czas: %.1f s" % _time_left
+	_reserve_timer_label_width()
 	timer_bar.value = 100.0
 
 	match str(_current_question.get("type", "multiple_choice")):
