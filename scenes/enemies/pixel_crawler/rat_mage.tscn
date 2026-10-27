@@ -12,7 +12,11 @@
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
 radius = 4.0
-height = 16.0
+height = 18.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_55mod"]
+resource_local_to_scene = true
+radius = 70.0
 
 [sub_resource type="Animation" id="RatRig_idle"]
 resource_name = "idle"
@@ -285,9 +289,12 @@ animation = &"idle"
 offset = Vector2(-1, -28)
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
-position = Vector2(0, 4.0)
+position = Vector2(0, 4)
 rotation = 1.570796
 shape = SubResource("CapsuleShape2D_body")
+
+[node name="CollisionShape2D" parent="DetectionArea" parent_id_path=PackedInt32Array(2045348945) index="0" unique_id=1963073735]
+shape = SubResource("CircleShape2D_55mod")
 
 [node name="Rig" type="Node2D" parent="AnimatedSprite2D"]
 script = ExtResource("RatRig_script")

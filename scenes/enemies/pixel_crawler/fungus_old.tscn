@@ -1,24 +1,127 @@
 [gd_scene format=3 uid="uid://di2di5my1fdak"]
 
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
-
 [ext_resource type="SpriteFrames" uid="uid://du03gyqoagwbu" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/fungus_old.tres" id="2_frames"]
-
 [ext_resource type="Resource" uid="uid://dgrl7y1a73e3a" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/data/fungus_old.tres" id="3_data"]
+[ext_resource type="PackedScene" uid="uid://b58f8twhymxyi" path="res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_immature.tscn" id="m_fungus_immature"]
+[ext_resource type="Texture2D" uid="uid://duf1ruhqmibhq" path="res://assets/pixel_crawler/environments/cave/Enemies/Fungus Weapons.png" id="RatRig_atlas"]
+[ext_resource type="Script" uid="uid://dam8gn467vh3x" path="res://modules/quiz_rpg/scripts/enemies/sprite_rig.gd" id="RatRig_script"]
 
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/enemies/pixel_crawler/fungus_immature.tscn" id="m_fungus_immature"]
+[sub_resource type="Animation" id="RatRig_death"]
+resource_name = "death"
+length = 0.6
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("HandBack:visible")
+tracks/0/interp = 0
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Staff:visible")
+tracks/1/interp = 0
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("HandFront:visible")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/enemies/sprite_rig.gd" id="RatRig_script"]
-
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/environments/cave/Enemies/Fungus Weapons.png" id="RatRig_atlas"]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
-radius = 4.0
-height = 16.0
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_76t0y"]
-resource_local_to_scene = true
-radius = 70.0
+[sub_resource type="Animation" id="RatRig_hurt"]
+resource_name = "hurt"
+length = 0.4
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("HandBack:visible")
+tracks/0/interp = 0
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("HandBack:position")
+tracks/1/interp = 0
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(8, 51), Vector2(4, 50), Vector2(4, 50), Vector2(6, 51)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Staff:visible")
+tracks/2/interp = 0
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Staff:position")
+tracks/3/interp = 0
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(45, 12), Vector2(41, 11), Vector2(41, 11), Vector2(43, 12)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("HandFront:visible")
+tracks/4/interp = 0
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("HandFront:position")
+tracks/5/interp = 0
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [Vector2(49, 47), Vector2(45, 46), Vector2(45, 46), Vector2(47, 47)]
+}
 
 [sub_resource type="Animation" id="RatRig_idle"]
 resource_name = "idle"
@@ -174,129 +277,21 @@ tracks/5/keys = {
 "values": [Vector2(49, 48), Vector2(49, 48), Vector2(49, 46), Vector2(49, 48), Vector2(49, 48), Vector2(49, 46)]
 }
 
-[sub_resource type="Animation" id="RatRig_hurt"]
-resource_name = "hurt"
-length = 0.4
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("HandBack:visible")
-tracks/0/interp = 0
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("HandBack:position")
-tracks/1/interp = 0
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 1,
-"values": [Vector2(8, 51), Vector2(4, 50), Vector2(4, 50), Vector2(6, 51)]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("Staff:visible")
-tracks/2/interp = 0
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
-}
-tracks/3/type = "value"
-tracks/3/imported = false
-tracks/3/enabled = true
-tracks/3/path = NodePath("Staff:position")
-tracks/3/interp = 0
-tracks/3/loop_wrap = true
-tracks/3/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 1,
-"values": [Vector2(45, 12), Vector2(41, 11), Vector2(41, 11), Vector2(43, 12)]
-}
-tracks/4/type = "value"
-tracks/4/imported = false
-tracks/4/enabled = true
-tracks/4/path = NodePath("HandFront:visible")
-tracks/4/interp = 0
-tracks/4/loop_wrap = true
-tracks/4/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
-}
-tracks/5/type = "value"
-tracks/5/imported = false
-tracks/5/enabled = true
-tracks/5/path = NodePath("HandFront:position")
-tracks/5/interp = 0
-tracks/5/loop_wrap = true
-tracks/5/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
-"transitions": PackedFloat32Array(1, 1, 1, 1),
-"update": 1,
-"values": [Vector2(49, 47), Vector2(45, 46), Vector2(45, 46), Vector2(47, 47)]
-}
-
-[sub_resource type="Animation" id="RatRig_death"]
-resource_name = "death"
-length = 0.6
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("HandBack:visible")
-tracks/0/interp = 0
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Staff:visible")
-tracks/1/interp = 0
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("HandFront:visible")
-tracks/2/interp = 0
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [false]
-}
-
 [sub_resource type="AnimationLibrary" id="RatRig_lib"]
 _data = {
-&"idle": SubResource("RatRig_idle"),
-&"walk": SubResource("RatRig_walk"),
+&"death": SubResource("RatRig_death"),
 &"hurt": SubResource("RatRig_hurt"),
-&"death": SubResource("RatRig_death")
+&"idle": SubResource("RatRig_idle"),
+&"walk": SubResource("RatRig_walk")
 }
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_body"]
+radius = 4.0
+height = 16.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mm3dg"]
+resource_local_to_scene = true
+radius = 70.0
 
 [node name="Enemy" unique_id=1406570050 instance=ExtResource("1_base")]
 enemy_data = ExtResource("3_data")
@@ -305,8 +300,39 @@ boss_minions = Array[PackedScene]([ExtResource("m_fungus_immature"), ExtResource
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
 position = Vector2(2, 3)
 sprite_frames = ExtResource("2_frames")
-animation = &"idle"
+animation = &"death"
 offset = Vector2(0, -27)
+
+[node name="Rig" type="Node2D" parent="AnimatedSprite2D" index="0" unique_id=700487043]
+position = Vector2(-32, -59)
+script = ExtResource("RatRig_script")
+
+[node name="HandBack" type="Sprite2D" parent="AnimatedSprite2D/Rig" index="0" unique_id=397044959]
+position = Vector2(8, 51)
+texture = ExtResource("RatRig_atlas")
+centered = false
+region_enabled = true
+region_rect = Rect2(36, 20, 8, 6)
+region_filter_clip_enabled = true
+
+[node name="Staff" type="Sprite2D" parent="AnimatedSprite2D/Rig" index="1" unique_id=307592997]
+position = Vector2(45, 12)
+texture = ExtResource("RatRig_atlas")
+centered = false
+region_enabled = true
+region_rect = Rect2(144, 16, 16, 48)
+region_filter_clip_enabled = true
+
+[node name="HandFront" type="Sprite2D" parent="AnimatedSprite2D/Rig" index="2" unique_id=1292901699]
+position = Vector2(49, 47)
+texture = ExtResource("RatRig_atlas")
+centered = false
+region_enabled = true
+region_rect = Rect2(53, 5, 7, 7)
+region_filter_clip_enabled = true
+
+[node name="RigAnim" type="AnimationPlayer" parent="AnimatedSprite2D/Rig" index="3" unique_id=1959764616]
+libraries/ = SubResource("RatRig_lib")
 
 [node name="CollisionShape2D" parent="." index="1" unique_id=1351730875]
 position = Vector2(2, 3)
@@ -317,37 +343,4 @@ shape = SubResource("CapsuleShape2D_body")
 visible = false
 
 [node name="CollisionShape2D" parent="DetectionArea" index="0" unique_id=1963073735]
-shape = SubResource("CircleShape2D_76t0y")
-
-[node name="Rig" type="Node2D" parent="AnimatedSprite2D"]
-script = ExtResource("RatRig_script")
-
-[node name="HandBack" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
-position = Vector2(8, 51)
-texture = ExtResource("RatRig_atlas")
-centered = false
-region_enabled = true
-region_rect = Rect2(36, 20, 8, 6)
-region_filter_clip_enabled = true
-
-[node name="Staff" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
-position = Vector2(45, 12)
-texture = ExtResource("RatRig_atlas")
-centered = false
-region_enabled = true
-region_rect = Rect2(144, 16, 16, 48)
-region_filter_clip_enabled = true
-
-[node name="HandFront" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
-position = Vector2(49, 47)
-texture = ExtResource("RatRig_atlas")
-centered = false
-region_enabled = true
-region_rect = Rect2(53, 5, 7, 7)
-region_filter_clip_enabled = true
-
-[node name="RigAnim" type="AnimationPlayer" parent="AnimatedSprite2D/Rig"]
-root_node = NodePath("..")
-libraries = {
-&"": SubResource("RatRig_lib")
-}
+shape = SubResource("CircleShape2D_mm3dg")
