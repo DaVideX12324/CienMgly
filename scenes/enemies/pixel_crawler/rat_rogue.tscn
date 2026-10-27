@@ -298,6 +298,7 @@ texture = ExtResource("RatRig_atlas")
 centered = false
 region_enabled = true
 region_rect = Rect2(16, 0, 16, 16)
+region_filter_clip_enabled = true
 
 [node name="HandBack" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
 position = Vector2(17, 50)
@@ -305,6 +306,7 @@ texture = ExtResource("RatRig_atlas")
 centered = false
 region_enabled = true
 region_rect = Rect2(116, 53, 8, 7)
+region_filter_clip_enabled = true
 
 [node name="Bow" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
 position = Vector2(38, 32)
@@ -312,6 +314,7 @@ texture = ExtResource("RatRig_atlas")
 centered = false
 region_enabled = true
 region_rect = Rect2(48, 48, 16, 32)
+region_filter_clip_enabled = true
 
 [node name="HandFront" type="Sprite2D" parent="AnimatedSprite2D/Rig"]
 position = Vector2(47, 47)
@@ -320,6 +323,7 @@ centered = false
 flip_h = true
 region_enabled = true
 region_rect = Rect2(116, 53, 8, 7)
+region_filter_clip_enabled = true
 
 [node name="RigAnim" type="AnimationPlayer" parent="AnimatedSprite2D/Rig"]
 root_node = NodePath("..")
