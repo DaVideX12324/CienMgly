@@ -1,7 +1,7 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://c7uwa1n0auurx"]
 
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Warrior/Idle/Idle-Hands-Sheet.png" id="1_idle"]
-[ext_resource type="Texture2D" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Warrior/Run/Run-Hands-Sheet.png" id="2_walk"]
+[ext_resource type="Texture2D" uid="uid://r5mttp3qx8a1" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Warrior/Idle/Idle-Sheet.png" id="1_idle"]
+[ext_resource type="Texture2D" uid="uid://cbqrlxmxkv3ge" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Warrior/Run/Run-Sheet.png" id="2_walk"]
 [ext_resource type="Texture2D" uid="uid://cdlhsbgud706m" path="res://assets/pixel_crawler/enemies/rat_enemy/Rat - Warrior/Death/Death-Sheet.png" id="3_death"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_idle_0"]
