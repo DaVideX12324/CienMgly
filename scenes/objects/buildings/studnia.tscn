@@ -11,6 +11,7 @@ collision_layer = 32
 collision_mask = 0
 
 [node name="Tilesets" type="Node2D" parent="." unique_id=1208713137]
+position = Vector2(0, 28)
 y_sort_enabled = true
 
 [node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1895637990]
@@ -35,6 +36,6 @@ position = Vector2(-96, -16)
 tile_set = ExtResource("1_sqpv0")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1596829265]
-position = Vector2(-8, -24)
+position = Vector2(-8, 4)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_yfsik")

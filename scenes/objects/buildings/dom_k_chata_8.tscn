@@ -9,43 +9,45 @@ size = Vector2(128, 16)
 radius = 14.0
 
 [node name="DomKChata8" type="StaticBody2D" unique_id=1187908513]
-y_sort_enabled = true
 collision_layer = 32
 collision_mask = 0
 
-[node name="Walls" type="TileMapLayer" parent="." unique_id=1113031003]
+[node name="Tilesets" type="Node2D" parent="."]
 y_sort_enabled = true
-position = Vector2(-64, -16)
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1113031003]
+y_sort_enabled = true
+position = Vector2(-64, -12)
 tile_map_data = PackedByteArray("AAAAAAEABQABADEAAAAAAAAABQABAAgAAAAAAP3/BQANAAgAAAABAAEABQACADEAAAABAAAABQACAAgAAAABAP3/BQAOAAgAAAACAAEABQACADEAAAACAAAABQACAAgAAAACAP3/BQAOAAgAAAADAAEABQACADEAAAADAAAABQACAAgAAAADAP3/BQAOAAgAAAAEAAEABQACADEAAAAEAAAABQACAAgAAAAEAP3/BQAOAAgAAAAFAAEABQACADEAAAAFAAAABQACAAgAAAAFAP3/BQAOAAgAAAAGAAEABQACADEAAAAGAAAABQACAAgAAAAGAP3/BQAOAAgAAAAHAAEABQADADEAAAAHAAAABQAEAAgAAAAHAP3/BQAQAAgAAAABAPz/BQAOAAgAAAACAPz/BQAOAAgAAAADAPz/BQAOAAgAAAAEAPz/BQAOAAgAAAAFAPz/BQAOAAgAAAAGAPz/BQAOAAgAAAAGAPv/BQAOAAgAAAAFAPv/BQAOAAgAAAAEAPv/BQAOAAgAAAADAPv/BQAOAAgAAAACAPv/BQAOAAgAAAABAPv/BQAOAAgAAAA=")
 tile_set = ExtResource("1_tiles")
 
-[node name="Roof" type="TileMapLayer" parent="." unique_id=44315758]
-position = Vector2(-64, -16)
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=44315758]
+position = Vector2(-64, -12)
 tile_map_data = PackedByteArray("AAD///r/BgABAAcAAAD///v/BgABAAgAAAD///z/BgABAAkAAAAAAPn/BgACAAYAAAAAAPr/BgACAAcAAAAAAPv/BgACAAgAAAABAPj/BgACAAYAAAABAPn/BgACAAcAAAABAPr/BgACAAgAAAACAPf/BgACAAYAAAACAPj/BgACAAcAAAACAPn/BgACAAgAAAADAPb/BgADAAUAAAADAPf/BgADAAYAAAADAPj/BgADAAcAAAAEAPb/BgAEAAUAAAAEAPf/BgAEAAYAAAAEAPj/BgAEAAcAAAAFAPf/BgAFAAYAAAAFAPj/BgAFAAcAAAAFAPn/BgAFAAgAAAAGAPj/BgAFAAYAAAAGAPn/BgAFAAcAAAAGAPr/BgAFAAgAAAAHAPn/BgAFAAYAAAAHAPr/BgAFAAcAAAAHAPv/BgAFAAgAAAAIAPr/BgAGAAcAAAAIAPv/BgAGAAgAAAAIAPz/BgAGAAkAAAD///3/BgABAAoAAAAAAPz/BgACAAkAAAABAPv/BgACAAkAAAACAPr/BgACAAkAAAADAPn/BgADAAgAAAAEAPn/BgAEAAgAAAAFAPr/BgAFAAkAAAAGAPv/BgAFAAkAAAAHAPz/BgAFAAkAAAAIAP3/BgAGAAoAAAA=")
 tile_set = ExtResource("1_tiles")
 
-[node name="DoorFrame" type="TileMapLayer" parent="." unique_id=941898463]
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets" unique_id=941898463]
 y_sort_enabled = true
-position = Vector2(-64, -16)
+position = Vector2(-64, -12)
 tile_map_data = PackedByteArray("AAADAP7/CwACABEAAAADAP//CwACABIAAAADAAAACwACABMAAAADAAEACwACABQAAAAEAP7/CwADABEAAAAEAP//CwADABIAAAAEAAAACwADABMAAAAEAAEACwADABQAAAA=")
 tile_set = ExtResource("1_tiles")
 
-[node name="Props" type="TileMapLayer" parent="." unique_id=771483819]
+[node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=771483819]
 y_sort_enabled = true
-position = Vector2(-64, -16)
+position = Vector2(-64, -12)
 tile_map_data = PackedByteArray("AAADAP7/CwAKABEAAAADAP//CwAKABIAAAADAAAACwAKABMAAAAEAP7/CwALABEAAAAEAP//CwALABIAAAAEAAAACwALABMAAAABAP7/CwAGABQAAAABAP//CwAGABUAAAACAP7/CwAHABQAAAACAP//CwAHABUAAAAFAP7/CwAGABQAAAAFAP//CwAGABUAAAAGAP7/CwAHABQAAAAGAP//CwAHABUAAAABAPv/CwAIABYAAAABAPz/CwAIABcAAAACAPv/CwAJABYAAAACAPz/CwAJABcAAAAGAPv/CwAJABYAAAAGAPz/CwAJABcAAAAFAPv/CwAIABYAAAAFAPz/CwAIABcAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="BaseCollision" type="CollisionShape2D" parent="." unique_id=1328818355]
-position = Vector2(0, -8)
+position = Vector2(0, -4)
 shape = SubResource("Rect_base")
 
 [node name="DoorArea" type="Area2D" parent="." unique_id=1295513579]
-position = Vector2(0, 8)
+position = Vector2(0, 12)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=486688604]
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=1196417404]
-position = Vector2(0, 24)
+position = Vector2(0, 28)

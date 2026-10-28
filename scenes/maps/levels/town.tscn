@@ -111,22 +111,22 @@ done_lines = PackedStringArray("Dotrzymałeś słowa. Idę z tobą!")
 y_sort_enabled = true
 
 [node name="House_Desert_RedStone_7" parent="Buildings" unique_id=1977202413 instance=ExtResource("b_7")]
-position = Vector2(911, 186)
+position = Vector2(911, 182)
 
 [node name="House_Desert_RedStone_3" parent="Buildings" unique_id=1628578430 instance=ExtResource("b_3")]
-position = Vector2(1176, 297)
+position = Vector2(1176, 309)
 
 [node name="House_Desert_RedStone_4" parent="Buildings" unique_id=5811033 instance=ExtResource("b_4")]
 position = Vector2(716, 189)
 
 [node name="House_Desert_RedStone_1" parent="Buildings" unique_id=1840899712 instance=ExtResource("b_1")]
-position = Vector2(668, 916)
+position = Vector2(668, 912)
 
 [node name="House_Desert_RedStone_2" parent="Buildings" unique_id=2112394822 instance=ExtResource("b_2")]
-position = Vector2(770, 410)
+position = Vector2(770, 419)
 
 [node name="House_Desert_RedStone_5" parent="Buildings" unique_id=511696688 instance=ExtResource("b_5")]
-position = Vector2(1063, 472)
+position = Vector2(1063, 468)
 
 [node name="House_Desert_RedStone_6" parent="Buildings" unique_id=1187017967 instance=ExtResource("b_6")]
 position = Vector2(233, 202)
