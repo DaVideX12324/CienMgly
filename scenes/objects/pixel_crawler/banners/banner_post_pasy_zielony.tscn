@@ -5,7 +5,7 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_banner"]
 atlas = ExtResource("2_furn")
-region = Rect2(400, 272, 16, 34)
+region = Rect2(480, 432, 17, 34)
 filter_clip = true
 
 [node name="BannerPost" instance=ExtResource("1_pole")]

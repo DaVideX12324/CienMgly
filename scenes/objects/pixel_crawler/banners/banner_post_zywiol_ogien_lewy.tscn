@@ -5,12 +5,13 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_banner"]
 atlas = ExtResource("2_furn")
-region = Rect2(323, 384, 10, 23)
+region = Rect2(322, 496, 11, 23)
 filter_clip = true
 
 [node name="BannerPostLeft" instance=ExtResource("1_pole")]
 
 [node name="Banner" type="Sprite2D" parent="Top" index="0"]
-position = Vector2(-13, -45)
+position = Vector2(-14, -45)
 texture = SubResource("AtlasTexture_banner")
 centered = false
+flip_h = true
