@@ -144,6 +144,9 @@ static func _is_floor_layer(layer: TileMapLayer) -> bool:
 static func _blocks(layer: TileMapLayer, c: Vector2i) -> bool:
 	if layer.tile_set.get_physics_layers_count() == 0:
 		return false
+	var src := layer.tile_set.get_source(layer.get_cell_source_id(c)) as TileSetAtlasSource
+	if src == null or not src.has_tile(layer.get_cell_atlas_coords(c)):
+		return false  # kafel usunięty z atlasu (komórka wskazuje środek kafla wielokratkowego albo pustkę)
 	var td := layer.get_cell_tile_data(c)
 	return td != null and td.get_collision_polygons_count(0) > 0
 
