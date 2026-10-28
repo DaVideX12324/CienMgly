@@ -10,7 +10,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/lullaby.tres" id="8_slttj"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/sea_chant.tres" id="9_ltc6l"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/aerial_strike.tres" id="10_0l0ee"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/mag_frames.tres" id="11_lt2o8"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/ll_mag_frames.tres" id="11_lt2o8"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/ice_shard.tres" id="12_ice"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/fireball.tres" id="13_fire"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/chain_lightning.tres" id="14_chain"]
@@ -22,7 +22,7 @@ display_name = "Eldon"
 character_class = "mage"
 actor_scene = ExtResource("1_2cya6")
 sprite_frames = ExtResource("11_lt2o8")
-sprite_offset = Vector2(1, -24)
+sprite_offset = Vector2(0, -15)
 base_hp = 240
 hp_ref_value = 1000
 hp_at_max_level = 36000

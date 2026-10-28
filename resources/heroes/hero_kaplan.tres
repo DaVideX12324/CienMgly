@@ -9,7 +9,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/rousing_tune.tres" id="7_x8ynh"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/nurturing_care.tres" id="8_v1us2"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/share_tempo.tres" id="9_6mxb2"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/enemies/pixel_crawler/royal_priest.tres" id="10_j7utp"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/heroes/frames/ll_kaplan_frames.tres" id="10_j7utp"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/holy_light.tres" id="11_holy"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/renewal_circle.tres" id="12_renewal"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/skills/mass_prayer.tres" id="13_prayer"]
@@ -22,7 +22,7 @@ display_name = "Selene"
 character_class = "priest"
 actor_scene = ExtResource("1_untre")
 sprite_frames = ExtResource("10_j7utp")
-sprite_offset = Vector2(1, -24)
+sprite_offset = Vector2(0, -15)
 base_hp = 300
 hp_ref_value = 1260
 hp_at_max_level = 45000
