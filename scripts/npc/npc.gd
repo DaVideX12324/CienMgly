@@ -18,8 +18,9 @@ const DialogBox = preload("../ui/dialog_box.gd")
 		sprite_frames = v
 		if is_node_ready():
 			_apply_look()
-## Przesunięcie sprite'a: stopy postaci ok. 2 px pod punktem NPC (klatki z mieszkańcami: -14; royal / elf crew: -30).
-@export var sprite_offset: Vector2 = Vector2(0, -14):
+## Przesunięcie sprite'a (do pozycji (0, 7) węzła sprite'a — jak u gracza): klatki postaci LumenLore -9, stopy 14 px
+## pod punktem NPC, kolizja (kapsuła jak u gracza) w (0, 11).
+@export var sprite_offset: Vector2 = Vector2(0, -9):
 	set(v):
 		sprite_offset = v
 		if is_node_ready():
