@@ -3,12 +3,12 @@
 Szablon ma części ciała w płaskich kolorach (głowa, twarz, oczy, tułów góra / dół, ramię i przedramię + noga po każdej
 stronie). Generator w każdej klatce każdej animacji rozpoznaje części (przedramię od nogi tego samego koloru: spójny
 obszar stykający się z ramieniem = ręka, w nim kratki > HIP_SLACK rzędów pod biodrem = noga), przerabia je wg postaci
-i maluje paletą z cieniowaniem (górna krawędź części jaśniej, dolna / prawa ciemniej, kończyny strony odwróconej od widza
-ciemniej) i konturem. Klatki 64×64, rzędy E/NE/N/NW/W/SW/S/SE (jak w szablonie).
+i maluje paletą: część jednolita (średni odcień), ciemna krawędź tam, gdzie styka się z inną częścią (prawy / dolny brzeg
+części, np. ręka na tułowiu), kończyny strony odwróconej od widza ciemniej, kontur dookoła. Klatki 64×64, rzędy E/NE/N/NW/W/SW/S/SE (jak w szablonie).
 
 Postać (CHARACTERS): palety części (3 odcienie: jasny, średni, ciemny — barwy z Pixel Crawlera, styl gry) oraz:
-- head: "hair" (włosy / goła głowa), "visor" (hełm z przyłbicą: twarz zakryta, szczelina na wysokości oczu, złoty pas
-  przez środek), "hood" (kaptur o 1 px szerszy od głowy, złota lamówka przy twarzy), "hood_dark" (kaptur, twarz w cieniu,
+- head: "hair" (włosy / goła głowa), "helmet" (hełm z odsłoniętą twarzą: osłony policzków od wysokości oczu w dół,
+  złoty pas przez środek do linii twarzy), "hood" (kaptur o 1 px szerszy od głowy, złota lamówka przy twarzy), "hood_dark" (kaptur, twarz w cieniu,
   świecące oczy), "wizard" (spiczasty kapelusz z rondem, siwe włosy, broda na piersi);
 - body: "plain" (spodnie, pas, buty) albo "robe" (szata do kostek: przerwa między nogami wypełniona, lamówka na dole).
 
@@ -62,10 +62,10 @@ WHITE = [(253, 253, 253), (203, 195, 188), (124, 108, 94)]
 DARK = [(64, 69, 69), (37, 39, 22), (20, 20, 18)]
 
 CHARACTERS = {
-    # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z przyłbicą i złotym pasem, niebieski wapenrok.
+    # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem, niebieski wapenrok.
     'bohater': {
-        'head_style': 'visor', 'body': 'plain',
-        'head': METAL, 'face': METAL, 'eye': (37, 39, 22), 'trim': GOLD,
+        'head_style': 'helmet', 'body': 'plain',
+        'head': METAL, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
         'torso_up': METAL, 'torso_lo': BLUE, 'belt': GOLD,
         'arm_up': METAL, 'arm_lo': METAL_D, 'hand': METAL_D,
         'leg': METAL_D, 'boot': [(112, 110, 104), (64, 69, 69), (37, 39, 22)],
@@ -175,12 +175,19 @@ def shape_head(lab, style, direction):
         return
     x0, y0, x1, y1 = _bbox(head + face)
     eye_rows = {p[1] for p, n in lab.items() if n == 'eye'}
-    if style == 'visor':
-        for p in face:
-            lab[p] = 'slit' if p[1] in eye_rows else 'head'
+    if style == 'helmet':
+        # osłony policzków: skrajne kratki twarzy przy hełmie od wysokości oczu w dół
+        if eye_rows:
+            for p in face:
+                if lab[p] == 'face' and p[1] >= min(eye_rows) and any(lab.get((p[0] + dx, p[1])) == 'head' for dx in (-1, 1)):
+                    lab[p] = 'guard'
+            for p in list(lab):
+                if lab[p] == 'guard':
+                    lab[p] = 'head'
+        face_top = min((p[1] for p in face), default=y1 + 1)
         cx = (x0 + x1) // 2 if FACING_X[direction] == 0 else (x1 - 1 if FACING_X[direction] > 0 else x0 + 1)
-        for y in range(y0, y1 + 1):
-            if lab.get((cx, y)) == 'head' and (not eye_rows or y < min(eye_rows)):
+        for y in range(y0, face_top):
+            if lab.get((cx, y)) == 'head':
                 lab[(cx, y)] = 'trim'
     elif style in ('hood', 'hood_dark'):
         for p in head:
@@ -267,9 +274,20 @@ def shape_body(lab, style, hip):
                     lab[(x, y)] = side + '_boot'
 
 
+# Kawałki postaci: ciemna krawędź tylko na styku różnych kawałków (nie między rękawem a dłonią, pasem a tułowiem itp.).
+PIECE = {'head': 'head', 'hood': 'head', 'hat': 'head', 'brim': 'head', 'hair': 'head', 'trim': 'head',
+         'face': 'face', 'eye': 'face', 'shadow': 'face', 'beard': 'face',
+         'torso_up': 'torso', 'torso_lo': 'torso', 'belt': 'torso', 'robe': 'torso', 'robe_hem': 'torso'}
+
+
+def piece(n):
+    if n[:2] in ('r_', 'l_'):
+        side, part = n.split('_', 1)
+        return side + ('_leg' if part in ('leg', 'boot') else '_arm')
+    return PIECE.get(n, n)
+
+
 def ramp_for(n, spec):
-    if n == 'slit':
-        return [spec['eye']] * 3
     if n in ('trim', 'robe_hem'):
         return spec['trim']
     if n == 'brim':
@@ -293,17 +311,12 @@ def paint(fr, spec, direction):
             out.putpixel((x, y), spec['eye'] + (255,))
             continue
         ramp = ramp_for(n, spec)
-        group = n.split('_')[0] if n[:2] in ('r_', 'l_') else n
-        above = lab.get((x, y - 1))
-        below = lab.get((x, y + 1))
-        right = lab.get((x + 1, y))
-        tone = 1
-        if above is None or (above != n and (above.split('_')[0] if above[:2] in ('r_', 'l_') else above) != group):
-            tone = 0
-        elif below is None or right is None:
-            tone = 2
-        if back and n.startswith(back + '_'):
-            tone = min(2, tone + 1)
+        group = piece(n)
+        tone = 2 if back and n.startswith(back + '_') else 1
+        for d in ((1, 0), (0, 1)):
+            nb = lab.get((x + d[0], y + d[1]))
+            if nb is not None and piece(nb) != group:
+                tone = 2
         out.putpixel((x, y), ramp[tone] + (255,))
     solid = {p for p in lab if 0 <= p[0] < FRAME and 0 <= p[1] < FRAME}
     for (x, y) in solid:
