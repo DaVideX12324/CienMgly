@@ -6,6 +6,8 @@ class_name ProceduralLevel
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const LevelPortal = preload("level_portal.gd")
+## z_index kafli voidu (raise_void_tiles).
+const VOID_Z := 1
 const HeightVeilScript = preload("height_veil.gd")
 const GateNavScript = preload("gate_nav.gd")
 const MapGeneratorBaseScript = preload("../generation/map_generator_base.gd")
@@ -761,6 +763,8 @@ func _resolve_tileset(palette: Dictionary) -> TileSet:
 ## Bridges / Rails tylko na mapach z kładkami / barierkami — tworzy je prepare_cave_layers).
 func _prepare_layers(job: GenJob) -> Dictionary:
 	var ts := _resolve_tileset(_palette())
+	if job.behaviour.get("profile") != null:
+		raise_void_tiles(job.behaviour.profile)
 	var floor_layer := _get_or_create_layer("Floor", -2, ts)
 	var floor_decor := _get_or_create_layer("FloorDecor", -1, ts)
 	var walls_layer := _get_or_create_layer("Walls", 0, ts)
@@ -777,6 +781,28 @@ func _prepare_layers(job: GenJob) -> Dictionary:
 
 
 ## Nakłada wynik generacji na scenę w jednej klatce.
+## Void (kafle roli SOLID_FILL profilu kafli) na z_index VOID_Z względem warstwy — przykrywa postacie i obiekty wystające
+## zza ścian (prośba usera 2026-10-28). Zmienia TileData współdzielonego TileSetu, więc dotyczy każdej mapy proceduralnej
+## z tym zestawem (też wczytanej z zapisu map).
+static func raise_void_tiles(profile: MapTileProfile) -> void:
+	for def in profile.tilesets:
+		if def == null or def.tile_set == null:
+			continue
+		var entry := def.get_entry(TileRole.Id.SOLID_FILL)
+		if entry == null:
+			continue
+		var refs: Array[TileRef] = [entry.tile]
+		for v in entry.variants:
+			for part in v.parts:
+				refs.append(part.tile)
+		for r in refs:
+			if r == null or not def.tile_set.has_source(r.source_id):
+				continue
+			var src := def.tile_set.get_source(r.source_id) as TileSetAtlasSource
+			if src != null and src.has_tile(r.atlas_coords) and src.has_alternative_tile(r.atlas_coords, r.alternative_tile):
+				src.get_tile_data(r.atlas_coords, r.alternative_tile).z_index = VOID_Z
+
+
 func _apply_job(job: GenJob) -> void:
 	last_result = job.result
 	var layers := _prepare_layers(job)
