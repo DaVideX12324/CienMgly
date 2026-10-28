@@ -12,7 +12,7 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 ## Podbijać przy zmianach generatora / kafli, które zmieniają wynik mapy (w buildzie debug dodatkowo działa data
 ## modyfikacji skryptów generatora).
-const MAP_CACHE_VERSION := 3
+const MAP_CACHE_VERSION := 4
 const MAGIC := 0x4D415031  # "MAP1"
 const ROOT := "user://maps"
 const KEEP_SEEDS := 6

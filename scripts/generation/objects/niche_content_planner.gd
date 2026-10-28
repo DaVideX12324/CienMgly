@@ -9,7 +9,8 @@ extends RefCounted
 ## losowania do osobnej mapy z relikwią (2–3 pokoje, relikwia w ostatnim, boss przed nim) — wybrana z hash(seed mapy)
 ## spośród nisz dalszych od wejścia niż mediana (po podłodze). Niszę out na takiej mapie gwarantuje plan kafli
 ## (CaveGenerator.plan_cave_tiles, force_out_niche).
-## Obiekt stoi w głębi niszy (między kolumnami pary, nad rzędem stopy); gracz sięga go z podłogi przed niszą.
+## Obiekt stoi w głębi niszy (między kolumnami pary, nad rzędem stopy) — przedmiot i skrzynia głęboko (DEEP_OFFSET); gracz
+## musi wejść w niszę, żeby go sięgnąć i zobaczyć podpowiedź (limit_reach; prośba usera 2026-10-28).
 ## Deterministycznie: RNG z hash(seed mapy, kratka niszy).
 
 const QuizRpgPaths = preload("../../quiz_rpg_paths.gd")
@@ -22,6 +23,15 @@ const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1),
 ## Przesunięcie punktu obiektu względem środka dołu kratki kotwicy (lewa kolumna, rząd stopy): x na granicę kolumn,
 ## y w głąb niszy (px).
 const OFFSET := Vector2(8, -14)
+## Przedmiot i skrzynia: w najszerszej części niszy (~31 px nad dołem rzędu stopy; wolne miejsce sięga ~46 px, wyżej się zwęża). Przejście zostaje na
+## OFFSET (szczelina Gap wypełnia niszę), głębiej przesunięty tylko jego obszar użycia (PASSAGE_USE_Y).
+const DEEP_OFFSET := Vector2(8, -23)
+## Promień obszaru interakcji skrzyni niszy (scena skrzyni: 30 px — podpowiedź z podłogi przed niszą).
+const CHEST_REACH := 12.0
+## Obszar użycia przejścia: tyle px nad punktem węzła.
+const PASSAGE_USE_Y := -16.0
+## z_index przedmiotu i skrzyni w głębi niszy (nad kaflami ścian).
+const DRAW_Z := 1
 ## Rzędy podłogi przed niszą (od rzędu stopy w dół) bez innych obiektów.
 const CLEAR_ROWS := 2
 
@@ -50,7 +60,7 @@ static func plan(result, cfg: Dictionary) -> void:
 		var pl := ObjectPlacement.new()
 		pl.def = defs[kind]
 		pl.cell = c
-		pl.offset = OFFSET
+		pl.offset = OFFSET if kind == &"secret_room" or kind == RELIC_ID else DEEP_OFFSET
 		added.append(pl)
 		objs.stats[pl.def.id] = int(objs.stats.get(pl.def.id, 0)) + 1
 		for dy in CLEAR_ROWS:
@@ -77,6 +87,25 @@ static func plan(result, cfg: Dictionary) -> void:
 			kept.append(pl)
 	kept.append_array(added)
 	objs.placements = kept
+
+
+## Zawartość niszy w grze: zasięg interakcji tylko w jej środku — skrzynia: mniejszy obszar interakcji, przejście: obszar
+## użycia w głąb niszy (kształty kopiowane — sceny je współdzielą); przedmiot sięga się z bliska (obszar 8 px) bez zmian.
+## Przedmiot i skrzynia nad kaflami lica (DRAW_Z) — w głębi niszy sortowanie Y chowało je pod kaflami wnęki.
+static func setup_node(node: Node) -> void:
+	var uid := String(node.get("unique_id")) if "unique_id" in node else ""
+	if uid.begins_with(String(KINDS[&"item"]) + "_"):
+		(node as CanvasItem).z_index = DRAW_Z
+	elif uid.begins_with(String(KINDS[&"chest"]) + "_"):
+		(node as CanvasItem).z_index = DRAW_Z
+		var cs := node.get_node_or_null("InteractionArea/CollisionShape2D") as CollisionShape2D  # węzeł grupy = sprite Chest
+		if cs != null and cs.shape is CircleShape2D:
+			cs.shape = cs.shape.duplicate()
+			(cs.shape as CircleShape2D).radius = CHEST_REACH
+	elif node.is_in_group("secret_passages"):
+		var cs := node.get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if cs != null:
+			cs.position.y = PASSAGE_USE_Y
 
 
 ## Czy mapa ma pokój relikwii (scena w "relic_scene") — wtedy zawsze dokładnie jedna nisza do niego.
