@@ -174,6 +174,12 @@ def segment(fr):
     return lab, hip
 
 
+def center_cols(x0, x1):
+    """Kolumny środka obrysu x0..x1: przy parzystej szerokości 2 (model ma 2-pikselowy środek), przy nieparzystej 1."""
+    w = x1 - x0 + 1
+    return [x0 + w // 2 - 1, x0 + w // 2] if w % 2 == 0 else [x0 + w // 2]
+
+
 def _bbox(cells):
     xs = [p[0] for p in cells]
     ys = [p[1] for p in cells]
@@ -208,11 +214,11 @@ def shape_head(lab, style, direction):
         else:
             # od przodu / tyłu: przez środek; ukosy: 1 px w stronę twarzy (S*) albo potylicy (N*)
             shift = 0 if fx == 0 else (fx if direction.startswith('S') else -fx)
-            cx = (hx0 + hx1 + 1) // 2 + shift
             face_top = min((p[1] for p in face), default=y1 + 1)
-            for y in range(y0, face_top if direction.startswith('S') else y1 + 1):
-                if lab.get((cx, y)) == 'head':
-                    lab[(cx, y)] = 'trim'
+            for cx in center_cols(hx0, hx1):
+                for y in range(y0, face_top if direction.startswith('S') else y1 + 1):
+                    if lab.get((cx + shift, y)) == 'head':
+                        lab[(cx + shift, y)] = 'trim'
     elif style in ('hood', 'hood_dark'):
         for p in head:
             lab[p] = 'hood'
@@ -317,9 +323,9 @@ def add_details(lab, spec, direction):
     up = [p for p, n in lab.items() if n == 'torso_up']
     if not torso or not up:
         return
-    cxf = sum(p[0] for p in up) / len(up) + 0.5
-    cx = int(cxf)
     tx0, ty0, tx1, ty1 = _bbox(up)
+    cxf = (tx0 + tx1 + 1) / 2.0
+    mid = center_cols(tx0, tx1)
     wide = tx1 - tx0 + 1 >= 6           # widok od przodu / tyłu (z boku tułów ma 4-5 px)
     front = direction in FRONT
     above_head = ('head', 'face', 'eye', 'hood', 'hair', 'beard', 'shadow', 'trim', 'brim')
@@ -341,18 +347,18 @@ def add_details(lab, spec, direction):
                 lab[(x, ty0 + k)] = 'strap'
     if front and 'emblem' in spec and wide:
         ey = ty0 + 3
-        for d in ((0, 0), (0, -1), (0, 1), (-1, 0), (1, 0)):
-            q = (cx + d[0], ey + d[1])
+        cross = [(x, ey + dy) for x in mid for dy in (-1, 0, 1)] + [(mid[0] - 1, ey), (mid[-1] + 1, ey)]
+        for q in cross:
             if lab.get(q) in ('tabard', 'torso_up'):
                 lab[q] = 'emblem'
     if front and 'stole' in spec:
         for p in list(lab):
-            if p[0] == cx and lab[p] in ('torso_up', 'torso_lo', 'robe', 'collar'):
+            if p[0] in mid and lab[p] in ('torso_up', 'torso_lo', 'robe', 'collar'):
                 lab[p] = 'stole'
     if front and 'buckle' in spec:
-        belt = sorted((p for p, n in lab.items() if n == 'belt'), key=lambda p: abs(p[0] + 0.5 - cxf))
-        for p in belt[:2 if wide else 1]:
-            lab[p] = 'buckle'
+        for p, n in list(lab.items()):
+            if n == 'belt' and p[0] in mid:
+                lab[p] = 'buckle'
     for side in ('r', 'l'):
         if 'cuff' in spec:
             for p, n in list(lab.items()):
