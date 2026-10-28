@@ -8,14 +8,21 @@ extends SceneTree
 ## Kafle warstw (wszystkie TileMapLayer w Tilesets poza tymi z z_index != 0, np. Shadow) trafiają do kopii warstw
 ## w segmentach; położenie kafli w świecie bez zmian. Kolejność warstw (przy równym y): ściany, ramy drzwi, dach,
 ## rekwizyty, komin. Korzeń i Tilesets dostają Y Sort.
-## Uruchomienie: godot --headless --path . -s res://modules/quiz_rpg/tools/segment_building.gd -- <scena.tscn> ...
+## Uruchomienie: godot --headless --path . -s res://modules/quiz_rpg/tools/segment_building.gd -- [A=B ...] <scena.tscn> ...
+## A=B: kolumny z podstawą A idą do segmentu B (np. 14=32 — wnęka drzwi to ta sama bryła co front).
 const CELL := 16
 const ORDER := ["Walls", "DoorFrame", "Roof", "Props", "Chimney"]
 
 
+var _merge := {}   # podstawa -> podstawa docelowa (argumenty A=B)
+
+
 func _initialize() -> void:
-	for path: String in OS.get_cmdline_user_args():
-		print(path, ": ", _segment(path))
+	for arg: String in OS.get_cmdline_user_args():
+		if "=" in arg:
+			_merge[float(arg.get_slice("=", 0))] = float(arg.get_slice("=", 1))
+		else:
+			print(arg, ": ", _segment(arg))
 	quit()
 
 
@@ -40,6 +47,7 @@ func _segment(path: String) -> String:
 		var off := _pos_in(layer, tilesets)
 		for c in layer.get_used_cells():
 			var base := _base_at(poly, tilesets.position.x + off.x + c.x * CELL + CELL * 0.5)
+			base = _merge.get(base, base)
 			if not groups.has(base):
 				groups[base] = {}
 			if not groups[base].has(layer):
