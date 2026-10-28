@@ -147,11 +147,22 @@ const DIRECT_STOP_SHORT := 12.0
 const STEER_RATE := 10.0         # płynny obrót kierunku (zamiast losowych drgań z Amon-Ra)
 const WANDER_PATH_FACTOR := 1.6  # cel wałęsania odrzucany, gdy ścieżka dłuższa niż promień × to (za ścianą)
 const WANDER_TRIES := 6
+## Pościg zablokowany przez innego wroga: tak blisko celu (stoi u celu przed nami) — też jesteśmy „u celu” i stoimy;
+## dalej — obejście bokiem przez SIDESTEP_TIME s (wcześniej tylny „szedł w miejscu” w plecy przedniego); gdy obejście
+## nie wychodzi PASS_THROUGH_TIME s (wąski chodnik), przenikamy przez niego do rozejścia na GHOST_RELEASE_DIST px.
+const ENEMY_QUEUE_DIST := 32.0
+const SIDESTEP_TIME := 0.4
+const PASS_THROUGH_TIME := 0.8
+const GHOST_RELEASE_DIST := 20.0
 var _nav_target := Vector2.INF
 var _repath_timer := 0.0
 var _move_dir := Vector2.ZERO
 var _path := PackedVector2Array()   # ścieżka z NavigationServer2D (własne śledzenie — agent tylko do RVO)
 var _path_i := 0
+var _sidestep := Vector2.ZERO
+var _sidestep_timer := 0.0
+var _block_time := 0.0
+var _ghosts: Array = []   # wrogowie z chwilowym wyjątkiem kolizji (przenikanie w pościgu)
 
 
 func _ready() -> void:
@@ -733,7 +744,66 @@ func _chase(delta: float) -> void:
 
 	# Walka startuje wyłącznie z kontaktu (collider wroga w Player/InteractionArea). Ruch po ścieżce
 	# siatki nawigacji; u celu (ostatnio widziana pozycja) wróg stoi, a nie „idzie w miejscu”.
-	_move_towards(_nav_direction(last_seen_player_pos, delta), patrol_speed * 1.3, delta)
+	_move_towards(_avoid_enemy(_nav_direction(last_seen_player_pos, delta), last_seen_player_pos, delta),
+			patrol_speed * 1.3, delta)
+
+
+## Inny wróg na drodze pościgu (kolizja z ostatniego ruchu, czołowa względem `dir`): blisko celu — ZERO (stój obok
+## niego), dalej — kierunek wzdłuż jego krawędzi w stronę wolnego boku, trzymany SIDESTEP_TIME s; zablokowany dłużej
+## niż PASS_THROUGH_TIME — wyjątek kolizji z nim (przenikanie).
+func _avoid_enemy(dir: Vector2, target: Vector2, delta: float) -> Vector2:
+	_release_ghosts()
+	if dir == Vector2.ZERO:
+		return dir
+	var col := _enemy_ahead(dir)
+	if col == null:
+		_block_time = 0.0
+	else:
+		if global_position.distance_to(target) <= ENEMY_QUEUE_DIST:
+			return Vector2.ZERO
+		var other := col.get_collider() as EnemyBase
+		_block_time += delta
+		if _block_time >= PASS_THROUGH_TIME:
+			add_collision_exception_with(other)
+			_ghosts.append(other)
+			_block_time = 0.0
+			_sidestep_timer = 0.0
+			return dir
+		if _sidestep_timer <= 0.0:
+			var n := col.get_normal()
+			var side := Vector2(-n.y, n.x)
+			if side.dot(global_position - other.global_position) < 0.0:
+				side = -side
+			if test_move(global_transform, side * 8.0):
+				side = -side
+				if test_move(global_transform, side * 8.0):
+					return dir
+			_sidestep = side
+			_sidestep_timer = SIDESTEP_TIME
+	if _sidestep_timer > 0.0:
+		_sidestep_timer -= delta
+		return (dir + _sidestep * 1.5).normalized()
+	return dir
+
+
+## Kolizja z wrogiem z ostatniego ruchu, czołowa względem `dir` (null = brak).
+func _enemy_ahead(dir: Vector2) -> KinematicCollision2D:
+	for i in range(get_slide_collision_count()):
+		var col := get_slide_collision(i)
+		if col.get_collider() is EnemyBase and col.get_normal().dot(dir) <= -0.5:
+			return col
+	return null
+
+
+## Zdejmuje wyjątki kolizji z wrogami, od których już się oddaliliśmy (albo którzy zniknęli).
+func _release_ghosts() -> void:
+	for i in range(_ghosts.size() - 1, -1, -1):
+		var g = _ghosts[i]
+		if not is_instance_valid(g):
+			_ghosts.remove_at(i)
+		elif global_position.distance_to((g as Node2D).global_position) > GHOST_RELEASE_DIST:
+			remove_collision_exception_with(g)
+			_ghosts.remove_at(i)
 
 
 # --- Ruch po siatce nawigacji ---------------------------------------------------------------
