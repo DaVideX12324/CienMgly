@@ -270,8 +270,7 @@ static func _add_north_stairs(out: NamedTileSetDefinition, cfg: Dictionary) -> v
 		out.tile_entries.append(_stair_entry(role, src, parts))
 
 
-## Moduł schodów bocznych E / W z atlasu (`dx0` = przesunięcie x pierwszej kolumny modułu względem kratki boku
-## platformy; domyślnie E od lewej 0, W od prawej -(szerokość-1)). Rzędy: belka
+## Moduł schodów bocznych E / W z atlasu (kolumny od strony platformy: E od lewej, W od prawej). Rzędy: belka
 ## poręczy nad schodami, stopnie (górny, środkowy — powtarzany przez PlateauPlacer._put_stair przy wyższych schodach —
 ## dolny), belka pod schodami. Belki na warstwie RAILS_LAYER (y-sort z postaciami, nie wymazują krawędzi platformy
 ## w swoich kratkach). Rola *_3H, kotwica = kratka boku platformy w górnym rzędzie schodów.
@@ -283,13 +282,12 @@ static func _add_side_stairs(out: NamedTileSetDefinition, cfg: Dictionary, role:
 	var sz: Array = cfg.get("size", [3, 5])
 	var o := Vector2i(int(org[0]), int(org[1]))
 	var w := int(sz[0])
-	var dx0 := int(cfg.get("dx0", -(w - 1) if west else 0))
 	var last := int(sz[1]) - 1
 	# [rząd modułu, przesunięcie y, warstwa]
 	var rows := [[0, -1, RAILS_LAYER], [1, 0, LAYER], [2, 1, LAYER], [last - 1, 2, LAYER], [last, 3, RAILS_LAYER]]
 	var parts: Array = []
 	for col in w:
-		var dx := col + dx0
+		var dx := col - (w - 1) if west else col
 		for r in rows:
 			parts.append([Vector2i(dx, int(r[1])), o + Vector2i(col, int(r[0])), r[2]])
 	out.tile_entries.append(_stair_entry(role, src, parts))
