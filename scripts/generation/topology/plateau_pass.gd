@@ -2037,6 +2037,11 @@ static func _stair_ok(ctx: GenerationContext, layout: PlateauLayout, dir: int, s
 	var tmp := PlateauLayout.new()
 	var lst: Array = [tmp.stairs, tmp.stairs_north, tmp.stairs_east, tmp.stairs_west]
 	(lst[dir] as Array).append(st)
+	# Ścieki: kratki podłogi zablokowane elementem liniowym (kanał, ściana szer. 1) — nie pod schodami.
+	var lin_blocked: Dictionary = ctx.canals.blocked if ctx.canals != null and "blocked" in ctx.canals else {}
+	for c in tmp.stair_cells():
+		if lin_blocked.has(c):
+			return false
 	for pair in tmp.stair_pairs():
 		var top: Vector2i = pair[0]
 		var foot: Vector2i = pair[1]
@@ -2045,6 +2050,8 @@ static func _stair_ok(ctx: GenerationContext, layout: PlateauLayout, dir: int, s
 		# Za stopą (w kierunku zejścia) nie może być znów wyżej — schody nie schodzą w szczelinę.
 		var landing: Vector2i = foot + (foot - top)
 		if GridUtils.is_walkable(ctx.grid, landing) and layout.height_of(landing) > layout.height_of(foot):
+			return false
+		if lin_blocked.has(landing) or lin_blocked.has(landing + (foot - top)):
 			return false
 	# Flanki (kratki lica tuż obok schodów) na tej samej wysokości co góra, z terenem o 1 niżej za nimi —
 	# inaczej schody stoją w rogu (np. po zasypaniu szczeliny obok) i nie pasują do kafli lica.
