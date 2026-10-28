@@ -30,16 +30,20 @@ func setup(result) -> void:
 	set_process(not _zones.is_empty())
 
 
-## Prostokąty (wiersze) mapy poza widocznym: obszar + schody + ściany w zasięgu WALL_REACH od obszaru i ściany
-## korytarza (zasięg 1) przy schodach.
+## Prostokąty (wiersze) mapy poza widocznym: obszar + schody + ściany i kanały (woda, barierki, doły — kratki, na
+## których kończy się obszar) w zasięgu WALL_REACH od obszaru i ściany korytarza (zasięg 1) przy schodach.
 func _hidden_rects(result, rect: Rect2i, zone: Dictionary) -> Array[Rect2]:
 	var visible := zone.duplicate()
+	var cn = result.canals
+	var solid := {}
+	for src in [cn.blocked, cn.water, cn.rail_cells, cn.pit_cells]:
+		solid.merge(src)
 	for c: Vector2i in zone:
-		_add_walls(result, visible, c, WALL_REACH)
+		_add_walls(result, solid, visible, c, WALL_REACH)
 	for y in range(rect.position.y, rect.end.y):
 		for x in range(rect.position.x, rect.end.x):
 			visible[Vector2i(x, y)] = true
-			_add_walls(result, visible, Vector2i(x, y), 1)
+			_add_walls(result, solid, visible, Vector2i(x, y), 1)
 	var out: Array[Rect2] = []
 	for y in range(result.height):
 		var x := 0
@@ -54,11 +58,11 @@ func _hidden_rects(result, rect: Rect2i, zone: Dictionary) -> Array[Rect2]:
 	return out
 
 
-func _add_walls(result, visible: Dictionary, c: Vector2i, reach: int) -> void:
+func _add_walls(result, solid: Dictionary, visible: Dictionary, c: Vector2i, reach: int) -> void:
 	for dy in range(-reach, reach + 1):
 		for dx in range(-reach, reach + 1):
 			var q := c + Vector2i(dx, dy)
-			if not GridUtils.is_walkable(result.grid, q):
+			if not GridUtils.is_walkable(result.grid, q) or solid.has(q):
 				visible[q] = true
 
 
