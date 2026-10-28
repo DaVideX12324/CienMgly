@@ -300,27 +300,33 @@ static func plan_masks(ctx: GenerationContext, terrain_plan: TerrainPaintPlan, t
 		if fl.floor_edges_by_walkable and pl != null and not pl.is_empty() and pl.face_down == 0:
 			# Platformy z licem na kratkach maski: góra platformy (z rimem / bokiem) osobno od reszty podłogi —
 			# brzeg terenu (cień) po obu stronach linii krawędzi platformy, nie kratkę dalej. Kratki schodów N / E / W
-			# należą do góry — cień niższej podłogi obchodzi schody dookoła zamiast biec pod nimi.
-			var stairs := PlateauLayout.new()
-			stairs.stairs_north = pl.stairs_north
-			stairs.stairs_east = pl.stairs_east
-			stairs.stairs_west = pl.stairs_west
-			var upper: Dictionary = pl.mask.duplicate()
-			for c in stairs.stair_cells():
-				upper[c] = true
+			# osobno od obu — cień niższej podłogi i góry platformy obchodzi schody dookoła zamiast biec pod nimi
+			# (brzeg samych schodów leży pod stopniami).
+			var sl := PlateauLayout.new()
+			sl.stairs_north = pl.stairs_north
+			sl.stairs_east = pl.stairs_east
+			sl.stairs_west = pl.stairs_west
+			var stair_set := {}
+			for c in sl.stair_cells():
+				stair_set[c] = true
 			var top: Array[Vector2i] = []
 			var rest: Array[Vector2i] = []
+			var stairs: Array[Vector2i] = []
 			var rest_mask: Array[Vector2i] = []
 			for p in terrain_cells:
-				if upper.has(p):
+				if stair_set.has(p):
+					stairs.append(p)
+				elif pl.mask.has(p):
 					top.append(p)
 				else:
 					rest.append(p)
 			for p in edge_mask:
-				if not upper.has(p):
+				if not pl.mask.has(p) and not stair_set.has(p):
 					rest_mask.append(p)
 			terrain_plan.add_batch(&"Floor", rest, 0, fl.floor_terrain, 0, true, rest_mask)
 			terrain_plan.add_batch(&"Floor", top, 0, fl.floor_terrain, 0, true, top)
+			if not stairs.is_empty():
+				terrain_plan.add_batch(&"Floor", stairs, 0, fl.floor_terrain, 0, true, stairs)
 		else:
 			terrain_plan.add_batch(&"Floor", terrain_cells, 0, fl.floor_terrain, 0, true, edge_mask)
 	var mud_idx: int = fl.terrain_mud_index if fl != null else 1
