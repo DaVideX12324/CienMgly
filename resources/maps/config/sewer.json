@@ -140,7 +140,7 @@
     "derive_from": "sewer",
     "shift": {"source": 0, "rect": [6, 0, 6, 6], "offset": [-6, 0]},
     "stairs": {"source": 0, "origin": [12, 9], "size": [5, 3]},
-    "stairs_north": {"source": 4, "origin": [0, 7], "size": [4, 3], "anchor_row": 1},
+    "stairs_north": {"source": 4, "origin": [0, 7], "size": [5, 3], "anchor_row": 1},
     "stairs_east": {"source": 4, "origin": [0, 10], "size": [3, 5]},
     "stairs_west": {"source": 4, "origin": [3, 10], "size": [3, 5]}
   },

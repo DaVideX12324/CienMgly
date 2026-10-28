@@ -242,25 +242,31 @@ static func _add_stairs(out: NamedTileSetDefinition, cfg: Dictionary) -> void:
 		out.tile_entries.append(entry)
 
 
-## Moduł schodów N z atlasu (kolumny: pierwsza z poręczą, środek, ostatnia z poręczą; rzędy od góry):
-## STAIR_NORTH_LEFT / MID / RIGHT, kotwica = kratka rimu, rząd `anchor_row` modułu na niej (wyżej — niższa podłoga).
+## Moduł schodów N z atlasu — układ jak S (kolumny: słupek poręczy, stopnie L / M / R, słupek; rzędy od góry):
+## STAIR_NORTH_LEFT / MID / RIGHT / SINGLE, kotwica = kratka rimu, rząd `anchor_row` modułu na niej (wyżej — niższa
+## podłoga). Słupki na flankach (kratki rimu obok schodów) na warstwie RAILS_LAYER — rim pod nimi zostaje.
 static func _add_north_stairs(out: NamedTileSetDefinition, cfg: Dictionary) -> void:
 	if cfg.is_empty():
 		return
 	var src := int(cfg.get("source", 0))
 	var org: Array = cfg.get("origin", [0, 0])
-	var sz: Array = cfg.get("size", [4, 3])
+	var sz: Array = cfg.get("size", [5, 3])
 	var o := Vector2i(int(org[0]), int(org[1]))
 	var anchor_row := int(cfg.get("anchor_row", 1))
+	var last := int(sz[0]) - 1
+	# rola -> [kolumna atlasu, przesunięcie x w module] dla każdej kolumny modułu
 	var cols := {
-		TileRole.Id.STAIR_NORTH_LEFT: 0,
-		TileRole.Id.STAIR_NORTH_MID: 1,
-		TileRole.Id.STAIR_NORTH_RIGHT: int(sz[0]) - 1,
+		TileRole.Id.STAIR_NORTH_LEFT: [[0, -1], [1, 0]],
+		TileRole.Id.STAIR_NORTH_MID: [[2, 0]],
+		TileRole.Id.STAIR_NORTH_RIGHT: [[last - 1, 0], [last, 1]],
+		TileRole.Id.STAIR_NORTH_SINGLE: [[0, -1], [2, 0], [last, 1]],
 	}
 	for role in cols:
 		var parts: Array = []
-		for row in int(sz[1]):
-			parts.append([Vector2i(0, row - anchor_row), o + Vector2i(int(cols[role]), row)])
+		for col in cols[role]:
+			var layer: StringName = RAILS_LAYER if int(col[1]) != 0 else LAYER
+			for row in int(sz[1]):
+				parts.append([Vector2i(int(col[1]), row - anchor_row), o + Vector2i(int(col[0]), row), layer])
 		out.tile_entries.append(_stair_entry(role, src, parts))
 
 
