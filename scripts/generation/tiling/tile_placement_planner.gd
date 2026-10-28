@@ -38,7 +38,7 @@ static func plan(ctx: GenerationContext, analysis: EdgeAnalysisResult) -> Dictio
 	# Kanały ścieków: kwas / lico (Floor), obrzeża i kładki (FloorDecor).
 	CanalPlacerScript.plan(ctx, tiles)
 	# Kratownice w posadzce (teren na Floor)
-	GratingPlannerScript.plan(ctx, terrain)
+	GratingPlannerScript.plan(ctx, terrain, tiles)
 	# Krawężniki na progach korytarz -> pokój / kompleks (FloorDecor)
 	CurbPlacerScript.plan(ctx, tiles)
 	if CanalPlacerScript.bed_terrain(ctx) >= 0:

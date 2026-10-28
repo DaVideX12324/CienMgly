@@ -336,6 +336,22 @@ static func prepare_cave_layers(
 			if walls_layer.get_parent() == rparent:
 				rparent.move_child(rails_layer, walls_layer.get_index() + 1)
 
+	# Warstwa FloorUnder (void pod kratownicami ścieków — widać go przez ich otwory): rodzeństwo zaraz PRZED Floor,
+	# ten sam z_index. Tylko przy kratownicach.
+	var under_layer: TileMapLayer = null
+	if floor_layer.get_parent():
+		under_layer = floor_layer.get_parent().get_node_or_null("FloorUnder") as TileMapLayer
+		if under_layer == null and result.canals != null and "grating_shapes" in result.canals and not result.canals.grating_shapes.is_empty():
+			under_layer = TileMapLayer.new()
+			under_layer.name = "FloorUnder"
+			under_layer.z_index = floor_layer.z_index
+			var uparent := floor_layer.get_parent()
+			uparent.add_child(under_layer)
+			uparent.move_child(under_layer, floor_layer.get_index())
+		if under_layer != null:
+			under_layer.tile_set = floor_layer.tile_set
+			under_layer.clear()
+
 	# Warstwa PortalShade (gradient na stopniu schodów portalu przy voidzie): na samej górze — nad ścianami i postaciami
 	# (decyzja usera), bez sortowania. Tylko przy schodach portali.
 	var shade_layer: TileMapLayer = null
@@ -364,6 +380,7 @@ static func prepare_cave_layers(
 		platforms_layer.clear()
 
 	return {
+		&"FloorUnder": under_layer,
 		&"Floor": floor_layer,
 		&"FloorDecor": floor_decor_layer,
 		&"Curbs": curbs_layer,
@@ -453,9 +470,10 @@ static func plan_cave_tiles(
 	return plans
 
 
-## Wykonuje plan na warstwach (główny wątek): Floor, teren, FloorDecor, Bridges, Walls, Rails, Platforms.
+## Wykonuje plan na warstwach (główny wątek): FloorUnder, Floor, teren, FloorDecor, Bridges, Walls, Rails, Platforms.
 static func execute_cave_tiles(layers: Dictionary, plans: Dictionary) -> void:
 	GenProgress.begin(&"paint")
+	TilePlacementExecutor.execute(layers.get(&"FloorUnder"), plans.tiles, &"FloorUnder")
 	TilePlacementExecutor.execute(layers[&"Floor"], plans.tiles, &"Floor")
 	TerrainPaintExecutor.execute(layers, plans.terrain)
 	TilePlacementExecutor.execute(layers.get(&"FloorDecor"), plans.tiles, &"FloorDecor")

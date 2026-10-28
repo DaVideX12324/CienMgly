@@ -12,7 +12,7 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 ## Podbijać przy zmianach generatora / kafli, które zmieniają wynik mapy (w buildzie debug dodatkowo działa data
 ## modyfikacji skryptów generatora).
-const MAP_CACHE_VERSION := 2
+const MAP_CACHE_VERSION := 3
 const MAGIC := 0x4D415031  # "MAP1"
 const ROOT := "user://maps"
 const KEEP_SEEDS := 6
@@ -71,7 +71,7 @@ static func _newest_script(dir: String) -> int:
 # --- Migawka (główny wątek: tylko kopie referencji / proste pętle; zapis w wątku roboczym) ---
 
 ## Warstwy kafli, które maluje generator (reszta — Decals / Props / … — powstaje z planu obiektów po wczytaniu).
-const PAINT_LAYERS := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
+const PAINT_LAYERS := [&"FloorUnder", &"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
 
 
 static func snapshot(layers: Dictionary, result, sig: String) -> Dictionary:
@@ -108,10 +108,11 @@ static func _pack_result(r) -> Dictionary:
 	if c != null:
 		out["canals"] = {"cells": c.cells, "blocked": c.blocked, "crossings": Array(c.crossings),
 			"crossing_cells": c.crossing_cells, "rail_cells": c.rail_cells, "stair_corridors": c.stair_corridors,
-			"stair_cells": c.stair_cells}
+			"stair_cells": c.stair_cells, "grating_shapes": c.grating_shapes}
 	var pl = r.plateau
 	if pl != null:
-		out["plateau"] = {"mask": pl.mask, "blocked": pl.blocked, "min_level": pl.min_level}
+		out["plateau"] = {"mask": pl.mask, "blocked": pl.blocked, "min_level": pl.min_level,
+			"stairs_north": Array(pl.stairs_north), "stairs_east": Array(pl.stairs_east), "stairs_west": Array(pl.stairs_west)}
 	var o = r.objects
 	if o != null:
 		var placements: Array = []
@@ -300,12 +301,16 @@ static func restore_result(r: Dictionary, catalog):
 		c.rail_cells = cd.rail_cells
 		c.stair_corridors = cd.stair_corridors
 		c.stair_cells = cd.stair_cells
+		c.grating_shapes = cd.get("grating_shapes", [])
 		res.canals = c
 	if r.has("plateau"):
 		var p := PlateauLayout.new()
 		p.mask = r.plateau.mask
 		p.blocked = r.plateau.blocked
 		p.min_level = r.plateau.min_level
+		p.stairs_north.assign(r.plateau.get("stairs_north", []))
+		p.stairs_east.assign(r.plateau.get("stairs_east", []))
+		p.stairs_west.assign(r.plateau.get("stairs_west", []))
 		res.plateau = p
 	if r.has("objects"):
 		res.objects = _restore_objects(r.objects, catalog)

@@ -8,13 +8,16 @@ extends RefCounted
 ## od innych. Foliage (`grass`, maska terenu na FloorDecor) najwyżej na skraju: tylko na kratkach obwodu kratownicy,
 ## nie więcej niż `foliage_edge` (część) z nich — kratownica nie ginie pod mchem.
 ## Wybór w generatorze układu (select -> canals.grating_shapes — planer obiektów trzyma z dala drobnicę), malowanie
-## w tilingu (plan): teren na Floor po podłodze (maska = sama kratownica — krawędzie na jej obwodzie).
+## w tilingu (plan): teren na Floor po podłodze (maska = sama kratownica — krawędzie na jej obwodzie), pod nim na
+## warstwie UNDER_LAYER kafel voidu `void_tile` [x, y] (źródło `void_source`) — widać go przez otwory kratownicy.
 ##
 ## JSON: "grating": {"terrain": 5, "per_1000": 1.5, "sizes": [[2, 2], [3, 2], [4, 3], [6, 3]], "shape_chance": 0.6,
-##        "margin": 1, "spacing": 4, "foliage_edge": 0.34}
+##        "margin": 1, "spacing": 4, "foliage_edge": 0.34, "void_tile": [20, 4], "void_source": 0}
+
+const UNDER_LAYER := &"FloorUnder"
 
 
-static func plan(ctx: GenerationContext, terrain: TerrainPaintPlan) -> void:
+static func plan(ctx: GenerationContext, terrain: TerrainPaintPlan, tiles: TilePlacementPlan = null) -> void:
 	var cfg: Dictionary = ctx.generator_behaviour.get("tiling", {}).get("grating", {})
 	var canals = ctx.canals
 	if cfg.is_empty() or canals == null or not "grating_shapes" in canals:
@@ -22,10 +25,22 @@ static func plan(ctx: GenerationContext, terrain: TerrainPaintPlan) -> void:
 	var t_idx := int(cfg.get("terrain", -1))
 	if t_idx < 0:
 		return
+	var vt: Array = cfg.get("void_tile", [])
 	for shape in canals.grating_shapes:
 		var arr: Array[Vector2i] = []
 		arr.assign(shape)
 		terrain.add_batch(&"Floor", arr, 0, t_idx, 2, true, arr)
+		if tiles == null or vt.size() < 2:
+			continue
+		for c in arr:
+			var p := TilePlacement.new()
+			p.pos = c
+			p.layer = UNDER_LAYER
+			p.source_id = int(cfg.get("void_source", 0))
+			p.atlas_coords = Vector2i(int(vt[0]), int(vt[1]))
+			p.category = &"FLOOR"
+			p.origin = c
+			tiles.queue(p)
 
 
 ## Wybór kratownic (w generatorze układu, przed obiektami) -> canals.grating_shapes / canals.grating.

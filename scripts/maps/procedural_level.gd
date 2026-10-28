@@ -809,7 +809,7 @@ func _apply_job_async(job: GenJob) -> void:
 ## plan daje te same warstwy (także malowany w tle przez save_prefetched_async). `progress`: pasek GenProgress.
 func _paint_cave_tiles(job: GenJob, layers: Dictionary, tree: SceneTree, slicer, step: int, progress: bool) -> void:
 	var tiles = job.plans.tiles
-	var order := [&"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
+	var order := [&"FloorUnder", &"Floor", &"FloorDecor", &"Curbs", &"Bridges", &"Walls", &"Rails", &"Platforms", &"PortalShade"]
 	var total := 0
 	for layer_name in order:
 		total += (tiles.by_layer.get(layer_name, {}) as Dictionary).size()
