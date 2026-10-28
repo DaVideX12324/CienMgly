@@ -10,7 +10,11 @@ Postać (CHARACTERS): palety części (3 odcienie: jasny, średni, ciemny — ba
 - head: "hair" (włosy / goła głowa), "helmet" (hełm z odsłoniętą twarzą: osłony policzków od wysokości oczu w dół,
   złoty pas przez środek do linii twarzy), "hood" (kaptur o 1 px szerszy od głowy, złota lamówka przy twarzy), "hood_dark" (kaptur, twarz w cieniu,
   świecące oczy), "wizard" (spiczasty kapelusz z rondem, siwe włosy, broda na piersi);
-- body: "plain" (spodnie, pas, buty) albo "robe" (szata do kostek: przerwa między nogami wypełniona, lamówka na dole).
+- body: "plain" (spodnie, pas, buty) albo "robe" (szata do kostek: przerwa między nogami wypełniona, lamówka na dole);
+- detale ubioru (klucz z paletą = detal włączony): "tabard" (środkowy pas tułowia, szer. 2·tabard_half, np. wapenrok
+  na napierśniku), "collar" (górny rząd tułowia pod głową), "emblem" (krzyżyk na piersi, tylko od przodu), "buckle"
+  (klamra na środku pasa, od przodu), "cuff" (mankiet przy dłoni), "knee" (nakolannik w połowie nogi), "stole" (pionowy
+  pas przez środek tułowia i szaty, od przodu), "strap" (skośny pas przez tułów, nie z boku).
 
 Wynik: assets/lumenlore/characters/<postać>/<Animacja>.png (arkusze jak w szablonie) + podgląd.
 Licencja szablonu: przeróbki do gry OK, bez rozpowszechniania plików (wynik tylko w prywatnym repo assets).
@@ -60,46 +64,54 @@ OLIVE = [(146, 130, 48), (95, 86, 37), (55, 58, 32)]
 PURPLE = [(147, 45, 139), (95, 46, 92), (67, 35, 65)]
 WHITE = [(253, 253, 253), (203, 195, 188), (124, 108, 94)]
 DARK = [(64, 69, 69), (37, 39, 22), (20, 20, 18)]
+CHAIN = [(146, 143, 136), (112, 110, 104), (64, 69, 69)]
+BLUE_D = [(51, 60, 129), (26, 32, 82), (20, 20, 18)]
+OLIVE_D = [(95, 86, 37), (55, 58, 32), (37, 39, 22)]
 
 CHARACTERS = {
     # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem, niebieski wapenrok.
     'bohater': {
         'head_style': 'helmet', 'body': 'plain',
-        'head': METAL, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
-        'torso_up': METAL, 'torso_lo': BLUE, 'belt': GOLD,
-        'arm_up': METAL, 'arm_lo': METAL_D, 'hand': METAL_D,
-        'leg': METAL_D, 'boot': [(112, 110, 104), (64, 69, 69), (37, 39, 22)],
+        'head': METAL_D, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
+        'torso_up': METAL, 'torso_lo': BLUE_D, 'belt': LEATHER, 'buckle': GOLD,
+        'tabard': BLUE, 'tabard_half': 2.5, 'emblem': GOLD, 'collar': METAL_D,
+        'arm_up': METAL, 'arm_lo': CHAIN, 'hand': LEATHER, 'cuff': METAL_D,
+        'leg': CHAIN, 'knee': METAL, 'boot': METAL_D,
     },
     # Kapłan (wzór: royal Priest): niebieski kaptur i szata ze złotą lamówką.
     'kaplan': {
         'head_style': 'hood', 'body': 'robe',
         'head': BLUE, 'hood': BLUE, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
-        'torso_up': BLUE, 'torso_lo': BLUE, 'belt': GOLD, 'robe': BLUE,
-        'arm_up': BLUE, 'arm_lo': BLUE, 'hand': SKIN,
+        'torso_up': BLUE, 'torso_lo': BLUE, 'belt': BLUE_D, 'robe': BLUE, 'stole': GOLD, 'collar': BLUE_D,
+        'arm_up': BLUE, 'arm_lo': BLUE, 'hand': SKIN, 'cuff': GOLD,
         'leg': BLUE, 'boot': LEATHER,
     },
     # Łotrzyk (wzór: NPC Rogue): oliwkowy kaptur, twarz w cieniu, świecące oczy, skórzany pas i buty.
     'lotrzyk': {
         'head_style': 'hood_dark', 'body': 'plain',
         'head': OLIVE, 'hood': OLIVE, 'face': DARK, 'eye': (12, 152, 214), 'trim': OLIVE,
-        'torso_up': OLIVE, 'torso_lo': [(95, 86, 37), (55, 58, 32), (37, 39, 22)], 'belt': LEATHER,
-        'arm_up': OLIVE, 'arm_lo': [(95, 86, 37), (55, 58, 32), (37, 39, 22)], 'hand': LEATHER,
-        'leg': [(95, 86, 37), (55, 58, 32), (37, 39, 22)], 'boot': LEATHER,
+        'torso_up': OLIVE, 'torso_lo': OLIVE_D, 'belt': LEATHER, 'buckle': METAL_D, 'strap': LEATHER,
+        'collar': DARK,
+        'arm_up': OLIVE, 'arm_lo': OLIVE_D, 'hand': LEATHER, 'cuff': LEATHER,
+        'leg': OLIVE_D, 'boot': LEATHER,
     },
     # Mag (wzór: NPC Wizzard): fioletowy spiczasty kapelusz i szata, siwa broda.
     'mag': {
         'head_style': 'wizard', 'body': 'robe',
         'head': PURPLE, 'hat': PURPLE, 'hair': WHITE, 'beard': WHITE, 'face': SKIN, 'eye': (20, 20, 18),
-        'trim': PURPLE,
-        'torso_up': PURPLE, 'torso_lo': PURPLE, 'belt': LEATHER, 'robe': PURPLE,
-        'arm_up': PURPLE, 'arm_lo': PURPLE, 'hand': SKIN,
+        'trim': GOLD,
+        'torso_up': PURPLE, 'torso_lo': PURPLE, 'belt': LEATHER, 'buckle': GOLD, 'robe': PURPLE,
+        'arm_up': PURPLE, 'arm_lo': PURPLE, 'hand': SKIN, 'cuff': GOLD,
         'leg': PURPLE, 'boot': LEATHER,
     },
 }
 
 LABEL_KEY = {'r_up': 'arm_up', 'l_up': 'arm_up', 'r_arm': 'arm_lo', 'l_arm': 'arm_lo', 'r_hand': 'hand',
              'l_hand': 'hand', 'r_leg': 'leg', 'l_leg': 'leg', 'r_boot': 'boot', 'l_boot': 'boot',
-             'r_robe': 'robe', 'l_robe': 'robe'}
+             'r_cuff': 'cuff', 'l_cuff': 'cuff', 'r_knee': 'knee', 'l_knee': 'knee'}
+# Kierunki, w których widać przód tułowia (znak na piersi, klamra, stuła).
+FRONT = {'S', 'SE', 'SW'}
+TORSO = ('torso_up', 'torso_lo', 'belt', 'robe', 'robe_hem')
 
 
 def load_frames(path):
@@ -277,14 +289,70 @@ def shape_body(lab, style, hip):
 # Kawałki postaci: ciemna krawędź tylko na styku różnych kawałków (nie między rękawem a dłonią, pasem a tułowiem itp.).
 PIECE = {'head': 'head', 'hood': 'head', 'hat': 'head', 'brim': 'head', 'hair': 'head', 'trim': 'head',
          'face': 'face', 'eye': 'face', 'shadow': 'face', 'beard': 'face',
-         'torso_up': 'torso', 'torso_lo': 'torso', 'belt': 'torso', 'robe': 'torso', 'robe_hem': 'torso'}
+         'torso_up': 'torso', 'torso_lo': 'torso', 'belt': 'torso', 'robe': 'torso', 'robe_hem': 'torso',
+         'tabard': 'torso', 'collar': 'torso', 'emblem': 'torso', 'buckle': 'torso', 'stole': 'torso', 'strap': 'torso'}
 
 
 def piece(n):
     if n[:2] in ('r_', 'l_'):
         side, part = n.split('_', 1)
-        return side + ('_leg' if part in ('leg', 'boot') else '_arm')
+        return side + ('_leg' if part in ('leg', 'boot', 'knee') else '_arm')
     return PIECE.get(n, n)
+
+
+def add_details(lab, spec, direction):
+    torso = [p for p, n in lab.items() if n in TORSO]
+    up = [p for p, n in lab.items() if n == 'torso_up']
+    if not torso or not up:
+        return
+    cxf = sum(p[0] for p in up) / len(up) + 0.5
+    cx = int(cxf)
+    tx0, ty0, tx1, ty1 = _bbox(up)
+    wide = tx1 - tx0 + 1 >= 6           # widok od przodu / tyłu (z boku tułów ma 4-5 px)
+    front = direction in FRONT
+    above_head = ('head', 'face', 'eye', 'hood', 'hair', 'beard', 'shadow', 'trim', 'brim')
+    if 'tabard' in spec and wide:
+        for p in torso:
+            if lab[p] in ('torso_up', 'torso_lo') and abs(p[0] + 0.5 - cxf) <= spec['tabard_half']:
+                lab[p] = 'tabard'
+    if 'collar' in spec:
+        for p in up:
+            if lab.get(p) in ('torso_up', 'tabard') and lab.get((p[0], p[1] - 1)) in above_head:
+                lab[p] = 'collar'
+    if 'strap' in spec and wide:
+        belt_y = min((p[1] for p, n in lab.items() if n == 'belt'), default=ty1)
+        h = max(1, belt_y - ty0)
+        for k in range(h + 1):
+            t = k / h
+            x = round(tx0 + 1 + (tx1 - tx0 - 2) * t) if direction != 'N' else round(tx1 - 1 - (tx1 - tx0 - 2) * t)
+            if lab.get((x, ty0 + k)) in ('torso_up', 'torso_lo', 'collar'):
+                lab[(x, ty0 + k)] = 'strap'
+    if front and 'emblem' in spec and wide:
+        ey = ty0 + 3
+        for d in ((0, 0), (0, -1), (0, 1), (-1, 0), (1, 0)):
+            q = (cx + d[0], ey + d[1])
+            if lab.get(q) in ('tabard', 'torso_up'):
+                lab[q] = 'emblem'
+    if front and 'stole' in spec:
+        for p in list(lab):
+            if p[0] == cx and lab[p] in ('torso_up', 'torso_lo', 'robe', 'collar'):
+                lab[p] = 'stole'
+    if front and 'buckle' in spec:
+        belt = sorted((p for p, n in lab.items() if n == 'belt'), key=lambda p: abs(p[0] + 0.5 - cxf))
+        for p in belt[:2 if wide else 1]:
+            lab[p] = 'buckle'
+    for side in ('r', 'l'):
+        if 'cuff' in spec:
+            for p, n in list(lab.items()):
+                if n == side + '_arm' and any(lab.get((p[0] + d[0], p[1] + d[1])) == side + '_hand' for d in D4):
+                    lab[p] = side + '_cuff'
+        if 'knee' in spec:
+            ys = [p[1] for p, n in lab.items() if n in (side + '_leg', side + '_boot')]
+            if ys:
+                ky = min(ys) + (max(ys) - min(ys)) // 2 - 1
+                for p, n in list(lab.items()):
+                    if n == side + '_leg' and p[1] == ky:
+                        lab[p] = side + '_knee'
 
 
 def ramp_for(n, spec):
@@ -302,6 +370,7 @@ def paint(fr, spec, direction):
     lab, hip = segment(fr)
     shape_head(lab, spec['head_style'], direction)
     shape_body(lab, spec['body'], hip)
+    add_details(lab, spec, direction)
     out = Image.new('RGBA', (FRAME, FRAME), (0, 0, 0, 0))
     back = BACK_SIDE[direction]
     for (x, y), n in lab.items():
