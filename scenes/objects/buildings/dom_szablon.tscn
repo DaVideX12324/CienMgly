@@ -7,14 +7,15 @@ radius = 14.0
 
 [node name="DomSzablon" type="StaticBody2D"]
 editor_description = "Szablon domu (duplikować: PPM -> Duplikuj w Systemie plików).
-Origin (0, 0): punkt sortowania całego domu = 4 px nad dolną krawędzią BaseCollision, x = środek drzwi. Korzeń bez Y Sort — dom sortuje się z postaciami w całości w tym punkcie; kafle w Tilesets (Y Sort) sortują się między sobą.
+Origin (0, 0): punkt sortowania całego domu = 15 px nad dolną krawędzią BaseCollision, x = środek drzwi. Korzeń bez Y Sort — dom sortuje się z postaciami w całości w tym punkcie; kafle w Tilesets (Y Sort) sortują się między sobą.
 Warstwy (pixel_crawler_free.tres): Walls (+ WallsDetail, WallsDetail2), Roof (+ Roof2, Roof3), DoorFrame, Props, Chimney (z 1, + ChimneyRoof), Shadow (z 1). Puste warstwy można usunąć.
-BaseCollision: obrys podstawy ścian (dolna krawędź 4 px pod originem). DoorArea: obszar przy drzwiach (okrąg), DoorSpot: punkt tuż przed drzwiami (2 px pod podstawą).
-Dom z wnękami (różne podstawy ścian): tools/segment_building.gd (lift=4)."
+BaseCollision: obrys podstawy ścian (dolna krawędź 15 px pod originem). DoorArea: obszar przy drzwiach (okrąg), DoorSpot: punkt tuż przed drzwiami (2 px pod podstawą).
+Dom z wnękami (różne podstawy ścian): tools/segment_building.gd (lift=15)."
 collision_layer = 32
 collision_mask = 0
 
 [node name="Tilesets" type="Node2D" parent="."]
+position = Vector2(0, 11)
 y_sort_enabled = true
 
 [node name="Walls" type="TileMapLayer" parent="Tilesets"]
@@ -63,14 +64,15 @@ z_index = 1
 tile_set = ExtResource("1_tiles")
 
 [node name="BaseCollision" type="CollisionPolygon2D" parent="."]
+position = Vector2(0, 11)
 polygon = PackedVector2Array(-64, -12, 64, -12, 64, 4, -64, 4)
 
 [node name="DoorArea" type="Area2D" parent="."]
-position = Vector2(0, -6)
+position = Vector2(0, 5)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea"]
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="."]
-position = Vector2(0, 6)
+position = Vector2(0, 17)

@@ -10,7 +10,8 @@ extends SceneTree
 ## rekwizyty, komin. Korzeń i Tilesets dostają Y Sort.
 ## Uruchomienie: godot --headless --path . -s res://modules/quiz_rpg/tools/segment_building.gd -- [A=B ...] <scena.tscn> ...
 ## A=B: kolumny z podstawą A idą do segmentu B (np. 14=32 — wnęka drzwi to ta sama bryła co front).
-## lift=N: punkt sortowania segmentu N px nad dolną krawędzią obrysu (user: 4 — postać tuż przy ścianie już przed nią).
+## lift=N: punkt sortowania segmentu N px nad dolną krawędzią obrysu (domy: 15 — postać w drzwiach
+## dłużej przed domem, punkt gracza jest ~14 px nad stopami).
 const CELL := 16
 const ORDER := ["Walls", "DoorFrame", "Roof", "Props", "Chimney"]
 

@@ -20,9 +20,10 @@ tile_map_data = PackedByteArray("AAABAP7/CAAEAAMAAAACAP7/CAAGAAEAAAADAP7/CAAGAAE
 tile_set = ExtResource("1_d7wmb")
 
 [node name="Seg_-1" type="Node2D" parent="Tilesets" unique_id=1511795603]
-position = Vector2(0, -5)
+position = Vector2(0, -16)
 
 [node name="Sort" type="Node2D" parent="Tilesets/Seg_-1" unique_id=1570119547]
+position = Vector2(0, 11)
 y_sort_enabled = true
 
 [node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=543960322]
@@ -44,9 +45,10 @@ tile_map_data = PackedByteArray("AAABAPf/CwAAABQAAAABAPj/CwAAABUAAAABAPn/CwAAABY
 tile_set = ExtResource("1_d7wmb")
 
 [node name="Seg_15" type="Node2D" parent="Tilesets" unique_id=1510309523]
-position = Vector2(0, 11)
+position = Vector2(0, 0)
 
 [node name="Sort" type="Node2D" parent="Tilesets/Seg_15" unique_id=1975662896]
+position = Vector2(0, 11)
 y_sort_enabled = true
 
 [node name="Walls2" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1416875035]
@@ -68,9 +70,10 @@ tile_map_data = PackedByteArray("AAAEAP//CwACABYAAAACAPf/CwABABQAAAACAPj/CwABABU
 tile_set = ExtResource("1_d7wmb")
 
 [node name="Seg_32" type="Node2D" parent="Tilesets" unique_id=1886708967]
-position = Vector2(0, 28)
+position = Vector2(0, 17)
 
 [node name="Sort" type="Node2D" parent="Tilesets/Seg_32" unique_id=896021950]
+position = Vector2(0, 11)
 y_sort_enabled = true
 
 [node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=707243402]

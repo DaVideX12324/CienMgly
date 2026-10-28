@@ -13,7 +13,7 @@ collision_layer = 32
 collision_mask = 0
 
 [node name="Tilesets" type="Node2D" parent="." unique_id=1208713137]
-position = Vector2(0, -12)
+position = Vector2(0, -1)
 y_sort_enabled = true
 
 [node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1895637990]
@@ -61,15 +61,15 @@ tile_map_data = PackedByteArray("AAADAPr/CAAGAAEAAAAEAPr/CAAGAAEAAAAFAPr/CAAGAAE
 tile_set = ExtResource("1_tiles")
 
 [node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=1898177545]
-position = Vector2(0, -12)
+position = Vector2(0, -1)
 polygon = PackedVector2Array(-49, 15, -10, 15, -10, -2, 10, -2, 10, 15, 49, 15, 49, -31, -49, -31)
 
 [node name="BaseCollision2" type="CollisionShape2D" parent="." unique_id=2024650575]
-position = Vector2(124, -13.5)
+position = Vector2(124, -2.5)
 shape = SubResource("RectangleShape2D_1e7vl")
 
 [node name="DoorArea" type="Area2D" parent="." unique_id=1525362002]
-position = Vector2(0, -1)
+position = Vector2(0, 10)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1666618756]
@@ -77,4 +77,4 @@ position = Vector2(0, -5)
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=1952000362]
-position = Vector2(0, 2)
+position = Vector2(0, 13)

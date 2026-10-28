@@ -13,6 +13,7 @@ collision_layer = 32
 collision_mask = 0
 
 [node name="Tilesets" type="Node2D" parent="."]
+position = Vector2(0, 11)
 y_sort_enabled = true
 
 [node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1113031003]
@@ -39,15 +40,15 @@ tile_map_data = PackedByteArray("AAADAP7/CwAKABEAAAADAP//CwAKABIAAAADAAAACwAKABM
 tile_set = ExtResource("1_tiles")
 
 [node name="BaseCollision" type="CollisionShape2D" parent="." unique_id=1328818355]
-position = Vector2(0, -4)
+position = Vector2(0, 7)
 shape = SubResource("Rect_base")
 
 [node name="DoorArea" type="Area2D" parent="." unique_id=1295513579]
-position = Vector2(0, 12)
+position = Vector2(0, 23)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=486688604]
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=1196417404]
-position = Vector2(0, 28)
+position = Vector2(0, 39)
