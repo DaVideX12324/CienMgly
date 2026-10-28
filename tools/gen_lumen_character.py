@@ -9,7 +9,8 @@ części, np. ręka na tułowiu), kończyny strony odwróconej od widza ciemniej
 Postać (CHARACTERS): palety części (3 odcienie: jasny, średni, ciemny — barwy z Pixel Crawlera, styl gry) oraz:
 - head: "hair" (włosy / goła głowa), "helmet" (hełm z odsłoniętą twarzą: osłony policzków od wysokości oczu w dół,
   złoty pas przez środek do linii twarzy), "hood" (kaptur o 1 px szerszy od głowy, złota lamówka przy twarzy), "hood_dark" (kaptur, twarz w cieniu,
-  świecące oczy), "wizard" (spiczasty kapelusz z rondem, siwe włosy, broda na piersi);
+  świecące oczy), "wizard" (spiczasty kapelusz z rondem, siwe włosy, broda na piersi), "hair_long" (włosy opadające
+  4 rzędy na ramiona / plecy), "bald" (łysa głowa w kolorze skóry); klucz "beard" = broda (też przy włosach i łysinie);
 - body: "plain" (spodnie, pas, buty) albo "robe" (szata do kostek: przerwa między nogami wypełniona, lamówka na dole);
 - detale ubioru (klucz z paletą = detal włączony): "tabard" (środkowy pas tułowia, szer. 2·tabard_half, np. wapenrok
   na napierśniku), "collar" (górny rząd tułowia pod głową), "emblem" (krzyżyk na piersi, tylko od przodu), "buckle"
@@ -67,6 +68,17 @@ DARK = [(64, 69, 69), (37, 39, 22), (20, 20, 18)]
 CHAIN = [(146, 143, 136), (112, 110, 104), (64, 69, 69)]
 BLUE_D = [(51, 60, 129), (26, 32, 82), (20, 20, 18)]
 OLIVE_D = [(95, 86, 37), (55, 58, 32), (37, 39, 22)]
+RED = [(186, 58, 52), (130, 38, 40), (78, 24, 30)]
+RED_D = [(130, 38, 40), (78, 24, 30), (48, 16, 22)]
+GREEN = [(90, 135, 24), (43, 94, 14), (15, 57, 15)]
+GREEN_D = [(43, 94, 14), (15, 57, 15), (20, 20, 18)]
+LINEN = [(226, 214, 186), (186, 170, 140), (124, 108, 94)]
+CLOTH = [(112, 104, 98), (82, 76, 72), (52, 48, 46)]
+BROWN = [(128, 92, 60), (96, 66, 42), (64, 44, 30)]
+HAIR_BROWN = [(128, 74, 30), (95, 56, 24), (71, 40, 13)]
+HAIR_BLONDE = [(240, 196, 96), (200, 150, 60), (150, 100, 30)]
+HAIR_BLACK = [(70, 62, 62), (44, 40, 42), (20, 20, 18)]
+HAIR_AUBURN = [(176, 82, 42), (128, 56, 30), (80, 34, 20)]
 
 CHARACTERS = {
     # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem, niebieski wapenrok.
@@ -103,6 +115,63 @@ CHARACTERS = {
         'torso_up': PURPLE, 'torso_lo': PURPLE, 'belt': LEATHER, 'buckle': GOLD, 'robe': PURPLE,
         'arm_up': PURPLE, 'arm_lo': PURPLE, 'hand': SKIN, 'cuff': GOLD,
         'leg': PURPLE, 'boot': LEATHER,
+    },
+    # --- NPC miasta (sceny scenes/npc/) ---
+    # Kowal: łysy, czarna broda, skórzany fartuch na szarej koszuli, gołe ręce, rękawice.
+    'kowal': {
+        'head_style': 'bald', 'body': 'plain', 'beard': HAIR_BLACK,
+        'head': SKIN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': LEATHER,
+        'torso_up': CLOTH, 'torso_lo': CLOTH, 'tabard': LEATHER, 'tabard_half': 2.5, 'belt': DARK, 'buckle': METAL_D,
+        'arm_up': SKIN, 'arm_lo': SKIN, 'hand': LEATHER,
+        'leg': BROWN, 'boot': DARK,
+    },
+    # Płatnerz: brązowe włosy, kolczuga z czerwonym wapenrokiem, skórzane spodnie.
+    'platnerz': {
+        'head_style': 'hair', 'body': 'plain',
+        'head': HAIR_BROWN, 'hair': HAIR_BROWN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
+        'torso_up': CHAIN, 'torso_lo': RED_D, 'tabard': RED, 'tabard_half': 1.5, 'belt': LEATHER, 'buckle': METAL_D,
+        'arm_up': CHAIN, 'arm_lo': CHAIN, 'hand': LEATHER, 'cuff': LEATHER,
+        'leg': BROWN, 'boot': LEATHER,
+    },
+    # Zielarka: rude długie włosy, zielona suknia, lniany fartuch.
+    'zielarka': {
+        'head_style': 'hair_long', 'body': 'robe',
+        'head': HAIR_AUBURN, 'hair': HAIR_AUBURN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GREEN_D,
+        'torso_up': GREEN, 'torso_lo': GREEN, 'robe': GREEN, 'tabard': LINEN, 'tabard_half': 2.0, 'belt': LEATHER,
+        'arm_up': GREEN, 'arm_lo': GREEN, 'hand': SKIN,
+        'leg': GREEN, 'boot': LEATHER,
+    },
+    # Karczmarka: jasne długie włosy, czerwona suknia, biały fartuch, podwinięte lniane rękawy.
+    'karczmarka': {
+        'head_style': 'hair_long', 'body': 'robe',
+        'head': HAIR_BLONDE, 'hair': HAIR_BLONDE, 'face': SKIN, 'eye': (20, 20, 18), 'trim': RED_D,
+        'torso_up': RED, 'torso_lo': RED, 'robe': RED, 'tabard': WHITE, 'tabard_half': 2.5, 'belt': LEATHER,
+        'arm_up': RED, 'arm_lo': LINEN, 'hand': SKIN,
+        'leg': RED, 'boot': LEATHER,
+    },
+    # Mistrz fechtunku: czarne włosy i broda, czerwony kubrak z białym kołnierzem i mankietami, złota klamra.
+    'mistrz': {
+        'head_style': 'hair', 'body': 'plain', 'beard': HAIR_BLACK,
+        'head': HAIR_BLACK, 'hair': HAIR_BLACK, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
+        'torso_up': RED, 'torso_lo': RED_D, 'collar': WHITE, 'belt': LEATHER, 'buckle': GOLD,
+        'arm_up': RED, 'arm_lo': RED, 'hand': LEATHER, 'cuff': WHITE,
+        'leg': DARK, 'boot': LEATHER,
+    },
+    # Mieszkanka: brązowe długie włosy, niebieska suknia z białym kołnierzem.
+    'mieszkanka': {
+        'head_style': 'hair_long', 'body': 'robe',
+        'head': HAIR_BROWN, 'hair': HAIR_BROWN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': BLUE_D,
+        'torso_up': BLUE, 'torso_lo': BLUE, 'robe': BLUE, 'collar': WHITE, 'belt': LEATHER,
+        'arm_up': BLUE, 'arm_lo': BLUE, 'hand': SKIN,
+        'leg': BLUE, 'boot': LEATHER,
+    },
+    # Mieszkaniec: brązowe włosy, lniana koszula, skórzany pas, brązowe spodnie.
+    'mieszkaniec': {
+        'head_style': 'hair', 'body': 'plain',
+        'head': HAIR_BROWN, 'hair': HAIR_BROWN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': LEATHER,
+        'torso_up': LINEN, 'torso_lo': LINEN, 'belt': LEATHER, 'buckle': METAL_D,
+        'arm_up': LINEN, 'arm_lo': LINEN, 'hand': SKIN,
+        'leg': BROWN, 'boot': LEATHER,
     },
 }
 
@@ -186,7 +255,8 @@ def _bbox(cells):
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def shape_head(lab, style, direction):
+def shape_head(lab, spec, direction):
+    style = spec['head_style']
     head = [p for p, n in lab.items() if n == 'head']
     face = [p for p, n in lab.items() if n in ('face', 'eye')]
     if not head:
@@ -257,15 +327,38 @@ def shape_head(lab, style, direction):
             cx = int(round(cxf + tilt * k * 0.45))
             for x in range(cx - half, cx + half + 1):
                 lab[(x, y0 - k)] = 'hat'
-        if face:
-            fx0, fy0, fx1, fy1 = _bbox(face)
-            for p in face:
-                if lab[p] == 'face' and p[1] >= fy1 - 1:
-                    lab[p] = 'beard'
-            for k in range(1, 4):
-                for x in range(fx0 + k - 1, fx1 - k + 2):
-                    if lab.get((x, fy1 + k)) in ('torso_up', 'torso_lo', None, 'r_up', 'l_up'):
-                        lab[(x, fy1 + k)] = 'beard'
+    elif style in ('hair', 'hair_long'):
+        for p in head:
+            lab[p] = 'hair'
+        if style == 'hair_long':
+            # kolumny, w których najniżej jest włos (boki, tył głowy) — włosy opadają 4 rzędy
+            for x in range(x0, x1 + 1):
+                ys = [p[1] for p in head + face if p[0] == x]
+                if not ys or lab.get((x, max(ys))) != 'hair':
+                    continue
+                for k in range(1, 5):
+                    q = (x, max(ys) + k)
+                    if lab.get(q) in (None, 'torso_up', 'r_up', 'l_up', 'r_arm', 'l_arm'):
+                        lab[q] = 'hair'
+                    else:
+                        break
+    elif style == 'bald':
+        for p in head:
+            lab[p] = 'face'
+    if face and (style == 'wizard' or 'beard' in spec):
+        add_beard(lab, face)
+
+
+def add_beard(lab, face):
+    """Broda: dwa dolne rzędy twarzy i trzy rzędy zwężającej się brody na piersi."""
+    fx0, fy0, fx1, fy1 = _bbox(face)
+    for p in face:
+        if lab[p] == 'face' and p[1] >= fy1 - 1:
+            lab[p] = 'beard'
+    for k in range(1, 4):
+        for x in range(fx0 + k - 1, fx1 - k + 2):
+            if lab.get((x, fy1 + k)) in ('torso_up', 'torso_lo', None, 'r_up', 'l_up'):
+                lab[(x, fy1 + k)] = 'beard'
 
 
 def shape_body(lab, style, hip):
@@ -331,7 +424,7 @@ def add_details(lab, spec, direction):
     above_head = ('head', 'face', 'eye', 'hood', 'hair', 'beard', 'shadow', 'trim', 'brim')
     if 'tabard' in spec and wide:
         for p in torso:
-            if lab[p] in ('torso_up', 'torso_lo') and abs(p[0] + 0.5 - cxf) <= spec['tabard_half']:
+            if lab[p] in ('torso_up', 'torso_lo', 'robe') and abs(p[0] + 0.5 - cxf) <= spec['tabard_half']:
                 lab[p] = 'tabard'
     if 'collar' in spec:
         for p in up:
@@ -386,7 +479,7 @@ def ramp_for(n, spec):
 
 def paint(fr, spec, direction):
     lab, hip = segment(fr)
-    shape_head(lab, spec['head_style'], direction)
+    shape_head(lab, spec, direction)
     shape_body(lab, spec['body'], hip)
     add_details(lab, spec, direction)
     out = Image.new('RGBA', (FRAME, FRAME), (0, 0, 0, 0))
