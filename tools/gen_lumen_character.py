@@ -84,7 +84,7 @@ CHARACTERS = {
     # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem, niebieski wapenrok.
     'bohater': {
         'head_style': 'helmet', 'body': 'plain',
-        'head': METAL_D, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
+        'head': METAL_D, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD, 'helm_rim': CHAIN,
         'torso_up': METAL, 'torso_lo': BLUE_D, 'belt': LEATHER, 'buckle': GOLD,
         'tabard': BLUE, 'tabard_half': 2.5, 'emblem': GOLD, 'collar': METAL_D,
         'arm_up': METAL, 'arm_lo': CHAIN, 'hand': LEATHER, 'cuff': METAL_D,
@@ -289,6 +289,23 @@ def shape_head(lab, spec, direction):
                 for y in range(y0, face_top if direction.startswith('S') else y1 + 1):
                     if lab.get((cx + shift, y)) == 'head':
                         lab[(cx + shift, y)] = 'trim'
+        # detale hełmu: rondo (ciemny pas nad twarzą, z tyłu dolny rząd), nosal (2 px w osi twarzy do linii oczu),
+        # połysk w lewym górnym rogu (nity na tej wielkości głowy wyglądały jak oczy — bez nich)
+        helm = [p for p, n in lab.items() if n == 'head']
+        hy1 = max(p[1] for p in helm)
+        face_now = [p for p, n in lab.items() if n in ('face', 'eye')]
+        for p in helm:
+            if lab.get((p[0], p[1] + 1)) in ('face', 'eye') or (not face_now and p[1] == hy1):
+                lab[p] = 'helm_rim'
+        if face_now and eye_rows and direction.startswith('S'):
+            fx0f, fy0f, fx1f, _ = _bbox(face_now)
+            for cx in center_cols(fx0f, fx1f):
+                for y in range(fy0f, max(eye_rows) + 1):
+                    if lab.get((cx, y)) == 'face':
+                        lab[(cx, y)] = 'head'
+        row = sorted(p[0] for p in helm if p[1] == y0 + 1 and lab.get(p) == 'head')
+        for x in row[1:3]:
+            lab[(x, y0 + 1)] = 'helm_hi'
     elif style in ('hood', 'hood_dark'):
         for p in head:
             lab[p] = 'hood'
@@ -399,6 +416,7 @@ def shape_body(lab, style, hip):
 
 # Kawałki postaci: ciemna krawędź tylko na styku różnych kawałków (nie między rękawem a dłonią, pasem a tułowiem itp.).
 PIECE = {'head': 'head', 'hood': 'head', 'hat': 'head', 'brim': 'head', 'hair': 'head', 'trim': 'head',
+         'helm_rim': 'head', 'helm_hi': 'head',
          'face': 'face', 'eye': 'face', 'shadow': 'face', 'beard': 'face',
          'torso_up': 'torso', 'torso_lo': 'torso', 'belt': 'torso', 'robe': 'torso', 'robe_hem': 'torso',
          'tabard': 'torso', 'collar': 'torso', 'emblem': 'torso', 'buckle': 'torso', 'stole': 'torso', 'strap': 'torso'}
@@ -467,6 +485,10 @@ def add_details(lab, spec, direction):
 
 
 def ramp_for(n, spec):
+    if n == 'helm_rim':
+        return spec['helm_rim']
+    if n == 'helm_hi':
+        return [spec['head'][0]] * 3
     if n in ('trim', 'robe_hem'):
         return spec['trim']
     if n == 'brim':
