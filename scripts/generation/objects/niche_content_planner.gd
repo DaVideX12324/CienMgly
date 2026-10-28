@@ -30,8 +30,6 @@ const DEEP_OFFSET := Vector2(8, -23)
 const CHEST_REACH := 12.0
 ## Obszar użycia przejścia: tyle px nad punktem węzła.
 const PASSAGE_USE_Y := -16.0
-## z_index przedmiotu i skrzyni w głębi niszy (nad kaflami ścian).
-const DRAW_Z := 1
 ## Rzędy podłogi przed niszą (od rzędu stopy w dół) bez innych obiektów.
 const CLEAR_ROWS := 2
 
@@ -91,13 +89,10 @@ static func plan(result, cfg: Dictionary) -> void:
 
 ## Zawartość niszy w grze: zasięg interakcji tylko w jej środku — skrzynia: mniejszy obszar interakcji, przejście: obszar
 ## użycia w głąb niszy (kształty kopiowane — sceny je współdzielą); przedmiot sięga się z bliska (obszar 8 px) bez zmian.
-## Przedmiot i skrzynia nad kaflami lica (DRAW_Z) — w głębi niszy sortowanie Y chowało je pod kaflami wnęki.
+## Rysowanie: zwykłe sortowanie Y (na DEEP_OFFSET filary niszy zachodzą na boki skrzyni, nic nie znika).
 static func setup_node(node: Node) -> void:
 	var uid := String(node.get("unique_id")) if "unique_id" in node else ""
-	if uid.begins_with(String(KINDS[&"item"]) + "_"):
-		(node as CanvasItem).z_index = DRAW_Z
-	elif uid.begins_with(String(KINDS[&"chest"]) + "_"):
-		(node as CanvasItem).z_index = DRAW_Z
+	if uid.begins_with(String(KINDS[&"chest"]) + "_"):
 		var cs := node.get_node_or_null("InteractionArea/CollisionShape2D") as CollisionShape2D  # węzeł grupy = sprite Chest
 		if cs != null and cs.shape is CircleShape2D:
 			cs.shape = cs.shape.duplicate()

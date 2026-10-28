@@ -953,7 +953,7 @@ func _apply_niche_content(result) -> void:
 	if cfg.is_empty() or result == null:
 		return
 	_apply_special_chests("niche_chest_", cfg)
-	for group in ["chests", "secret_passages", "ground_items"]:
+	for group in ["chests", "secret_passages"]:
 		for node in get_tree().get_nodes_in_group(group):
 			if is_ancestor_of(node):
 				NicheContentPlanner.setup_node(node)
