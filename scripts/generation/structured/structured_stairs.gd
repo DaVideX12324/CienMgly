@@ -5,7 +5,8 @@ extends RefCounted
 ## leży wyżej. Grafika: stopnie modułu schodów platform (`platform_tiles.stairs`, bez poręczy — korytarz ma ściany),
 ## efekt wysokości: HeightVeil (reszta mapy pod voidem po wejściu `veil_rows` kratek schodów w górę albo w obszarze).
 ## Config: structured_layout.corridor_stairs {"chance": 0.7, "max": 3, "min_len": 4, "max_width": 4, "zone": [30, 900],
-##   "veil_rows": 4, "portal_ring": 2}. Na razie tylko korytarze północne — jedyne schody paczki.
+##   "room_min": 30, "veil_rows": 4, "portal_ring": 2} — room_min: tyle kratek obszaru musi należeć do pokoju / hali
+##   (canals.areas), inaczej schody prowadziłyby tylko do ślepego korytarza. Na razie tylko korytarze północne — jedyne schody paczki.
 
 const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
@@ -28,7 +29,7 @@ static func select(ctx: GenerationContext, canals, cfg: Dictionary) -> int:
 		if taken.has(r.position):
 			continue
 		var zone := _dead_end(ctx, canals, r, int(zr[0]), int(zr[1]))
-		if zone.is_empty() or _overlaps(zone, taken):
+		if zone.is_empty() or _overlaps(zone, taken) or _room_cells(canals, zone) < int(cfg.get("room_min", 30)):
 			continue
 		if rng.randf() >= float(cfg.get("chance", 0.7)):
 			continue
@@ -130,6 +131,16 @@ static func _dead_end(ctx: GenerationContext, canals, r: Rect2i, lo: int, hi: in
 	if seen.size() < lo:
 		return {}
 	return seen
+
+
+## Kratki obszaru należące do pokoju / hali (nie korytarz, nie kratki bez wpisu w canals.areas).
+static func _room_cells(canals, zone: Dictionary) -> int:
+	var n := 0
+	for p in zone:
+		var key := String(canals.areas.get(p, &"corridor"))
+		if key != "corridor":
+			n += 1
+	return n
 
 
 static func _overlaps(a: Dictionary, b: Dictionary) -> bool:
