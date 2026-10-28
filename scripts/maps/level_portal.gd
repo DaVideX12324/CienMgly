@@ -63,11 +63,14 @@ static func _connect_key(area: Area2D, on_enter: Callable, prompt: String) -> vo
 
 
 ## Uzbraja obszar po ARM_PHYSICS_FRAMES klatkach fizyki, chyba że gracz w nim stoi (wtedy body_exited).
+## Obszar wyłączony (wyjście zamknięte do pokonania bossa) — liczenie dopiero od jego włączenia.
 static func _arm_when_clear(area: Area2D, armed: Array) -> void:
-	for i in ARM_PHYSICS_FRAMES:
+	var i := 0
+	while i < ARM_PHYSICS_FRAMES:
 		await area.get_tree().physics_frame
 		if not is_instance_valid(area):
 			return
+		i = i + 1 if area.monitoring else 0
 	for body in area.get_overlapping_bodies():
 		if is_player(body):
 			return
