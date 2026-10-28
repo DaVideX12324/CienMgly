@@ -19,93 +19,93 @@ z_index = 1
 tile_map_data = PackedByteArray("AAABAP7/CAAEAAMAAAACAP7/CAAGAAEAAAADAP7/CAAGAAEAAAABAP3/CAAGAAEAAAADAP//CAADAAMAAAAEAP//CAAEAAMAAAAFAP//CAAGAAEAAAAGAP//CAAGAAEAAAAHAP//CAAGAAEAAAAIAP//CAAGAAEAAAAJAP//CAAGAAEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Seg_-1" type="Node2D" parent="Tilesets" unique_id=530116157]
-position = Vector2(0, -1)
+[node name="Seg_-1" type="Node2D" parent="Tilesets" unique_id=1511795603]
+position = Vector2(0, -5)
 
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_-1" unique_id=1244138086]
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_-1" unique_id=1570119547]
 y_sort_enabled = true
 
-[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=528101913]
+[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=543960322]
 y_sort_enabled = true
-position = Vector2(0, 1)
+position = Vector2(0, 5)
 tile_map_data = PackedByteArray("AAABAPz/BQAHAAcAAAABAP7/BQAHAAcAAAABAP//BQAHAAgAAAABAAAABQAFADEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=146904351]
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=813326662]
 y_sort_enabled = true
-position = Vector2(0, 1)
+position = Vector2(0, 5)
 tile_map_data = PackedByteArray("AAABAPv/BgALAAsAAAABAPz/BgALAAwAAAABAPr/BgALAAoAAAAAAPr/BgAKAAoAAAAAAPv/BgAKAAsAAAAAAPz/BgAKAAwAAAAAAP3/BgAKAA0AAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=1739589802]
+[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=1133951139]
 y_sort_enabled = true
-position = Vector2(0, 1)
+position = Vector2(0, 5)
 tile_map_data = PackedByteArray("AAABAPf/CwAAABQAAAABAPj/CwAAABUAAAABAPn/CwAAABYAAAABAPr/CwAAABcAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Seg_15" type="Node2D" parent="Tilesets" unique_id=2027238503]
-position = Vector2(0, 15)
+[node name="Seg_15" type="Node2D" parent="Tilesets" unique_id=1510309523]
+position = Vector2(0, 11)
 
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_15" unique_id=1585531777]
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_15" unique_id=1975662896]
 y_sort_enabled = true
 
-[node name="Walls2" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1755320641]
+[node name="Walls2" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1416875035]
 y_sort_enabled = true
-position = Vector2(0, -15)
+position = Vector2(0, -11)
 tile_map_data = PackedByteArray("AAACAPz/BQAHAAYAAAACAP3/BQAHAAcAAAACAAAABQAHAAgAAAACAAEABQAFADEAAAADAP3/BQAIAAcAAAADAAAABQAIAAgAAAADAAEABQAGADEAAAAEAP3/BQAJAAcAAAAEAP7/BQAKAAEAAAAEAAAABQAKAAwAAAAEAAEABQADADEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=860008339]
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1206404328]
 y_sort_enabled = true
-position = Vector2(0, -15)
+position = Vector2(0, -11)
 tile_map_data = PackedByteArray("AAAEAP7/BgAKAAwAAAAEAPv/BgALAAsAAAACAPv/BgALAAsAAAADAPv/BgAMAAsAAAACAPz/BgALAAsAAAADAPz/BgAMAAsAAAACAP3/BgAKAAwAAAADAP3/BgALAAwAAAAEAP3/BgALAAsAAAAEAPz/BgALAAsAAAACAPr/BgALAAoAAAADAPr/BgAMAAoAAAAEAPr/BgALAAoAAAACAP7/BgAKAA0AAAAEAP//BgAKAA0AAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1679787739]
+[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1629086799]
 y_sort_enabled = true
-position = Vector2(0, -15)
+position = Vector2(0, -11)
 tile_map_data = PackedByteArray("AAAEAP//CwACABYAAAACAPf/CwABABQAAAACAPj/CwABABUAAAACAPn/CwABABYAAAACAPr/CwABABcAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Seg_32" type="Node2D" parent="Tilesets" unique_id=1793589740]
-position = Vector2(0, 32)
+[node name="Seg_32" type="Node2D" parent="Tilesets" unique_id=1886708967]
+position = Vector2(0, 28)
 
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_32" unique_id=1513591404]
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_32" unique_id=896021950]
 y_sort_enabled = true
 
-[node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=336337266]
+[node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=707243402]
 y_sort_enabled = true
-position = Vector2(0, -32)
+position = Vector2(0, -28)
 tile_map_data = PackedByteArray("AAAGAAEABQAIAAEAAAAHAAEABQAIAAgAAAAGAP7/BQAJAAcAAAAHAP7/BQAIAAcAAAAGAAIABQAGADEAAAAHAAIABQAGADEAAAAGAPz/BQANAAgAAAAHAPz/BQAPAAgAAAAIAAEABQAIAAEAAAAJAAEABQAKAAgAAAAFAP7/BQAHAAcAAAAIAP7/BQAJAAcAAAAJAP7/BQAKAAcAAAAFAAIABQAFADEAAAAJAAIABQAHADEAAAAIAAIABQAGADEAAAAFAAEABQAHAAgAAAAFAP3/BQAHAAYAAAAJAPz/BQAQAAgAAAAIAPz/BQAOAAgAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1029847267]
+[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=2144726736]
 y_sort_enabled = true
-position = Vector2(0, -32)
+position = Vector2(0, -28)
 tile_map_data = PackedByteArray("AAAGAAIABQAGADEAAAAHAAIABQAGADEAAAAFAAIABQAFADEAAAAIAAIABQAGADEAAAAJAAIABQAHADEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="DoorFrame" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1744049181]
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=109952510]
 y_sort_enabled = true
-position = Vector2(0, -32)
+position = Vector2(0, -28)
 tile_map_data = PackedByteArray("AAAHAAEACwAGABAAAAAHAAIACwADABQAAAAGAAIACwACABQAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=958828792]
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=892252578]
 y_sort_enabled = true
-position = Vector2(0, -32)
+position = Vector2(0, -28)
 tile_map_data = PackedByteArray("AAAGAP7/BgAMAAwAAAAHAP7/BgALAAwAAAAGAP3/BgALAAsAAAAHAP3/BgAMAAsAAAAGAPr/BgALAAoAAAAGAPz/BgAKAAkAAAAHAPr/BgALAAoAAAAFAP7/BgALAAwAAAAIAP7/BgAMAAwAAAAJAP7/BgAMAAwAAAAIAP3/BgALAAsAAAAJAP3/BgAMAAsAAAAFAPv/BgAMAAsAAAAFAP3/BgAMAAsAAAAFAPz/BgAMAAsAAAAFAPr/BgAMAAoAAAAKAP7/BgANAAwAAAAKAP//BgANAA0AAAAKAP3/BgANAAsAAAAKAPz/BgANAAsAAAAKAPv/BgANAAsAAAAKAPr/BgANAAoAAAAJAPz/BgANAAkAAAAJAPr/BgALAAoAAAAIAPr/BgALAAoAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof2" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1879062187]
+[node name="Roof2" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1955385042]
 y_sort_enabled = true
-position = Vector2(0, -32)
+position = Vector2(0, -28)
 tile_map_data = PackedByteArray("AAAGAPr/BgAJAAcAAAAGAPv/BgAJAAkAAAAHAPn/BgALAAUAAAAHAPr/BgALAAYAAAAGAPz/BgAJAAoAAAAHAPv/BgALAAgAAAAIAPn/BgAMAAUAAAAIAPr/BgAMAAYAAAAJAPr/BgAOAAcAAAAJAPv/BgAOAAkAAAAIAPv/BgAMAAgAAAAJAPz/BgAOAAoAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=740601947]
+[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=169780039]
 y_sort_enabled = true
-position = Vector2(0, -32)
+position = Vector2(0, -28)
 tile_map_data = PackedByteArray("AAAHAAEACwAIABEAAAAIAPz/CwAEABQAAAAJAAAACwACABYAAAA=")
 tile_set = ExtResource("1_d7wmb")
 

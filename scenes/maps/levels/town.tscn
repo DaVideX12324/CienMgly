@@ -117,7 +117,7 @@ position = Vector2(911, 186)
 position = Vector2(1176, 297)
 
 [node name="House_Desert_RedStone_4" parent="Buildings" unique_id=5811033 instance=ExtResource("b_4")]
-position = Vector2(716, 178)
+position = Vector2(716, 189)
 
 [node name="House_Desert_RedStone_1" parent="Buildings" unique_id=1840899712 instance=ExtResource("b_1")]
 position = Vector2(668, 916)

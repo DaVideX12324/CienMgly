@@ -10,16 +10,20 @@ extends SceneTree
 ## rekwizyty, komin. Korzeń i Tilesets dostają Y Sort.
 ## Uruchomienie: godot --headless --path . -s res://modules/quiz_rpg/tools/segment_building.gd -- [A=B ...] <scena.tscn> ...
 ## A=B: kolumny z podstawą A idą do segmentu B (np. 14=32 — wnęka drzwi to ta sama bryła co front).
+## lift=N: punkt sortowania segmentu N px nad dolną krawędzią obrysu (user: 4 — postać tuż przy ścianie już przed nią).
 const CELL := 16
 const ORDER := ["Walls", "DoorFrame", "Roof", "Props", "Chimney"]
 
 
 var _merge := {}   # podstawa -> podstawa docelowa (argumenty A=B)
+var _lift := 0.0   # lift=N
 
 
 func _initialize() -> void:
 	for arg: String in OS.get_cmdline_user_args():
-		if "=" in arg:
+		if arg.begins_with("lift="):
+			_lift = float(arg.get_slice("=", 1))
+		elif "=" in arg:
 			_merge[float(arg.get_slice("=", 0))] = float(arg.get_slice("=", 1))
 		else:
 			print(arg, ": ", _segment(arg))
@@ -60,7 +64,7 @@ func _segment(path: String) -> String:
 	for base: float in bases:
 		var seg := Node2D.new()
 		seg.name = "Seg_%d" % int(base)
-		seg.position = Vector2(0, base - tilesets.position.y)
+		seg.position = Vector2(0, base - _lift - tilesets.position.y)
 		segs[base] = seg
 		var sort := Node2D.new()
 		sort.name = "Sort"
