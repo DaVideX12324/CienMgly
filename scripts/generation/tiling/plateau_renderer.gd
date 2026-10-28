@@ -10,6 +10,7 @@ const GenProgress = preload("../core/gen_progress.gd")
 
 const TILESET_ID := &"caves_platform"  # domyślny zestaw platform (jaskinie); inny: generator_behaviour.platform_tiles
 const LAYER := &"Platforms"
+const RAILS_LAYER := &"Rails"  # belki poręczy schodów bocznych (warstwa barierek kanałów)
 const WINDOW_MARGIN := 6
 # Poszerzenie bboxa kawałka P do prostokąta skanu (kafle zostają tylko w P i stopach lica, a analiza
 # kratki sięga kilka kratek dalej — głębokość bryły max 6).
@@ -194,6 +195,9 @@ static func _derive_set(profile: MapTileProfile, id: StringName, cfg: Dictionary
 		if not entry.variants.is_empty():
 			out.tile_entries.append(entry)
 	_add_stairs(out, cfg.get("stairs", {}))
+	_add_north_stairs(out, cfg.get("stairs_north", {}))
+	_add_side_stairs(out, cfg.get("stairs_east", {}), TileRole.Id.STAIR_EAST_3H, false)
+	_add_side_stairs(out, cfg.get("stairs_west", {}), TileRole.Id.STAIR_WEST_3H, true)
 	return out
 
 
@@ -236,6 +240,67 @@ static func _add_stairs(out: NamedTileSetDefinition, cfg: Dictionary) -> void:
 				v.parts.append(part)
 		entry.variants.append(v)
 		out.tile_entries.append(entry)
+
+
+## Moduł schodów N z atlasu (kolumny: pierwsza z poręczą, środek, ostatnia z poręczą; rzędy od góry):
+## STAIR_NORTH_LEFT / MID / RIGHT, kotwica = kratka rimu, rząd `anchor_row` modułu na niej (wyżej — niższa podłoga).
+static func _add_north_stairs(out: NamedTileSetDefinition, cfg: Dictionary) -> void:
+	if cfg.is_empty():
+		return
+	var src := int(cfg.get("source", 0))
+	var org: Array = cfg.get("origin", [0, 0])
+	var sz: Array = cfg.get("size", [4, 3])
+	var o := Vector2i(int(org[0]), int(org[1]))
+	var anchor_row := int(cfg.get("anchor_row", 1))
+	var cols := {
+		TileRole.Id.STAIR_NORTH_LEFT: 0,
+		TileRole.Id.STAIR_NORTH_MID: 1,
+		TileRole.Id.STAIR_NORTH_RIGHT: int(sz[0]) - 1,
+	}
+	for role in cols:
+		var parts: Array = []
+		for row in int(sz[1]):
+			parts.append([Vector2i(0, row - anchor_row), o + Vector2i(int(cols[role]), row)])
+		out.tile_entries.append(_stair_entry(role, src, parts))
+
+
+## Moduł schodów bocznych E / W z atlasu (kolumny od strony platformy: E od lewej, W od prawej). Rzędy: belka
+## poręczy nad schodami, stopnie (górny, środkowy — powtarzany przez PlateauPlacer._put_stair przy wyższych schodach —
+## dolny), belka pod schodami. Belki na warstwie RAILS_LAYER (y-sort z postaciami, nie wymazują krawędzi platformy
+## w swoich kratkach). Rola *_3H, kotwica = kratka boku platformy w górnym rzędzie schodów.
+static func _add_side_stairs(out: NamedTileSetDefinition, cfg: Dictionary, role: int, west: bool) -> void:
+	if cfg.is_empty():
+		return
+	var src := int(cfg.get("source", 0))
+	var org: Array = cfg.get("origin", [0, 0])
+	var sz: Array = cfg.get("size", [3, 5])
+	var o := Vector2i(int(org[0]), int(org[1]))
+	var w := int(sz[0])
+	var last := int(sz[1]) - 1
+	# [rząd modułu, przesunięcie y, warstwa]
+	var rows := [[0, -1, RAILS_LAYER], [1, 0, LAYER], [2, 1, LAYER], [last - 1, 2, LAYER], [last, 3, RAILS_LAYER]]
+	var parts: Array = []
+	for col in w:
+		var dx := col - (w - 1) if west else col
+		for r in rows:
+			parts.append([Vector2i(dx, int(r[1])), o + Vector2i(col, int(r[0])), r[2]])
+	out.tile_entries.append(_stair_entry(role, src, parts))
+
+
+## Wpis roli schodów z części [przesunięcie w module, kafel atlasu, warstwa (opcjonalnie, domyślnie LAYER)].
+static func _stair_entry(role: int, src: int, parts: Array) -> TileRoleEntry:
+	var entry := TileRoleEntry.new()
+	entry.role = role
+	var v := TileVariant.new()
+	v.variant_id = &"A"
+	for pr in parts:
+		var part := TileModulePart.new()
+		part.offset = pr[0]
+		part.tile = TileRef.make(pr[1], src)
+		part.layer = pr[2] if pr.size() > 2 else LAYER
+		v.parts.append(part)
+	entry.variants.append(v)
+	return entry
 
 
 ## Lico płaskowyżu urwane przy wchłoniętej kolumnie: kolumna obok dostaje zakończenie lica 2H (jak

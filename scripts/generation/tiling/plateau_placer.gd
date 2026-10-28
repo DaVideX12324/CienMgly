@@ -127,7 +127,8 @@ static func _hole(ctx: GenerationContext, placement_plan: TilePlacementPlan, dir
 
 
 ## height > 3 (schody boczne 3H): moduł rozciągnięty — wiersz górny, środkowy powtórzony
-## height-2 razy, dolny (tak jak szerokie schody S/N dokładają modułów MID).
+## height-2 razy, dolny i wszystko pod nim (belka poręczy) niżej o height-3 (tak jak szerokie schody S/N
+## dokładają modułów MID). Część z własną warstwą (belki poręczy na Rails) idzie na nią.
 ## False, gdy zestaw nie ma roli — wołający zostawia przejście (_hole).
 static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan, anchor: Vector2i, role: int, table: Dictionary, height: int = 0) -> bool:
 	var parts := TileResolver.resolve_in_set(ctx, PlateauRenderer.platform_tileset(ctx), anchor, role)
@@ -138,15 +139,15 @@ static func _put_stair(ctx: GenerationContext, placement_plan: TilePlacementPlan
 		if height > 3 and rp.offset.y == 1:
 			for k in range(height - 2):
 				cells.append([anchor + Vector2i(rp.offset.x, 1 + k), rp])
-		elif height > 3 and rp.offset.y == 2:
-			cells.append([anchor + Vector2i(rp.offset.x, height - 1), rp])
+		elif height > 3 and rp.offset.y >= 2:
+			cells.append([anchor + rp.offset + Vector2i(0, height - 3), rp])
 		else:
 			cells.append([anchor + rp.offset, rp])
 	for cell in cells:
 		var rp = cell[1]
 		var p := TilePlacement.new()
 		p.pos = cell[0]
-		p.layer = LAYER
+		p.layer = rp.layer if rp.layer != &"" else LAYER
 		p.source_id = rp.tile.source_id
 		p.atlas_coords = rp.tile.atlas_coords
 		p.alternative_tile = rp.tile.alternative_tile

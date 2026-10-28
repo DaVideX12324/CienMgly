@@ -321,7 +321,9 @@ static func prepare_cave_layers(
 	# się z postaciami jak ściana, a może stać w kratce lica muru (barierka przed fasadą). Tylko przy barierkach.
 	if rails_layer == null and floor_layer.get_parent():
 		rails_layer = floor_layer.get_parent().get_node_or_null("Rails") as TileMapLayer
-		if rails_layer == null and result.canals != null and not result.canals.rail_cells.is_empty():
+		# Ścieki (canals): także belki poręczy schodów bocznych platform (PlateauRenderer.RAILS_LAYER).
+		var side_stairs: bool = result.plateau != null and not (result.plateau.stairs_east.is_empty() and result.plateau.stairs_west.is_empty())
+		if rails_layer == null and result.canals != null and (not result.canals.rail_cells.is_empty() or side_stairs):
 			rails_layer = TileMapLayer.new()
 			rails_layer.name = "Rails"
 			rails_layer.tile_set = floor_layer.tile_set
