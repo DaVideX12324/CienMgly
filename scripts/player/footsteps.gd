@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _is_walk_anim() -> bool:
-	return String(_sprite.animation).begins_with("walk")
+	return String(_sprite.animation).begins_with("walk") or String(_sprite.animation).begins_with("run")
 
 
 func _on_frame_changed() -> void:

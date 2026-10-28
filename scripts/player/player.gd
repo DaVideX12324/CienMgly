@@ -38,6 +38,8 @@ var _direction_color: Color = Color(1.0, 1.0, 0.3)
 ## domyślny ruch: przy domyślnym biegu przytrzymanie daje chód.
 const MODULE_ID := "quiz_rpg"
 const SPRINT_ACTION := "sprint"
+## Nazwy kierunków animacji w kolejności kątów co 45° od prawej (oś Y w dół).
+const DIRECTIONS_8 := ["right", "down_right", "down", "down_left", "left", "up_left", "up", "up_right"]
 const MOVE_DEFAULT_KEY := "move_default"
 const SPRINT_MODE_KEY := "sprint_mode"
 var _default_run := false
@@ -161,7 +163,11 @@ func _physics_process(delta: float) -> void:
 		_is_moving = true
 		if not _use_programmer_art:
 			_bob_time += delta * 10.0 * run_mult
-			_update_sprite_animation("walk", run_mult)
+			# Bieg: własna animacja, gdy postać ją ma (szablon LumenLorePixels), inaczej przyspieszony chód.
+			if run_mult > 1.0 and _has_animation_for("run"):
+				_update_sprite_animation("run")
+			else:
+				_update_sprite_animation("walk", run_mult)
 	else:
 		_is_moving = false
 		if not _use_programmer_art:
@@ -280,12 +286,12 @@ func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
 func _play_animation(sprite: AnimatedSprite2D, anim_name: String) -> void:
 	if sprite.animation == anim_name and sprite.is_playing():
 		return
-	var was_walking := String(sprite.animation).begins_with("walk") and sprite.is_playing()
+	var was_walking := _is_step_anim(String(sprite.animation)) and sprite.is_playing()
 	var frame := sprite.frame
 	var progress := sprite.frame_progress
 	sprite.play(anim_name)
 	var count := sprite.sprite_frames.get_frame_count(anim_name)
-	if not anim_name.begins_with("walk") or count < 2:
+	if not _is_step_anim(anim_name) or count < 2:
 		return
 	if was_walking:
 		sprite.set_frame_and_progress(frame % count, progress)
@@ -293,7 +299,21 @@ func _play_animation(sprite: AnimatedSprite2D, anim_name: String) -> void:
 		sprite.frame = 1
 
 
+func _is_step_anim(anim_name: String) -> bool:
+	return anim_name.begins_with("walk") or anim_name.begins_with("run")
+
+
+## Czy klatki postaci mają animację stanu `state` (z kierunkiem albo bez).
+func _has_animation_for(state: String) -> bool:
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	return sprite != null and sprite.sprite_frames != null and sprite.sprite_frames.has_animation(state + "_" + _direction_name())
+
+
+## Kierunek animacji: 8 kierunków, gdy klatki je mają (idle_down_right — postacie z szablonu LumenLorePixels), inaczej 4.
 func _direction_name() -> String:
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if sprite != null and sprite.sprite_frames != null and sprite.sprite_frames.has_animation(&"idle_down_right"):
+		return DIRECTIONS_8[posmod(roundi(facing_direction.angle() / (PI / 4.0)), 8)]
 	if abs(facing_direction.x) > abs(facing_direction.y):
 		return "right" if facing_direction.x > 0 else "left"
 	else:
