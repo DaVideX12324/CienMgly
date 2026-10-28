@@ -3,7 +3,8 @@ extends RefCounted
 ## Gracz nie pojawia się w obszarze przejścia, tylko przy markerze odsuniętym od niego (prośba usera
 ## 2026-10-04): na mapach generowanych `Spawn` (przyjście z poprzedniego poziomu) i FROM_NEXT_SPAWN (powrót
 ## z następnego) kilka kratek od obszaru (MapGeneratorBase.arrival_cell), w scenach ręcznych — marker w Spawns.
-## Na wszelki wypadek: obszar, w którym gracz stoi zaraz po wczytaniu, działa dopiero po jego opuszczeniu.
+## Obszar działa dopiero, gdy gracz odejdzie od niego na ARM_DISTANCE (prośba usera 2026-10-28 — wejście na mapę i od
+## razu cofnięcie się nie wyrzuca z niej z powrotem; dotyczy też obszaru, w którym gracz stoi zaraz po wczytaniu).
 ## Tryb klawisza (use_key albo metadana obszaru `portal_use_key`): przejście dopiero po „interact” (E) w obszarze,
 ## z podpowiedzią `portal_prompt` (domyślnie „Przejdź”) — PortalKeyListener.
 
@@ -13,6 +14,8 @@ const PREVIOUS_AREA := "enter_previous_level"
 const FROM_NEXT_SPAWN := "FromNext"
 ## Tyle klatek fizyki po podpięciu obszar czeka (gracz zdąży stanąć na spawnie), zanim się uzbroi.
 const ARM_PHYSICS_FRAMES := 5
+## Tyle px od krawędzi obszaru gracz musi odejść, zanim obszar zacznie działać (spawn jest ~2 kratki od krawędzi).
+const ARM_DISTANCE := 64.0
 const META_USE_KEY := &"portal_use_key"
 const META_PROMPT := &"portal_prompt"
 const DEFAULT_PROMPT := "Przejdź"
@@ -33,9 +36,6 @@ static func connect_area(area: Area2D, on_enter: Callable, use_key: bool = false
 		fade.name = "PortalFade"
 		area.add_child(fade)
 	var armed := [false]
-	area.body_exited.connect(func(body: Node2D) -> void:
-		if is_player(body):
-			armed[0] = true)
 	area.body_entered.connect(func(body: Node2D) -> void:
 		if is_player(body) and armed[0]:
 			on_enter.call())
@@ -62,7 +62,7 @@ static func _connect_key(area: Area2D, on_enter: Callable, prompt: String) -> vo
 			listener.set_in_range(true)
 
 
-## Uzbraja obszar po ARM_PHYSICS_FRAMES klatkach fizyki, chyba że gracz w nim stoi (wtedy body_exited).
+## Uzbraja obszar po ARM_PHYSICS_FRAMES klatkach fizyki, gdy gracz jest dalej niż ARM_DISTANCE od jego krawędzi.
 ## Obszar wyłączony (wyjście zamknięte do pokonania bossa) — liczenie dopiero od jego włączenia.
 static func _arm_when_clear(area: Area2D, armed: Array) -> void:
 	var i := 0
@@ -71,10 +71,26 @@ static func _arm_when_clear(area: Area2D, armed: Array) -> void:
 		if not is_instance_valid(area):
 			return
 		i = i + 1 if area.monitoring else 0
-	for body in area.get_overlapping_bodies():
-		if is_player(body):
+	while true:
+		var player := area.get_tree().get_first_node_in_group("player") as Node2D
+		if player != null and _distance_to_area(area, player.global_position) > ARM_DISTANCE:
+			break
+		await area.get_tree().physics_frame
+		if not is_instance_valid(area):
 			return
 	armed[0] = true
+
+
+## Odległość punktu od najbliższego prostokąta kształtów obszaru (0 w środku); bez kształtów — od pozycji obszaru.
+static func _distance_to_area(area: Area2D, p: Vector2) -> float:
+	var best := INF
+	for c in area.get_children():
+		var cs := c as CollisionShape2D
+		if cs == null or cs.shape == null or cs.disabled:
+			continue
+		var r: Rect2 = cs.global_transform * cs.shape.get_rect()
+		best = minf(best, (p.clamp(r.position, r.end) - p).length())
+	return best if best != INF else area.global_position.distance_to(p)
 
 
 ## Marker `marker_name` w węźle Spawns poziomu (tworzy brakujące węzły), w pozycji lokalnej `pos`.
