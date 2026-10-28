@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post_arm.tscn" id="1_post"]
+[ext_resource type="Texture2D" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png" id="2_furn"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_banner"]
+atlas = ExtResource("2_furn")
+region = Rect2(368, 272, 16, 34)
+filter_clip = true
+
+[node name="BannerPost" instance=ExtResource("1_post")]
+pole_extra = 17
+metadata/object_group = "banners"
+
+[node name="Banner" type="Sprite2D" parent="Top" index="0"]
+position = Vector2(5, -38)
+texture = SubResource("AtlasTexture_banner")
+centered = false
