@@ -9,6 +9,7 @@ signal set_spawn(spawn: Vector2)
 static var INITIAL_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/tutorial_area.tscn")
 const DEFAULT_SPAWN_NAME := "Spawn"
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
+const LoadingScreenScript = preload("../ui/loading_screen.gd")
 ## Nazwa lokacji na ekranie ładowania (duży napis nad paskiem) wg nazwy pliku sceny mapy; brak = bez
 ## napisu (ProceduralLevel ma własną: location_name / typ poziomu).
 const LOCATION_NAMES := {
@@ -62,11 +63,13 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		spawn_name = DEFAULT_SPAWN_NAME
 
 	var overlay := _show_loading_screen(level_path)
-	# Gracz czeka zamrożony, aż mapa (i przy ProceduralLevel spawny) będzie gotowa.
+	# Gracz czeka zamrożony, aż mapa (i przy ProceduralLevel spawny) będzie gotowa; sterowanie dopiero po zaniknięciu
+	# ekranu ładowania i wynurzeniu się drużyny (_unblock_input_after_fade).
 	var player := _get_player()
 	var player_mode := player.process_mode if player else Node.PROCESS_MODE_INHERIT
 	if player:
 		player.process_mode = Node.PROCESS_MODE_DISABLED
+		_set_input_blocked(player, true)
 
 	_clear_transient_nodes()
 	if is_instance_valid(current_level):
@@ -78,6 +81,7 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 		push_warning("[QuizRpgLevelManager] Cannot load level: %s" % level_path)
 		if is_instance_valid(player):
 			player.process_mode = player_mode
+			_set_input_blocked(player, false)
 		_close_loading_screen()
 		return
 
@@ -111,6 +115,22 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	_play_level_music(level_path, current_level)
 	QuizRpgProgressLog.map_entered(_progress_ps(), level_path)
 	_close_loading_screen()
+	await _unblock_input_after_fade(player)
+
+
+## Oddaje sterowanie, gdy nie ma już ekranu ładowania (też ekranu ProceduralLevel) i drużyna się wynurzyła.
+func _unblock_input_after_fade(player: Node) -> void:
+	var t0 := Time.get_ticks_msec()
+	while is_inside_tree() and (not get_tree().get_nodes_in_group(LoadingScreenScript.GROUP).is_empty()
+			or Time.get_ticks_msec() - t0 < int(QuizRpgPortalFade.FADE_IN_TIME * 1000.0)):
+		await get_tree().process_frame
+	if is_instance_valid(player):
+		_set_input_blocked(player, false)
+
+
+func _set_input_blocked(player: Node, blocked: bool) -> void:
+	if "input_blocked" in player:
+		player.set("input_blocked", blocked)
 
 
 ## Scena mapy wczytywana w tle (ResourceLoader.load_threaded_request) — pasek ekranu ładowania idzie

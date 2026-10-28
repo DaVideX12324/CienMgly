@@ -19,6 +19,8 @@ var facing_direction: Vector2 = Vector2.DOWN
 ## Mnożnik prędkości od podłoża (np. wysoka trawa wolniej, droga szybciej); ustawia go warstwa terenu mapy.
 var _terrain_speed_mult: float = 1.0
 var can_move: bool = true
+## Sterowanie wyłączone na czas wczytywania mapy (LevelManager — do końca zanikania ekranu ładowania i wynurzania).
+var input_blocked: bool = false
 var nearby_interactables: Array = []
 ## Obiekt, dla którego gracz zgłosił podpowiedź interakcji (InteractPrompt).
 var _prompt_target: Node2D = null
@@ -137,7 +139,7 @@ func _prompt_candidate() -> Node2D:
 func _physics_process(delta: float) -> void:
 	if _immunity_left > 0.0:
 		_tick_immunity(delta)
-	if not can_move or not (_gm and _gm.is_exploring()):
+	if not can_move or input_blocked or not (_gm and _gm.is_exploring()):
 		velocity = Vector2.ZERO
 		_is_moving = false
 		if not _use_programmer_art:
@@ -223,7 +225,7 @@ func _draw_ellipse(center: Vector2, radii: Vector2, color: Color, segments: int 
 
 
 func _input(event: InputEvent) -> void:
-	if is_party_follower:
+	if is_party_follower or input_blocked:
 		return
 	if event.is_action_pressed("interact") and _gm and _gm.is_exploring():
 		_try_interact()

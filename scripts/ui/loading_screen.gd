@@ -25,6 +25,8 @@ extends CanvasLayer
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const FADE_TIME := 0.25
+## Wszystkie ekrany ładowania (LevelManager czeka, aż znikną, zanim odda sterowanie).
+const GROUP := &"quiz_rpg_loading_screen"
 static var BACKGROUND_DIR: String = QuizRpgPaths.path("assets/textures/loading_screens/")
 const BACKGROUND_EXTS := ["png", "jpg", "jpeg", "webp"]
 ## Dolna część grafiki (ułamek wysokości), z której uśredniany jest kolor pasa.
@@ -141,6 +143,7 @@ func set_background_for(keys) -> bool:
 
 
 func _ready() -> void:
+	add_to_group(GROUP)
 	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	_title.text = QuizRpgI18n.t(title, title)
 	_apply_location()
