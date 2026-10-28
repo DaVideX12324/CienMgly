@@ -53,6 +53,18 @@ const MAX_TRAIL_POINTS := 96
 ## Towarzysz dalej od swojego punktu na śladzie niż tyle px przeskakuje na niego.
 const FOLLOW_CATCH_UP_DISTANCE := 96.0
 
+# Odblokowanie lidera wciśniętego między kolizje (softlock): gdy ma kierunek, a stoi, i przez STUCK_TIME nie może ruszyć
+# się o STUCK_PROBE px w żadną z 8 stron, wraca na ostatnie wolne miejsce (zapamiętywane co SAFE_SPOT_INTERVAL s
+# swobodnego chodu), a gdy żadne nie jest wolne — na najbliższe wolne w promieniu UNSTICK_RADIUS.
+const STUCK_PROBE := 2.0
+const STUCK_TIME := 0.5
+const SAFE_SPOT_INTERVAL := 0.25
+const MAX_SAFE_SPOTS := 24
+const UNSTICK_RADIUS := 64.0
+var _safe_spots: Array[Vector2] = []
+var _safe_spot_timer := 0.0
+var _stuck_time := 0.0
+
 # Bobbing animation
 var _bob_time: float = 0.0
 var _is_moving: bool = false
@@ -177,7 +189,76 @@ func _physics_process(delta: float) -> void:
 	if _use_programmer_art:
 		queue_redraw()
 
+	var before := global_position
 	move_and_slide()
+	_record_trail_position()
+	if not is_party_follower:
+		_check_stuck(delta, input, global_position.distance_to(before))
+
+
+func _check_stuck(delta: float, input: Vector2, moved: float) -> void:
+	if input == Vector2.ZERO or moved > 0.05:
+		_stuck_time = 0.0
+		_safe_spot_timer -= delta
+		if input != Vector2.ZERO and _safe_spot_timer <= 0.0 and get_slide_collision_count() == 0:
+			_safe_spot_timer = SAFE_SPOT_INTERVAL
+			if _safe_spots.is_empty() or _safe_spots[-1].distance_to(global_position) > 4.0:
+				_safe_spots.append(global_position)
+				if _safe_spots.size() > MAX_SAFE_SPOTS:
+					_safe_spots.remove_at(0)
+		return
+	if _can_move_somewhere():
+		_stuck_time = 0.0
+		return
+	_stuck_time += delta
+	if _stuck_time >= STUCK_TIME:
+		_stuck_time = 0.0
+		unstick()
+
+
+func _can_move_somewhere() -> bool:
+	for i in 8:
+		if not test_move(global_transform, Vector2.RIGHT.rotated(i * PI / 4.0) * STUCK_PROBE):
+			return true
+	return false
+
+
+## Przenosi lidera na ostatnie wolne miejsce albo najbliższe wolne w promieniu UNSTICK_RADIUS. false = brak wolnego.
+func unstick() -> bool:
+	for i in range(_safe_spots.size() - 1, -1, -1):
+		var p := _safe_spots[i]
+		if p.distance_to(global_position) > 1.0 and _is_free_at(p):
+			_teleport(p)
+			_safe_spots.resize(i + 1)
+			return true
+	var r := 4.0
+	while r <= UNSTICK_RADIUS:
+		for k in 16:
+			var p := global_position + Vector2.RIGHT.rotated(k * TAU / 16.0) * r
+			if _is_free_at(p):
+				_teleport(p)
+				return true
+		r += 4.0
+	return false
+
+
+func _is_free_at(pos: Vector2) -> bool:
+	var cs := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if cs == null or cs.shape == null:
+		return true
+	var q := PhysicsShapeQueryParameters2D.new()
+	q.shape = cs.shape
+	q.transform = Transform2D(global_rotation + cs.rotation, pos + cs.position.rotated(global_rotation))
+	q.collision_mask = collision_mask
+	q.exclude = [get_rid()]
+	return get_world_2d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+
+func _teleport(pos: Vector2) -> void:
+	print("[Player] odblokowanie: %s -> %s" % [global_position, pos])
+	global_position = pos
+	velocity = Vector2.ZERO
+	_trail_points.clear()
 	_record_trail_position()
 
 
