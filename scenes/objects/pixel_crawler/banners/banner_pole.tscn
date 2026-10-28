@@ -25,7 +25,7 @@ region = Rect2(250, 182, 8, 4)
 filter_clip = true
 
 [node name="BannerPole" type="StaticBody2D"]
-editor_description = "Słup na proporzec (Furniture.png, kafle 0,24-0,26) o regulowanej wysokości: pole_extra powiela 1 px trzonu, Top (czubek + baner) jedzie w górę. Sceny banner_post_* dziedziczą i dokładają Banner w Top."
+editor_description = "Słup na proporzec (Furniture.png, kafle 0,24-0,26) o regulowanej wysokości: pole_extra powiela 1 px trzonu, Top (czubek + baner) jedzie w górę. Sceny banner_post_* dziedziczą i dokładają Banner w Top (na środku słupa, nad nim)."
 collision_layer = 32
 collision_mask = 0
 script = ExtResource("1_script")
