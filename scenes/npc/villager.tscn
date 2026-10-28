@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/tq_female_villager_frames.tres" id="2_2orwn"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_mieszkanka_frames.tres" id="2_2orwn"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_kgtq6"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="4_mshdv"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_quest_service.gd" id="5_quest"]

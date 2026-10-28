@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/teacher_frames.tres" id="2_teut8"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_mistrz_frames.tres" id="2_teut8"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_ltc1i"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/skill_lesson.gd" id="4_sv87o"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_skill_teacher_service.gd" id="5_xj2xr"]

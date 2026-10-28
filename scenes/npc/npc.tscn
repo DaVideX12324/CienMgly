@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/npc.gd" id="1_script"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/villager_frames.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_mieszkaniec_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_feet"]
 size = Vector2(12, 8)

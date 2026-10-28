@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/blacksmith_frames.tres" id="2_th7q5"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_kowal_frames.tres" id="2_th7q5"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_vxe2y"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_05lib"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_fejpd"]
@@ -184,7 +184,6 @@ label_key = "npc.service.station"
 npc_name = "Brann"
 npc_name_key = "npc.blacksmith.name"
 sprite_frames = ExtResource("2_th7q5")
-sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Ostrza, topory, włócznie. Lepszej stali nie pamiętam… jeszcze.")
 greeting_key = "npc.blacksmith.greeting"
 services = Array[ExtResource("3_vxe2y")]([SubResource("Resource_6ktd1"), SubResource("Resource_upgr1"), SubResource("Service_station"), SubResource("Resource_recl1"), SubResource("Quest_brann_ore"), SubResource("Quest_brann_steel")])

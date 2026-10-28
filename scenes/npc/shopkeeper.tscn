@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/shopkeeper_frames.tres" id="2_cg8oe"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_zielarka_frames.tres" id="2_cg8oe"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_bjecs"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_ynlsj"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_2msha"]

@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/armorer_frames.tres" id="2_0xb6a"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_platnerz_frames.tres" id="2_0xb6a"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_tgmt6"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_shop_service.gd" id="4_s0kr6"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/shop_entry.gd" id="5_5mc3i"]
@@ -139,7 +139,6 @@ label_key = "npc.service.shop"
 npc_name = "Kastor"
 npc_name_key = "npc.armorer.name"
 sprite_frames = ExtResource("2_0xb6a")
-sprite_offset = Vector2(0, -30)
 greeting = PackedStringArray("Tarcza i dobry hełm uratowały więcej głów niż najlepszy miecz.")
 greeting_key = "npc.armorer.greeting"
 services = Array[ExtResource("3_tgmt6")]([SubResource("Resource_6b1sk"), SubResource("Quest_kastor_hides"), SubResource("Quest_kastor_scales")])

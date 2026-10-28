@@ -1,6 +1,7 @@
 extends SceneTree
 ## Arkusze postaci z generatora gen_lumen_character.py (assets/lumenlore/characters/<postać>/<Animacja>.png, klatki
-## 64×64, rzędy E/NE/N/NW/W/SW/S/SE) -> SpriteFrames resources/heroes/frames/ll_<postać>_frames.tres:
+## 64×64, rzędy E/NE/N/NW/W/SW/S/SE) -> SpriteFrames ll_<postać>_frames.tres w resources/heroes/frames (drużyna, CHARS)
+## albo resources/npc/frames (pozostali, np. kowal):
 ## <stan>_<kierunek> dla 8 kierunków (right, up_right, up, up_left, left, down_left, down, down_right); idle / walk / run
 ## w pętli, death / punch bez; "idle" i "walk" = dół (NPC, zapas).
 ## Uruchomienie: godot --headless --path . -s res://modules/quiz_rpg/tools/build_lumen_frames.gd [-- postać ...]
@@ -35,6 +36,6 @@ func _initialize() -> void:
 						at.atlas = tex
 						at.region = Rect2(i * FRAME, r * FRAME, FRAME, FRAME)
 						sf.add_frame(anim, at)
-		var out := "res://modules/quiz_rpg/resources/heroes/frames/ll_%s_frames.tres" % ch
+		var out := "res://modules/quiz_rpg/resources/%s/frames/ll_%s_frames.tres" % ["heroes" if ch in CHARS else "npc", ch]
 		print(out, " ", error_string(ResourceSaver.save(sf, out)))
 	quit()

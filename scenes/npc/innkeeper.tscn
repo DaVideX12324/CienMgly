@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="0_base"]
-[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/innkeeper_frames.tres" id="2_4aiv6"]
+[ext_resource type="SpriteFrames" path="res://modules/quiz_rpg/resources/npc/frames/ll_karczmarka_frames.tres" id="2_4aiv6"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_service.gd" id="3_vlmv8"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_inn_service.gd" id="4_qeccd"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/npc/services/npc_talk_service.gd" id="5_bxffi"]
