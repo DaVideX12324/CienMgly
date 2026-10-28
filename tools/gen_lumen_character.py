@@ -2,14 +2,20 @@
 
 Szablon ma części ciała w płaskich kolorach (głowa, twarz, oczy, tułów góra / dół, ramię i przedramię + noga po każdej
 stronie). Generator w każdej klatce każdej animacji rozpoznaje części (przedramię od nogi tego samego koloru: spójny
-obszar stykający się z ramieniem = ręka, w nim kratki > HIP_SLACK rzędów pod biodrem = noga), maluje je kolorami postaci
-z cieniowaniem (górna krawędź części jaśniej, dolna / prawa ciemniej, kończyny strony odwróconej od widza ciemniej),
-dokłada pas, buty, dłonie i kontur. Klatki 64×64, rzędy E/NE/N/NW/W/SW/S/SE (jak w szablonie).
+obszar stykający się z ramieniem = ręka, w nim kratki > HIP_SLACK rzędów pod biodrem = noga), przerabia je wg postaci
+i maluje paletą z cieniowaniem (górna krawędź części jaśniej, dolna / prawa ciemniej, kończyny strony odwróconej od widza
+ciemniej) i konturem. Klatki 64×64, rzędy E/NE/N/NW/W/SW/S/SE (jak w szablonie).
+
+Postać (CHARACTERS): palety części (3 odcienie: jasny, średni, ciemny — barwy z Pixel Crawlera, styl gry) oraz:
+- head: "hair" (włosy / goła głowa), "visor" (hełm z przyłbicą: twarz zakryta, szczelina na wysokości oczu, złoty pas
+  przez środek), "hood" (kaptur o 1 px szerszy od głowy, złota lamówka przy twarzy), "hood_dark" (kaptur, twarz w cieniu,
+  świecące oczy), "wizard" (spiczasty kapelusz z rondem, siwe włosy, broda na piersi);
+- body: "plain" (spodnie, pas, buty) albo "robe" (szata do kostek: przerwa między nogami wypełniona, lamówka na dole).
 
 Wynik: assets/lumenlore/characters/<postać>/<Animacja>.png (arkusze jak w szablonie) + podgląd.
 Licencja szablonu: przeróbki do gry OK, bez rozpowszechniania plików (wynik tylko w prywatnym repo assets).
 
-Użycie: python gen_lumen_character.py <postać> [--preview]
+Użycie: python gen_lumen_character.py <postać|all> [--preview]
 """
 import os, sys
 from collections import deque
@@ -35,33 +41,70 @@ T = {
 }
 # Strona odwrócona od widza (ciemniejsza) w kierunku: postać patrzy na wschód -> jej lewa strona z tyłu.
 BACK_SIDE = {'E': 'l', 'NE': 'l', 'SE': 'l', 'W': 'r', 'NW': 'r', 'SW': 'r', 'N': '', 'S': ''}
+# Kierunek patrzenia w poziomie (czubek kapelusza maga przechyla się do tyłu).
+FACING_X = {'E': 1, 'NE': 1, 'SE': 1, 'W': -1, 'NW': -1, 'SW': -1, 'N': 0, 'S': 0}
 HIP_SLACK = 2       # dłoń sięga do 2 rzędów pod biodro; niżej w obszarze ręki = noga
 BOOT_ROWS = 2
 HAND_PX = 2         # tyle kratek przedramienia najdalej od ramienia = dłoń
-OUTLINE = (22, 18, 28)
+D4 = ((1, 0), (-1, 0), (0, 1), (0, -1))
+
+# Barwy Pixel Crawlera (royal crew, NPC).
+OUTLINE = (20, 20, 18)
+SKIN = [(240, 154, 83), (204, 120, 62), (128, 74, 30)]
+METAL = [(255, 255, 254), (204, 201, 194), (146, 143, 136)]
+METAL_D = [(204, 201, 194), (146, 143, 136), (112, 110, 104)]
+GOLD = [(255, 192, 0), (167, 117, 32), (112, 80, 25)]
+BLUE = [(69, 83, 189), (51, 60, 129), (26, 32, 82)]
+LEATHER = [(181, 108, 48), (128, 74, 30), (71, 40, 13)]
+OLIVE = [(146, 130, 48), (95, 86, 37), (55, 58, 32)]
+PURPLE = [(147, 45, 139), (95, 46, 92), (67, 35, 65)]
+WHITE = [(253, 253, 253), (203, 195, 188), (124, 108, 94)]
+DARK = [(64, 69, 69), (37, 39, 22), (20, 20, 18)]
 
 CHARACTERS = {
-    # Bohater — rycerz: hełm, niebieski wapenrok na kolczudze, stalowe naramienniki i rękawice.
+    # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z przyłbicą i złotym pasem, niebieski wapenrok.
     'bohater': {
-        'head': [(214, 222, 230), (156, 168, 184), (92, 100, 118)],
-        'face': [(246, 206, 170), (226, 170, 132), (170, 116, 90)],
-        'eye': (36, 28, 40),
-        'torso_up': [(92, 136, 206), (62, 100, 176), (38, 62, 124)],
-        'torso_lo': [(78, 120, 194), (54, 88, 160), (34, 56, 112)],
-        'belt': [(150, 100, 56), (112, 72, 40), (72, 46, 28)],
-        'arm_up': [(204, 212, 222), (146, 158, 176), (86, 94, 112)],
-        'arm_lo': [(170, 180, 196), (124, 136, 154), (78, 86, 104)],
-        'hand': [(204, 212, 222), (146, 158, 176), (86, 94, 112)],
-        'leg': [(110, 112, 126), (82, 84, 98), (56, 56, 70)],
-        'boot': [(132, 88, 52), (98, 64, 38), (64, 40, 26)],
+        'head_style': 'visor', 'body': 'plain',
+        'head': METAL, 'face': METAL, 'eye': (37, 39, 22), 'trim': GOLD,
+        'torso_up': METAL, 'torso_lo': BLUE, 'belt': GOLD,
+        'arm_up': METAL, 'arm_lo': METAL_D, 'hand': METAL_D,
+        'leg': METAL_D, 'boot': [(112, 110, 104), (64, 69, 69), (37, 39, 22)],
+    },
+    # Kapłan (wzór: royal Priest): niebieski kaptur i szata ze złotą lamówką.
+    'kaplan': {
+        'head_style': 'hood', 'body': 'robe',
+        'head': BLUE, 'hood': BLUE, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD,
+        'torso_up': BLUE, 'torso_lo': BLUE, 'belt': GOLD, 'robe': BLUE,
+        'arm_up': BLUE, 'arm_lo': BLUE, 'hand': SKIN,
+        'leg': BLUE, 'boot': LEATHER,
+    },
+    # Łotrzyk (wzór: NPC Rogue): oliwkowy kaptur, twarz w cieniu, świecące oczy, skórzany pas i buty.
+    'lotrzyk': {
+        'head_style': 'hood_dark', 'body': 'plain',
+        'head': OLIVE, 'hood': OLIVE, 'face': DARK, 'eye': (12, 152, 214), 'trim': OLIVE,
+        'torso_up': OLIVE, 'torso_lo': [(95, 86, 37), (55, 58, 32), (37, 39, 22)], 'belt': LEATHER,
+        'arm_up': OLIVE, 'arm_lo': [(95, 86, 37), (55, 58, 32), (37, 39, 22)], 'hand': LEATHER,
+        'leg': [(95, 86, 37), (55, 58, 32), (37, 39, 22)], 'boot': LEATHER,
+    },
+    # Mag (wzór: NPC Wizzard): fioletowy spiczasty kapelusz i szata, siwa broda.
+    'mag': {
+        'head_style': 'wizard', 'body': 'robe',
+        'head': PURPLE, 'hat': PURPLE, 'hair': WHITE, 'beard': WHITE, 'face': SKIN, 'eye': (20, 20, 18),
+        'trim': PURPLE,
+        'torso_up': PURPLE, 'torso_lo': PURPLE, 'belt': LEATHER, 'robe': PURPLE,
+        'arm_up': PURPLE, 'arm_lo': PURPLE, 'hand': SKIN,
+        'leg': PURPLE, 'boot': LEATHER,
     },
 }
+
+LABEL_KEY = {'r_up': 'arm_up', 'l_up': 'arm_up', 'r_arm': 'arm_lo', 'l_arm': 'arm_lo', 'r_hand': 'hand',
+             'l_hand': 'hand', 'r_leg': 'leg', 'l_leg': 'leg', 'r_boot': 'boot', 'l_boot': 'boot',
+             'r_robe': 'robe', 'l_robe': 'robe'}
 
 
 def load_frames(path):
     im = Image.open(path).convert('RGBA')
-    cols, rows = im.width // FRAME, im.height // FRAME
-    return im, cols, rows
+    return im, im.width // FRAME, im.height // FRAME
 
 
 def segment(fr):
@@ -89,12 +132,12 @@ def segment(fr):
             while q:
                 c = q.popleft()
                 comp.append(c)
-                for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                for d in D4:
                     n = (c[0] + d[0], c[1] + d[1])
                     if n in lo and n not in seen:
                         seen.add(n)
                         q.append(n)
-            arm = any((c[0] + d[0], c[1] + d[1]) in up for c in comp for d in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+            arm = any((c[0] + d[0], c[1] + d[1]) in up for c in comp for d in D4)
             for c in comp:
                 lab[c] = side + ('_arm' if arm and c[1] <= hip + HIP_SLACK else '_leg')
         # dłoń: kratki przedramienia najdalej (BFS) od ramienia
@@ -102,76 +145,169 @@ def segment(fr):
         dist = {}
         q = deque()
         for p in arm_px:
-            if any((p[0] + d[0], p[1] + d[1]) in up for d in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+            if any((p[0] + d[0], p[1] + d[1]) in up for d in D4):
                 dist[p] = 0
                 q.append(p)
         while q:
             c = q.popleft()
-            for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            for d in D4:
                 n = (c[0] + d[0], c[1] + d[1])
                 if n in arm_px and n not in dist:
                     dist[n] = dist[c] + 1
                     q.append(n)
         if dist:
-            far = sorted(dist, key=lambda p: -dist[p])[:HAND_PX]
-            for p in far:
+            for p in sorted(dist, key=lambda p: -dist[p])[:HAND_PX]:
                 if dist[p] >= 2:
                     lab[p] = side + '_hand'
-    return lab
+    return lab, hip
 
 
-def part_ramp(name, spec):
-    if name in ('r_up', 'l_up'):
-        return spec['arm_up']
-    if name in ('r_arm', 'l_arm'):
-        return spec['arm_lo']
-    if name in ('r_hand', 'l_hand'):
-        return spec['hand']
-    if name in ('r_leg', 'l_leg'):
-        return spec['leg']
-    return spec[name]
+def _bbox(cells):
+    xs = [p[0] for p in cells]
+    ys = [p[1] for p in cells]
+    return min(xs), min(ys), max(xs), max(ys)
 
 
-def paint(fr, spec, direction):
-    lab = segment(fr)
+def shape_head(lab, style, direction):
+    head = [p for p, n in lab.items() if n == 'head']
+    face = [p for p, n in lab.items() if n in ('face', 'eye')]
+    if not head:
+        return
+    x0, y0, x1, y1 = _bbox(head + face)
+    eye_rows = {p[1] for p, n in lab.items() if n == 'eye'}
+    if style == 'visor':
+        for p in face:
+            lab[p] = 'slit' if p[1] in eye_rows else 'head'
+        cx = (x0 + x1) // 2 if FACING_X[direction] == 0 else (x1 - 1 if FACING_X[direction] > 0 else x0 + 1)
+        for y in range(y0, y1 + 1):
+            if lab.get((cx, y)) == 'head' and (not eye_rows or y < min(eye_rows)):
+                lab[(cx, y)] = 'trim'
+    elif style in ('hood', 'hood_dark'):
+        for p in head:
+            lab[p] = 'hood'
+        # kaptur szerszy o 1 px (boki i góra), nie pod linią twarzy
+        face_bottom = max(p[1] for p in face) if face else y1
+        for p in list(lab):
+            if lab[p] != 'hood':
+                continue
+            for d in ((1, 0), (-1, 0), (0, -1)):
+                n = (p[0] + d[0], p[1] + d[1])
+                if n[1] <= face_bottom and lab.get(n) in (None, 'torso_up', 'r_up', 'l_up'):
+                    lab[n] = 'hood_edge'
+        for p in list(lab):
+            if lab[p] == 'hood_edge':
+                lab[p] = 'hood'
+        if style == 'hood':
+            for p in list(lab):
+                if lab[p] == 'hood' and any(lab.get((p[0] + d[0], p[1] + d[1])) == 'face' for d in D4):
+                    lab[p] = 'trim'
+        else:
+            for p in face:
+                if lab[p] == 'face':
+                    lab[p] = 'shadow'
+    elif style == 'wizard':
+        brim_y = y0 + max(2, (y1 - y0) * 2 // 5)
+        for p in head:
+            lab[p] = 'hat' if p[1] < brim_y else 'hair'
+        for x in range(x0 - 2, x1 + 3):
+            if lab.get((x, brim_y)) in (None, 'hair', 'head', 'hat', 'face', 'torso_up') and lab.get((x, brim_y)) != 'eye':
+                lab[(x, brim_y)] = 'brim'
+        w = x1 - x0 + 1
+        tilt = -FACING_X[direction]
+        cxf = (x0 + x1) / 2.0
+        for k in range(1, 8):
+            half = max(0, int((w - 2) / 2 * (1 - k / 8.0)))
+            cx = int(round(cxf + tilt * k * 0.45))
+            for x in range(cx - half, cx + half + 1):
+                lab[(x, y0 - k)] = 'hat'
+        if face:
+            fx0, fy0, fx1, fy1 = _bbox(face)
+            for p in face:
+                if lab[p] == 'face' and p[1] >= fy1 - 1:
+                    lab[p] = 'beard'
+            for k in range(1, 4):
+                for x in range(fx0 + k - 1, fx1 - k + 2):
+                    if lab.get((x, fy1 + k)) in ('torso_up', 'torso_lo', None, 'r_up', 'l_up'):
+                        lab[(x, fy1 + k)] = 'beard'
+
+
+def shape_body(lab, style, hip):
     # pas: górny rząd dołu tułowia (kratki torso_lo z torso_up nad sobą)
     for p, n in list(lab.items()):
         if n == 'torso_lo' and lab.get((p[0], p[1] - 1)) == 'torso_up':
             lab[p] = 'belt'
-    # buty: dolne BOOT_ROWS rzędów każdej nogi (per kolumna)
-    for side in ('r', 'l'):
-        legs = [p for p, n in lab.items() if n == side + '_leg']
-        cols = {}
+    legs = {p: n for p, n in lab.items() if n in ('r_leg', 'l_leg')}
+    if style == 'robe' and legs:
+        rows = {}
         for p in legs:
-            cols.setdefault(p[0], []).append(p[1])
+            rows.setdefault(p[1], []).append(p[0])
+        bottom = max(rows)
+        for y, xs in rows.items():
+            if y >= bottom:
+                continue
+            for x in range(min(xs), max(xs) + 1):
+                if lab.get((x, y)) in (None, 'r_leg', 'l_leg', 'torso_lo'):
+                    lab[(x, y)] = 'robe_hem' if y == bottom - 1 else 'robe'
+        for p, n in legs.items():
+            if p[1] >= bottom and lab.get(p) in ('r_leg', 'l_leg'):
+                lab[p] = n.split('_')[0] + '_boot'
+        for p, n in list(lab.items()):
+            if n == 'torso_lo':
+                lab[p] = 'robe'
+        return
+    for side in ('r', 'l'):
+        cols = {}
+        for p, n in legs.items():
+            if n == side + '_leg':
+                cols.setdefault(p[0], []).append(p[1])
         for x, ys in cols.items():
             bottom = max(ys)
             for y in ys:
                 if y > bottom - BOOT_ROWS:
                     lab[(x, y)] = side + '_boot'
+
+
+def ramp_for(n, spec):
+    if n == 'slit':
+        return [spec['eye']] * 3
+    if n in ('trim', 'robe_hem'):
+        return spec['trim']
+    if n == 'brim':
+        return [spec['hat'][1], spec['hat'][2], spec['hat'][2]]
+    if n == 'shadow':
+        return [spec['face'][1], spec['face'][2], spec['face'][2]]
+    key = LABEL_KEY.get(n, n)
+    return spec.get(key) or spec['torso_lo']
+
+
+def paint(fr, spec, direction):
+    lab, hip = segment(fr)
+    shape_head(lab, spec['head_style'], direction)
+    shape_body(lab, spec['body'], hip)
     out = Image.new('RGBA', (FRAME, FRAME), (0, 0, 0, 0))
     back = BACK_SIDE[direction]
     for (x, y), n in lab.items():
+        if not (0 <= x < FRAME and 0 <= y < FRAME):
+            continue
         if n == 'eye':
             out.putpixel((x, y), spec['eye'] + (255,))
             continue
-        ramp = spec['boot'] if n.endswith('_boot') else part_ramp(n, spec)
-        tone = 1
+        ramp = ramp_for(n, spec)
         group = n.split('_')[0] if n[:2] in ('r_', 'l_') else n
         above = lab.get((x, y - 1))
         below = lab.get((x, y + 1))
         right = lab.get((x + 1, y))
-        if above is None or (above != n and above.split('_')[0] != group):
+        tone = 1
+        if above is None or (above != n and (above.split('_')[0] if above[:2] in ('r_', 'l_') else above) != group):
             tone = 0
         elif below is None or right is None:
             tone = 2
         if back and n.startswith(back + '_'):
             tone = min(2, tone + 1)
         out.putpixel((x, y), ramp[tone] + (255,))
-    # kontur
-    solid = set(lab)
-    for (x, y) in list(solid):
-        for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+    solid = {p for p in lab if 0 <= p[0] < FRAME and 0 <= p[1] < FRAME}
+    for (x, y) in solid:
+        for d in D4:
             n = (x + d[0], y + d[1])
             if n not in solid and 0 <= n[0] < FRAME and 0 <= n[1] < FRAME:
                 out.putpixel(n, OUTLINE + (255,))
@@ -194,7 +330,7 @@ def build(char_id, preview):
                 sheet.alpha_composite(paint(fr, spec, DIRS[r]), (c * FRAME, r * FRAME))
         sheet.save(dst + anim + '.png')
         sheets[anim] = (sheet, cols)
-        print(anim, src.size, '->', dst + anim + '.png')
+    print(char_id, '->', dst)
     if preview:
         _preview(char_id, sheets)
 
@@ -204,7 +340,7 @@ def _preview(char_id, sheets):
     tmp = os.environ.get('LUMEN_PREVIEW_DIR', os.environ.get('TEMP', '.'))
     walk, wcols = sheets['Walk']
     idle, _ = sheets['Idle']
-    crop = (16, 8, 48, 56)   # postać w klatce 64×64
+    crop = (16, 4, 48, 56)   # postać w klatce 64×64 (z kapeluszem maga)
     cw, ch = crop[2] - crop[0], crop[3] - crop[1]
     S = 4
     pv = Image.new('RGBA', ((wcols + 1) * cw, 8 * ch), (70, 70, 70, 255))
@@ -221,12 +357,13 @@ def _preview(char_id, sheets):
             f.alpha_composite(walk.crop((c * FRAME + crop[0], r * FRAME + crop[1], c * FRAME + crop[2], r * FRAME + crop[3])), (r * cw, 0))
         frames.append(f.resize((f.width * S, f.height * S), Image.NEAREST).convert('P', palette=Image.ADAPTIVE))
     frames[0].save(os.path.join(tmp, 'lumen_%s_walk.gif' % char_id), save_all=True, append_images=frames[1:], duration=120, loop=0)
-    print('podgląd:', os.path.join(tmp, 'lumen_%s_preview.png' % char_id))
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2 or sys.argv[1] not in CHARACTERS:
+    ids = list(CHARACTERS) if len(sys.argv) > 1 and sys.argv[1] == 'all' else sys.argv[1:2]
+    if not ids or any(i not in CHARACTERS for i in ids):
         print(__doc__)
         print('postacie:', ', '.join(CHARACTERS))
         sys.exit(1)
-    build(sys.argv[1], '--preview' in sys.argv)
+    for i in ids:
+        build(i, '--preview' in sys.argv)
