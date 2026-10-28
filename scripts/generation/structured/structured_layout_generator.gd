@@ -219,6 +219,10 @@ static func generate_layout(
 		for lad in result.portal_ladders:
 			lad["height"] = 4 if bases_4h.has(lad["cell"]) else 3
 
+	# Bez nawigacji wrogów: azyl przy wejściu (kwadrat jak SpawnPlanner._start_safe_cells — obejmuje strefę
+	# bezpieczną gracza przy kratce przybycia) i strefy portali; wrogowie tam nie wchodzą, spawny pomijają te kratki.
+	result.nav_excluded = _nav_excluded_cells(ctx)
+
 	GenProgress.begin(&"spawns")
 	if not rooms.is_empty() and entrance_room_idx >= 0:
 		SpawnPlanner.plan_spawns(ctx, result, entrance_room_idx, exit_room_idx)
@@ -226,6 +230,23 @@ static func generate_layout(
 	result.portal_zone = ctx.portal_zone
 	result.preprocess_stats = ctx.preprocess_stats
 	return ctx
+
+
+## Kratki bez nawigacji wrogów: strefy portali + chodliwe kratki w kwadracie ±(START_SAFE_HALF + ARRIVAL_DIST) od wejścia.
+static func _nav_excluded_cells(ctx: GenerationContext) -> Dictionary:
+	var out := {}
+	for p in ctx.portal_zone:
+		out[p] = true
+	var e := ctx.entrance_pos
+	if e == Vector2i.ZERO:
+		return out
+	var r := SpawnPlanner.START_SAFE_HALF + MapGeneratorBase.ARRIVAL_DIST
+	for y in range(e.y - r, e.y + r + 1):
+		for x in range(e.x - r, e.x + r + 1):
+			var c := Vector2i(x, y)
+			if GridUtils.is_walkable(ctx.grid, c):
+				out[c] = true
+	return out
 
 
 ## Nakładka kanałów dla tilingu / obiektów / nawigacji: woda, puste koryto, chodniki, korytarze serwisowe,
