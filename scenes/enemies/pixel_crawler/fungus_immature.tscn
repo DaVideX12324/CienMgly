@@ -296,7 +296,6 @@ radius = 70.0
 enemy_data = ExtResource("3_data")
 
 [node name="AnimatedSprite2D" parent="." index="0" unique_id=1014503738]
-y_sort_enabled = true
 position = Vector2(0, 4)
 sprite_frames = ExtResource("2_frames")
 animation = &"death"
