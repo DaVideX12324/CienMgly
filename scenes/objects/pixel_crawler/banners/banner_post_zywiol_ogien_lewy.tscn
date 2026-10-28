@@ -11,7 +11,7 @@ filter_clip = true
 [node name="BannerPostLeft" instance=ExtResource("1_pole")]
 
 [node name="Banner" type="Sprite2D" parent="Top"]
-position = Vector2(-6, -48)
+position = Vector2(-5, -48)
 texture = SubResource("AtlasTexture_banner")
 centered = false
 flip_h = true
