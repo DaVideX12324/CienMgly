@@ -24,7 +24,7 @@ centered = false
 offset = Vector2(-14, -26)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=2052893423]
-polygon = PackedVector2Array(-10, -4, -9, -5, 9, -5, 10, -4, 10, 1, 9, 2, -9, 2, -10, 1)
+polygon = PackedVector2Array(-3, -4, -2, -5, 2, -5, 3, -4, 3, 1, 2, 2, -2, 2, -3, 1)
 
 [node name="Shadow" type="Sprite2D" parent="."]
 show_behind_parent = true
