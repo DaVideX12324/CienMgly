@@ -59,7 +59,7 @@ tile_set = ExtResource("1_hxmoo")
 visible = false
 z_index = 1
 position = Vector2(-16, -5)
-polygon = PackedVector2Array(96, 18, 96, -59, -96, -59, -96, -15, 14, -14, 15, 18, 54, 18, 54, 3, 74, 3, 75, 18)
+polygon = PackedVector2Array(-15, -8, 32, -8, 32, 4, -15, 4)
 
 [node name="DoorArea" type="Area2D" parent="." unique_id=1240725754]
 position = Vector2(-8, -15)
@@ -69,4 +69,4 @@ collision_layer = 0
 shape = SubResource("CircleShape2D_vdhva")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=383535535]
-position = Vector2(-9, -3)
+position = Vector2(-8, 1)
