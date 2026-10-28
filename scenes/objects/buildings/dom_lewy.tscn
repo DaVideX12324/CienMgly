@@ -19,134 +19,98 @@ z_index = 1
 tile_map_data = PackedByteArray("AAABAP7/CAAEAAMAAAACAP7/CAAGAAEAAAADAP7/CAAGAAEAAAABAP3/CAAGAAEAAAADAP//CAADAAMAAAAEAP//CAAEAAMAAAAFAP//CAAGAAEAAAAGAP//CAAGAAEAAAAHAP//CAAGAAEAAAAIAP//CAAGAAEAAAAJAP//CAAGAAEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Seg_-1" type="Node2D" parent="Tilesets" unique_id=399223446]
+[node name="Seg_-1" type="Node2D" parent="Tilesets" unique_id=530116157]
 position = Vector2(0, -1)
 
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_-1" unique_id=1359158699]
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_-1" unique_id=1244138086]
 y_sort_enabled = true
 
-[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=470403291]
+[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=528101913]
 y_sort_enabled = true
 position = Vector2(0, 1)
 tile_map_data = PackedByteArray("AAABAPz/BQAHAAcAAAABAP7/BQAHAAcAAAABAP//BQAHAAgAAAABAAAABQAFADEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=334657791]
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=146904351]
 y_sort_enabled = true
 position = Vector2(0, 1)
 tile_map_data = PackedByteArray("AAABAPv/BgALAAsAAAABAPz/BgALAAwAAAABAPr/BgALAAoAAAAAAPr/BgAKAAoAAAAAAPv/BgAKAAsAAAAAAPz/BgAKAAwAAAAAAP3/BgAKAA0AAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=246504386]
+[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_-1/Sort" unique_id=1739589802]
 y_sort_enabled = true
 position = Vector2(0, 1)
 tile_map_data = PackedByteArray("AAABAPf/CwAAABQAAAABAPj/CwAAABUAAAABAPn/CwAAABYAAAABAPr/CwAAABcAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Seg_14" type="Node2D" parent="Tilesets" unique_id=1192114326]
-position = Vector2(0, 14)
-
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_14" unique_id=346174382]
-y_sort_enabled = true
-
-[node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_14/Sort" unique_id=1021253425]
-y_sort_enabled = true
-position = Vector2(0, -14)
-tile_map_data = PackedByteArray("AAAGAAEABQAIAAEAAAAHAAEABQAIAAgAAAAGAP7/BQAJAAcAAAAHAP7/BQAIAAcAAAAGAAIABQAGADEAAAAHAAIABQAGADEAAAAGAPz/BQANAAgAAAAHAPz/BQAPAAgAAAA=")
-tile_set = ExtResource("1_d7wmb")
-
-[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_14/Sort" unique_id=342259435]
-y_sort_enabled = true
-position = Vector2(0, -14)
-tile_map_data = PackedByteArray("AAAGAAIABQAGADEAAAAHAAIABQAGADEAAAA=")
-tile_set = ExtResource("1_d7wmb")
-
-[node name="DoorFrame" type="TileMapLayer" parent="Tilesets/Seg_14/Sort" unique_id=34340928]
-y_sort_enabled = true
-position = Vector2(0, -14)
-tile_map_data = PackedByteArray("AAAHAAEACwAGABAAAAAHAAIACwADABQAAAAGAAIACwACABQAAAA=")
-tile_set = ExtResource("1_d7wmb")
-
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_14/Sort" unique_id=1138582948]
-y_sort_enabled = true
-position = Vector2(0, -14)
-tile_map_data = PackedByteArray("AAAGAP7/BgAMAAwAAAAHAP7/BgALAAwAAAAGAP3/BgALAAsAAAAHAP3/BgAMAAsAAAAGAPr/BgALAAoAAAAGAPz/BgAKAAkAAAAHAPr/BgALAAoAAAA=")
-tile_set = ExtResource("1_d7wmb")
-
-[node name="Roof2" type="TileMapLayer" parent="Tilesets/Seg_14/Sort" unique_id=798083091]
-y_sort_enabled = true
-position = Vector2(0, -14)
-tile_map_data = PackedByteArray("AAAGAPr/BgAJAAcAAAAGAPv/BgAJAAkAAAAHAPn/BgALAAUAAAAHAPr/BgALAAYAAAAGAPz/BgAJAAoAAAAHAPv/BgALAAgAAAA=")
-tile_set = ExtResource("1_d7wmb")
-
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_14/Sort" unique_id=928523230]
-y_sort_enabled = true
-position = Vector2(0, -14)
-tile_map_data = PackedByteArray("AAAHAAEACwAIABEAAAA=")
-tile_set = ExtResource("1_d7wmb")
-
-[node name="Seg_15" type="Node2D" parent="Tilesets" unique_id=262441113]
+[node name="Seg_15" type="Node2D" parent="Tilesets" unique_id=2027238503]
 position = Vector2(0, 15)
 
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_15" unique_id=1368841587]
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_15" unique_id=1585531777]
 y_sort_enabled = true
 
-[node name="Walls2" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1936229321]
+[node name="Walls2" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1755320641]
 y_sort_enabled = true
 position = Vector2(0, -15)
 tile_map_data = PackedByteArray("AAACAPz/BQAHAAYAAAACAP3/BQAHAAcAAAACAAAABQAHAAgAAAACAAEABQAFADEAAAADAP3/BQAIAAcAAAADAAAABQAIAAgAAAADAAEABQAGADEAAAAEAP3/BQAJAAcAAAAEAP7/BQAKAAEAAAAEAAAABQAKAAwAAAAEAAEABQADADEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=686327352]
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=860008339]
 y_sort_enabled = true
 position = Vector2(0, -15)
 tile_map_data = PackedByteArray("AAAEAP7/BgAKAAwAAAAEAPv/BgALAAsAAAACAPv/BgALAAsAAAADAPv/BgAMAAsAAAACAPz/BgALAAsAAAADAPz/BgAMAAsAAAACAP3/BgAKAAwAAAADAP3/BgALAAwAAAAEAP3/BgALAAsAAAAEAPz/BgALAAsAAAACAPr/BgALAAoAAAADAPr/BgAMAAoAAAAEAPr/BgALAAoAAAACAP7/BgAKAA0AAAAEAP//BgAKAA0AAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=242333827]
+[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_15/Sort" unique_id=1679787739]
 y_sort_enabled = true
 position = Vector2(0, -15)
 tile_map_data = PackedByteArray("AAAEAP//CwACABYAAAACAPf/CwABABQAAAACAPj/CwABABUAAAACAPn/CwABABYAAAACAPr/CwABABcAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Seg_32" type="Node2D" parent="Tilesets" unique_id=398557510]
+[node name="Seg_32" type="Node2D" parent="Tilesets" unique_id=1793589740]
 position = Vector2(0, 32)
 
-[node name="Sort" type="Node2D" parent="Tilesets/Seg_32" unique_id=1401264757]
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_32" unique_id=1513591404]
 y_sort_enabled = true
 
-[node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1619516295]
+[node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=336337266]
 y_sort_enabled = true
 position = Vector2(0, -32)
-tile_map_data = PackedByteArray("AAAIAAEABQAIAAEAAAAJAAEABQAKAAgAAAAFAP7/BQAHAAcAAAAIAP7/BQAJAAcAAAAJAP7/BQAKAAcAAAAFAAIABQAFADEAAAAJAAIABQAHADEAAAAIAAIABQAGADEAAAAFAAEABQAHAAgAAAAFAP3/BQAHAAYAAAAJAPz/BQAQAAgAAAAIAPz/BQAOAAgAAAA=")
+tile_map_data = PackedByteArray("AAAGAAEABQAIAAEAAAAHAAEABQAIAAgAAAAGAP7/BQAJAAcAAAAHAP7/BQAIAAcAAAAGAAIABQAGADEAAAAHAAIABQAGADEAAAAGAPz/BQANAAgAAAAHAPz/BQAPAAgAAAAIAAEABQAIAAEAAAAJAAEABQAKAAgAAAAFAP7/BQAHAAcAAAAIAP7/BQAJAAcAAAAJAP7/BQAKAAcAAAAFAAIABQAFADEAAAAJAAIABQAHADEAAAAIAAIABQAGADEAAAAFAAEABQAHAAgAAAAFAP3/BQAHAAYAAAAJAPz/BQAQAAgAAAAIAPz/BQAOAAgAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=825320783]
+[node name="Walls3" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1029847267]
 y_sort_enabled = true
 position = Vector2(0, -32)
-tile_map_data = PackedByteArray("AAAFAAIABQAFADEAAAAIAAIABQAGADEAAAAJAAIABQAHADEAAAA=")
+tile_map_data = PackedByteArray("AAAGAAIABQAGADEAAAAHAAIABQAGADEAAAAFAAIABQAFADEAAAAIAAIABQAGADEAAAAJAAIABQAHADEAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1513861226]
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1744049181]
 y_sort_enabled = true
 position = Vector2(0, -32)
-tile_map_data = PackedByteArray("AAAFAP7/BgALAAwAAAAIAP7/BgAMAAwAAAAJAP7/BgAMAAwAAAAIAP3/BgALAAsAAAAJAP3/BgAMAAsAAAAFAPv/BgAMAAsAAAAFAP3/BgAMAAsAAAAFAPz/BgAMAAsAAAAFAPr/BgAMAAoAAAAKAP7/BgANAAwAAAAKAP//BgANAA0AAAAKAP3/BgANAAsAAAAKAPz/BgANAAsAAAAKAPv/BgANAAsAAAAKAPr/BgANAAoAAAAJAPz/BgANAAkAAAAJAPr/BgALAAoAAAAIAPr/BgALAAoAAAA=")
+tile_map_data = PackedByteArray("AAAHAAEACwAGABAAAAAHAAIACwADABQAAAAGAAIACwACABQAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Roof2" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=475285874]
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=958828792]
 y_sort_enabled = true
 position = Vector2(0, -32)
-tile_map_data = PackedByteArray("AAAIAPn/BgAMAAUAAAAIAPr/BgAMAAYAAAAJAPr/BgAOAAcAAAAJAPv/BgAOAAkAAAAIAPv/BgAMAAgAAAAJAPz/BgAOAAoAAAA=")
+tile_map_data = PackedByteArray("AAAGAP7/BgAMAAwAAAAHAP7/BgALAAwAAAAGAP3/BgALAAsAAAAHAP3/BgAMAAsAAAAGAPr/BgALAAoAAAAGAPz/BgAKAAkAAAAHAPr/BgALAAoAAAAFAP7/BgALAAwAAAAIAP7/BgAMAAwAAAAJAP7/BgAMAAwAAAAIAP3/BgALAAsAAAAJAP3/BgAMAAsAAAAFAPv/BgAMAAsAAAAFAP3/BgAMAAsAAAAFAPz/BgAMAAsAAAAFAPr/BgAMAAoAAAAKAP7/BgANAAwAAAAKAP//BgANAA0AAAAKAP3/BgANAAsAAAAKAPz/BgANAAsAAAAKAPv/BgANAAsAAAAKAPr/BgANAAoAAAAJAPz/BgANAAkAAAAJAPr/BgALAAoAAAAIAPr/BgALAAoAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
-[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1825257774]
+[node name="Roof2" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=1879062187]
 y_sort_enabled = true
 position = Vector2(0, -32)
-tile_map_data = PackedByteArray("AAAIAPz/CwAEABQAAAAJAAAACwACABYAAAA=")
+tile_map_data = PackedByteArray("AAAGAPr/BgAJAAcAAAAGAPv/BgAJAAkAAAAHAPn/BgALAAUAAAAHAPr/BgALAAYAAAAGAPz/BgAJAAoAAAAHAPv/BgALAAgAAAAIAPn/BgAMAAUAAAAIAPr/BgAMAAYAAAAJAPr/BgAOAAcAAAAJAPv/BgAOAAkAAAAIAPv/BgAMAAgAAAAJAPz/BgAOAAoAAAA=")
+tile_set = ExtResource("1_d7wmb")
+
+[node name="Props" type="TileMapLayer" parent="Tilesets/Seg_32/Sort" unique_id=740601947]
+y_sort_enabled = true
+position = Vector2(0, -32)
+tile_map_data = PackedByteArray("AAAHAAEACwAIABEAAAAIAPz/CwAEABQAAAAJAAAACwACABYAAAA=")
 tile_set = ExtResource("1_d7wmb")
 
 [node name="DoorArea" type="Area2D" parent="." unique_id=1372149913]
-position = Vector2(33, 4)
+position = Vector2(128, 16)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=1372149914]
@@ -154,7 +118,7 @@ position = Vector2(-16, -1)
 shape = SubResource("Circle_door")
 
 [node name="DoorSpot" type="Marker2D" parent="." unique_id=1372149915]
-position = Vector2(16, 14)
+position = Vector2(112, 31)
 
 [node name="House_Desert_RedStone_2" parent="." unique_id=1688914537 instance=ExtResource("2_rsog6")]
 visible = false

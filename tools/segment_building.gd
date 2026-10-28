@@ -68,9 +68,17 @@ func _segment(path: String) -> String:
 		seg.add_child(sort)
 		var srcs: Array = groups[base].keys()
 		srcs.sort_custom(func(a, b): return ORDER.find(_kind(String(a.name))) < ORDER.find(_kind(String(b.name))))
+		var made := {}   # nazwa -> nowa warstwa (warstwy o tej samej nazwie, zestawie i przesunięciu — jedna, np. po A=B)
 		for src: TileMapLayer in srcs:
+			var pos := _pos_in(src, tilesets) - seg.position
+			var same: TileMapLayer = made.get(String(src.name))
+			if same != null and same.position == pos and same.tile_set == src.tile_set:
+				for c: Vector2i in groups[base][src]:
+					same.set_cell(c, src.get_cell_source_id(c), src.get_cell_atlas_coords(c), src.get_cell_alternative_tile(c))
+				continue
 			var nl := TileMapLayer.new()
-			nl.name = src.name
+			nl.name = String(src.name) if same == null else "%s_%d" % [src.name, made.size()]
+			made[String(nl.name)] = nl
 			nl.tile_set = src.tile_set
 			nl.y_sort_enabled = true
 			nl.rendering_quadrant_size = src.rendering_quadrant_size
@@ -78,7 +86,7 @@ func _segment(path: String) -> String:
 			nl.navigation_enabled = src.navigation_enabled
 			nl.modulate = src.modulate
 			nl.self_modulate = src.self_modulate
-			nl.position = _pos_in(src, tilesets) - seg.position
+			nl.position = pos
 			for c: Vector2i in groups[base][src]:
 				nl.set_cell(c, src.get_cell_source_id(c), src.get_cell_atlas_coords(c), src.get_cell_alternative_tile(c))
 			sort.add_child(nl)
