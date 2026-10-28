@@ -196,11 +196,23 @@ def shape_head(lab, style, direction):
             for p in list(lab):
                 if lab[p] == 'guard':
                     lab[p] = 'head'
-        face_top = min((p[1] for p in face), default=y1 + 1)
-        cx = (x0 + x1) // 2 if FACING_X[direction] == 0 else (x1 - 1 if FACING_X[direction] > 0 else x0 + 1)
-        for y in range(y0, face_top):
-            if lab.get((cx, y)) == 'head':
-                lab[(cx, y)] = 'trim'
+        # pas hełmu: linia środkowa głowy od czoła przez czubek do karku, rzutowana wg kierunku
+        fx = FACING_X[direction]
+        hx0, _, hx1, _ = _bbox(head)
+        if fx != 0 and direction in ('E', 'W'):
+            # z boku: wzdłuż górnego obrysu głowy
+            for x in range(hx0, hx1 + 1):
+                ys = [p[1] for p in head if p[0] == x]
+                if ys and lab.get((x, min(ys))) == 'head':
+                    lab[(x, min(ys))] = 'trim'
+        else:
+            # od przodu / tyłu: przez środek; ukosy: 1 px w stronę twarzy (S*) albo potylicy (N*)
+            shift = 0 if fx == 0 else (fx if direction.startswith('S') else -fx)
+            cx = (hx0 + hx1 + 1) // 2 + shift
+            face_top = min((p[1] for p in face), default=y1 + 1)
+            for y in range(y0, face_top if direction.startswith('S') else y1 + 1):
+                if lab.get((cx, y)) == 'head':
+                    lab[(cx, y)] = 'trim'
     elif style in ('hood', 'hood_dark'):
         for p in head:
             lab[p] = 'hood'
