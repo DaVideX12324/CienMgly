@@ -1,0 +1,90 @@
+[gd_scene format=4 uid="uid://dxpco76qsuxxj"]
+
+[ext_resource type="Texture2D" uid="uid://cvjq035qpo6tl" path="res://assets/scratch_desert_town/assets/textures/atlases/The Fan-tasy Tileset - Desert Oasis/Art/Buildings/House_Desert_RedStone_5.png" id="1_q0lmq"]
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_tiles"]
+
+[sub_resource type="CircleShape2D" id="Circle_door"]
+radius = 14.0
+
+[node name="DomWysoki" type="StaticBody2D" unique_id=261582637]
+collision_layer = 32
+collision_mask = 0
+
+[node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=1003681620]
+position = Vector2(64.5, -3.5)
+polygon = PackedVector2Array(-33.5, 17.5, -32.5, 17.5, -32.5, 8.5, -26.5, 8.5, -26.5, -7.5, -6.5, -7.5, -6.5, 8.5, -0.5, 8.5, -0.5, 18.5, 32.5, 18.5, 32.5, -23.5, -33.5, -23.5)
+
+[node name="DoorArea" type="Area2D" parent="." unique_id=447780461]
+position = Vector2(48, -10)
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=887497193]
+shape = SubResource("Circle_door")
+
+[node name="DoorSpot" type="Marker2D" parent="." unique_id=478969660]
+position = Vector2(48, 6)
+
+[node name="House_Desert_RedStone_5" type="Sprite2D" parent="." unique_id=58507156]
+visible = false
+z_index = 1
+position = Vector2(63, -2)
+texture = ExtResource("1_q0lmq")
+offset = Vector2(1, -48)
+
+[node name="Tilesets" type="Node2D" parent="." unique_id=2052600685]
+y_sort_enabled = true
+position = Vector2(0, -11)
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=1934919461]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAIAAEABQAfAAgAAAAJAAEABQAgAAgAAAAKAAEABQAhAAgAAAALAAEABQAiAAgAAAAIAP3/BQABAAcAAAAIAP7/BQAaAAgAAAAJAP3/BQACAAcAAAAJAP7/BQAaAAEAAAAKAP3/BQADAAcAAAAKAP7/BQAbAAEAAAALAP3/BQAEAAcAAAALAP7/BQAbAAgAAAAHAP7/BQAZAAgAAAAIAPz/BQAaAAEAAAAJAPz/BQAaAAEAAAAKAPz/BQAaAAEAAAALAPz/BQAaAAEAAAAMAP7/BQAcAAgAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="WallsDetail" type="TileMapLayer" parent="Tilesets/Walls" unique_id=1700483095]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAIAP3/BQABAAcAAAAJAP3/BQACAAcAAAAKAP3/BQADAAcAAAAHAP//CwADABgAAAAMAP//CwAEABgAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="WallsDetail2" type="TileMapLayer" parent="Tilesets/Walls" unique_id=1298552639]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAIAP3/BQABAAcAAAAJAP3/BQACAAcAAAAKAP3/BQADAAcAAAAMAP//BQAEACwAAAAHAP//BQAAACwAAAAKAAIABQACAC8AAAAMAAIABQADAC8AAAAMAAEABQAEAC0AAAAMAAAABQAEAC0AAAAHAAAABQAAAC0AAAAHAAEABQAAAC0AAAAIAAIABQACAC8AAAAJAAIABQACAC8AAAALAAIABQACAC8AAAAHAAIABQABAC8AAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=1849188711]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAGAPr/BgAAAAIAAAAGAPv/BgAAAAMAAAAGAPz/BgAAAAQAAAAHAPn/BgABAAEAAAAHAPr/BgABAAIAAAAHAPv/BgABAAIAAAAHAPz/BgABAAQAAAAIAPn/BgACAAEAAAAIAPr/BgACAAIAAAAIAPv/BgACAAIAAAAIAPz/BgACAAQAAAAJAPj/BgADAAAAAAAJAPn/BgADAAEAAAAJAPr/BgADAAIAAAAJAPv/BgADAAIAAAAJAPz/BgADAAQAAAAKAPj/BgAEAAAAAAAKAPn/BgAEAAEAAAAKAPr/BgAEAAIAAAAKAPv/BgAEAAIAAAAKAPz/BgAEAAQAAAALAPn/BgAFAAEAAAALAPr/BgAFAAIAAAALAPv/BgAFAAIAAAALAPz/BgAFAAQAAAAMAPn/BgAGAAEAAAAMAPr/BgAGAAIAAAAMAPv/BgAGAAIAAAAMAPz/BgAGAAQAAAANAPr/BgAHAAIAAAANAPv/BgAHAAMAAAANAPz/BgAHAAQAAAAGAP3/BgAAAAUAAAAHAP3/BgABAAUAAAAMAP3/BgAGAAUAAAANAP3/BgAHAAUAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof2" type="TileMapLayer" parent="Tilesets/Roof" unique_id=1074965596]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAGAPr/BgACAAoAAAAGAPv/BgACAAwAAAAHAPr/BgADAAoAAAAHAPv/BgADAAwAAAAIAPr/BgAEAAoAAAAJAPr/BgAFAAoAAAAKAPr/BgACAAoAAAALAPr/BgADAAoAAAAMAPr/BgAEAAoAAAAMAPv/BgADAAwAAAANAPr/BgAFAAoAAAANAPv/BgAFAAwAAAAGAPz/BgAAAA8AAAAHAPz/BgABAA8AAAAIAPv/BgADAAwAAAAJAPv/BgAFAAwAAAAKAPv/BgACAAwAAAALAPv/BgADAAwAAAAMAPz/BgABAA8AAAANAPz/BgACAA8AAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Roof3" type="TileMapLayer" parent="Tilesets/Roof" unique_id=467933669]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAHAPv/BgABAAEAAAAJAPr/BgADAAAAAAAKAPr/BgAEAAAAAAAMAPv/BgAGAAEAAAAGAPz/BgAAAAIAAAAHAPz/BgABAAIAAAAIAPv/BgACAAEAAAAJAPv/BgADAAEAAAAKAPv/BgAEAAEAAAALAPv/BgAFAAEAAAAMAPz/BgAGAAIAAAANAPz/BgAHAAIAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets" unique_id=741224403]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAJAAEACwACABEAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=443550175]
+y_sort_enabled = true
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAJAAEACwAMABEAAAAIAAIACwACABQAAAAJAAIACwADABQAAAALAAAACwAIABYAAAAJAP3/CwAIABQAAAALAP3/CwAMABQAAAA=")
+tile_set = ExtResource("1_tiles")
+
+[node name="Chimney" type="TileMapLayer" parent="Tilesets" unique_id=846268485]
+y_sort_enabled = true
+position = Vector2(-116, 22)
+tile_set = ExtResource("1_tiles")
+
+[node name="Shadow" type="TileMapLayer" parent="Tilesets" unique_id=55370788]
+position = Vector2(-96, -16)
+tile_map_data = PackedByteArray("AAAHAP7/CAACAAMAAAAIAP3/CAABAAMAAAAJAP3/CAACAAMAAAAKAP3/CAADAAMAAAALAP3/CAAEAAMAAAAMAP7/CAADAAMAAAAHAP3/CAACAAIAAAAIAPz/CAABAAIAAAAJAPz/CAACAAIAAAAKAPz/CAADAAIAAAALAPz/CAAEAAIAAAAMAP3/CAADAAIAAAA=")
+tile_set = ExtResource("1_tiles")
