@@ -7,7 +7,7 @@ extends RefCounted
 ## budżetu: ok. 72 zabić na mapę (120 %), każda mapa ≈ 1/15 drogi do lv 100 (jaskinie do lv 8–9). Wróg z poziomem 0
 ## ma stałe xp_reward z danych (tutorial). Tabela budżetów: docs/kontekst/poziomy_i_xp.md.
 
-const KILL_FRACTION := 0.08
+const KILL_FRACTION := 0.12  # 2026-10-30: grind za żmudny (wrogowie nie wracają, XP za odpowiedzi tylko po wygranej)
 const TIER_WEIGHT := {1: 0.6, 2: 1.0, 3: 1.6}
 const BOSS_MULT := 6.0
 
