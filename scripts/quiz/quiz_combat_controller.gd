@@ -3158,6 +3158,8 @@ func _start_band_animation() -> void:
 	_band_before = {}
 	if _band_tween and _band_tween.is_valid():
 		_band_tween.kill()
+	for p: Control in _band_panels():
+		p.scale.x = 1.0  # przerwana animacja nie zostawia ściśniętego okna (znikał pas drużyny przy szybkich zmianach)
 	_band_delta.clear()
 	for g in _band_ghosts:
 		if is_instance_valid(g):
