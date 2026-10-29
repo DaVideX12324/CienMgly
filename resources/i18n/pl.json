@@ -1,4 +1,8 @@
 {
+  "touch.accept": "A",
+  "touch.cancel": "ESC",
+  "touch.interact": "E",
+  "touch.sprint": "RUN",
   "prompt.open_grate": "Otwórz kratę",
   "cutscene.cave_climb": "Wspinasz się długo po skalnej ścianie, z głębi jaskini ku światłu…",
   "chest.key_opens": "Klucz otwiera skrzynię.",

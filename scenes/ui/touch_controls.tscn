@@ -1,0 +1,212 @@
+[gd_scene format=3 uid="uid://t5i4ejje7gxix"]
+
+[ext_resource type="Script" uid="uid://skybholfw5dh" path="res://modules/quiz_rpg/scripts/ui/touch_controls.gd" id="1_touch"]
+[ext_resource type="Texture2D" uid="uid://ceskfk67380k7" path="res://assets/UI/Pixel UI pack 3/Full.png" id="2_full"]
+[ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="3_theme"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_joystick_base"]
+atlas = ExtResource("2_full")
+region = Rect2(288, 160, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_joystick_stick"]
+atlas = ExtResource("2_full")
+region = Rect2(196, 0, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_blue_normal"]
+atlas = ExtResource("2_full")
+region = Rect2(196, 0, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_blue_pressed"]
+atlas = ExtResource("2_full")
+region = Rect2(218, 0, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_green_normal"]
+atlas = ExtResource("2_full")
+region = Rect2(196, 48, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_green_pressed"]
+atlas = ExtResource("2_full")
+region = Rect2(218, 48, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_yellow_normal"]
+atlas = ExtResource("2_full")
+region = Rect2(196, 16, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_yellow_pressed"]
+atlas = ExtResource("2_full")
+region = Rect2(218, 16, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_red_normal"]
+atlas = ExtResource("2_full")
+region = Rect2(196, 32, 18, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_btn_red_pressed"]
+atlas = ExtResource("2_full")
+region = Rect2(218, 32, 18, 16)
+
+[node name="TouchControls" type="CanvasLayer"]
+process_mode = 3
+layer = 100
+script = ExtResource("1_touch")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="JoystickZone" type="Control" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = -280.0
+offset_right = 300.0
+offset_bottom = -40.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="JoystickBase" type="TextureRect" parent="Root/JoystickZone"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.65)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = -90.0
+offset_right = 90.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_joystick_base")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="JoystickStick" type="TextureRect" parent="Root/JoystickZone"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.9)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -36.0
+offset_top = -32.0
+offset_right = 36.0
+offset_bottom = 32.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("AtlasTexture_joystick_stick")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ActionZone" type="Control" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -340.0
+offset_top = -280.0
+offset_right = -40.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="BtnInteract" type="TouchScreenButton" parent="Root/ActionZone"]
+unique_name_in_owner = true
+position = Vector2(170, 100)
+scale = Vector2(4.5, 4.5)
+texture_normal = SubResource("AtlasTexture_btn_blue_normal")
+texture_pressed = SubResource("AtlasTexture_btn_blue_pressed")
+action = "interact"
+
+[node name="Label" type="Label" parent="Root/ActionZone/BtnInteract"]
+offset_top = 1.0
+offset_right = 18.0
+offset_bottom = 15.0
+theme = ExtResource("3_theme")
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 9
+text = "E"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnAccept" type="TouchScreenButton" parent="Root/ActionZone"]
+unique_name_in_owner = true
+position = Vector2(75, 130)
+scale = Vector2(4, 4)
+texture_normal = SubResource("AtlasTexture_btn_green_normal")
+texture_pressed = SubResource("AtlasTexture_btn_green_pressed")
+action = "ui_accept"
+
+[node name="Label" type="Label" parent="Root/ActionZone/BtnAccept"]
+offset_top = 1.0
+offset_right = 18.0
+offset_bottom = 15.0
+theme = ExtResource("3_theme")
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 9
+text = "A"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnSprint" type="TouchScreenButton" parent="Root/ActionZone"]
+unique_name_in_owner = true
+position = Vector2(85, 35)
+scale = Vector2(3.5, 3.5)
+texture_normal = SubResource("AtlasTexture_btn_yellow_normal")
+texture_pressed = SubResource("AtlasTexture_btn_yellow_pressed")
+action = "sprint"
+
+[node name="Label" type="Label" parent="Root/ActionZone/BtnSprint"]
+offset_top = 1.0
+offset_right = 18.0
+offset_bottom = 15.0
+theme = ExtResource("3_theme")
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+text = "RUN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BtnCancel" type="TouchScreenButton" parent="Root/ActionZone"]
+unique_name_in_owner = true
+position = Vector2(185, 10)
+scale = Vector2(3.5, 3.5)
+texture_normal = SubResource("AtlasTexture_btn_red_normal")
+texture_pressed = SubResource("AtlasTexture_btn_red_pressed")
+action = "ui_cancel"
+
+[node name="Label" type="Label" parent="Root/ActionZone/BtnCancel"]
+offset_top = 1.0
+offset_right = 18.0
+offset_bottom = 15.0
+theme = ExtResource("3_theme")
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.1, 0.1, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+text = "ESC"
+horizontal_alignment = 1
+vertical_alignment = 1

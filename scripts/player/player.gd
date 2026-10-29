@@ -6,6 +6,7 @@ extends CharacterBody2D
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
 const InteractPromptScene = preload("../../scenes/ui/interact_prompt.tscn")
 const PoisonVignetteScene = preload("../../scenes/ui/poison_vignette.tscn")
+const TouchControlsScene = preload("../../scenes/ui/touch_controls.tscn")
 ## Dźwięki kroków (footsteps.gd); dokładane w _ready, gdy scena gracza nie ma węzła Footsteps.
 const FootstepsScene = preload("../../scenes/player/footsteps.tscn")
 
@@ -107,6 +108,7 @@ func _ready() -> void:
 		if ps and ps.has_signal("status_tick"):
 			ps.status_tick.connect(_on_status_tick)
 		add_child(PoisonVignetteScene.instantiate())
+		add_child(TouchControlsScene.instantiate())
 
 
 ## Trucizna w eksploracji (PlayerStats co 3 s): HUD nie pokazuje HP, więc ubytek nad liderem na fioletowo (+ winieta zatrucia na całym ekranie).
