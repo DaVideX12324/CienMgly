@@ -5,7 +5,7 @@
 - kuźnia (nieużywane): posąg w trzech stanach, w kamieniu; cmentarz (nieużywane): rozbite nagrobki,
 - własny gruz: bloki, stos, słup, mur, odłamki (kamień i piaskowiec),
 - miasto (zamienniki Desert Oasis): zrujnowany mur z lica muru zamku, drogowskaz, tablice (menu, ogłoszenia), bale z pnia
-  drzewa, skrzynia z kryjówki (zamknięta, otwarta), łopata z cmentarza, szczątki szkieleta (ostatnia klatka śmierci).
+  drzewa, łopata z cmentarza, szczątki szkieleta (ostatnia klatka śmierci).
 Elementy bez zmian z plików widocznych w Godocie (poza _nieuzywane) nie trafiają tu — sceny biorą je z oryginałów.
 Każdy element w osobnym slocie siatki 16 px (dół sprite'a = dół slotu, środek w poziomie).
 Uruchomienie: python -I gen_ruins_atlas.py  ->  Ruins.png + lista regionów (nazwa, Rect2) na wyjściu."""
@@ -453,13 +453,11 @@ def groups():
         out.append([("gruz_%s_%s" % (k, pal), rubble(k, BLOCK_PALETTES[pal], 7 + i)) for i, k in enumerate(RUBBLE_KINDS)])
 
     trees = load(STATIC, "Trees/Model_01/Size_04.png")
-    hideout = load(UNUSED, "hideout/Pixel Crawler - Hideout/Assets/Tiles.png")
     cemetery = load(UNUSED, "cemetery/Pixel Crawler - Cemetery/Environment/Props/Props.png")
     skeleton = load(PC, "packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png")
     out.append([("mur_zrujnowany", ruined_wall(castle, 72, 3)), ("mur_zrujnowany_maly", ruined_wall(castle, 40, 9))])
     out.append([("drogowskaz", signpost()), ("tablica_menu", menu_board()), ("tablica_ogloszen", bulletin_board()),
                 ("bal", tree_log(trees, 30)), ("bale_stos", tree_log_pile(trees)),
-                ("skrzynia", trim(hideout.crop((224, 272, 256, 304)))), ("skrzynia_otwarta", trim(hideout.crop((256, 260, 288, 304)))),
                 ("lopata", trim(cemetery.crop((82, 49, 93, 80)))), ("lopata_kopiec", trim(cemetery.crop((128, 48, 159, 80)))),
                 ("szczatki", trim(skeleton.crop((704, 0, 768, 64))))])  # klatka animacji śmierci jako obiekt
     return out

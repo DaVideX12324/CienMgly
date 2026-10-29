@@ -1,10 +1,10 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" uid="uid://0fcagsaimb2r" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Ruins.png" id="1_tex"]
+[ext_resource type="Texture2D" uid="uid://coq2udul5n1dx" path="res://assets/pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Assets/Tiles.png" id="1_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_main"]
 atlas = ExtResource("1_tex")
-region = Rect2(240, 596, 32, 44)
+region = Rect2(256, 260, 32, 44)
 filter_clip = true
 
 [node name="SkrzyniaOtwarta" type="StaticBody2D"]

@@ -4,7 +4,7 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_main"]
 atlas = ExtResource("1_tex")
-region = Rect2(274, 593, 11, 31)
+region = Rect2(210, 593, 11, 31)
 filter_clip = true
 
 [node name="Lopata" type="StaticBody2D"]

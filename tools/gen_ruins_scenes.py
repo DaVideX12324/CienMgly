@@ -13,10 +13,11 @@ MOD = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OBJ = os.path.join(MOD, "scenes/objects/pixel_crawler")
 RES_ASSETS = "res://assets/"
 SEWER_TILES = "pixel_crawler/environments/sewer/Assets/Tiles.png"
+HIDEOUT_TILES = "pixel_crawler/environments/hideout/Pixel Crawler - Hideout/Assets/Tiles.png"
 STATIC = "pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/"
 RUINS = STATIC + "Ruins.png"
 
-TOWN = {"drogowskaz", "tablica_menu", "tablica_ogloszen", "bal", "bale_stos", "skrzynia", "skrzynia_otwarta", "lopata", "lopata_kopiec",
+TOWN = {"drogowskaz", "tablica_menu", "tablica_ogloszen", "bal", "bale_stos", "lopata", "lopata_kopiec",
         "szczatki"}
 FLIPPED = {"szczatki_odbite": "szczatki"}   # odbicie w scenie (flip_h), bez kopii w atlasie
 NO_COLLISION = ("odlamki", "szczatki", "lopata", "deska", "dzban_rozbity")
@@ -30,9 +31,11 @@ EXTERNAL = {
     "deska_ukos_2": (STATIC + "Furniture.png", (82, 593, 111, 622), False),
     "deska": (STATIC + "Furniture.png", (112, 565, 144, 571), False),
     "worek": (STATIC + "Farm.png", (256, 2, 272, 14), False),
+    "skrzynia": (HIDEOUT_TILES, (224, 272, 256, 304), False),
+    "skrzynia_otwarta": (HIDEOUT_TILES, (256, 260, 288, 304), False),
     "worek_pelny": (STATIC + "Farm.png", (256, 16, 271, 32), False),
 }
-EXTERNAL_TOWN = {"deska_ukos", "deska_ukos_2", "deska", "worek", "worek_pelny"}
+EXTERNAL_TOWN = {"skrzynia", "skrzynia_otwarta", "deska_ukos", "deska_ukos_2", "deska", "worek", "worek_pelny"}
 
 
 def uid_of(rel):
