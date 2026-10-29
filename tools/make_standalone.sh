@@ -20,4 +20,31 @@ esac
 tar -C "$SRC" --exclude=./.git --exclude=./.godot --exclude=./tests -cf - . | tar -C "$DST" -xf -
 rm -f "$DST/_host/.gdignore"
 mv "$DST/project.godot.off" "$DST/project.godot"
+# Ścieżki hosta (res://modules/quiz_rpg/…) w zasobach bez UID nie istnieją samodzielnie — przepisujemy na korzeń.
+# quiz_rpg_paths.gd zostaje: przelicza ścieżki zapisów między hostem a wersją samodzielną.
+find "$DST" -type f \( -name '*.tscn' -o -name '*.tres' -o -name '*.json' -o -name '*.import' -o -name '*.gd' \) \
+	! -name quiz_rpg_paths.gd -exec sed -i 's#res://modules/quiz_rpg/#res://#g' {} +
+# Assety hosta (res://assets/…) leżą samodzielnie w _host/assets/ — przepisujemy, gdy moduł nie ma własnego pliku.
+python - "$DST" <<'PY'
+import os, re, sys
+root = sys.argv[1]
+pat = re.compile(r'res://assets/[^"\n]+')
+def fix(m):
+	rel = m.group(0)[len('res://'):]
+	if not os.path.exists(os.path.join(root, rel)) and os.path.exists(os.path.join(root, '_host', rel)):
+		return 'res://_host/' + rel
+	return m.group(0)
+for d, dirs, files in os.walk(root):
+	if os.path.relpath(d, root).split(os.sep)[0] == '_host':
+		continue
+	for f in files:
+		if f.endswith(('.tscn', '.tres', '.json', '.gd')):
+			p = os.path.join(d, f)
+			with open(p, encoding='utf-8', newline='') as fh:
+				s = fh.read()
+			t = pat.sub(fix, s)
+			if t != s:
+				with open(p, 'w', encoding='utf-8', newline='') as fh:
+					fh.write(t)
+PY
 echo "Samodzielny projekt: $DST"

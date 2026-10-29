@@ -83,6 +83,8 @@ func _load_manifest(root_path: String) -> Dictionary:
 	manifest["root_path"] = root_path
 	manifest["manifest_path"] = manifest_path
 	manifest["entry_scene_path"] = _resolve_module_path(root_path, manifest["entry_scene"])
+	if manifest.has("credits"):
+		manifest["credits_path"] = _resolve_module_path(root_path, manifest["credits"])
 	return manifest
 
 
