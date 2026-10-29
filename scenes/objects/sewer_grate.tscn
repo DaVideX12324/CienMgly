@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://b7kratka4scieki"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/sewer_grate.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://tdqw1w8fhcf8" path="res://assets/pixel_crawler/environments/sewer/Assets/Tiles.png" id="2_tex"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hole"]
+radius = 13.0
+
+[node name="SewerGrate" type="StaticBody2D"]
+collision_layer = 32
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = -1
+texture_filter = 1
+texture = ExtResource("2_tex")
+region_enabled = true
+region_rect = Rect2(288, 240, 32, 32)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_hole")
+disabled = true

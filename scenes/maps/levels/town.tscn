@@ -95,6 +95,7 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c1.tscn" id="t_30"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r1c0.tscn" id="t_31"]
 
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/sewer_grate.tscn" id="grate_scene"]
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_portal"]
 size = Vector2(64, 32)
 
@@ -1652,6 +1653,10 @@ shape = SubResource("RectangleShape2D_portal")
 
 [node name="enter_next_level" type="Area2D" parent="." unique_id=1311617570]
 position = Vector2(110, 780)
+metadata/portal_use_key = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="enter_next_level" unique_id=1007320539]
 shape = SubResource("RectangleShape2D_portal")
+
+[node name="SewerGrate" parent="." unique_id=1580447213 instance=ExtResource("grate_scene")]
+position = Vector2(110, 780)
