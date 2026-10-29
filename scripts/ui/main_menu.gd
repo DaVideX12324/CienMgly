@@ -39,10 +39,11 @@ const MAX_MENU_SAVE_SLOTS := 20
 ## nie fokus Godota.
 var _menu_buttons: Array[Button] = []
 var _cursor := 0
-## Ekrany treści (zapisy, opcje, statystyki, imię) chodzą na fokusie Godota (strzałki / Enter / Esc); WASD / Z / X
-## zamieniane na te akcje — poza polem tekstowym, gdzie to zwykłe litery.
-const KEY_AS_UI_ACTION := {KEY_W: &"ui_up", KEY_S: &"ui_down", KEY_A: &"ui_left", KEY_D: &"ui_right",
-	KEY_Z: &"ui_accept", KEY_X: &"ui_cancel"}
+## Ekrany treści (zapisy, opcje, statystyki, imię) chodzą na fokusie Godota (strzałki / Enter / Esc); klawisze akcji
+## ruchu / zatwierdź / wstecz (domyślnie WASD / Z / X, zmienialne w Sterowaniu) zamieniane na te akcje — poza polem
+## tekstowym, gdzie to zwykłe litery.
+const ACTION_AS_UI := {&"move_up": &"ui_up", &"move_down": &"ui_down", &"move_left": &"ui_left", &"move_right": &"ui_right",
+	&"menu_confirm": &"ui_accept", &"menu_cancel": &"ui_cancel"}
 
 
 func _ready() -> void:
@@ -298,13 +299,20 @@ func _on_back() -> void:
 ## WASD / Z / X w ekranie treści -> akcja ui_* (nawigacja fokusu, suwaki, listy, Enter, Esc jak ze strzałek).
 func _forward_key_as_ui_action(event: InputEvent) -> bool:
 	var key := event as InputEventKey
-	if key == null or not KEY_AS_UI_ACTION.has(key.keycode):
+	if key == null:
+		return false
+	var target := &""
+	for src: StringName in ACTION_AS_UI:
+		if key.is_action(src):
+			target = ACTION_AS_UI[src]
+			break
+	if target == &"" or key.is_action(target):  # klawisz już jest akcją ui_* (np. strzałka) — bez podwójnego ruchu
 		return false
 	var owner := get_viewport().gui_get_focus_owner()
 	if owner is LineEdit or owner is TextEdit:
 		return false
 	var action := InputEventAction.new()
-	action.action = KEY_AS_UI_ACTION[key.keycode]
+	action.action = target
 	action.pressed = key.pressed
 	Input.parse_input_event(action)
 	return true
@@ -320,11 +328,11 @@ func _focus_first_button(root: Node) -> void:
 
 
 func _handle_menu_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W]):
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
 		_move_cursor(-1)
-	elif event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S]):
+	elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
 		_move_cursor(1)
-	elif event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z]):
+	elif event.is_action_pressed("ui_accept") or event.is_action_pressed("menu_confirm"):
 		var btn := _menu_buttons[_cursor]
 		if btn.disabled:
 			return
@@ -333,10 +341,6 @@ func _handle_menu_input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()
 
-
-func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
-	var key_event := event as InputEventKey
-	return key_event != null and key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
 
 
 func _build_save_slots_panel() -> void:

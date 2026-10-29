@@ -571,11 +571,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_navigate_list(-cols)
 			get_viewport().set_input_as_handled()
 			return
-		if event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D]):
+		if event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
 			_navigate_list(1)
 			get_viewport().set_input_as_handled()
 			return
-		if event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A]):
+		if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
 			_navigate_list(-1)
 			get_viewport().set_input_as_handled()
 			return
@@ -597,11 +597,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			_navigate_target_list(-maxi(target_list_vbox.columns, 1))
 			get_viewport().set_input_as_handled()
 			return
-		if event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D]):
+		if event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
 			_navigate_target_list(1)
 			get_viewport().set_input_as_handled()
 			return
-		if event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A]):
+		if event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
 			_navigate_target_list(-1)
 			get_viewport().set_input_as_handled()
 			return
@@ -1562,20 +1562,20 @@ func _update_list_description() -> void:
 
 
 func _is_menu_up(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W])
+	return event.is_action_pressed("ui_up") or event.is_action_pressed("move_up")
 
 
 func _is_menu_down(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S])
+	return event.is_action_pressed("ui_down") or event.is_action_pressed("move_down")
 
 
 func _is_menu_accept(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z])
+	return event.is_action_pressed("ui_accept") or event.is_action_pressed("menu_confirm")
 
 
 ## Wstecz w menu walki; prawy przycisk myszy też (jak w RPG Makerze — gra samą myszą).
 func _is_menu_cancel(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_cancel") or _is_key_pressed(event, [KEY_X, KEY_ESCAPE]) or _is_right_click(event)
+	return event.is_action_pressed("ui_cancel") or event.is_action_pressed("menu_cancel") or _is_right_click(event)
 
 
 func _is_right_click(event: InputEvent) -> bool:
@@ -1584,18 +1584,12 @@ func _is_right_click(event: InputEvent) -> bool:
 
 
 func _is_action_menu_prev(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W, KEY_A])
+	return event.is_action_pressed("ui_up") or event.is_action_pressed("move_up") or event.is_action_pressed("move_left")
 
 
 func _is_action_menu_next(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S, KEY_D])
+	return event.is_action_pressed("ui_down") or event.is_action_pressed("move_down") or event.is_action_pressed("move_right")
 
-
-func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
-	if not (event is InputEventKey):
-		return false
-	var key_event: InputEventKey = event as InputEventKey
-	return key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
 
 
 ## Umiejętność z listy: leczenie (cel: ja / sojusznik — kursor drużyny, gdy jest wybór / drużyna / nieprzytomny)

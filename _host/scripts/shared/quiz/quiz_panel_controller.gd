@@ -214,22 +214,22 @@ func handle_input(event: InputEvent) -> bool:
 	match str(_current_question.get("type", "multiple_choice")):
 		"multiple_choice":
 			# Direct number keys [1] - [4] (main keyboard & numpad)
-			if key in [KEY_1, KEY_KP_1] and mc_buttons.size() > 0 and mc_buttons[0].visible and not mc_buttons[0].disabled:
+			if _answer_index(event) == 0 and mc_buttons.size() > 0 and mc_buttons[0].visible and not mc_buttons[0].disabled:
 				_mc_selected_idx = 0
 				_refresh_mc_selection()
 				_submit_answer(answer_multiple_choice(0))
 				return true
-			if key in [KEY_2, KEY_KP_2] and mc_buttons.size() > 1 and mc_buttons[1].visible and not mc_buttons[1].disabled:
+			if _answer_index(event) == 1 and mc_buttons.size() > 1 and mc_buttons[1].visible and not mc_buttons[1].disabled:
 				_mc_selected_idx = 1
 				_refresh_mc_selection()
 				_submit_answer(answer_multiple_choice(1))
 				return true
-			if key in [KEY_3, KEY_KP_3] and mc_buttons.size() > 2 and mc_buttons[2].visible and not mc_buttons[2].disabled:
+			if _answer_index(event) == 2 and mc_buttons.size() > 2 and mc_buttons[2].visible and not mc_buttons[2].disabled:
 				_mc_selected_idx = 2
 				_refresh_mc_selection()
 				_submit_answer(answer_multiple_choice(2))
 				return true
-			if key in [KEY_4, KEY_KP_4] and mc_buttons.size() > 3 and mc_buttons[3].visible and not mc_buttons[3].disabled:
+			if _answer_index(event) == 3 and mc_buttons.size() > 3 and mc_buttons[3].visible and not mc_buttons[3].disabled:
 				_mc_selected_idx = 3
 				_refresh_mc_selection()
 				_submit_answer(answer_multiple_choice(3))
@@ -238,24 +238,24 @@ func handle_input(event: InputEvent) -> bool:
 			# Nawigacja po siatce odpowiedzi wg faktycznej liczby kolumn MC_Box (1 kolumna = lista,
 			# 2 kolumny = siatka 2x2); góra / dół przeskakują o jeden wiersz, nie o stałe 2 pozycje.
 			var cols: int = _mc_columns()
-			if event.is_action_pressed("ui_left") or key in [KEY_A, KEY_LEFT]:
+			if event.is_action_pressed("ui_left") or _act(event, &"move_left"):
 				if cols > 1 and _mc_selected_idx % cols > 0 and mc_buttons[_mc_selected_idx - 1].visible:
 					_mc_selected_idx -= 1
 					_refresh_mc_selection()
 					return true
-			elif event.is_action_pressed("ui_right") or key in [KEY_D, KEY_RIGHT]:
+			elif event.is_action_pressed("ui_right") or _act(event, &"move_right"):
 				if cols > 1 and _mc_selected_idx % cols < cols - 1 and _mc_selected_idx + 1 < mc_buttons.size() and mc_buttons[_mc_selected_idx + 1].visible:
 					_mc_selected_idx += 1
 					_refresh_mc_selection()
 					return true
-			elif event.is_action_pressed("ui_up") or key in [KEY_W, KEY_UP]:
+			elif event.is_action_pressed("ui_up") or _act(event, &"move_up"):
 				if _mc_selected_idx >= cols and mc_buttons[_mc_selected_idx - cols].visible:
 					_mc_selected_idx -= cols
 					_refresh_mc_selection()
 				else:
 					_move_mc_selection(-1)
 				return true
-			elif event.is_action_pressed("ui_down") or key in [KEY_S, KEY_DOWN]:
+			elif event.is_action_pressed("ui_down") or _act(event, &"move_down"):
 				if _mc_selected_idx + cols < mc_buttons.size() and mc_buttons[_mc_selected_idx + cols].visible:
 					_mc_selected_idx += cols
 					_refresh_mc_selection()
@@ -268,17 +268,17 @@ func handle_input(event: InputEvent) -> bool:
 				return true
 
 		"true_false":
-			if key in [KEY_1, KEY_KP_1]:
+			if _answer_index(event) == 0:
 				_tf_selected_idx = 0
 				_refresh_tf_selection()
 				_submit_answer(answer_true_false(true))
 				return true
-			if key in [KEY_2, KEY_KP_2]:
+			if _answer_index(event) == 1:
 				_tf_selected_idx = 1
 				_refresh_tf_selection()
 				_submit_answer(answer_true_false(false))
 				return true
-			if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right") or key in [KEY_A, KEY_D, KEY_LEFT, KEY_RIGHT]:
+			if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right") or _act(event, &"move_left") or _act(event, &"move_right"):
 				_tf_selected_idx = 1 - _tf_selected_idx
 				_refresh_tf_selection()
 				return true
@@ -292,20 +292,23 @@ func handle_input(event: InputEvent) -> bool:
 		"fill_tiles":
 			# Klawiatura: lewo / prawo — kafelek (na końcu „Potwierdź”), góra / dół / Tab — luka, 1–9 — kafelek wprost,
 			# Enter / Z / spacja — wstaw kafelek albo potwierdź, Backspace / Delete — opróżnij lukę.
-			if key >= KEY_1 and key <= KEY_9 and key - KEY_1 < _tile_buttons.size():
-				_place_tile_at(key - KEY_1)
+			var tile_key := _answer_index(event)  # kafelki 1–4: akcje odpowiedzi, 5–9: cyfry
+			if tile_key < 0 and key >= KEY_5 and key <= KEY_9:
+				tile_key = key - KEY_1
+			if tile_key >= 0 and tile_key < _tile_buttons.size():
+				_place_tile_at(tile_key)
 				return true
-			if event.is_action_pressed("ui_left") or key in [KEY_A, KEY_LEFT]:
+			if event.is_action_pressed("ui_left") or _act(event, &"move_left"):
 				_move_tile_cursor(-1)
 				return true
-			if event.is_action_pressed("ui_right") or key in [KEY_D, KEY_RIGHT]:
+			if event.is_action_pressed("ui_right") or _act(event, &"move_right"):
 				_move_tile_cursor(1)
 				return true
-			if event.is_action_pressed("ui_up") or key in [KEY_W, KEY_UP]:
+			if event.is_action_pressed("ui_up") or _act(event, &"move_up"):
 				_active_gap = posmod(_active_gap - 1, maxi(_tile_slots.size(), 1))
 				_update_gap_highlight()
 				return true
-			if event.is_action_pressed("ui_down") or key in [KEY_S, KEY_DOWN, KEY_TAB]:
+			if event.is_action_pressed("ui_down") or _act(event, &"move_down") or key == KEY_TAB:
 				_active_gap = (_active_gap + 1) % maxi(_tile_slots.size(), 1)
 				_update_gap_highlight()
 				return true
@@ -320,7 +323,7 @@ func handle_input(event: InputEvent) -> bool:
 				return true
 
 		"matching":
-			if key == KEY_ENTER or key == KEY_KP_ENTER:
+			if _is_choice_accept(event):
 				_submit_answer(answer_matching())
 				return true
 
@@ -605,22 +608,29 @@ func _build_tf() -> void:
 
 
 func _is_choice_prev(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W, KEY_A])
+	return event.is_action_pressed("ui_up") or _act(event, &"move_up") or _act(event, &"move_left")
 
 
 func _is_choice_next(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S, KEY_D])
+	return event.is_action_pressed("ui_down") or _act(event, &"move_down") or _act(event, &"move_right")
 
 
 func _is_choice_accept(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE])
+	return event.is_action_pressed("ui_accept") or _act(event, &"menu_confirm")
 
 
-func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
-	if not (event is InputEventKey):
-		return false
-	var key_event: InputEventKey = event as InputEventKey
-	return key_event.pressed and not key_event.echo and int(key_event.keycode) in keys
+## Akcja z InputMap (klawisze zmienialne w Sterowaniu); bez akcji w projekcie (np. inny moduł) — false.
+func _act(event: InputEvent, action: StringName) -> bool:
+	return InputMap.has_action(action) and event.is_action_pressed(action)
+
+
+## Klawisz odpowiedzi 1–4 (akcje answer_1..answer_4) -> 0..3; inaczej -1.
+func _answer_index(event: InputEvent) -> int:
+	for i in 4:
+		if _act(event, StringName("answer_%d" % (i + 1))):
+			return i
+	return -1
+
 
 
 func _mc_columns() -> int:

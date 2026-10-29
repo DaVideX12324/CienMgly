@@ -5,6 +5,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Zmieniono
+- Klawisze walki, menu pauzy, menu głównego i minimapy z akcji (zmienialne w Sterowaniu) zamiast na sztywno.
+
 ## [0.9.6-beta] — 2026-10-29
 
 ### Dodano

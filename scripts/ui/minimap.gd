@@ -176,14 +176,12 @@ func _zoom(dir: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if data == null or not InputMap.has_action(ACTION):
 		return
-	var key := event as InputEventKey
-	if key != null and key.pressed and (_exploring() or _full.visible):
-		var code := key.physical_keycode if key.physical_keycode != KEY_NONE else key.keycode
-		if code in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
+	if event is InputEventKey and (_exploring() or _full.visible):
+		if event.is_action_pressed(&"map_zoom_in", true):  # przytrzymanie powtarza
 			_zoom(1)
 			get_viewport().set_input_as_handled()
 			return
-		if code in [KEY_MINUS, KEY_KP_SUBTRACT]:
+		if event.is_action_pressed(&"map_zoom_out", true):
 			_zoom(-1)
 			get_viewport().set_input_as_handled()
 			return

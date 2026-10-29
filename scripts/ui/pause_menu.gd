@@ -2037,39 +2037,33 @@ func _get_inventory_service() -> Node:
 
 
 func _is_accept(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z, KEY_ENTER])
+	return event.is_action_pressed("ui_accept") or event.is_action_pressed("menu_confirm")
 
 
 func _is_cancel(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_cancel") or _is_key_pressed(event, [KEY_X, KEY_ESCAPE])
+	return event.is_action_pressed("ui_cancel") or event.is_action_pressed("menu_cancel")
 
 
 func _is_nav_up(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_up") or _is_key_pressed(event, [KEY_W, KEY_UP])
+	return event.is_action_pressed("ui_up") or event.is_action_pressed("move_up")
 
 
 func _is_nav_down(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_down") or _is_key_pressed(event, [KEY_S, KEY_DOWN])
+	return event.is_action_pressed("ui_down") or event.is_action_pressed("move_down")
 
 
 func _is_nav_left(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_left") or _is_key_pressed(event, [KEY_A, KEY_LEFT])
+	return event.is_action_pressed("ui_left") or event.is_action_pressed("move_left")
 
 
 func _is_nav_right(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_right") or _is_key_pressed(event, [KEY_D, KEY_RIGHT])
+	return event.is_action_pressed("ui_right") or event.is_action_pressed("move_right")
 
 
 func _is_prev_tab(event: InputEvent) -> bool:
-	return _is_key_pressed(event, [KEY_Q])
+	return event.is_action_pressed("tab_prev")
 
 
 func _is_next_tab(event: InputEvent) -> bool:
-	return _is_key_pressed(event, [KEY_E])
+	return event.is_action_pressed("tab_next")
 
-
-func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
-	if not (event is InputEventKey):
-		return false
-	var key_event: InputEventKey = event as InputEventKey
-	return key_event.pressed and not key_event.echo and int(key_event.keycode) in keys

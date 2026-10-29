@@ -13,7 +13,18 @@
     "move_left": "Lewo",
     "move_right": "Prawo",
     "interact": "Interakcja",
-    "sprint": "Bieg / chód"
+    "sprint": "Bieg / chód",
+    "menu_confirm": "Zatwierdź",
+    "menu_cancel": "Wróć / anuluj",
+    "answer_1": "Odpowiedź 1",
+    "answer_2": "Odpowiedź 2",
+    "answer_3": "Odpowiedź 3",
+    "answer_4": "Odpowiedź 4",
+    "tab_prev": "Poprzednia zakładka",
+    "tab_next": "Następna zakładka",
+    "minimap": "Mapa",
+    "map_zoom_in": "Przybliż mapę",
+    "map_zoom_out": "Oddal mapę"
   },
   "controls": [
     {
@@ -38,28 +49,44 @@
       ]
     },
     {
-      "label": "Mapa (pełny widok)",
-      "keys": "M; zoom: = / - albo kółko nad mapą"
+      "label": "Mapa (pełny widok i zoom; zoom też kółkiem nad mapą)",
+      "actions": [
+        "minimap",
+        "map_zoom_in",
+        "map_zoom_out"
+      ]
     },
     {
-      "label": "Wybór w menu i walce",
-      "keys": "Strzałki, W / S"
+      "label": "Zatwierdź (Enter i spacja działają zawsze)",
+      "actions": [
+        "menu_confirm"
+      ]
     },
     {
-      "label": "Zatwierdź",
-      "keys": "Enter, Z, Spacja"
-    },
-    {
-      "label": "Wróć / anuluj",
-      "keys": "Esc, X"
+      "label": "Wróć / anuluj (Esc działa zawsze)",
+      "actions": [
+        "menu_cancel"
+      ]
     },
     {
       "label": "Odpowiedzi w quizie",
-      "keys": "1, 2, 3, 4"
+      "actions": [
+        "answer_1",
+        "answer_2",
+        "answer_3",
+        "answer_4"
+      ]
     },
     {
       "label": "Menu Esc: zakładki przedmiotów",
-      "keys": "Q / E"
+      "actions": [
+        "tab_prev",
+        "tab_next"
+      ]
+    },
+    {
+      "label": "Wybór w menu i walce",
+      "keys": "Strzałki albo klawisze ruchu"
     },
     {
       "label": "Pauza i menu",
