@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://bqtpyix0t5hlu"]
 
-[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_6yl81"]
-[ext_resource type="Script" uid="uid://d32icsvfwja3b" path="res://modules/quiz_rpg/scripts/world/z_trigger.gd" id="2_a0x4c"]
+[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_6yl81"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/z_trigger.gd" id="2_a0x4c"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nq12t"]
 radius = 14.0
@@ -38,23 +38,46 @@ position = Vector2(0, -36)
 [node name="ScianaPodSchodami" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1900247560]
 y_sort_enabled = true
 position = Vector2(0, 36)
-tile_map_data = PackedByteArray("AAD5/wAABQACAC8AAAD4/wAABQACAC8AAAD5////BQAmABEAAAD4////BQAnABEAAAD5//7/BQAmABAAAAD3////BQAmABEAAAD3/wAABQAAACsAAAD9//z/BQAZAAgAAAD6//3/CQAHABYAAAD6//7/CQAHABcAAAD7//3/CQAHABYAAAD7//7/CQAHABcAAAD8//3/CQAIABYAAAD8//7/CQAIABcAAAD8//z/BQAiAAYAAAD9////BQAgAAgAAAD8////BQAgAAgAAAD7////BQAgAAgAAAD6////BQAgAAgAAAA=")
+tile_map_data = PackedByteArray("AAD5/wAA///////////4/wAA///////////5///////////////4///////////////5//7////////////3////BQAmABEAAAD3/wAABQAAACsAAAD9//z////////////6//3////////////6//7////////////7//3////////////7//7////////////8//3////////////8//7////////////8//z////////////9///////////////8///////////////7///////////////6//////////////8=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="ScianaPodSchodamiDetal" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1427629825]
 y_sort_enabled = true
 position = Vector2(0, 36)
-tile_map_data = PackedByteArray("AAD6//3/BQAaAAcAAAD7//3/BQAaAAcAAAD8//3/BQAcAAcAAAD6//7/BQAmAAwAAAD7//7/BQAmAAwAAAD8//7/BQAmAAwAAAA=")
+tile_map_data = PackedByteArray("AAD6//3////////////7//3////////////8//3////////////6//7////////////7//7////////////8//7///////////8=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Schody" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1948278698]
 y_sort_enabled = true
 position = Vector2(0, 36)
-tile_map_data = PackedByteArray("AAD7//3/CQAHABgAAAD8//3/CQAIABgAAAD6//z/CQAGABQAAAD7//z/CQAHABQAAAD8//z/CQAIABQAAAD5//3/CQAIABAAAAD5//7/CQAIABEAAAD5//z/CQAIAA4AAAD4//z/CQAHAA4AAAD4//3/CQAHAA8AAAD4//7/CQAHABEAAAD4////CQAHABIAAAD3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7/BQAlAA4AAAD9//3/BQAlAA0AAAD3/wAACQAHABIAAAD6//3/CQAGABgAAAA=")
+tile_map_data = PackedByteArray("AAD7//3////////////8//3////////////6//z////////////7//z////////////8//z////////////5//3////////////5//7////////////5//z////////////4//z////////////4//3////////////4//7////////////4///////////////3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7////////////9//3////////////3/wAACQAHABIAAAD6//3///////////8=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort/Schody" unique_id=788129460]
 tile_map_data = PackedByteArray("AAD6//3/BQAgAAcAAAD7//3/BQAhAAcAAAD8//3/BQAiAAcAAAD8//z/BQAiAAYAAAA=")
+tile_set = ExtResource("1_6yl81")
+
+[node name="Seg_SchodyPrawe" type="Node2D" parent="Tilesets" unique_id=667506876]
+position = Vector2(0, -19)
+
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_SchodyPrawe" unique_id=1748005080]
+
+[node name="ScianaPodSchodami" type="TileMapLayer" parent="Tilesets/Seg_SchodyPrawe/Sort" unique_id=1715909685]
+y_sort_enabled = true
+position = Vector2(0, 19)
+tile_map_data = PackedByteArray("AAD5/wAABQACAC8AAAD4/wAABQACAC8AAAD5////BQAmABEAAAD4////BQAnABEAAAD5//7/BQAmABAAAAD9//z/BQAZAAgAAAD6//3/CQAHABYAAAD6//7/CQAHABcAAAD7//3/CQAHABYAAAD7//7/CQAHABcAAAD8//3/CQAIABYAAAD8//7/CQAIABcAAAD8//z/BQAiAAYAAAD9////BQAgAAgAAAD8////BQAgAAgAAAD7////BQAgAAgAAAD6////BQAgAAgAAAA=")
+tile_set = ExtResource("1_6yl81")
+
+[node name="ScianaPodSchodamiDetal" type="TileMapLayer" parent="Tilesets/Seg_SchodyPrawe/Sort" unique_id=1374230403]
+y_sort_enabled = true
+position = Vector2(0, 19)
+tile_map_data = PackedByteArray("AAD6//3/BQAaAAcAAAD7//3/BQAaAAcAAAD8//3/BQAcAAcAAAD6//7/BQAmAAwAAAD7//7/BQAmAAwAAAD8//7/BQAmAAwAAAA=")
+tile_set = ExtResource("1_6yl81")
+
+[node name="Schody" type="TileMapLayer" parent="Tilesets/Seg_SchodyPrawe/Sort" unique_id=1554383942]
+y_sort_enabled = true
+position = Vector2(0, 19)
+tile_map_data = PackedByteArray("AAD7//3/CQAHABgAAAD8//3/CQAIABgAAAD6//z/CQAGABQAAAD7//z/CQAHABQAAAD8//z/CQAIABQAAAD5//3/CQAIABAAAAD5//7/CQAIABEAAAD5//z/CQAIAA4AAAD4//z/CQAHAA4AAAD4//3/CQAHAA8AAAD4//7/CQAHABEAAAD4////CQAHABIAAAD9//7/BQAlAA4AAAD9//3/BQAlAA0AAAD6//3/CQAGABgAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Seg_21" type="Node2D" parent="Tilesets" unique_id=1677673195]
