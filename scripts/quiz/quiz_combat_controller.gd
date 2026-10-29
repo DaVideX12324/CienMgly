@@ -3081,12 +3081,16 @@ func _set_band_mode(mode: Band) -> void:
 				party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
 
 
-## Zmiana pasa bez przeskoku: okna, które zostają, przesuwają się z poprzedniego miejsca na nowe, a nowe wjeżdżają
-## z boku z wygaszeniem (BAND_SLIDE_SEC). Stan „przed” = pierwszy w klatce (kilka zmian w jednej klatce = jedna animacja).
-const BAND_SLIDE_SEC := 0.16
+## Zmiana pasa bez przeskoku (slide): okna, które zostają (np. drużyna w środku), przesuwają się z poprzedniego miejsca
+## na nowe, a nowe okno komend „jedzie” z miejsca znikającego (lewe -> prawe) z wygaszeniem. Kontener ustawia pozycje
+## przy każdym przeliczeniu układu (np. zmiana licznika tury), więc przesunięcie jest dokładane po każdym ułożeniu
+## (sort_children), a nie tweenowane wprost na position. Stan „przed” = pierwszy w klatce.
+const BAND_SLIDE_SEC := 0.22
 const BAND_SLIDE_IN_PX := 48.0
 var _band_before := {}   # okno -> [widoczne, pozycja globalna] sprzed zmian w tej klatce
-var _band_tweens: Array[Tween] = []
+var _band_delta := {}    # okno -> przesunięcie na starcie animacji (px), maleje do 0
+var _band_t := 0.0       # 1 -> 0
+var _band_tween: Tween
 
 
 func _band_panels() -> Array[Control]:
@@ -3115,26 +3119,57 @@ func _start_band_animation() -> void:
 		content_row.sort_children.disconnect(_start_band_animation)
 	var before := _band_before
 	_band_before = {}
-	for t in _band_tweens:
-		if t.is_valid():
-			t.kill()
-	_band_tweens.clear()
+	if _band_tween and _band_tween.is_valid():
+		_band_tween.kill()
+	_band_delta.clear()
+	# Znikające okno (było, już nie ma) — z jego miejsca wjeżdża nowe.
+	var gone_pos: Variant = null
+	for p in _band_panels():
+		var was: Array = before.get(p, [false, Vector2.ZERO])
+		if was[0] and not p.is_visible_in_tree():
+			gone_pos = was[1]
 	for p in _band_panels():
 		p.modulate.a = 1.0  # przerwana animacja nie zostawia wygaszonego okna
 		if not p.is_visible_in_tree():
 			continue
 		var was: Array = before.get(p, [false, p.global_position])
-		var target := p.position
-		var from: Vector2 = target + (was[1] - p.global_position) if was[0] else target + Vector2(BAND_SLIDE_IN_PX, 0)
-		if from.distance_to(target) < 1.0 and was[0]:
+		var delta: Vector2
+		if was[0]:
+			delta = was[1] - p.global_position
+		elif gone_pos != null:
+			delta = Vector2((gone_pos as Vector2).x - p.global_position.x, 0.0)
+		else:
+			delta = Vector2(BAND_SLIDE_IN_PX, 0.0)
+		if delta.length() < 1.0 and was[0]:
 			continue
-		p.position = from
-		var tw := create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		tw.tween_property(p, "position", target, BAND_SLIDE_SEC)
+		_band_delta[p] = delta
 		if not was[0]:
 			p.modulate.a = 0.0
-			tw.tween_property(p, "modulate:a", 1.0, BAND_SLIDE_SEC)
-		_band_tweens.append(tw)
+	if _band_delta.is_empty():
+		return
+	if not content_row.sort_children.is_connected(_apply_band_offset):
+		content_row.sort_children.connect(_apply_band_offset)
+	_band_t = 1.0
+	_apply_band_offset()
+	_band_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_band_tween.tween_method(func(t: float) -> void:
+		_band_t = t
+		content_row.queue_sort(), 1.0, 0.0, BAND_SLIDE_SEC)
+	_band_tween.finished.connect(func() -> void:
+		_band_t = 0.0
+		_band_delta.clear()
+		if content_row.sort_children.is_connected(_apply_band_offset):
+			content_row.sort_children.disconnect(_apply_band_offset)
+		content_row.queue_sort())
+
+
+## Po ułożeniu przez kontener: pozycja docelowa + reszta przesunięcia; nowe okna rozjaśniają się w tym czasie.
+func _apply_band_offset() -> void:
+	for p: Control in _band_delta:
+		if is_instance_valid(p):
+			p.position += (_band_delta[p] as Vector2) * _band_t
+			if p.modulate.a < 1.0:  # nowe okno rozjaśnia się razem z przesunięciem
+				p.modulate.a = maxf(p.modulate.a, 1.0 - _band_t)
 
 
 func _update_corner_label() -> void:
