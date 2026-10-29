@@ -172,37 +172,13 @@ func _close_loading_screen(immediate: bool = false) -> void:
 	_loading_screen = null
 
 
-func _play_level_music(level_path: String, level_node: Node) -> void:
+func _play_level_music(_level_path: String, level_node: Node) -> void:
 	var audio_service: Node = get_node_or_null("/root/AudioService")
 	if audio_service == null or not audio_service.has_method("play_music"):
 		return
-	var track := "world_map"
-	var p := QuizRpgPaths.level_scene(level_path).to_lower()
+	# Utwór mapy: pole music_track mapy (ręczne — Inspektor; generowane — companion-JSON "music"); brak = world_map.
 	var own := str(level_node.get("music_track")) if level_node != null and "music_track" in level_node else ""
-	if not own.is_empty():
-		track = own   # mapa ręczna z własnym utworem (QuizRpgHandmadeLevel.music_track)
-	elif p.contains("tutorial"):
-		track = "tutorial"
-	elif p.contains("desert"):
-		track = "desert_town"
-	elif p.contains("cave"):
-		track = "cave_entrance"
-	elif p.contains("castle"):
-		track = "ancient_ruins"
-	elif p.contains("fairy"):
-		track = "fairy_forest"
-	elif p.contains("forge"):
-		track = "forge"
-	elif p.contains("garden"):
-		track = "garden"
-	elif p.contains("hideout") or p.contains("sewer"):
-		track = "tunnels"
-	elif level_node:
-		for prop in ["biome", "theme"]:
-			if prop in level_node and str(level_node.get(prop)) != "":
-				track = str(level_node.get(prop)).to_snake_case()
-				break
-	audio_service.call("play_music", track)
+	audio_service.call("play_music", own if not own.is_empty() else "world_map")
 
 
 ## Towarzysze drużyny za graczem (PartyFollowers); snap = ustawieni na graczu (nowa mapa / spawn).

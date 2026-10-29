@@ -73,6 +73,7 @@ var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
 var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device, locks_exit bossów mapy
+var music_track := ""  # companion-JSON "music" (_music_from_config)
 var _exit_ends_game := false  # companion-JSON "exit_ends_game": wyjście pokazuje ekran końca zamiast następnej mapy
 var _random_encounters: Dictionary = {}  # companion-JSON "random_encounters": tryb, dystans i tiery losowych spotkań (QuizRpgRandomEncounters)
 var _rare_rooms: Dictionary = {}  # companion-JSON "rare_rooms": skrzynie specjalne w rzadkich pokojach (TreasurePlanner.plan_rare)
@@ -192,6 +193,21 @@ class GenJob extends RefCounted:
 
 ## Wczytuje companion-JSON (parametry generatora + Named TileSet System).
 ## Zwraca obiekt konfiguracji lub null (puste/brak ścieżki => stary tryb).
+## Utwór mapy: companion-JSON "music" (nazwa z music_tracks.json hosta; nadpisanie config_overlay ma pierwszeństwo).
+## Gra go LevelManager po wejściu na mapę (_play_level_music).
+func _music_from_config() -> String:
+	var json_path := _resolve_behaviour_json_path()
+	if json_path.is_empty() or not FileAccess.file_exists(json_path):
+		return ""
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(json_path))
+	if not raw is Dictionary:
+		return ""
+	var over: Variant = (raw as Dictionary).get(config_overlay) if not config_overlay.is_empty() else null
+	if over is Dictionary and (over as Dictionary).has("music"):
+		return str(over["music"])
+	return str((raw as Dictionary).get("music", ""))
+
+
 func _load_behaviour_config():
 	var json_path := _resolve_behaviour_json_path()
 	if json_path.is_empty():
@@ -253,14 +269,7 @@ func _ready() -> void:
 		generate_level_async(map_seed)
 	else:
 		generate_level(map_seed)
-	var audio := get_node_or_null("/root/AudioService")
-	if audio:
-		if level_type == LevelType.DUNGEON_CASTLE:
-			audio.play_music("castle")
-		elif level_type == LevelType.CAVE_DUNGEON:
-			audio.play_music("caves")
-		else:
-			audio.play_music("fairy_forest")
+	music_track = _music_from_config()
 
 
 func _ensure_default_resources() -> void:

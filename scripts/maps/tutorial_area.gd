@@ -2,6 +2,9 @@ extends Node2D
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
+## Utwór mapy (nazwa z music_tracks.json hosta) — gra go LevelManager.
+@export var music_track: String = "tutorial"
+
 static var NEXT_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/levels/cave.tscn")
 const NEXT_SPAWN_NAME := "Spawn"
 ## Marker w Spawns, przy którym gracz pojawia się po powrocie z jaskini (cave.tscn: previous_spawn_name),

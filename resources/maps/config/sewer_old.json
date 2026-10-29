@@ -1,4 +1,5 @@
 {
+  "music": "tunnels",
   "version": 1,
   "tile_profile": "res://modules/quiz_rpg/resources/maps/profile/sewer_old_map_tiles.tres",
   "generation": {
