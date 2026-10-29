@@ -24,6 +24,7 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @onready var background: ColorRect = $BG
 @onready var ver_label: Label = $VerLabel
 @onready var name_entry: VBoxContainer = $ScreenPanel/Margin/RightVBox/ContextBody/NameEntry
+@onready var back_btn: Button = $ScreenPanel/Margin/RightVBox/BtnBack
 
 var _title_time := 0.0
 var _save_slots_panel: VBoxContainer
@@ -54,6 +55,8 @@ func _ready() -> void:
 	_style_menu()
 	_show_context("")
 	ver_label.text = "Cień Mgły " + _version_label()
+	back_btn.text = QuizRpgI18n.t("main_menu.back", "← Wstecz")
+	back_btn.pressed.connect(_on_back)
 	# Muzyka menu także po powrocie z gry („Zakończ grę” w menu Esc) — poziom zostawiał swoją.
 	var audio := get_node_or_null("/root/AudioService")
 	if audio and audio.has_method("play_music"):
@@ -197,6 +200,7 @@ func _show_context(kind: String) -> void:
 	menu_center.visible = kind == ""
 	stats_label.visible = kind == "stats"
 	name_entry.visible = kind == "name"
+	back_btn.visible = kind != "name"  # ekran imienia ma własne „Wstecz”
 	if _save_slots_panel:
 		_save_slots_panel.visible = kind == "load"
 	if kind != "options" and _options_menu != null and is_instance_valid(_options_menu):
@@ -280,6 +284,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		_play_click()
 		_show_context("")
 		get_viewport().set_input_as_handled()
+
+
+## „Wstecz” na ekranie treści (gra samą myszą) — jak Esc; opcje zamykają się same (sygnał closed).
+func _on_back() -> void:
+	if _context == "options" and _options_menu and is_instance_valid(_options_menu):
+		_options_menu.call("close")
+		return
+	_play_click()
+	_show_context("")
 
 
 ## WASD / Z / X w ekranie treści -> akcja ui_* (nawigacja fokusu, suwaki, listy, Enter, Esc jak ze strzałek).

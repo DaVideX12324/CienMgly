@@ -409,6 +409,7 @@
   "loot.default_title": "Loot",
   "loot.gate_key_msg": "Fits the lock at the spike gate. Keys: {count}.",
   "loot.gate_key_title": "Gate Key",
+  "main_menu.back": "← Back",
   "main_menu.delete_save": "Delete save",
   "main_menu.delete_save_confirm": "Click again to delete",
   "main_menu.load_game_title": "Load Game",
