@@ -5,16 +5,15 @@ extends CanvasLayer
 ## listy interakcji (drzwi z zagadką…). Przy kilku zgłoszonych pokazuje najbliższy graczowi; tylko podczas
 ## eksploracji. Klawisz z bieżących przypisań akcji „interact” (zmiana klawiszy w opcjach).
 
-const QuizTheme = preload("quiz_theme.gd")
+## Wygląd: scenes/ui/interact_prompt.tscn (WYSIWYG).
 const GROUP := &"interact_prompt"
 const ACTION := "interact"
-const FONT_SIZE := 27
 ## Domyślna wysokość nad pozycją obiektu (świat), gdy obiekt nie podaje własnej (interaction_prompt_offset()).
 const DEFAULT_OFFSET := Vector2(0, -22)
 
 var _targets: Dictionary = {}  # Node2D -> tekst akcji
-var _panel: PanelContainer
-var _label: Label
+@onready var _panel: PanelContainer = $Panel
+@onready var _label: Label = $Panel/Label
 
 
 ## Zgłoszenie obiektu (np. gracz w zasięgu skrzyni). Bez gracza z podpowiedzią — nic się nie dzieje.
@@ -30,16 +29,6 @@ static func release(target: Node2D) -> void:
 
 func _ready() -> void:
 	add_to_group(GROUP)
-	layer = 4
-	_panel = PanelContainer.new()
-	_panel.theme_type_variation = QuizTheme.WINDOW
-	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_panel.visible = false
-	_label = Label.new()
-	_label.add_theme_font_size_override("font_size", FONT_SIZE)
-	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_panel.add_child(_label)
-	add_child(_panel)
 	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 
 

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://d8podpowied4e"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/interact_prompt.gd" id="1_script"]
+
+[node name="InteractPrompt" type="CanvasLayer"]
+layer = 4
+script = ExtResource("1_script")
+
+[node name="Panel" type="PanelContainer" parent="."]
+visible = false
+offset_right = 120.0
+offset_bottom = 40.0
+mouse_filter = 2
+theme_type_variation = &"QuizWindow"
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 27
+text = "[E] Otwórz"
+horizontal_alignment = 1

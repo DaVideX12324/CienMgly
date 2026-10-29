@@ -12,6 +12,7 @@ const LevelPortal = preload("level_portal.gd")
 const MapPrefetch = preload("map_prefetch.gd")
 const MapLinks = preload("map_links.gd")
 const Freeroam = preload("freeroam.gd")
+const ArrivalCaptionScene = preload("../../scenes/ui/arrival_caption.tscn")
 
 ## Mapa za wyjściem `enter_next_level` i marker, przy którym gracz się tam pojawia.
 @export_file("*.tscn") var next_level_path: String = ""
@@ -68,20 +69,10 @@ func _connect_areas() -> void:
 
 
 func _play_arrival_scene() -> void:
-	var layer := CanvasLayer.new()
-	layer.layer = 128
-	var bg := ColorRect.new()
-	bg.color = Color.BLACK
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(bg)
-	var label := Label.new()
+	var layer := ArrivalCaptionScene.instantiate() as CanvasLayer
+	var bg := layer.get_node("Background") as ColorRect
+	var label := layer.get_node("Background/Label") as Label
 	label.text = QuizRpgI18n.t(arrival_scene_text, arrival_scene_text)
-	label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.modulate.a = 0.0
-	bg.add_child(label)
 	add_child(layer)
 	var player := get_tree().get_first_node_in_group(&"player")
 	var tw := create_tween()

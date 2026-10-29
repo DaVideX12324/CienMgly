@@ -4,6 +4,7 @@ extends CharacterBody2D
 ## Programmer art: rysowany kodem jeśli brak AnimatedSprite2D/sprite frames.
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
+const InteractPromptScene = preload("../../scenes/ui/interact_prompt.tscn")
 const PoisonVignetteScene = preload("../../scenes/ui/poison_vignette.tscn")
 ## Dźwięki kroków (footsteps.gd); dokładane w _ready, gdy scena gracza nie ma węzła Footsteps.
 const FootstepsScene = preload("../../scenes/player/footsteps.tscn")
@@ -101,7 +102,7 @@ func _ready() -> void:
 	if is_party_follower:
 		_setup_as_follower()
 	else:
-		add_child(InteractPromptScript.new())
+		add_child(InteractPromptScene.instantiate())
 		var ps: Node = CoreManager.get_singleton("PlayerStats")
 		if ps and ps.has_signal("status_tick"):
 			ps.status_tick.connect(_on_status_tick)
