@@ -3031,6 +3031,7 @@ func _narrow_window() -> bool:
 func _set_band_mode(mode: Band) -> void:
 	if mode != _band_mode:
 		_settle_input()
+		_animate_band_change()
 	_band_mode = mode
 	if content_row == null or party_command_panel == null or party_panel_container == null:
 		return
@@ -3079,6 +3080,62 @@ func _set_band_mode(mode: Band) -> void:
 			else:
 				party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
+
+
+## Zmiana pasa bez przeskoku: okna, które zostają, przesuwają się z poprzedniego miejsca na nowe, a nowe wjeżdżają
+## z boku z wygaszeniem (BAND_SLIDE_SEC). Stan „przed” = pierwszy w klatce (kilka zmian w jednej klatce = jedna animacja).
+const BAND_SLIDE_SEC := 0.16
+const BAND_SLIDE_IN_PX := 48.0
+var _band_before := {}   # okno -> [widoczne, pozycja globalna] sprzed zmian w tej klatce
+var _band_tweens: Array[Tween] = []
+
+
+func _band_panels() -> Array[Control]:
+	var out: Array[Control] = []
+	for c: Control in [party_command_panel, actor_command_panel, list_panel, party_panel_container]:
+		if c:
+			out.append(c)
+	return out
+
+
+func _animate_band_change() -> void:
+	if content_row == null or not is_inside_tree() or not _band_before.is_empty():
+		return
+	for p in _band_panels():
+		_band_before[p] = [p.is_visible_in_tree(), p.global_position]
+	# Start zaraz po ułożeniu okien przez kontener (przed rysowaniem — bez klatki w nowym miejscu); zapasowo
+	# po chwili, gdyby układ się nie zmienił.
+	content_row.sort_children.connect(_start_band_animation, CONNECT_ONE_SHOT)
+	get_tree().create_timer(0.05).timeout.connect(_start_band_animation)
+
+
+func _start_band_animation() -> void:
+	if _band_before.is_empty():
+		return
+	if content_row.sort_children.is_connected(_start_band_animation):
+		content_row.sort_children.disconnect(_start_band_animation)
+	var before := _band_before
+	_band_before = {}
+	for t in _band_tweens:
+		if t.is_valid():
+			t.kill()
+	_band_tweens.clear()
+	for p in _band_panels():
+		p.modulate.a = 1.0  # przerwana animacja nie zostawia wygaszonego okna
+		if not p.is_visible_in_tree():
+			continue
+		var was: Array = before.get(p, [false, p.global_position])
+		var target := p.position
+		var from: Vector2 = target + (was[1] - p.global_position) if was[0] else target + Vector2(BAND_SLIDE_IN_PX, 0)
+		if from.distance_to(target) < 1.0 and was[0]:
+			continue
+		p.position = from
+		var tw := create_tween().set_parallel().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(p, "position", target, BAND_SLIDE_SEC)
+		if not was[0]:
+			p.modulate.a = 0.0
+			tw.tween_property(p, "modulate:a", 1.0, BAND_SLIDE_SEC)
+		_band_tweens.append(tw)
 
 
 func _update_corner_label() -> void:
