@@ -83,7 +83,8 @@ static func reset_module(settings: Node, module_id: String, actions: Array) -> v
 
 ## Nazwa klawisza w bieżącym układzie klawiatury, po polsku / krócej.
 static func key_name(code: int) -> String:
-	var label := DisplayServer.keyboard_get_keycode_from_physical(code as Key)
+	# Android i inne serwery bez układu klawiatury nie obsługują mapowania (błąd w logu przy każdym wierszu).
+	var label := DisplayServer.keyboard_get_keycode_from_physical(code as Key) if not OS.has_feature("mobile") else KEY_NONE
 	var name := OS.get_keycode_string(label if label != KEY_NONE else code as Key)
 	var space_str: String = "Spacja"
 	var loop := Engine.get_main_loop()
