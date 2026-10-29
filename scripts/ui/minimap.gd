@@ -197,7 +197,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _exploring() -> bool:
 	var gm := CoreManager.get_singleton("GameManager")
-	return gm == null or int(gm.get("current_state")) == int(gm.GameState.EXPLORING)
+	var state = gm.get("current_state") if gm else null
+	return state == null or int(state) == int(gm.GameState.EXPLORING)
 
 
 func _set_shown(on: bool) -> void:
