@@ -31,14 +31,14 @@ z_index = 1
 tile_set = ExtResource("1_6yl81")
 
 [node name="Seg_Schody" type="Node2D" parent="Tilesets" unique_id=1612327104]
-position = Vector2(0, 10)
+position = Vector2(0, -36)
 
 [node name="Sort" type="Node2D" parent="Tilesets/Seg_Schody" unique_id=2119607465]
 y_sort_enabled = true
 
 [node name="Schody" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1948278698]
 y_sort_enabled = true
-position = Vector2(0, -10)
+position = Vector2(0, 36)
 tile_map_data = PackedByteArray("AAD6//3/CQAGABgAAAD7//3/CQAHABgAAAD8//3/CQAIABgAAAD6//z/CQAGABQAAAD7//z/CQAHABQAAAD8//z/CQAIABQAAAD5//3/CQAIABAAAAD5//7/CQAIABEAAAD5//z/CQAIAA4AAAD4//z/CQAHAA4AAAD4//3/CQAHAA8AAAD4//7/CQAHABEAAAD4////CQAHABIAAAD3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7/BQAlAA4AAAD9//3/BQAlAA0AAAD3/wAACQAHABIAAAA=")
 tile_set = ExtResource("1_6yl81")
 
@@ -105,7 +105,7 @@ tile_set = ExtResource("1_6yl81")
 [node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=286642405]
 z_index = 1
 position = Vector2(-24, 6)
-polygon = PackedVector2Array(-117, -15, -71, -15, -71, -61, 73, -61, 73, 15, 40, 15, 40, 4, 34, 4, 34, -13, 14, -13, 14, 4, 8, 4, 8, 15, -117, 15)
+polygon = PackedVector2Array(-110, -15, -71, -15, -71, -61, 73, -61, 73, 15, 40, 15, 40, 4, 34, 4, 34, -13, 14, -13, 14, 4, 8, 4, 8, 15, -110, 15)
 
 [node name="Kolizje" type="Node2D" parent="." unique_id=296228397]
 
@@ -137,16 +137,16 @@ collision_mask = 0
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz" unique_id=66025296]
 polygon = PackedVector2Array(-141, -13, -96, -58, -141, -58)
 
-[node name="LewyBok" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+[node name="LewyBok" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz" unique_id=2101401193]
 polygon = PackedVector2Array(-144, -58, -141, -58, -141, -10, -144, -10)
 
-[node name="SpodIPrzod" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
-polygon = PackedVector2Array(-141, 17, -96, -21, -46, -21, -46, 24, -141, 24)
+[node name="SpodIPrzod" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz" unique_id=2086557088]
+polygon = PackedVector2Array(-141, 22, -96, -21, -46, -21, -46, 24, -141, 24)
 
-[node name="PodestBok" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+[node name="PodestBok" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz" unique_id=1770330340]
 polygon = PackedVector2Array(-47, -21, -47, -55, -40, -55, -40, -21)
 
-[node name="ScianaPietra" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+[node name="ScianaPietra" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz" unique_id=1947991916]
 polygon = PackedVector2Array(-96, -54, -74, -54, -74, -63, -54, -63, -54, -54, -47, -54, -47, -75, -96, -75)
 
 [node name="SchodyDol" type="Area2D" parent="Kolizje" unique_id=51146672]
@@ -157,7 +157,6 @@ collision_mask = 5
 script = ExtResource("2_a0x4c")
 z = 0
 from_z = 1
-pair = NodePath("../SchodyGora")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/SchodyDol" unique_id=1424202463]
 polygon = PackedVector2Array(-145, -25, -141, -25, -141, 23, -145, 23)
@@ -167,7 +166,6 @@ visible = false
 collision_layer = 0
 collision_mask = 5
 script = ExtResource("2_a0x4c")
-pair = NodePath("../SchodyDol")
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/SchodyGora" unique_id=1166003537]
 z_index = 1
