@@ -2,10 +2,10 @@
 - Desert (nieużywane): obeliski, ceglane słupy, dzbany — przekolorowane rampą jasności (kamień zamku, piaskowiec),
 - zamek: złamane kolumny, bloki, popiersia (złamania dorysowane: wyszczerbiona krawędź, jaśniejszy przełom),
 - ścieki: filar leżący (oryginał) i wszystkie filary w kamieniu (stojące oryginały: sewer/Assets/Tiles.png),
-- kuźnia (nieużywane): posąg w trzech stanach, w kamieniu; cmentarz (nieużywane): rozbite nagrobki,
+- kuźnia (nieużywane): posąg w trzech stanach, w kamieniu,
 - własny gruz: bloki, stos, słup, mur, odłamki (kamień i piaskowiec),
 - miasto (zamienniki Desert Oasis): zrujnowany mur z lica muru zamku, drogowskaz, tablice (menu, ogłoszenia), bale z pnia
-  drzewa, łopata z cmentarza, szczątki szkieleta (ostatnia klatka śmierci).
+  drzewa, szczątki szkieleta (ostatnia klatka śmierci).
 Elementy bez zmian z plików widocznych w Godocie (poza _nieuzywane) nie trafiają tu — sceny biorą je z oryginałów.
 Każdy element w osobnym slocie siatki 16 px (dół sprite'a = dół slotu, środek w poziomie).
 Uruchomienie: python -I gen_ruins_atlas.py  ->  Ruins.png + lista regionów (nazwa, Rect2) na wyjściu."""
@@ -404,7 +404,6 @@ def groups():
     castle = load(PC, "environments/castle/Assets/Tiles.png")
     sewer = load(PC, "environments/sewer/Assets/Tiles.png")
     forge = load(UNUSED, "forge/Assets/Tiles.png")
-    graves = load(UNUSED, "cemetery/Pixel Crawler - Cemetery/Environment/Props/Graves.png")
     rocks = load(STATIC, "Rocks.png")
     pebbles = [rocks.crop(b) for b in ((180, 37, 188, 43), (165, 54, 172, 60), (181, 54, 189, 60), (148, 70, 155, 75), (132, 85, 140, 91))]
 
@@ -439,7 +438,6 @@ def groups():
 
     forge_items = [("posag", trim(forge.crop((192, 150, 222, 208)))), ("posag_rozbity", trim(forge.crop((225, 160, 253, 208)))),
                    ("posag_cokol", trim(forge.crop((225, 210, 253, 242))))]
-    grave_items = [("nagrobek_rozbity_%d" % (i + 1), trim(graves.crop((i * 16, 64, i * 16 + 16, 96)))) for i in range(3)]
 
     out = []
     for ramp in ("kamien", "piaskowiec"):
@@ -447,18 +445,15 @@ def groups():
     out.append([("zamek_" + n, im) for n, im in castle_items])
     out.append([("sciek_" + n, im) for n, im in sewer_items if n == "filar_lezacy"])  # reszta bez zmian: Tiles.png
     out.append([("sciek_%s_kamien" % n, recolor(im, "kamien", keep_blue=False)) for n, im in sewer_items])
-    out.append([("kuznia_%s_kamien" % n, recolor(im, "kamien", keep_blue=False)) for n, im in forge_items] +
-               [("cmentarz_" + n, im) for n, im in grave_items])
+    out.append([("kuznia_%s_kamien" % n, recolor(im, "kamien", keep_blue=False)) for n, im in forge_items])
     for pal in ("kamien", "piaskowiec"):
         out.append([("gruz_%s_%s" % (k, pal), rubble(k, BLOCK_PALETTES[pal], 7 + i)) for i, k in enumerate(RUBBLE_KINDS)])
 
     trees = load(STATIC, "Trees/Model_01/Size_04.png")
-    cemetery = load(UNUSED, "cemetery/Pixel Crawler - Cemetery/Environment/Props/Props.png")
     skeleton = load(PC, "packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png")
     out.append([("mur_zrujnowany", ruined_wall(castle, 72, 3)), ("mur_zrujnowany_maly", ruined_wall(castle, 40, 9))])
     out.append([("drogowskaz", signpost()), ("tablica_menu", menu_board()), ("tablica_ogloszen", bulletin_board()),
                 ("bal", tree_log(trees, 30)), ("bale_stos", tree_log_pile(trees)),
-                ("lopata", trim(cemetery.crop((82, 49, 93, 80)))), ("lopata_kopiec", trim(cemetery.crop((128, 48, 159, 80)))),
                 ("szczatki", trim(skeleton.crop((704, 0, 768, 64))))])  # klatka animacji śmierci jako obiekt
     return out
 

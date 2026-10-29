@@ -1,10 +1,10 @@
 [gd_scene format=3]
 
-[ext_resource type="Texture2D" uid="uid://0fcagsaimb2r" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Ruins.png" id="1_tex"]
+[ext_resource type="Texture2D" uid="uid://c1ks7obj5bfqv" path="res://assets/pixel_crawler/environments/cemetery/Pixel Crawler - Cemetery/Environment/Props/Graves.png" id="1_tex"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_main"]
 atlas = ExtResource("1_tex")
-region = Rect2(128, 426, 16, 22)
+region = Rect2(32, 74, 16, 22)
 filter_clip = true
 
 [node name="CmentarzNagrobekRozbity3" type="StaticBody2D"]

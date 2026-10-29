@@ -4,7 +4,7 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_main"]
 atlas = ExtResource("1_tex")
-region = Rect2(263, 594, 17, 14)
+region = Rect2(215, 594, 17, 14)
 filter_clip = true
 
 [node name="Szczatki" type="StaticBody2D"]
