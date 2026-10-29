@@ -79,17 +79,20 @@ HAIR_BROWN = [(128, 74, 30), (95, 56, 24), (71, 40, 13)]
 HAIR_BLONDE = [(240, 196, 96), (200, 150, 60), (150, 100, 30)]
 HAIR_BLACK = [(70, 62, 62), (44, 40, 42), (20, 20, 18)]
 HAIR_AUBURN = [(176, 82, 42), (128, 56, 30), (80, 34, 20)]
+HAIR_HIKER = [(170, 92, 72), (130, 66, 56), (88, 44, 40)]
+SKIN_LIGHT = [(240, 196, 140), (214, 156, 104), (150, 98, 64)]
+MAROON = [(110, 48, 56), (82, 36, 44), (56, 26, 34)]
+MAROON_D = [(82, 36, 44), (56, 26, 34), (36, 20, 24)]
 
 CHARACTERS = {
-    # Bohater — poszukiwacz przygód: brązowe włosy, zielona tunika z lnianym kołnierzem, podwinięte rękawy,
-    # skórzany pas i pas przez pierś, brązowe spodnie i skórzane buty.
+    # Bohater — wędrowiec (wzór: chroma-dave „Pixelart Hiker”): rudobrązowe włosy i pełna broda, niebieska koszula
+    # w kratę z podwiniętymi rękawami, zielone szelki plecaka, bordowe spodnie, ciemne buty.
     'bohater': {
-        'head_style': 'hair', 'body': 'plain',
-        'head': HAIR_BROWN, 'hair': HAIR_BROWN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': LEATHER,
-        'torso_up': GREEN, 'torso_lo': GREEN, 'collar': LINEN,
-        'belt': LEATHER, 'buckle': GOLD, 'strap': LEATHER,
-        'arm_up': GREEN, 'arm_lo': LINEN, 'hand': LEATHER, 'cuff': LEATHER,
-        'leg': BROWN, 'boot': LEATHER,
+        'head_style': 'hair', 'body': 'plain', 'beard': HAIR_HIKER,
+        'head': HAIR_HIKER, 'hair': HAIR_HIKER, 'face': SKIN_LIGHT, 'eye': (40, 50, 110), 'trim': GREEN_D,
+        'torso_up': BLUE, 'torso_lo': BLUE, 'plaid': True, 'strap': GREEN_D, 'pack': GREEN,
+        'arm_up': BLUE, 'arm_lo': SKIN_LIGHT, 'hand': SKIN_LIGHT,
+        'leg': MAROON, 'boot': MAROON_D,
     },
     # Rycerz (dawny wygląd bohatera, wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem,
     # niebieski wapenrok.
@@ -430,7 +433,7 @@ PIECE = {'head': 'head', 'hood': 'head', 'hat': 'head', 'brim': 'head', 'hair': 
          'helm_rim': 'head', 'helm_hi': 'head',
          'face': 'face', 'eye': 'face', 'shadow': 'face', 'beard': 'face',
          'torso_up': 'torso', 'torso_lo': 'torso', 'belt': 'torso', 'robe': 'torso', 'robe_hem': 'torso',
-         'tabard': 'torso', 'collar': 'torso', 'emblem': 'torso', 'buckle': 'torso', 'stole': 'torso', 'strap': 'torso'}
+         'tabard': 'torso', 'collar': 'torso', 'emblem': 'torso', 'buckle': 'torso', 'stole': 'torso', 'strap': 'torso', 'pack': 'pack'}
 
 
 def piece(n):
@@ -459,7 +462,18 @@ def add_details(lab, spec, direction):
         for p in up:
             if lab.get(p) in ('torso_up', 'tabard') and lab.get((p[0], p[1] - 1)) in above_head:
                 lab[p] = 'collar'
-    if 'strap' in spec and wide:
+    if 'pack' in spec:
+        # plecak: z tyłu prostokąt na tułowiu, z przodu dwie pionowe szelki
+        for (x, y), n in list(lab.items()):
+            if n not in ('torso_up', 'torso_lo', 'collar'):
+                continue
+            if direction in ('N', 'NE', 'NW') and tx0 < x < tx1 and y > ty0:
+                lab[(x, y)] = 'pack'
+            elif direction in ('S', 'SE', 'SW') and wide and x in (tx0 + 1, tx1 - 1):
+                lab[(x, y)] = 'strap'
+            elif direction in ('E', 'W') and x == (tx0 if direction == 'E' else tx1) and y > ty0:
+                lab[(x, y)] = 'pack'
+    elif 'strap' in spec and wide:
         belt_y = min((p[1] for p, n in lab.items() if n == 'belt'), default=ty1)
         h = max(1, belt_y - ty0)
         for k in range(h + 1):
@@ -530,6 +544,8 @@ def paint(fr, spec, direction):
             nb = lab.get((x + d[0], y + d[1]))
             if nb is not None and piece(nb) != group:
                 tone = 2
+        if spec.get('plaid') and tone == 1 and n in ('torso_up', 'torso_lo', 'arm_up') and (x + y) % 2 == 0:
+            tone = 2    # koszula w kratę: szachownica tonu środkowego i ciemnego
         out.putpixel((x, y), ramp[tone] + (255,))
     solid = {p for p in lab if 0 <= p[0] < FRAME and 0 <= p[1] < FRAME}
     for (x, y) in solid:
