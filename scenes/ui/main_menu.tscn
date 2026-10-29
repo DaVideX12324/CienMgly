@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://srjisxxnddcr" path="res://modules/quiz_rpg/scripts/ui/main_menu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/ui/name_entry.tscn" id="2_name"]
+[ext_resource type="PackedScene" uid="uid://cc5nwa4mwu4x3" path="res://modules/quiz_rpg/scenes/ui/menu_parallax.tscn" id="3_parallax"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.18, 0.18, 0.25, 0.9)
@@ -91,6 +92,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.06, 0.06, 0.1, 1)
+
+[node name="MenuParallax" parent="." instance=ExtResource("3_parallax")]
 
 [node name="Center" type="CenterContainer" parent="." unique_id=1572571532]
 texture_filter = 2

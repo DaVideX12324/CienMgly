@@ -6,6 +6,10 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Menu główne: tło paralaksy (Mountain Dusk, ansimuz) — noc z księżycem, płynące warstwy, mgła nad lasem.
+- Umiejętności bossów: ×0,6 obrażeń, +2 tury odnowienia.
+
+### Dodano
 - Opcja „Tempo walki” (Opcje → Sterowanie): normalne / ×1,5 / ×2 (tury, poza wyborem i pytaniem).
 - Przytrzymanie biegu (Shift) w walce przyspiesza tury ×3: tekst od razu, komunikaty przechodzą same (jak w FNaFB).
 

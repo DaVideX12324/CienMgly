@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://b8menu4paralaks"]
+[gd_scene format=3 uid="uid://cc5nwa4mwu4x3"]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/menu_parallax.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/01_sky.png" id="2_01_sky"]
