@@ -178,22 +178,12 @@ func _build_use_message(item_data: QuizRpgItemData) -> String:
 func _load_item_database() -> void:
 	_items_by_id.clear()
 	_display_name_to_id.clear()
-	var dir: DirAccess = DirAccess.open(ITEMS_DIR)
-	if dir != null:
-		_load_item_directory(ITEMS_DIR, dir)
-
-
-func _load_item_directory(dir_path: String, dir: DirAccess) -> void:
-	dir.list_dir_begin()
-	var file_name: String = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and (file_name.ends_with(".tres") or file_name.ends_with(".res")):
-			var resource_path: String = "%s/%s" % [dir_path, file_name]
-			var item_resource: Resource = load(resource_path)
+	# ResourceLoader, nie DirAccess: w eksporcie pliki leżą jako *.tres.remap.
+	for file_name in ResourceLoader.list_directory(ITEMS_DIR):
+		if file_name.ends_with(".tres") or file_name.ends_with(".res"):
+			var item_resource: Resource = load(ITEMS_DIR.path_join(file_name))
 			if item_resource is QuizRpgItemData:
 				_register_item(item_resource as QuizRpgItemData)
-		file_name = dir.get_next()
-	dir.list_dir_end()
 
 
 func _register_item(item_data: QuizRpgItemData) -> void:
