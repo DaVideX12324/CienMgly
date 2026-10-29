@@ -24,6 +24,11 @@ const DIM := Color(1, 1, 1, 0.45)
 @onready var _stats: Label = %Stats
 @onready var _desc: Label = %Desc
 @onready var _owned: Label = %Owned
+@onready var _qty_row: HBoxContainer = %QtyRow
+@onready var _qty_label: Label = %Qty
+@onready var _minus: Button = %Minus
+@onready var _plus: Button = %Plus
+@onready var _action_btn: Button = %ActionBtn
 @onready var _message: Label = %Message
 @onready var _hint: Label = %Hint
 
@@ -33,6 +38,10 @@ var selling := false
 var _age := 0.0
 var _rows: Array[Button] = []
 var _row_items: Array = []   # QuizRpgShopEntry (kupno) albo item_id (sprzedaż), wyrównane z _rows
+## Wybrany wiersz (Enter / klik) — ilość i przycisk Kup / Sprzedaj pod opisem; -1 = brak wyboru.
+var _sel := -1
+var _qty := 1
+const MAX_QTY := 99
 
 
 ## Otwiera sklep pod węzłem NPC. Zwraca okno — `await panel.closed`.
@@ -53,6 +62,9 @@ func _ready() -> void:
 	_buy_tab.pressed.connect(_set_mode.bind(false))
 	_sell_tab.pressed.connect(_set_mode.bind(true))
 	_message.text = " "
+	_minus.pressed.connect(_change_qty.bind(-1))
+	_plus.pressed.connect(_change_qty.bind(1))
+	_action_btn.pressed.connect(_confirm)
 	_set_mode(false)
 
 
@@ -124,6 +136,9 @@ static func _price_text(p: int) -> String:
 
 
 func _on_row_focus(idx: int) -> void:
+	if idx != _sel:
+		_sel = -1
+		_qty_row.visible = false
 	var p: Variant = _row_items[idx] if idx < _row_items.size() else null
 	_show_info(p.item if p is QuizRpgShopEntry else QuizRpgNpcContext.item(npc, str(p)) if p != null else null)
 
@@ -152,22 +167,66 @@ static func item_stats_text(it: QuizRpgItemData) -> String:
 	return ", ".join(parts)
 
 
+## Wybór wiersza: pod opisem ilość (−/+, ←/→) i przycisk Kup / Sprzedaj z ceną; fokus na przycisku.
 func _activate(idx: int) -> void:
 	if _age < INPUT_GRACE or idx >= _row_items.size():
 		return
-	var p: Variant = _row_items[idx]
+	_sel = idx
+	_qty = 1
+	_qty_row.visible = true
+	_update_qty()
+	_action_btn.grab_focus()
+
+
+## Najwięcej sztuk: kupno — na ile starczy dukatów, sprzedaż — ile masz (najwyżej MAX_QTY).
+func _max_qty() -> int:
+	if _sel < 0 or _sel >= _row_items.size():
+		return 1
+	var p: Variant = _row_items[_sel]
+	var ps := QuizRpgNpcContext.player_stats(npc)
+	if p is QuizRpgShopEntry:
+		var price := maxi((p as QuizRpgShopEntry).final_price(), 1)
+		return clampi(int(ps.gold) / price if ps else 1, 1, MAX_QTY)
+	return clampi(int(ps.get_item_count(str(p))) if ps else 1, 1, MAX_QTY)
+
+
+func _change_qty(d: int) -> void:
+	_qty = clampi(_qty + d, 1, _max_qty())
+	_update_qty()
+
+
+func _update_qty() -> void:
+	if _sel < 0 or _sel >= _row_items.size():
+		return
+	_qty = clampi(_qty, 1, _max_qty())
+	_qty_label.text = str(_qty)
+	var p: Variant = _row_items[_sel]
+	if p is QuizRpgShopEntry:
+		_action_btn.text = QuizRpgI18n.tf("shop.buy_for", {"price": (p as QuizRpgShopEntry).final_price() * _qty}, "Kup — {price} D")
+	else:
+		var it := QuizRpgNpcContext.item(npc, str(p))
+		_action_btn.text = QuizRpgI18n.tf("shop.sell_for", {"price": (it.sell_price() if it else 0) * _qty}, "Sprzedaj — {price} D")
+
+
+func _confirm() -> void:
+	if _age < INPUT_GRACE or _sel < 0 or _sel >= _row_items.size():
+		return
+	var p: Variant = _row_items[_sel]
 	var ok := false
 	if p is QuizRpgShopEntry:
 		var entry := p as QuizRpgShopEntry
-		ok = shop.buy(npc, entry)
-		_message.text = QuizRpgI18n.tf("shop.bought", {"item": entry.item.localized_name()}, "Kupiono: {item}.") if ok \
+		ok = shop.buy(npc, entry, _qty)
+		_message.text = QuizRpgI18n.tf("shop.bought_n", {"item": entry.item.localized_name(), "count": _qty}, "Kupiono: {item} ×{count}.") if ok \
 				else QuizRpgI18n.t("shop.no_gold", "Za mało dukatów.")
 	else:
 		var item_name := QuizRpgNpcContext.item_name(npc, str(p))
-		ok = shop.sell(npc, str(p))
-		_message.text = QuizRpgI18n.tf("shop.sold", {"item": item_name}, "Sprzedano: {item}.") if ok else " "
+		ok = shop.sell(npc, str(p), _qty)
+		_message.text = QuizRpgI18n.tf("shop.sold_n", {"item": item_name, "count": _qty}, "Sprzedano: {item} ×{count}.") if ok else " "
 	if ok:
 		QuizRpgNpcContext.play_sfx(npc, "coin")
+	var idx := _sel
+	_sel = -1
+	_qty_row.visible = false
 	_refresh(idx)
 
 
@@ -176,6 +235,20 @@ func _input(event: InputEvent) -> void:
 	if QuizRpgUiKeys.forward(event, get_viewport()):  # WASD / Z / X jak strzałki / Enter / Esc
 		get_viewport().set_input_as_handled()
 		return
+	# Na przycisku Kup / Sprzedaj: ←/→ zmienia ilość, Esc wraca do listy.
+	if _qty_row.visible and get_viewport().gui_get_focus_owner() in [_action_btn, _minus, _plus]:
+		if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+			_change_qty(-1 if event.is_action_pressed("ui_left") else 1)
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("ui_cancel"):
+			get_viewport().set_input_as_handled()
+			var back := _sel
+			_sel = -1
+			_qty_row.visible = false
+			if back >= 0 and back < _rows.size():
+				_rows[back].grab_focus()
+			return
 	if _age < INPUT_GRACE or not (event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right")):
 		return
 	get_viewport().set_input_as_handled()
