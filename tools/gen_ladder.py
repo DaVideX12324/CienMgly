@@ -1,24 +1,26 @@
-"""Tekstura drabiny w stylu Pixel Crawlera (miedź ścieków): 16 px szerokości, powtarzalna w pionie co RUNG px.
+"""Tekstura drabiny w stylu Pixel Crawlera (miedź ścieków i jasnosiwe żelazo): 16 px szerokości, powtarzalna w pionie co RUNG px.
 
-Paleta z sewer/Assets (Props, Tiles): kontur (20, 20, 18), miedź jasna / średnia / ciemna i odblask.
-Dwie szyny po bokach (kontur, odblask, jasna, średnia, ciemna), szczeble co RUNG px (górna krawędź jasna, dolna ciemna). Wynik: assets/pixel_crawler/environments/sewer/Assets/Ladder.png (texture_repeat w scenie).
+Kontur (20, 20, 18) jak w Pixel Crawlerze; rampy materiałów w MATERIALS (miedź z sewer/Assets).
+Dwie szyny po bokach (kontur, odblask, jasna, średnia, ciemna), szczeble co RUNG px (górna krawędź jasna, dolna ciemna). Wynik: assets/pixel_crawler/environments/sewer/Assets/Ladder.png i Ladder_Iron.png (texture_repeat w scenie).
 Użycie: python gen_ladder.py [--preview <plik.png>]
 """
 import os, sys
 from PIL import Image
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..')) + '/'
-OUT = ROOT + 'assets/pixel_crawler/environments/sewer/Assets/Ladder.png'
+OUT_DIR = ROOT + 'assets/pixel_crawler/environments/sewer/Assets/'
 W, RUNG, RUNGS = 16, 8, 6
 
 OUTLINE = (20, 20, 18)
-HI = (255, 224, 213)
-LIGHT = (219, 151, 126)
-MID = (163, 95, 70)
-DARK = (106, 57, 39)
+## Materiały: plik wynikowy i rampa (odblask, jasna, średnia, ciemna).
+MATERIALS = {
+    'miedz': ('Ladder.png', [(255, 224, 213), (219, 151, 126), (163, 95, 70), (106, 57, 39)]),
+    'zelazo': ('Ladder_Iron.png', [(255, 255, 255), (214, 214, 210), (168, 168, 164), (120, 120, 118)]),
+}
 
 
-def build() -> Image.Image:
+def build(ramp: list) -> Image.Image:
+    HI, LIGHT, MID, DARK = ramp
     h = RUNG * RUNGS
     im = Image.new('RGBA', (W, h), (0, 0, 0, 0))
     px = im.load()
@@ -47,11 +49,13 @@ def build() -> Image.Image:
 
 
 if __name__ == '__main__':
-    img = build()
-    img.save(OUT)
-    print('drabina ->', OUT, img.size)
-    if '--preview' in sys.argv:
-        bg = Image.new('RGBA', (W * 3, img.height * 2), (14, 17, 19, 255))
-        for k in range(2):
-            bg.alpha_composite(img, (W, k * img.height))
-        bg.resize((bg.width * 6, bg.height * 6), Image.NEAREST).save(sys.argv[sys.argv.index('--preview') + 1])
+    preview = sys.argv[sys.argv.index('--preview') + 1] if '--preview' in sys.argv else ''
+    bg = Image.new('RGBA', (W * (2 * len(MATERIALS) + 1), RUNG * RUNGS * 2), (14, 17, 19, 255))
+    for k, (name, (file, ramp)) in enumerate(MATERIALS.items()):
+        img = build(ramp)
+        img.save(OUT_DIR + file)
+        print(name, '->', OUT_DIR + file, img.size)
+        for j in range(2):
+            bg.alpha_composite(img, (W * (2 * k + 1), j * img.height))
+    if preview:
+        bg.resize((bg.width * 6, bg.height * 6), Image.NEAREST).save(preview)
