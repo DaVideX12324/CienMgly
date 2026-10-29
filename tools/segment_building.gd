@@ -95,6 +95,15 @@ func _segment(path: String) -> String:
 			for c: Vector2i in groups[base][src]:
 				nl.set_cell(c, src.get_cell_source_id(c), src.get_cell_atlas_coords(c), src.get_cell_alternative_tile(c))
 			sort.add_child(nl)
+	# warstwy z z_index != 0 (np. WallsDetail pod Walls) zostają — spod usuwanych warstw idą do Tilesets
+	for n in tilesets.find_children("*", "TileMapLayer", true, false):
+		var kept := n as TileMapLayer
+		if kept.z_index != 0 and kept.get_parent() != tilesets and layers.has(kept.get_parent()):
+			var pos := _pos_in(kept, tilesets)
+			kept.get_parent().remove_child(kept)
+			tilesets.add_child(kept)
+			kept.owner = root
+			kept.position = pos
 	# stare warstwy i puste grupy precz, segmenty na ich miejsce
 	for layer in layers:
 		if is_instance_valid(layer) and layer.get_parent() != null:
