@@ -1255,6 +1255,7 @@ func _show_target_panel() -> void:
 
 func _hide_target_panel() -> void:
 	target_panel.visible = false
+	_refresh_stats_panel()  # wiersze drużyny wracają (wybór celu je chował — po celu środek był pusty)
 	_hovered_enemy_slot_index = -1
 	for child in target_list_vbox.get_children():
 		child.queue_free()
