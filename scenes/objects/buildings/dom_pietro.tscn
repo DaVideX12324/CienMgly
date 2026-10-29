@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://bqtpyix0t5hlu"]
 
 [ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_6yl81"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/raised_zone.gd" id="2_a0x4c"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/z_trigger.gd" id="2_a0x4c"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nq12t"]
 radius = 14.0
@@ -108,9 +108,6 @@ z_index = 1
 position = Vector2(-24, 6)
 polygon = PackedVector2Array(-76, -27, -24, -27, -24, -44, -23, -44, -23, -60, -30, -60, -30, -69, -50, -69, -50, -60, -71, -60, -71, -75, -23, -75, -23, -61, 73, -61, 73, -44, 73, 15, 40, 15, 40, 4, 34, 4, 34, -13, 14, -13, 14, 4, 8, 4, 8, 15, -120, 15)
 
-[node name="SchodyTyl" type="CollisionPolygon2D" parent="." unique_id=1854527012]
-polygon = PackedVector2Array(-149, -12, -101, -58, -95, -58, -95, -54, -101, -54, -147, -9)
-
 [node name="DoorArea" type="Area2D" parent="." unique_id=944086640]
 position = Vector2(0, 5)
 collision_layer = 0
@@ -131,10 +128,29 @@ position = Vector2(0, 17)
 [node name="DoorSpot2" type="Marker2D" parent="." unique_id=1729659583]
 position = Vector2(-65, -56)
 
-[node name="StrefaSchodow" type="Area2D" parent="." unique_id=1638675161]
+[node name="SchodyDol" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 5
 script = ExtResource("2_a0x4c")
+z = 0
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StrefaSchodow" unique_id=398934482]
-polygon = PackedVector2Array(-146, 22, -100, -18, -45, -18, -45, -54, -54, -54, -54, -64, -74, -64, -74, -54, -100, -57, -146, -9)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyDol"]
+polygon = PackedVector2Array(-152, 4, -139, 4, -139, 24, -152, 24)
+
+[node name="SchodyGora" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 5
+script = ExtResource("2_a0x4c")
+z = 1
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyGora"]
+polygon = PackedVector2Array(-139, 4, -130, -3, -130, 9, -139, 18)
+
+[node name="Podest" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 5
+script = ExtResource("2_a0x4c")
+z = 1
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Podest"]
+polygon = PackedVector2Array(-98, -18, -45, -18, -45, -54, -54, -54, -54, -64, -74, -64, -74, -54, -98, -54)
