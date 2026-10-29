@@ -183,6 +183,8 @@
   "enemy.zombie_overweight.name": "Bloated Zombie",
   "enemy.zombie_overweight.scan": "A lumbering, bloated cadaver. Its massed blows can paralyze the target.",
   "equip.empty_slot_desc": "Remove equipment from this slot.",
+  "equip.worn": "(equipped)",
+  "equip.worn_with_spare": "(equipped, {count} in bag)",
   "equip.empty_slot_name": "(empty)",
   "equip.slot.accessory": "Accessory",
   "equip.slot.body": "Body",

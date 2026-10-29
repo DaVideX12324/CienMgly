@@ -1376,8 +1376,22 @@ func _rebuild_equipment_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = _current_equip_entries[index]
-			_set_simple_row(row, str(entry.get("name", "---")), _get_equipment_delta_text(entry), not items_selectable, true, entry.get("icon") as Texture2D)
+			_set_simple_row(row, _equip_entry_label(entry), _get_equipment_delta_text(entry), not items_selectable, true, entry.get("icon") as Texture2D)
 	_refresh_equipment_item_rows()
+
+
+## Nazwa na liście do slotu: założony — „(założony, w plecaku ×N)”, z plecaka — „×N” przy kilku sztukach.
+func _equip_entry_label(entry: Dictionary) -> String:
+	var label := str(entry.get("name", "---"))
+	if str(entry.get("item_id", "")) == "":
+		return label
+	if bool(entry.get("equipped", false)):
+		var spare := int(entry.get("spare_count", 0))
+		if spare > 0:
+			return label + " " + QuizRpgI18n.tf("equip.worn_with_spare", {"count": spare}, "(założony, w plecaku ×{count})")
+		return label + " " + QuizRpgI18n.t("equip.worn", "(założony)")
+	var count := int(entry.get("count", 1))
+	return label + (" ×%d" % count if count > 1 else "")
 
 
 func _refresh_equipment_item_rows() -> void:

@@ -183,6 +183,8 @@
   "enemy.zombie_overweight.name": "Zombie Grubas",
   "enemy.zombie_overweight.scan": "Rozlazły, napuchnięty truposz. Jego zmasowane uderzenia mogą wywołać paraliż celu.",
   "equip.empty_slot_desc": "Zdejmij wyposażenie z tego slotu.",
+  "equip.worn": "(założony)",
+  "equip.worn_with_spare": "(założony, w plecaku ×{count})",
   "equip.empty_slot_name": "(puste)",
   "equip.slot.accessory": "Akcesorium",
   "equip.slot.body": "Ciało",

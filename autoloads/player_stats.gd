@@ -1321,10 +1321,12 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 	var inventory_entries: Array[Dictionary] = get_inventory_entries()
 	var options: Array[Dictionary] = []
 	var worn_id := ""  # założony przedmiot jest na liście osobno — ta sama rzecz z plecaka byłaby zamianą na identyczną kopię
+	var spare := 0     # ile takich samych sztuk leży w plecaku (pokazane przy założonym)
 	if member_index >= 0 and member_index < party.size():
 		worn_id = str(((party[member_index] as Dictionary).get("equipment", {}) as Dictionary).get(slot_name, ""))
 	for entry: Dictionary in inventory_entries:
 		if str(entry.get("item_id", "")) == worn_id:
+			spare = int(entry.get("count", 0))
 			continue
 		if str(entry.get("equip_slot", "")) == slot_name and member_can_equip(member_index, entry.get("allowed_classes", PackedStringArray())):
 			options.append(entry)
@@ -1351,6 +1353,7 @@ func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Ar
 						"mdf_bonus": item_data.mdf_bonus,
 						"agi_bonus": item_data.agi_bonus,
 						"equipped": true,
+						"spare_count": spare,
 					})
 	var empty_entry: Dictionary = {
 		"item_id": "",
