@@ -129,12 +129,20 @@ position = Vector2(0, 17)
 position = Vector2(-65, -56)
 
 [node name="SchodyKrawedz" type="StaticBody2D" parent="."]
-editor_description = "Krawędź schodów tylko dla postaci na schodach: warstwa 7 (64), którą QuizRpgZTrigger dopisuje do maski postaci przy z 1 (SchodyGora, Podest) i zdejmuje przy z 0 (SchodyDol)."
+editor_description = "Krawędź schodów tylko dla postaci na schodach (od lewego górnego narożnika 2. stopnia do ściany): warstwa 7 (64), którą QuizRpgZTrigger dopisuje do maski postaci przy z 1 (SchodyGora, Podest) i zdejmuje przy z 0 (SchodyDol)."
 collision_layer = 64
 collision_mask = 0
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyKrawedz"]
-polygon = PackedVector2Array(-153, 4, -153, -12, -101, -58, -95, -58, -95, -54, -101, -54, -148, -9, -148, 4)
+polygon = PackedVector2Array(-141, -13, -96, -55, -96, -57, -141, -15)
+
+[node name="SchodyPod" type="StaticBody2D" parent="."]
+editor_description = "Kolizja dla postaci pod / za schodami (z 0): od 2. stopnia, piksel nad wierzchem 1. stopnia, do ściany domu z prawej — od tyłu nie wejdzie się w dolną część schodów. Warstwa 8 (128): gracz ma ją domyślnie w masce, QuizRpgZTrigger zdejmuje ją przy z 1 i przywraca przy z 0."
+collision_layer = 128
+collision_mask = 0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyPod"]
+polygon = PackedVector2Array(-141, -11, -108, -11, -108, -10, -141, -10)
 
 [node name="SchodyDol" type="Area2D" parent="."]
 collision_layer = 0
@@ -143,7 +151,7 @@ script = ExtResource("2_a0x4c")
 z = 0
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyDol"]
-polygon = PackedVector2Array(-152, 4, -139, 4, -139, 24, -152, 24)
+polygon = PackedVector2Array(-145, -9, -141, -9, -141, 21, -145, 21)
 
 [node name="SchodyGora" type="Area2D" parent="."]
 collision_layer = 0
@@ -152,7 +160,7 @@ script = ExtResource("2_a0x4c")
 z = 1
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyGora"]
-polygon = PackedVector2Array(-139, 4, -130, -3, -130, 9, -139, 18)
+polygon = PackedVector2Array(-141, -13, -136, -13, -136, 21, -141, 21)
 
 [node name="Podest" type="Area2D" parent="."]
 collision_layer = 0
