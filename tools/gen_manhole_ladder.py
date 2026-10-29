@@ -16,7 +16,7 @@ HOLE = (14, 17, 19)
 RAMP = [(219, 151, 126), (163, 95, 70), (106, 57, 39), (59, 35, 27)]
 ## Szyny: proste linie, od (TOP_Y, x LEFT / RIGHT) o 1 px ku środkowi co STEP wierszy, do BOTTOM_Y.
 TOP_Y, BOTTOM_Y, STEP = 4, 19, 4
-LEFT, RIGHT = 11, 20
+LEFT, RIGHT = 11, 21
 ## Szczeble: wiersze (co STEP, w połowie odcinka szyny) i odcień 0..3 — im głębiej, tym ciemniej.
 RUNGS = [(6, 0), (10, 1), (14, 2), (18, 3)]
 
