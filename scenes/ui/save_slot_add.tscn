@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://d3dodaj4slot"]
+
+[node name="AddSlot" type="Button"]
+custom_minimum_size = Vector2(560, 42)
+text = "+ Dodaj slot"

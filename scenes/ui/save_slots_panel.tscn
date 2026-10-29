@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://b5lista4sapisow"]
+
+[node name="SaveSlots" type="VBoxContainer"]
+visible = false
+theme_override_constants/separation = 12
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.76, 1)
+text = "Kliknij zapis, aby go wczytać. Kosz z boku usuwa zapis (kliknij dwa razy). Esc — wróć."
+autowrap_mode = 3
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10

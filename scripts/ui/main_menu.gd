@@ -2,6 +2,9 @@ extends CanvasLayer
 
 ## Main menu for res://modules/quiz_rpg/scenes/ui/main_menu.tscn.
 
+const SaveSlotsPanelScene = preload("../../scenes/ui/save_slots_panel.tscn")
+const SaveSlotRowScene = preload("../../scenes/ui/save_slot_row.tscn")
+const SaveSlotAddScene = preload("../../scenes/ui/save_slot_add.tscn")
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 ## Menu na środku; „Wczytaj grę”, „Statystyki” i „Opcje” otwierają osobny ekran na całe okno (menu znika,
@@ -309,29 +312,11 @@ func _is_key_pressed(event: InputEvent, keys: Array[int]) -> bool:
 func _build_save_slots_panel() -> void:
 	if _save_slots_panel:
 		return
-	_save_slots_panel = VBoxContainer.new()
-	_save_slots_panel.name = "SaveSlots"
-	_save_slots_panel.visible = false
-	_save_slots_panel.add_theme_constant_override("separation", 12)
+	_save_slots_panel = SaveSlotsPanelScene.instantiate() as VBoxContainer
 	context_body.add_child(_save_slots_panel)
-
-	var hint := Label.new()
-	hint.text = QuizRpgI18n.t("main_menu.save_hint", "Kliknij zapis, aby go wczytać. Kosz z boku usuwa zapis (kliknij dwa razy). Esc — wróć.")
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hint.add_theme_font_size_override("font_size", QuizTheme.snap(13))
-	hint.add_theme_color_override("font_color", Color(0.68, 0.68, 0.76, 1))
-	_save_slots_panel.add_child(hint)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.follow_focus = true
-	_save_slots_panel.add_child(scroll)
-
-	_save_slots_list = VBoxContainer.new()
-	_save_slots_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_save_slots_list.add_theme_constant_override("separation", 10)
-	scroll.add_child(_save_slots_list)
+	var hint := _save_slots_panel.get_node("Hint") as Label
+	hint.text = QuizRpgI18n.t("main_menu.save_hint", hint.text)
+	_save_slots_list = _save_slots_panel.get_node("Scroll/List") as VBoxContainer
 
 
 func _show_save_slots(title: String) -> void:
@@ -365,9 +350,7 @@ func _populate_save_slots() -> void:
 			_save_slots_list.add_child(_create_slot_row(summary_value))
 
 	if int(save_manager.call("get_slot_count")) < MAX_MENU_SAVE_SLOTS:
-		var add_btn := Button.new()
-		add_btn.text = "+ Dodaj slot"
-		add_btn.custom_minimum_size = Vector2(560, 42)
+		var add_btn := SaveSlotAddScene.instantiate() as Button
 		add_btn.pressed.connect(_on_add_slot_pressed)
 		_add_click_sfx(add_btn)
 		_save_slots_list.add_child(add_btn)
@@ -379,14 +362,8 @@ func _populate_save_slots() -> void:
 func _create_slot_row(slot_summary: Dictionary) -> Control:
 	var slot_index := int(slot_summary.get("slot_index", 0))
 	var exists := bool(slot_summary.get("exists", false))
-
-	var outer := HBoxContainer.new()
-	outer.add_theme_constant_override("separation", 8)
-
-	var slot_btn := Button.new()
-	slot_btn.custom_minimum_size = Vector2(560, 118)
-	slot_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slot_btn.focus_mode = Control.FOCUS_ALL
+	var row := SaveSlotRowScene.instantiate() as HBoxContainer
+	var slot_btn := row.get_node("SlotButton") as Button
 	slot_btn.disabled = _slot_mode == "load" and not exists
 	# slot jak okno motywu, najechany / z fokusem — zaznaczenie motywu
 	var window_sb := QuizTheme.theme().get_stylebox(&"panel", QuizTheme.WINDOW)
@@ -397,65 +374,23 @@ func _create_slot_row(slot_summary: Dictionary) -> Control:
 		slot_btn.add_theme_stylebox_override(st, selected_sb)
 	slot_btn.pressed.connect(func() -> void: _on_slot_action_pressed(slot_index))
 	_add_click_sfx(slot_btn)
-	outer.add_child(slot_btn)
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 14)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_right", 14)
-	margin.add_theme_constant_override("margin_bottom", 10)
-	slot_btn.add_child(margin)
-
-	var text_box := VBoxContainer.new()
-	text_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	text_box.add_theme_constant_override("separation", 4)
-	margin.add_child(text_box)
-
-	var title := Label.new()
-	title.text = "%s - %s" % [str(slot_summary.get("slot_name", "Slot")), str(slot_summary.get("title", ""))]
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title.add_theme_font_size_override("font_size", QuizTheme.snap(18))
-	title.add_theme_color_override("font_color", Color(0.95, 0.95, 0.98, 1))
-	text_box.add_child(title)
-
-	var subtitle := Label.new()
-	subtitle.text = str(slot_summary.get("subtitle", ""))
-	subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	subtitle.add_theme_color_override("font_color", Color(0.72, 0.72, 0.8, 1))
-	text_box.add_child(subtitle)
-
-	var detail := Label.new()
-	detail.text = str(slot_summary.get("detail", ""))
-	detail.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.add_theme_font_size_override("font_size", QuizTheme.snap(13))
-	detail.add_theme_color_override("font_color", Color(0.58, 0.58, 0.66, 1))
-	text_box.add_child(detail)
-
+	var text := "SlotButton/Margin/Text/"
+	(row.get_node(text + "Title") as Label).text = "%s - %s" % [str(slot_summary.get("slot_name", "Slot")), str(slot_summary.get("title", ""))]
+	(row.get_node(text + "Subtitle") as Label).text = str(slot_summary.get("subtitle", ""))
+	(row.get_node(text + "Detail") as Label).text = str(slot_summary.get("detail", ""))
+	var trash := row.get_node("Trash") as Button
 	if exists:
-		outer.add_child(_create_trash_button(slot_index))
+		_setup_trash_button(trash, slot_index)
 	else:
-		var spacer := Control.new()
-		spacer.custom_minimum_size = Vector2(44, 0)
-		outer.add_child(spacer)
-	return outer
+		trash.queue_free()
+		row.get_node("Spacer").visible = true
+	return row
 
 
 ## Kosz z boku wiersza: pierwszy klik zaznacza (czerwony), drugi usuwa; utrata fokusu / kursora wycofuje zaznaczenie.
-func _create_trash_button(slot_index: int) -> Button:
-	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(44, 44)
-	btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+func _setup_trash_button(btn: Button, slot_index: int) -> void:
 	btn.tooltip_text = QuizRpgI18n.t("main_menu.delete_save", "Usuń zapis")
-	var icon := QuizTrashIcon.new()
-	icon.set_anchors_preset(Control.PRESET_CENTER)
-	icon.offset_left = -11
-	icon.offset_right = 11
-	icon.offset_top = -11
-	icon.offset_bottom = 11
-	btn.add_child(icon)
+	var icon := btn.get_node("Icon") as QuizTrashIcon
 	var armed := [false]
 	var disarm := func() -> void:
 		armed[0] = false
@@ -471,7 +406,6 @@ func _create_trash_button(slot_index: int) -> Button:
 	_add_click_sfx(btn)
 	btn.focus_exited.connect(disarm)
 	btn.mouse_exited.connect(disarm)
-	return btn
 
 
 func _add_message_row(text: String) -> void:
