@@ -89,7 +89,7 @@ y_sort_enabled = true
 [node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=1509727475]
 y_sort_enabled = true
 position = Vector2(0, 5)
-tile_map_data = PackedByteArray("AAD+////BQAgAAgAAAABAP//BQAhAAgAAAACAP//BQAiAAgAAAACAPz/BQAcAAgAAAD+//z/BQAaAAgAAAABAPz/BQAaAAgAAAD6//v/BQAZAAgAAAD7//v/BQAbAAgAAAD8//v/BQAcAAwAAAD6/wAABQAAACsAAAD7/wAABQACAC8AAAD8/wAABQACAC8AAAD9/wAABQAAACsAAAD+/wAABQACAC8AAAABAAAABQACAC8AAAACAAAABQAAACsAAAADAAAABQADAC8AAAADAP//BQAEAC0AAAADAP7/BQAEAC0AAAADAP3/BQAEAC0AAAADAPz/BQAEAC0AAAADAPv/BQAJACwAAAA=")
+tile_map_data = PackedByteArray("AAD+////BQAgAAgAAAABAP//BQAhAAgAAAACAP//BQAiAAgAAAACAPz/BQAcAAgAAAD+//z/BQAaAAgAAAABAPz/BQAaAAgAAAD6//v////////////7//v////////////8//v////////////6/wAABQAAACsAAAD7/wAABQACAC8AAAD8/wAABQACAC8AAAD9/wAABQAAACsAAAD+/wAABQACAC8AAAABAAAABQACAC8AAAACAAAABQAAACsAAAADAAAABQADAC8AAAADAP//BQAEAC0AAAADAP7/BQAEAC0AAAADAP3/BQAEAC0AAAADAPz/BQAEAC0AAAADAPv/BQAJACwAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Walls_Drzwi" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=2016662168]
@@ -106,7 +106,7 @@ tile_set = ExtResource("1_6yl81")
 [node name="DoorFrame" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=1036335461]
 y_sort_enabled = true
 position = Vector2(0, 5)
-tile_map_data = PackedByteArray("AAD8//v/CwAAABEAAAA=")
+tile_map_data = PackedByteArray("AAD8//v///////////8=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="DoorFrame_Drzwi" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=13849791]
@@ -118,7 +118,7 @@ tile_set = ExtResource("1_6yl81")
 [node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=1824422874]
 y_sort_enabled = true
 position = Vector2(0, 5)
-tile_map_data = PackedByteArray("AAABAPn/BgAEAAwAAAACAPn/BgAEAAwAAAADAPn/BgAFAAwAAAADAPr/BgAFAA0AAAD+//n/BgAEAAwAAAD9//n/BgAEAAwAAAD5//j/BgACAAwAAAD5//n/BgACAA0AAAD6//j/BgADAAwAAAD7//j/BgAEAAwAAAD8//j/BgAEAAwAAAD9//j/BgADAAsAAAD+//j/BgAEAAsAAAABAPj/BgADAAsAAAACAPj/BgAEAAsAAAADAPj/BgAFAAsAAAD5//f/BgACAAoAAAD6//f/BgADAAoAAAD7//f/BgAEAAoAAAD8//f/BgADAAoAAAD9//f/BgAEAAoAAAD+//f/BgADAAoAAAABAPf/BgAEAAoAAAACAPf/BgADAAoAAAADAPf/BgAFAAoAAAA=")
+tile_map_data = PackedByteArray("AAABAPn/BgAEAAwAAAACAPn/BgAEAAwAAAADAPn/BgAFAAwAAAADAPr/BgAFAA0AAAD+//n/BgAEAAwAAAD9//n////////////5//j////////////5//n////////////6//j////////////7//j////////////8//j////////////9//j////////////+//j/BgAEAAsAAAABAPj/BgADAAsAAAACAPj/BgAEAAsAAAADAPj/BgAFAAsAAAD5//f////////////6//f////////////7//f////////////8//f////////////9//f////////////+//f/BgADAAoAAAABAPf/BgAEAAoAAAACAPf/BgADAAoAAAADAPf/BgAFAAoAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Roof_Drzwi" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=1841237177]
@@ -137,6 +137,30 @@ tile_set = ExtResource("1_6yl81")
 y_sort_enabled = true
 position = Vector2(0, 5)
 tile_map_data = PackedByteArray("AAD///v/CwAKABQAAAA=")
+tile_set = ExtResource("1_6yl81")
+
+[node name="Seg_Pietro" type="Node2D" parent="Tilesets" unique_id=686582115]
+z_index = 1
+position = Vector2(0, -79)
+
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_Pietro" unique_id=412230349]
+
+[node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_Pietro/Sort" unique_id=742669108]
+y_sort_enabled = true
+position = Vector2(0, 79)
+tile_map_data = PackedByteArray("AAD6//v/BQAZAAgAAAD7//v/BQAbAAgAAAD8//v/BQAcAAwAAAA=")
+tile_set = ExtResource("1_6yl81")
+
+[node name="DoorFrame" type="TileMapLayer" parent="Tilesets/Seg_Pietro/Sort" unique_id=177552433]
+y_sort_enabled = true
+position = Vector2(0, 79)
+tile_map_data = PackedByteArray("AAD8//v/CwAAABEAAAA=")
+tile_set = ExtResource("1_6yl81")
+
+[node name="Roof" type="TileMapLayer" parent="Tilesets/Seg_Pietro/Sort" unique_id=2142596841]
+y_sort_enabled = true
+position = Vector2(0, 79)
+tile_map_data = PackedByteArray("AAD9//n/BgAEAAwAAAD5//j/BgACAAwAAAD5//n/BgACAA0AAAD6//j/BgADAAwAAAD7//j/BgAEAAwAAAD8//j/BgAEAAwAAAD9//j/BgADAAsAAAD5//f/BgACAAoAAAD6//f/BgADAAoAAAD7//f/BgAEAAoAAAD8//f/BgADAAoAAAD9//f/BgAEAAoAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=286642405]
