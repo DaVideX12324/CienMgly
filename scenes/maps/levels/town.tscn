@@ -12,6 +12,8 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_lewy.tscn" id="13_mq6ex"]
 [ext_resource type="PackedScene" uid="uid://2qlww7yh5prd" path="res://modules/quiz_rpg/scenes/objects/buildings/wieza.tscn" id="14_mys51"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/scarecrow.tscn" id="16_uicu5"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/training_dummy.tscn" id="16_dummy"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/training_dummy_spin.tscn" id="16_dummyspin"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/deska_ukos.tscn" id="17_vp02q"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/deska.tscn" id="18_xkhol"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/worek_pelny.tscn" id="19_3m601"]
@@ -208,16 +210,16 @@ y_sort_enabled = true
 [node name="Scarecrow" parent="Object Layer PC/Small_Objects" unique_id=587597238 instance=ExtResource("16_uicu5")]
 position = Vector2(512, 1040)
 
-[node name="Scarecrow2" parent="Object Layer PC/Small_Objects" unique_id=2138426369 instance=ExtResource("16_uicu5")]
+[node name="TrainingDummy" parent="Object Layer PC/Small_Objects" unique_id=2138426369 instance=ExtResource("16_dummy")]
 position = Vector2(1000, 695)
 
-[node name="Scarecrow3" parent="Object Layer PC/Small_Objects" unique_id=453997176 instance=ExtResource("16_uicu5")]
+[node name="TrainingDummySpin" parent="Object Layer PC/Small_Objects" unique_id=453997176 instance=ExtResource("16_dummyspin")]
 position = Vector2(1029, 714)
 
-[node name="Scarecrow4" parent="Object Layer PC/Small_Objects" unique_id=974998272 instance=ExtResource("16_uicu5")]
+[node name="TrainingDummy2" parent="Object Layer PC/Small_Objects" unique_id=974998272 instance=ExtResource("16_dummy")]
 position = Vector2(1072, 672)
 
-[node name="Scarecrow5" parent="Object Layer PC/Small_Objects" unique_id=915291073 instance=ExtResource("16_uicu5")]
+[node name="TrainingDummySpin2" parent="Object Layer PC/Small_Objects" unique_id=915291073 instance=ExtResource("16_dummyspin")]
 position = Vector2(1084, 721)
 
 [node name="WoodenBoard_1" parent="Object Layer PC/Small_Objects" unique_id=2014632883 instance=ExtResource("17_vp02q")]
