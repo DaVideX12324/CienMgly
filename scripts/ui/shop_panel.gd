@@ -10,7 +10,8 @@ const SCENE := "scenes/ui/shop_panel.tscn"
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const QuizTheme = preload("quiz_theme.gd")
 const INPUT_GRACE := 0.15
-const ROW_FONT := 30
+## Wiersz listy (przycisk z ceną / kosztem po prawej) — scena WYSIWYG, wspólna dla usług NPC.
+const ROW_SCENE: PackedScene = preload("../../scenes/ui/service_row.tscn")
 const DIM := Color(1, 1, 1, 0.45)
 
 @onready var _title: Label = %Title
@@ -102,28 +103,12 @@ func _refresh(focus_index: int) -> void:
 
 
 func _add_row(text: String, right: String, icon: Texture2D, affordable: bool, payload: Variant) -> void:
-	var b := Button.new()
+	var b := ROW_SCENE.instantiate() as Button
 	b.text = text
 	b.icon = icon
-	b.theme_type_variation = QuizTheme.MENU_ITEM
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.add_theme_font_size_override("font_size", ROW_FONT)
-	b.add_theme_constant_override("icon_max_width", 32)
-	b.expand_icon = true
-	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	b.custom_minimum_size = Vector2(0, 44)
 	if not affordable:
 		b.modulate = DIM
-	var price := Label.new()
-	price.text = right
-	price.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	price.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	price.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	price.add_theme_font_size_override("font_size", ROW_FONT)
-	price.set_anchors_preset(Control.PRESET_FULL_RECT)
-	price.offset_right = -12
-	price.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(price)
+	(b.get_node("Right") as Label).text = right
 	var idx := _rows.size()
 	b.pressed.connect(_activate.bind(idx))
 	b.focus_entered.connect(_on_row_focus.bind(idx))

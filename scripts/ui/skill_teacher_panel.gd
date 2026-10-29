@@ -10,7 +10,8 @@ const SCENE := "scenes/ui/skill_teacher_panel.tscn"
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const QuizTheme = preload("quiz_theme.gd")
 const INPUT_GRACE := 0.15
-const ROW_FONT := 30
+## Wiersz listy (przycisk z ceną / kosztem po prawej) — scena WYSIWYG, wspólna dla usług NPC.
+const ROW_SCENE: PackedScene = preload("../../scenes/ui/service_row.tscn")
 const DIM := Color(1, 1, 1, 0.45)
 const Status = QuizRpgNpcSkillTeacher.Status
 
@@ -86,24 +87,11 @@ static func cost_text(node: Node, ls: QuizRpgSkillLesson) -> String:
 
 
 func _add_row(text: String, right: String, available: bool) -> void:
-	var b := Button.new()
+	var b := ROW_SCENE.instantiate() as Button
 	b.text = text
-	b.theme_type_variation = QuizTheme.MENU_ITEM
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.add_theme_font_size_override("font_size", ROW_FONT)
-	b.custom_minimum_size = Vector2(0, 44)
 	if not available:
 		b.modulate = DIM
-	var cost := Label.new()
-	cost.text = right
-	cost.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	cost.add_theme_font_size_override("font_size", ROW_FONT)
-	cost.set_anchors_preset(Control.PRESET_FULL_RECT)
-	cost.offset_right = -12
-	cost.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(cost)
+	(b.get_node("Right") as Label).text = right
 	var idx := _rows.size()
 	b.pressed.connect(_activate.bind(idx))
 	b.focus_entered.connect(_show_info.bind(idx))
