@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="5_ether"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier2.tres" id="6_key_tier2"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_ore.tres" id="mat_iron_ore"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_2s.tres" id="9_potion_2s"]
 
 [sub_resource type="Resource" id="Entry_0_iron_sword"]
 script = ExtResource("2_entry")
@@ -43,6 +44,13 @@ count_min = 2
 count_max = 3
 chance = 1.0
 
+[sub_resource type="Resource" id="Entry_t2_potion_2s"]
+script = ExtResource("2_entry")
+item = ExtResource("9_potion_2s")
+weight = 10.0
+count_min = 1
+count_max = 1
+
 [resource]
 script = ExtResource("1_table")
-entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_iron_sword"), SubResource("Entry_1_potion"), SubResource("Entry_2_ether"), SubResource("Entry_3_key_tier2"), SubResource("Entry_mat_iron_ore")])
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_iron_sword"), SubResource("Entry_1_potion"), SubResource("Entry_2_ether"), SubResource("Entry_3_key_tier2"), SubResource("Entry_mat_iron_ore"), SubResource("Entry_t2_potion_2s")])
