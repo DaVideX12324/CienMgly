@@ -20,7 +20,6 @@ const MESSAGE_CHARS_PER_SEC := 60.0  ## tempo wypisywania komunikatów w dolnym 
 const PARTY_CURSOR_MIN_PAD := 8.0  ## kursor wiersza drużyny: odstęp ramki od tekstu w poziomie (px)
 const DeathScreenScene: PackedScene = preload("../../scenes/ui/death_screen.tscn")
 
-const PARTY_SKILL_SP_MAX := 100
 const PARTY_TP_MAX := 100
 ## TP z otrzymanych obrażeń: proporcjonalnie do utraconej części HP — tyle TP za utratę 100% HP
 ## (utrata 50% HP -> 40 TP). Liczone z obrażeń bez redukcji przez obronę (obrona nie zmniejsza TP).
@@ -185,7 +184,8 @@ var _action_menu_open := false
 var _actor_select_open := false  # po „Walcz”: kursor na liście drużyny (prawe okno), wybór postaci
 var _actor_selected_idx := 0
 var _active_actor_index := 0     # postać, która wykonuje akcję w tej turze
-var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY)
+var _heal_target_index := 0     # cel leczenia umiejętności (ONE_ALLY / DEAD_ALLY) i przedmiotu
+var _pending_item := {}          # przedmiot czekający na wybór celu z drużyny
 ## Kursor drużyny wybiera cel leczenia zamiast postaci: 0 — nie, 1 — żywy sojusznik, 2 — nieprzytomny (wskrzeszenie).
 var _ally_pick := 0
 var _guard := {}                 # członek drużyny -> dobra odpowiedź przy Obronie (do końca rundy)
@@ -1660,6 +1660,22 @@ func _open_ally_pick(dead: bool) -> void:
 
 
 func _confirm_ally_pick() -> void:
+	if not _pending_item.is_empty():
+		var t := _actor_selected_idx
+		# Przedmiot, który na tym celu nic by nie dał (pełne HP / SP / TP, brak statusu) — powód, wybór zostaje.
+		var block: String = _ps.item_block_reason(str(_pending_item.get("item_id", "")), t, _item_values(t)) if _ps and _ps.has_method("item_block_reason") else ""
+		if block != "":
+			result_label.visible = true
+			result_label.text = block
+			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
+			return
+		_heal_target_index = t
+		_ally_pick = 0
+		_close_actor_select()
+		var it := _pending_item
+		_pending_item = {}
+		_commit_plan({"item": it})  # przedmiot zużywany w ruchu postaci
+		return
 	_heal_target_index = _actor_selected_idx
 	_ally_pick = 0
 	_close_actor_select()
@@ -1668,6 +1684,11 @@ func _confirm_ally_pick() -> void:
 
 func _cancel_ally_pick() -> void:
 	_ally_pick = 0
+	if not _pending_item.is_empty():
+		_pending_item = {}
+		_close_actor_select()
+		_open_items_menu()
+		return
 	_pending_skill_data.clear()
 	_close_actor_select()
 	_open_skills_menu()
@@ -1697,17 +1718,13 @@ func _use_item(item_data: Dictionary) -> void:
 	if not _ps.has_method("use_item"):
 		return
 	if not _executing:
-		# Przedmiot, który nic by nie dał (pełne HP / SP / TP, brak statusu) — nie do wybrania, menu zostaje.
-		var block: String = _ps.item_block_reason(item_id, _active_actor_index, _item_values(_active_actor_index)) if _ps.has_method("item_block_reason") else ""
-		if block != "":
-			result_label.visible = true
-			result_label.text = block
-			result_label.add_theme_color_override("font_color", Color(0.75, 0.75, 0.82))
-			return
+		# Cel przedmiotu z drużyny (np. odtrutka dla zatrutego towarzysza) — wybór jak przy leczeniu umiejętnością.
+		_pending_item = item_data.duplicate(true)
 		_close_list_menu()
-		_commit_plan({"item": item_data.duplicate(true)})  # przedmiot zużywany w ruchu postaci
+		_open_ally_pick(false)
 		return
-	var use_result: Dictionary = _ps.use_item_on_member(item_id, _active_actor_index, _item_values(_active_actor_index))
+	var target := _heal_target_index
+	var use_result: Dictionary = _ps.use_item_on_member(item_id, target, _item_values(target))
 	var item_name: String = str(use_result.get("name", item_data.get("name", QuizRpgI18n.t("combat.default_item_name", "Przedmiot"))))
 	if not bool(use_result.get("success", false)):
 		result_label.visible = true
@@ -1729,10 +1746,10 @@ func _use_item(item_data: Dictionary) -> void:
 		_flash_sprite(player_sprite_node, Color.GREEN)
 		FloatingText.create_at(player, player.global_position + Vector2(0, -20), "+%d HP" % heal_amount, Color.GREEN, 14)
 	if sp_restore > 0:
-		_restore_party_sp(_active_actor_index, sp_restore)
+		_restore_party_sp(target, sp_restore)
 		effect_parts.append("+%d SP" % sp_restore)
 	if tp_restore > 0:
-		_restore_party_tp(_active_actor_index, tp_restore)
+		_restore_party_tp(target, tp_restore)
 		effect_parts.append("+%d TP" % tp_restore)
 	if (use_result.get("cured_statuses", []) as Array).has("poison"):
 		effect_parts.append(QuizRpgI18n.t("combat.poison_cured", "zatrucie wyleczone"))
@@ -2361,6 +2378,9 @@ func _apply_status_round() -> bool:
 func _end_combat(player_won: bool, fled: bool = false) -> void:
 	phase = Phase.COMBAT_END
 	_log_combat_end(player_won, fled)
+	if _ps and _ps.has_method("set_member_sp"):
+		for i in range(_party_state.size()):
+			_ps.set_member_sp(i, int(_party_state[i].get("sp", 0)))
 	if _ps and _ps.has_method("clear_battle_statuses"):
 		_ps.clear_battle_statuses()
 	_quiz_panel_controller.reset_question()
@@ -3512,7 +3532,34 @@ func _member_damaged(t: int) -> void:
 
 ## HP członka drużyny w walce (bohater z PlayerStats.hp, reszta z danych drużyny).
 func _member_hp(i: int) -> int:
-	return int(_ps.member_hp(i)) if _ps and _ps.has_method("member_hp") else 0
+	return int(_ps.member_hp(i)) if _ps and _ps.has_method("member_hp") else (int(_party_state[i].get("lp", 0)) if i >= 0 and i < _party_state.size() else 0)
+
+
+func _member_max_hp(i: int) -> int:
+	if _ps and _ps.has_method("get_party_member"):
+		var m: Dictionary = _ps.get_party_member(i)
+		return maxi(int(m.get("max_hp", 1)), 1)
+	return maxi(int(_party_state[i].get("lp_max", 1)), 1) if i >= 0 and i < _party_state.size() else 1
+
+
+## SP członka drużyny w walce (z PlayerStats.party).
+func _member_sp(i: int) -> int:
+	if _ps and _ps.has_method("member_sp"):
+		return int(_ps.member_sp(i))
+	if _ps and _ps.has_method("get_party_member"):
+		var m: Dictionary = _ps.get_party_member(i)
+		return int(m.get("sp", 0))
+	return int(_party_state[i].get("sp", 100)) if i >= 0 and i < _party_state.size() else 100
+
+
+## Maksymalne SP członka drużyny w walce.
+func _member_max_sp(i: int) -> int:
+	if _ps and _ps.has_method("member_max_sp"):
+		return int(_ps.member_max_sp(i))
+	if _ps and _ps.has_method("get_party_member"):
+		var m: Dictionary = _ps.get_party_member(i)
+		return maxi(int(m.get("max_sp", 1)), 1)
+	return maxi(int(_party_state[i].get("sp_max", 100)), 1) if i >= 0 and i < _party_state.size() else 100
 
 
 func _party_indices(dead: bool) -> Array[int]:
@@ -3718,25 +3765,25 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 		_set_band_mode(_band_mode)
 
 
-## Stan walki każdego członka drużyny (PlayerStats.party): HP z PlayerStats, pula SP / TP na walkę (jak u lidera).
+## Stan walki każdego członka drużyny (PlayerStats.party): HP i SP z PlayerStats, TP na walkę.
 func _init_party_state() -> void:
 	_party_state.clear()
 	var n: int = _ps.get_party_members().size() if _ps and _ps.has_method("get_party_members") else 1
 	for i in range(maxi(n, 1)):
-		_party_state.append(_new_member_state())
+		_party_state.append(_new_member_state(i))
 		_sync_party_member_from_player(i)
 	if _ps and _ps.has_signal("member_recruited") and not _ps.member_recruited.is_connected(_on_member_recruited):
 		_ps.member_recruited.connect(_on_member_recruited)
 
 
 ## Stan walki uczestnika: TP na start losowo TP_START_MIN..TP_START_MAX (także przy dołączeniu w trakcie walki).
-func _new_member_state() -> Dictionary:
+func _new_member_state(index: int = 0) -> Dictionary:
 	return {
 		"name": "",
-		"lp": 0,
-		"lp_max": 1,
-		"sp": PARTY_SKILL_SP_MAX,
-		"sp_max": PARTY_SKILL_SP_MAX,
+		"lp": _member_hp(index),
+		"lp_max": _member_max_hp(index),
+		"sp": _member_sp(index),
+		"sp_max": _member_max_sp(index),
 		"tp": randi_range(TP_START_MIN, TP_START_MAX),
 		"tp_max": PARTY_TP_MAX,
 	}
@@ -3749,14 +3796,15 @@ func _on_member_recruited(index: int, _hero_id: String) -> void:
 	if phase == Phase.COMBAT_END:
 		return
 	while _party_state.size() <= index:
-		_party_state.append(_new_member_state())
-		_sync_party_member_from_player(_party_state.size() - 1)
+		var new_idx := _party_state.size()
+		_party_state.append(_new_member_state(new_idx))
+		_sync_party_member_from_player(new_idx)
 	if index < party_rows.size():
 		_push_log(QuizRpgI18n.tf("combat.member_joins_battle", {"name": _member_name(index)}, "{name} dołącza do walki!"), Color(0.55, 0.85, 1.0))
 	_refresh_stats_panel()
 
 
-## Imię i HP członka z PlayerStats (lider: player_name / hp / max_hp, reszta: dane drużyny).
+## Imię, HP i SP członka z PlayerStats (lider: player_name / hp / max_hp, reszta: dane drużyny).
 func _sync_party_member_from_player(index: int = 0) -> void:
 	if _ps == null or index < 0 or index >= _party_state.size():
 		return
@@ -3764,7 +3812,9 @@ func _sync_party_member_from_player(index: int = 0) -> void:
 	var m: Dictionary = _ps.get_party_member(index) if _ps.has_method("get_party_member") else {}
 	member["name"] = str(m.get("name", "?"))
 	member["lp"] = _member_hp(index)
-	member["lp_max"] = maxi(int(m.get("max_hp", 1)), 1)
+	member["lp_max"] = _member_max_hp(index)
+	member["sp"] = _member_sp(index)
+	member["sp_max"] = _member_max_sp(index)
 	_party_state[index] = member
 
 
@@ -3783,22 +3833,40 @@ func _item_values(index: int) -> Dictionary:
 	if index < 0 or index >= _party_state.size():
 		return {}
 	var m := _party_state[index]
-	return {"sp": int(m.get("sp", 0)), "max_sp": int(m.get("sp_max", PARTY_SKILL_SP_MAX)), "tp": int(m.get("tp", 0)), "max_tp": int(m.get("tp_max", PARTY_TP_MAX))}
+	return {
+		"sp": int(m.get("sp", 0)),
+		"max_sp": int(m.get("sp_max", 1)),
+		"tp": int(m.get("tp", 0)),
+		"max_tp": int(m.get("tp_max", PARTY_TP_MAX)),
+	}
 
 
 func _consume_party_sp(index: int, amount: int) -> void:
 	if index < 0 or index >= _party_state.size():
 		return
+	if _ps and _ps.has_method("consume_member_sp"):
+		_ps.consume_member_sp(index, amount)
 	var member := _party_state[index]
-	member["sp"] = clampi(int(member.get("sp", 0)) - maxi(amount, 0), 0, int(member.get("sp_max", PARTY_SKILL_SP_MAX)))
+	var max_sp_val: int = _member_max_sp(index)
+	var new_sp: int = _member_sp(index) if (_ps and _ps.has_method("member_sp")) else clampi(int(member.get("sp", 0)) - maxi(amount, 0), 0, max_sp_val)
+	member["sp"] = new_sp
+	member["sp_max"] = max_sp_val
 	_party_state[index] = member
 
 
 func _restore_party_sp(index: int, amount: int) -> void:
 	if index < 0 or index >= _party_state.size():
 		return
+	if _ps and _ps.has_method("member_sp"):
+		var cur_in_ps := int(_ps.member_sp(index))
+		var cur_in_state := int(_party_state[index].get("sp", 0))
+		if cur_in_ps == cur_in_state and _ps.has_method("restore_member_sp"):
+			_ps.restore_member_sp(index, amount)
 	var member := _party_state[index]
-	member["sp"] = clampi(int(member.get("sp", 0)) + maxi(amount, 0), 0, int(member.get("sp_max", PARTY_SKILL_SP_MAX)))
+	var max_sp_val: int = _member_max_sp(index)
+	var new_sp: int = _member_sp(index) if (_ps and _ps.has_method("member_sp")) else clampi(int(member.get("sp", 0)) + maxi(amount, 0), 0, max_sp_val)
+	member["sp"] = new_sp
+	member["sp_max"] = max_sp_val
 	_party_state[index] = member
 
 
