@@ -26,7 +26,7 @@ RECOLOR = {
     (24, 82, 116): JUTE[2], (37, 79, 96): JUTE[2], (26, 53, 64): JUTE[3],
 }
 HEAD_ROWS = 17          # kapelusz + twarz stracha (wiersze 0..16)
-HEAD_C, HEAD_R = (11.5, 11.0), 5.2
+HEAD_C, HEAD_R = (11.5, 11.0), 5.7
 ## Korpus stracha ma parzystą szerokość (środek x 11,5), więc tarcza też parzysta: 8x8 od x 8.
 TARGET_TL = (8, 20)
 TARGET = ['..RRRR..', '.RWWWWR.', 'RWWRRWWR', 'RWRRRRWR', 'RWRRRRWR', 'RWWRRWWR', '.RWWWWR.', '..RRRR..']
