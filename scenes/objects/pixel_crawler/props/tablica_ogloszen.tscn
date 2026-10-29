@@ -13,11 +13,11 @@ collision_mask = 0
 metadata/object_group = "props"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=781505232]
-position = Vector2(-1, 0)
+position = Vector2(0, -3)
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-16, -23)
+offset = Vector2(-17, -20)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1047021130]
 position = Vector2(0, 8)
-polygon = PackedVector2Array(-15, -8, 15, -8, 15, 0, -15, 0)
+polygon = PackedVector2Array(-15, -8, 15, -8, 15, 0, 10, 0, 10, -5, -10, -5, -10, 0, -15, 0)
