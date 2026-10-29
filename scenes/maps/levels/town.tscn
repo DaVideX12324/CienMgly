@@ -95,10 +95,6 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c1.tscn" id="t_30"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r1c0.tscn" id="t_31"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_feet"]
-radius = 3.0
-height = 9.0
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_portal"]
 size = Vector2(64, 32)
 
@@ -1619,16 +1615,6 @@ intro_lines = PackedStringArray("Psst. Nie patrz tak — nie jestem stąd, tak j
 progress_lines = PackedStringArray("Jeszcze {left}. Nie poddawaj się.")
 done_lines = PackedStringArray("Dotrzymałeś słowa. Idę z tobą!")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Companions/Npc_lotrzyk" unique_id=2075933049]
-y_sort_enabled = true
-position = Vector2(0, 7)
-offset = Vector2(0, -9)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Companions/Npc_lotrzyk" unique_id=1265558637]
-position = Vector2(0, 11)
-rotation = 1.5707964
-shape = SubResource("CapsuleShape2D_feet")
-
 [node name="Npc_mag" parent="Companions" unique_id=146482169 instance=ExtResource("2_71fwf")]
 position = Vector2(776, 488)
 hero_id = "mag"
@@ -1639,16 +1625,6 @@ intro_lines = PackedStringArray("Moje zapasy się skończyły, a bez nich nie rz
 progress_lines = PackedStringArray("Jeszcze {left}. Nie poddawaj się.")
 done_lines = PackedStringArray("Dotrzymałeś słowa. Idę z tobą!")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Companions/Npc_mag" unique_id=1767475974]
-y_sort_enabled = true
-position = Vector2(0, 7)
-offset = Vector2(0, -9)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Companions/Npc_mag" unique_id=352689234]
-position = Vector2(0, 11)
-rotation = 1.5707964
-shape = SubResource("CapsuleShape2D_feet")
-
 [node name="Npc_kaplan" parent="Companions" unique_id=1823739234 instance=ExtResource("2_71fwf")]
 position = Vector2(792, 648)
 hero_id = "kaplan"
@@ -1656,16 +1632,6 @@ quest_count = 10
 intro_lines = PackedStringArray("Mgła zabiera wspomnienia, ale wiedza zostaje.", "Odpowiedz poprawnie na {count} pytań — pomogę ci przetrwać, co nadejdzie.")
 progress_lines = PackedStringArray("Jeszcze {left}. Nie poddawaj się.")
 done_lines = PackedStringArray("Dotrzymałeś słowa. Idę z tobą!")
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Companions/Npc_kaplan" unique_id=32653667]
-y_sort_enabled = true
-position = Vector2(0, 7)
-offset = Vector2(0, -9)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Companions/Npc_kaplan" unique_id=146948319]
-position = Vector2(0, 11)
-rotation = 1.5707964
-shape = SubResource("CapsuleShape2D_feet")
 
 [node name="Spawns" type="Node2D" parent="." unique_id=1993417404]
 
