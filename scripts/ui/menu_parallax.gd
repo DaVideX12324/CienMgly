@@ -5,7 +5,7 @@ extends Control
 ## do dołu — nadmiar nieba ucięty u góry); dalsze płyną wolniej, bliższe szybciej, a ruch myszy lekko je przesuwa.
 
 ## Prędkość najbliższej warstwy (px grafiki na sekundę); najdalsza stoi.
-@export var drift_px_per_sec := 4.0
+@export var drift_px_per_sec := 12.0
 ## Przesunięcie najbliższej warstwy przy myszy na brzegu ekranu (px grafiki).
 @export var mouse_shift_px := 8.0
 
@@ -45,4 +45,5 @@ func _process(delta: float) -> void:
 		var off := fposmod(_t * drift_px_per_sec * depth + _mouse * mouse_shift_px * depth, tile_w)
 		layer.scale = Vector2(k, k)
 		layer.size = Vector2(ceilf(vs.x / k) + tile_w * 2.0, src_h)
-		layer.position = Vector2(roundf(-(off + tile_w)) * k, vs.y - src_h * k)
+		# Co piksel ekranu, nie grafiki — przy skali ×5–6 skoki o cały piksel grafiki klatkowały.
+		layer.position = Vector2(roundf(-(off + tile_w) * k), vs.y - src_h * k)
