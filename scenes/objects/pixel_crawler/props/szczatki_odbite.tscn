@@ -11,5 +11,5 @@ filter_clip = true
 texture = SubResource("AtlasTexture_main")
 centered = false
 flip_h = true
-offset = Vector2(-8, -14)
+offset = Vector2(-8, -7)
 metadata/object_group = "props"

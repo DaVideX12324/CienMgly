@@ -15,7 +15,7 @@ metadata/object_group = "ruins"
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-29, -17)
+offset = Vector2(-29, -9)
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
-polygon = PackedVector2Array(-26, -5, 26, -5, 26, 1, -26, 1)
+polygon = PackedVector2Array(-26, 3, 26, 3, 26, 8, -26, 8)

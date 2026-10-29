@@ -10,5 +10,5 @@ filter_clip = true
 [node name="DeskaUkos" type="Sprite2D"]
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-14, -29)
+offset = Vector2(-14, -21)
 metadata/object_group = "props"

@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://ca3vl8ypqmw3i"]
 
 [ext_resource type="Texture2D" uid="uid://0fcagsaimb2r" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Ruins.png" id="1_tex"]
 
@@ -7,15 +7,17 @@ atlas = ExtResource("1_tex")
 region = Rect2(71, 593, 34, 31)
 filter_clip = true
 
-[node name="TablicaOgloszen" type="StaticBody2D"]
+[node name="TablicaOgloszen" type="StaticBody2D" unique_id=145917091]
 collision_layer = 32
 collision_mask = 0
 metadata/object_group = "props"
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=781505232]
+position = Vector2(-1, 0)
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-17, -31)
+offset = Vector2(-16, -23)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
-polygon = PackedVector2Array(-10, -6, 10, -6, 10, 1, -10, 1)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="." unique_id=1047021130]
+position = Vector2(0, 8)
+polygon = PackedVector2Array(-15, -8, 15, -8, 15, 0, -15, 0)

@@ -1,7 +1,8 @@
 """Sceny obiektów z atlasu ruin (gen_ruins_atlas.py) i zamienników Desert Oasis wziętych wprost z plików Pixel Crawlera:
-StaticBody2D (warstwa 32) + Sprite2D z AtlasTexture (punkt sceny = środek podstawy sprite'a) + kolizja przy podstawie;
+StaticBody2D (warstwa 32) + Sprite2D z AtlasTexture (punkt sceny 8 px nad środkiem podstawy sprite'a, patrz lift) +
+kolizja przy podstawie;
 drobiazgi bez kolizji to sam Sprite2D jako korzeń. Ruiny -> scenes/objects/pixel_crawler/ruins/, miejskie -> scenes/objects/pixel_crawler/props/.
-Uruchomienie: python -I gen_ruins_scenes.py (po gen_ruins_atlas.py; istniejące sceny są nadpisywane)."""
+Uruchomienie: python -I gen_ruins_scenes.py (po gen_ruins_atlas.py; nadpisuje swoje sceny, pomija zapisane w edytorze)."""
 import os
 import re
 
@@ -20,6 +21,7 @@ RUINS = STATIC + "Ruins.png"
 
 TOWN = {"drogowskaz", "tablica_menu", "tablica_ogloszen", "bal", "bale_stos", "szczatki"}
 FLIPPED = {"szczatki_odbite": "szczatki"}   # odbicie w scenie (flip_h), bez kopii w atlasie
+LIFT = 8
 NO_COLLISION = ("odlamki", "szczatki", "lopata", "deska", "dzban_rozbity")
 LYING = ("lezac", "bal", "mur", "przewrocon", "pekniety", "stos")
 # elementy bez zmian prosto z plików widocznych w Godocie: nazwa -> (plik w assets/, obszar do przycięcia, flip_h)
@@ -53,14 +55,22 @@ def node_name(name):
     return "".join(part.capitalize() for part in name.split("_"))
 
 
+def lift(h):
+    """Origin nad dołem sprite'a (user, tablica ogłoszeń 2026-10-29: 8 px) — gracz sortuje się ~11 px nad stopami,
+    więc przy originie na samym dole chował się za obiektem, stojąc przed nim. Niskie obiekty: najwyżej połowa wysokości."""
+    return min(LIFT, h // 2)
+
+
 def collision(name, w, h):
+    """Pas przy podstawie: od dołu sprite'a (y = lift) w górę."""
     if any(k in name for k in NO_COLLISION):
         return None
     if any(k in name for k in LYING):
         hw, top = max(2, w // 2 - 3), min(8, max(3, h // 3))
     else:
         hw, top = max(2, int(w * 0.32)), min(6, max(3, h // 4))
-    return "PackedVector2Array(%d, %d, %d, %d, %d, %d, %d, %d)" % (-hw, -top, hw, -top, hw, 1, -hw, 1)
+    b = lift(h)
+    return "PackedVector2Array(%d, %d, %d, %d, %d, %d, %d, %d)" % (-hw, b - top, hw, b - top, hw, b, -hw, b)
 
 
 def scene(name, tex_rel, rect, flip=False, group="props"):
@@ -71,7 +81,7 @@ def scene(name, tex_rel, rect, flip=False, group="props"):
              '[sub_resource type="AtlasTexture" id="AtlasTexture_main"]', 'atlas = ExtResource("1_tex")',
              "region = Rect2(%d, %d, %d, %d)" % (x, y, w, h), "filter_clip = true", ""]
     sprite = ['texture = SubResource("AtlasTexture_main")', "centered = false"] + (["flip_h = true"] if flip else []) + \
-             ["offset = Vector2(%d, %d)" % (-(w // 2), -h)]
+             ["offset = Vector2(%d, %d)" % (-(w // 2), lift(h) - h)]
     poly = collision(name, w, h)
     if not poly:  # sam sprite: Sprite2D jako korzeń
         lines += ['[node name="%s" type="Sprite2D"]' % node_name(name)] + sprite + ['metadata/object_group = "%s"' % group, ""]
@@ -83,8 +93,13 @@ def scene(name, tex_rel, rect, flip=False, group="props"):
 
 
 def write(folder, name, text):
+    """Nie nadpisuje scen zapisanych w edytorze (unique_id) — to ręczne poprawki usera."""
+    path = os.path.join(OBJ, folder, name + ".tscn")
+    if os.path.exists(path) and "unique_id=" in open(path, encoding="utf-8").read():
+        print("pominięta (edytowana w Godocie):", folder + "/" + name)
+        return
     os.makedirs(os.path.join(OBJ, folder), exist_ok=True)
-    with open(os.path.join(OBJ, folder, name + ".tscn"), "w", encoding="utf-8", newline="\n") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
 

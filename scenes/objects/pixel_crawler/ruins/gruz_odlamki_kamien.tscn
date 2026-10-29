@@ -10,5 +10,5 @@ filter_clip = true
 [node name="GruzOdlamkiKamien" type="Sprite2D"]
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-9, -11)
+offset = Vector2(-9, -6)
 metadata/object_group = "ruins"

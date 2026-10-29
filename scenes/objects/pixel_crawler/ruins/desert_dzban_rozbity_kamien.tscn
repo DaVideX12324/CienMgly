@@ -10,5 +10,5 @@ filter_clip = true
 [node name="DesertDzbanRozbityKamien" type="Sprite2D"]
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-7, -13)
+offset = Vector2(-7, -7)
 metadata/object_group = "ruins"
