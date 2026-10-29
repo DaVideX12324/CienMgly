@@ -54,7 +54,8 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/banners/banner_post_herb_zielony.tscn" id="80_xlvth"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_menu.tscn" id="81_mlrkn"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/drogowskaz.tscn" id="82_oqpxl"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/skrzynia.tscn" id="83_a4s3p"]
+[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/closed_chest_tutorial.tscn" id="83_a4s3p"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/loot/town_chests.tres" id="83_townloot"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/bal.tscn" id="84_nma14"]
 [ext_resource type="PackedScene" uid="uid://ca3vl8ypqmw3i" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_ogloszen.tscn" id="85_u7pdi"]
 [ext_resource type="PackedScene" uid="uid://cd10dxevnubxm" path="res://assets/scratch_desert_town/scenes/levels/desert_town_plants.tscn" id="86_t6wt0"]
@@ -1551,11 +1552,23 @@ position = Vector2(320, 339)
 [node name="Chest_Sand_1" parent="Object Layer PC/Big_Objects" unique_id=829497094 instance=ExtResource("83_a4s3p")]
 position = Vector2(164, 894)
 
+[node name="Chest" parent="Object Layer PC/Big_Objects/Chest_Sand_1"]
+loot_data = ExtResource("83_townloot")
+tier = 1
+
 [node name="Chest_Sand_2" parent="Object Layer PC/Big_Objects" unique_id=2041715844 instance=ExtResource("83_a4s3p")]
 position = Vector2(1169, 498)
 
+[node name="Chest" parent="Object Layer PC/Big_Objects/Chest_Sand_2"]
+loot_data = ExtResource("83_townloot")
+tier = 1
+
 [node name="Chest_Sand_3" parent="Object Layer PC/Big_Objects" unique_id=780064552 instance=ExtResource("83_a4s3p")]
 position = Vector2(478, 1201)
+
+[node name="Chest" parent="Object Layer PC/Big_Objects/Chest_Sand_3"]
+loot_data = ExtResource("83_townloot")
+tier = 1
 
 [node name="Logs_Sand_2" parent="Object Layer PC/Big_Objects" unique_id=1000855882 instance=ExtResource("84_nma14")]
 position = Vector2(472, 521)
@@ -1656,3 +1669,9 @@ shape = SubResource("CircleShape2D_vk0i2")
 
 [node name="SewerGrate" parent="." unique_id=1580447213 instance=ExtResource("grate_scene")]
 position = Vector2(873, 1175)
+
+[editable path="Object Layer PC/Big_Objects/Chest_Sand_1"]
+
+[editable path="Object Layer PC/Big_Objects/Chest_Sand_2"]
+
+[editable path="Object Layer PC/Big_Objects/Chest_Sand_3"]
