@@ -5,6 +5,12 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+## [0.9.5-beta] — 2026-10-29
+
+### Zmieniono
+- Samouczek: słabszy boss-szlam (na lv 5: HP 600 → 421, ATK 44 → 30, DEF 40 → 32, MAT 44 → 30) — gracz lv 3 nie miał szans.
+- Miasto: zmiany z edytora (deski, katalog obiektów).
+
 ## [0.9.4-beta] — 2026-10-29
 
 ### Zmieniono
