@@ -6,6 +6,11 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Nowe miasto w `town.tscn` (Pixel Crawler, bez Desert Oasis): domy, ruiny, propsy, NPC z postaciami LumenLore, rośliny.
+- Postacie drużyny i NPC generowane z szablonu LumenLorePixels (8 kierunków, bieg).
+- Atlas ruin `Ruins.png` i sceny ruin / miejskich propsów (generatory `tools/gen_ruins_atlas.py`, `tools/gen_ruins_scenes.py`).
+- Schody i piętro domu (`QuizRpgZTrigger`): poziom postaci (na schodach / za nimi) zależny od drogi, z kolizjami górnego poziomu.
+- Banery Pixel Crawlera na słupach (w tym żywioły), strach na wróble, odblokowanie gracza przy zakleszczeniu.
 - Grupy efektów dźwiękowych (opcje → Dźwięk, pod „Efekty dźwiękowe”): interfejs, walka, otoczenie. Kroki i kolce
   grają w otoczeniu, okna NPC (sklep, nauczyciel, kowal, karczma, zadania) i umiejętność z menu Esc w interfejsie;
   reszta wg nazwy dźwięku (AudioService).
