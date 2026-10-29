@@ -31,6 +31,10 @@ var _in_slots := false
 
 
 func _ready() -> void:
+	if get_tree().get_nodes_in_group(&"death_screen").size() > 0:
+		queue_free()  # już jest jeden
+		return
+	add_to_group(&"death_screen")
 	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę
 	var gm := _singleton("GameManager")
 	if gm and gm.has_method("change_state"):
@@ -170,6 +174,12 @@ func _on_main_menu() -> void:
 	gm.call("return_to_main_menu")
 
 
+## Gra stoi pod ekranem, dopóki gracz go nie zamknie (nic innego nie może jej odpauzować).
+func _process(_delta: float) -> void:
+	if not _leaving and not get_tree().paused:
+		get_tree().paused = true
+
+
 ## Wyjście: odpauzowanie (przejście sceny GameManagera to tween, w pauzie stoi), nietykalność gracza na czas
 ## zaciemnienia, ekran znika po chwili (przejście zasłania już ekran).
 func _leave() -> void:
@@ -178,6 +188,7 @@ func _leave() -> void:
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.has_method("grant_encounter_immunity"):
 			p.call("grant_encounter_immunity", leave_immunity)
+	remove_from_group(&"death_screen")
 	get_tree().paused = false
 	get_tree().create_timer(0.6, true).timeout.connect(queue_free)
 

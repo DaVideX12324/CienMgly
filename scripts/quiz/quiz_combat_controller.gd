@@ -274,7 +274,8 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
-	if get_tree() and get_tree().paused:
+	# Przy śmierci drużyny pauzę trzyma ekran śmierci — inaczej wrogowie ruszają pod nim i zaczynają nową walkę.
+	if get_tree() and get_tree().paused and get_tree().get_first_node_in_group(&"death_screen") == null:
 		get_tree().paused = false
 
 
