@@ -5,6 +5,17 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Zmieniono
+- Sklep: wybór przedmiotu, ilość (−/+, ←/→) i przycisk Kup / Sprzedaj z ceną.
+- Okna NPC (sklep, nauczyciel, kowal) obsługują WASD / Z / X.
+- Towarzysze dołączają na własnym poziomie (base_level), nie na poziomie gracza.
+- Miasto: skrzynie z łupem.
+- Ekonomia: wrogowie dają o połowę mniej dukatów (bossowie ×4 zamiast ×6).
+- Umiejętności bossów ×0,7 (było ×0,6); bossowie sekretnych pokoi na lv 7 (było 9).
+
+### Naprawiono
+- Walka: pas drużyny znikał przy kolejnej postaci (przerwana animacja zostawiała ściśnięte okno).
+
 ### Naprawiono
 - Wyeksportowana gra: odtrutka nie leczyła (pola PackedStringArray w .tres gubione przy konwersji eksportu dla skryptów zasobów bez @tool) — skrypty danych (przedmioty, postacie, wrogowie, kafle, kroki) jako @tool.
 - Walka: przedmioty z wyborem celu z drużyny; winieta zatrucia tylko poza walką.

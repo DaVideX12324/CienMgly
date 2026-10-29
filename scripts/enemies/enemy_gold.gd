@@ -7,9 +7,9 @@ extends RefCounted
 ## dowolna — ceny w sklepie liczy się w „zabiciach zwykłego wroga” (docs/kontekst/ekwipunek_szkic.md). Rozmiar mapy: jak XP
 ## (skala po liczbie spawnów) nakłada EnemyBase.
 
-const GOLD_PER_ATK := 2.0
+const GOLD_PER_ATK := 1.0  # 2026-10-30: po jaskiniach ~2800 D — za dużo
 const TIER_WEIGHT := {1: 0.6, 2: 1.0, 3: 1.6}
-const BOSS_MULT := 6.0
+const BOSS_MULT := 4.0
 
 
 ## ATK standardowej broni na poziomie L (broń ze sklepu, QuizRpgStatScale: 10 -> ≈ 5700 od lv 1 do 100).

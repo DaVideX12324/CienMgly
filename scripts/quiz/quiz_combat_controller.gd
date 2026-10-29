@@ -470,7 +470,7 @@ func trigger_instant_win() -> void:
 
 
 ## Umiejętności bossów (tier 4+) po testach za mocne: obrażenia ×BOSS_SKILL_DAMAGE, odnowienie +BOSS_SKILL_EXTRA_COOLDOWN tur.
-const BOSS_SKILL_DAMAGE := 0.6
+const BOSS_SKILL_DAMAGE := 0.7
 const BOSS_SKILL_EXTRA_COOLDOWN := 2
 
 
