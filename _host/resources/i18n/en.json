@@ -40,6 +40,7 @@
   "host.options.scale_xsmall": "Very Small (0.5x)",
   "host.options.scale_small": "Small (0.75x)",
   "host.options.scale_normal": "Normal (1x)",
+  "host.options.scale_medium": "Medium (1.25x)",
   "host.options.scale_large": "Large (1.5x)",
   "host.options.scale_xlarge": "4K (2x)",
   "host.options.vsync": "V-Sync (vertical sync)",

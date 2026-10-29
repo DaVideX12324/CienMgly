@@ -2,44 +2,43 @@ extends CanvasLayer
 
 signal closed
 
-@onready var _btn_windowed: Button = $Panel/Margin/VBox/Tabs/Ekran/HBoxMode/BtnWindowed
-@onready var _btn_borderless: Button = $Panel/Margin/VBox/Tabs/Ekran/HBoxMode/BtnBorderless
-@onready var _btn_fullscreen: Button = $Panel/Margin/VBox/Tabs/Ekran/HBoxMode/BtnFullscreen
-@onready var _res_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/ResOption
-@onready var _res_note: Label = $Panel/Margin/VBox/Tabs/Ekran/ResNote
-@onready var _monitor_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/MonitorOption
-@onready var _scale_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/ScaleOption
-@onready var _vsync_check: CheckButton = $Panel/Margin/VBox/Tabs/Ekran/VSyncCheck
-@onready var _fps_label: Label = $Panel/Margin/VBox/Tabs/Ekran/FpsLabel
-@onready var _fps_slider: HSlider = $Panel/Margin/VBox/Tabs/Ekran/FpsRow/FpsSlider
-@onready var _fps_spin: SpinBox = $Panel/Margin/VBox/Tabs/Ekran/FpsRow/FpsSpin
-@onready var _quizless_mode: CheckButton = $Panel/Margin/VBox/Tabs/Ogolne/QuizlessMode
-@onready var _lang_label: Label = $Panel/Margin/VBox/Tabs/Ogolne/LangLabel
-@onready var _lang_option: OptionButton = $Panel/Margin/VBox/Tabs/Ogolne/LangOption
-@onready var _mode_label: Label = $Panel/Margin/VBox/Tabs/Ekran/ModeLabel
-@onready var _monitor_label: Label = $Panel/Margin/VBox/Tabs/Ekran/MonitorLabel
-@onready var _res_label: Label = $Panel/Margin/VBox/Tabs/Ekran/ResLabel
-@onready var _scale_label: Label = $Panel/Margin/VBox/Tabs/Ekran/ScaleLabel
+@onready var _btn_windowed: Button = $Panel/Margin/VBox/Tabs/Ekran/Content/HBoxMode/BtnWindowed
+@onready var _btn_borderless: Button = $Panel/Margin/VBox/Tabs/Ekran/Content/HBoxMode/BtnBorderless
+@onready var _btn_fullscreen: Button = $Panel/Margin/VBox/Tabs/Ekran/Content/HBoxMode/BtnFullscreen
+@onready var _res_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/Content/ResOption
+@onready var _res_note: Label = $Panel/Margin/VBox/Tabs/Ekran/Content/ResNote
+@onready var _monitor_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/Content/MonitorOption
+@onready var _scale_option: OptionButton = $Panel/Margin/VBox/Tabs/Ekran/Content/ScaleOption
+@onready var _vsync_check: CheckButton = $Panel/Margin/VBox/Tabs/Ekran/Content/VSyncCheck
+@onready var _fps_label: Label = $Panel/Margin/VBox/Tabs/Ekran/Content/FpsLabel
+@onready var _fps_slider: HSlider = $Panel/Margin/VBox/Tabs/Ekran/Content/FpsRow/FpsSlider
+@onready var _fps_spin: SpinBox = $Panel/Margin/VBox/Tabs/Ekran/Content/FpsRow/FpsSpin
+@onready var _quizless_mode: CheckButton = $Panel/Margin/VBox/Tabs/Ogolne/Content/QuizlessMode
+@onready var _lang_label: Label = $Panel/Margin/VBox/Tabs/Ogolne/Content/LangLabel
+@onready var _lang_option: OptionButton = $Panel/Margin/VBox/Tabs/Ogolne/Content/LangOption
+@onready var _mode_label: Label = $Panel/Margin/VBox/Tabs/Ekran/Content/ModeLabel
+@onready var _monitor_label: Label = $Panel/Margin/VBox/Tabs/Ekran/Content/MonitorLabel
+@onready var _res_label: Label = $Panel/Margin/VBox/Tabs/Ekran/Content/ResLabel
+@onready var _scale_label: Label = $Panel/Margin/VBox/Tabs/Ekran/Content/ScaleLabel
 
-@onready var _slider_master: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SliderMaster
-@onready var _slider_music: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SliderMusic
-@onready var _slider_sfx: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SliderSfx
-@onready var _slider_sfx_ui: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox/SliderSfxUi
-@onready var _slider_sfx_combat: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox/SliderSfxCombat
-@onready var _slider_sfx_env: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/SfxGroups/VBox/SliderSfxEnv
-@onready var _lbl_master: Label = $Panel/Margin/VBox/Tabs/Dzwiek/LblMaster
-@onready var _lbl_music: Label = $Panel/Margin/VBox/Tabs/Dzwiek/LblMusic
-@onready var _lbl_sfx: Label = $Panel/Margin/VBox/Tabs/Dzwiek/LblSfx
+@onready var _slider_master: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/Content/SliderMaster
+@onready var _slider_music: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/Content/SliderMusic
+@onready var _slider_sfx: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/Content/SliderSfx
+@onready var _slider_sfx_ui: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/Content/SfxGroups/VBox/SliderSfxUi
+@onready var _slider_sfx_combat: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/Content/SfxGroups/VBox/SliderSfxCombat
+@onready var _slider_sfx_env: HSlider = $Panel/Margin/VBox/Tabs/Dzwiek/Content/SfxGroups/VBox/SliderSfxEnv
+@onready var _lbl_master: Label = $Panel/Margin/VBox/Tabs/Dzwiek/Content/LblMaster
+@onready var _lbl_music: Label = $Panel/Margin/VBox/Tabs/Dzwiek/Content/LblMusic
+@onready var _lbl_sfx: Label = $Panel/Margin/VBox/Tabs/Dzwiek/Content/LblSfx
 
-@onready var _skin_tab: VBoxContainer = $Panel/Margin/VBox/Tabs/Motyw
-@onready var _skin_option: OptionButton = $Panel/Margin/VBox/Tabs/Motyw/SkinOption
-@onready var _slider_brightness: HSlider = $Panel/Margin/VBox/Tabs/Motyw/SliderBrightness
-@onready var _lbl_skin: Label = $Panel/Margin/VBox/Tabs/Motyw/LblSkin
-@onready var _lbl_brightness: Label = $Panel/Margin/VBox/Tabs/Motyw/LblBrightness
-@onready var _lbl_no_skins: Label = $Panel/Margin/VBox/Tabs/Motyw/LblNoSkins
-@onready var _lbl_bars: Label = $Panel/Margin/VBox/Tabs/Motyw/LblBars
-@onready var _bars_option: OptionButton = $Panel/Margin/VBox/Tabs/Motyw/BarsOption
-@onready var _extra_options: VBoxContainer = $Panel/Margin/VBox/Tabs/Motyw/ExtraOptions
+@onready var _skin_option: OptionButton = $Panel/Margin/VBox/Tabs/Motyw/Content/SkinOption
+@onready var _slider_brightness: HSlider = $Panel/Margin/VBox/Tabs/Motyw/Content/SliderBrightness
+@onready var _lbl_skin: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblSkin
+@onready var _lbl_brightness: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblBrightness
+@onready var _lbl_no_skins: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblNoSkins
+@onready var _lbl_bars: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblBars
+@onready var _bars_option: OptionButton = $Panel/Margin/VBox/Tabs/Motyw/Content/BarsOption
+@onready var _extra_options: VBoxContainer = $Panel/Margin/VBox/Tabs/Motyw/Content/ExtraOptions
 
 @onready var _sets_list: VBoxContainer = $Panel/Margin/VBox/Tabs/Pytania/SetsScroll/SetsList
 @onready var _lbl_sets: Label = $Panel/Margin/VBox/Tabs/Pytania/LblSets
@@ -1019,6 +1018,9 @@ func _on_scale_changed(_scale: float) -> void:
 	_lbl_master.add_theme_font_size_override("font_size", main_size)
 	_lbl_music.add_theme_font_size_override("font_size", main_size)
 	_lbl_sfx.add_theme_font_size_override("font_size", main_size)
+	for sub in _lbl_sfx.get_parent().get_node("SfxGroups/VBox").get_children():  # grupy efektów: odrobinę mniejsze niż główne
+		if sub is Label:
+			sub.add_theme_font_size_override("font_size", _fs(17))
 	_lbl_skin.add_theme_font_size_override("font_size", main_size)
 	_lbl_brightness.add_theme_font_size_override("font_size", main_size)
 	_lbl_no_skins.add_theme_font_size_override("font_size", _fs(14))

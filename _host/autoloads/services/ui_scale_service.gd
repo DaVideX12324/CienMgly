@@ -2,12 +2,13 @@ extends Node
 
 signal scale_changed(new_scale: float)
 
-enum ScaleMode { XSMALL, SMALL, NORMAL, LARGE, XLARGE }
+enum ScaleMode { XSMALL, SMALL, NORMAL, MEDIUM, LARGE, XLARGE }
 
 const SCALE_VALUES: Dictionary = {
 	ScaleMode.XSMALL: 0.5,
 	ScaleMode.SMALL: 0.75,
 	ScaleMode.NORMAL: 1.0,
+	ScaleMode.MEDIUM: 1.25,
 	ScaleMode.LARGE: 1.5,
 	ScaleMode.XLARGE: 2.0,
 }
@@ -16,6 +17,7 @@ const SCALE_LABELS: Dictionary = {
 	ScaleMode.XSMALL: "Bardzo małe (0.5x)",
 	ScaleMode.SMALL: "Małe (0.75x)",
 	ScaleMode.NORMAL: "Normalne (1x)",
+	ScaleMode.MEDIUM: "Średnie (1.25x)",
 	ScaleMode.LARGE: "Duże (1.5x)",
 	ScaleMode.XLARGE: "4K (2x)",
 }
@@ -23,6 +25,7 @@ const SCALE_LABELS: Dictionary = {
 const MIN_SCREEN_H: Dictionary = {
 	ScaleMode.XLARGE: 2160,
 	ScaleMode.LARGE: 1081,  # powyżej FHD — przy 1080 ×1,5 jest za duże (decyzja usera 2026-10-16)
+	ScaleMode.MEDIUM: 1081,
 	ScaleMode.NORMAL: 900,
 	ScaleMode.SMALL: 720,
 	ScaleMode.XSMALL: 0,
@@ -68,6 +71,7 @@ func get_mode_labels() -> Array[String]:
 			str(i18n.call("t", "host.options.scale_xsmall", SCALE_LABELS[ScaleMode.XSMALL])),
 			str(i18n.call("t", "host.options.scale_small", SCALE_LABELS[ScaleMode.SMALL])),
 			str(i18n.call("t", "host.options.scale_normal", SCALE_LABELS[ScaleMode.NORMAL])),
+			str(i18n.call("t", "host.options.scale_medium", SCALE_LABELS[ScaleMode.MEDIUM])),
 			str(i18n.call("t", "host.options.scale_large", SCALE_LABELS[ScaleMode.LARGE])),
 			str(i18n.call("t", "host.options.scale_xlarge", SCALE_LABELS[ScaleMode.XLARGE])),
 		]
@@ -75,6 +79,7 @@ func get_mode_labels() -> Array[String]:
 		SCALE_LABELS[ScaleMode.XSMALL],
 		SCALE_LABELS[ScaleMode.SMALL],
 		SCALE_LABELS[ScaleMode.NORMAL],
+		SCALE_LABELS[ScaleMode.MEDIUM],
 		SCALE_LABELS[ScaleMode.LARGE],
 		SCALE_LABELS[ScaleMode.XLARGE],
 	]
@@ -96,6 +101,9 @@ func load_from_cfg(cfg: ConfigFile) -> void:
 	var is_auto: bool = cfg.get_value("ui", "ui_scale_auto", true)
 	if not is_auto:
 		var saved: int = cfg.get_value("ui", "ui_scale_mode", -1)
+		# Zapis sprzed skali 1,25 (MEDIUM wstawione przed LARGE): LARGE / XLARGE miały numery o jeden mniejsze.
+		if int(cfg.get_value("ui", "ui_scale_modes_version", 1)) < 2 and saved >= ScaleMode.MEDIUM:
+			saved += 1
 		if saved >= ScaleMode.XSMALL and saved <= ScaleMode.XLARGE:
 			set_mode(saved)
 			return
@@ -105,6 +113,7 @@ func load_from_cfg(cfg: ConfigFile) -> void:
 func save_to_cfg(cfg: ConfigFile) -> void:
 	cfg.set_value("ui", "ui_scale_mode", picked_mode if user_picked and picked_mode >= 0 else current_mode)
 	cfg.set_value("ui", "ui_scale_auto", not user_picked)
+	cfg.set_value("ui", "ui_scale_modes_version", 2)
 
 
 ## Nowa rozdzielczość (opcje, przeciągnięte okno, dopasowanie okna po starcie): skala auto — największa, jaka się

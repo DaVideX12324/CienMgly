@@ -2,7 +2,7 @@ extends Node
 
 signal scale_changed(new_scale: float)
 
-enum ScaleMode { XSMALL, SMALL, NORMAL, LARGE, XLARGE }
+enum ScaleMode { XSMALL, SMALL, NORMAL, MEDIUM, LARGE, XLARGE }
 
 
 var current_mode: int:
