@@ -439,7 +439,7 @@ func _populate_scale() -> void:
 
 
 ## Skala działa od razu i zapisuje się (jak głośność) — potwierdzenia z odliczaniem wymaga tylko okno (tryb,
-## monitor, rozdzielczość). Wcześniej skala czekała na „Zastosuj”, więc wybór bez niego przepadał.
+## monitor, rozdzielczość).
 func _on_scale_item_selected(index: int) -> void:
 	_sel_scale = index
 	_scale_manually_changed = true
@@ -976,6 +976,7 @@ func _on_confirm() -> void:
 	_sel_scale = _prev_scale
 	_scale_manually_changed = false
 	_remember_display_selection()
+	SettingsService.save_settings()  # apply_settings zapisał jeszcze przed ustawieniem skali — bez tego wracała po restarcie
 
 
 func _on_revert() -> void:
