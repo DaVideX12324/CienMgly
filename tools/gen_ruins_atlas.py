@@ -3,7 +3,9 @@
 - zamek: złamane kolumny, bloki, popiersia (złamania dorysowane: wyszczerbiona krawędź, jaśniejszy przełom),
 - ścieki: filary (cały, ułamany, kikut, leżący) w oryginale i w kamieniu,
 - kuźnia (nieużywane): posąg w trzech stanach, w kamieniu; cmentarz (nieużywane): rozbite nagrobki,
-- własny gruz: bloki, stos, słup, mur, odłamki (kamień i piaskowiec).
+- własny gruz: bloki, stos, słup, mur, odłamki (kamień i piaskowiec),
+- miasto (zamienniki Desert Oasis): zrujnowany mur z lica muru zamku, drogowskaz, tablice (menu, ogłoszenia), bale z pnia
+  drzewa, skrzynia z kryjówki (zamknięta, otwarta), łopata z cmentarza, szczątki szkieleta (ostatnia klatka śmierci).
 Każdy element w osobnym slocie siatki 16 px (dół sprite'a = dół slotu, środek w poziomie).
 Uruchomienie: python -I gen_ruins_atlas.py  ->  Ruins.png + lista regionów (nazwa, Rect2) na wyjściu."""
 import os
@@ -231,6 +233,168 @@ def rubble(kind, pal, seed):
 RUBBLE_KINDS = ["blok", "blok_dlugi", "bloki_stos", "slup", "mur", "blok_pekniety", "blok_przewrocony", "odlamki"]
 
 
+# --- miasto: zamienniki obiektów Desert Oasis (mur, drogowskaz, tablice, bale) -----------------------------------
+
+K = (0, 0, 0)                                                                       # kontur mebli Pixel Crawlera
+WOOD = [(47, 28, 16), (90, 54, 30), (125, 76, 40), (160, 97, 49), (186, 120, 66)]   # Furniture.png (+ rozjaśnienie)
+SLATE = [(34, 40, 39), (46, 54, 52), (58, 68, 66)]
+CHALK = (206, 206, 194)
+PAPER = [(206, 196, 170), (232, 224, 202), (150, 140, 120)]
+PIN = (170, 50, 40)
+
+
+class Px:
+    """Płótno do rysowania pikseli z obrysem na zewnątrz (kolor konturu)."""
+
+    def __init__(self, w, h):
+        self.im = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        self.p = self.im.load()
+        self.w, self.h = w, h
+
+    def put(self, x, y, c):
+        if 0 <= x < self.w and 0 <= y < self.h:
+            self.p[x, y] = c + (255,)
+
+    def rect(self, x0, y0, x1, y1, c):
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                self.put(x, y, c)
+
+    def outlined(self, col=K):
+        s = self.im.copy().load()
+        for y in range(self.h):
+            for x in range(self.w):
+                if not s[x, y][3] and any(0 <= x + dx < self.w and 0 <= y + dy < self.h and s[x + dx, y + dy][3]
+                                          and s[x + dx, y + dy][:3] != col for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                    self.p[x, y] = col + (255,)
+        return trim(self.im)
+
+
+def ruined_wall(castle, width, seed):
+    """Zrujnowany mur z lica muru zamku: szczyt opada schodkami w prawo, przełom jaśniejszy, gruz u podstawy."""
+    out_col = RAMPS["kamien"][0]
+    wall = Image.new("RGBA", (width, 40), (0, 0, 0, 0))
+    for x in range(0, width, 48):
+        wall.alpha_composite(castle.crop((16, 80, 64, 112)), (x, 8))
+    rng = random.Random(seed)
+    prof = []
+    for w, top in [(14, 0), (10, 5), (8, 2), (12, 12), (10, 19), (10, 24), (8, 28)]:
+        prof += [top + rng.choice((0, 0, 1, -1)) for _ in range(w)]
+    prof = (prof + [prof[-1]] * width)[:width]
+    p = wall.load()
+    for x in range(width):
+        y = max(0, prof[x]) + 8
+        for yy in range(y):
+            p[x, yy] = (0, 0, 0, 0)
+        if y < wall.height and p[x, y][3]:
+            p[x, y] = out_col + (255,)
+            for k, v in ((1, 30), (2, 14)):
+                if y + k < wall.height and p[x, y + k][3]:
+                    p[x, y + k] = lighter(p[x, y + k], v)
+    c = Px(width + 2, wall.height)
+    c.im.alpha_composite(wall, (1, 0))
+    body = c.outlined(out_col)
+    res = Image.new("RGBA", (width + 30, body.height + 3), (0, 0, 0, 0))
+    res.alpha_composite(body, (0, 0))
+    pal = BLOCK_PALETTES["kamien"]
+    for kind, s, x in (("blok", 7, width - 4), ("odlamki", 14, width + 8), ("blok_pekniety", 12, 20)):
+        im = rubble(kind, pal, s)
+        res.alpha_composite(im, (x, body.height + 3 - im.height))
+    return trim(res)
+
+
+def signpost():
+    c = Px(30, 34)
+    c.rect(13, 2, 16, 33, WOOD[2])                       # słupek
+    for y in range(2, 34):
+        c.put(13, y, WOOD[3])
+        c.put(16, y, WOOD[1])
+    c.put(14, 2, WOOD[4])
+    c.put(15, 2, WOOD[3])
+    for x0, y0, w, right in ((6, 6, 22, True), (2, 15, 18, False)):   # deski-strzałki
+        for y in range(y0, y0 + 7):
+            for x in range(x0, x0 + w):
+                d = (x0 + w - 1 - x) if right else (x - x0)
+                if d < min(3, abs(y - (y0 + 3))):
+                    continue
+                c.put(x, y, WOOD[4] if y == y0 else (WOOD[1] if y == y0 + 6 else (WOOD[2] if y == y0 + 3 else WOOD[3])))
+        c.put(x0 + (2 if right else w - 3), y0 + 3, K)    # gwóźdź
+    return c.outlined()
+
+
+def menu_board():
+    c = Px(18, 26)
+    c.rect(1, 1, 16, 21, WOOD[2])                        # rama
+    for y in range(1, 22):
+        c.put(1, y, WOOD[3])
+        c.put(16, y, WOOD[1])
+    for x in range(1, 17):
+        c.put(x, 1, WOOD[4])
+        c.put(x, 21, WOOD[1])
+    c.rect(3, 3, 14, 19, SLATE[1])                       # łupek
+    for x in range(3, 15):
+        c.put(x, 3, SLATE[0])
+    for y in range(3, 20):
+        c.put(14, y, SLATE[2])
+    for y, (a, b) in zip((6, 9, 12, 15), ((5, 12), (5, 10), (5, 12), (5, 9))):   # kreda
+        for x in range(a, b + 1):
+            if x % 3 != 1:
+                c.put(x, y, CHALK)
+    for x0 in (2, 14):                                   # nóżki
+        for y in range(22, 25):
+            c.put(x0, y, WOOD[2])
+            c.put(x0 + 1, y, WOOD[1])
+    return c.outlined()
+
+
+def bulletin_board():
+    c = Px(34, 32)
+    for x0 in (3, 28):                                   # słupki
+        c.rect(x0, 4, x0 + 2, 31, WOOD[2])
+        for y in range(4, 32):
+            c.put(x0, y, WOOD[3])
+            c.put(x0 + 2, y, WOOD[1])
+    c.rect(1, 2, 32, 4, WOOD[3])                         # daszek
+    for x in range(1, 33):
+        c.put(x, 2, WOOD[4])
+        c.put(x, 4, WOOD[1])
+    for y in range(6, 22):                               # tablica z poziomych desek
+        for x in range(2, 32):
+            c.put(x, y, WOOD[3] if y == 6 else (WOOD[0] if y == 21 else (WOOD[2] if (y - 6) % 5 else WOOD[1])))
+    for x0, y0, w, h in ((5, 8, 7, 9), (14, 9, 6, 7), (22, 8, 7, 10), (13, 17, 5, 3)):   # kartki
+        c.rect(x0, y0, x0 + w - 1, y0 + h - 1, PAPER[1])
+        for y in range(y0, y0 + h):
+            c.put(x0 + w - 1, y, PAPER[0])
+        for y in range(y0 + 2, y0 + h - 1, 2):
+            for x in range(x0 + 1, x0 + w - 2):
+                c.put(x, y, PAPER[2])
+        c.put(x0 + w // 2, y0, PIN)
+    return c.outlined()
+
+
+def tree_log(trees, length):
+    """Bal: prosty odcinek pnia martwego dębu (Trees/Model_01/Size_04) położony na boku, czoło = przekrój pniaka."""
+    strip = trees.crop((191, 96, 207, 116))
+    trunk = Image.new("RGBA", (16, length), (0, 0, 0, 0))
+    for y in range(0, length, strip.height):
+        trunk.alpha_composite(strip, (0, y))
+    log_im = trunk.rotate(90, expand=True)
+    cap = trees.crop((337, 8, 351, 16)).rotate(90, expand=True)
+    c = Px(length + cap.width + 2, 18)
+    c.im.alpha_composite(log_im, (cap.width // 2 + 1, 1))
+    c.im.alpha_composite(cap, (1, 1 + (16 - cap.height) // 2))
+    return c.outlined(min({p[:3] for p in log_im.get_flattened_data() if p[3] == 255}, key=sum))
+
+
+def tree_log_pile(trees):
+    a, b, top = tree_log(trees, 30), tree_log(trees, 26), tree_log(trees, 24)
+    res = Image.new("RGBA", (44, 34), (0, 0, 0, 0))
+    res.alpha_composite(top, (10, 0))
+    res.alpha_composite(a, (0, 34 - a.height))
+    res.alpha_composite(b, (12, 34 - a.height - 9))
+    return trim(res)
+
+
 # --- elementy ---------------------------------------------------------------------------------------------------
 
 def groups():
@@ -286,6 +450,17 @@ def groups():
                [("cmentarz_" + n, im) for n, im in grave_items])
     for pal in ("kamien", "piaskowiec"):
         out.append([("gruz_%s_%s" % (k, pal), rubble(k, BLOCK_PALETTES[pal], 7 + i)) for i, k in enumerate(RUBBLE_KINDS)])
+
+    trees = load(STATIC, "Trees/Model_01/Size_04.png")
+    hideout = load(UNUSED, "hideout/Pixel Crawler - Hideout/Assets/Tiles.png")
+    cemetery = load(UNUSED, "cemetery/Pixel Crawler - Cemetery/Environment/Props/Props.png")
+    skeleton = trim(load(PC, "packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png").crop((704, 0, 768, 64)))
+    out.append([("mur_zrujnowany", ruined_wall(castle, 72, 3)), ("mur_zrujnowany_maly", ruined_wall(castle, 40, 9))])
+    out.append([("drogowskaz", signpost()), ("tablica_menu", menu_board()), ("tablica_ogloszen", bulletin_board()),
+                ("bal", tree_log(trees, 30)), ("bale_stos", tree_log_pile(trees)),
+                ("skrzynia", trim(hideout.crop((224, 272, 256, 304)))), ("skrzynia_otwarta", trim(hideout.crop((256, 260, 288, 304)))),
+                ("lopata", trim(cemetery.crop((82, 49, 93, 80)))), ("lopata_kopiec", trim(cemetery.crop((128, 48, 159, 80)))),
+                ("szczatki", skeleton), ("szczatki_odbite", skeleton.transpose(Image.FLIP_LEFT_RIGHT))])
     return out
 
 
