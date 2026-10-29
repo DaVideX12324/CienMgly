@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Wspinaczka z jaskini do miasta (krótka scenka), zejście do ścieków przez kratkę otwieraną klawiszem E.
+- Bohater w nowym wyglądzie wędrowca (broda, koszula w kratę, plecak).
+- Ramka celu w walce z grafiki Pixel UI; okna i listy w całym UI korzystają z wybranego motywu.
 - Nowe miasto w `town.tscn` (Pixel Crawler, bez Desert Oasis): domy, ruiny, propsy, NPC z postaciami LumenLore, rośliny.
 - Postacie drużyny i NPC generowane z szablonu LumenLorePixels (8 kierunków, bieg).
 - Atlas ruin `Ruins.png` i sceny ruin / miejskich propsów (generatory `tools/gen_ruins_atlas.py`, `tools/gen_ruins_scenes.py`).
