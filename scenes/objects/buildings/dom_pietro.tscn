@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://bqtpyix0t5hlu"]
 
-[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_6yl81"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/z_trigger.gd" id="2_a0x4c"]
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_6yl81"]
+[ext_resource type="Script" uid="uid://d32icsvfwja3b" path="res://modules/quiz_rpg/scripts/world/z_trigger.gd" id="2_a0x4c"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nq12t"]
 radius = 14.0
@@ -39,7 +39,7 @@ y_sort_enabled = true
 [node name="Schody" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1948278698]
 y_sort_enabled = true
 position = Vector2(0, -10)
-tile_map_data = PackedByteArray("AAD6//3/CQAGABgAAAD7//3/CQAHABgAAAD8//3/CQAIABgAAAD6//z/CQAGABQAAAD7//z/CQAHABQAAAD8//z/CQAIABQAAAD5//3/CQAIABAAAAD5//7/CQAIABEAAAD5//z/CQAIAA4AAAD4//z/CQAHAA4AAAD4//3/CQAHAA8AAAD4//7/CQAHABEAAAD4////CQAHABIAAAD3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7/BQAlAA4AAAD9//3/BQAlAA0AAAA=")
+tile_map_data = PackedByteArray("AAD6//3/CQAGABgAAAD7//3/CQAHABgAAAD8//3/CQAIABgAAAD6//z/CQAGABQAAAD7//z/CQAHABQAAAD8//z/CQAIABQAAAD5//3/CQAIABAAAAD5//7/CQAIABEAAAD5//z/CQAIAA4AAAD4//z/CQAHAA4AAAD4//3/CQAHAA8AAAD4//7/CQAHABEAAAD4////CQAHABIAAAD3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7/BQAlAA4AAAD9//3/BQAlAA0AAAD3/wAACQAHABIAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Seg_21" type="Node2D" parent="Tilesets" unique_id=1677673195]
@@ -51,7 +51,7 @@ y_sort_enabled = true
 [node name="Walls" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=1509727475]
 y_sort_enabled = true
 position = Vector2(0, 5)
-tile_map_data = PackedByteArray("AAD9////BQAgAAgAAAD+////BQAgAAgAAAABAP//BQAhAAgAAAACAP//BQAiAAgAAAACAPz/BQAcAAgAAAD+//z/BQAaAAgAAAABAPz/BQAaAAgAAAD9//z/BQAZAAgAAAD6//3/CQAHABYAAAD6//7/CQAHABcAAAD7//3/CQAHABYAAAD7//7/CQAHABcAAAD8//3/CQAIABYAAAD8//7/CQAIABcAAAD8////BQAgAAgAAAD7////BQAgAAgAAAD6////BQAgAAgAAAD6//v/BQAZAAgAAAD7//v/BQAbAAgAAAD8//v/BQAcAAwAAAD6/wAABQAAACsAAAD7/wAABQACAC8AAAD8/wAABQACAC8AAAD9/wAABQAAACsAAAD+/wAABQACAC8AAAABAAAABQACAC8AAAACAAAABQAAACsAAAADAAAABQADAC8AAAADAP//BQAEAC0AAAADAP7/BQAEAC0AAAADAP3/BQAEAC0AAAADAPz/BQAEAC0AAAD5/wAABQACAC8AAAD4/wAABQACAC8AAAD3/wAABQACAC8AAAD5////BQAmABEAAAD4////BQAnABEAAAD5//7/BQAmABAAAAD3////BQAmABEAAAADAPv/BQAJACwAAAA=")
+tile_map_data = PackedByteArray("AAD9////BQAgAAgAAAD+////BQAgAAgAAAABAP//BQAhAAgAAAACAP//BQAiAAgAAAACAPz/BQAcAAgAAAD+//z/BQAaAAgAAAABAPz/BQAaAAgAAAD9//z/BQAZAAgAAAD6//3/CQAHABYAAAD6//7/CQAHABcAAAD7//3/CQAHABYAAAD7//7/CQAHABcAAAD8//3/CQAIABYAAAD8//7/CQAIABcAAAD8////BQAgAAgAAAD7////BQAgAAgAAAD6////BQAgAAgAAAD6//v/BQAZAAgAAAD7//v/BQAbAAgAAAD8//v/BQAcAAwAAAD6/wAABQAAACsAAAD7/wAABQACAC8AAAD8/wAABQACAC8AAAD9/wAABQAAACsAAAD+/wAABQACAC8AAAABAAAABQACAC8AAAACAAAABQAAACsAAAADAAAABQADAC8AAAADAP//BQAEAC0AAAADAP7/BQAEAC0AAAADAP3/BQAEAC0AAAADAPz/BQAEAC0AAAD5/wAABQACAC8AAAD4/wAABQACAC8AAAD5////BQAmABEAAAD4////BQAnABEAAAD5//7/BQAmABAAAAD3////BQAmABEAAAADAPv/BQAJACwAAAD3/wAABQAAACsAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Walls_Drzwi" type="TileMapLayer" parent="Tilesets/Seg_21/Sort" unique_id=2016662168]
@@ -103,70 +103,83 @@ tile_map_data = PackedByteArray("AAD///v/CwAKABQAAAA=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="BaseCollision" type="CollisionPolygon2D" parent="." unique_id=286642405]
-visible = false
 z_index = 1
 position = Vector2(-24, 6)
-polygon = PackedVector2Array(-76, -27, -24, -27, -24, -44, -23, -44, -23, -60, -30, -60, -30, -69, -50, -69, -50, -60, -71, -60, -71, -75, -23, -75, -23, -61, 73, -61, 73, -44, 73, 15, 40, 15, 40, 4, 34, 4, 34, -13, 14, -13, 14, 4, 8, 4, 8, 15, -120, 15)
+polygon = PackedVector2Array(-117, -15, -71, -15, -71, -61, 73, -61, 73, 15, 40, 15, 40, 4, 34, 4, 34, -13, 14, -13, 14, 4, 8, 4, 8, 15, -117, 15)
 
-[node name="DoorArea" type="Area2D" parent="." unique_id=944086640]
+[node name="Kolizje" type="Node2D" parent="." unique_id=296228397]
+
+[node name="DoorArea" type="Area2D" parent="Kolizje" unique_id=944086640]
 position = Vector2(0, 5)
 collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea" unique_id=494572656]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Kolizje/DoorArea" unique_id=494572656]
 shape = SubResource("CircleShape2D_nq12t")
 
-[node name="DoorArea2" type="Area2D" parent="." unique_id=272173120]
+[node name="DoorArea2" type="Area2D" parent="Kolizje" unique_id=272173120]
 position = Vector2(-64, -71)
 collision_layer = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorArea2" unique_id=938749623]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Kolizje/DoorArea2" unique_id=938749623]
 shape = SubResource("CircleShape2D_nq12t")
 
-[node name="DoorSpot" type="Marker2D" parent="." unique_id=1932257482]
+[node name="DoorSpot" type="Marker2D" parent="Kolizje" unique_id=1932257482]
 position = Vector2(0, 17)
 
-[node name="DoorSpot2" type="Marker2D" parent="." unique_id=1729659583]
+[node name="DoorSpot2" type="Marker2D" parent="Kolizje" unique_id=1729659583]
 position = Vector2(-65, -56)
 
-[node name="SchodyKrawedz" type="StaticBody2D" parent="."]
-editor_description = "Krawędź schodów tylko dla postaci na schodach (od lewego górnego narożnika 2. stopnia do ściany): warstwa 7 (64), którą QuizRpgZTrigger dopisuje do maski postaci przy z 1 (SchodyGora, Podest) i zdejmuje przy z 0 (SchodyDol)."
+[node name="SchodyKrawedz" type="StaticBody2D" parent="Kolizje" unique_id=1189640366]
+editor_description = "Obrys górnego poziomu (schody, podest, wnęka drzwi piętra) tylko dla postaci na górze: warstwa 7 (64), którą QuizRpgZTrigger dopisuje do maski przy z 1 (SchodyGora, Podest) i zdejmuje przy z 0 (SchodyDol); na górze postać ignoruje BaseCollision domu. Krawędź schodów (od lewego górnego narożnika 2. stopnia do ściany), spód schodów i przód podestu, prawy bok podestu, ściana piętra z wnęką drzwi."
 collision_layer = 64
 collision_mask = 0
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyKrawedz"]
-polygon = PackedVector2Array(-141, -13, -96, -55, -96, -57, -141, -15)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz" unique_id=66025296]
+polygon = PackedVector2Array(-141, -13, -96, -58, -141, -58)
 
-[node name="SchodyPod" type="StaticBody2D" parent="."]
-editor_description = "Kolizja dla postaci pod / za schodami (z 0): od 2. stopnia, piksel nad wierzchem 1. stopnia, do ściany domu z prawej — od tyłu nie wejdzie się w dolną część schodów. Warstwa 8 (128): gracz ma ją domyślnie w masce, QuizRpgZTrigger zdejmuje ją przy z 1 i przywraca przy z 0."
-collision_layer = 128
-collision_mask = 0
+[node name="LewyBok" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+polygon = PackedVector2Array(-144, -58, -141, -58, -141, -10, -144, -10)
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyPod"]
-polygon = PackedVector2Array(-141, -11, -108, -11, -108, -10, -141, -10)
+[node name="SpodIPrzod" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+polygon = PackedVector2Array(-141, 17, -96, -21, -46, -21, -46, 24, -141, 24)
 
-[node name="SchodyDol" type="Area2D" parent="."]
+[node name="PodestBok" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+polygon = PackedVector2Array(-47, -21, -47, -55, -40, -55, -40, -21)
+
+[node name="ScianaPietra" type="CollisionPolygon2D" parent="Kolizje/SchodyKrawedz"]
+polygon = PackedVector2Array(-96, -54, -74, -54, -74, -63, -54, -63, -54, -54, -47, -54, -47, -75, -96, -75)
+
+[node name="SchodyDol" type="Area2D" parent="Kolizje" unique_id=51146672]
+visible = false
+z_index = 1
 collision_layer = 0
 collision_mask = 5
 script = ExtResource("2_a0x4c")
 z = 0
+from_z = 1
+pair = NodePath("../SchodyGora")
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyDol"]
-polygon = PackedVector2Array(-145, -9, -141, -9, -141, 21, -145, 21)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/SchodyDol" unique_id=1424202463]
+polygon = PackedVector2Array(-145, -25, -141, -25, -141, 23, -145, 23)
 
-[node name="SchodyGora" type="Area2D" parent="."]
+[node name="SchodyGora" type="Area2D" parent="Kolizje" unique_id=1313714669]
+visible = false
 collision_layer = 0
 collision_mask = 5
 script = ExtResource("2_a0x4c")
-z = 1
+pair = NodePath("../SchodyDol")
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyGora"]
-polygon = PackedVector2Array(-141, -13, -136, -13, -136, 21, -141, 21)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/SchodyGora" unique_id=1166003537]
+z_index = 1
+position = Vector2(0, -2)
+polygon = PackedVector2Array(-141, -11, -136, -11, -136, 21, -141, 21)
 
-[node name="Podest" type="Area2D" parent="."]
+[node name="Podest" type="Area2D" parent="Kolizje" unique_id=339119629]
+visible = false
 collision_layer = 0
 collision_mask = 5
 script = ExtResource("2_a0x4c")
-z = 1
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Podest"]
-polygon = PackedVector2Array(-98, -18, -45, -18, -45, -54, -54, -54, -54, -64, -74, -64, -74, -54, -98, -54)
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Kolizje/Podest" unique_id=182217022]
+z_index = 1
+polygon = PackedVector2Array(-94, -21, -45, -21, -45, -54, -54, -54, -54, -64, -74, -64, -74, -54, -94, -54)
