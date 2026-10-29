@@ -570,7 +570,7 @@
   "prompt.solve_puzzle": "Solve puzzle",
   "prompt.talk": "Talk",
   "prompt.transition": "Proceed",
-  "puzzle.bonus_progress": "(Bonus! +1 progress)",
+  "puzzle.chance": "Chance to open: {chance}% ({correct} / {total})",
   "puzzle.correct": "Correct!",
   "puzzle.failed_to_open": "Failed to open...",
   "puzzle.opened": "Opened!",

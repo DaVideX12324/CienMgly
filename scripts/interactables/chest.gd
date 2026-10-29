@@ -158,7 +158,7 @@ func _start_lockpicking(ps: Node) -> void:
 	var canvas = load(PUZZLE_UI_SCENE).instantiate()
 	var ui = canvas.get_node("Root")
 	var total := 2 + tier
-	ui.setup(self, player, quiz_id, quiz_category, total, total - 1)
+	ui.setup(self, player, quiz_id, quiz_category, total, 0)  # 0 = szansa otwarcia wg odsetka poprawnych
 	ui.puzzle_finished.connect(_on_lockpick_finished.bind(ps, player, gm))
 	get_tree().current_scene.add_child(canvas)
 
@@ -234,16 +234,19 @@ func drop_item() -> void:
 	var loot_manager := _get_module_singleton("LootManager")
 	if loot_manager and loot_manager.has_method("show_loot_popup"):
 		var item_name := item_id
+		var item_icon: Texture2D = null
 		var inventory_service := _get_module_singleton("InventoryService")
 		if inventory_service and inventory_service.has_method("get_item"):
 			var item_data := inventory_service.call("get_item", item_id) as QuizRpgItemData
 			if item_data != null:
 				item_name = item_data.localized_name()
+				item_icon = item_data.icon
 		loot_manager.call("show_loot_popup", {
 			"found": true,
-			"title": "Zawartosc skrzyni",
+			"icon": item_icon,
+			"title": "Zawartość skrzyni",
 			"message": "%s x%d trafia do ekwipunku." % [item_name, item_count],
-			"detail": "Nacisnij E albo Enter, aby kontynuowac.",
+			"detail": "Naciśnij E albo Enter, aby kontynuować.",
 		})
 
 

@@ -570,7 +570,7 @@
   "prompt.solve_puzzle": "Rozwiąż zagadkę",
   "prompt.talk": "Porozmawiaj",
   "prompt.transition": "Przejdź",
-  "puzzle.bonus_progress": "(Bonus! +1 postęp)",
+  "puzzle.chance": "Szansa na otwarcie: {chance}% ({correct} / {total})",
   "puzzle.correct": "Poprawnie!",
   "puzzle.failed_to_open": "Nie udało się otworzyć...",
   "puzzle.opened": "Otwarto!",

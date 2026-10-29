@@ -16,6 +16,9 @@ var current_correct: int = 0
 var current_question: int = 0
 var total_questions: int = 5
 var _finished: bool = false
+## Tryb szansy (required <= 0, np. skrzynia z wytrychem): padają wszystkie pytania, a otwarcie jest losowane z szansą
+## = poprawne / wszystkie. Inaczej (drzwi) — trzeba zebrać required_correct poprawnych.
+var _chance_mode := false
 
 var _quiz_id: String
 var _category: String
@@ -42,6 +45,7 @@ func setup(p_door: Node2D, p_player: Node2D, quiz_id: String,
 	_category = category
 	total_questions = p_total
 	required_correct = p_required
+	_chance_mode = p_required <= 0
 
 
 func _ready() -> void:
@@ -167,10 +171,6 @@ func _on_answered(result: Dictionary, submitted_answer: Dictionary) -> void:
 
 	if correct:
 		current_correct += 1
-		# Bonus +1 postępu tylko gdy do otwarcia brakuje więcej niż jednej odpowiedzi (licznik nie przekracza wymaganych).
-		if current_correct < required_correct and _ps and _ps.roll_with_bonus(0.15):
-			current_correct += 1
-			_result_label.text += " " + QuizRpgI18n.t("puzzle.bonus_progress", "(Bonus! +1 postęp)")
 	current_question += 1
 	_update_progress()
 
@@ -179,6 +179,16 @@ func _on_answered(result: Dictionary, submitted_answer: Dictionary) -> void:
 		return
 
 	var remaining := total_questions - current_question
+	if _chance_mode:
+		if remaining <= 0 or result.get("quiz_finished", false):
+			_finish(randf() < _chance())
+			return
+		var next_chance_q: Dictionary = QuizManager.get_current_question()
+		if next_chance_q.is_empty():
+			_finish(randf() < _chance())
+		else:
+			_qp.start_question(next_chance_q, _diff_range.x)
+		return
 	if current_correct >= required_correct:
 		_finish(true)
 	elif current_correct + remaining < required_correct:
@@ -193,7 +203,18 @@ func _on_answered(result: Dictionary, submitted_answer: Dictionary) -> void:
 			_qp.start_question(next_q, _diff_range.x)
 
 
+## Szansa otwarcia w trybie szansy: poprawne / wszystkie pytania.
+func _chance() -> float:
+	return float(current_correct) / float(maxi(total_questions, 1))
+
+
 func _update_progress() -> void:
+	if _chance_mode:
+		if progress_bar:
+			progress_bar.value = _chance() * 100.0
+		if progress_label:
+			progress_label.text = QuizRpgI18n.tf("puzzle.chance", {"chance": roundi(_chance() * 100.0), "correct": current_correct, "total": total_questions}, "Szansa na otwarcie: {chance}% ({correct} / {total})")
+		return
 	var shown := mini(current_correct, required_correct)
 	if progress_bar:
 		progress_bar.value = (float(shown) / float(maxi(required_correct, 1))) * 100.0

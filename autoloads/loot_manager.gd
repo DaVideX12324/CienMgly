@@ -15,6 +15,8 @@ var _popup_root: Control
 var _popup_title: Label
 var _popup_message: Label
 var _popup_detail: Label
+var _popup_icon: TextureRect
+var _popup_icon_label: Label
 var _popup_button: Button
 var _previous_pause_state: bool = false
 var _toast_layer: CanvasLayer
@@ -138,6 +140,9 @@ func show_loot_popup(result: Dictionary) -> void:
 	_popup_title.text = QuizRpgI18n.t(str(result.get("title", "Loot")), str(result.get("title", QuizRpgI18n.t("loot.default_title", "Łup"))))
 	_popup_message.text = str(result.get("message", ""))
 	_popup_detail.text = QuizRpgI18n.t(str(result.get("detail", "")), str(result.get("detail", QuizRpgI18n.t("loot.continue_hint", "Naciśnij E albo Enter, aby kontynuować."))))
+	# Ikona przedmiotu („icon”: Texture2D); bez niej znak zapytania.
+	_popup_icon.texture = result.get("icon") as Texture2D
+	_popup_icon_label.visible = _popup_icon.texture == null
 	_previous_pause_state = get_tree().paused
 	get_tree().paused = true
 	_popup_layer.visible = true
@@ -209,6 +214,12 @@ func _ensure_popup() -> void:
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	icon_label.add_theme_font_size_override("font_size", QuizTheme.snap(40))
 	icon_panel.add_child(icon_label)
+	_popup_icon_label = icon_label
+	_popup_icon = TextureRect.new()
+	_popup_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_popup_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_popup_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon_panel.add_child(_popup_icon)
 
 	var text_box := VBoxContainer.new()
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
