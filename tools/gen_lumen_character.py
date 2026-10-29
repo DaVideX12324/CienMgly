@@ -90,7 +90,7 @@ CHARACTERS = {
     'bohater': {
         'head_style': 'hair', 'body': 'plain', 'beard': HAIR_HIKER,
         'head': HAIR_HIKER, 'hair': HAIR_HIKER, 'face': SKIN_LIGHT, 'eye': (40, 50, 110), 'trim': GREEN_D,
-        'torso_up': BLUE, 'torso_lo': BLUE, 'plaid': True, 'strap': GREEN_D, 'pack': GREEN,
+        'torso_up': BLUE, 'torso_lo': BLUE, 'plaid': True, 'strap': GREEN, 'pack': GREEN,
         'arm_up': BLUE, 'arm_lo': SKIN_LIGHT, 'hand': SKIN_LIGHT,
         'leg': MAROON, 'boot': MAROON_D,
     },
@@ -473,6 +473,16 @@ def add_details(lab, spec, direction):
                 lab[(x, y)] = 'strap'
             elif direction in ('E', 'W') and x == (tx0 if direction == 'E' else tx1) and y > ty0:
                 lab[(x, y)] = 'pack'
+        # z boku i z ukosa plecak wystaje 2 kratki za plecami (na pustym tle, od ramion do dołu tułowia)
+        side = -1 if direction in ('E', 'NE', 'SE') else (1 if direction in ('W', 'NW', 'SW') else 0)
+        if side:
+            edge = tx0 if side < 0 else tx1
+            belt_y = max((q[1] for q, m in lab.items() if m in ('torso_up', 'torso_lo', 'belt')), default=ty1)
+            for y in range(ty0, belt_y):
+                for k in (1, 2):
+                    q = (edge + side * k, y)
+                    if q not in lab and not (k == 2 and y in (ty0, belt_y - 1)):
+                        lab[q] = 'pack'
     elif 'strap' in spec and wide:
         belt_y = min((p[1] for p, n in lab.items() if n == 'belt'), default=ty1)
         h = max(1, belt_y - ty0)
