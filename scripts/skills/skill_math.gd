@@ -20,7 +20,7 @@ static func damage(skill: QuizRpgSkillBase, user: Dictionary, target: Dictionary
 	var raw := float(skill.base_damage) * float(user.get("base_scale", 1.0)) \
 		+ float(user.get("atk", 0)) * skill.atk_coeff + float(user.get("mat", 0)) * skill.mat_coeff \
 		- float(target.get("def", 0)) * skill.def_coeff - float(target.get("mdf", 0)) * skill.mdf_coeff
-	var mult := skill.damage_multiplier
+	var mult := skill.damage_multiplier * float(user.get("skill_mult", 1.0))
 	if skill.bonus_vs_status != "none" and (target.get("statuses", []) as Array).has(skill.bonus_vs_status):
 		mult *= skill.bonus_multiplier
 	return maxi(roundi(raw * mult * _spread(skill.variance, rng) * _bonus_roll(skill, rng)), 1)
