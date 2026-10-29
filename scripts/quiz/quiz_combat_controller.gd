@@ -469,14 +469,18 @@ func trigger_instant_win() -> void:
 	_end_combat(true)
 
 
-## Przytrzymanie biegu (Shift) w walce przyspiesza wszystko poza wyborem i pytaniem: animacje i przerwy ×FAST_FORWARD,
-## tekst komunikatów od razu w całości, komunikaty czekające na potwierdzenie przechodzą same.
+## Tempo walki poza wyborem i pytaniem: opcja „Tempo walki” (Opcje → Sterowanie, ×1 / ×1,5 / ×2), a przytrzymanie
+## biegu (Shift) dokłada ×FAST_FORWARD — tekst komunikatów od razu w całości, komunikaty czekające na potwierdzenie
+## przechodzą same.
 const FAST_FORWARD := 3.0
 
 
 func _update_fast_forward() -> void:
-	var fast := InputMap.has_action(&"sprint") and Input.is_action_pressed(&"sprint") 			and phase in [Phase.PLAYER_RESULT, Phase.ENEMY_TURN, Phase.COMBAT_END]
-	var scale := FAST_FORWARD if fast else 1.0
+	var running := phase in [Phase.PLAYER_RESULT, Phase.ENEMY_TURN, Phase.COMBAT_END]
+	var fast := running and InputMap.has_action(&"sprint") and Input.is_action_pressed(&"sprint")
+	var settings := get_node_or_null("/root/SettingsService")
+	var base := clampf(float(str(settings.get_module("quiz_rpg", "battle_speed", "1"))), 1.0, 3.0) if settings and running else 1.0
+	var scale := base * (FAST_FORWARD if fast else 1.0)
 	if not is_equal_approx(Engine.time_scale, scale):
 		Engine.time_scale = scale
 	if fast:

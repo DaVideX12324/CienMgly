@@ -157,6 +157,25 @@
           "name": "Wyłączone"
         }
       ]
+    },
+    {
+      "key": "battle_speed",
+      "label": "Tempo walki",
+      "default": "1",
+      "options": [
+        {
+          "id": "1",
+          "name": "Normalne"
+        },
+        {
+          "id": "1.5",
+          "name": "Szybkie (×1,5)"
+        },
+        {
+          "id": "2",
+          "name": "Bardzo szybkie (×2)"
+        }
+      ]
     }
   ]
 }

@@ -5,6 +5,14 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Dodano
+- Opcja „Tempo walki” (Opcje → Sterowanie): normalne / ×1,5 / ×2 (tury, poza wyborem i pytaniem).
+- Przytrzymanie biegu (Shift) w walce przyspiesza tury ×3: tekst od razu, komunikaty przechodzą same (jak w FNaFB).
+
+### Zmieniono
+- Walka: zmiana dolnego pasa — znikające okno ściska się do krawędzi, nowe rozszerza, drużyna w środku się przesuwa.
+- Paski HP wrogów bez kolorów tieru (tier jest na liście celów).
+
 ## [0.9.7-beta] — 2026-10-29
 
 ### Dodano
