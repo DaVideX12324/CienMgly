@@ -1,5 +1,7 @@
 extends Control
 
+const TargetRowScene = preload("../../scenes/quiz/combat_target_row.tscn")
+const ActorPreviewScene = preload("../../scenes/quiz/actor_preview.tscn")
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 signal combat_finished(player_won: bool)
@@ -1147,34 +1149,13 @@ func _build_target_menu() -> void:
 	target_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	target_list_vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	for entry in _target_entries:
-		var row: PanelContainer = PanelContainer.new()
-		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.mouse_filter = Control.MOUSE_FILTER_STOP
-		row.custom_minimum_size = Vector2(0.0, 34)
-		var row_margin: MarginContainer = MarginContainer.new()
-		row_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row_margin.mouse_filter = Control.MOUSE_FILTER_STOP
-		var row_content: HBoxContainer = HBoxContainer.new()
-		row_content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row_content.add_theme_constant_override("separation", 12)
-		var name_text: Label = Label.new()
-		name_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		name_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_text.text = str(entry.get("name", enemy_name_str))
-		name_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-		name_text.add_theme_color_override("font_color", UI_TEXT_PRIMARY)
-		row_content.add_child(name_text)  # HP wroga pokazuje umiejętność Skan, nie lista celów
+		var row := TargetRowScene.instantiate() as PanelContainer
+		var row_margin := row.get_node("Margin") as MarginContainer
+		(row.get_node("Margin/Content/Name") as Label).text = str(entry.get("name", enemy_name_str))  # HP wroga pokazuje Skan, nie lista celów
 		var lvl := int(entry.get("level", 0))
-		if lvl > 0:  # poziom wroga (mapa: "enemy_levels"); bez poziomu (samouczek) — bez znacznika
-			var level_text: Label = Label.new()
-			level_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			level_text.text = QuizRpgI18n.tf("combat.level_short", {"level": lvl}, "Lv {level}")
-			level_text.add_theme_font_size_override("font_size", QuizTheme.COMBAT_FONT_SIZE)
-			level_text.add_theme_color_override("font_color", Color(0.85, 0.8, 0.5))
-			row_content.add_child(level_text)
-		row_margin.add_child(row_content)
-		row.add_child(row_margin)
+		var level_text := row.get_node("Margin/Content/Level") as Label
+		level_text.visible = lvl > 0  # poziom wroga (mapa: "enemy_levels"); bez poziomu (samouczek) — bez znacznika
+		level_text.text = QuizRpgI18n.tf("combat.level_short", {"level": lvl}, "Lv {level}")
 		var row_index: int = _target_rows.size()
 		row.gui_input.connect(func(event: InputEvent): _on_target_row_gui_input(event, row_index))
 		row.mouse_entered.connect(func(): _on_target_row_hover(row_index))
@@ -2455,62 +2436,24 @@ func _set_action_buttons_enabled(enabled: bool) -> void:
 
 func _setup_battlefield_visuals() -> void:
 	if player_sprite_node:
-		_build_actor_preview(player_sprite_node, player, Color(0.16, 0.42, 0.82), true)
+		_build_actor_preview(player_sprite_node, player, true)
 
 
-func _build_actor_preview(
-	slot: Control,
-	actor: Node,
-	accent: Color,
-	flip_h: bool,
-	unit_data: Dictionary = {},
-	is_active: bool = false
-) -> void:
+func _build_actor_preview(slot: Control, actor: Node, flip_h: bool) -> void:
 	if slot == null:
 		return
 	for child in slot.get_children():
 		child.queue_free()
-
-	var margin := VBoxContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.alignment = BoxContainer.ALIGNMENT_END
-	margin.add_theme_constant_override("separation", 8)
-	slot.add_child(margin)
-
-	var center := CenterContainer.new()
-	center.custom_minimum_size = Vector2(0, 132)
-	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	margin.add_child(center)
-
+	var preview := ActorPreviewScene.instantiate() as Control
+	slot.add_child(preview)
 	var texture := _extract_actor_texture(actor)
-	if texture != null:
-		var sprite_rect := TextureRect.new()
-		sprite_rect.texture = texture
-		sprite_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		sprite_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		sprite_rect.custom_minimum_size = Vector2(128, 128)
-		sprite_rect.flip_h = flip_h
-		sprite_rect.modulate = Color.WHITE if is_active else Color(0.82, 0.82, 0.88)
-		center.add_child(sprite_rect)
-	else:
-		var fallback := Label.new()
-		fallback.text = _fallback_actor_label(actor)
-		fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		fallback.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		fallback.add_theme_font_size_override("font_size", QuizTheme.snap(52))
-		fallback.add_theme_color_override("font_color", accent.lightened(0.62) if is_active else accent.lightened(0.35))
-		center.add_child(fallback)
-
-	if not unit_data.is_empty():
-		var bar := ProgressBar.new()
-		bar.custom_minimum_size = Vector2(92, 9)
-		bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		bar.show_percentage = false
-		bar.value = (float(unit_data.get("hp", 0)) / float(maxi(int(unit_data.get("max_hp", 1)), 1))) * 100.0
-		_style_progress_bar(bar, Color(0.36, 1.0, 0.36), Color(0.06, 0.14, 0.06), 0)
-		margin.add_child(bar)
-
+	var sprite_rect := preview.get_node("Center/Sprite") as TextureRect
+	var fallback := preview.get_node("Center/Fallback") as Label
+	sprite_rect.visible = texture != null
+	fallback.visible = texture == null
+	sprite_rect.texture = texture
+	sprite_rect.flip_h = flip_h
+	fallback.text = _fallback_actor_label(actor)
 
 func _setup_enemy_display() -> void:
 	_enemy_display_root = get_node_or_null("Battlefield/FieldContent/EnemySection/EnemySprite/EnemyDisplayCanvas") as Node2D
@@ -3456,26 +3399,6 @@ func _style_party_row(_row: HBoxContainer) -> void:
 
 func _style_party_progress_bar(_bar: ProgressBar, _fill_color: Color) -> void:
 	pass
-
-
-func _style_progress_bar(bar: ProgressBar, fill_color: Color, bg_color: Color, corner: int) -> void:
-	if bar == null:
-		return
-	var fill: StyleBoxFlat = StyleBoxFlat.new()
-	fill.bg_color = fill_color
-	fill.corner_radius_top_left = corner
-	fill.corner_radius_top_right = corner
-	fill.corner_radius_bottom_left = corner
-	fill.corner_radius_bottom_right = corner
-	bar.add_theme_stylebox_override("fill", fill)
-
-	var bg: StyleBoxFlat = StyleBoxFlat.new()
-	bg.bg_color = bg_color
-	bg.corner_radius_top_left = corner
-	bg.corner_radius_top_right = corner
-	bg.corner_radius_bottom_left = corner
-	bg.corner_radius_bottom_right = corner
-	bar.add_theme_stylebox_override("background", bg)
 
 
 ## Mnożnik obrażeń bronionego członka: 1/4 po dobrej odpowiedzi, 1/2 po złej.
