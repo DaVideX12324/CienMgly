@@ -438,9 +438,15 @@ func _populate_scale() -> void:
 		_lang_option.item_selected.connect(_on_language_selected)
 
 
+## Skala działa od razu i zapisuje się (jak głośność) — potwierdzenia z odliczaniem wymaga tylko okno (tryb,
+## monitor, rozdzielczość). Wcześniej skala czekała na „Zastosuj”, więc wybór bez niego przepadał.
 func _on_scale_item_selected(index: int) -> void:
 	_sel_scale = index
 	_scale_manually_changed = true
+	UIScaleService.set_mode(index)
+	SettingsService.save_settings()
+	_prev_scale = index
+	_prev_scale_user_picked = true
 
 
 ## V-Sync i limit FPS działają od razu (bez „Zastosuj”); limit: suwak co 10 (0 = bez limitu) albo dowolna wartość
@@ -936,7 +942,7 @@ func _on_apply() -> void:
 	if resolution_index >= 0 and resolution_index < _resolutions.size():
 		resolution = _resolutions[resolution_index]
 	var display_changed := _sel_mode != _prev_mode or _monitor_option.selected != _open_monitor_index \
-		or _res_option.selected != _open_res_index or _sel_scale != _prev_scale
+		or _res_option.selected != _open_res_index
 	if not display_changed:
 		return
 	# Najpierw okno (nowa rozdzielczość ustawia największą skalę), potem ręczny wybór skali — inaczej zmiana
