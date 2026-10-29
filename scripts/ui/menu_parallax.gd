@@ -1,3 +1,4 @@
+@tool
 extends Control
 
 ## Tło menu z warstw paralaksy: dzieci TextureRect od najdalszej do najbliższej (scena menu_parallax.tscn).
