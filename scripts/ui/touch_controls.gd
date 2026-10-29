@@ -8,7 +8,6 @@ extends CanvasLayer
 
 const DEADZONE := 0.2
 const MAX_RADIUS := 70.0
-const QuizRpgI18n = preload("../quiz_rpg_paths.gd")
 
 @onready var _joystick_zone: Control = %JoystickZone
 @onready var _joystick_base: Control = %JoystickBase
@@ -31,10 +30,7 @@ func _ready() -> void:
 
 	var cm := get_node_or_null("/root/CoreManager")
 	_gm = cm.get_singleton("GameManager") if cm and cm.has_method("get_singleton") else null
-	if _gm and _gm.has_signal("state_changed"):
-		_gm.state_changed.connect(_on_game_state_changed)
-
-	_update_visibility()
+	_process(0.0)
 
 
 static func is_touch_supported() -> bool:
@@ -61,19 +57,6 @@ func _apply_i18n_labels() -> void:
 
 func _get_i18n_service() -> Node:
 	return get_node_or_null("/root/I18nService")
-
-
-func _on_game_state_changed(_old_state, _new_state) -> void:
-	_update_visibility()
-
-
-func _update_visibility() -> void:
-	var should_show := true
-	if _gm != null:
-		should_show = _gm.is_exploring()
-	visible = should_show
-	if not should_show:
-		_reset_joystick()
 
 
 func _process(_delta: float) -> void:
