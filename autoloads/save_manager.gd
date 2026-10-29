@@ -25,6 +25,7 @@ var is_loading: bool = false
 var _has_pending_level_load: bool = false
 var _pending_level_path: String = INITIAL_LEVEL_PATH
 var _pending_spawn_name: String = "Spawn"
+var _pending_position: Variant = null  # pozycja gracza z zapisu (Vector2) — po wczytaniu stoi tam, gdzie zapisał
 
 
 func _ready() -> void:
@@ -74,6 +75,8 @@ func load_game(slot_index: int = -1) -> bool:
 	_has_pending_level_load = true
 	_pending_level_path = _resolve_level_path_from_save(slot_data)
 	_pending_spawn_name = str(slot_data.get("spawn_point", "Spawn"))
+	var pos: Variant = slot_data.get("player_position")
+	_pending_position = Vector2(float(pos[0]), float(pos[1])) if pos is Array and (pos as Array).size() == 2 else null
 
 	var gm := _get_game_manager()
 	if gm:
@@ -111,10 +114,12 @@ func consume_pending_level_load() -> Dictionary:
 	var pending := {
 		"level_path": _pending_level_path,
 		"spawn_name": _pending_spawn_name,
+		"position": _pending_position,
 	}
 	_has_pending_level_load = false
 	_pending_level_path = INITIAL_LEVEL_PATH
 	_pending_spawn_name = "Spawn"
+	_pending_position = null
 	return pending
 
 
@@ -260,6 +265,7 @@ func _build_save_data(slot_index: int) -> Dictionary:
 		"current_scene": current_scene,
 		"current_level": current_level,
 		"spawn_point": spawn_point,
+		"player_position": _player_position(),
 		"player_stats": player_stats_data,
 		"quiz_progress": QuizManager.get_save_data(),
 		"difficulty": dm.get_save_data() if dm and dm.has_method("get_save_data") else {},
@@ -268,6 +274,12 @@ func _build_save_data(slot_index: int) -> Dictionary:
 		"currency": {},
 		"world": {},
 	}
+
+
+## [x, y] gracza na mapie (null bez gracza) — zapis w punkcie zapisu, wczytanie w tym samym miejscu.
+func _player_position() -> Variant:
+	var player := get_tree().get_first_node_in_group("player") as Node2D if get_tree() else null
+	return [player.global_position.x, player.global_position.y] if player else null
 
 
 func _restore_global_state(save_data: Dictionary) -> void:

@@ -166,7 +166,7 @@
     ]
   },
   "random_encounters": {
-    "mode": "always",
+    "mode": "cleared",
     "min_distance": 900,
     "max_distance": 2000,
     "max_chance": 0.08,

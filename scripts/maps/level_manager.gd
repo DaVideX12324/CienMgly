@@ -30,6 +30,7 @@ var current_level: Node = null
 var current_level_path: String = ""
 var current_spawn_name: String = DEFAULT_SPAWN_NAME
 var _loading_screen: Node = null
+var _resume_position: Variant = null  # pozycja z wczytanego zapisu (jednorazowo, zamiast punktu startu)
 
 
 func _ready() -> void:
@@ -40,6 +41,7 @@ func _ready() -> void:
 		var pending: Dictionary = save_manager.call("consume_pending_level_load")
 		level_path = str(pending.get("level_path", INITIAL_LEVEL_PATH))
 		spawn_name = str(pending.get("spawn_name", DEFAULT_SPAWN_NAME))
+		_resume_position = pending.get("position")
 	# Ekran ładowania już w pierwszej klatce sceny gry — inaczej przed wczytaniem mapy widać pustą scenę.
 	_show_loading_screen(level_path)
 	await get_tree().process_frame
@@ -109,6 +111,10 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	if is_instance_valid(player):
 		player.process_mode = player_mode
 	var spawn_pos := _place_player_at_spawn(spawn_name)
+	if _resume_position is Vector2 and is_instance_valid(player):
+		spawn_pos = _resume_position
+		player.global_position = spawn_pos
+	_resume_position = null
 	_sync_party_followers(true)
 	QuizRpgPortalFade.fade_in(get_tree())
 	_setup_start_safety(spawn_pos)

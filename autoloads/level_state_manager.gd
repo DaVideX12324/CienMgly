@@ -40,6 +40,7 @@ func get_level_state(level_path: String) -> Dictionary:
 	if not level_states.has(level_path):
 		level_states[level_path] = {
 			"defeated_bosses": [],        # ← pokonani bossowie (per-save, czyszczeni przy rerollu)
+			"defeated_enemies": [],       # pokonani zwykli wrogowie mapy (nie wracają po wyjściu i wczytaniu zapisu)
 			"dropped_items": [],
 			"opened_chests": [],
 			"destroyed_barrels": [],
@@ -112,6 +113,20 @@ func is_boss_defeated(level_path: String, boss_id: String) -> bool:
 	if not state.has("defeated_bosses"):
 		return false
 	return boss_id in state["defeated_bosses"]
+
+## Zwykli wrogowie mapy (id z pozycji startowej — ten sam seed, ta sama pozycja).
+func mark_enemy_defeated(level_path: String, enemy_id: String) -> void:
+	var state = get_level_state(level_path)
+	if not state.has("defeated_enemies"):
+		state["defeated_enemies"] = []
+	if enemy_id not in state["defeated_enemies"]:
+		state["defeated_enemies"].append(enemy_id)
+
+
+func is_enemy_defeated(level_path: String, enemy_id: String) -> bool:
+	var state = get_level_state(level_path)
+	return state.has("defeated_enemies") and enemy_id in state["defeated_enemies"]
+
 
 ## Reset pokonanych bossów dla poziomu (do wywołania — bez pełnego rerollu mapy).
 ## Bossowie odrodzą się przy ponownym wejściu; reszta stanu (skrzynie itd.) zostaje.

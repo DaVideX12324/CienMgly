@@ -183,9 +183,9 @@ func _ready() -> void:
 		if lsm == null or not bool(lsm.call("has_story_flag", requires_flag)):
 			queue_free()   # jeszcze nie czas (np. przed dotarciem do miasta)
 			return
-	# Bossy: przywróć stan pokonania (per-save). Deferred + retry na level_path,
+	# Stan pokonania (per-save): bossowie i zwykli wrogowie mapy (bez losowych spotkań). Deferred + retry na level_path,
 	# bo current_level_path bywa ustawiany dopiero po _ready (jak w skrzyniach).
-	if is_boss:
+	if not has_meta(&"random_encounter"):
 		if unique_id.is_empty():
 			unique_id = _generate_boss_id()
 		call_deferred("_check_boss_defeated")
@@ -1100,6 +1100,11 @@ func on_combat_finished(player_won: bool, player: Node2D) -> void:
 		_record_kill()
 		if is_boss:
 			_persist_boss_defeat()
+		elif not has_meta(&"random_encounter"):
+			var lsm := _get_level_state_manager()
+			var level_path := _get_current_level_path()
+			if lsm and not level_path.is_empty():
+				lsm.mark_enemy_defeated(level_path, unique_id)  # nie wraca po wyjściu z mapy / wczytaniu zapisu
 		# XP dodaje ekran walki (QuizCombatController._end_combat, razem z komunikatem) — tu już nie.
 		# Gracz rusza od razu (bez czekania na animację znikania) i dostaje nietykalność na kolejne walki.
 		if _gm:
@@ -1162,7 +1167,7 @@ func _generate_boss_id() -> String:
 
 
 func _check_boss_defeated() -> void:
-	if not is_boss or not is_instance_valid(self):
+	if not is_instance_valid(self) or has_meta(&"random_encounter"):
 		return
 	var level_path := _get_current_level_path()
 	if level_path.is_empty():
@@ -1171,7 +1176,8 @@ func _check_boss_defeated() -> void:
 			_check_boss_defeated()
 		return
 	var lsm := _get_level_state_manager()
-	if lsm and lsm.is_boss_defeated(level_path, unique_id):
+	var beaten: bool = lsm != null and (lsm.is_boss_defeated(level_path, unique_id) if is_boss else lsm.is_enemy_defeated(level_path, unique_id))
+	if beaten:
 		# Już pokonany w tym zapisie -> nie spawnuj (usuń cicho).
 		defeated = true
 		state = State.DEFEATED

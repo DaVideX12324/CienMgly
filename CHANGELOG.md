@@ -6,6 +6,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Naprawiono
+- Wczytanie zapisu stawia gracza tam, gdzie zapisał (pozycja w zapisie), a nie na starcie mapy.
+- Pokonani zwykli wrogowie mapy nie wracają po wyjściu z niej (np. z ukrytej niszy) ani po wczytaniu zapisu (stan
+  mapy w zapisie); dalsze walki — losowe spotkania (ścieki też w trybie „po wyczyszczeniu”).
 - XP za poprawne odpowiedzi w walce wpadało od razu — także przy ucieczce i porażce; teraz trafia do puli walki
   i przychodzi tylko po wygranej (w zagadkach bez zmian).
 - Walka: bez menu pauzy (X / Esc tylko cofa) — w pauzie dało się leczyć poza turą; przycisk „Wyjście” ukryty.
