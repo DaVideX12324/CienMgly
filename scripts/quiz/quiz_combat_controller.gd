@@ -363,7 +363,7 @@ func _ready() -> void:
 		exit_btn.mouse_entered.connect(func(): _highlight_action(2))
 	_action_buttons = [atk_btn, skills_btn, def_btn, items_btn]
 	if _back_btn:
-		_back_btn.text = QuizRpgI18n.t("main_menu.back", "← Wstecz")
+		_back_btn.tooltip_text = QuizRpgI18n.t("main_menu.back", "← Wstecz")  # sama strzałka — nie wchodzi na wiersze drużyny
 		_back_btn.pressed.connect(func() -> void:
 			var back := InputEventAction.new()  # jak Esc: cofa listę / cel / postać / akcje
 			back.action = &"ui_cancel"

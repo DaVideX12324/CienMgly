@@ -1289,8 +1289,10 @@ visible = false
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
+tooltip_text = "Wstecz"
 focus_mode = 0
-text = "← Wstecz"
+flat = true
+text = "←"
 
 [node name="ActorCommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1588123456]
 custom_minimum_size = Vector2(288, 0)
