@@ -5,6 +5,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+## [0.9.6-beta] — 2026-10-29
+
 ### Dodano
 - Opcja „Losowe spotkania” (Opcje → Sterowanie): włączone / wyłączone.
 - Pytania z lukami (kafelki) z klawiatury: lewo / prawo — kafelek i „Potwierdź”, góra / dół / Tab — luka, 1–9,
