@@ -5,6 +5,24 @@
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
 [ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 
+[ext_resource type="Texture2D" uid="uid://ceskfk67380k7" path="res://assets/UI/Pixel UI pack 3/Full.png" id="px3_full"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corner_TL"]
+atlas = ExtResource("px3_full")
+region = Rect2(1172, 179, 8, 9)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corner_TR"]
+atlas = ExtResource("px3_full")
+region = Rect2(1188, 179, 8, 9)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corner_BL"]
+atlas = ExtResource("px3_full")
+region = Rect2(1172, 196, 8, 9)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corner_BR"]
+atlas = ExtResource("px3_full")
+region = Rect2(1188, 196, 8, 9)
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_hp_fill"]
 bg_color = Color(0.9, 0.3, 0.3, 1)
 
@@ -156,7 +174,6 @@ mouse_filter = 1
 
 [node name="TargetHighlight" type="Control" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0" unique_id=470500810]
 visible = false
-z_index = 5
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -183,69 +200,57 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.3, 0.6, 1, 0.08)
 
-[node name="CornerTL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=644855837]
-layout_mode = 0
-offset_right = 16.0
-offset_bottom = 3.0
-color = Color(0.3, 0.6, 1, 1)
+[node name="CornerTL" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300400]
+layout_mode = 1
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 24.0
+offset_bottom = 27.0
+mouse_filter = 2
+texture_filter = 1
+texture = SubResource("AtlasTexture_corner_TL")
+expand_mode = 1
 
-[node name="CornerTL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1875534250]
-layout_mode = 0
-offset_right = 3.0
-offset_bottom = 16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerTR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=808152701]
-layout_mode = 0
+[node name="CornerTR" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300407]
+layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -16.0
-offset_bottom = 3.0
-color = Color(0.3, 0.6, 1, 1)
+offset_left = -24.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 27.0
+mouse_filter = 2
+texture_filter = 1
+texture = SubResource("AtlasTexture_corner_TR")
+expand_mode = 1
 
-[node name="CornerTR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1090748851]
-layout_mode = 0
+[node name="CornerBL" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300414]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = -27.0
+offset_right = 24.0
+offset_bottom = 0.0
+mouse_filter = 2
+texture_filter = 1
+texture = SubResource("AtlasTexture_corner_BL")
+expand_mode = 1
+
+[node name="CornerBR" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300421]
+layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -3.0
-offset_bottom = 16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBL_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=715230197]
-layout_mode = 0
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -3.0
-offset_right = 16.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBL_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1893925431]
-layout_mode = 0
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -16.0
-offset_right = 3.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBR_H" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1172693026]
-layout_mode = 0
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -16.0
-offset_top = -3.0
-color = Color(0.3, 0.6, 1, 1)
-
-[node name="CornerBR_V" type="ColorRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1795692176]
-layout_mode = 0
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -3.0
-offset_top = -16.0
-color = Color(0.3, 0.6, 1, 1)
+offset_left = -24.0
+offset_top = -27.0
+offset_right = 0.0
+offset_bottom = 0.0
+mouse_filter = 2
+texture_filter = 1
+texture = SubResource("AtlasTexture_corner_BR")
+expand_mode = 1
 
 [node name="EnemyHPBar0" type="ProgressBar" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer" unique_id=347917086]
 custom_minimum_size = Vector2(96, 8)
