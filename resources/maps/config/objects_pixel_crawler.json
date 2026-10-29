@@ -160,6 +160,8 @@
     { "id": "grass_rust_04", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_rust_04.tscn" },
     { "id": "grass_green_04", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_green_04.tscn" },
     { "id": "grass_rust_05", "group": "grass", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/plants/grass_rust_05.tscn" },
-    { "id": "tablica_ogloszen", "group": "props", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_ogloszen.tscn" }
+    { "id": "tablica_ogloszen", "group": "props", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_ogloszen.tscn" },
+    { "id": "deska_ukos", "group": "props", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/deska_ukos.tscn" },
+    { "id": "deska", "group": "props", "scene": "res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/deska.tscn" }
   ]
 }

@@ -1,4 +1,4 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://wknrjkfhophg"]
 
 [ext_resource type="Texture2D" uid="uid://5hmnfgtobndb" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png" id="1_tex"]
 
@@ -7,8 +7,9 @@ atlas = ExtResource("1_tex")
 region = Rect2(146, 561, 28, 29)
 filter_clip = true
 
-[node name="DeskaUkos" type="Sprite2D"]
+[node name="DeskaUkos" type="Sprite2D" unique_id=1120230591]
+position = Vector2(7, -27)
 texture = SubResource("AtlasTexture_main")
 centered = false
-offset = Vector2(-14, -21)
+offset = Vector2(-21, 6)
 metadata/object_group = "props"
