@@ -25,7 +25,7 @@ const HITS_TO_KILL := {1: 1.5, 2: 4.0, 3: 6.0, 4: 12.0}
 const DEF_RATIO := 0.7
 ## Korekta tierów po testach (2026-10-29: zwykli za łatwi, bossowie za trudni) — mnożnik HP / ATK (i MAT) wroga na
 ## poziomie, ponad wariant. Nie wchodzi do wzoru (variant_ratio by ją znosiło), nakłada ją enemy_base po wariancie.
-const TIER_BALANCE := {1: {"hp": 1.6, "atk": 1.15}, 2: {"hp": 1.15, "atk": 1.05}, 3: {"hp": 1.0, "atk": 1.0}, 4: {"hp": 0.7, "atk": 0.9}}
+const TIER_BALANCE := {1: {"hp": 1.3, "atk": 1.0}, 2: {"hp": 1.0, "atk": 0.95}, 3: {"hp": 0.9, "atk": 0.95}, 4: {"hp": 0.7, "atk": 0.9}}
 ## Stałe obrażenia umiejętności wrogów (base_damage) rosną z poziomem: pełne od tego poziomu, niżej proporcjonalnie
 ## (min. BASE_DAMAGE_MIN_SCALE) — bez tego umiejętności z base_damage 100–200 zabijały jednym ciosem na lv 5–9.
 const BASE_DAMAGE_FULL_LEVEL := 20.0
