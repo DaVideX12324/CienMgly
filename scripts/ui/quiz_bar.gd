@@ -58,6 +58,7 @@ void fragment() {
 
 static var _shader: Shader = null
 static var _rows_cache := {}   # Texture2D -> [row_l, row_r] (pierwsza / za ostatnią nieprzezroczystą kolumną)
+static var _flat_cache := {}   # AtlasTexture -> ImageTexture samego wycinka (sampler shadera widzi cały atlas)
 
 var _textured := false
 var _switching := false  # nadpisania stylów same wywołują NOTIFICATION_THEME_CHANGED
@@ -136,8 +137,8 @@ func _draw() -> void:
 		var mid := maxf(src.x - caps.x - caps.y, 1.0)
 		dst_w = caps.x + caps.y + maxf(floorf((dst_w - caps.x - caps.y) / mid), 1.0) * mid
 	var m := material as ShaderMaterial
-	m.set_shader_parameter(&"under_tex", under)
-	m.set_shader_parameter(&"progress_tex", progress)
+	m.set_shader_parameter(&"under_tex", _flat(under))
+	m.set_shader_parameter(&"progress_tex", _flat(progress))
 	m.set_shader_parameter(&"src_size", src)
 	m.set_shader_parameter(&"dst_w", dst_w)
 	m.set_shader_parameter(&"cap_l", caps.x)
@@ -151,6 +152,15 @@ func _draw() -> void:
 	var h := src.y * k
 	var fill_h := (src.y - 2 * _outline()) * k
 	draw_texture_rect(under, Rect2(Vector2(0, roundf((size.y - fill_h) * 0.5) - _outline() * k), Vector2(dst_w * k, h)), false)
+
+
+## Wycinek atlasu jako osobna tekstura — sampler shadera dostaje RID całego atlasu, nie regionu.
+static func _flat(tex: Texture2D) -> Texture2D:
+	if not (tex is AtlasTexture):
+		return tex
+	if not _flat_cache.has(tex):
+		_flat_cache[tex] = ImageTexture.create_from_image(tex.get_image())
+	return _flat_cache[tex]
 
 
 ## Zasięg kształtu w każdym wierszu grafiki (do przycinania wypełnienia po skosie).
