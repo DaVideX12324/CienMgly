@@ -19,6 +19,7 @@ var _finished: bool = false
 ## Tryb szansy (required <= 0, np. skrzynia z wytrychem): padają wszystkie pytania, a otwarcie jest losowane z szansą
 ## = poprawne / wszystkie. Inaczej (drzwi) — trzeba zebrać required_correct poprawnych.
 var _chance_mode := false
+var _was_paused := false
 
 var _quiz_id: String
 var _category: String
@@ -51,6 +52,10 @@ func setup(p_door: Node2D, p_player: Node2D, quiz_id: String,
 func _ready() -> void:
 	if get_parent() is CanvasLayer:
 		UiLayerScale.attach(get_parent() as CanvasLayer)  # skala UI z opcji na całą warstwę
+	# Gra stoi na czas zagadki (skrzynia, drzwi) — wrogowie nie podchodzą; okno działa dalej.
+	get_parent().process_mode = Node.PROCESS_MODE_ALWAYS
+	_was_paused = get_tree().paused
+	get_tree().paused = true
 	theme = QuizTheme.combat_theme()  # ten sam motyw i rozmiar tekstu co w walce
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_dm = CoreManager.get_singleton("DifficultyManager")
@@ -91,6 +96,7 @@ func _ready() -> void:
 	var first_q: Dictionary = QuizManager.start_quiz(_quiz_id, _diff_range, total_questions)
 	if first_q.is_empty():
 		push_warning("QuizPuzzle: Brak pytań!")
+		get_tree().paused = _was_paused
 		puzzle_finished.emit(false)
 		get_parent().queue_free()
 		return
@@ -244,5 +250,6 @@ func _finish(success: bool) -> void:
 		_result_label.add_theme_color_override("font_color", Color.RED)
 
 	await get_tree().create_timer(1.0).timeout
+	get_tree().paused = _was_paused
 	puzzle_finished.emit(success)
 	get_parent().queue_free()
