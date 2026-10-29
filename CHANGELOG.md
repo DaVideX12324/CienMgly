@@ -5,6 +5,25 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+## [0.9.4-beta] — 2026-10-29
+
+### Zmieniono
+- Walka: zmiana dolnego pasa bez przeskoku — okna przesuwają się na nowe miejsce, nowe wjeżdżają z boku (0,16 s).
+- Walka: „Wstecz” jako sama strzałka w rogu okna drużyny (podpowiedź po najechaniu).
+- Walka: przez 120 ms po zmianie fazy / panelu wejście jest ignorowane — szybkie podwójne wejścia (klik w cel + Esc,
+  Atak + Umiejętności) nie trafiają w stan w połowie przejścia.
+- XP: wrogowie z poziomem w scenie (samouczek) dają XP z krzywej (szlam 18, boss 724) zamiast stałych 400 / 8000 —
+  po samouczku nie ma już lv 10.
+- Skrzynie z wytrychem: padają wszystkie pytania, szansa otwarcia = odsetek poprawnych odpowiedzi (zamiast progu);
+  w zagadkach (drzwi, skrzynie) bez losowego „Bonus +1 postęp”.
+- Muzyka map w jednym miejscu: pole `music_track` mapy (ręczne i samouczek — Inspektor), mapy generowane —
+  companion-JSON `"music"`; mapa bez utworu nie zmienia muzyki.
+- Miasto: zmiany z edytora (tablica ogłoszeń).
+
+### Naprawiono
+- Okienko łupu ze skrzyni pokazuje ikonę przedmiotu (był znak zapytania).
+- Walka: pusty panel drużyny po dwóch szybkich wejściach (wybór celu przerwany innym menu).
+
 ## [0.9.3-beta] — 2026-10-29
 
 ### Dodano
