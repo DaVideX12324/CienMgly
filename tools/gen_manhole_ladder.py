@@ -14,8 +14,16 @@ TILE = (288, 272)
 HOLE = (14, 17, 19)
 ## Jasna, średnia, ciemna miedź i najgłębszy cień (ten sam materiał co Ladder.png).
 RAMP = [(219, 151, 126), (163, 95, 70), (106, 57, 39), (59, 35, 27)]
-## Szczeble od góry: (y, lewa szyna x, prawa szyna x, odcień 0..3). Zbieżność ku środkowi kafla (x 15,5).
-RUNGS = [(6, 11, 20, 0), (10, 12, 19, 1), (14, 13, 18, 2), (17, 14, 17, 3)]
+## Szyny: proste linie, od (TOP_Y, x LEFT / RIGHT) o 1 px ku środkowi co STEP wierszy, do BOTTOM_Y.
+TOP_Y, BOTTOM_Y, STEP = 4, 19, 4
+LEFT, RIGHT = 11, 20
+## Szczeble: wiersze (co STEP, w połowie odcinka szyny) i odcień 0..3 — im głębiej, tym ciemniej.
+RUNGS = [(6, 0), (10, 1), (14, 2), (18, 3)]
+
+
+def rail_x(y: int) -> tuple:
+    k = (y - TOP_Y) // STEP
+    return LEFT + k, RIGHT - k
 
 
 def paint(im: Image.Image) -> None:
@@ -26,22 +34,18 @@ def paint(im: Image.Image) -> None:
         if px[ox + x, oy + y][:3] == HOLE:
             px[ox + x, oy + y] = c + (255,)
 
-    # szyny: odcinki między kolejnymi szczeblami, odcień jak niższy szczebel
-    for (y0, l0, r0, _), (y1, l1, r1, s1) in zip(RUNGS, RUNGS[1:]):
-        for y in range(y0, y1 + 1):
-            t = (y - y0) / (y1 - y0)
-            put(round(l0 + (l1 - l0) * t), y, RAMP[s1])
-            put(round(r0 + (r1 - r0) * t), y, RAMP[s1])
-    # szyny nad górnym szczeblem aż do obręczy
-    l, r = RUNGS[0][1], RUNGS[0][2]
-    for y in range(4, RUNGS[0][0]):
-        put(l, y, RAMP[0]); put(r, y, RAMP[0])
-    # szczeble (górny jaśniejszy z ciemniejszym spodem)
-    for y, l, r, s in RUNGS:
+    # szyny: odcień wg szczebla poniżej (głębiej ciemniej)
+    for y in range(TOP_Y, BOTTOM_Y + 1):
+        shade = next((sh for ry, sh in RUNGS if ry >= y), RUNGS[-1][1])
+        l, r = rail_x(y)
+        put(l, y, RAMP[shade]); put(r, y, RAMP[shade])
+    # szczeble między szynami; górny z ciemniejszym spodem
+    for y, sh in RUNGS:
+        l, r = rail_x(y)
         for x in range(l + 1, r):
-            put(x, y, RAMP[s])
-            if s == 0:
-                put(x, y + 1, RAMP[s + 2])
+            put(x, y, RAMP[sh])
+            if sh == 0:
+                put(x, y + 1, RAMP[2])
 
 
 if __name__ == '__main__':
