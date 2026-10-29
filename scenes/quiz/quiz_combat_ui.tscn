@@ -3,9 +3,8 @@
 [ext_resource type="Script" uid="uid://bmndbqqcgecbu" path="res://modules/quiz_rpg/scripts/quiz/quiz_combat_controller.gd" id="1_combat"]
 [ext_resource type="Theme" uid="uid://cu4rmiph6kyp2" path="res://modules/quiz_rpg/resources/ui/quiz_theme.tres" id="1_u2rx0"]
 [ext_resource type="Script" uid="uid://co1ex231wo1ix" path="res://modules/quiz_rpg/scripts/quiz/battle_background.gd" id="2_bg"]
-[ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
-
 [ext_resource type="Texture2D" uid="uid://ceskfk67380k7" path="res://assets/UI/Pixel UI pack 3/Full.png" id="px3_full"]
+[ext_resource type="Script" uid="uid://3v766m6yv38l" path="res://modules/quiz_rpg/scripts/ui/quiz_bar.gd" id="quiz_bar"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_corner_TL"]
 atlas = ExtResource("px3_full")
@@ -97,7 +96,6 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="EnemySection" type="VBoxContainer" parent="Root/Battlefield/FieldContent" unique_id=1837799062]
-mouse_filter = 2
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 0.507
@@ -107,6 +105,7 @@ offset_top = -56.810028
 offset_bottom = 271.18997
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 theme_override_constants/separation = 12
 
 [node name="EnemyName" type="Label" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=1684427100]
@@ -124,31 +123,31 @@ text = "Przeciwnicy"
 horizontal_alignment = 1
 
 [node name="EnemySprite" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection" unique_id=637457849]
-mouse_filter = 2
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="EnemyDisplayCanvas" type="Node2D" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=1973957803]
 
 [node name="EnemyRow2" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=550312785]
-mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2" unique_id=1801887481]
-mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/margin_left = 450
 theme_override_constants/margin_right = 450
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer" unique_id=971464970]
-mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/separation = 20
 alignment = 1
 
@@ -193,54 +192,49 @@ grow_vertical = 2
 color = Color(0.3, 0.6, 1, 0.08)
 
 [node name="CornerTL" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300400]
+texture_filter = 1
 layout_mode = 1
-offset_left = 0.0
-offset_top = 0.0
 offset_right = 24.0
 offset_bottom = 27.0
 mouse_filter = 2
-texture_filter = 1
 texture = SubResource("AtlasTexture_corner_TL")
 expand_mode = 1
 
 [node name="CornerTR" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300407]
+texture_filter = 1
 layout_mode = 1
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -24.0
-offset_top = 0.0
-offset_right = 0.0
 offset_bottom = 27.0
 mouse_filter = 2
-texture_filter = 1
 texture = SubResource("AtlasTexture_corner_TR")
 expand_mode = 1
 
 [node name="CornerBL" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300414]
+texture_filter = 1
 layout_mode = 1
+anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
 offset_top = -27.0
 offset_right = 24.0
-offset_bottom = 0.0
 mouse_filter = 2
-texture_filter = 1
 texture = SubResource("AtlasTexture_corner_BL")
 expand_mode = 1
 
 [node name="CornerBR" type="TextureRect" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow2/MarginContainer/HBoxContainer/VBoxContainer/EnemySlot0/TargetHighlight" unique_id=1712300421]
+texture_filter = 1
 layout_mode = 1
+anchors_preset = 3
 anchor_left = 1.0
-anchor_right = 1.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -24.0
 offset_top = -27.0
-offset_right = 0.0
-offset_bottom = 0.0
 mouse_filter = 2
-texture_filter = 1
 texture = SubResource("AtlasTexture_corner_BR")
 expand_mode = 1
 
@@ -333,23 +327,23 @@ show_percentage = false
 script = ExtResource("quiz_bar")
 
 [node name="EnemyRow1" type="VBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite" unique_id=189913761]
-mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+mouse_filter = 2
 alignment = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1" unique_id=1801887480]
-mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/margin_left = 120
 theme_override_constants/margin_right = 120
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Root/Battlefield/FieldContent/EnemySection/EnemySprite/EnemyRow1/MarginContainer" unique_id=701350609]
-mouse_filter = 2
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/separation = 20
 alignment = 1
 
@@ -565,6 +559,7 @@ text = "Ucieknij"
 alignment = 0
 
 [node name="ExitBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyCommandPanel/CommandMargin/CommandVBox/ActionPanel/PrimaryMenu" unique_id=1526698013]
+visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 theme_type_variation = &"QuizMenuItem"
@@ -1284,15 +1279,15 @@ text = "Tura 1  ·  seria 0  ·  +0%"
 horizontal_alignment = 2
 vertical_alignment = 2
 
-[node name="BackBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel"]
+[node name="BackBtn" type="Button" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel" unique_id=525096173]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
 tooltip_text = "Wstecz"
 focus_mode = 0
-flat = true
 text = "←"
+flat = true
 
 [node name="ActorCommandPanel" type="PanelContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow" unique_id=1588123456]
 custom_minimum_size = Vector2(288, 0)
@@ -1386,6 +1381,11 @@ layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/line_spacing = 10
 autowrap_mode = 3
+
+[node name="MoreMarker" type="Polygon2D" parent="Root/BattleWindow/WindowMargin/VBox/MessageWindow" unique_id=1205356754]
+visible = false
+color = Color(0.95, 0.95, 0.98, 1)
+polygon = PackedVector2Array(0, 0, 26, 0, 13, 16)
 
 [node name="QuizModalOverlay" type="Control" parent="Root" unique_id=987654321]
 visible = false
@@ -1503,8 +1503,3 @@ visible = false
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 0
 autowrap_mode = 3
-
-[node name="MoreMarker" type="Polygon2D" parent="Root/BattleWindow/WindowMargin/VBox/MessageWindow"]
-visible = false
-color = Color(0.95, 0.95, 0.98, 1)
-polygon = PackedVector2Array(0, 0, 26, 0, 13, 16)

@@ -2055,4 +2055,3 @@ func _is_prev_tab(event: InputEvent) -> bool:
 
 func _is_next_tab(event: InputEvent) -> bool:
 	return event.is_action_pressed("tab_next")
-
