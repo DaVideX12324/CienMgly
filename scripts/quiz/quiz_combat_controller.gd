@@ -3081,16 +3081,18 @@ func _set_band_mode(mode: Band) -> void:
 				party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
 
 
-## Zmiana pasa bez przeskoku (slide): okna, które zostają (np. drużyna w środku), przesuwają się z poprzedniego miejsca
-## na nowe, a nowe okno komend „jedzie” z miejsca znikającego (lewe -> prawe) z wygaszeniem. Kontener ustawia pozycje
+## Zmiana pasa bez przeskoku: okna, które zostają (np. drużyna w środku), przesuwają się z poprzedniego miejsca na nowe;
+## znikające okno ściska się do swojej zewnętrznej krawędzi (jego obraz z ostatniej klatki), nowe rozszerza się od swojej
+## (scale.x z pivotem na krawędzi — kontener nie rusza skali). Kontener ustawia pozycje
 ## przy każdym przeliczeniu układu (np. zmiana licznika tury), więc przesunięcie jest dokładane po każdym ułożeniu
 ## (sort_children), a nie tweenowane wprost na position. Stan „przed” = pierwszy w klatce.
 const BAND_SLIDE_SEC := 0.22
-const BAND_SLIDE_IN_PX := 48.0
 var _band_before := {}   # okno -> [widoczne, pozycja globalna] sprzed zmian w tej klatce
 var _band_delta := {}    # okno -> przesunięcie na starcie animacji (px), maleje do 0
 var _band_t := 0.0       # 1 -> 0
 var _band_tween: Tween
+var _band_ghosts: Array[TextureRect] = []  # obrazy znikających okien (ściskane)
+var _band_frame: Image  # klatka sprzed zmiany (obraz znikającego okna)
 
 
 func _band_panels() -> Array[Control]:
@@ -3106,6 +3108,7 @@ func _animate_band_change() -> void:
 		return
 	for p in _band_panels():
 		_band_before[p] = [p.is_visible_in_tree(), p.global_position]
+	_band_frame = get_viewport().get_texture().get_image()  # ostatnia klatka — jeszcze ze starym układem
 	# Start zaraz po ułożeniu okien przez kontener (przed rysowaniem — bez klatki w nowym miejscu); zapasowo
 	# po chwili, gdyby układ się nie zmienił.
 	content_row.sort_children.connect(_start_band_animation, CONNECT_ONE_SHOT)
@@ -3122,30 +3125,34 @@ func _start_band_animation() -> void:
 	if _band_tween and _band_tween.is_valid():
 		_band_tween.kill()
 	_band_delta.clear()
-	# Znikające okno (było, już nie ma) — z jego miejsca wjeżdża nowe.
-	var gone_pos: Variant = null
+	for g in _band_ghosts:
+		if is_instance_valid(g):
+			g.queue_free()
+	_band_ghosts.clear()
+	var middle_x := party_panel_container.get_global_rect().get_center().x if party_panel_container else 0.0
+	# Znikające okno (było, już nie ma): jego obraz ściska się do zewnętrznej krawędzi.
 	for p in _band_panels():
 		var was: Array = before.get(p, [false, Vector2.ZERO])
-		if was[0] and not p.is_visible_in_tree():
-			gone_pos = was[1]
+		if was[0] and not p.is_visible_in_tree() and _band_frame != null:
+			var ghost := _band_ghost(p, was[1], middle_x)
+			if ghost:
+				_band_ghosts.append(ghost)
+	_band_frame = null
 	for p in _band_panels():
 		p.modulate.a = 1.0  # przerwana animacja nie zostawia wygaszonego okna
 		if not p.is_visible_in_tree():
 			continue
 		var was: Array = before.get(p, [false, p.global_position])
-		var delta: Vector2
-		if was[0]:
-			delta = was[1] - p.global_position
-		elif gone_pos != null:
-			delta = Vector2((gone_pos as Vector2).x - p.global_position.x, 0.0)
-		else:
-			delta = Vector2(BAND_SLIDE_IN_PX, 0.0)
-		if delta.length() < 1.0 and was[0]:
-			continue
-		_band_delta[p] = delta
 		if not was[0]:
-			p.modulate.a = 0.0
-	if _band_delta.is_empty():
+			# Nowe okno rozszerza się od zewnętrznej krawędzi (dalszej od środka).
+			p.pivot_offset = Vector2(p.size.x if p.get_global_rect().get_center().x > middle_x else 0.0, p.size.y * 0.5)
+			p.scale.x = 0.0
+			_band_delta[p] = Vector2.ZERO
+			continue
+		var delta: Vector2 = was[1] - p.global_position
+		if delta.length() >= 1.0:
+			_band_delta[p] = delta
+	if _band_delta.is_empty() and _band_ghosts.is_empty():
 		return
 	if not content_row.sort_children.is_connected(_apply_band_offset):
 		content_row.sort_children.connect(_apply_band_offset)
@@ -3154,9 +3161,19 @@ func _start_band_animation() -> void:
 	_band_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_band_tween.tween_method(func(t: float) -> void:
 		_band_t = t
+		for g in _band_ghosts:
+			if is_instance_valid(g):
+				g.scale.x = t
 		content_row.queue_sort(), 1.0, 0.0, BAND_SLIDE_SEC)
 	_band_tween.finished.connect(func() -> void:
 		_band_t = 0.0
+		for p: Control in _band_delta:
+			if is_instance_valid(p):
+				p.scale.x = 1.0
+		for g in _band_ghosts:
+			if is_instance_valid(g):
+				g.queue_free()
+		_band_ghosts.clear()
 		_band_delta.clear()
 		if content_row.sort_children.is_connected(_apply_band_offset):
 			content_row.sort_children.disconnect(_apply_band_offset)
@@ -3168,8 +3185,32 @@ func _apply_band_offset() -> void:
 	for p: Control in _band_delta:
 		if is_instance_valid(p):
 			p.position += (_band_delta[p] as Vector2) * _band_t
-			if p.modulate.a < 1.0:  # nowe okno rozjaśnia się razem z przesunięciem
-				p.modulate.a = maxf(p.modulate.a, 1.0 - _band_t)
+			if p.scale.x < 1.0 or (_band_delta[p] as Vector2) == Vector2.ZERO:
+				p.scale.x = 1.0 - _band_t  # nowe okno rozszerza się
+
+
+## Obraz znikającego okna z ostatniej klatki w jego starym miejscu, ściskany do zewnętrznej krawędzi.
+func _band_ghost(p: Control, old_global: Vector2, middle_x: float) -> TextureRect:
+	var xf := p.get_global_transform_with_canvas()
+	var px_pos := xf.origin + (old_global - p.global_position) * xf.get_scale()  # stary lewy górny róg w px ekranu
+	var px_size := p.size * xf.get_scale()
+	var rect := Rect2i(Vector2i(px_pos), Vector2i(px_size)).intersection(Rect2i(Vector2i.ZERO, _band_frame.get_size()))
+	if rect.size.x <= 0 or rect.size.y <= 0:
+		return null
+	var ghost := TextureRect.new()
+	ghost.texture = ImageTexture.create_from_image(_band_frame.get_region(rect))
+	ghost.top_level = true
+	ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ghost.stretch_mode = TextureRect.STRETCH_SCALE
+	ghost.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	add_child(ghost)
+	# top_level: pozycja w układzie płótna tego węzła — przeliczenie z px ekranu.
+	var inv := get_global_transform_with_canvas().affine_inverse()
+	ghost.global_position = inv * Vector2(rect.position)
+	ghost.size = Vector2(rect.size) / xf.get_scale()
+	var outer_right := old_global.x + p.size.x * 0.5 > middle_x
+	ghost.pivot_offset = Vector2(ghost.size.x if outer_right else 0.0, ghost.size.y * 0.5)
+	return ghost
 
 
 func _update_corner_label() -> void:
