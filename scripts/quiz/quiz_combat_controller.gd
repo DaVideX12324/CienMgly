@@ -215,6 +215,8 @@ var _quiz_panel_controller
 var _field_band_h := 0.0   # wysokość zwykłego pasa pod polem bitwy (bez chwilowego wzrostu okna przy dużym pytaniu)
 var _band_mode: Band = Band.PARTY_COMMAND
 @onready var _corner_label: Label = (party_panel_container.get_node_or_null("CornerInfo") if party_panel_container else null) as Label
+## „Wstecz” w rogu okna drużyny (gra samą myszą) — to samo co Esc / PPM, widoczne, gdy jest dokąd wrócić.
+@onready var _back_btn: Button = (party_panel_container.get_node_or_null("BackBtn") if party_panel_container else null) as Button
 @onready var _top_window: PanelContainer = $TopWindow           # u góry: pytanie quizu + czas albo log bitwy
 @onready var _top_vbox: VBoxContainer = $TopWindow/VBox
 @onready var _timer_row: HBoxContainer = $TopWindow/VBox/TimerRow
@@ -360,6 +362,13 @@ func _ready() -> void:
 	if exit_btn:
 		exit_btn.mouse_entered.connect(func(): _highlight_action(2))
 	_action_buttons = [atk_btn, skills_btn, def_btn, items_btn]
+	if _back_btn:
+		_back_btn.text = QuizRpgI18n.t("main_menu.back", "← Wstecz")
+		_back_btn.pressed.connect(func() -> void:
+			var back := InputEventAction.new()  # jak Esc: cofa listę / cel / postać / akcje
+			back.action = &"ui_cancel"
+			back.pressed = true
+			_unhandled_input(back))
 	atk_btn.pressed.connect(_on_action.bind(Action.ATTACK))
 	def_btn.pressed.connect(_on_action.bind(Action.DEFEND))
 	skills_btn.pressed.connect(_open_skills_menu)
@@ -462,6 +471,8 @@ func _process(delta: float) -> void:
 		_quiz_panel_controller.tick(delta)
 	_update_corner_label()
 	_update_top_window()
+	if _back_btn:
+		_back_btn.visible = _list_menu_mode != "" or phase == Phase.TARGET_SELECT 				or (phase == Phase.ACTION_SELECT and (_actor_select_open or _action_menu_open))
 
 
 ## Mysz nie działa w walce, gdy okno nie ma fokusu (np. po przełączeniu na Discorda), a kliknięcie, które tylko przywraca fokus
