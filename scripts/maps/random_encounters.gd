@@ -120,6 +120,9 @@ func _can_count() -> bool:
 		return false
 	if mode == MODE_CLEARED and _live_regular_enemies() > 0:
 		return false
+	var settings := get_node_or_null("/root/SettingsService")  # Opcje modułu: „Losowe spotkania”
+	if settings and str(settings.get_module("quiz_rpg", "random_encounters", "on")) == "off":
+		return false
 	return true
 
 

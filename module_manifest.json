@@ -115,6 +115,21 @@
           "name": "Wyłączona"
         }
       ]
+    },
+    {
+      "key": "random_encounters",
+      "label": "Losowe spotkania",
+      "default": "on",
+      "options": [
+        {
+          "id": "on",
+          "name": "Włączone"
+        },
+        {
+          "id": "off",
+          "name": "Wyłączone"
+        }
+      ]
     }
   ]
 }
