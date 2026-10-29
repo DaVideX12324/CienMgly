@@ -1167,6 +1167,7 @@ func _open_target_menu() -> void:
 			"hp": int(enemy_unit.get("hp", 0)),
 			"max_hp": int(enemy_unit.get("max_hp", 1)),
 			"level": int(enemy_unit.get("level", 0)),
+			"tier": int(enemy_unit.get("tier", 1)),
 		})
 	_target_selected_idx = 0
 	target_list_vbox.columns = mini(2, maxi(_target_entries.size(), 1))
@@ -1184,8 +1185,10 @@ func _build_target_menu() -> void:
 		(row.get_node("Margin/Content/Name") as Label).text = str(entry.get("name", enemy_name_str))  # HP wroga pokazuje Skan, nie lista celów
 		var lvl := int(entry.get("level", 0))
 		var level_text := row.get_node("Margin/Content/Level") as Label
-		level_text.visible = lvl > 0  # poziom wroga (mapa: "enemy_levels"); bez poziomu (samouczek) — bez znacznika
-		level_text.text = QuizRpgI18n.tf("combat.level_short", {"level": lvl}, "Lv {level}")
+		# Poziom wroga (mapa: "enemy_levels") i tier obok — tier 4+ jako „Boss”; bez poziomu sam tier.
+		var tier := int(entry.get("tier", 1))
+		var tier_text := QuizRpgI18n.t("combat.boss_short", "Boss") if tier >= 4 else QuizRpgI18n.tf("combat.tier_short", {"tier": tier}, "T{tier}")
+		level_text.text = (QuizRpgI18n.tf("combat.level_short", {"level": lvl}, "Lv {level}") + " · " if lvl > 0 else "") + tier_text
 		var row_index: int = _target_rows.size()
 		row.gui_input.connect(func(event: InputEvent): _on_target_row_gui_input(event, row_index))
 		row.mouse_entered.connect(func(): _on_target_row_hover(row_index))

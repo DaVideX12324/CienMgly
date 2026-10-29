@@ -47,6 +47,8 @@
   "combat.hit_damage": "{target}: hit! -{damage} HP",
   "combat.item_dropped": "Acquired: {item}!",
   "combat.level_short": "Lv {level}",
+  "combat.boss_short": "Boss",
+  "combat.tier_short": "T{tier}",
   "combat.member_joins_battle": "{name} joins the battle!",
   "combat.miss": "Miss!",
   "combat.new_skill_learned": "New skill: {skill}!",
