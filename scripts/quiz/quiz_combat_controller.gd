@@ -157,7 +157,6 @@ const ListRowScene := preload("../../scenes/quiz/combat_list_row.tscn")
 	]
 @onready var engage_btn: Button = (primary_menu.get_node_or_null("EngageBtn") if primary_menu else null) as Button
 @onready var run_btn: Button = (primary_menu.get_node_or_null("RunBtn") if primary_menu else null) as Button
-@onready var exit_btn: Button = (primary_menu.get_node_or_null("ExitBtn") if primary_menu else null) as Button
 @onready var atk_btn: Button = (action_menu.get_node_or_null("AtkBtn") if action_menu else null) as Button
 @onready var def_btn: Button = (action_menu.get_node_or_null("DefBtn") if action_menu else null) as Button
 @onready var skills_btn: Button = (action_menu.get_node_or_null("SkillsBtn") if action_menu else null) as Button
@@ -364,12 +363,8 @@ func _ready() -> void:
 
 	engage_btn.pressed.connect(_on_engage_pressed)
 	run_btn.pressed.connect(_on_run_pressed)
-	if exit_btn:
-		exit_btn.pressed.connect(_on_exit_pressed)
 	engage_btn.mouse_entered.connect(func(): _highlight_action(0))
 	run_btn.mouse_entered.connect(func(): _highlight_action(1))
-	if exit_btn:
-		exit_btn.mouse_entered.connect(func(): _highlight_action(2))
 	_action_buttons = [atk_btn, skills_btn, def_btn, items_btn]
 	if _back_btn:
 		_back_btn.tooltip_text = QuizRpgI18n.t("main_menu.back", "← Wstecz")  # sama strzałka — nie wchodzi na wiersze drużyny
@@ -389,7 +384,7 @@ func _ready() -> void:
 		party_rows[i].draw.connect(_draw_party_row_cursor.bind(i))
 	# Kursor menu prowadzi ten skrypt (_unhandled_input); fokus Godota na przycisku przejmowałby
 	# strzałki / Enter (własna nawigacja fokusu) i rozjeżdżał się z podświetleniem.
-	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
+	for btn: Button in [engage_btn, run_btn, atk_btn, skills_btn, def_btn, items_btn]:
 		if btn:
 			btn.focus_mode = Control.FOCUS_NONE
 
@@ -474,8 +469,6 @@ func trigger_instant_win() -> void:
 
 
 func _process(delta: float) -> void:
-	if _is_pause_menu_open():
-		return
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
 	_update_corner_label()
@@ -522,8 +515,6 @@ func _is_focus_click(event: InputEvent) -> bool:
 
 
 func _input(event: InputEvent) -> void:
-	if _is_pause_menu_open():
-		return
 	if _is_focus_click(event) or _is_settling_press(event):
 		get_viewport().set_input_as_handled()
 		return
@@ -549,8 +540,6 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_pause_menu_open():
-		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key_event := event as InputEventKey
 		if OS.is_debug_build() and key_event.keycode == KEY_F9:
@@ -654,10 +643,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 	if phase == Phase.QUIZ and _quiz_panel_controller and _quiz_panel_controller.handle_input(event):
-		get_viewport().set_input_as_handled()
-		return
-	if _is_menu_cancel(event) and not _is_right_click(event):  # PPM tylko cofa, pauzy nie otwiera
-		_open_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -2446,7 +2431,7 @@ func _highlight_action(idx: int) -> void:
 	if buttons.is_empty():
 		return
 	_selected_action_idx = clampi(idx, 0, buttons.size() - 1)
-	for btn: Button in [engage_btn, run_btn, exit_btn, atk_btn, skills_btn, def_btn, items_btn]:
+	for btn: Button in [engage_btn, run_btn, atk_btn, skills_btn, def_btn, items_btn]:
 		if btn:
 			QuizTheme.set_menu_item_selected(btn, btn == buttons[_selected_action_idx])
 
@@ -2839,34 +2824,6 @@ func _ensure_enemy_target_highlight(slot: Control) -> Control:
 			old_parent.remove_child(_enemy_target_highlight_node)
 		slot.add_child(_enemy_target_highlight_node)
 	return _enemy_target_highlight_node
-
-
-func _is_pause_menu_open() -> bool:
-	var pause_menu: Node = _find_pause_menu_node()
-	if pause_menu != null and pause_menu.has_method("is_paused"):
-		return bool(pause_menu.call("is_paused"))
-	return false
-
-
-## Menu pauzy z grupy (pause_menu.gd dodaje się w _enter_tree) — wołane co klatkę i przy każdym zdarzeniu wejścia,
-## więc bez find_child po całym drzewie (rosło z wielkością poziomu).
-func _find_pause_menu_node() -> Node:
-	return get_tree().get_first_node_in_group(&"quiz_pause_menu") if get_tree() else null
-
-
-func _open_pause_menu(start_in_exit_confirm: bool = false) -> void:
-	var pause_menu: Node = _find_pause_menu_node()
-	if pause_menu == null:
-		var pause_scene: PackedScene = load(QuizRpgPaths.path("scenes/ui/pause_menu.tscn")) as PackedScene
-		if pause_scene and get_tree() and get_tree().current_scene:
-			var new_pause: CanvasLayer = pause_scene.instantiate() as CanvasLayer
-			get_tree().current_scene.add_child(new_pause)
-			pause_menu = new_pause
-	if pause_menu:
-		if start_in_exit_confirm and pause_menu.has_method("open_confirm_exit"):
-			pause_menu.call("open_confirm_exit")
-		elif pause_menu.has_method("open_pause_menu"):
-			pause_menu.call("open_pause_menu")
 
 
 func _on_viewport_size_changed() -> void:
@@ -3798,7 +3755,7 @@ func _get_visible_action_count() -> int:
 
 func _get_visible_primary_buttons() -> Array[Button]:
 	var visible_buttons: Array[Button] = []
-	for btn: Button in [engage_btn, run_btn, exit_btn]:
+	for btn: Button in [engage_btn, run_btn]:
 		if btn and btn.visible:
 			visible_buttons.append(btn)
 	return visible_buttons
@@ -3920,12 +3877,6 @@ func _handle_actor_row_mouse(event: InputEvent) -> bool:
 			return true
 		return false
 	return false
-
-
-func _on_exit_pressed() -> void:
-	if phase != Phase.ACTION_SELECT:
-		return
-	_open_pause_menu(true)
 
 
 ## Okno komunikatów po bitwie ma szerokość UI walki (wyśrodkowane): zakres widocznych okien paska tuż przed ich ukryciem,
