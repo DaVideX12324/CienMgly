@@ -31,25 +31,25 @@ z_index = 1
 tile_set = ExtResource("1_6yl81")
 
 [node name="Seg_Schody" type="Node2D" parent="Tilesets" unique_id=1612327104]
-position = Vector2(0, -36)
+position = Vector2(0, -23)
 
 [node name="Sort" type="Node2D" parent="Tilesets/Seg_Schody" unique_id=2119607465]
 
 [node name="ScianaPodSchodami" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1900247560]
 y_sort_enabled = true
-position = Vector2(0, 36)
+position = Vector2(0, 23)
 tile_map_data = PackedByteArray("AAD5/wAA///////////4/wAA///////////5///////////////4///////////////5//7////////////3////BQAmABEAAAD3/wAABQAAACsAAAD9//z////////////6//3////////////6//7////////////7//3////////////7//7////////////8//3////////////8//7////////////8//z////////////9///////////////8///////////////7///////////////6//////////////8=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="ScianaPodSchodamiDetal" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1427629825]
 y_sort_enabled = true
-position = Vector2(0, 36)
+position = Vector2(0, 23)
 tile_map_data = PackedByteArray("AAD6//3////////////7//3////////////8//3////////////6//7////////////7//7////////////8//7///////////8=")
 tile_set = ExtResource("1_6yl81")
 
 [node name="Schody" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1948278698]
 y_sort_enabled = true
-position = Vector2(0, 36)
+position = Vector2(0, 23)
 tile_map_data = PackedByteArray("AAD7//3////////////8//3////////////6//z////////////7//z////////////8//z////////////5//3////////////5//7////////////5//z////////////4//z////////////4//3////////////4//7////////////4///////////////3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7////////////9//3////////////3/wAACQAHABIAAAD6//3///////////8=")
 tile_set = ExtResource("1_6yl81")
 
