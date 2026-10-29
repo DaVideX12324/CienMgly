@@ -2875,7 +2875,9 @@ func _apply_responsive_enemy_layout() -> void:
 		var slot_sz: Vector2 = slot.custom_minimum_size if slot.custom_minimum_size != Vector2.ZERO else Vector2(150.0, 150.0)
 		wrapper.size = wrapper.get_combined_minimum_size()
 		# Stopy wroga (display: środek slotu, 8 px nad jego dołem) w miejscu z pola walki.
-		var foot: Vector2 = _battle_layout.foot(spot, area, vp_size)
+		var foot: Vector2 = _battle_layout.foot(spot, area, vp_size, battle_background.size if battle_background else Vector2.ZERO)
+		if battle_background and _battle_layout.texture != null:  # px tła -> px warstwy wrogów
+			foot = _enemy_field_layer.get_global_transform().affine_inverse() * (battle_background.get_global_transform() * foot)
 		wrapper.position = foot - Vector2(wrapper.size.x * 0.5, slot_sz.y - 8.0)
 		depth_order.append([foot.y, wrapper])
 		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:

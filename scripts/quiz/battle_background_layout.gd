@@ -5,8 +5,8 @@ extends Resource
 ## Pola walki (gdzie stoją wrogowie) na konkretnym tle — plik obok grafiki tła (`<nazwa>_layout.tres`).
 ## Edycja graficzna: scenes/tools/battle_layout_preview.tscn (narożniki pól — trapezów — przeciągane
 ## myszą, Ctrl+D = nowe pole, np. platforma). Współrzędne pól w px obszaru bitwy przy 1920 px szerokości
-## (REF_AREA = obszar nad dolnym paskiem UI przy 1920×1080); w grze: x skalowane szerokością ekranu,
-## y liczone od dołu obszaru bitwy (skala wysokości ekranu). Liczenie położenia jest tylko tutaj —
+## (REF_AREA = obszar nad dolnym paskiem UI przy 1920×1080, tło „cover”); w grze tym samym „cover” co tło
+## (to_background), a dla tła bez grafiki: x wg szerokości, y od dołu obszaru bitwy (to_screen). Liczenie położenia jest tylko tutaj —
 ## kontroler walki i podgląd używają tych samych funkcji.
 
 ## Grafika tła, której dotyczy układ (podgląd w edytorze; tło w grze wybiera generator tła).
@@ -172,12 +172,26 @@ func _weighted_pick(free: Array[int], rng: RandomNumberGenerator) -> int:
 
 
 ## Linia stóp wroga na miejscu `spot`: równo na linii rzędu między lewym a prawym bokiem pola.
-func foot(spot: Spot, area_size: Vector2, viewport_size: Vector2) -> Vector2:
+## `bg_size` > 0 i tło z grafiką: wynik w px tła o tym rozmiarze (to_background — wrogowie idą za tłem);
+## inaczej w px obszaru bitwy (to_screen).
+func foot(spot: Spot, area_size: Vector2, viewport_size: Vector2, bg_size := Vector2.ZERO) -> Vector2:
 	var fl := active_fields()
 	var field: BattleField = fl[clampi(spot.field, 0, fl.size() - 1)]
 	var line := field.row_line(spot.row)
 	var p := line[0].lerp(line[1], (spot.k + 0.5) / maxi(spot.n, 1))
+	if texture != null and bg_size.x > 0.0 and bg_size.y > 0.0:
+		return to_background(p, bg_size)
 	return to_screen(p, area_size, viewport_size)
+
+
+## Punkt pola (px wzorcowe: ekran REF_SIZE z tłem „cover”) -> px tła rysowanego „cover” w prostokącie
+## `bg_size` — to samo przekształcenie co grafika tła, więc miejsce zostaje na tym samym fragmencie obrazka
+## przy każdej rozdzielczości i proporcjach.
+func to_background(p: Vector2, bg_size: Vector2) -> Vector2:
+	var ts := texture.get_size()
+	var k_ref := maxf(REF_SIZE.x / ts.x, REF_SIZE.y / ts.y)
+	var k := maxf(bg_size.x / ts.x, bg_size.y / ts.y)
+	return (bg_size - ts * k) * 0.5 + (p - (REF_SIZE - ts * k_ref) * 0.5) * (k / k_ref)
 
 
 func spot_scale(spot: Spot) -> float:
