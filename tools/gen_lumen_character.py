@@ -81,8 +81,19 @@ HAIR_BLACK = [(70, 62, 62), (44, 40, 42), (20, 20, 18)]
 HAIR_AUBURN = [(176, 82, 42), (128, 56, 30), (80, 34, 20)]
 
 CHARACTERS = {
-    # Bohater — rycerz (wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem, niebieski wapenrok.
+    # Bohater — poszukiwacz przygód: brązowe włosy, zielona tunika z lnianym kołnierzem, podwinięte rękawy,
+    # skórzany pas i pas przez pierś, brązowe spodnie i skórzane buty.
     'bohater': {
+        'head_style': 'hair', 'body': 'plain',
+        'head': HAIR_BROWN, 'hair': HAIR_BROWN, 'face': SKIN, 'eye': (20, 20, 18), 'trim': LEATHER,
+        'torso_up': GREEN, 'torso_lo': GREEN, 'collar': LINEN,
+        'belt': LEATHER, 'buckle': GOLD, 'strap': LEATHER,
+        'arm_up': GREEN, 'arm_lo': LINEN, 'hand': LEATHER, 'cuff': LEATHER,
+        'leg': BROWN, 'boot': LEATHER,
+    },
+    # Rycerz (dawny wygląd bohatera, wzór: royal Knight): srebrna zbroja, hełm z odsłoniętą twarzą i złotym pasem,
+    # niebieski wapenrok.
+    'rycerz': {
         'head_style': 'helmet', 'body': 'plain',
         'head': METAL_D, 'face': SKIN, 'eye': (20, 20, 18), 'trim': GOLD, 'helm_rim': CHAIN,
         'torso_up': METAL, 'torso_lo': BLUE_D, 'belt': LEATHER, 'buckle': GOLD,
