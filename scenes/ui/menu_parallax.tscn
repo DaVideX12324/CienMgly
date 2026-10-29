@@ -1,0 +1,73 @@
+[gd_scene load_steps=9 format=3 uid="uid://b8menu4paralaks"]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/menu_parallax.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/01_sky.png" id="2_01_sky"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/02_far-clouds.png" id="3_02_far-clouds"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/03_far-mountains.png" id="4_03_far-mountains"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/04_near-clouds.png" id="5_04_near-clouds"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/05_mountains.png" id="6_05_mountains"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/06_myst.png" id="7_06_myst"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/mountain_dusk/07_trees.png" id="8_07_trees"]
+
+[node name="MenuParallax" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Sky" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("2_01_sky")
+stretch_mode = 1
+
+[node name="FarClouds" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("3_02_far-clouds")
+stretch_mode = 1
+
+[node name="FarMountains" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("4_03_far-mountains")
+stretch_mode = 1
+
+[node name="NearClouds" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("5_04_near-clouds")
+stretch_mode = 1
+
+[node name="Mountains" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("6_05_mountains")
+stretch_mode = 1
+
+[node name="Trees" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("8_07_trees")
+stretch_mode = 1
+
+[node name="Myst" type="TextureRect" parent="."]
+modulate = Color(0.55, 0.55, 0.9, 0.55)
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("7_06_myst")
+stretch_mode = 1
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.03, 0.08, 0.35)
