@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://b18muyp2vb85u"]
 
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/bohater/Death.png" id="1_veutp"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/bohater/Idle.png" id="2_pf41d"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/bohater/Punch.png" id="3_8h3oa"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/bohater/Run.png" id="4_pxsp5"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/bohater/Walk.png" id="5_7aclm"]
+[ext_resource type="Texture2D" uid="uid://bxnj60etqyxtg" path="res://assets/lumenlore/characters/bohater/Death.png" id="1_veutp"]
+[ext_resource type="Texture2D" uid="uid://dqlvmqcnry6ws" path="res://assets/lumenlore/characters/bohater/Idle.png" id="2_pf41d"]
+[ext_resource type="Texture2D" uid="uid://c4m1wnbmnru38" path="res://assets/lumenlore/characters/bohater/Punch.png" id="3_8h3oa"]
+[ext_resource type="Texture2D" uid="uid://blbyjqyuuc0id" path="res://assets/lumenlore/characters/bohater/Run.png" id="4_pxsp5"]
+[ext_resource type="Texture2D" uid="uid://d2jijg15f8xd6" path="res://assets/lumenlore/characters/bohater/Walk.png" id="5_7aclm"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_utd44"]
 atlas = ExtResource("1_veutp")

@@ -1,16 +1,16 @@
 [gd_scene format=4 uid="uid://ckxhf2hjjemjw"]
 
-[ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_d6a3d"]
+[ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_d6a3d"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/companion_npc.tscn" id="2_71fwf"]
-[ext_resource type="Material" path="res://assets/scratch_desert_town/assets/shaders/desert_town/desert_town.tres" id="3_n460d"]
-[ext_resource type="Script" path="res://assets/scratch_desert_town/scripts/level/tall_grass.gd" id="4_wkyqv"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_pietro.tscn" id="5_ii1kl"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_maly.tscn" id="6_t4xu5"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/studnia.tscn" id="7_efu62"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/targ_1.tscn" id="10_lp6ku"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/targ_2.tscn" id="11_phd2x"]
+[ext_resource type="Material" uid="uid://suegyf210usi" path="res://assets/scratch_desert_town/assets/shaders/desert_town/desert_town.tres" id="3_n460d"]
+[ext_resource type="Script" uid="uid://tdvmcq60klkr" path="res://assets/scratch_desert_town/scripts/level/tall_grass.gd" id="4_wkyqv"]
+[ext_resource type="PackedScene" uid="uid://bqtpyix0t5hlu" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_pietro.tscn" id="5_ii1kl"]
+[ext_resource type="PackedScene" uid="uid://bnyhgynj8baw4" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_maly.tscn" id="6_t4xu5"]
+[ext_resource type="PackedScene" uid="uid://vt12rq8cdtpy" path="res://modules/quiz_rpg/scenes/objects/buildings/studnia.tscn" id="7_efu62"]
+[ext_resource type="PackedScene" uid="uid://cl8xcmlpjai1j" path="res://modules/quiz_rpg/scenes/objects/buildings/targ_1.tscn" id="10_lp6ku"]
+[ext_resource type="PackedScene" uid="uid://drhlmi3rt2ej5" path="res://modules/quiz_rpg/scenes/objects/buildings/targ_2.tscn" id="11_phd2x"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_lewy.tscn" id="13_mq6ex"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/wieza.tscn" id="14_mys51"]
+[ext_resource type="PackedScene" uid="uid://2qlww7yh5prd" path="res://modules/quiz_rpg/scenes/objects/buildings/wieza.tscn" id="14_mys51"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/scarecrow.tscn" id="16_uicu5"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/deska_ukos.tscn" id="17_vp02q"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/deska.tscn" id="18_xkhol"]
@@ -42,21 +42,21 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_rust_large.tscn" id="65_qu547"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_large.tscn" id="66_mqikc"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_olive_large.tscn" id="67_xisst"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/crate.tscn" id="72_jh8qy"]
+[ext_resource type="PackedScene" uid="uid://b0k7uee0p1t82" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/crate.tscn" id="72_jh8qy"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/bucket_water.tscn" id="73_7b58y"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/pot.tscn" id="74_3061d"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/jug.tscn" id="75_t6sno"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/barrel.tscn" id="76_ni807"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post.tscn" id="77_kx07t"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post_left.tscn" id="78_g6vda"]
+[ext_resource type="PackedScene" uid="uid://rkffimg7bahh" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/lamps/lamp_post_left.tscn" id="78_g6vda"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/banners/banner_post_herb_czerwony.tscn" id="79_n5are"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/banners/banner_post_herb_zielony.tscn" id="80_xlvth"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_menu.tscn" id="81_mlrkn"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/drogowskaz.tscn" id="82_oqpxl"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/skrzynia.tscn" id="83_a4s3p"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/bal.tscn" id="84_nma14"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_ogloszen.tscn" id="85_u7pdi"]
-[ext_resource type="PackedScene" path="res://assets/scratch_desert_town/scenes/levels/desert_town_plants.tscn" id="86_t6wt0"]
+[ext_resource type="PackedScene" uid="uid://ca3vl8ypqmw3i" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/props/tablica_ogloszen.tscn" id="85_u7pdi"]
+[ext_resource type="PackedScene" uid="uid://cd10dxevnubxm" path="res://assets/scratch_desert_town/scenes/levels/desert_town_plants.tscn" id="86_t6wt0"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/blacksmith.tscn" id="87_evv6g"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/armorer.tscn" id="88_mxgio"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/innkeeper.tscn" id="89_qcig2"]
@@ -64,14 +64,15 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/skill_teacher.tscn" id="91_6rqqp"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/villager.tscn" id="92_vdafc"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/npc.tscn" id="93_xmuhc"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_kuznia.tscn" id="b_2"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_fancy.tscn" id="b_3"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_sredni.tscn" id="b_4"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_wysoki.tscn" id="b_6"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/handmade_level.gd" id="h_level"]
+[ext_resource type="PackedScene" uid="uid://dmvq6201lj0e6" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_kuznia.tscn" id="b_2"]
+[ext_resource type="PackedScene" uid="uid://bminfuqusn0u4" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_fancy.tscn" id="b_3"]
+[ext_resource type="PackedScene" uid="uid://djriv8kl2s3um" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_sredni.tscn" id="b_4"]
+[ext_resource type="PackedScene" uid="uid://dxpco76qsuxxj" path="res://modules/quiz_rpg/scenes/objects/buildings/dom_wysoki.tscn" id="b_6"]
+[ext_resource type="PackedScene" uid="uid://biggnd8w2l4ro" path="res://modules/quiz_rpg/scenes/objects/sewer_grate.tscn" id="grate_scene"]
+[ext_resource type="Script" uid="uid://6lqqncf8ddfy" path="res://modules/quiz_rpg/scripts/maps/handmade_level.gd" id="h_level"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_medium.tscn" id="t_1"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_green_small.tscn" id="t_2"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_olive_small.tscn" id="t_3"]
+[ext_resource type="PackedScene" uid="uid://ctj5t77qn434i" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/bushes/bush_olive_small.tscn" id="t_3"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_big.tscn" id="t_10"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_pair.tscn" id="t_11"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/rocks/rock_grey_small.tscn" id="t_12"]
@@ -91,13 +92,15 @@
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s3_r1c1.tscn" id="t_26"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m2_s4_r0c0.tscn" id="t_27"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s2_r0c0.tscn" id="t_28"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c0.tscn" id="t_29"]
+[ext_resource type="PackedScene" uid="uid://t44saofuaige" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c0.tscn" id="t_29"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r0c1.tscn" id="t_30"]
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r1c0.tscn" id="t_31"]
+[ext_resource type="PackedScene" uid="uid://cbxgg634tshpa" path="res://modules/quiz_rpg/scenes/objects/pixel_crawler/trees/tree_m3_s3_r1c0.tscn" id="t_31"]
 
-[ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/sewer_grate.tscn" id="grate_scene"]
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_portal"]
 size = Vector2(64, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vk0i2"]
+radius = 25.0
 
 [node name="Town" type="Node2D" unique_id=449664831]
 y_sort_enabled = true
@@ -105,9 +108,9 @@ script = ExtResource("h_level")
 next_level_path = "res://modules/quiz_rpg/scenes/maps/levels/sewer.tscn"
 previous_level_path = "res://modules/quiz_rpg/scenes/maps/levels/cave.tscn"
 exit_edge = 3
+music_track = "desert_town"
 arrival_scene_spawn = "Cave-Town"
 arrival_scene_text = "cutscene.cave_climb"
-music_track = "desert_town"
 
 [node name="Ground_1" type="TileMapLayer" parent="." unique_id=412207907 groups=["tilemap"]]
 z_index = -3
@@ -158,7 +161,7 @@ tile_set = ExtResource("1_d6a3d")
 script = ExtResource("4_wkyqv")
 grass_layer = NodePath(".")
 road_layer = NodePath("../Road")
-layers_to_adjust = [NodePath(""), NodePath("../Object Layer PC"), NodePath("../Fence"), null, null]
+layers_to_adjust = [null, NodePath("../Object Layer PC"), NodePath("../Fence"), null, null]
 
 [node name="Object Layer PC" type="Node2D" parent="." unique_id=533892908]
 y_sort_enabled = true
@@ -1643,7 +1646,7 @@ position = Vector2(551, 191)
 position = Vector2(551, 191)
 
 [node name="Sewer-Town" type="Marker2D" parent="Spawns" unique_id=318726052]
-position = Vector2(160, 780)
+position = Vector2(872, 1130)
 
 [node name="enter_previous_level" type="Area2D" parent="." unique_id=271876270]
 position = Vector2(551, 150)
@@ -1652,11 +1655,12 @@ position = Vector2(551, 150)
 shape = SubResource("RectangleShape2D_portal")
 
 [node name="enter_next_level" type="Area2D" parent="." unique_id=1311617570]
-position = Vector2(110, 780)
+position = Vector2(875, 1176)
 metadata/portal_use_key = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="enter_next_level" unique_id=1007320539]
-shape = SubResource("RectangleShape2D_portal")
+position = Vector2(-2, -1)
+shape = SubResource("CircleShape2D_vk0i2")
 
 [node name="SewerGrate" parent="." unique_id=1580447213 instance=ExtResource("grate_scene")]
-position = Vector2(110, 780)
+position = Vector2(873, 1175)
