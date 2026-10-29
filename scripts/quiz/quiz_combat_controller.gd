@@ -497,6 +497,7 @@ func _update_fast_forward() -> void:
 
 func _process(delta: float) -> void:
 	_update_fast_forward()
+	_animate_target_highlight()
 	if not (_band_tween and _band_tween.is_running()):
 		# Bez trwającej animacji pasa: okna w pełnej szerokości, bez obrazów znikających okien (zabezpieczenie —
 		# zgłoszenie: po ataku bohatera znikał środkowy panel).
@@ -2743,6 +2744,17 @@ func _select_enemy_layout_slots(active_count: int) -> Array[Dictionary]:
 		selected.append(slot_data)
 	return selected
 
+
+
+## Ramka celu pulsuje (skala ±4 % od środka i jasność), żeby było widać, który przeciwnik jest wybrany.
+func _animate_target_highlight() -> void:
+	var h := _enemy_target_highlight_node
+	if h == null or not h.visible:
+		return
+	var t := Time.get_ticks_msec() / 1000.0
+	h.pivot_offset = h.size * 0.5
+	h.scale = Vector2.ONE * (1.0 + 0.04 * sin(t * 6.0))
+	h.modulate.a = 0.75 + 0.25 * (0.5 + 0.5 * sin(t * 6.0))
 
 
 func _refresh_enemy_slot_highlight() -> void:
