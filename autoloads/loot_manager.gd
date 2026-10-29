@@ -251,7 +251,7 @@ func _ensure_popup() -> void:
 
 
 func _on_popup_gui_input(event: InputEvent) -> void:
-	var click := event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	var click: bool = event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
 	if click or event.is_action_pressed("interact") or event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
 		_close_popup()
 		get_viewport().set_input_as_handled()
