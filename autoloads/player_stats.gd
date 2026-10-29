@@ -194,15 +194,6 @@ func _add_member_xp(member_index: int, amount: int) -> void:
 		party_changed.emit()
 
 
-## Najwyższy poziom w drużynie — poziom odniesienia (np. start nowego członka; docs/kontekst/druzyna_szkic.md).
-func highest_level() -> int:
-	var best := level
-	for i in range(party.size()):
-		if i != hero_index():
-			best = maxi(best, int((party[i] as Dictionary).get("level", 1)))
-	return best
-
-
 ## Indeks głównego bohatera (hero_party_data[0]) w drużynie. Jego HP / poziom / XP / imię są też w polach hp / level /
 ## xp / player_name. Szyk (kolejność drużyny) jest dowolny — party[0] to lider (postać na mapie, cel ataków w lidera).
 func hero_index() -> int:
@@ -251,8 +242,8 @@ func has_member(hero_id: String) -> bool:
 	return false
 
 
-## Dołącza postać do drużyny (zadanie towarzysza, menu deweloperskie). at_level <= 0: najwyższy poziom w drużynie − 1
-## (co najmniej 1). Pełne HP / SP, ekwipunek startowy postaci założony, umiejętności z poziomu. false = już w drużynie
+## Dołącza postać do drużyny (zadanie towarzysza, menu deweloperskie). at_level <= 0: własny poziom postaci z danych
+## (QuizRpgHeroData.base_level — ustawiany w Inspektorze), nie poziom gracza. Pełne HP / SP, ekwipunek startowy postaci założony, umiejętności z poziomu. false = już w drużynie
 ## albo nieznana postać.
 func recruit(hero_id: String, at_level: int = 0) -> bool:
 	if has_member(hero_id):
@@ -261,7 +252,7 @@ func recruit(hero_id: String, at_level: int = 0) -> bool:
 	if hero == null:
 		return false
 	var m := hero.build_member_data()
-	var lvl := clampi(at_level if at_level > 0 else highest_level() - 1, 1, mini(MAX_LEVEL, LEVEL_CAP))
+	var lvl := clampi(at_level if at_level > 0 else hero.base_level, 1, mini(MAX_LEVEL, LEVEL_CAP))
 	m["level"] = lvl
 	m["xp"] = 0
 	m["max_hp"] = hero.hp_for_level(lvl, MAX_LEVEL)
