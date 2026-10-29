@@ -57,6 +57,7 @@ var _tile_buttons: Array[Button] = []
 var _gap_buttons: Array[Button] = []
 var _active_gap := 0
 var _tile_cursor := 0  # kursor klawiatury: kafelek 0..n-1, n = „Potwierdź”
+var _match_cursor := Vector2i.ZERO  # kursor klawiatury w parach: x 0 = lewa, 1 = prawa, 2 = „Potwierdź”; y = wiersz
 var _match_selected := -1
 var _match_pairs: Dictionary = {}
 var _match_left_buttons: Array[Button] = []
@@ -323,8 +324,33 @@ func handle_input(event: InputEvent) -> bool:
 				return true
 
 		"matching":
+			# Klawiatura: góra / dół — wiersz (pod ostatnim „Potwierdź”), lewo / prawo — kolumna, Enter / Z / spacja —
+			# wybór karty (po lewej kursor przechodzi na prawą) albo potwierdzenie.
+			if event.is_action_pressed("ui_up") or _act(event, &"move_up"):
+				_move_match_cursor(Vector2i(0, -1))
+				return true
+			if event.is_action_pressed("ui_down") or _act(event, &"move_down"):
+				_move_match_cursor(Vector2i(0, 1))
+				return true
+			if event.is_action_pressed("ui_left") or _act(event, &"move_left"):
+				_move_match_cursor(Vector2i(-1, 0))
+				return true
+			if event.is_action_pressed("ui_right") or _act(event, &"move_right"):
+				_move_match_cursor(Vector2i(1, 0))
+				return true
 			if _is_choice_accept(event):
-				_submit_answer(answer_matching())
+				match _match_cursor.x:
+					0:
+						_on_match_left(_match_cursor.y)
+						if _match_selected >= 0:
+							_match_cursor = Vector2i(1, mini(_match_cursor.y, _match_right_buttons.size() - 1))
+					1:
+						_on_match_right(_match_cursor.y)
+						if _match_pairs.size() >= _match_left_buttons.size():
+							_match_cursor = Vector2i(2, 0)
+					_:
+						_submit_answer(answer_matching())
+				_refresh_match_cursor()
 				return true
 
 	return false
@@ -799,6 +825,8 @@ func _build_matching(question: Dictionary) -> void:
 		match_right.add_child(button)
 		_match_right_buttons.append(button)
 	_refresh_matching_display()
+	_match_cursor = Vector2i.ZERO
+	_refresh_match_cursor()
 
 
 func _show_correct_answer() -> void:
@@ -1036,6 +1064,35 @@ func _on_match_right(index: int) -> void:
 		for key in to_erase:
 			_match_pairs.erase(key)
 		_refresh_matching_display()
+
+
+func _move_match_cursor(d: Vector2i) -> void:
+	var c := _match_cursor
+	if c.x == 2:
+		if d.y < 0 or d.x != 0:
+			c = Vector2i(0 if d.x <= 0 else 1, maxi(_match_left_buttons.size() - 1, 0))
+	else:
+		c.x = clampi(c.x + d.x, 0, 1)
+		var rows := (_match_left_buttons if c.x == 0 else _match_right_buttons).size()
+		c.y += d.y
+		if c.y >= rows:
+			c = Vector2i(2, 0)
+		else:
+			c.y = clampi(c.y, 0, maxi(rows - 1, 0))
+	_match_cursor = c
+	_refresh_match_cursor()
+
+
+## Kursor klawiatury w parach: rozjaśniona karta albo zaznaczone „Potwierdź”.
+func _refresh_match_cursor() -> void:
+	for col in 2:
+		var buttons := _match_left_buttons if col == 0 else _match_right_buttons
+		for i in buttons.size():
+			buttons[i].modulate = Color(1.35, 1.35, 1.35) if _match_cursor == Vector2i(col, i) else Color.WHITE
+	if selection_styler.is_valid():
+		selection_styler.call(match_confirm, _match_cursor.x == 2)
+	else:
+		match_confirm.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if _match_cursor.x == 2 else TEXT_PRIMARY)
 
 
 func _refresh_matching_display() -> void:
