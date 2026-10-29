@@ -81,6 +81,7 @@ HAIR_BLACK = [(70, 62, 62), (44, 40, 42), (20, 20, 18)]
 HAIR_AUBURN = [(176, 82, 42), (128, 56, 30), (80, 34, 20)]
 HAIR_HIKER = [(170, 92, 72), (130, 66, 56), (88, 44, 40)]
 SKIN_LIGHT = [(240, 196, 140), (214, 156, 104), (150, 98, 64)]
+STRAP = [(130, 190, 60), (130, 190, 60), (43, 94, 14)]
 MAROON = [(110, 48, 56), (82, 36, 44), (56, 26, 34)]
 MAROON_D = [(82, 36, 44), (56, 26, 34), (36, 20, 24)]
 
@@ -90,7 +91,7 @@ CHARACTERS = {
     'bohater': {
         'head_style': 'hair', 'body': 'plain', 'beard': HAIR_HIKER,
         'head': HAIR_HIKER, 'hair': HAIR_HIKER, 'face': SKIN_LIGHT, 'eye': (40, 50, 110), 'trim': GREEN_D,
-        'torso_up': BLUE, 'torso_lo': BLUE, 'plaid': True, 'strap': GREEN, 'pack': GREEN,
+        'torso_up': BLUE, 'torso_lo': BLUE, 'plaid': True, 'strap': STRAP, 'pack': GREEN,
         'arm_up': BLUE, 'arm_lo': SKIN_LIGHT, 'hand': SKIN_LIGHT,
         'leg': MAROON, 'boot': MAROON_D,
     },
@@ -483,6 +484,13 @@ def add_details(lab, spec, direction):
                     q = (edge + side * k, y)
                     if q not in lab and not (k == 2 and y in (ty0, belt_y - 1)):
                         lab[q] = 'pack'
+            if direction in ('SE', 'SW'):
+                # przodem na ukos plecak zasłania ręka — wystaje nad ramieniem
+                for y in (ty0 - 2, ty0 - 1):
+                    for k in (0, 1, 2):
+                        q = (edge + side * k, y)
+                        if q not in lab:
+                            lab[q] = 'pack'
     elif 'strap' in spec and wide:
         belt_y = min((p[1] for p, n in lab.items() if n == 'belt'), default=ty1)
         h = max(1, belt_y - ty0)
