@@ -157,6 +157,12 @@ func _activate(idx: int) -> void:
 	_refresh(idx)
 
 
+## WASD / Z / X jak strzałki / Enter / Esc (fokus Godota).
+func _input(event: InputEvent) -> void:
+	if QuizRpgUiKeys.forward(event, get_viewport()):
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _age < INPUT_GRACE:
 		return

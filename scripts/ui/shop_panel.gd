@@ -173,6 +173,9 @@ func _activate(idx: int) -> void:
 
 ## ←/→ przed nawigacją fokusu (lista pionowa) — przełączenie zakładki.
 func _input(event: InputEvent) -> void:
+	if QuizRpgUiKeys.forward(event, get_viewport()):  # WASD / Z / X jak strzałki / Enter / Esc
+		get_viewport().set_input_as_handled()
+		return
 	if _age < INPUT_GRACE or not (event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right")):
 		return
 	get_viewport().set_input_as_handled()

@@ -39,11 +39,6 @@ const MAX_MENU_SAVE_SLOTS := 20
 ## nie fokus Godota.
 var _menu_buttons: Array[Button] = []
 var _cursor := 0
-## Ekrany treści (zapisy, opcje, statystyki, imię) chodzą na fokusie Godota (strzałki / Enter / Esc); klawisze akcji
-## ruchu / zatwierdź / wstecz (domyślnie WASD / Z / X, zmienialne w Sterowaniu) zamieniane na te akcje — poza polem
-## tekstowym, gdzie to zwykłe litery.
-const ACTION_AS_UI := {&"move_up": &"ui_up", &"move_down": &"ui_down", &"move_left": &"ui_left", &"move_right": &"ui_right",
-	&"menu_confirm": &"ui_accept", &"menu_cancel": &"ui_cancel"}
 
 
 func _ready() -> void:
@@ -278,7 +273,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _context == "":
 		_handle_menu_input(event)
 		return
-	if _forward_key_as_ui_action(event):
+	if QuizRpgUiKeys.forward(event, get_viewport()):
 		get_viewport().set_input_as_handled()
 		return
 	if _context != "options" and event.is_action_pressed("ui_cancel"):
@@ -294,28 +289,6 @@ func _on_back() -> void:
 		return
 	_play_click()
 	_show_context("")
-
-
-## WASD / Z / X w ekranie treści -> akcja ui_* (nawigacja fokusu, suwaki, listy, Enter, Esc jak ze strzałek).
-func _forward_key_as_ui_action(event: InputEvent) -> bool:
-	var key := event as InputEventKey
-	if key == null:
-		return false
-	var target := &""
-	for src: StringName in ACTION_AS_UI:
-		if key.is_action(src):
-			target = ACTION_AS_UI[src]
-			break
-	if target == &"" or key.is_action(target):  # klawisz już jest akcją ui_* (np. strzałka) — bez podwójnego ruchu
-		return false
-	var owner := get_viewport().gui_get_focus_owner()
-	if owner is LineEdit or owner is TextEdit:
-		return false
-	var action := InputEventAction.new()
-	action.action = target
-	action.pressed = key.pressed
-	Input.parse_input_event(action)
-	return true
 
 
 ## Pierwszy włączony przycisk pod `root` dostaje fokus (wejście do ekranu treści z klawiatury).
