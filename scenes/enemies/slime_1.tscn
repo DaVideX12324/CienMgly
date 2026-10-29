@@ -23,7 +23,6 @@ defense = 22
 magic_attack = 16
 magic_defense = 22
 enemy_level = 5
-xp_reward = 600
 encounter_tier = 1
 patrol_speed = 60.0
 

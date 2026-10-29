@@ -242,7 +242,9 @@ func _apply_enemy_data() -> void:
 		encounter_tier = clampi(encounter_tier, 1, 5)
 		_ready_applied = true
 		if _spawn_level <= 0 and enemy_level > 0:
-			_apply_level_stats()  # poziom ze sceny (np. samouczek): statystyki z poziomu, XP ze sceny
+			# Poziom ze sceny (np. samouczek): statystyki i XP z poziomu — ta sama krzywa co na mapach generowanych.
+			xp_reward = QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss)
+			_apply_level_stats()
 		_apply_spawn_level()
 		_update_gold_reward()
 		return

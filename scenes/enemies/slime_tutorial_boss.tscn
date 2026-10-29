@@ -24,7 +24,6 @@ magic_attack = 40
 magic_defense = 38
 agility = 14
 enemy_level = 5
-xp_reward = 8000
 encounter_tier = 4
 is_boss = true
 patrol_speed = 65.0
