@@ -6,6 +6,11 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 ## [Unreleased]
 
 ### Dodano
+- Manekiny treningowe na górce w mieście, drabina w studzience, sterowanie dotykowe i eksport na Androida.
+
+## [0.9.0-beta] — 2026-10-29
+
+### Dodano
 - Wspinaczka z jaskini do miasta (krótka scenka), zejście do ścieków przez kratkę otwieraną klawiszem E.
 - Bohater w nowym wyglądzie wędrowca (broda, koszula w kratę, plecak).
 - Ramka celu w walce z grafiki Pixel UI; okna i listy w całym UI korzystają z wybranego motywu.
