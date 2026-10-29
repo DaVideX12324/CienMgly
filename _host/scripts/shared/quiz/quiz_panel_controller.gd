@@ -56,6 +56,7 @@ var _tile_slots: Array[String] = []
 var _tile_buttons: Array[Button] = []
 var _gap_buttons: Array[Button] = []
 var _active_gap := 0
+var _tile_cursor := 0  # kursor klawiatury: kafelek 0..n-1, n = „Potwierdź”
 var _match_selected := -1
 var _match_pairs: Dictionary = {}
 var _match_left_buttons: Array[Button] = []
@@ -289,12 +290,33 @@ func handle_input(event: InputEvent) -> bool:
 				return true
 
 		"fill_tiles":
-			if key == KEY_TAB:
-				_active_gap = (_active_gap + 1) % max(_tile_slots.size(), 1)
+			# Klawiatura: lewo / prawo — kafelek (na końcu „Potwierdź”), góra / dół / Tab — luka, 1–9 — kafelek wprost,
+			# Enter / Z / spacja — wstaw kafelek albo potwierdź, Backspace / Delete — opróżnij lukę.
+			if key >= KEY_1 and key <= KEY_9 and key - KEY_1 < _tile_buttons.size():
+				_place_tile_at(key - KEY_1)
+				return true
+			if event.is_action_pressed("ui_left") or key in [KEY_A, KEY_LEFT]:
+				_move_tile_cursor(-1)
+				return true
+			if event.is_action_pressed("ui_right") or key in [KEY_D, KEY_RIGHT]:
+				_move_tile_cursor(1)
+				return true
+			if event.is_action_pressed("ui_up") or key in [KEY_W, KEY_UP]:
+				_active_gap = posmod(_active_gap - 1, maxi(_tile_slots.size(), 1))
 				_update_gap_highlight()
 				return true
-			if key == KEY_ENTER or key == KEY_KP_ENTER:
-				_submit_answer(answer_fill_tiles())
+			if event.is_action_pressed("ui_down") or key in [KEY_S, KEY_DOWN, KEY_TAB]:
+				_active_gap = (_active_gap + 1) % maxi(_tile_slots.size(), 1)
+				_update_gap_highlight()
+				return true
+			if key in [KEY_BACKSPACE, KEY_DELETE]:
+				_clear_gap(_active_gap)
+				return true
+			if _is_choice_accept(event):
+				if _tile_cursor >= _tile_buttons.size():
+					_submit_answer(answer_fill_tiles())
+				else:
+					_place_tile_at(_tile_cursor)
 				return true
 
 		"matching":
@@ -651,6 +673,8 @@ func _refresh_tf_selection() -> void:
 
 
 func _on_mc_button_hover(index: int) -> void:
+	if not _answering:  # po odpowiedzi zostaje podświetlenie dobrej / złej odpowiedzi
+		return
 	if index < 0 or index >= mc_buttons.size():
 		return
 	if not mc_buttons[index].visible or mc_buttons[index].disabled:
@@ -660,6 +684,8 @@ func _on_mc_button_hover(index: int) -> void:
 
 
 func _on_tf_button_hover(index: int) -> void:
+	if not _answering:  # po odpowiedzi zostaje podświetlenie dobrej / złej odpowiedzi
+		return
 	if index < 0 or index >= tf_buttons.size():
 		return
 	_tf_selected_idx = index
@@ -728,6 +754,8 @@ func _build_fill_tiles(question: Dictionary) -> void:
 		tile_row.add_child(tile_button)
 		_tile_buttons.append(tile_button)
 	_update_gap_highlight()
+	_tile_cursor = 0
+	_refresh_tile_cursor()
 
 
 func _build_matching(question: Dictionary) -> void:
@@ -884,6 +912,52 @@ func _measure_result_width() -> float:
 	return width
 
 
+## Kafelek i (klawiatura) do aktywnej luki; po wypełnieniu wszystkich luk kursor na „Potwierdź”.
+func _place_tile_at(i: int) -> void:
+	if i < 0 or i >= _tile_buttons.size() or _tile_buttons[i].disabled:
+		return
+	_on_tile_clicked(_tile_buttons[i].text, _tile_buttons[i])
+	_tile_cursor = _tile_buttons.size() if not _tile_slots.has("") else i
+	_move_tile_cursor(0)
+
+
+func _clear_gap(gap: int) -> void:
+	if gap < 0 or gap >= _tile_slots.size() or _tile_slots[gap] == "":
+		return
+	for button in _tile_buttons:
+		if button.text == _tile_slots[gap] and button.disabled:
+			button.disabled = false
+			break
+	_tile_slots[gap] = ""
+	_gap_buttons[gap].text = "[ ___ ]"
+	_refresh_tile_cursor()
+
+
+## Kursor o step (0 = zostaje) z pominięciem użytych kafelków; „Potwierdź” na końcu.
+func _move_tile_cursor(step: int) -> void:
+	var n := _tile_buttons.size() + 1
+	var i := _tile_cursor
+	for _k in n:
+		i = posmod(i + (step if step != 0 else 0), n)
+		if i >= _tile_buttons.size() or not _tile_buttons[i].disabled:
+			break
+		if step == 0:
+			step = 1
+	_tile_cursor = i
+	_refresh_tile_cursor()
+
+
+func _refresh_tile_cursor() -> void:
+	var targets: Array[Button] = _tile_buttons.duplicate()
+	targets.append(tiles_confirm)
+	for i in targets.size():
+		var on := i == _tile_cursor
+		if selection_styler.is_valid():
+			selection_styler.call(targets[i], on)
+		else:
+			targets[i].add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if on else TEXT_PRIMARY)
+
+
 func _on_gap_clicked(gap_index: int) -> void:
 	_active_gap = gap_index
 	_update_gap_highlight()
@@ -908,6 +982,7 @@ func _on_tile_clicked(tile_text: String, tile_button: Button) -> void:
 		next = (next + 1) % _tile_slots.size()
 	_active_gap = next
 	_update_gap_highlight()
+	_move_tile_cursor(0)  # kursor klawiatury nie zostaje na użytym kafelku
 
 
 func _update_gap_highlight() -> void:
