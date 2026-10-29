@@ -1219,20 +1219,9 @@ func _navigate_target_list(delta: int) -> void:
 
 
 func _refresh_target_selection() -> void:
-	var active_style: StyleBoxFlat = StyleBoxFlat.new()
-	active_style.bg_color = Color(UI_ACCENT.r, UI_ACCENT.g, UI_ACCENT.b, 0.14)
-	active_style.border_width_left = 2
-	active_style.border_width_top = 2
-	active_style.border_width_right = 2
-	active_style.border_width_bottom = 2
-	active_style.border_color = UI_ACCENT
-	var inactive_style: StyleBoxFlat = StyleBoxFlat.new()
-	inactive_style.bg_color = Color(1.0, 1.0, 1.0, 0.03)
-	inactive_style.border_width_left = 1
-	inactive_style.border_width_top = 1
-	inactive_style.border_width_right = 1
-	inactive_style.border_width_bottom = 1
-	inactive_style.border_color = Color(UI_BORDER.r, UI_BORDER.g, UI_BORDER.b, 0.8)
+	# zaznaczony wiersz celu — zaznaczenie motywu (jak w menu), pozostałe bez tła
+	var active_style := QuizTheme.theme().get_stylebox(&"selected", QuizTheme.MENU_ITEM)
+	var inactive_style := StyleBoxEmpty.new()
 	for i in range(_target_rows.size()):
 		var row: PanelContainer = _target_rows[i]
 		if i == _target_selected_idx:

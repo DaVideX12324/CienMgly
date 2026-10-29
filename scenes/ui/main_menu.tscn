@@ -3,18 +3,6 @@
 [ext_resource type="Script" uid="uid://srjisxxnddcr" path="res://modules/quiz_rpg/scripts/ui/main_menu.gd" id="1"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/ui/name_entry.tscn" id="2_name"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_main_panel"]
-bg_color = Color(0.08, 0.08, 0.12, 0.95)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.25, 0.25, 0.35, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 bg_color = Color(0.18, 0.18, 0.25, 0.9)
 content_margin_left = 12.0
@@ -114,7 +102,7 @@ grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center" unique_id=1929729743]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_main_panel")
+theme_type_variation = &"QuizWindow"
 
 [node name="Margin" type="MarginContainer" parent="Center/Panel" unique_id=744504487]
 layout_mode = 2

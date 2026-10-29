@@ -17,13 +17,6 @@ fill_to = Vector2(0, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_yfsik"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info"]
-content_margin_left = 20.0
-content_margin_top = 8.0
-content_margin_right = 20.0
-content_margin_bottom = 8.0
-bg_color = Color(0.03, 0.025, 0.02, 0.72)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back"]
 bg_color = Color(0.16, 0.14, 0.12, 1)
 corner_radius_top_left = 4
@@ -134,7 +127,7 @@ theme_override_styles/separator = SubResource("StyleBoxEmpty_yfsik")
 
 [node name="Info" type="PanelContainer" parent="Root/MarginContainer/Bottom" unique_id=696628184]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_info")
+theme_type_variation = &"QuizWindow"
 
 [node name="Row" type="HBoxContainer" parent="Root/MarginContainer/Bottom/Info" unique_id=1538968957]
 layout_mode = 2

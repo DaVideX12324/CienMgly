@@ -37,14 +37,6 @@ fill_to = Vector2(0, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6br0c"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel_dark"]
-bg_color = Color(0.02, 0.03, 0.05, 0.9)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.18, 0.22, 0.3, 0.95)
-
 [node name="QuizCombatUI" type="CanvasLayer" unique_id=878893991]
 process_mode = 3
 layer = 15
@@ -1417,7 +1409,7 @@ offset_right = 500.0
 offset_bottom = 180.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel_dark")
+theme_type_variation = &"QuizWindow"
 
 [node name="ModalMargin" type="MarginContainer" parent="Root/QuizModalOverlay/ModalPanel" unique_id=987654324]
 layout_mode = 2

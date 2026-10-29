@@ -388,11 +388,13 @@ func _create_slot_row(slot_summary: Dictionary) -> Control:
 	slot_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot_btn.focus_mode = Control.FOCUS_ALL
 	slot_btn.disabled = _slot_mode == "load" and not exists
-	slot_btn.add_theme_stylebox_override("normal", _make_panel_style(Color(0.12, 0.12, 0.18, 0.95), Color(0.42, 0.42, 0.58, 1.0)))
-	slot_btn.add_theme_stylebox_override("hover", _make_panel_style(Color(0.17, 0.17, 0.26, 0.98), Color(0.62, 0.62, 0.86, 1.0)))
-	slot_btn.add_theme_stylebox_override("pressed", _make_panel_style(Color(0.2, 0.2, 0.3, 1.0), Color(0.75, 0.75, 0.95, 1.0)))
-	slot_btn.add_theme_stylebox_override("focus", _make_panel_style(Color(0.17, 0.17, 0.26, 0.98), Color(0.8, 0.8, 1.0, 1.0)))
-	slot_btn.add_theme_stylebox_override("disabled", _make_panel_style(Color(0.1, 0.1, 0.14, 0.9), Color(0.28, 0.28, 0.36, 1.0)))
+	# slot jak okno motywu, najechany / z fokusem — zaznaczenie motywu
+	var window_sb := QuizTheme.theme().get_stylebox(&"panel", QuizTheme.WINDOW)
+	var selected_sb := QuizTheme.theme().get_stylebox(&"selected", QuizTheme.MENU_ITEM)
+	for st in ["normal", "pressed", "disabled"]:
+		slot_btn.add_theme_stylebox_override(st, window_sb)
+	for st in ["hover", "focus"]:
+		slot_btn.add_theme_stylebox_override(st, selected_sb)
 	slot_btn.pressed.connect(func() -> void: _on_slot_action_pressed(slot_index))
 	_add_click_sfx(slot_btn)
 	outer.add_child(slot_btn)
@@ -505,21 +507,6 @@ func _on_save_slots_changed() -> void:
 	_update_load_button()
 	if _save_slots_panel and _save_slots_panel.visible:
 		_populate_save_slots()
-
-
-func _make_panel_style(bg_color: Color, border_color: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = bg_color
-	style.border_color = border_color
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_left = 10
-	style.corner_radius_bottom_right = 10
-	return style
 
 
 func _populate_stats() -> void:
