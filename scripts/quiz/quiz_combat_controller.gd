@@ -526,6 +526,10 @@ func _input(event: InputEvent) -> void:
 	if _is_focus_click(event) or _is_settling_press(event):
 		get_viewport().set_input_as_handled()
 		return
+	if phase == Phase.COMBAT_END and event is InputEventMouseButton and event.pressed 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		_victory_skip = true  # podsumowanie walki: klik jak Enter
+		get_viewport().set_input_as_handled()
+		return
 	if _is_right_click(event):  # przyciski łapią mysz przed _unhandled_input — PPM (wstecz) obsługujemy od razu
 		_unhandled_input(event)
 		get_viewport().set_input_as_handled()

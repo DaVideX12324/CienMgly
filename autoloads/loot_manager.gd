@@ -179,6 +179,7 @@ func _ensure_popup() -> void:
 	dim.color = Color(0, 0, 0, 0.25)
 	dim.mouse_filter = Control.MOUSE_FILTER_STOP
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.gui_input.connect(_on_popup_gui_input)  # klik obok okienka też zamyka
 	_popup_root.add_child(dim)
 
 	var panel := PanelContainer.new()
@@ -250,7 +251,8 @@ func _ensure_popup() -> void:
 
 
 func _on_popup_gui_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+	var click := event is InputEventMouseButton and event.pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	if click or event.is_action_pressed("interact") or event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
 		_close_popup()
 		get_viewport().set_input_as_handled()
 
