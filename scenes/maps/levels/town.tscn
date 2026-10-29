@@ -107,8 +107,9 @@ y_sort_enabled = true
 script = ExtResource("h_level")
 next_level_path = "res://modules/quiz_rpg/scenes/maps/levels/sewer.tscn"
 previous_level_path = "res://modules/quiz_rpg/scenes/maps/levels/cave.tscn"
-entry_edge = 2
-exit_edge = 0
+exit_edge = 3
+arrival_scene_spawn = "Cave-Town"
+arrival_scene_text = "cutscene.cave_climb"
 music_track = "desert_town"
 
 [node name="Ground_1" type="TileMapLayer" parent="." unique_id=412207907 groups=["tilemap"]]
@@ -1669,22 +1670,22 @@ shape = SubResource("CapsuleShape2D_feet")
 [node name="Spawns" type="Node2D" parent="." unique_id=1993417404]
 
 [node name="Spawn" type="Marker2D" parent="Spawns" unique_id=1399963078]
-position = Vector2(869, 1204)
-
-[node name="Cave-Town" type="Marker2D" parent="Spawns" unique_id=149074477]
-position = Vector2(869, 1204)
-
-[node name="Sewer-Town" type="Marker2D" parent="Spawns" unique_id=318726052]
 position = Vector2(551, 191)
 
+[node name="Cave-Town" type="Marker2D" parent="Spawns" unique_id=149074477]
+position = Vector2(551, 191)
+
+[node name="Sewer-Town" type="Marker2D" parent="Spawns" unique_id=318726052]
+position = Vector2(160, 780)
+
 [node name="enter_previous_level" type="Area2D" parent="." unique_id=271876270]
-position = Vector2(869, 1260)
+position = Vector2(551, 150)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="enter_previous_level" unique_id=222008736]
 shape = SubResource("RectangleShape2D_portal")
 
 [node name="enter_next_level" type="Area2D" parent="." unique_id=1311617570]
-position = Vector2(551, 150)
+position = Vector2(110, 780)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="enter_next_level" unique_id=1007320539]
 shape = SubResource("RectangleShape2D_portal")

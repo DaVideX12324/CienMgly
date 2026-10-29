@@ -28,6 +28,10 @@ const Freeroam = preload("freeroam.gd")
 @export var in_route := true
 ## Utwór muzyki (AudioService); pusty = wg ścieżki sceny (level_manager).
 @export var music_track: String = ""
+## Scenka po przyjściu przy tym markerze (np. wspinaczka z jaskini): czarny ekran z tekstem (klucz i18n), potem
+## zanikanie; gracz stoi, póki trwa. Pusty marker = bez scenki.
+@export var arrival_scene_spawn: String = ""
+@export var arrival_scene_text: String = ""
 
 var _transitioning := false
 
@@ -58,6 +62,40 @@ func _connect_areas() -> void:
 	var prev_area := get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D
 	if prev_area != null and not previous_level_path.is_empty():
 		LevelPortal.connect_area(prev_area, _change_level.bind(previous_level_path, previous_spawn_name))
+	var lm := find_level_manager(self)
+	if not arrival_scene_spawn.is_empty() and lm != null and str(lm.get("current_spawn_name")) == arrival_scene_spawn:
+		_play_arrival_scene()
+
+
+func _play_arrival_scene() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 128
+	var bg := ColorRect.new()
+	bg.color = Color.BLACK
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(bg)
+	var label := Label.new()
+	label.text = QuizRpgI18n.t(arrival_scene_text, arrival_scene_text)
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.modulate.a = 0.0
+	bg.add_child(label)
+	add_child(layer)
+	var player := get_tree().get_first_node_in_group(&"player")
+	var tw := create_tween()
+	tw.tween_property(label, "modulate:a", 1.0, 0.6)
+	tw.tween_interval(1.8)
+	tw.tween_property(label, "modulate:a", 0.0, 0.5)
+	tw.tween_property(bg, "modulate:a", 0.0, 0.8)
+	while tw.is_running():
+		if is_instance_valid(player) and "input_blocked" in player:
+			player.set("input_blocked", true)   # level_manager odblokowuje po ekranie ładowania — scenka trwa dłużej
+		await get_tree().process_frame
+	if is_instance_valid(player) and "input_blocked" in player:
+		player.set("input_blocked", false)
+	layer.queue_free()
 
 
 func _change_level(path: String, spawn: String) -> void:
@@ -78,6 +116,8 @@ func _record_link() -> void:
 		return
 	var name := QuizRpgPaths.level_name(scene_file_path)
 	var cons := MapLinks.constraints(lsm.map_links, name, QuizRpgPaths.level_name(previous_level_path))
+	if entry_edge < 0:
+		cons["pos"] = []   # przejście bez krawędzi (wspinaczka, drabina) — nowa warstwa siatki
 	cons["in"] = entry_edge
 	cons["allow"] = [exit_edge] if exit_edge >= 0 else []
 	MapLinks.record(lsm.map_links, name, cons, exit_edge)
