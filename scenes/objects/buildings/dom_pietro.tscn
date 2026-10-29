@@ -128,6 +128,14 @@ position = Vector2(0, 17)
 [node name="DoorSpot2" type="Marker2D" parent="." unique_id=1729659583]
 position = Vector2(-65, -56)
 
+[node name="SchodyKrawedz" type="StaticBody2D" parent="."]
+editor_description = "Krawędź schodów tylko dla postaci na schodach: warstwa 7 (64), którą QuizRpgZTrigger dopisuje do maski postaci przy z 1 (SchodyGora, Podest) i zdejmuje przy z 0 (SchodyDol)."
+collision_layer = 64
+collision_mask = 0
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="SchodyKrawedz"]
+polygon = PackedVector2Array(-153, 4, -153, -12, -101, -58, -95, -58, -95, -54, -101, -54, -148, -9, -148, 4)
+
 [node name="SchodyDol" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 5
