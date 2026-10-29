@@ -18,6 +18,7 @@ var _current := 0.0
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS  # walka pauzuje drzewo — bez tego winieta zostawała nad ekranem walki
 	_ps = CoreManager.get_singleton("PlayerStats")
 	_gm = CoreManager.get_singleton("GameManager")
 	if _ps and _ps.has_signal("status_tick"):
@@ -35,6 +36,8 @@ func _exploring() -> bool:
 
 func _process(delta: float) -> void:
 	var poisoned: bool = _ps != null and _ps.any_status("poison") and _exploring()
+	if not _exploring():
+		_current = 0.0  # tylko poza walką (i bez menu) — gaśnie od razu
 	var base := BASE_ALPHA if poisoned else 0.0
 	_pulse = maxf(_pulse - delta / PULSE_FADE, 0.0) if poisoned else 0.0
 	var target := maxf(base, _pulse * PULSE_ALPHA)
