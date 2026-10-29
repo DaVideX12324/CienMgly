@@ -7,12 +7,8 @@ atlas = ExtResource("1_tex")
 region = Rect2(243, 131, 10, 13)
 filter_clip = true
 
-[node name="DesertDzbanRozbityMalyPiaskowiec" type="StaticBody2D"]
-collision_layer = 32
-collision_mask = 0
-metadata/object_group = "ruins"
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="DesertDzbanRozbityMalyPiaskowiec" type="Sprite2D"]
 texture = SubResource("AtlasTexture_main")
 centered = false
 offset = Vector2(-5, -13)
+metadata/object_group = "ruins"

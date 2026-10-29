@@ -1,6 +1,6 @@
 """Sceny obiektów z atlasu ruin (gen_ruins_atlas.py) i zamienników Desert Oasis wziętych wprost z plików Pixel Crawlera:
-StaticBody2D (warstwa 32) + Sprite2D z AtlasTexture (punkt sceny = środek podstawy sprite'a) + kolizja przy podstawie
-(drobiazgi bez kolizji). Ruiny -> scenes/objects/pixel_crawler/ruins/, miejskie -> scenes/objects/pixel_crawler/props/.
+StaticBody2D (warstwa 32) + Sprite2D z AtlasTexture (punkt sceny = środek podstawy sprite'a) + kolizja przy podstawie;
+drobiazgi bez kolizji to sam Sprite2D jako korzeń. Ruiny -> scenes/objects/pixel_crawler/ruins/, miejskie -> scenes/objects/pixel_crawler/props/.
 Uruchomienie: python -I gen_ruins_scenes.py (po gen_ruins_atlas.py; istniejące sceny są nadpisywane)."""
 import os
 import re
@@ -70,15 +70,15 @@ def scene(name, tex_rel, rect, flip=False, group="props"):
              '[ext_resource type="Texture2D"%s path="%s%s" id="1_tex"]' % (' uid="%s"' % uid if uid else "", RES_ASSETS, tex_rel), "",
              '[sub_resource type="AtlasTexture" id="AtlasTexture_main"]', 'atlas = ExtResource("1_tex")',
              "region = Rect2(%d, %d, %d, %d)" % (x, y, w, h), "filter_clip = true", ""]
-    lines += ['[node name="%s" type="StaticBody2D"]' % node_name(name), "collision_layer = 32", "collision_mask = 0",
-              'metadata/object_group = "%s"' % group, "",
-              '[node name="Sprite2D" type="Sprite2D" parent="."]', 'texture = SubResource("AtlasTexture_main")', "centered = false"]
-    if flip:
-        lines.append("flip_h = true")
-    lines += ["offset = Vector2(%d, %d)" % (-(w // 2), -h), ""]
+    sprite = ['texture = SubResource("AtlasTexture_main")', "centered = false"] + (["flip_h = true"] if flip else []) + \
+             ["offset = Vector2(%d, %d)" % (-(w // 2), -h)]
     poly = collision(name, w, h)
-    if poly:
-        lines += ['[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]', "polygon = " + poly, ""]
+    if not poly:  # sam sprite: Sprite2D jako korzeń
+        lines += ['[node name="%s" type="Sprite2D"]' % node_name(name)] + sprite + ['metadata/object_group = "%s"' % group, ""]
+        return "\n".join(lines)
+    lines += ['[node name="%s" type="StaticBody2D"]' % node_name(name), "collision_layer = 32", "collision_mask = 0",
+              'metadata/object_group = "%s"' % group, "", '[node name="Sprite2D" type="Sprite2D" parent="."]'] + sprite + [""]
+    lines += ['[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]', "polygon = " + poly, ""]
     return "\n".join(lines)
 
 

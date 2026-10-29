@@ -7,12 +7,8 @@ atlas = ExtResource("1_tex")
 region = Rect2(128, 48, 31, 32)
 filter_clip = true
 
-[node name="LopataKopiec" type="StaticBody2D"]
-collision_layer = 32
-collision_mask = 0
-metadata/object_group = "props"
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="LopataKopiec" type="Sprite2D"]
 texture = SubResource("AtlasTexture_main")
 centered = false
 offset = Vector2(-15, -32)
+metadata/object_group = "props"
