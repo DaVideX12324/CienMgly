@@ -2746,15 +2746,31 @@ func _select_enemy_layout_slots(active_count: int) -> Array[Dictionary]:
 
 
 
-## Ramka celu pulsuje (skala ±4 % od środka i jasność), żeby było widać, który przeciwnik jest wybrany.
+## Ramka celu: animacja narożników z Pixel UI pack 3 (Full.png) — 4 klatki obok siebie w atlasie, narożniki
+## rozchodzą się na zewnątrz (0 / 1 / 3 / 3 px grafiki); klatki tam i z powrotem.
+const CORNER_FRAMES_X := {&"CornerTL": [1172, 1203, 1233, 1265], &"CornerTR": [1188, 1221, 1255, 1287],
+	&"CornerBL": [1172, 1203, 1233, 1265], &"CornerBR": [1188, 1221, 1255, 1287]}
+const CORNER_DIR := {&"CornerTL": Vector2(-1, -1), &"CornerTR": Vector2(1, -1), &"CornerBL": Vector2(-1, 1), &"CornerBR": Vector2(1, 1)}
+const CORNER_SPREAD := [0.0, 1.0, 3.0, 3.0]
+const CORNER_SEQUENCE := [0, 1, 2, 3, 2, 1]
+const CORNER_FPS := 8.0
+
+
 func _animate_target_highlight() -> void:
 	var h := _enemy_target_highlight_node
 	if h == null or not h.visible:
 		return
-	var t := Time.get_ticks_msec() / 1000.0
-	h.pivot_offset = h.size * 0.5
-	h.scale = Vector2.ONE * (1.0 + 0.04 * sin(t * 6.0))
-	h.modulate.a = 0.75 + 0.25 * (0.5 + 0.5 * sin(t * 6.0))
+	var f: int = CORNER_SEQUENCE[int(Time.get_ticks_msec() / 1000.0 * CORNER_FPS) % CORNER_SEQUENCE.size()]
+	for corner: StringName in CORNER_FRAMES_X:
+		var c := h.get_node_or_null(NodePath(corner)) as TextureRect
+		if c == null or not (c.texture is AtlasTexture):
+			continue
+		var at := c.texture as AtlasTexture
+		at.region.position.x = CORNER_FRAMES_X[corner][f]
+		if not c.has_meta(&"base_pos"):
+			c.set_meta(&"base_pos", c.position)
+		var k := c.size.x / maxf(at.region.size.x, 1.0)
+		c.position = (c.get_meta(&"base_pos") as Vector2) + CORNER_DIR[corner] * CORNER_SPREAD[f] * k
 
 
 func _refresh_enemy_slot_highlight() -> void:
