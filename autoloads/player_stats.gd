@@ -1320,7 +1320,12 @@ func member_can_equip(member_index: int, allowed_classes: PackedStringArray) -> 
 func get_equippable_entries_for_slot(member_index: int, slot_name: String) -> Array[Dictionary]:
 	var inventory_entries: Array[Dictionary] = get_inventory_entries()
 	var options: Array[Dictionary] = []
+	var worn_id := ""  # założony przedmiot jest na liście osobno — ta sama rzecz z plecaka byłaby zamianą na identyczną kopię
+	if member_index >= 0 and member_index < party.size():
+		worn_id = str(((party[member_index] as Dictionary).get("equipment", {}) as Dictionary).get(slot_name, ""))
 	for entry: Dictionary in inventory_entries:
+		if str(entry.get("item_id", "")) == worn_id:
+			continue
 		if str(entry.get("equip_slot", "")) == slot_name and member_can_equip(member_index, entry.get("allowed_classes", PackedStringArray())):
 			options.append(entry)
 	if member_index >= 0 and member_index < party.size():
