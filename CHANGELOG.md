@@ -5,8 +5,25 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+## [0.9.3-beta] — 2026-10-29
+
 ### Dodano
 - `credits.json` z autorami assetów (pole `credits` w manifeście, ekran „Autorzy” w hoście).
+- Gra samą myszą: przycisk „Wstecz” na ekranach menu głównego (opcje, statystyki, zapisy) i w walce (lista, cel,
+  wybór postaci, akcje); prawy przycisk myszy w walce działa jak Esc (bez otwierania pauzy).
+
+### Zmieniono
+- Menu główne: wybrana pozycja zostaje w swoim kolorze z obwódką (zamiast stylu zaznaczenia z walki).
+- Walka: wrogowie stoją w miejscach liczonych tym samym skalowaniem co tło — przy każdej rozdzielczości i proporcjach
+  na tym samym fragmencie obrazka.
+- Usunięty martwy kod (jednorazowe migracje, diagnostyka zacinania myszy, stara `world_map.tscn`).
+
+### Naprawiono
+- Wyeksportowana gra: przedmioty bez danych (w łupie surowe id, np. „ether ×3”) — katalog przedmiotów czytany przez
+  `ResourceLoader.list_directory` (w eksporcie pliki leżą jako `*.tres.remap`).
+- Paski HP / SP ze stylów z grafiki Pixel UI (np. „pas2”) rysowały kolorową sieczkę — shader dostawał cały atlas.
+- Wersja samodzielna stała po „Nowa gra” (zasoby z twardymi ścieżkami hosta) — `make_standalone.sh` przepisuje ścieżki.
+- Polskie znaki w napisach menu głównego.
 
 ## [0.9.0-beta] — 2026-10-29
 
