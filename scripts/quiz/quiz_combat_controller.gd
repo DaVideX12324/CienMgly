@@ -1088,6 +1088,8 @@ func _on_action(action: Action) -> void:
 
 
 func _open_skills_menu() -> void:
+	if phase != Phase.ACTION_SELECT:  # dwa kliknięcia naraz (np. Atak + Umiejętności): wybór celu już trwa
+		return
 	if _ps and _ps.has_method("member_has_restriction") and _ps.member_has_restriction(_active_actor_index, QuizRpgStatusData.Restriction.SILENCED):
 		result_label.visible = true
 		result_label.text = QuizRpgI18n.tf("log.combat.silenced", {"name": _member_name(_active_actor_index)}, "{name}: cisza — umiejętności zablokowane.")
@@ -1100,6 +1102,8 @@ func _open_skills_menu() -> void:
 
 
 func _open_items_menu() -> void:
+	if phase != Phase.ACTION_SELECT:  # dwa kliknięcia naraz (np. Atak + Umiejętności): wybór celu już trwa
+		return
 	var entries: Array[Dictionary] = []
 	if _ps and _ps.has_method("get_inventory_entries"):
 		for it in _ps.get_inventory_entries():
@@ -3663,6 +3667,9 @@ func _show_primary_menu() -> void:
 
 
 func _show_action_menu() -> void:
+	if target_panel and target_panel.visible:  # wybór celu przerwany innym wejściem — wiersze drużyny wracają
+		_hide_target_panel()
+		_refresh_stats_panel()
 	_action_menu_open = true
 	primary_menu.visible = false
 	action_menu.visible = true
