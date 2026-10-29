@@ -50,7 +50,7 @@ func _ready() -> void:
 	_update_load_button()
 	_style_menu()
 	_show_context("")
-	ver_label.text = "Cień Mgły " + _version_label()
+	ver_label.text = "Cień Mgły " + _version_label() + _build_suffix()
 	back_btn.text = QuizRpgI18n.t("main_menu.back", "← Wstecz")
 	back_btn.pressed.connect(_on_back)
 	# Muzyka menu także po powrocie z gry („Zakończ grę” w menu Esc) — poziom zostawiał swoją.
@@ -60,6 +60,14 @@ func _ready() -> void:
 
 
 ## Wersja z module_manifest.json do wyświetlenia: "0.8.0-alpha" -> "0.8.0 Alpha" (zasady wersjonowania: docs hosta).
+## " (build N)" z resources/build.json hosta (podbijany przy eksporcie release); bez pliku — "".
+func _build_suffix() -> String:
+	var path := QuizRpgPaths.host("res://resources/build.json")
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+	var build := int((data as Dictionary).get("build", 0)) if data is Dictionary else 0
+	return " (build %d)" % build if build > 0 else ""
+
+
 func _version_label() -> String:
 	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path("module_manifest.json")))
 	var version := str(manifest.get("version", "")) if manifest is Dictionary else ""
