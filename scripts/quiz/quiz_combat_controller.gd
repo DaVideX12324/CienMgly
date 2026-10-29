@@ -273,6 +273,7 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	Engine.time_scale = 1.0  # przyspieszenie walki (Shift) nie zostaje po walce
 	# Przy śmierci drużyny pauzę trzyma ekran śmierci — inaczej wrogowie ruszają pod nim i zaczynają nową walkę.
 	if get_tree() and get_tree().paused and get_tree().get_first_node_in_group(&"death_screen") == null:
 		get_tree().paused = false
@@ -468,7 +469,25 @@ func trigger_instant_win() -> void:
 	_end_combat(true)
 
 
+## Przytrzymanie biegu (Shift) w walce przyspiesza wszystko poza wyborem i pytaniem: animacje i przerwy ×FAST_FORWARD,
+## tekst komunikatów od razu w całości, komunikaty czekające na potwierdzenie przechodzą same.
+const FAST_FORWARD := 3.0
+
+
+func _update_fast_forward() -> void:
+	var fast := InputMap.has_action(&"sprint") and Input.is_action_pressed(&"sprint") 			and phase in [Phase.PLAYER_RESULT, Phase.ENEMY_TURN, Phase.COMBAT_END]
+	var scale := FAST_FORWARD if fast else 1.0
+	if not is_equal_approx(Engine.time_scale, scale):
+		Engine.time_scale = scale
+	if fast:
+		if _typing:
+			_type_skip = true
+		if _awaiting_notice:
+			confirm_notice()
+
+
 func _process(delta: float) -> void:
+	_update_fast_forward()
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
 	_update_corner_label()
