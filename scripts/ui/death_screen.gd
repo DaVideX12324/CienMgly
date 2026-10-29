@@ -8,6 +8,8 @@ extends CanvasLayer
 ## ostatniego zapisu przepada (zapis ręczny w menu pauzy). „Wczytaj zapis” otwiera okno z listą zapisów (slotów) do wyboru;
 ## Esc / „Wróć” wraca do przycisków.
 
+const SlotRowScene = preload("../../scenes/ui/death_slot_row.tscn")
+
 @export var fade_time := 1.2
 @export var leave_immunity := 3.0   ## s: żaden wróg nie zaczyna walki w czasie przejścia sceny
 
@@ -121,10 +123,7 @@ func _open_slots() -> void:
 		if not bool(summary.get("exists", false)):
 			continue
 		var slot := int(summary.get("slot_index", 0))
-		var row := Button.new()
-		row.focus_mode = Control.FOCUS_NONE
-		row.theme_type_variation = &"QuizMenuItem"
-		row.custom_minimum_size = Vector2(600, 0)
+		var row := SlotRowScene.instantiate() as Button
 		row.text = "%s — %s
 %s  |  %s" % [summary.get("slot_name", QuizRpgI18n.t("death.default_slot_name", "Slot")), summary.get("title", ""), summary.get("subtitle", ""), summary.get("detail", "")]
 		row.pressed.connect(_on_slot_chosen.bind(slot))

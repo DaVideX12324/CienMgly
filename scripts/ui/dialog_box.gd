@@ -11,6 +11,7 @@ signal chosen(index: int)
 const SCENE := "scenes/ui/dialog_box.tscn"
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const QuizTheme = preload("quiz_theme.gd")
+const ChoiceScene = preload("../../scenes/ui/dialog_choice.tscn")
 ## Pierwsze wciśnięcie po otwarciu (ten sam klawisz, który otworzył rozmowę) nie przewija.
 const INPUT_GRACE := 0.15
 
@@ -66,11 +67,8 @@ func _build_choices() -> void:
 	_choices.visible = not _options.is_empty()
 	_next.visible = _options.is_empty()
 	for i in _options.size():
-		var b := Button.new()
+		var b := ChoiceScene.instantiate() as Button
 		b.text = _options[i]
-		b.theme_type_variation = QuizTheme.MENU_ITEM
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.add_theme_font_size_override("font_size", 33)
 		b.pressed.connect(_choose.bind(i))
 		b.focus_entered.connect(QuizTheme.set_menu_item_selected.bind(b, true))
 		b.focus_exited.connect(QuizTheme.set_menu_item_selected.bind(b, false))

@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://c2wybor4dialogu"]
+
+[node name="DialogChoice" type="Button"]
+theme_type_variation = &"QuizMenuItem"
+theme_override_font_sizes/font_size = 33
+text = "Odpowiedź"
+alignment = 0
