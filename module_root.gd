@@ -89,6 +89,7 @@ func embedded_start(host_api, manifest: Dictionary = {}) -> void:
 
 func embedded_stop() -> void:
 	get_tree().paused = false
+	QuizTheme.restore()  # od razu — w _exit_tree (koniec klatki) menu hosta zdążyło już przejąć czcionkę modułu
 
 
 func open_scene(scene_path: String) -> void:

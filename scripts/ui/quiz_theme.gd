@@ -265,6 +265,10 @@ static func restore() -> void:
 		th.remove_type(t)
 	_prev_fallback = null
 	_prev_default = null
+	# Kontrolki na ekranie (np. menu hosta) przeliczają czcionkę z przywróconego motywu.
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree and tree.root:
+		tree.root.propagate_notification(Control.NOTIFICATION_THEME_CHANGED)
 
 
 ## Motyw, jasność i styl pasków z ustawień modułu (SettingsService); bez usługi — domyślne.
