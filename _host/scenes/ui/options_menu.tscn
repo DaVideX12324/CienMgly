@@ -65,6 +65,7 @@ theme_override_constants/side_margin = 8
 theme_override_styles/panel = SubResource("StyleBoxFlat_tabs")
 tab_alignment = 1
 current_tab = 0
+use_hidden_tabs_for_min_size = true
 
 [node name="Ogolne" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 layout_mode = 2
