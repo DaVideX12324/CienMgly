@@ -5,6 +5,24 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Dodano
+- Opcja „Losowe spotkania” (Opcje → Sterowanie): włączone / wyłączone.
+- Pytania z lukami (kafelki) z klawiatury: lewo / prawo — kafelek i „Potwierdź”, góra / dół / Tab — luka, 1–9,
+  Enter wstawia / potwierdza, Backspace opróżnia lukę.
+- Mysz: klik pomija podsumowanie walki, klik obok okienka łupu je zamyka.
+
+### Zmieniono
+- Balans wrogów: tier 1 HP ×1,6, ATK ×1,15; tier 2 HP ×1,15; bossowie (tier 4) HP ×0,7, ATK ×0,9. Stałe obrażenia
+  umiejętności wrogów rosną z poziomem (pełne od lv 20) — wcześniej zabijały jednym ciosem na niskich poziomach.
+  `bat_fur` ma statystyki tieru 2 (były niższe niż tier 1).
+- Zagadki (skrzynie, drzwi): gra spauzowana na czas okna.
+- Pauza w walce / zagadce zatrzymuje czas (walka nie biegnie dalej pod menu).
+
+### Naprawiono
+- Ekran śmierci: zamykana walka zdejmowała pauzę spod ekranu — wróg atakował, zaczynała się walka pod ekranem, a po
+  „Menu główne” ekran zostawał na menu.
+- Quiz: najechanie myszą po odpowiedzi kasowało podświetlenie dobrej / złej odpowiedzi.
+
 ## [0.9.5-beta] — 2026-10-29
 
 ### Zmieniono
