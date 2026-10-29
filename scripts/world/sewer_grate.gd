@@ -1,7 +1,7 @@
 extends StaticBody2D
 
 ## Kratka ściekowa nad przejściem do ścieków (obszar `portal` w trybie klawisza). Zamknięta: można po niej chodzić,
-## pierwsze [E] ją otwiera. Otwarta: kolizja (nie wejdzie się w dziurę), kolejne [E] — zejście. Otwarcie zostaje
+## pierwsze [E] ją otwiera. Otwarta: drabina w otworze, kolizja (nie wejdzie się w dziurę), kolejne [E] — zejście. Otwarcie zostaje
 ## w zapisie (flaga fabularna `flag`).
 
 @export var portal: NodePath = ^"../enter_next_level"
@@ -11,6 +11,7 @@ extends StaticBody2D
 
 @onready var _sprite: Sprite2D = $Sprite2D
 @onready var _shape: CollisionShape2D = $CollisionShape2D
+@onready var _ladder: Sprite2D = $Ladder
 var _open := false
 
 
@@ -43,6 +44,7 @@ func _hook() -> void:
 func _set_open(open: bool) -> void:
 	_open = open
 	_sprite.region_rect = open_region if open else closed_region
+	_ladder.visible = open   # w otwartej studzience widać szczyt drabiny
 	_shape.set_deferred("disabled", not open)
 
 
