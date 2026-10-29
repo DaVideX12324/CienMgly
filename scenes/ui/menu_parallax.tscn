@@ -24,36 +24,42 @@ layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("2_01_sky")
 stretch_mode = 1
+metadata/speed = 0.0
 
 [node name="FarClouds" type="TextureRect" parent="."]
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("3_02_far-clouds")
 stretch_mode = 1
-
-[node name="FarMountains" type="TextureRect" parent="."]
-layout_mode = 0
-mouse_filter = 2
-texture = ExtResource("4_03_far-mountains")
-stretch_mode = 1
+metadata/speed = 2.5
 
 [node name="NearClouds" type="TextureRect" parent="."]
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("5_04_near-clouds")
 stretch_mode = 1
+metadata/speed = 8.5
+
+[node name="FarMountains" type="TextureRect" parent="."]
+layout_mode = 0
+mouse_filter = 2
+texture = ExtResource("4_03_far-mountains")
+stretch_mode = 1
+metadata/speed = 19.0
 
 [node name="Mountains" type="TextureRect" parent="."]
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("6_05_mountains")
 stretch_mode = 1
+metadata/speed = 38.0
 
 [node name="Trees" type="TextureRect" parent="."]
 layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("8_07_trees")
 stretch_mode = 1
+metadata/speed = 48.0
 
 [node name="Myst" type="TextureRect" parent="."]
 modulate = Color(0.55, 0.55, 0.9, 0.55)
@@ -61,6 +67,7 @@ layout_mode = 0
 mouse_filter = 2
 texture = ExtResource("7_06_myst")
 stretch_mode = 1
+metadata/speed = 55.0
 
 [node name="Dim" type="ColorRect" parent="."]
 layout_mode = 1

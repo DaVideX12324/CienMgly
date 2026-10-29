@@ -2,10 +2,11 @@ extends Control
 
 ## Tło menu z warstw paralaksy: dzieci TextureRect od najdalszej do najbliższej (scena menu_parallax.tscn).
 ## Warstwy powtarzają się w poziomie (STRETCH_TILE), skalowane całkowicie tak, by wypełnić wysokość ekranu (wyrównane
-## do dołu — nadmiar nieba ucięty u góry); dalsze płyną wolniej, bliższe szybciej, a ruch myszy lekko je przesuwa.
+## do dołu — nadmiar nieba ucięty u góry); każda warstwa płynie z własną prędkością (metadane „speed”, px grafiki
+## na sekundę — jak w przykładzie paczki Mountain Dusk), a ruch myszy lekko przesuwa bliższe mocniej.
 
-## Prędkość najbliższej warstwy (px grafiki na sekundę); najdalsza stoi.
-@export var drift_px_per_sec := 12.0
+## Mnożnik prędkości wszystkich warstw.
+@export var speed_scale := 1.0
 ## Przesunięcie najbliższej warstwy przy myszy na brzegu ekranu (px grafiki).
 @export var mouse_shift_px := 8.0
 
@@ -42,7 +43,8 @@ func _process(delta: float) -> void:
 		var layer := layers[i]
 		var depth := float(i) / float(maxi(layers.size() - 1, 1))
 		var tile_w := float(layer.texture.get_width())
-		var off := fposmod(_t * drift_px_per_sec * depth + _mouse * mouse_shift_px * depth, tile_w)
+		var speed := float(layer.get_meta(&"speed", 0.0)) * speed_scale
+		var off := fposmod(_t * speed + _mouse * mouse_shift_px * depth, tile_w)
 		layer.scale = Vector2(k, k)
 		layer.size = Vector2(ceilf(vs.x / k) + tile_w * 2.0, src_h)
 		# Co piksel ekranu, nie grafiki — przy skali ×5–6 skoki o cały piksel grafiki klatkowały.
