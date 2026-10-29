@@ -497,6 +497,16 @@ func _update_fast_forward() -> void:
 
 func _process(delta: float) -> void:
 	_update_fast_forward()
+	if not (_band_tween and _band_tween.is_running()):
+		# Bez trwającej animacji pasa: okna w pełnej szerokości, bez obrazów znikających okien (zabezpieczenie —
+		# zgłoszenie: po ataku bohatera znikał środkowy panel).
+		for p in _band_panels():
+			if p.scale.x != 1.0:
+				p.scale.x = 1.0
+		for g in _band_ghosts:
+			if is_instance_valid(g):
+				g.queue_free()
+		_band_ghosts.clear()
 	if _quiz_panel_controller:
 		_quiz_panel_controller.tick(delta)
 	_update_corner_label()
