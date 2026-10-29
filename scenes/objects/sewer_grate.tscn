@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/sewer_grate.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://tdqw1w8fhcf8" path="res://assets/pixel_crawler/environments/sewer/Assets/Tiles.png" id="2_tex"]
-[ext_resource type="Texture2D" uid="uid://dvhjfr4ukcwh4" path="res://assets/textures/legacy_amonra/atlases/nieodkryteglebiny_textures/New Stairs.png" id="3_ladder"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hole"]
 radius = 13.0
@@ -18,15 +17,6 @@ texture_filter = 1
 texture = ExtResource("2_tex")
 region_enabled = true
 region_rect = Rect2(288, 240, 32, 32)
-
-[node name="Ladder" type="Sprite2D" parent="."]
-visible = false
-z_index = -1
-texture_filter = 1
-texture = ExtResource("3_ladder")
-region_enabled = true
-region_rect = Rect2(0, 0, 16, 22)
-position = Vector2(0, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_hole")
