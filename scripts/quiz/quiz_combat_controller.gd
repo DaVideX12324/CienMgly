@@ -2548,20 +2548,6 @@ func _create_enemy_display_clone(source: Node2D, slot_index: int = 0) -> Node2D:
 	return display
 
 
-## Pasek HP wroga wg tieru: kolor jak paski drużyny (tier 1 TP — zielony, 2 czas — żółty, 3 i boss — HP wroga),
-## boss (tier 4+) — dłuższy pasek. Kolory pochodzą z wybranego stylu pasków.
-const ENEMY_BAR_BY_TIER: Array[StringName] = [QuizTheme.BAR_TP, QuizTheme.BAR_TIMER, QuizTheme.BAR_ENEMY]
-const ENEMY_BAR_WIDTH := 96.0
-const BOSS_BAR_WIDTH := 168.0
-
-
-func _style_enemy_bar(bar: ProgressBar, tier: int) -> void:
-	var variation: StringName = ENEMY_BAR_BY_TIER[clampi(tier, 1, ENEMY_BAR_BY_TIER.size()) - 1]
-	if bar.theme_type_variation != variation:
-		bar.theme_type_variation = variation
-	bar.custom_minimum_size.x = BOSS_BAR_WIDTH if tier >= 4 else ENEMY_BAR_WIDTH
-
-
 func _sync_enemy_displays() -> void:
 	for bar_index in range(_enemy_active_layout_slots.size()):
 		var hp_bar: ProgressBar = _enemy_active_layout_slots[bar_index].get("bar", null) as ProgressBar
@@ -2574,7 +2560,6 @@ func _sync_enemy_displays() -> void:
 			hp_bar.min_value = 0.0
 			hp_bar.max_value = float(hp_max)
 			hp_bar.value = float(hp_value)
-			_style_enemy_bar(hp_bar, int(enemy_unit.get("tier", 1)))
 			if hp_value > 0:
 				hp_bar.visible = true
 				hp_bar.modulate.a = 1.0
