@@ -1,7 +1,7 @@
 """Ręce i broń wrogów Pixel Crawlera jako rig (SpriteRig) w scenach scenes/enemies/pixel_crawler/<wróg>.tscn.
 
 Pod AnimatedSprite2D ciała: Rig (Node2D, scripts/enemies/sprite_rig.gd) -> Sprite2D z wycinkami atlasu broni rodziny
-(region; atlas kopiowany z assets/_nieuzywane do katalogu wrogów) i AnimationPlayer RigAnim z animacjami o nazwach
+(region; atlas broni rodziny z paczki autora w katalogu wrogów) i AnimationPlayer RigAnim z animacjami o nazwach
 animacji ciała (klucze dyskretne w czasie klatek ciała). Animacje można potem poprawiać w edytorze (oś czasu RigAnim
 pokazuje pasującą klatkę ciała) — ponowne uruchomienie generatora dla rodziny NADPISUJE rig w jej scenach.
 
@@ -18,7 +18,7 @@ Rodziny:
 
 Użycie: python gen_enemy_hands.py <rodzina> [--preview]   (--preview: tylko podgląd 4× złożonych klatek do %TEMP%)
 """
-import os, re, shutil, sys, tempfile
+import os, re, sys, tempfile
 from PIL import Image
 import numpy as np
 
@@ -37,7 +37,6 @@ FUNGUS_HAND_BACK = (36, 20, 8, 6)
 # [(węzeł, wycinek x, y, w, h, odbicie, pozycja w klatce ref_frame)].
 FAMILIES = {
     'rat': {
-        'atlas_src': 'assets/_nieuzywane/pixel_crawler/environments/sewer/Weapons/Poison Weapons/Poison Weapons.png',
         'atlas': 'assets/pixel_crawler/enemies/rat_enemy/Rat Weapons.png',
         'sheet': 'assets/pixel_crawler/enemies/rat_enemy/Rat - {kind}/{sheet}/{sheet}-Sheet.png',
         'anims': {'idle': ('Idle', 4, 6.0), 'walk': ('Run', 6, 10.0), 'death': ('Death', 6, 10.0)},
@@ -72,7 +71,6 @@ FAMILIES = {
         },
     },
     'fungus': {
-        'atlas_src': 'assets/_nieuzywane/pixel_crawler/environments/cave/Weapons/Spore_Roots/Spore_Roots.png',
         'atlas': 'assets/pixel_crawler/environments/cave/Enemies/Fungus Weapons.png',
         'sheet': 'assets/pixel_crawler/environments/cave/Enemies/{kind} Fungus/{sheet}-Sheet.png',
         'anims': {'idle': ('Idle', 4, 6.0), 'walk': ('Run', 6, 10.0), 'hurt': ('Hit', 4, 10.0),
@@ -263,8 +261,6 @@ def main():
     if '--preview' in sys.argv:
         preview(fam, name)
         return
-    if not os.path.exists(ROOT + fam['atlas']):
-        shutil.copyfile(ROOT + fam['atlas_src'], ROOT + fam['atlas'])
     for scene, kind in fam['scenes'].items():
         patch_scene(SCENES + scene + '.tscn', fam, kind)
         print(scene, '<-', kind)
