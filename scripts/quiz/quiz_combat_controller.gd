@@ -3371,6 +3371,7 @@ func _unit_stats(unit: Dictionary) -> Dictionary:
 	for stat in base:
 		base[stat] = roundi(base[stat] * _unit_status_mult(unit, stat))
 	base["statuses"] = (unit.get("statuses", {}) as Dictionary).keys()
+	base["base_scale"] = QuizRpgEnemyStats.base_damage_scale(int(unit.get("level", 0)))  # stałe obrażenia skilli z poziomu
 	return base
 
 

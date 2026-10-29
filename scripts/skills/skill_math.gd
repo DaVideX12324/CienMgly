@@ -17,7 +17,7 @@ static func damage(skill: QuizRpgSkillBase, user: Dictionary, target: Dictionary
 			return 0
 		QuizRpgSkillBase.DamageMode.FIXED:
 			return maxi(roundi(skill.fixed_damage * _spread(skill.variance, rng) * _bonus_roll(skill, rng)), 1)
-	var raw := float(skill.base_damage) \
+	var raw := float(skill.base_damage) * float(user.get("base_scale", 1.0)) \
 		+ float(user.get("atk", 0)) * skill.atk_coeff + float(user.get("mat", 0)) * skill.mat_coeff \
 		- float(target.get("def", 0)) * skill.def_coeff - float(target.get("mdf", 0)) * skill.mdf_coeff
 	var mult := skill.damage_multiplier
