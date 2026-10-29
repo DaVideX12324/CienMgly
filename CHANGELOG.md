@@ -5,6 +5,13 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+## [0.9.7-beta] — 2026-10-29
+
+### Dodano
+- Pary w quizie z klawiatury; tier wroga obok poziomu na liście celów (Lv 7 · T2, tier 4 — „Boss”); pasek HP wroga
+  w kolorze tieru, boss z dłuższym paskiem.
+- Mikstury tieru 2 w łupie jaskiń.
+
 ### Naprawiono
 - Wczytanie zapisu stawia gracza tam, gdzie zapisał (pozycja w zapisie), a nie na starcie mapy.
 - Pokonani zwykli wrogowie mapy nie wracają po wyjściu z niej (np. z ukrytej niszy) ani po wczytaniu zapisu (stan
