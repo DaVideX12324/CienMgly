@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://0fcagsaimb2r" path="res://assets/pixel_crawler/packs/free_pack_2.11/Pixel Crawler - Free Pack/Environment/Props/Static/Ruins.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_main"]
+atlas = ExtResource("1_tex")
+region = Rect2(182, 263, 35, 41)
+filter_clip = true
+
+[node name="ZamekBlokiZamekStos" type="StaticBody2D"]
+collision_layer = 32
+collision_mask = 0
+metadata/object_group = "ruins"
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = SubResource("AtlasTexture_main")
+centered = false
+offset = Vector2(-17, -41)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-14, -8, 14, -8, 14, 1, -14, 1)

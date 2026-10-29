@@ -1,11 +1,12 @@
 """Atlas ruin Ruins.png (Pixel Crawler, Props/Static) — elementy z paczek Pixel Crawlera i własny gruz:
 - Desert (nieużywane): obeliski, ceglane słupy, dzbany — przekolorowane rampą jasności (kamień zamku, piaskowiec),
 - zamek: złamane kolumny, bloki, popiersia (złamania dorysowane: wyszczerbiona krawędź, jaśniejszy przełom),
-- ścieki: filary (cały, ułamany, kikut, leżący) w oryginale i w kamieniu,
+- ścieki: filar leżący (oryginał) i wszystkie filary w kamieniu (stojące oryginały: sewer/Assets/Tiles.png),
 - kuźnia (nieużywane): posąg w trzech stanach, w kamieniu; cmentarz (nieużywane): rozbite nagrobki,
 - własny gruz: bloki, stos, słup, mur, odłamki (kamień i piaskowiec),
 - miasto (zamienniki Desert Oasis): zrujnowany mur z lica muru zamku, drogowskaz, tablice (menu, ogłoszenia), bale z pnia
   drzewa, skrzynia z kryjówki (zamknięta, otwarta), łopata z cmentarza, szczątki szkieleta (ostatnia klatka śmierci).
+Elementy bez zmian z plików widocznych w Godocie (poza _nieuzywane) nie trafiają tu — sceny biorą je z oryginałów.
 Każdy element w osobnym slocie siatki 16 px (dół sprite'a = dół slotu, środek w poziomie).
 Uruchomienie: python -I gen_ruins_atlas.py  ->  Ruins.png + lista regionów (nazwa, Rect2) na wyjściu."""
 import os
@@ -444,7 +445,7 @@ def groups():
     for ramp in ("kamien", "piaskowiec"):
         out.append([("desert_%s_%s" % (n, ramp), recolor(im, ramp)) for n, im in d_base])
     out.append([("zamek_" + n, im) for n, im in castle_items])
-    out.append([("sciek_" + n, im) for n, im in sewer_items])
+    out.append([("sciek_" + n, im) for n, im in sewer_items if n == "filar_lezacy"])  # reszta bez zmian: Tiles.png
     out.append([("sciek_%s_kamien" % n, recolor(im, "kamien", keep_blue=False)) for n, im in sewer_items])
     out.append([("kuznia_%s_kamien" % n, recolor(im, "kamien", keep_blue=False)) for n, im in forge_items] +
                [("cmentarz_" + n, im) for n, im in grave_items])
@@ -454,13 +455,13 @@ def groups():
     trees = load(STATIC, "Trees/Model_01/Size_04.png")
     hideout = load(UNUSED, "hideout/Pixel Crawler - Hideout/Assets/Tiles.png")
     cemetery = load(UNUSED, "cemetery/Pixel Crawler - Cemetery/Environment/Props/Props.png")
-    skeleton = trim(load(PC, "packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png").crop((704, 0, 768, 64)))
+    skeleton = load(PC, "packs/free_pack_2.11/Pixel Crawler - Free Pack/Entities/Mobs/Skeleton Crew/Skeleton - Base/Death/Death-Sheet.png")
     out.append([("mur_zrujnowany", ruined_wall(castle, 72, 3)), ("mur_zrujnowany_maly", ruined_wall(castle, 40, 9))])
     out.append([("drogowskaz", signpost()), ("tablica_menu", menu_board()), ("tablica_ogloszen", bulletin_board()),
                 ("bal", tree_log(trees, 30)), ("bale_stos", tree_log_pile(trees)),
                 ("skrzynia", trim(hideout.crop((224, 272, 256, 304)))), ("skrzynia_otwarta", trim(hideout.crop((256, 260, 288, 304)))),
                 ("lopata", trim(cemetery.crop((82, 49, 93, 80)))), ("lopata_kopiec", trim(cemetery.crop((128, 48, 159, 80)))),
-                ("szczatki", skeleton), ("szczatki_odbite", skeleton.transpose(Image.FLIP_LEFT_RIGHT))])
+                ("szczatki", trim(skeleton.crop((704, 0, 768, 64))))])  # klatka animacji śmierci jako obiekt
     return out
 
 
