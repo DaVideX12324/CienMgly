@@ -222,18 +222,35 @@ func _setup_menu_cursor() -> void:
 	_set_cursor(0)
 
 
-## Wybrana pozycja w stylu „selected” pozycji menu z motywu modułu (jak kursor w walce i pauzie).
+## Wybrana pozycja: własny styl hover przycisku z obwódką w kolorze tekstu; reszta w stylu normal (mysz nie podświetla
+## drugiej pozycji — kursor idzie za myszą).
 func _set_cursor(index: int) -> void:
 	_cursor = index
-	var selected_sb := QuizTheme.theme().get_stylebox(&"selected", QuizTheme.MENU_ITEM)
-	var selected_font := QuizTheme.theme().get_color(&"font_selected_color", QuizTheme.MENU_ITEM)
 	for i in _menu_buttons.size():
 		var btn := _menu_buttons[i]
 		var on := i == _cursor
+		var sb: StyleBox = btn.get_meta(&"menu_hover" if on else &"menu_normal")
+		if on:
+			sb = _cursor_style(sb, btn.get_meta(&"menu_font_hover_color"))
 		for st: StringName in [&"normal", &"hover", &"pressed"]:
-			btn.add_theme_stylebox_override(st, selected_sb if on else btn.get_meta(&"menu_" + st))
-		for fc: StringName in [&"font_color", &"font_hover_color", &"font_pressed_color"]:
-			btn.add_theme_color_override(fc, selected_font if on else btn.get_meta(&"menu_" + fc))
+			btn.add_theme_stylebox_override(st, btn.get_meta(&"menu_pressed") if on and st == &"pressed" else sb)
+		var font: Color = btn.get_meta(&"menu_font_hover_color" if on else &"menu_font_color")
+		for fc: StringName in [&"font_color", &"font_hover_color"]:
+			btn.add_theme_color_override(fc, font)
+
+
+## Kopia stylu z obwódką 2 px (bez obwódki styl nie-płaski zostaje bez zmian).
+func _cursor_style(base: StyleBox, color: Color) -> StyleBox:
+	if not (base is StyleBoxFlat):
+		return base
+	if not base.has_meta(&"menu_cursor"):
+		var sb := (base as StyleBoxFlat).duplicate() as StyleBoxFlat
+		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:  # obwódka nie przesuwa tekstu
+			sb.set_content_margin(side, base.get_content_margin(side))
+		sb.set_border_width_all(2)
+		sb.border_color = color
+		base.set_meta(&"menu_cursor", sb)
+	return base.get_meta(&"menu_cursor")
 
 
 ## Kursor o `step` pozycji z zawinięciem, z pominięciem wyłączonych (np. „Wczytaj grę” bez zapisów); 0 = zostaje,
