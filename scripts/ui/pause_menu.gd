@@ -163,8 +163,19 @@ func _enter_tree() -> void:
 	add_to_group(GROUP)
 
 
+## Pauza w walce / zagadce: walka działa w pauzie drzewa (PROCESS_MODE_ALWAYS), więc jej liczniki, tweeny i timery
+## zatrzymuje dopiero czas silnika — na czas otwartego menu time_scale = 0.
+func _sync_time_scale() -> void:
+	Engine.time_scale = 0.0 if pause_root.visible and _is_in_combat() else 1.0
+
+
+func _exit_tree() -> void:
+	Engine.time_scale = 1.0
+
+
 func _ready() -> void:
 	UiLayerScale.attach(self)  # skala UI z opcji na całą warstwę (brakowało — menu pauzy się nie skalowało)
+	pause_root.visibility_changed.connect(_sync_time_scale)
 	var core_mgr: Node = get_node_or_null("/root/CoreManager")
 	if core_mgr and core_mgr.has_method("get_singleton"):
 		_gm = core_mgr.call("get_singleton", "GameManager")
