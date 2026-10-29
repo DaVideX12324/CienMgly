@@ -494,6 +494,10 @@ func _input(event: InputEvent) -> void:
 	if _is_focus_click(event):
 		get_viewport().set_input_as_handled()
 		return
+	if _is_right_click(event):  # przyciski łapią mysz przed _unhandled_input — PPM (wstecz) obsługujemy od razu
+		_unhandled_input(event)
+		get_viewport().set_input_as_handled()
+		return
 	if _typing and (_is_menu_accept(event) or (event is InputEventMouseButton and event.pressed \
 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT)):
 		_type_skip = true  # dopisuje tekst do końca, nie zatwierdza komunikatu
@@ -615,7 +619,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if phase == Phase.QUIZ and _quiz_panel_controller and _quiz_panel_controller.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
-	if _is_menu_cancel(event):
+	if _is_menu_cancel(event) and not _is_right_click(event):  # PPM tylko cofa, pauzy nie otwiera
 		_open_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
@@ -1528,8 +1532,14 @@ func _is_menu_accept(event: InputEvent) -> bool:
 	return event.is_action_pressed("ui_accept") or _is_key_pressed(event, [KEY_Z])
 
 
+## Wstecz w menu walki; prawy przycisk myszy też (jak w RPG Makerze — gra samą myszą).
 func _is_menu_cancel(event: InputEvent) -> bool:
-	return event.is_action_pressed("ui_cancel") or _is_key_pressed(event, [KEY_X, KEY_ESCAPE])
+	return event.is_action_pressed("ui_cancel") or _is_key_pressed(event, [KEY_X, KEY_ESCAPE]) or _is_right_click(event)
+
+
+func _is_right_click(event: InputEvent) -> bool:
+	var mb := event as InputEventMouseButton
+	return mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_RIGHT
 
 
 func _is_action_menu_prev(event: InputEvent) -> bool:
