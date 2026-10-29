@@ -1212,6 +1212,7 @@ func _open_target_menu() -> void:
 	_build_target_menu()
 	party_panel_container.visible = true
 	_show_target_panel()
+	_refresh_enemy_slot_highlight()  # podświetlenie wybranego przeciwnika od razu, nie dopiero po zmianie celu
 
 
 func _build_target_menu() -> void:
@@ -1219,6 +1220,7 @@ func _build_target_menu() -> void:
 	target_list_vbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	for entry in _target_entries:
 		var row := TargetRowScene.instantiate() as PanelContainer
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL  # równe kolumny siatki celów
 		var row_margin := row.get_node("Margin") as MarginContainer
 		(row.get_node("Margin/Content/Name") as Label).text = str(entry.get("name", enemy_name_str))  # HP wroga pokazuje Skan, nie lista celów
 		var lvl := int(entry.get("level", 0))
@@ -1274,7 +1276,10 @@ func _navigate_target_list(delta: int) -> void:
 func _refresh_target_selection() -> void:
 	# zaznaczony wiersz celu — zaznaczenie motywu (jak w menu), pozostałe bez tła
 	var active_style := QuizTheme.theme().get_stylebox(&"selected", QuizTheme.MENU_ITEM)
+	# Puste tło z tymi samymi marginesami co zaznaczenie — wiersze nie zmieniają rozmiaru (lista nie skacze).
 	var inactive_style := StyleBoxEmpty.new()
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		inactive_style.set_content_margin(side, active_style.get_margin(side))
 	for i in range(_target_rows.size()):
 		var row: PanelContainer = _target_rows[i]
 		if i == _target_selected_idx:
