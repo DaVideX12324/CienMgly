@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://e3enw2ku4pim"]
 
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/lotrzyk/Death.png" id="1_cf833"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/lotrzyk/Idle.png" id="2_3doi0"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/lotrzyk/Punch.png" id="3_58xa5"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/lotrzyk/Run.png" id="4_oii02"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/lotrzyk/Walk.png" id="5_m8glj"]
+[ext_resource type="Texture2D" uid="uid://b35fdtmfcmq8b" path="res://assets/lumenlore/characters/lotrzyk/Death.png" id="1_cf833"]
+[ext_resource type="Texture2D" uid="uid://d2waw7xwgaykm" path="res://assets/lumenlore/characters/lotrzyk/Idle.png" id="2_3doi0"]
+[ext_resource type="Texture2D" uid="uid://bywjes1uq7xod" path="res://assets/lumenlore/characters/lotrzyk/Punch.png" id="3_58xa5"]
+[ext_resource type="Texture2D" uid="uid://dv83v6j3i5wss" path="res://assets/lumenlore/characters/lotrzyk/Run.png" id="4_oii02"]
+[ext_resource type="Texture2D" uid="uid://b6lxpfkvs0mk5" path="res://assets/lumenlore/characters/lotrzyk/Walk.png" id="5_m8glj"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_mh82d"]
 atlas = ExtResource("1_cf833")

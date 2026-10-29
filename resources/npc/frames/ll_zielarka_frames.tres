@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cv6sah5u1tkqx"]
 
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/zielarka/Death.png" id="1_5mako"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/zielarka/Idle.png" id="2_p6cf6"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/zielarka/Punch.png" id="3_3pwgx"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/zielarka/Run.png" id="4_jv28d"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/zielarka/Walk.png" id="5_gc0co"]
+[ext_resource type="Texture2D" uid="uid://clip3migehy2g" path="res://assets/lumenlore/characters/zielarka/Death.png" id="1_5mako"]
+[ext_resource type="Texture2D" uid="uid://c1bygiky6s7pn" path="res://assets/lumenlore/characters/zielarka/Idle.png" id="2_p6cf6"]
+[ext_resource type="Texture2D" uid="uid://3lj03hrillej" path="res://assets/lumenlore/characters/zielarka/Punch.png" id="3_3pwgx"]
+[ext_resource type="Texture2D" uid="uid://xpxj0l1b72uv" path="res://assets/lumenlore/characters/zielarka/Run.png" id="4_jv28d"]
+[ext_resource type="Texture2D" uid="uid://b338ubheubc88" path="res://assets/lumenlore/characters/zielarka/Walk.png" id="5_gc0co"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_h6llm"]
 atlas = ExtResource("1_5mako")

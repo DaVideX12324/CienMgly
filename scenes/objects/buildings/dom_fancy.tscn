@@ -34,7 +34,7 @@ tile_set = ExtResource("1_tiles")
 
 [node name="DoorFrame" type="TileMapLayer" parent="Tilesets" unique_id=543857472]
 y_sort_enabled = true
-tile_map_data = PackedByteArray("AAAAAAEACwACABEAAAA=")
+tile_map_data = PackedByteArray("AAAAAAAACwACABEAAAA=")
 tile_set = ExtResource("1_tiles")
 
 [node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=192015196]

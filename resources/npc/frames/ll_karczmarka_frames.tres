@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://ewq3vhnksqb8"]
 
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/karczmarka/Death.png" id="1_8d0y7"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/karczmarka/Idle.png" id="2_hd71m"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/karczmarka/Punch.png" id="3_3ve8v"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/karczmarka/Run.png" id="4_si0qv"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/karczmarka/Walk.png" id="5_jjtf3"]
+[ext_resource type="Texture2D" uid="uid://dpxvumglr6b8x" path="res://assets/lumenlore/characters/karczmarka/Death.png" id="1_8d0y7"]
+[ext_resource type="Texture2D" uid="uid://cb1r17x3d16sd" path="res://assets/lumenlore/characters/karczmarka/Idle.png" id="2_hd71m"]
+[ext_resource type="Texture2D" uid="uid://f75wtbtlcg6o" path="res://assets/lumenlore/characters/karczmarka/Punch.png" id="3_3ve8v"]
+[ext_resource type="Texture2D" uid="uid://36wvycs8wmef" path="res://assets/lumenlore/characters/karczmarka/Run.png" id="4_si0qv"]
+[ext_resource type="Texture2D" uid="uid://d13wu216a3cmr" path="res://assets/lumenlore/characters/karczmarka/Walk.png" id="5_jjtf3"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_mcq8g"]
 atlas = ExtResource("1_8d0y7")

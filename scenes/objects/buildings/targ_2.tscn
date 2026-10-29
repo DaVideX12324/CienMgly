@@ -3,33 +3,29 @@
 [ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_0p2wr"]
 
 [sub_resource type="RectangleShape2D" id="Rect_base"]
-size = Vector2(63, 3)
+size = Vector2(64, 4)
 
 [node name="Targ2" type="StaticBody2D" unique_id=1778700622]
 collision_layer = 32
 collision_mask = 0
 
-[node name="Walls" type="TileMapLayer" parent="." unique_id=2110612390]
+[node name="Tilesets" type="Node2D" parent="." unique_id=1175041738]
 y_sort_enabled = true
-position = Vector2(-64, -16)
-tile_map_data = PackedByteArray("AAABAAAABQABACUAAAACAAAABQACACUAAAABAP//BQAbAAYAAAABAP7/BQAbAAQAAAADAAAABQACACUAAAAEAAAABQAEACUAAAAEAP7/BQAaAAQAAAAEAP//BQAaAAYAAAA=")
-tile_set = ExtResource("1_0p2wr")
+position = Vector2(0, -12)
 
-[node name="Roof" type="TileMapLayer" parent="." unique_id=1897911002]
-position = Vector2(-64, -16)
-tile_map_data = PackedByteArray("AAADAP3/BgAMAAoAAAACAP3/BgAMAAoAAAABAP3/BgAMAAoAAAAAAP3/BgAKAAoAAAAAAP7/BgAKAAwAAAABAP7/BgALAAwAAAACAP7/BgAMAAwAAAADAP7/BgALAAwAAAAAAP//BgAKAA0AAAAEAP3/BgAMAAoAAAAEAP7/BgAMAAwAAAAFAP3/BgANAAoAAAAFAP7/BgANAAwAAAAFAP//BgANAA0AAAA=")
-tile_set = ExtResource("1_0p2wr")
-
-[node name="DoorFrame" type="TileMapLayer" parent="." unique_id=1476129283]
+[node name="Walls" type="TileMapLayer" parent="Tilesets" unique_id=2110612390]
 y_sort_enabled = true
-position = Vector2(-64, -16)
+tile_map_data = PackedByteArray("AAD+//7/BQAbAAQAAAD+////BQAbAAYAAAABAP7/BQAaAAQAAAABAP//BQAaAAYAAAD+/wAABQABACUAAAD//wAABQACACUAAAAAAAAABQACACUAAAABAAAABQAEACUAAAA=")
 tile_set = ExtResource("1_0p2wr")
 
-[node name="Props" type="TileMapLayer" parent="." unique_id=1566230523]
-position = Vector2(-64, -16)
-tile_map_data = PackedByteArray("AAADAP//BgABAA8AAAACAP//BgABAA8AAAABAP//BgABAA8AAAAAAP//BgAAAA8AAAAEAP//BgABAA8AAAAFAP//BgACAA8AAAA=")
+[node name="Roof" type="TileMapLayer" parent="Tilesets" unique_id=1897911002]
+tile_map_data = PackedByteArray("AAD9//3/BgAKAAoAAAD9//7/BgAKAAwAAAD+//3/BgAMAAoAAAD///3/BgAMAAoAAAAAAP3/BgAMAAoAAAABAP3/BgAMAAoAAAACAP3/BgANAAoAAAACAP7/BgANAAwAAAD9////BgAKAA0AAAD+//7/BgALAAwAAAD///7/BgAMAAwAAAAAAP7/BgALAAwAAAABAP7/BgAMAAwAAAACAP//BgANAA0AAAA=")
+tile_set = ExtResource("1_0p2wr")
+
+[node name="Props" type="TileMapLayer" parent="Tilesets" unique_id=1566230523]
+tile_map_data = PackedByteArray("AAD9////BgAAAA8AAAD+////BgABAA8AAAD/////BgABAA8AAAAAAP//BgABAA8AAAABAP//BgABAA8AAAACAP//BgACAA8AAAA=")
 tile_set = ExtResource("1_0p2wr")
 
 [node name="BaseCollision" type="CollisionShape2D" parent="." unique_id=1045199322]
-position = Vector2(-15.5, -6.5)
+position = Vector2(0, 2)
 shape = SubResource("Rect_base")

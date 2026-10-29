@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cmhfeo8gdw0l7"]
 
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/mistrz/Death.png" id="1_xaxxg"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/mistrz/Idle.png" id="2_ks2ef"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/mistrz/Punch.png" id="3_yi71j"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/mistrz/Run.png" id="4_a0ltu"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/mistrz/Walk.png" id="5_eap4u"]
+[ext_resource type="Texture2D" uid="uid://buon84v2l8g53" path="res://assets/lumenlore/characters/mistrz/Death.png" id="1_xaxxg"]
+[ext_resource type="Texture2D" uid="uid://bkl6pv3fx3tut" path="res://assets/lumenlore/characters/mistrz/Idle.png" id="2_ks2ef"]
+[ext_resource type="Texture2D" uid="uid://bu31e4k3xip3c" path="res://assets/lumenlore/characters/mistrz/Punch.png" id="3_yi71j"]
+[ext_resource type="Texture2D" uid="uid://bptrgr7bapba2" path="res://assets/lumenlore/characters/mistrz/Run.png" id="4_a0ltu"]
+[ext_resource type="Texture2D" uid="uid://bayuft7vdlhgt" path="res://assets/lumenlore/characters/mistrz/Walk.png" id="5_eap4u"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_urngu"]
 atlas = ExtResource("1_xaxxg")

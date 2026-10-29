@@ -1,10 +1,10 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://cmf1hcisurjlg"]
 
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/kowal/Death.png" id="1_yevun"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/kowal/Idle.png" id="2_456o0"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/kowal/Punch.png" id="3_a8a6w"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/kowal/Run.png" id="4_k2y72"]
-[ext_resource type="Texture2D" path="res://assets/lumenlore/characters/kowal/Walk.png" id="5_71uic"]
+[ext_resource type="Texture2D" uid="uid://bf3ba0a6eo5x3" path="res://assets/lumenlore/characters/kowal/Death.png" id="1_yevun"]
+[ext_resource type="Texture2D" uid="uid://cf41deglsaxsg" path="res://assets/lumenlore/characters/kowal/Idle.png" id="2_456o0"]
+[ext_resource type="Texture2D" uid="uid://bkohmvvxdn24i" path="res://assets/lumenlore/characters/kowal/Punch.png" id="3_a8a6w"]
+[ext_resource type="Texture2D" uid="uid://bmoja85gph1fb" path="res://assets/lumenlore/characters/kowal/Run.png" id="4_k2y72"]
+[ext_resource type="Texture2D" uid="uid://d3prgkg3q6pwo" path="res://assets/lumenlore/characters/kowal/Walk.png" id="5_71uic"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_8wbq8"]
 atlas = ExtResource("1_yevun")
