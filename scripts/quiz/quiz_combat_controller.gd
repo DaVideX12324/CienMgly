@@ -2903,6 +2903,22 @@ func _on_battle_background_layout_changed(layout: BattleBackgroundLayout) -> voi
 	_apply_responsive_enemy_layout()
 
 
+## Odstęp stóp wroga od górnej krawędzi okna walki (pasek HP wroga pod stopami), px warstwy wrogów.
+const ENEMY_UI_GAP := 28.0
+
+
+## O ile podnieść wrogów, żeby najniższe stopy były ENEMY_UI_GAP nad oknem walki (0 = mieszczą się).
+func _enemy_lift_above_ui(feet: Array) -> float:
+	if feet.is_empty() or battle_window == null or not battle_window.is_visible_in_tree():
+		return 0.0
+	var top_screen := battle_window.get_global_transform_with_canvas() * Vector2.ZERO
+	var limit := (_enemy_field_layer.get_global_transform_with_canvas().affine_inverse() * top_screen).y - ENEMY_UI_GAP
+	var lowest := -INF
+	for f: Vector2 in feet:
+		lowest = maxf(lowest, f.y)
+	return maxf(lowest - limit, 0.0)
+
+
 func _apply_responsive_enemy_layout() -> void:
 	if _enemy_field_layer == null or _enemy_active_layout_slots.is_empty():
 		return
@@ -2911,6 +2927,17 @@ func _apply_responsive_enemy_layout() -> void:
 	var vp_size: Vector2 = UiLayerScale.screen_size(self)
 	var area: Vector2 = _enemy_field_layer.size
 	var depth_order: Array = []  # [linia stóp y, wrapper] — dalsi (wyżej na ekranie) rysowani pierwsi
+	var feet := {}  # slot -> stopy w px warstwy wrogów
+	for slot_idx in range(_enemy_active_layout_slots.size()):
+		var spot_data = _enemy_active_layout_slots[slot_idx].get("spot", null)
+		if spot_data == null:
+			continue
+		var f: Vector2 = _battle_layout.foot(spot_data, area, vp_size, battle_background.size if battle_background else Vector2.ZERO)
+		if battle_background and _battle_layout.texture != null:  # px tła -> px warstwy wrogów
+			f = _enemy_field_layer.get_global_transform().affine_inverse() * (battle_background.get_global_transform() * f)
+		feet[slot_idx] = f
+	# Okno walki rośnie ze skalą UI — gdy stopy (z paskiem HP pod nimi) wchodzą pod nie, wszyscy idą w górę o tyle samo.
+	var lift := _enemy_lift_above_ui(feet.values())
 	for slot_idx in range(_enemy_active_layout_slots.size()):
 		var slot_data: Dictionary = _enemy_active_layout_slots[slot_idx]
 		var wrapper: Control = slot_data.get("wrapper", null) as Control
@@ -2921,9 +2948,7 @@ func _apply_responsive_enemy_layout() -> void:
 		var slot_sz: Vector2 = slot.custom_minimum_size if slot.custom_minimum_size != Vector2.ZERO else Vector2(150.0, 150.0)
 		wrapper.size = wrapper.get_combined_minimum_size()
 		# Stopy wroga (display: środek slotu, 8 px nad jego dołem) w miejscu z pola walki.
-		var foot: Vector2 = _battle_layout.foot(spot, area, vp_size, battle_background.size if battle_background else Vector2.ZERO)
-		if battle_background and _battle_layout.texture != null:  # px tła -> px warstwy wrogów
-			foot = _enemy_field_layer.get_global_transform().affine_inverse() * (battle_background.get_global_transform() * foot)
+		var foot: Vector2 = feet.get(slot_idx, Vector2.ZERO) - Vector2(0, lift)
 		wrapper.position = foot - Vector2(wrapper.size.x * 0.5, slot_sz.y - 8.0)
 		depth_order.append([foot.y, wrapper])
 		if slot_idx < _enemy_displays.size() and _enemy_displays[slot_idx] != null:

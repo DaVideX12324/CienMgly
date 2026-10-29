@@ -19,6 +19,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Muzyka map w jednym miejscu: pole `music_track` mapy (ręczne i samouczek — Inspektor), mapy generowane —
   companion-JSON `"music"`; mapa bez utworu nie zmienia muzyki.
 - Miasto: zmiany z edytora (tablica ogłoszeń).
+- Walka: wrogowie nie chowają się za oknem walki przy większej skali UI — gdy najniższe stopy wchodzą pod okno,
+  wszyscy przesuwają się w górę o tyle samo.
 
 ### Naprawiono
 - Okienko łupu ze skrzyni pokazuje ikonę przedmiotu (był znak zapytania).
