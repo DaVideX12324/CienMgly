@@ -1,0 +1,17 @@
+{
+  "title": "Cień Mgły",
+  "sections": [
+    {"title": "Grafika", "entries": [
+      {"name": "Pixel Crawler (Free Pack)", "author": "Anokolisa", "note": "kafle, obiekty, przeciwnicy, postacie"},
+      {"name": "Szablon postaci LumenLore", "author": "LumenLorePixels", "note": "drużyna i NPC generowane z szablonu"},
+      {"name": "Tiny Questers — Free Starter Pack", "author": "Bobddadoo", "url": "https://bobddadoo.itch.io"},
+      {"name": "32x32 Top-Down Character Animation Pack", "author": "freddyka"},
+      {"name": "Ikony przedmiotów", "author": "Glionox, Kyrise"},
+      {"name": "Pixel UI pack 3, UI Assets pack", "author": "do uzupełnienia"},
+      {"name": "Przeciwnicy i kafle z projektu Amon-Ra", "author": "do uzupełnienia"}
+    ]},
+    {"title": "Dźwięk", "entries": [
+      {"name": "Muzyka i efekty dźwiękowe", "author": "do uzupełnienia"}
+    ]}
+  ]
+}
