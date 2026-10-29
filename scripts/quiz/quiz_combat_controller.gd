@@ -71,7 +71,15 @@ const COMPLEX_CHANCE_MAX := 0.8
 @export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
 @export var compact_min_viewport_width := 1600.0  ## węższe okno gry (px): UI walki na całą szerokość (także sam status i opcja „na szerokość treści”)
 
-var phase: Phase = Phase.ACTION_SELECT
+var phase: Phase = Phase.ACTION_SELECT:
+	set(v):
+		if v != phase:
+			_settle_input()
+		phase = v
+## Po zmianie fazy / panelu wejście jest chwilę ignorowane — dwa szybkie wejścia (klik w cel + Esc, Atak + Umiejętności)
+## nie trafiają w stan w połowie przejścia.
+const INPUT_SETTLE_MSEC := 120
+var _input_settle_until := 0
 var chosen_action: Action = Action.ATTACK
 
 var enemy: Node2D
@@ -490,6 +498,19 @@ func _notification(what: int) -> void:
 		_focus_in_msec = Time.get_ticks_msec()
 
 
+func _settle_input() -> void:
+	_input_settle_until = Time.get_ticks_msec() + INPUT_SETTLE_MSEC
+
+
+## Naciśnięcie (klawisz, przycisk myszy) w czasie INPUT_SETTLE_MSEC po zmianie stanu walki.
+func _is_settling_press(event: InputEvent) -> bool:
+	if Time.get_ticks_msec() >= _input_settle_until:
+		return false
+	if event is InputEventKey:
+		return event.pressed and not event.echo
+	return event is InputEventMouseButton and event.pressed
+
+
 ## Zdarzenie myszy do zignorowania: okno bez fokusu albo kliknięcie tuż po odzyskaniu fokusu.
 func _is_focus_click(event: InputEvent) -> bool:
 	if not (event is InputEventMouseButton or event is InputEventMouseMotion):
@@ -502,7 +523,7 @@ func _is_focus_click(event: InputEvent) -> bool:
 func _input(event: InputEvent) -> void:
 	if _is_pause_menu_open():
 		return
-	if _is_focus_click(event):
+	if _is_focus_click(event) or _is_settling_press(event):
 		get_viewport().set_input_as_handled()
 		return
 	if _is_right_click(event):  # przyciski łapią mysz przed _unhandled_input — PPM (wstecz) obsługujemy od razu
@@ -3008,6 +3029,8 @@ func _narrow_window() -> bool:
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
 func _set_band_mode(mode: Band) -> void:
+	if mode != _band_mode:
+		_settle_input()
 	_band_mode = mode
 	if content_row == null or party_command_panel == null or party_panel_container == null:
 		return
