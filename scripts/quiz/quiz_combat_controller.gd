@@ -1734,7 +1734,7 @@ func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void
 	var category := quiz_id
 	if _ps:
 		if correct:
-			_ps.on_correct_answer()
+			_bonus_xp_reward += _ps.on_correct_answer(false)  # XP za odpowiedź tylko po wygranej
 		else:
 			_ps.on_wrong_answer()
 	if _dm:

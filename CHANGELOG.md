@@ -5,6 +5,11 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Naprawiono
+- XP za poprawne odpowiedzi w walce wpadało od razu — także przy ucieczce i porażce; teraz trafia do puli walki
+  i przychodzi tylko po wygranej (w zagadkach bez zmian).
+- Walka: bez menu pauzy (X / Esc tylko cofa) — w pauzie dało się leczyć poza turą; przycisk „Wyjście” ukryty.
+
 ### Zmieniono
 - Klawisze walki, menu pauzy, menu głównego i minimapy z akcji (zmienialne w Sterowaniu) zamiast na sztywno.
 

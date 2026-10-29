@@ -336,15 +336,20 @@ func spend_gold(amount: int) -> bool:
 	return true
 
 
-func on_correct_answer() -> void:
+## Zwraca XP za odpowiedź (15 + 3 × seria). grant_xp = false — walka: XP trafia do puli walki i przepada przy
+## ucieczce / porażce (wcześniej wpadało od razu, także przy ucieczce).
+func on_correct_answer(grant_xp: bool = true) -> int:
 	total_correct += 1
 	streak += 1
 	if streak > best_streak:
 		best_streak = streak
 	rng_bonus = clampf(rng_bonus + 0.05 + (streak * 0.02), 0.0, 0.5)
 	add_points(10 + streak * 5)
-	add_xp(15 + streak * 3)
+	var answer_xp := 15 + streak * 3
+	if grant_xp:
+		add_xp(answer_xp)
 	_check_rewards()
+	return answer_xp
 
 
 func on_wrong_answer() -> void:
