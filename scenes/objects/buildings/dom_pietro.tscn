@@ -1,6 +1,7 @@
-[gd_scene format=4]
+[gd_scene format=4 uid="uid://bqtpyix0t5hlu"]
 
 [ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_6yl81"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/world/raised_zone.gd" id="2_a0x4c"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_nq12t"]
 radius = 14.0
@@ -29,9 +30,15 @@ tile_set = ExtResource("1_6yl81")
 z_index = 1
 tile_set = ExtResource("1_6yl81")
 
-[node name="WallsDetail" type="TileMapLayer" parent="Tilesets" unique_id=772819623]
-z_index = 1
+[node name="Seg_Schody" type="Node2D" parent="Tilesets" unique_id=1612327104]
+position = Vector2(0, 10)
+
+[node name="Sort" type="Node2D" parent="Tilesets/Seg_Schody" unique_id=2119607465]
 y_sort_enabled = true
+
+[node name="Schody" type="TileMapLayer" parent="Tilesets/Seg_Schody/Sort" unique_id=1948278698]
+y_sort_enabled = true
+position = Vector2(0, -10)
 tile_map_data = PackedByteArray("AAD6//3/CQAGABgAAAD7//3/CQAHABgAAAD8//3/CQAIABgAAAD6//z/CQAGABQAAAD7//z/CQAHABQAAAD8//z/CQAIABQAAAD5//3/CQAIABAAAAD5//7/CQAIABEAAAD5//z/CQAIAA4AAAD4//z/CQAHAA4AAAD4//3/CQAHAA8AAAD4//7/CQAHABEAAAD4////CQAHABIAAAD3//3/CQAHAA4AAAD3//7/CQAHAA8AAAD3////CQAHABEAAAD2////CQAGABEAAAD2//7/CQAGAA8AAAD2/wAACQAGABIAAAD9//7/BQAlAA4AAAD9//3/BQAlAA0AAAA=")
 tile_set = ExtResource("1_6yl81")
 
@@ -107,6 +114,9 @@ z_index = 1
 position = Vector2(-24, 6)
 polygon = PackedVector2Array(-76, -27, -24, -27, -24, -44, -23, -44, -23, -60, -30, -60, -30, -69, -50, -69, -50, -60, -71, -60, -71, -75, -23, -75, -23, -61, 73, -61, 73, -44, 73, 15, 40, 15, 40, 4, 34, 4, 34, -13, 14, -13, 14, 4, 8, 4, 8, 15, -120, 15)
 
+[node name="SchodyTyl" type="CollisionPolygon2D" parent="." unique_id=1854527012]
+polygon = PackedVector2Array(-149, -12, -101, -58, -95, -58, -95, -54, -101, -54, -147, -9)
+
 [node name="DoorArea" type="Area2D" parent="." unique_id=944086640]
 position = Vector2(0, 5)
 collision_layer = 0
@@ -126,3 +136,11 @@ position = Vector2(0, 17)
 
 [node name="DoorSpot2" type="Marker2D" parent="." unique_id=1729659583]
 position = Vector2(-65, -56)
+
+[node name="StrefaSchodow" type="Area2D" parent="." unique_id=1638675161]
+collision_layer = 0
+collision_mask = 5
+script = ExtResource("2_a0x4c")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StrefaSchodow" unique_id=398934482]
+polygon = PackedVector2Array(-146, 22, -100, -18, -45, -18, -45, -54, -54, -54, -54, -64, -74, -64, -74, -54, -100, -57, -146, -9)
