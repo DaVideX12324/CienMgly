@@ -894,8 +894,8 @@ func _move_towards(dir: Vector2, speed: float, delta: float) -> void:
 func _setup_detection_area() -> void:
 	var det_area = get_node_or_null("DetectionArea")
 	if det_area:
-		det_area.monitoring = true
-		det_area.monitorable = true
+		det_area.set_deferred("monitoring", true)
+		det_area.set_deferred("monitorable", true)
 		det_area.collision_mask = 1
 		if not det_area.body_entered.is_connected(_on_detection_area_body_entered):
 			det_area.body_entered.connect(_on_detection_area_body_entered)

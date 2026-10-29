@@ -577,7 +577,7 @@ func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("interactable") and not nearby_interactables.has(body):
 		nearby_interactables.append(body)
 	if body.is_in_group("enemies") and body.has_method("engage_from_player_interaction"):
-		body.engage_from_player_interaction(self)
+		body.call_deferred("engage_from_player_interaction", self)
 		return
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:

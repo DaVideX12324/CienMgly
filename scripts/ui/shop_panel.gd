@@ -163,9 +163,9 @@ func _activate(idx: int) -> void:
 		_message.text = QuizRpgI18n.tf("shop.bought", {"item": entry.item.localized_name()}, "Kupiono: {item}.") if ok \
 				else QuizRpgI18n.t("shop.no_gold", "Za mało dukatów.")
 	else:
-		var name := QuizRpgNpcContext.item_name(npc, str(p))
+		var item_name := QuizRpgNpcContext.item_name(npc, str(p))
 		ok = shop.sell(npc, str(p))
-		_message.text = QuizRpgI18n.tf("shop.sold", {"item": name}, "Sprzedano: {item}.") if ok else " "
+		_message.text = QuizRpgI18n.tf("shop.sold", {"item": item_name}, "Sprzedano: {item}.") if ok else " "
 	if ok:
 		QuizRpgNpcContext.play_sfx(npc, "coin")
 	_refresh(idx)

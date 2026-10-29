@@ -5,6 +5,10 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Naprawiono
+- Wyeksportowana gra: odtrutka nie leczyła (pola PackedStringArray w .tres gubione przy konwersji eksportu dla skryptów zasobów bez @tool) — skrypty danych (przedmioty, postacie, wrogowie, kafle, kroki) jako @tool.
+- Walka: przedmioty z wyborem celu z drużyny; winieta zatrucia tylko poza walką.
+
 ### Dodano
 - Menu główne: tło paralaksy (Mountain Dusk, ansimuz) — noc z księżycem, płynące warstwy, mgła nad lasem.
 - Umiejętności bossów: ×0,6 obrażeń, +2 tury odnowienia.
