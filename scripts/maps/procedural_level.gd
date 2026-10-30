@@ -394,6 +394,7 @@ func _finish_generation(progress, overlay, job: GenJob) -> void:
 	GenProgress.stop()
 	overlay.close()
 	is_generating = false
+	_paint_void_margin()
 	if job.debug_report:
 		print(map_report(job, progress))
 	generation_finished.emit()
@@ -404,6 +405,37 @@ func _finish_generation(progress, overlay, job: GenJob) -> void:
 	if _prefetch_allowed():
 		MapPrefetch.request(next_level_path)
 		MapPrefetch.request(previous_level_path)
+
+
+## Pustka za krawędzią mapy (VOID_MARGIN kratek) na osobnej warstwie VoidMargin — kamera nie pokazuje pustego tła,
+## a minimapa jej nie czyta (tylko warstwy podłogi i ścian), więc dalej widać, gdzie mapa się kończy.
+## Kafel = róg warstwy Walls (lita skała / pustka mapy).
+const VOID_MARGIN := 32
+
+
+func _paint_void_margin() -> void:
+	var walls := get_node_or_null("Walls") as TileMapLayer
+	if walls == null:
+		return
+	var rect := walls.get_used_rect()
+	if rect.size == Vector2i.ZERO or walls.get_cell_source_id(rect.position) == -1:
+		return
+	var layer := get_node_or_null("VoidMargin") as TileMapLayer
+	if layer == null:
+		layer = TileMapLayer.new()
+		layer.name = "VoidMargin"
+		add_child(layer)
+		move_child(layer, walls.get_index())
+	layer.clear()
+	layer.tile_set = walls.tile_set
+	layer.z_index = walls.z_index
+	var src := walls.get_cell_source_id(rect.position)
+	var ac := walls.get_cell_atlas_coords(rect.position)
+	var alt := walls.get_cell_alternative_tile(rect.position)
+	for y in range(rect.position.y - VOID_MARGIN, rect.end.y + VOID_MARGIN):
+		for x in range(rect.position.x - VOID_MARGIN, rect.end.x + VOID_MARGIN):
+			if not rect.has_point(Vector2i(x, y)):
+				layer.set_cell(Vector2i(x, y), src, ac, alt)
 
 
 ## Zapis map na dysk tylko w grze (jak mapy z wyprzedzeniem) i dla jaskiń / ścieków (układ z planem kafli).
