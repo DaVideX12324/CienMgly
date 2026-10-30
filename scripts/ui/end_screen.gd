@@ -30,6 +30,7 @@ func _ready() -> void:
 	if gm and gm.has_method("change_state"):
 		gm.call("change_state", 0)   # GameState.MENU
 	get_tree().paused = true
+	_translate()
 	_fill_stats(gm)
 	_saved_label.visible = saved
 	_buttons = [_continue_button, _menu_button]
@@ -45,6 +46,19 @@ func _ready() -> void:
 	tw.tween_property(_dim, "color:a", dim_a, fade_time)
 	tw.tween_property(_box, "modulate:a", 1.0, fade_time).set_delay(fade_time * 0.4)
 	tw.chain().tween_callback(func() -> void: _ready_for_input = true)
+
+
+## Teksty ze sceny (WYSIWYG, po polsku) przez i18n modułu.
+func _translate() -> void:
+	const BOX := "Root/Center/Box/"
+	const KEYS := {"Title": "end.title", "Subtitle": "end.subtitle", "StatsPanel/Stats/TimeLabel": "end.time",
+		"StatsPanel/Stats/LevelLabel": "end.level", "StatsPanel/Stats/BossesLabel": "end.bosses",
+		"StatsPanel/Stats/CorrectLabel": "end.correct", "SavedLabel": "end.saved",
+		"Panel/List/ContinueButton": "end.continue", "Panel/List/MenuButton": "end.menu"}
+	for path: String in KEYS:
+		var n := get_node_or_null(BOX + path)
+		if n != null and "text" in n:
+			n.text = QuizRpgI18n.t(KEYS[path], n.text)
 
 
 func _fill_stats(gm: Node) -> void:
