@@ -15,18 +15,17 @@ static var _hero: QuizRpgHeroData = null
 
 
 ## Schodki poziomów (pomysł usera 2026-10-30): XP walki × mnożnik z różnicy (poziom wroga − poziom gracza) —
-## na nowej mapie (wrogowie wyżej) szybko, przy jej końcu coraz wolniej, a daleko nad wrogami tylko LEVEL_MULT_MIN.
+## na nowej mapie (wrogowie wyżej) szybko, przy jej końcu coraz wolniej, a o LEVEL_GAP_ZERO poziomów nad wrogami nic.
 ## Obejmuje też XP za odpowiedzi w walce (inaczej grind quizami na starej mapie). Wróg bez poziomu (0) = ×1.
 const LEVEL_STEP := 0.2         # zmiana mnożnika na poziom różnicy
 const LEVEL_MULT_MAX := 1.5     # wrogowie wyżej o 3+
-const LEVEL_MULT_MIN := 0.2     # gracz wyżej o 4+ — coś zawsze leci (decyzja usera)
 const BOSS_LEVEL_MULT_MIN := 0.5  # boss zawsze coś daje
 
 
 static func level_mult(enemy_level: int, player_level: int, is_boss: bool = false) -> float:
 	if enemy_level <= 0:
 		return 1.0
-	var m := clampf(1.0 + LEVEL_STEP * float(enemy_level - player_level), LEVEL_MULT_MIN, LEVEL_MULT_MAX)
+	var m := clampf(1.0 + LEVEL_STEP * float(enemy_level - player_level), 0.0, LEVEL_MULT_MAX)
 	return maxf(m, BOSS_LEVEL_MULT_MIN) if is_boss else m
 
 
