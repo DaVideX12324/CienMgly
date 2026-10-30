@@ -2416,7 +2416,7 @@ func _end_combat(player_won: bool, fled: bool = false) -> void:
 	if player_won:
 		if audio:
 			audio.play_sfx_by_name("victory")
-		var total_xp_reward := _battle_xp()
+		var total_xp_reward :int= enemy.xp_reward + _bonus_xp_reward
 		var lvl_before :int= _ps.level if _ps else 1
 		var learned: Array[String] = []
 		var on_learned := func(i: int, skill_name: String):
@@ -4242,20 +4242,9 @@ func _log_combat_end(player_won: bool, fled: bool) -> void:
 		var lv: int = int(src.get("enemy_level")) if src != null and src.get("enemy_level") != null else 0
 		names.append("%s%s t%d" % [str(u.get("name", "?")), " lv%d" % lv if lv > 0 else "", int(u.get("tier", 1))])
 	var outcome := "wygrana" if player_won else ("ucieczka" if fled else "porazka")
-	var xp := _battle_xp() if player_won else 0
+	var xp := (int(enemy.xp_reward) + _bonus_xp_reward) if player_won else 0
 	var gold := _total_gold_reward() if player_won else 0
 	QuizRpgProgressLog.combat_end(_ps, outcome, ", ".join(names), _is_boss_encounter(), xp, turn_number, float(Time.get_ticks_msec() - _combat_started_msec) / 1000.0, gold)
-
-
-## XP walki (wrogowie + odpowiedzi) × schodki poziomów: najwyższy poziom wroga w walce vs poziom gracza.
-func _battle_xp() -> int:
-	var top := 0
-	for u in _enemy_units:
-		var src: Variant = u.get("source", enemy)
-		if src != null and src.get("enemy_level") != null:
-			top = maxi(top, int(src.get("enemy_level")))
-	var mult := QuizRpgEnemyXp.level_mult(top, int(_ps.level) if _ps else 1, _is_boss_encounter())
-	return roundi(float(int(enemy.xp_reward) + _bonus_xp_reward) * mult)
 
 
 ## Złoto z pokonanych jednostek walki: każda liczy się jak jej wróg-źródło (grupa ze świata) albo główny wróg (kopie).
