@@ -103,9 +103,19 @@ func xp_total_for_level(lvl: int) -> int:
 	return roundi(xp_base * pow(l - 1.0, 0.9 + xp_acc_a / 250.0) * l * (l + 1.0) / (6.0 + l * l / 50.0 / xp_acc_b) + (l - 1.0) * xp_extra)
 
 
-## XP z poziomu lvl na lvl + 1.
-func xp_to_next(lvl: int) -> int:
-	return maxi(xp_total_for_level(lvl + 1) - xp_total_for_level(lvl), 1)
+## Szybszy początek: XP na awans ×EARLY_XP_MIN na lv 1, rośnie liniowo do pełnego od EARLY_XP_FULL_LEVEL (sklep dopiero
+## po jaskiniach — wczesne awanse częściej). Nagroda za wroga liczy się z pełnej krzywej (raw), więc wcześnie mniej walk.
+const EARLY_XP_MIN := 0.5
+const EARLY_XP_FULL_LEVEL := 20
+
+
+## XP z poziomu lvl na lvl + 1. raw = bez szybszego początku (wzór nagrody za wroga).
+func xp_to_next(lvl: int, raw: bool = false) -> int:
+	var need := maxi(xp_total_for_level(lvl + 1) - xp_total_for_level(lvl), 1)
+	if raw:
+		return need
+	var t := clampf(float(lvl - 1) / float(EARLY_XP_FULL_LEVEL - 1), 0.0, 1.0)
+	return maxi(roundi(need * lerpf(EARLY_XP_MIN, 1.0, t)), 1)
 
 
 ## Maks. SP na danym poziomie (jak hp_for_level).
