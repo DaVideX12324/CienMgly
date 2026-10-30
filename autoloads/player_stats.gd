@@ -214,6 +214,63 @@ func member_hp(member_index: int) -> int:
 	return _member_hp(member_index) if member_index >= 0 and member_index < party.size() else 0
 
 
+## SP członka drużyny (party[member_index]["sp"]).
+func member_sp(member_index: int) -> int:
+	_ensure_party_defaults()
+	if member_index < 0 or member_index >= party.size():
+		return 0
+	return int((party[member_index] as Dictionary).get("sp", 0))
+
+
+## Maksymalne SP członka drużyny (party[member_index]["max_sp"]).
+func member_max_sp(member_index: int) -> int:
+	_ensure_party_defaults()
+	if member_index < 0 or member_index >= party.size():
+		return 1
+	return maxi(int((party[member_index] as Dictionary).get("max_sp", 1)), 1)
+
+
+## Zużycie SP członka drużyny (umiejętności w walce / menu). Zwraca faktycznie zużyte SP.
+func consume_member_sp(member_index: int, amount: int) -> int:
+	_ensure_party_defaults()
+	if member_index < 0 or member_index >= party.size() or amount <= 0:
+		return 0
+	var m: Dictionary = party[member_index]
+	var cur: int = int(m.get("sp", 0))
+	var spent: int = mini(cur, amount)
+	m["sp"] = cur - spent
+	party[member_index] = m
+	party_changed.emit()
+	return spent
+
+
+## Odnowienie SP członka drużyny (mikstury, umiejętności). Zwraca faktycznie odnowione SP.
+func restore_member_sp(member_index: int, amount: int) -> int:
+	_ensure_party_defaults()
+	if member_index < 0 or member_index >= party.size() or amount <= 0:
+		return 0
+	var m: Dictionary = party[member_index]
+	var cur: int = int(m.get("sp", 0))
+	var max_val: int = int(m.get("max_sp", cur))
+	var restored: int = mini(amount, maxi(max_val - cur, 0))
+	m["sp"] = cur + restored
+	party[member_index] = m
+	party_changed.emit()
+	return restored
+
+
+## Ustawienie SP członka drużyny (z ograniczeniem 0..max_sp).
+func set_member_sp(member_index: int, value: int) -> void:
+	_ensure_party_defaults()
+	if member_index < 0 or member_index >= party.size():
+		return
+	var m: Dictionary = party[member_index]
+	var max_val: int = int(m.get("max_sp", value))
+	m["sp"] = clampi(value, 0, max_val)
+	party[member_index] = m
+	party_changed.emit()
+
+
 ## Zamienia miejscami dwóch członków drużyny (szyk; party[0] = lider). false = zły indeks albo ten sam.
 func swap_members(a: int, b: int) -> bool:
 	if a == b or a < 0 or b < 0 or a >= party.size() or b >= party.size():
