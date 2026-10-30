@@ -887,7 +887,7 @@ func _show_equipment_panel() -> void:
 	_rebuild_equipment_slots()
 	_rebuild_equipment_item_rows()
 	if _mode == "equip_item_list":
-		equipment_footer_label.text = str(_current_equip_entries[_equip_item_index].get("description", "")) if _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size() else ""
+		equipment_footer_label.text = _equip_footer_text(_equip_item_index)
 	else:
 		equipment_footer_label.text = QuizRpgI18n.t("pause.hint_select_back", "Enter/Z: wybierz    X/Esc: wróć")
 
@@ -1365,7 +1365,7 @@ func _rebuild_equipment_item_rows() -> void:
 		row.visible = has_entry
 		if has_entry:
 			var entry: Dictionary = _current_equip_entries[index]
-			_set_simple_row(row, _equip_entry_label(entry), _get_equipment_delta_text(entry), not items_selectable, true, entry.get("icon") as Texture2D)
+			_set_simple_row(row, _equip_entry_label(entry), _get_equipment_base_text(entry), not items_selectable, true, entry.get("icon") as Texture2D)
 	_refresh_equipment_item_rows()
 
 
@@ -1387,7 +1387,7 @@ func _refresh_equipment_item_rows() -> void:
 	var selected_index: int = _equip_item_index if _mode == "equip_item_list" else -1
 	_set_row_selection(_equip_item_rows, selected_index)
 	if _mode == "equip_item_list" and _equip_item_index >= 0 and _equip_item_index < _current_equip_entries.size():
-		equipment_footer_label.text = str(_current_equip_entries[_equip_item_index].get("description", ""))
+		equipment_footer_label.text = _equip_footer_text(_equip_item_index)
 
 
 func _get_equipment_preview_slot_name() -> String:
@@ -1722,6 +1722,29 @@ func _get_equipped_item_name(item_id: String) -> String:
 	if item_data == null:
 		return item_id
 	return item_data.localized_name()
+
+
+## Statystyki bazowe przedmiotu na liście (bez porównania): „ATK 10  DEF 2”.
+func _get_equipment_base_text(entry: Dictionary) -> String:
+	var parts: Array[String] = []
+	for stat in ["atk", "def", "mat", "mdf", "agi"]:
+		var v: int = int(entry.get(stat + "_bonus", 0))
+		if v != 0:
+			parts.append("%s %d" % [stat.to_upper(), v])
+	return "  ".join(parts)
+
+
+## Stopka listy do slotu: opis + porównanie z założonym (lista pokazuje same statystyki bazowe).
+func _equip_footer_text(idx: int) -> String:
+	if idx < 0 or idx >= _current_equip_entries.size():
+		return ""
+	var sel: Dictionary = _current_equip_entries[idx]
+	var cmp := _get_equipment_delta_text(sel)
+	var text := str(sel.get("description", ""))
+	if cmp != "" and not bool(sel.get("equipped", false)):
+		text += "
+" + QuizRpgI18n.tf("equip.compare", {"delta": cmp}, "Względem założonego: {delta}")
+	return text
 
 
 func _get_equipment_delta_text(entry: Dictionary) -> String:
