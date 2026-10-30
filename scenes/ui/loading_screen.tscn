@@ -37,7 +37,6 @@ colors = PackedColorArray(1, 0.97, 0.88, 0, 1, 0.97, 0.88, 0.9, 1, 0.97, 0.88, 0
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_shine"]
 gradient = SubResource("Gradient_shine")
-width = 64
 height = 4
 
 [node name="LoadingScreen" type="CanvasLayer" unique_id=69467971]
@@ -107,8 +106,8 @@ layout_mode = 2
 theme_override_constants/separation = 20
 
 [node name="Location" type="Label" parent="Root/MarginContainer/Bottom" unique_id=1159859477]
-auto_translate_mode = 2
 unique_name_in_owner = true
+auto_translate_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.84, 0.6, 1)
 theme_override_colors/font_shadow_color = Color(0.02, 0.015, 0.01, 0.9)
@@ -127,7 +126,6 @@ theme_override_styles/separator = SubResource("StyleBoxEmpty_yfsik")
 
 [node name="Info" type="PanelContainer" parent="Root/MarginContainer/Bottom" unique_id=696628184]
 layout_mode = 2
-theme_type_variation = &"QuizWindow"
 
 [node name="Row" type="HBoxContainer" parent="Root/MarginContainer/Bottom/Info" unique_id=1538968957]
 layout_mode = 2
@@ -160,13 +158,13 @@ theme_override_styles/background = SubResource("StyleBoxFlat_back")
 theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
 show_percentage = false
 
-[node name="FillClip" type="Control" parent="Root/MarginContainer/Bottom/Bar"]
+[node name="FillClip" type="Control" parent="Root/MarginContainer/Bottom/Bar" unique_id=621370745]
 unique_name_in_owner = true
 clip_contents = true
-layout_mode = 0
+anchors_preset = 0
 mouse_filter = 2
 
-[node name="Shine" type="TextureRect" parent="Root/MarginContainer/Bottom/Bar/FillClip"]
+[node name="Shine" type="TextureRect" parent="Root/MarginContainer/Bottom/Bar/FillClip" unique_id=977706120]
 unique_name_in_owner = true
 layout_mode = 0
 mouse_filter = 2
