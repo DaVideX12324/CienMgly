@@ -1741,6 +1741,10 @@ func _equip_footer_text(idx: int) -> String:
 	var sel: Dictionary = _current_equip_entries[idx]
 	var cmp := _get_equipment_delta_text(sel)
 	var text := str(sel.get("description", ""))
+	var item_data: QuizRpgItemData = _get_inventory_service().call("get_item", str(sel.get("item_id", ""))) if _get_inventory_service() and str(sel.get("item_id", "")) != "" else null
+	if item_data and item_data.classes_text() != "":
+		text += "
+" + item_data.classes_text()
 	if cmp != "" and not bool(sel.get("equipped", false)):
 		text += "
 " + QuizRpgI18n.tf("equip.compare", {"delta": cmp}, "Względem założonego: {delta}")

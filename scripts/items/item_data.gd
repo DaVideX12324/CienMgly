@@ -70,6 +70,17 @@ func effective_classes() -> PackedStringArray:
 	return PackedStringArray()
 
 
+## „Dla: Wojownik, Kapłan” — klasy z effective_classes(); "" gdy każda klasa (albo nie do założenia).
+func classes_text() -> String:
+	var classes := effective_classes()
+	if equip_slot == "" or classes.is_empty():
+		return ""
+	var names: Array[String] = []
+	for c in classes:
+		names.append(QuizRpgI18n.t("class." + c, str(QuizRpgHeroData.CLASS_LABELS.get(c, c))))
+	return QuizRpgI18n.tf("item.for_classes", {"classes": ", ".join(names)}, "Dla: {classes}")
+
+
 ## Czy przedmiot może założyć postać danej klasy.
 func usable_by_class(class_id: String) -> bool:
 	var classes := effective_classes()

@@ -164,7 +164,9 @@ static func item_stats_text(it: QuizRpgItemData) -> String:
 	var eff := it.get_effect_summary()
 	if eff != "":
 		parts.append(eff)
-	return ", ".join(parts)
+	var cls := it.classes_text()
+	return ", ".join(parts) + ("
+" + cls if cls != "" else "")
 
 
 ## Wybór wiersza: pod opisem ilość (−/+, ←/→) i przycisk Kup / Sprzedaj z ceną; fokus na przycisku.
