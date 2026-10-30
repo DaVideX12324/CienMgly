@@ -14,35 +14,35 @@ script = ExtResource("2_entry")
 item = ExtResource("3_potion")
 weight = 55.0
 count_min = 1
-count_max = 3
+count_max = 1
 
 [sub_resource type="Resource" id="Entry_1_ether"]
 script = ExtResource("2_entry")
 item = ExtResource("4_ether")
 weight = 25.0
 count_min = 1
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Entry_2_focus_tonic"]
 script = ExtResource("2_entry")
 item = ExtResource("5_focus_tonic")
 weight = 15.0
 count_min = 1
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Entry_3_antidote"]
 script = ExtResource("2_entry")
 item = ExtResource("6_antidote")
 weight = 15.0
 count_min = 1
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Entry_4_lockpick"]
 script = ExtResource("2_entry")
 item = ExtResource("7_lockpick")
 weight = 30.0
 count_min = 1
-count_max = 2
+count_max = 1
 
 [sub_resource type="Resource" id="Entry_5_lucky_charm"]
 script = ExtResource("2_entry")
@@ -53,6 +53,5 @@ count_max = 1
 
 [resource]
 script = ExtResource("1_table")
-item_chances = PackedFloat32Array(1, 0.3, 0.1)
-amount_chances = PackedFloat32Array(0.3, 0.1)
+item_chances = PackedFloat32Array(0.6, 0.15)
 entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_ether"), SubResource("Entry_2_focus_tonic"), SubResource("Entry_3_antidote"), SubResource("Entry_4_lockpick"), SubResource("Entry_5_lucky_charm")])

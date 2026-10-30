@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" format=3]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
@@ -8,6 +8,16 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="6_antidote"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="7_lockpick"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier2.tres" id="8_key_tier2"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/tempered_sword.tres" id="eq_tempered_sword"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/tempered_dagger.tres" id="eq_tempered_dagger"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_mace.tres" id="eq_iron_mace"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/oak_staff.tres" id="eq_oak_staff"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/scale_armor.tres" id="eq_scale_armor"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/studded_jerkin.tres" id="eq_studded_jerkin"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_coif.tres" id="eq_iron_coif"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/studded_hood.tres" id="eq_studded_hood"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/banded_buckler.tres" id="eq_banded_buckler"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_round_shield.tres" id="eq_iron_round_shield"]
 
 [sub_resource type="Resource" id="Entry_0_potion"]
 script = ExtResource("2_entry")
@@ -51,6 +61,76 @@ weight = 6.0
 count_min = 1
 count_max = 1
 
+[sub_resource type="Resource" id="Entry_tempered_sword"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_tempered_sword")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_tempered_dagger"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_tempered_dagger")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_iron_mace"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_iron_mace")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_oak_staff"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_oak_staff")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_scale_armor"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_scale_armor")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_studded_jerkin"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_studded_jerkin")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_iron_coif"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_iron_coif")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_studded_hood"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_studded_hood")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_banded_buckler"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_banded_buckler")
+weight = 8.0
+count_min = 1
+count_max = 1
+
+[sub_resource type="Resource" id="Entry_iron_round_shield"]
+script = ExtResource("2_entry")
+item = ExtResource("eq_iron_round_shield")
+weight = 8.0
+count_min = 1
+count_max = 1
+
 [resource]
 script = ExtResource("1_table")
-entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_ether"), SubResource("Entry_2_focus_tonic"), SubResource("Entry_3_antidote"), SubResource("Entry_4_lockpick"), SubResource("Entry_5_key_tier2")])
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_ether"), SubResource("Entry_2_focus_tonic"), SubResource("Entry_3_antidote"), SubResource("Entry_4_lockpick"), SubResource("Entry_5_key_tier2"), SubResource("Entry_tempered_sword"), SubResource("Entry_tempered_dagger"), SubResource("Entry_iron_mace"), SubResource("Entry_oak_staff"), SubResource("Entry_scale_armor"), SubResource("Entry_studded_jerkin"), SubResource("Entry_iron_coif"), SubResource("Entry_studded_hood"), SubResource("Entry_banded_buckler"), SubResource("Entry_iron_round_shield")])

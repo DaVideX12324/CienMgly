@@ -51,22 +51,22 @@ weight = 6.0
 [sub_resource type="Resource" id="Entry_7_iron_sword"]
 script = ExtResource("2_entry")
 item = ExtResource("10_iron_sword")
-weight = 4.0
+weight = 10.0
 
 [sub_resource type="Resource" id="Entry_8_iron_buckler"]
 script = ExtResource("2_entry")
 item = ExtResource("11_iron_buckler")
-weight = 4.0
+weight = 10.0
 
 [sub_resource type="Resource" id="Entry_9_leather_hood"]
 script = ExtResource("2_entry")
 item = ExtResource("12_leather_hood")
-weight = 4.0
+weight = 10.0
 
 [sub_resource type="Resource" id="Entry_10_reinforced_tunic"]
 script = ExtResource("2_entry")
 item = ExtResource("13_reinforced_tunic")
-weight = 4.0
+weight = 10.0
 
 [sub_resource type="Resource" id="Entry_t2_potion_2s"]
 script = ExtResource("2_entry")
