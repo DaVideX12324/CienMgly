@@ -103,19 +103,33 @@ func xp_total_for_level(lvl: int) -> int:
 	return roundi(xp_base * pow(l - 1.0, 0.9 + xp_acc_a / 250.0) * l * (l + 1.0) / (6.0 + l * l / 50.0 / xp_acc_b) + (l - 1.0) * xp_extra)
 
 
-## Szybszy początek: XP na awans ×EARLY_XP_MIN na lv 1, rośnie liniowo do pełnego od EARLY_XP_FULL_LEVEL (sklep dopiero
-## po jaskiniach — wczesne awanse częściej). Nagroda za wroga liczy się z pełnej krzywej (raw), więc wcześnie mniej walk.
-const EARLY_XP_MIN := 0.5
-const EARLY_XP_FULL_LEVEL := 20
+## Schodki poziomów (pomysł usera 2026-10-30): każda mapa ma swój pas poziomów, kończący się najwyższym poziomem jej
+## wrogów (STAIR_CAPS). Na początku pasa awans tani (×STAIR_LOW), pod koniec coraz droższy (do ×STAIR_HIGH na jego
+## szczycie), więc wrogowie mapy przestają wystarczać i opłaca się iść dalej; na następnej mapie znów tanio. XP za
+## wroga stałe (z krzywej bez schodków, raw) — gracz wie, kto ile daje. Nowa mapa = jej górny poziom wrogów w STAIR_CAPS.
+const STAIR_CAPS: Array[int] = [9, 15]   # jaskinie (enemy_levels do 9), ścieki (do 15)
+const STAIR_LOW := 0.5
+const STAIR_HIGH := 3.0
+const STAIR_EXPONENT := 2.0   # > 1 = wolno rośnie na początku pasa, stromo przy szczycie
 
 
-## XP z poziomu lvl na lvl + 1. raw = bez szybszego początku (wzór nagrody za wroga).
+## Mnożnik XP na awans z lvl na lvl + 1 wg pasa mapy; za ostatnim pasem 1.
+static func stair_mult(lvl: int) -> float:
+	var start := 1
+	for cap in STAIR_CAPS:
+		if lvl <= cap:
+			var t := float(lvl - start) / float(maxi(cap - start, 1))
+			return lerpf(STAIR_LOW, STAIR_HIGH, pow(clampf(t, 0.0, 1.0), STAIR_EXPONENT))
+		start = cap + 1
+	return 1.0
+
+
+## XP z poziomu lvl na lvl + 1. raw = bez schodków (wzór nagrody za wroga).
 func xp_to_next(lvl: int, raw: bool = false) -> int:
 	var need := maxi(xp_total_for_level(lvl + 1) - xp_total_for_level(lvl), 1)
 	if raw:
 		return need
-	var t := clampf(float(lvl - 1) / float(EARLY_XP_FULL_LEVEL - 1), 0.0, 1.0)
-	return maxi(roundi(need * lerpf(EARLY_XP_MIN, 1.0, t)), 1)
+	return maxi(roundi(need * stair_mult(lvl)), 1)
 
 
 ## Maks. SP na danym poziomie (jak hp_for_level).
