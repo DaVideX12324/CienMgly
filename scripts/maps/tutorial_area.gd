@@ -2,6 +2,8 @@ extends Node2D
 
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
+## Utwór mapy — przeciągnij plik (.ogg); ma pierwszeństwo przed music_track.
+@export var music: AudioStream
 ## Utwór mapy (nazwa z music_tracks.json hosta) — gra go LevelManager.
 @export var music_track: String = "tutorial"
 

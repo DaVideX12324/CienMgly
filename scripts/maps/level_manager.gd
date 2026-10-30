@@ -184,6 +184,9 @@ func _play_level_music(_level_path: String, level_node: Node) -> void:
 		return
 	# Utwór mapy: pole music_track mapy (ręczne — Inspektor; generowane — companion-JSON "music"); brak = gra dalej to, co grało.
 	var own := str(level_node.get("music_track")) if level_node != null and "music_track" in level_node else ""
+	var stream := level_node.get("music") as AudioStream if level_node != null and "music" in level_node else null
+	if stream != null and stream.resource_path != "":
+		own = stream.resource_path  # plik przeciągnięty w Inspektorze
 	if not own.is_empty():
 		audio_service.call("play_music", own)
 

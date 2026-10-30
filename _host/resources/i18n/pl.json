@@ -1,6 +1,7 @@
 {
+  "update.whats_new": "Co nowego w {version}",
   "update.available": "Dostępna wersja {version} — pobierz",
-  "update.restart": "Pobrano aktualizację {version} — uruchom grę ponownie",
+  "update.restart": "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie",
   "host.menu.title": "Artefakt Wiedzy",
   "host.menu.subtitle": "Wybierz moduł",
   "host.menu.questions": "Pytania",

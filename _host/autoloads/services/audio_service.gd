@@ -155,9 +155,10 @@ func register_music_track(track_name: String, path: String) -> void:
 func _get_music_stream(track_name: String) -> AudioStream:
 	if _music_stream_cache.has(track_name):
 		return _music_stream_cache[track_name]
-	if not music_track_paths.has(track_name):
+	# Nazwa z music_tracks.json albo bezpośrednio ścieżka pliku (utwór przeciągnięty w Inspektorze mapy).
+	if not music_track_paths.has(track_name) and not track_name.begins_with("res://"):
 		return null
-	var path: String = music_track_paths[track_name]
+	var path: String = music_track_paths.get(track_name, track_name)
 	if not ResourceLoader.exists(path):
 		push_warning("[AudioService] Plik nie istnieje: %s (%s)" % [track_name, path])
 		return null
