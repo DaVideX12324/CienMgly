@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://enemy001" path="res://modules/quiz_rpg/scenes/enemies/enemy.tscn" id="1_base"]
 [ext_resource type="Script" uid="uid://dpiiemxevibj3" path="res://modules/quiz_rpg/scripts/enemies/slime_tutorial.gd" id="2_script"]
 [ext_resource type="SpriteFrames" uid="uid://ddavbs47h5i8c" path="res://modules/quiz_rpg/resources/enemies/slime_green.tres" id="3_frames"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/loot/tutorial_enemies.tres" id="9_loot"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fix"]
 radius = 5.0
@@ -13,6 +14,7 @@ resource_local_to_scene = true
 radius = 70.0
 
 [node name="Enemy" unique_id=1491906518 instance=ExtResource("1_base")]
+loot_data = ExtResource("9_loot")
 script = ExtResource("2_script")
 enemy_name = "Slime Tutorial"
 quiz_id = "ogolne"

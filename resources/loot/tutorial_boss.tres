@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/cloth_cap.tres" id="3_cloth_cap"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/adventurer_tunic.tres" id="4_adventurer_tunic"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/apprentice_staff.tres" id="5_apprentice_staff"]
+
+[sub_resource type="Resource" id="Entry_cloth_cap"]
+script = ExtResource("2_entry")
+item = ExtResource("3_cloth_cap")
+count_min = 1
+count_max = 1
+chance = 1.0
+
+[sub_resource type="Resource" id="Entry_adventurer_tunic"]
+script = ExtResource("2_entry")
+item = ExtResource("4_adventurer_tunic")
+count_min = 1
+count_max = 1
+chance = 1.0
+
+[sub_resource type="Resource" id="Entry_apprentice_staff"]
+script = ExtResource("2_entry")
+item = ExtResource("5_apprentice_staff")
+count_min = 1
+count_max = 1
+chance = 1.0
+
+[resource]
+script = ExtResource("1_table")
+entries = Array[ExtResource("2_entry")]([SubResource("Entry_cloth_cap"), SubResource("Entry_adventurer_tunic"), SubResource("Entry_apprentice_staff")])
