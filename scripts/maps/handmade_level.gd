@@ -27,8 +27,6 @@ const ArrivalCaptionScene = preload("../../scenes/ui/arrival_caption.tscn")
 @export_enum("Brak:-1", "N:0", "E:1", "S:2", "W:3") var exit_edge: int = -1
 ## Czy mapa jest w głównej trasie (MapLinks). Wnętrza budynków: nie.
 @export var in_route := true
-## Utwór mapy — przeciągnij plik (.ogg); ma pierwszeństwo przed music_track.
-@export var music: AudioStream
 ## Utwór po nazwie z music_tracks.json hosta (gdy music puste); pusty = gra dalej to, co grało.
 @export var music_track: String = ""
 ## Scenka po przyjściu przy tym markerze (np. wspinaczka z jaskini): czarny ekran z tekstem (klucz i18n), potem

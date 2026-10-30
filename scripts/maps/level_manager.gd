@@ -182,11 +182,14 @@ func _play_level_music(_level_path: String, level_node: Node) -> void:
 	var audio_service: Node = get_node_or_null("/root/AudioService")
 	if audio_service == null or not audio_service.has_method("play_music"):
 		return
-	# Utwór mapy: pole music_track mapy (ręczne — Inspektor; generowane — companion-JSON "music"); brak = gra dalej to, co grało.
+	# Utwór mapy: węzeł LevelMusic (plik z Inspektora), inaczej music_track mapy (ręczne — Inspektor; generowane —
+	# companion-JSON "music"); brak = gra dalej to, co grało.
 	var own := str(level_node.get("music_track")) if level_node != null and "music_track" in level_node else ""
-	var stream := level_node.get("music") as AudioStream if level_node != null and "music" in level_node else null
-	if stream != null and stream.resource_path != "":
-		own = stream.resource_path  # plik przeciągnięty w Inspektorze
+	for child in (level_node.get_children() if level_node != null else []):
+		var lm := child as QuizRpgLevelMusic  # węzeł LevelMusic z plikiem przeciągniętym w Inspektorze
+		if lm != null and lm.music != null and lm.music.resource_path != "":
+			own = lm.music.resource_path
+			break
 	if not own.is_empty():
 		audio_service.call("play_music", own)
 
