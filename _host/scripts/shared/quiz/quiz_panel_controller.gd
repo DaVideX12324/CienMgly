@@ -386,7 +386,7 @@ func start_question(question: Dictionary, base_difficulty: int) -> void:
 	else:
 		_time_left = float(_current_question.get("time_limit", 16.0))
 	_total_time = _time_left
-	timer_label.text = "Czas: %.1f s" % _time_left
+	timer_label.text = _i18n_tf("host.quiz.time", {"seconds": "%.1f" % _time_left})
 	_reserve_timer_label_width()
 	timer_bar.value = 100.0
 
