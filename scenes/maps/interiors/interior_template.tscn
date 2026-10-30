@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/handmade_level.gd" id="1_level"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/level_music.gd" id="lm_music"]
 [ext_resource type="TileSet" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="2_tiles"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/objects/level_door.tscn" id="3_door"]
 
@@ -32,3 +33,6 @@ position = Vector2(0, -24)
 target_level = "res://modules/quiz_rpg/scenes/maps/levels/town.tscn"
 target_spawn = "Spawn"
 prompt_key = "prompt.exit"
+
+[node name="LevelMusic" type="Node" parent="."]
+script = ExtResource("lm_music")

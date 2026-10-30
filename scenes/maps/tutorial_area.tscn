@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://coop15pt2llmj"]
 
 [ext_resource type="TileSet" uid="uid://dis32q3fbs00h" path="res://assets/textures/tilesets/tutorial_area.tres" id="2_bmcky"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/level_music.gd" id="lm_music"]
 [ext_resource type="PackedScene" uid="uid://ch5sbpevr0xqk" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_horizontal.tscn" id="4_1gyrv"]
 [ext_resource type="PackedScene" uid="uid://c8m5o1lxci0um" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_vertical_short.tscn" id="5_5qsod"]
 [ext_resource type="PackedScene" uid="uid://cfo7s4j1w7jhb" path="res://modules/quiz_rpg/scenes/enemies/slime_tutorial.tscn" id="6_0m64r"]
@@ -150,3 +151,6 @@ position = Vector2(542, -67)
 
 [node name="Enemy5" parent="Enemies" unique_id=96031201 instance=ExtResource("8_5bl0e")]
 position = Vector2(-49, -167)
+
+[node name="LevelMusic" type="Node" parent="."]
+script = ExtResource("lm_music")

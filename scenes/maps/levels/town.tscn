@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://ckxhf2hjjemjw"]
 
 [ext_resource type="TileSet" uid="uid://c273qhq1dnqgr" path="res://modules/quiz_rpg/resources/maps/pixel_crawler_free.tres" id="1_d6a3d"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/maps/level_music.gd" id="lm_music"]
 [ext_resource type="PackedScene" path="res://modules/quiz_rpg/scenes/npc/companion_npc.tscn" id="2_71fwf"]
 [ext_resource type="Material" uid="uid://suegyf210usi" path="res://assets/scratch_desert_town/assets/shaders/desert_town/desert_town.tres" id="3_n460d"]
 [ext_resource type="Script" uid="uid://tdvmcq60klkr" path="res://assets/scratch_desert_town/scripts/level/tall_grass.gd" id="4_wkyqv"]
@@ -1675,3 +1676,6 @@ position = Vector2(873, 1175)
 [editable path="Object Layer PC/Big_Objects/Chest_Sand_2"]
 
 [editable path="Object Layer PC/Big_Objects/Chest_Sand_3"]
+
+[node name="LevelMusic" type="Node" parent="."]
+script = ExtResource("lm_music")
