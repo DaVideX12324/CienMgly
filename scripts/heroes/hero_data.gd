@@ -104,24 +104,39 @@ func xp_total_for_level(lvl: int) -> int:
 
 
 ## Schodki poziomów (pomysł usera 2026-10-30): każda mapa ma swój pas poziomów, kończący się najwyższym poziomem jej
-## wrogów (STAIR_CAPS). Na początku pasa awans tani (×STAIR_LOW), pod koniec coraz droższy (do ×STAIR_HIGH na jego
-## szczycie), więc wrogowie mapy przestają wystarczać i opłaca się iść dalej; na następnej mapie znów tanio. XP za
-## wroga stałe (z krzywej bez schodków, raw) — gracz wie, kto ile daje. Nowa mapa = jej górny poziom wrogów w STAIR_CAPS.
+## wrogów (STAIR_CAPS). Wymóg XP rośnie w pasie od ×STAIR_LOW do ×STAIR_HIGH (względem krzywej raw), a następny pas
+## zaczyna tam, gdzie skończył poprzedni (×STAIR_GROWTH na pas) — progi zawsze rosną. Wrogowie pasa dają XP ×
+## band_reward (QuizRpgEnemyXp), więc na początku pasa poziomy lecą szybko, przy jego szczycie ×STAIR_GROWTH wolniej
+## i opłaca się iść na następną mapę. XP wroga stałe (z jego poziomu). Nowa mapa = jej górny poziom wrogów w STAIR_CAPS.
 const STAIR_CAPS: Array[int] = [9, 15]   # jaskinie (enemy_levels do 9), ścieki (do 15)
 const STAIR_LOW := 0.5
 const STAIR_HIGH := 3.0
+const STAIR_GROWTH := STAIR_HIGH / STAIR_LOW
 const STAIR_EXPONENT := 2.0   # > 1 = wolno rośnie na początku pasa, stromo przy szczycie
 
 
-## Mnożnik XP na awans z lvl na lvl + 1 wg pasa mapy; za ostatnim pasem 1.
+## Pas mapy poziomu (0 = pierwsza mapa); za ostatnim — kolejny numer.
+static func stair_band(lvl: int) -> int:
+	for i in STAIR_CAPS.size():
+		if lvl <= STAIR_CAPS[i]:
+			return i
+	return STAIR_CAPS.size()
+
+
+## Mnożnik XP na awans z lvl na lvl + 1 (rośnie stale: w pasie LOW -> HIGH, pasy kolejno × STAIR_GROWTH).
 static func stair_mult(lvl: int) -> float:
-	var start := 1
-	for cap in STAIR_CAPS:
-		if lvl <= cap:
-			var t := float(lvl - start) / float(maxi(cap - start, 1))
-			return lerpf(STAIR_LOW, STAIR_HIGH, pow(clampf(t, 0.0, 1.0), STAIR_EXPONENT))
-		start = cap + 1
-	return 1.0
+	var b := stair_band(lvl)
+	var base := pow(STAIR_GROWTH, b)
+	if b >= STAIR_CAPS.size():
+		return base * STAIR_LOW
+	var start := 1 if b == 0 else STAIR_CAPS[b - 1] + 1
+	var t := float(lvl - start) / float(maxi(STAIR_CAPS[b] - start, 1))
+	return base * lerpf(STAIR_LOW, STAIR_HIGH, pow(clampf(t, 0.0, 1.0), STAIR_EXPONENT))
+
+
+## Mnożnik XP wrogów z poziomu (pas ich mapy): na początku pasa wróg swojego poziomu wymaga ×STAIR_LOW walk krzywej raw.
+static func band_reward(lvl: int) -> float:
+	return pow(STAIR_GROWTH, stair_band(lvl))
 
 
 ## XP z poziomu lvl na lvl + 1. raw = bez schodków (wzór nagrody za wroga).

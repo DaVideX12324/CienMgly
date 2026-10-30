@@ -17,5 +17,6 @@ static var _hero: QuizRpgHeroData = null
 static func kill_xp(level: int, tier: int, is_boss: bool = false) -> int:
 	if _hero == null:
 		_hero = QuizRpgHeroData.new()
-	var base := float(_hero.xp_to_next(clampi(level, 1, 99), true)) * KILL_FRACTION * float(TIER_WEIGHT.get(clampi(tier, 1, 3), 1.0))
+	var base := float(_hero.xp_to_next(clampi(level, 1, 99), true)) * KILL_FRACTION * float(TIER_WEIGHT.get(clampi(tier, 1, 3), 1.0)) \
+			* QuizRpgHeroData.band_reward(level)  # schodki: wrogowie dalszych map dają więcej
 	return maxi(roundi(base * (BOSS_MULT if is_boss else 1.0)), 1)
