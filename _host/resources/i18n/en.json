@@ -173,6 +173,7 @@
   "host.quiz.hint.fill_text": "Type answer and press Enter",
   "host.quiz.hint.fill_tiles": "Click tiles, Tab changes blank, Enter confirms",
   "host.quiz.hint.matching": "Left -> right, Enter confirms",
+  "host.quiz.time": "Time: {seconds} s",
   "host.quiz.correct": "Correct!",
   "host.quiz.wrong_answer": "Wrong answer!",
   "host.quiz.time_out": "Time's up!",

@@ -173,6 +173,7 @@
   "host.quiz.hint.fill_text": "Wpisz odpowiedź i Enter",
   "host.quiz.hint.fill_tiles": "Klikaj kafle, Tab zmienia lukę, Enter zatwierdza",
   "host.quiz.hint.matching": "Lewa -> prawa, Enter zatwierdza",
+  "host.quiz.time": "Czas: {seconds} s",
   "host.quiz.correct": "Poprawnie!",
   "host.quiz.wrong_answer": "Błędna odpowiedź!",
   "host.quiz.time_out": "Czas minął!",

@@ -199,7 +199,7 @@ func tick(delta: float) -> void:
 		return
 	_time_left = maxf(_time_left - delta, 0.0)
 	timer_bar.value = (_time_left / maxf(_total_time, 0.001)) * 100.0
-	timer_label.text = "Czas: %.1f s" % _time_left
+	timer_label.text = _i18n_tf("host.quiz.time", {"seconds": "%.1f" % _time_left})
 	if _time_left <= 0.0:
 		_submit_timeout()
 
