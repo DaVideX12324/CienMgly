@@ -40,7 +40,8 @@ func search_barrel(data: QuizRpgLootTableData = null, item_chances := PackedFloa
 	var table := data.to_table()
 	var counts := {}
 	for _k in range(QuizRpgLootTableData.roll_chain(item_chances if not item_chances.is_empty() else data.item_chances, _rng)):
-		var picked := QuizRpgLootTable.pick_weighted(table, _rng)
+		# Każdy kolejny przedmiot z beczki inny niż poprzednie — wylosowane wpisy odpadają z puli.
+		var picked := QuizRpgLootTable.pick_weighted(table.filter(func(e: Dictionary) -> bool: return not counts.has(str(e.get("item_id", "")))), _rng)
 		if not picked.is_empty():
 			var pid := str(picked.get("item_id", ""))
 			counts[pid] = int(counts.get(pid, 0)) + data.roll_amount(int(picked.get("count_min", 1)), int(picked.get("count_max", 1)), _rng)
