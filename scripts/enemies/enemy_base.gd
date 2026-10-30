@@ -197,6 +197,10 @@ func _ready() -> void:
 		if sprite.sprite_frames.has_animation("walk_down") or sprite.sprite_frames.has_animation("idle_down"):
 			_uses_directional_animations = true
 		_resolve_2way_anims(sprite.sprite_frames)
+	_place_level_label()
+	if _ps and _ps.has_signal("level_up"):
+		_ps.level_up.connect(func(_l: int) -> void: _update_level_label())
+	_update_level_label()
 
 	if _use_programmer_art:
 		if sprite:
@@ -303,6 +307,42 @@ func _apply_spawn_level() -> void:
 	xp_reward = maxi(roundi(QuizRpgEnemyXp.kill_xp(enemy_level, encounter_tier, is_boss) * _spawn_xp_scale), 1)
 	_apply_level_stats()
 	_update_gold_reward()
+	_update_level_label()
+
+
+## Poziom nad wrogiem (LevelLabel w enemy.tscn): kolor wg przewagi nad drużyną — od LEVEL_WARN wyżej pomarańczowy,
+## od LEVEL_DANGER czerwony; boss z „Boss”. Wróg bez poziomu (0) bez napisu.
+const LEVEL_WARN := 2
+const LEVEL_DANGER := 4
+
+
+func _update_level_label() -> void:
+	var lbl := get_node_or_null("LevelLabel") as Label
+	if lbl == null:
+		return
+	lbl.visible = enemy_level > 0
+	if enemy_level <= 0:
+		return
+	var diff := enemy_level - (int(_ps.get("level")) if _ps else 1)
+	var lv := QuizRpgI18n.tf("enemy.level_tag", {"level": enemy_level}, "Lv {level}")
+	lbl.text = (QuizRpgI18n.t("enemy.boss_tag", "Boss") + " · " + lv) if is_boss else lv
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.3, 0.25) if diff >= LEVEL_DANGER
+		else Color(1.0, 0.7, 0.25) if diff >= LEVEL_WARN else Color(0.9, 0.9, 0.9))
+
+
+## Napis tuż nad górną krawędzią klatki sprite'a (sceny dziedziczące mają różne rozmiary).
+func _place_level_label() -> void:
+	var lbl := get_node_or_null("LevelLabel") as Label
+	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	if lbl == null or sprite == null or sprite.sprite_frames == null or not sprite.sprite_frames.has_animation(sprite.animation) 			or sprite.sprite_frames.get_frame_count(sprite.animation) == 0:
+		return
+	var tex := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
+	if tex == null:
+		return
+	var h := tex.get_size().y * sprite.scale.y
+	var top := sprite.position.y + sprite.offset.y * sprite.scale.y - (h / 2.0 if sprite.centered else 0.0)
+	lbl.offset_bottom = top + 2.0
+	lbl.offset_top = lbl.offset_bottom - 10.0
 
 
 ## Złoto z poziomu wroga (wróg bez poziomu, np. tutorial, liczony jak poziom 1); skala rozmiaru mapy jak przy XP.

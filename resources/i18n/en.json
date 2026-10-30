@@ -577,6 +577,8 @@
   "diff.skill_level_scale": "Enemy skills weaker at low levels",
   "diff.bat_fur": "Furry bat",
   "diff.bat_fur_v2": "HP 220 ATK 17 (current)",
+  "enemy.level_tag": "Lv {level}",
+  "enemy.boss_tag": "Boss",
   "pause.quests_empty": "No quests. Talk to the townsfolk.",
   "pause.quests_hint": "X/Esc: back",
   "pause.save_disabled_combat": "Saving is disabled during combat.    X/Esc: back",

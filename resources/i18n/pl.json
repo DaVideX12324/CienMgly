@@ -577,6 +577,8 @@
   "diff.skill_level_scale": "Umiejętności wrogów słabsze na niskich poziomach",
   "diff.bat_fur": "Nietoperz futrzasty",
   "diff.bat_fur_v2": "HP 220 ATK 17 (obecne)",
+  "enemy.level_tag": "Lv {level}",
+  "enemy.boss_tag": "Boss",
   "pause.quests_empty": "Brak zadań. Porozmawiaj z mieszkańcami.",
   "pause.quests_hint": "X/Esc: wróć",
   "pause.save_disabled_combat": "Zapisywanie jest niedostępne w trakcie walki.    X/Esc: wróć",
