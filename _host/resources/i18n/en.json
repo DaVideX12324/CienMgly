@@ -1,4 +1,6 @@
 {
+  "update.available": "Version {version} available — download",
+  "update.restart": "Update {version} downloaded — restart the game",
   "host.menu.title": "Artefakt Wiedzy",
   "host.menu.subtitle": "Select Module",
   "host.menu.questions": "Questions",
