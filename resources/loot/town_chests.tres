@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="QuizRpgLootTableData" load_steps=27 format=3]
+[gd_resource type="Resource" script_class="QuizRpgLootTableData" format=3 uid="uid://def0eajv7bcu0"]
 
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
-[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
+[ext_resource type="Script" uid="uid://b4c2n2ffqxw65" path="res://modules/quiz_rpg/scripts/items/loot_table_data.gd" id="1_table"]
+[ext_resource type="Script" uid="uid://dwsujh8erpsgr" path="res://modules/quiz_rpg/scripts/items/loot_entry.gd" id="2_entry"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion.tres" id="3_potion"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_1m.tres" id="4_potion_1m"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/ether.tres" id="5_ether"]
@@ -9,11 +9,11 @@
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/antidote.tres" id="7_antidote"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/lockpick.tres" id="8_lockpick"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/key_tier1.tres" id="9_key_tier1"]
+[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_2s.tres" id="9_potion_2s"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_sword.tres" id="10_iron_sword"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/iron_buckler.tres" id="11_iron_buckler"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/leather_hood.tres" id="12_leather_hood"]
 [ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/reinforced_tunic.tres" id="13_reinforced_tunic"]
-[ext_resource type="Resource" path="res://modules/quiz_rpg/resources/items/potion_2s.tres" id="9_potion_2s"]
 
 [sub_resource type="Resource" id="Entry_0_potion"]
 script = ExtResource("2_entry")
@@ -25,80 +25,56 @@ count_max = 2
 [sub_resource type="Resource" id="Entry_1_potion_1m"]
 script = ExtResource("2_entry")
 item = ExtResource("4_potion_1m")
-weight = 10.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_2_ether"]
 script = ExtResource("2_entry")
 item = ExtResource("5_ether")
 weight = 18.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_3_focus_tonic"]
 script = ExtResource("2_entry")
 item = ExtResource("6_focus_tonic")
-weight = 10.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_4_antidote"]
 script = ExtResource("2_entry")
 item = ExtResource("7_antidote")
-weight = 10.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_5_lockpick"]
 script = ExtResource("2_entry")
 item = ExtResource("8_lockpick")
-weight = 10.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_6_key_tier1"]
 script = ExtResource("2_entry")
 item = ExtResource("9_key_tier1")
 weight = 6.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_7_iron_sword"]
 script = ExtResource("2_entry")
 item = ExtResource("10_iron_sword")
 weight = 4.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_8_iron_buckler"]
 script = ExtResource("2_entry")
 item = ExtResource("11_iron_buckler")
 weight = 4.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_9_leather_hood"]
 script = ExtResource("2_entry")
 item = ExtResource("12_leather_hood")
 weight = 4.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_10_reinforced_tunic"]
 script = ExtResource("2_entry")
 item = ExtResource("13_reinforced_tunic")
 weight = 4.0
-count_min = 1
-count_max = 1
 
 [sub_resource type="Resource" id="Entry_t2_potion_2s"]
 script = ExtResource("2_entry")
 item = ExtResource("9_potion_2s")
 weight = 8.0
-count_min = 1
-count_max = 1
 
 [resource]
 script = ExtResource("1_table")
 entries = Array[ExtResource("2_entry")]([SubResource("Entry_0_potion"), SubResource("Entry_1_potion_1m"), SubResource("Entry_2_ether"), SubResource("Entry_3_focus_tonic"), SubResource("Entry_4_antidote"), SubResource("Entry_5_lockpick"), SubResource("Entry_6_key_tier1"), SubResource("Entry_7_iron_sword"), SubResource("Entry_8_iron_buckler"), SubResource("Entry_9_leather_hood"), SubResource("Entry_10_reinforced_tunic"), SubResource("Entry_t2_potion_2s")])
+item_chances = PackedFloat32Array(1, 0.75, 0.5, 0.375, 0.3, 0.25, 0.2143, 0.1875)
+amount_chances = PackedFloat32Array(0.5, 0.3333, 0.25, 0.2)
