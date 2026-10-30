@@ -146,7 +146,12 @@ func _process(delta: float) -> void:
 
 
 ## Kółko myszy nad minimapą (róg albo pełna mapa) — przed innymi odbiorcami (kamera, listy), tylko gdy kursor nad mapą.
+## Esc / wstecz zamyka pełną mapę tu, przed menu pauzy (inaczej to ono łapało klawisz).
 func _input(event: InputEvent) -> void:
+	if _full.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("menu_cancel")):
+		_full.visible = false
+		get_viewport().set_input_as_handled()
+		return
 	var mb := event as InputEventMouseButton
 	if data == null or mb == null or not mb.pressed:
 		return
@@ -187,9 +192,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 	if event.is_action_pressed(ACTION) and _mode != MODE_OFF and (_exploring() or _full.visible):
 		_full.visible = not _full.visible
-		get_viewport().set_input_as_handled()
-	elif _full.visible and event.is_action_pressed("ui_cancel"):
-		_full.visible = false
 		get_viewport().set_input_as_handled()
 
 
