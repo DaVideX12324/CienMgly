@@ -23,9 +23,8 @@ const ENEMY_ATK_MULT := {1: 0.79, 2: 0.96, 3: 1.04, 4: 1.0}
 const HITS_TO_KILL := {1: 1.5, 2: 4.0, 3: 6.0, 4: 12.0}
 ## DEF wroga jako ułamek ATK bohatera wzorcowego (zwykłe trafienie bohatera = ATK×4 − DEF×2).
 const DEF_RATIO := 0.7
-## Korekta tierów po testach (2026-10-29: zwykli za łatwi, bossowie za trudni) — mnożnik HP / ATK (i MAT) wroga na
-## poziomie, ponad wariant. Nie wchodzi do wzoru (variant_ratio by ją znosiło), nakłada ją enemy_base po wariancie.
-const TIER_BALANCE := {1: {"hp": 1.3, "atk": 1.0}, 2: {"hp": 1.0, "atk": 0.95}, 3: {"hp": 0.9, "atk": 0.95}, 4: {"hp": 0.7, "atk": 0.9}}
+## Korekta tierów (mnożnik HP / ATK ponad wariant, nakłada ją enemy_base) — wersja z opcji: QuizRpgDifficulty.tier_balance.
+const Difficulty = preload("difficulty.gd")
 ## Stałe obrażenia umiejętności wrogów (base_damage) rosną z poziomem: pełne od tego poziomu, niżej proporcjonalnie
 ## (min. BASE_DAMAGE_MIN_SCALE) — bez tego umiejętności z base_damage 100–200 zabijały jednym ciosem na lv 5–9.
 const BASE_DAMAGE_FULL_LEVEL := 20.0
@@ -33,6 +32,8 @@ const BASE_DAMAGE_MIN_SCALE := 0.25
 
 
 static func base_damage_scale(level: int) -> float:
+	if not Difficulty.skill_level_scale_enabled():
+		return 1.0
 	return clampf(float(level) / BASE_DAMAGE_FULL_LEVEL, BASE_DAMAGE_MIN_SCALE, 1.0) if level > 0 else 1.0
 
 

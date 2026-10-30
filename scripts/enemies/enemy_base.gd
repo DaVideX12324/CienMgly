@@ -259,6 +259,10 @@ func _apply_enemy_data() -> void:
 	magic_attack = maxi(enemy_data.magic_attack, 0)
 	magic_defense = maxi(enemy_data.magic_defense, 0)
 	agility = maxi(enemy_data.agility, 1)
+	var ov := QuizRpgEnemyStats.Difficulty.data_override(enemy_data.resource_path)  # wersja statystyk z opcji
+	for k in ov:
+		set(k, ov[k])
+	hp = max_hp
 	if not enemy_data.battle_skills.is_empty():
 		battle_skills = enemy_data.battle_skills.duplicate()
 	xp_reward = maxi(enemy_data.xp_reward, 0)
@@ -314,7 +318,7 @@ func _apply_level_stats() -> void:
 		_variant_ratio = QuizRpgEnemyStats.variant_ratio(encounter_tier, max_hp, attack, defense, agility)
 	var g := gear_tier if gear_tier >= 0 else int(_map_field("_gear_tier", 0))
 	var s := QuizRpgEnemyStats.for_level(enemy_level, encounter_tier, g)
-	var bal: Dictionary = QuizRpgEnemyStats.TIER_BALANCE.get(clampi(encounter_tier, 1, 4), {})
+	var bal: Dictionary = QuizRpgEnemyStats.Difficulty.tier_balance(encounter_tier)
 	max_hp = maxi(roundi(s["hp"] * _variant_ratio["hp"] * float(bal.get("hp", 1.0))), 1)
 	hp = max_hp
 	attack = maxi(roundi(s["atk"] * _variant_ratio["atk"] * float(bal.get("atk", 1.0))), 1)

@@ -469,9 +469,7 @@ func trigger_instant_win() -> void:
 	_end_combat(true)
 
 
-## Umiejętności bossów (tier 4+) po testach za mocne: obrażenia ×BOSS_SKILL_DAMAGE, odnowienie +BOSS_SKILL_EXTRA_COOLDOWN tur.
-const BOSS_SKILL_DAMAGE := 0.7
-const BOSS_SKILL_EXTRA_COOLDOWN := 2
+## Umiejętności bossów (tier 4+): obrażenia i dodatkowe odnowienie wg wersji z opcji (QuizRpgEnemyStats.Difficulty).
 
 
 ## Tempo walki poza wyborem i pytaniem: opcja „Tempo walki” (Opcje → Sterowanie, ×1 / ×1,5 / ×2), a przytrzymanie
@@ -2187,7 +2185,7 @@ func _pick_enemy_skill(enemy_unit: Dictionary) -> QuizRpgEnemySkill:
 		if sk.is_heal() and not _enemy_side_wounded():
 			continue
 		if randf() < sk.use_chance:
-			var extra := BOSS_SKILL_EXTRA_COOLDOWN if int(enemy_unit.get("tier", 1)) >= 4 else 0
+			var extra := QuizRpgEnemyStats.Difficulty.boss_skill_cooldown() if int(enemy_unit.get("tier", 1)) >= 4 else 0
 			if sk.cooldown_turns + extra > 0:
 				cds[i] = sk.cooldown_turns + extra + 1   # odliczanie zaczyna się od następnej tury wroga
 			return sk
@@ -3498,7 +3496,7 @@ func _unit_stats(unit: Dictionary) -> Dictionary:
 	base["statuses"] = (unit.get("statuses", {}) as Dictionary).keys()
 	base["base_scale"] = QuizRpgEnemyStats.base_damage_scale(int(unit.get("level", 0)))  # stałe obrażenia skilli z poziomu
 	if int(unit.get("tier", 1)) >= 4:
-		base["skill_mult"] = BOSS_SKILL_DAMAGE  # umiejętności bossów słabsze (zwykły atak bez zmian)
+		base["skill_mult"] = QuizRpgEnemyStats.Difficulty.boss_skill_damage()  # umiejętności bossów słabsze (zwykły atak bez zmian)
 	return base
 
 

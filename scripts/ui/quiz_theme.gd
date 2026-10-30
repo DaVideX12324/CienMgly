@@ -148,6 +148,7 @@ static func get_ui_options() -> Array[Dictionary]:
 				choices.append(choice_item)
 			item["choices"] = choices
 		result.append(item)
+	result.append_array(preload("../enemies/difficulty.gd").ui_options())
 	return result
 
 
