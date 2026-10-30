@@ -1,0 +1,10 @@
+{
+  "_doc": "Cel główny w dzienniku (Pauza → Zadania): pierwszy krok, którego flagi fabularnej jeszcze nie ma. Tekst = klucz i18n modułu (resources/i18n), \"text\" = zapas.",
+  "steps": [
+    {"flag": "boss:tutorial_area", "key": "quest.main.tutorial", "text": "Pokonaj wielkiego szlama, który strzeże polany, i zejdź do jaskini."},
+    {"flag": "visited:town", "key": "quest.main.reach_town", "text": "Przejdź przez jaskinie i dotrzyj do miasta."},
+    {"flag": "boss:cave_return", "key": "quest.main.bat_matriarch", "text": "Wróć do jaskiń i pokonaj Matkę Nietoperzy."},
+    {"flag": "boss:sewer", "key": "quest.main.sewer", "text": "Zejdź do ścieków pod miastem i pokonaj ich strażnika."}
+  ],
+  "final": {"key": "quest.main.done", "text": "Opuść ścieki — dalsza część przygody wkrótce."}
+}

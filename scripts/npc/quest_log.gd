@@ -12,6 +12,23 @@ const DONE := "done"
 const DONE_FLAG_PREFIX := "quest:"
 
 
+const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const MAIN_QUEST_PATH := "resources/data/main_quest.json"
+
+
+## Cel główny fabuły: pierwszy krok z resources/data/main_quest.json bez flagi fabularnej (lsm = LevelStateManager).
+static func main_goal(lsm: Node) -> String:
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path(MAIN_QUEST_PATH)))
+	if not data is Dictionary:
+		return ""
+	var step: Dictionary = data.get("final", {})
+	for s: Dictionary in data.get("steps", []):
+		if lsm == null or not lsm.has_method("has_story_flag") or not lsm.has_story_flag(str(s.get("flag", ""))):
+			step = s
+			break
+	return QuizRpgI18n.t(str(step.get("key", "")), str(step.get("text", "")))
+
+
 static func entry(ps: Node, quest_id: String) -> Dictionary:
 	return ps.quests.get(quest_id, {}) if ps != null else {}
 
