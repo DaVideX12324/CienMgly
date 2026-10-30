@@ -589,6 +589,9 @@ func _build_extra_options(module: Node) -> void:
 		if type == "choice":
 			_add_choice_option(opt)
 			continue
+		if type == "number":
+			_add_number_option(opt)
+			continue
 		if type != "bool":
 			continue
 		var key := str(opt.get("key", ""))
@@ -600,6 +603,30 @@ func _build_extra_options(module: Node) -> void:
 			_play_click()
 			SettingsService.set_module(_skin_module_id, key, on))
 		_extra_options.add_child(cb)
+
+
+## Opcja liczbowa modułu ({key, label, type: "number", min, max, step, default}): etykieta + pole liczbowe.
+func _add_number_option(opt: Dictionary) -> void:
+	var key := str(opt.get("key", ""))
+	if key == "":
+		return
+	var row := HBoxContainer.new()
+	var lbl := Label.new()
+	lbl.text = str(opt.get("label", key))
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 1))
+	lbl.add_theme_font_size_override("font_size", _fs(18))
+	row.add_child(lbl)
+	var spin := SpinBox.new()
+	spin.min_value = float(opt.get("min", 0.0))
+	spin.max_value = float(opt.get("max", 10.0))
+	spin.step = float(opt.get("step", 0.1))
+	spin.value = float(SettingsService.get_module(_skin_module_id, key, opt.get("default", 0.0)))
+	spin.get_line_edit().add_theme_font_size_override("font_size", _fs(18))
+	spin.value_changed.connect(func(v: float) -> void:
+		SettingsService.set_module(_skin_module_id, key, v))
+	row.add_child(spin)
+	_extra_options.add_child(row)
 
 
 ## Opcja wyboru modułu ({key, label, type: "choice", choices: [{id, name}], default}): etykieta + lista.

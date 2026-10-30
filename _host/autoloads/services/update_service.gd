@@ -1,12 +1,12 @@
 extends Node
 
 ## Aktualizacje. Przy starcie (przed innymi autoloadami) wczytuje paczki z folderu patches/ obok exe — ich pliki
-## nadpisują te z exe, w kolejności buildów. Tylko paczki głównej wersji exe (patch_<0.9.9>_<build>.pck — ustawienia
-## projektu paczka nie zmienia, więc to wersja bazy); starsze są usuwane. Build liczy się od 1 w każdej głównej
-## wersji (ExportCheck), więc nowszość = wersja, a przy równej wersji build. Potem pobiera manifest z gista:
-## {"version": "0.9.8-beta", "build": 4, "url": "<pełny exe>", "patches": [{"build": 4, "url": "<.pck>"}]}
-## Paczki o buildzie wyższym niż obecny są pobierane do patches/ (działają po ponownym uruchomieniu); nowsza
-## wersja bez paczek = tylko informacja z linkiem do pobrania.
+## nadpisują te z exe, w kolejności buildów (patch_<build>.pck). Build rośnie stale (ExportCheck), bazą jest build
+## exe (jego build.json, czytany przed paczkami); paczki o buildzie nie wyższym niż exe są starsze, więc usuwane.
+## Wersja to tylko etykieta — nowszość = build. Potem pobiera manifest z gista:
+## {"version": "0.9.8-beta", "build": 4, "base": 2, "url": "<pełny exe>", "patches": [{"build": 4, "url": "<.pck>"}]}
+## Paczki dla bazy tego exe (base == build exe) są pobierane do patches/ (działają po ponownym uruchomieniu);
+## inna baza = tylko informacja z linkiem do pełnego exe.
 
 signal update_available(text: String, url: String)
 
@@ -17,21 +17,22 @@ const MANIFEST_URL := "https://gist.githubusercontent.com/DaVideX12324/cc2274c3d
 const BUILD_PATH := "res://_host/resources/build.json"
 
 var _patch_dir := OS.get_executable_path().get_base_dir().path_join("patches")
+var _base_build := 0  # build exe (bez paczek)
 
 
 func _init() -> void:
 	if not OS.has_feature("template"):  # w edytorze bez paczek
 		return
-	var prefix := "patch_%s_" % main_version(str(ProjectSettings.get_setting("application/config/version", "")))
+	_base_build = current_build()
 	var mine: Array[String] = []
 	for f in (DirAccess.get_files_at(_patch_dir) if DirAccess.dir_exists_absolute(_patch_dir) else PackedStringArray()):
 		if f.get_extension().to_lower() != "pck":
 			continue
-		if f.begins_with(prefix):
+		if f.get_basename().get_slice("_", 1).is_valid_int() and _patch_build(f) > _base_build:
 			mine.append(f)
 		else:
-			DirAccess.remove_absolute(_patch_dir.path_join(f))  # paczka innej bazy (stary exe)
-	mine.sort_custom(func(a: String, b: String) -> bool: return a.get_basename().get_slice("_", 2).to_int() < b.get_basename().get_slice("_", 2).to_int())
+			DirAccess.remove_absolute(_patch_dir.path_join(f))  # paczka starszej bazy (stary exe)
+	mine.sort_custom(func(a: String, b: String) -> bool: return _patch_build(a) < _patch_build(b))
 	for f in mine:
 		if not ProjectSettings.load_resource_pack(_patch_dir.path_join(f)):
 			push_warning("[Update] Nie wczytano paczki: " + f)
@@ -42,6 +43,10 @@ func _ready() -> void:
 		_fetch(MANIFEST_URL + "?t=%d" % int(Time.get_unix_time_from_system()), _on_manifest)  # bez pamięci podręcznej (5 min)
 
 
+static func _patch_build(file: String) -> int:
+	return file.get_basename().get_slice("_", 1).to_int()
+
+
 static func current_build() -> int:
 	return int(_build_info().get("build", 0))
 
@@ -49,33 +54,6 @@ static func current_build() -> int:
 ## Wersja z build.json (aktualna także po paczce), bez niej z ustawień projektu.
 static func current_version() -> String:
 	return str(_build_info().get("version", ProjectSettings.get_setting("application/config/version", "")))
-
-
-## Liczby wersji: "0.9.9.1-beta" -> [0, 9, 9, 1].
-static func version_numbers(version: String) -> Array[int]:
-	var out: Array[int] = []
-	for part in version.get_slice("-", 0).split("."):
-		out.append(part.to_int())
-	return out
-
-
-## Główna wersja (pierwsze trzy liczby): "0.9.9.1-beta" -> "0.9.9".
-static func main_version(version: String) -> String:
-	var n := version_numbers(version)
-	n.resize(3)
-	return "%d.%d.%d" % [n[0], n[1], n[2]]
-
-
-## true, gdy (wersja, build) a jest nowsze niż b.
-static func is_newer(version_a: String, build_a: int, version_b: String, build_b: int) -> bool:
-	var a := version_numbers(version_a)
-	var b := version_numbers(version_b)
-	for i in maxi(a.size(), b.size()):
-		var x := a[i] if i < a.size() else 0
-		var y := b[i] if i < b.size() else 0
-		if x != y:
-			return x > y
-	return build_a > build_b
 
 
 static func _build_info() -> Dictionary:
@@ -98,12 +76,11 @@ func _fetch(url: String, done: Callable, save_to: String = "") -> void:
 
 func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	var m: Variant = JSON.parse_string(body.get_string_from_utf8()) if ok else null
-	if not m is Dictionary or not is_newer(str(m.get("version", "")), int(m.get("build", 0)), current_version(), current_build()):
+	if not m is Dictionary or int(m.get("build", 0)) <= current_build():
 		return
 	var version := str(m.get("version", ""))
-	# Paczki tylko dla bazy tego exe (ta sama główna wersja); nowa główna wersja = link do pełnego exe.
-	var base := main_version(str(ProjectSettings.get_setting("application/config/version", "")))
-	var pending: Array = [] if main_version(version) != base else (m.get("patches", []) as Array).filter(func(p: Variant) -> bool:
+	# Paczki tylko dla bazy tego exe; nowa baza = link do pełnego exe.
+	var pending: Array = [] if int(m.get("base", -1)) != _base_build else (m.get("patches", []) as Array).filter(func(p: Variant) -> bool:
 		return p is Dictionary)
 	if pending.is_empty():
 		_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), str(m.get("url", "")))
@@ -112,7 +89,7 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	var left := [pending.size()]
 	var failed := [false]
 	for p: Dictionary in pending:
-		var dest := _patch_dir.path_join("patch_%s_%d.pck" % [base, int(p.build)])
+		var dest := _patch_dir.path_join("patch_%d.pck" % int(p.build))
 		_fetch(str(p.url), func(got: bool, _b: PackedByteArray) -> void:
 			if not got:
 				failed[0] = true
