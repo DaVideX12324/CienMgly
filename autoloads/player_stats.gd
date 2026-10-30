@@ -1418,7 +1418,7 @@ func set_member_equipment(member_index: int, slot_name: String, item_id: String)
 		if inventory_service == null or not inventory_service.has_method("get_item"):
 			return false
 		var item_data: QuizRpgItemData = inventory_service.call("get_item", item_id)
-		if item_data == null or item_data.equip_slot != slot_name or not member_can_equip(member_index, item_data.allowed_classes):
+		if item_data == null or item_data.equip_slot != slot_name or not member_can_equip(member_index, item_data.effective_classes()):
 			return false
 		var consume_result: Dictionary = inventory_service.call("consume_item_from_inventory", inventory, item_id, 1)
 		if not bool(consume_result.get("success", false)):

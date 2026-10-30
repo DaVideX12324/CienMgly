@@ -52,9 +52,28 @@ func sell_price() -> int:
 	return maxi(price / 2, 1) if price > 0 else 0
 
 
+## Klasy domyślne, gdy allowed_classes jest puste (docs/kontekst/klasy_postaci_i_bronie.md): broń wg rodzaju, tarcza —
+## wojownik i kapłan; hełmy, pancerze i akcesoria — każdy.
+const WEAPON_CLASSES := {"sword": ["warrior"], "axe": ["warrior"], "spear": ["warrior"], "dagger": ["rogue"], "bow": ["rogue"],
+	"staff": ["mage"], "mace": ["priest"]}
+const SHIELD_CLASSES: Array[String] = ["warrior", "priest"]
+
+
+## Klasy, które mogą założyć przedmiot (puste = każda): jawne allowed_classes albo domyślne wg slotu / rodzaju broni.
+func effective_classes() -> PackedStringArray:
+	if not allowed_classes.is_empty():
+		return allowed_classes
+	if equip_slot == "weapon" and WEAPON_CLASSES.has(weapon_type):
+		return PackedStringArray(WEAPON_CLASSES[weapon_type])
+	if equip_slot == "shield":
+		return PackedStringArray(SHIELD_CLASSES)
+	return PackedStringArray()
+
+
 ## Czy przedmiot może założyć postać danej klasy.
 func usable_by_class(class_id: String) -> bool:
-	return allowed_classes.is_empty() or allowed_classes.has(class_id)
+	var classes := effective_classes()
+	return classes.is_empty() or classes.has(class_id)
 
 
 const WEAPON_TYPE_NAMES := {"sword": "Miecz", "dagger": "Sztylet", "axe": "Topór", "spear": "Włócznia", "mace": "Buława", "staff": "Kostur", "bow": "Łuk"}
