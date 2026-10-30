@@ -71,6 +71,7 @@ var _marker_left := 0.0
 
 
 func _ready() -> void:
+	_full.add_to_group(&"quiz_modal_ui")  # Esc zamyka mapę zamiast otwierać pauzę (pause_menu)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_full.visible = false
 	_corner.visible = false

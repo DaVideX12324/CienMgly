@@ -242,11 +242,19 @@ func _cache_panel_nodes() -> void:
 	quest_row_template = quest_panel.find_child("QuestRow0", true, false) as Control if quest_panel else null
 
 
+## Otwarte okno nad mapą (grupa quiz_modal_ui, np. pełna minimapa) — Esc zamyka je, nie otwiera pauzy.
+func _modal_open() -> bool:
+	for n in get_tree().get_nodes_in_group(&"quiz_modal_ui"):
+		if n is CanvasItem and (n as CanvasItem).is_visible_in_tree():
+			return true
+	return false
+
+
 func _input(event: InputEvent) -> void:
 	if _options_menu != null and is_instance_valid(_options_menu) and _options_menu.visible:
 		return
 	if not _paused:
-		if _is_cancel(event) and _gm and _gm.is_exploring():
+		if _is_cancel(event) and _gm and _gm.is_exploring() and not _modal_open():
 			_play_click()
 			_toggle_pause()
 			get_viewport().set_input_as_handled()
