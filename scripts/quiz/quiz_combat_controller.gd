@@ -767,7 +767,7 @@ func _begin_input() -> void:
 	if turn_label:
 		turn_label.text = QuizRpgI18n.tf("combat.turn_number", {"turn": turn_number}, "Tura {turn}")
 	if streak_label and _ps:
-		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
+		streak_label.text = QuizRpgI18n.tf("combat.streak_rng", {"streak": _ps.streak, "bonus": "%.0f" % (_ps.rng_bonus * 100.0)}, "Seria: {streak} | RNG: +{bonus}%")
 	result_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
@@ -1253,7 +1253,7 @@ func _show_target_panel() -> void:
 	if target_panel:
 		target_panel.visible = true
 	if target_label:
-		target_label.text = "Wybierz cel"
+		target_label.text = QuizRpgI18n.t("combat.choose_target", "Wybierz cel")
 
 
 func _hide_target_panel() -> void:
@@ -1836,7 +1836,7 @@ func _resolve_action(correct: bool) -> void:
 	_refresh_enemy_header()
 	_refresh_stats_panel()
 	if streak_label and _ps:
-		streak_label.text = "Seria: %d | RNG: +%.0f%%" % [_ps.streak, _ps.rng_bonus * 100.0]
+		streak_label.text = QuizRpgI18n.tf("combat.streak_rng", {"streak": _ps.streak, "bonus": "%.0f" % (_ps.rng_bonus * 100.0)}, "Seria: {streak} | RNG: +{bonus}%")
 	await get_tree().create_timer(1.5).timeout
 	_next_turn()
 
@@ -3298,7 +3298,7 @@ func _update_corner_label() -> void:
 		return
 	var streak := int(_ps.streak) if _ps else 0
 	var bonus := float(_ps.rng_bonus) * 100.0 if _ps else 0.0
-	_corner_label.text = "Tura %d  ·  seria %d  ·  +%.0f%%" % [turn_number, streak, bonus]
+	_corner_label.text = QuizRpgI18n.tf("combat.corner", {"turn": turn_number, "streak": streak, "bonus": "%.0f" % bonus}, "Tura {turn}  ·  seria {streak}  ·  +{bonus}%")
 
 
 func _apply_responsive_layout() -> void:

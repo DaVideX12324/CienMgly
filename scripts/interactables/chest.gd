@@ -244,9 +244,9 @@ func drop_item() -> void:
 		loot_manager.call("show_loot_popup", {
 			"found": true,
 			"icon": item_icon,
-			"title": "Zawartość skrzyni",
-			"message": "%s x%d trafia do ekwipunku." % [item_name, item_count],
-			"detail": "Naciśnij E albo Enter, aby kontynuować.",
+			"title": QuizRpgI18n.t("chest.popup_title", "Zawartość skrzyni"),
+			"message": QuizRpgI18n.tf("chest.popup_message", {"item": item_name, "count": item_count}, "{item} x{count} trafia do ekwipunku."),
+			"detail": QuizRpgI18n.t("chest.popup_detail", "Naciśnij E albo Enter, aby kontynuować."),
 		})
 
 

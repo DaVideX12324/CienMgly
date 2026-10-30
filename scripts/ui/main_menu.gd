@@ -461,7 +461,7 @@ func _on_save_slots_changed() -> void:
 func _populate_stats() -> void:
 	var ps := _get_module_singleton("PlayerStats")
 	if not ps:
-		stats_label.text = "Brak statystyk"
+		stats_label.text = QuizRpgI18n.t("menu.no_stats", "Brak statystyk")
 		return
 
 	stats_label.text = """Statystyki gracza:
