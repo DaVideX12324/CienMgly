@@ -7,6 +7,7 @@ extends Node2D
 const CELL := 16
 const WALL_REACH := 4
 const FADE_SPEED := 3.0
+const FEET_Y := 11  # środek kolizji gracza pod jego pozycją (player.tscn) — kratka stóp, nie tułowia
 const VOID_COLOR := Color8(14, 17, 19)  # kolor kafla voidu ścieków (SOLID_FILL) — granica zasłony niewidoczna
 
 var _zones: Array = []      # {rect: Rect2i, zone: Dictionary, veil_rows: int, hidden: Array[Rect2]}
@@ -71,12 +72,13 @@ func _process(delta: float) -> void:
 		_player = get_tree().get_first_node_in_group("player") as Node2D
 		if _player == null:
 			return
-	var c := Vector2i(floori(_player.global_position.x / CELL), floori(_player.global_position.y / CELL))
+	var c := Vector2i(floori(_player.global_position.x / CELL), floori((_player.global_position.y + FEET_Y) / CELL))
 	var want := -1
 	for i in _zones.size():
 		var z: Dictionary = _zones[i]
 		var r: Rect2i = z.rect
-		if (z.zone as Dictionary).has(c) or (r.has_point(c) and r.end.y - c.y >= int(z.veil_rows)):
+		# Przy ścianie kolizja gracza zahacza o kratkę muru — aktywna zasłona trzyma się też sąsiadów obszaru.
+		if _in_zone(z.zone, c, i == _active and _alpha > 0.0) or (r.has_point(c) and r.end.y - c.y >= int(z.veil_rows)):
 			want = i
 			break
 	var target := 1.0 if want >= 0 else 0.0
@@ -86,6 +88,16 @@ func _process(delta: float) -> void:
 	if a != _alpha:
 		_alpha = a
 		queue_redraw()
+
+
+func _in_zone(zone: Dictionary, c: Vector2i, sticky: bool) -> bool:
+	if zone.has(c):
+		return true
+	if sticky:
+		for d in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)]:
+			if zone.has(c + d):
+				return true
+	return false
 
 
 func _draw() -> void:
