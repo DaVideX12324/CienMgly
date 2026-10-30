@@ -946,11 +946,11 @@ func _show_quest_panel() -> void:
 		row.name = "QuestRow%d" % rows.size()
 		quest_list_vbox.add_child(row)
 		rows.append(row)
-	var goal_title := quest_panel.find_child("MainGoalTitle", true, false) as Label
-	var goal_label := quest_panel.find_child("MainGoalLabel", true, false) as Label
-	if goal_title and goal_label:
-		goal_title.text = QuizRpgI18n.t("quest.main.title", "Cel główny")
-		goal_label.text = QuizRpgQuestLog.main_goal(lsm)
+	var main_title := quest_panel.find_child("MainGoalTitle", true, false) as Label
+	var main_label := quest_panel.find_child("MainGoalLabel", true, false) as Label
+	if main_title and main_label:
+		main_title.text = QuizRpgI18n.t("quest.main.title", "Cel główny")
+		main_label.text = QuizRpgQuestLog.main_goal(lsm)
 	quest_empty_label.visible = ids.is_empty()
 	quest_empty_label.text = QuizRpgI18n.t("pause.quests_empty", "Brak zadań. Porozmawiaj z mieszkańcami.")
 	for i in rows.size():
