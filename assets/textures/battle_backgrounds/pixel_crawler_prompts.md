@@ -477,6 +477,30 @@ A 16-bit pixel art JRPG battle background of a castle great hall with an elevate
 
 ---
 
+## 🧩 Prompty korekcyjne: przód tła (barierki nad wrogami)
+
+Gra rysuje `<wariant>_front.png` (przezroczystość) nad wrogami — wrogowie na platformie stoją za barierką. Wycięcie
+skryptem z koloru wychodzi poszarpane, więc warstwę barierek robi Gemini na podstawie gotowego tła.
+Załącz **dokładnie ten plik tła** (np. `sewer/variant_5.jpg`) i zachowaj jego rozdzielczość. Wynik (magenta) daj
+Claude'owi — zamieni magentę na przezroczystość i zapisze jako `variant_5_front.png`.
+
+#### Sewer wariant 5 — barierka platformy
+```text
+Edit the attached 16-bit pixel art battle background. Keep only the copper handrails along the front edge of the raised brick platform in the background (both railing sections left and right of the central staircase, including their posts and the curved ends). Replace absolutely everything else with flat solid magenta #FF00FF: floor, walls, stairs, pipes, crates, barrels, the green canal and its railing. Do not move, resize, redraw or restyle the railings; keep every pixel of them exactly where it is in the original. Same image size, no shadows, no outlines, no anti-aliasing against the magenta.
+```
+
+#### Sewer wariant 5 — barierka kanału (opcjonalnie)
+```text
+Edit the attached 16-bit pixel art battle background. Keep only the copper railing in front of the green canal on the right side of the lower floor (the long horizontal railing with posts and the short diagonal section at its left end). Replace absolutely everything else with flat solid magenta #FF00FF. Do not move, resize, redraw or restyle the railing; keep every pixel exactly where it is in the original. Same image size, no shadows, no anti-aliasing against the magenta.
+```
+
+#### Inne tła (szablon)
+```text
+Edit the attached 16-bit pixel art battle background. Keep only <CO ZOSTAWIĆ: np. the stone parapet along the front edge of the balcony>. Replace absolutely everything else with flat solid magenta #FF00FF. Do not move, resize, redraw or restyle it; keep every pixel exactly where it is in the original. Same image size, no shadows, no anti-aliasing against the magenta.
+```
+
+---
+
 ## 🛠️ Jak dodać tło do gry
 
 1. **Generowanie:**
