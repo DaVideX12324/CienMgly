@@ -54,6 +54,12 @@ func set_context(map_node: Node, enemy: Node, player: Node, enemy_units: Array =
 	queue_redraw()
 
 
+func get_front_texture() -> Texture2D:
+	if _generator == null:
+		_select_generator()
+	return _generator.call("get_front_texture") if _generator != null and _generator.has_method("get_front_texture") else null
+
+
 func refresh_units(enemy_units: Array) -> void:
 	_enemy_units = enemy_units.duplicate(true)
 	queue_redraw()

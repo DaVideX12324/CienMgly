@@ -3036,6 +3036,12 @@ func _ensure_enemy_field_layer() -> void:
 		_enemy_field_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		(field_content if field_content else self).add_child(_enemy_field_layer)
 		_enemy_field_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var front := _enemy_field_layer.get_parent().get_node_or_null("BackgroundFront")
+	if front == null:
+		front = preload("battle_background_front.gd").new()
+		front.name = "BackgroundFront"
+		_enemy_field_layer.add_sibling(front)
+	front.set("background", battle_background)
 	if not _enemy_field_layer.resized.is_connected(_apply_responsive_enemy_layout):
 		_enemy_field_layer.resized.connect(_apply_responsive_enemy_layout)
 

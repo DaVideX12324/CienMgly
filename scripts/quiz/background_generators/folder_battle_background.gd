@@ -32,7 +32,7 @@ static func variant_paths(key: String) -> PackedStringArray:
 		if not DirAccess.dir_exists_absolute(dir):
 			continue
 		for f in ResourceLoader.list_directory(dir):
-			if f.get_extension().to_lower() in IMAGE_EXTS:
+			if f.get_extension().to_lower() in IMAGE_EXTS and not f.get_basename().ends_with("_front"):  # _front = przód tła
 				out.append(dir + f)
 		if not out.is_empty():
 			return out
@@ -56,6 +56,14 @@ func _select_random_texture() -> void:
 		return
 	_selected_variant_path = _variants[randi() % _variants.size()]
 	_cached_texture = load(_selected_variant_path) as Texture2D
+
+
+## Przód tła (`<wariant>_front.png` obok grafiki) — rysowany nad wrogami; brak = null.
+func get_front_texture() -> Texture2D:
+	if _cached_texture == null:
+		_select_random_texture()
+	var p := _selected_variant_path.get_basename() + "_front.png"
+	return load(p) as Texture2D if not _selected_variant_path.is_empty() and ResourceLoader.exists(p) else null
 
 
 func draw_background(canvas: Control, _context: Dictionary) -> void:
