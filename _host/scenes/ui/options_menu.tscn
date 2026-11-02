@@ -369,15 +369,6 @@ value = 100.0
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="LblNoSkins" type="Label" parent="Panel/Margin/VBox/Tabs/Motyw/Content"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
-theme_override_font_sizes/font_size = 14
-text = "Ten tryb nie ma motywów interfejsu."
-horizontal_alignment = 1
-autowrap_mode = 3
-
 [node name="Pytania" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 visible = false
 layout_mode = 2

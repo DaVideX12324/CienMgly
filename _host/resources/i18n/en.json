@@ -62,7 +62,6 @@
   "host.options.bars_label": "Bar Style:",
   "host.options.brightness_initial": "Theme Brightness: 100%",
   "host.options.brightness_val": "Theme Brightness: {val}%",
-  "host.options.no_skins": "This mode has no UI themes.",
   "host.options.sets_label": "Question sets used in game:",
   "host.options.sets_hint": "Add, import and edit questions: Main Menu -> Questions.",
   "host.options.set_edited": "(edited)",

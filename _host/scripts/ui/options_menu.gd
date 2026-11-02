@@ -35,7 +35,6 @@ signal closed
 @onready var _slider_brightness: HSlider = $Panel/Margin/VBox/Tabs/Motyw/Content/SliderBrightness
 @onready var _lbl_skin: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblSkin
 @onready var _lbl_brightness: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblBrightness
-@onready var _lbl_no_skins: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblNoSkins
 @onready var _lbl_bars: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblBars
 @onready var _bars_option: OptionButton = $Panel/Margin/VBox/Tabs/Motyw/Content/BarsOption
 @onready var _extra_options: VBoxContainer = $Panel/Margin/VBox/Tabs/Motyw/Content/ExtraOptions
@@ -588,7 +587,8 @@ func _sync_skin_tab() -> void:
 	_lbl_bars.visible = has_skins and not _bar_styles.is_empty()
 	var use_picker := _lbl_bars.visible and module.has_method("create_bar_style_picker")
 	_bars_option.visible = _lbl_bars.visible and not use_picker
-	_lbl_no_skins.visible = not has_skins
+	# Bez motywów modułu zakładka „Motyw” ukryta (jak zakładka modułu bez ustawień).
+	_tabs.set_tab_hidden(_lbl_skin.get_parent().get_parent().get_index(), not has_skins)
 	_fill_option(_skin_option, _skins, SKIN_KEY)
 	_fill_option(_bars_option, _bar_styles, BAR_STYLE_KEY)
 	_sync_bar_picker(module if use_picker else null)
@@ -1091,7 +1091,6 @@ func _on_scale_changed(_scale: float) -> void:
 			sub.add_theme_font_size_override("font_size", _fs(17))
 	_lbl_skin.add_theme_font_size_override("font_size", main_size)
 	_lbl_brightness.add_theme_font_size_override("font_size", main_size)
-	_lbl_no_skins.add_theme_font_size_override("font_size", _fs(14))
 	_skin_option.add_theme_font_size_override("font_size", main_size)
 	_scale_popup_font(_skin_option, main_size)
 	_lbl_bars.add_theme_font_size_override("font_size", main_size)

@@ -62,7 +62,6 @@
   "host.options.bars_label": "Styl pasków:",
   "host.options.brightness_initial": "Jasność motywu: 100%",
   "host.options.brightness_val": "Jasność motywu: {val}%",
-  "host.options.no_skins": "Ten tryb nie ma motywów interfejsu.",
   "host.options.sets_label": "Zestawy pytań używane w grze:",
   "host.options.sets_hint": "Dodawanie, import i edycja pytań: menu główne -> Pytania.",
   "host.options.set_edited": "(edytowany)",
