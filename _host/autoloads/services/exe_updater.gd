@@ -26,10 +26,11 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	if not m is Dictionary or str(m.get("url", "")) == "":
 		return
 	var update := get_node_or_null("/root/UpdateService")
-	if update == null or int(m.get("build", 0)) <= int(update.call("current_build")):
+	if update == null:
 		return
+	# Build samego exe (bez łatek) — bieżący build po łatce bywa wyższy niż build nowego exe.
 	var base := int(update.get("_base_build")) if "_base_build" in update else int(update.call("current_build"))
-	if int(m.get("base", -1)) == base or not _can_write():
+	if int(m.get("build", 0)) <= base or int(m.get("base", -1)) == base or not _can_write():
 		return  # ta sama baza = wystarczą łatki
 	var exe := OS.get_executable_path()
 	_request(str(m.url), exe + ".new", DOWNLOAD_TIMEOUT, func(got: bool, _b: PackedByteArray) -> void:
