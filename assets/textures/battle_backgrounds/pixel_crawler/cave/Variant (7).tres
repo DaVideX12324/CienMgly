@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3 uid="uid://hrosl1dw80f2"]
+
+[ext_resource type="Script" uid="uid://b7oj2baq86vqb" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_ylvlh"]
+[ext_resource type="Script" uid="uid://mccxa5pvph1i" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_wxyl0"]
+[ext_resource type="Texture2D" uid="uid://ddwsvwslsxkfx" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/Variant (7).jpg" id="3_nqynq"]
+
+[sub_resource type="Resource" id="Resource_5piir"]
+script = ExtResource("1_ylvlh")
+quad = PackedVector2Array(233, 765, 1780, 765, 1419, 604, 1060, 515, 836, 517, 529, 604)
+rows = 3
+row_capacities = PackedInt32Array(5, 4, 2)
+auto_depth_scale = false
+back_scale = 0.6
+
+[resource]
+script = ExtResource("2_wxyl0")
+texture = ExtResource("3_nqynq")
+fields = Array[ExtResource("1_ylvlh")]([SubResource("Resource_5piir")])
+metadata/_custom_type_script = "uid://mccxa5pvph1i"

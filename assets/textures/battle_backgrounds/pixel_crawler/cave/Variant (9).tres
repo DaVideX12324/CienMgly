@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BattleBackgroundLayout" format=3 uid="uid://sowntt3dsh3c"]
+
+[ext_resource type="Script" uid="uid://b7oj2baq86vqb" path="res://modules/quiz_rpg/scripts/quiz/battle_field.gd" id="1_nvkqt"]
+[ext_resource type="Script" uid="uid://mccxa5pvph1i" path="res://modules/quiz_rpg/scripts/quiz/battle_background_layout.gd" id="2_46joe"]
+[ext_resource type="Texture2D" uid="uid://py5qp6sttpks" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/cave/Variant (9).jpg" id="3_s7lsa"]
+
+[sub_resource type="Resource" id="Resource_fscs5"]
+script = ExtResource("1_nvkqt")
+quad = PackedVector2Array(233, 765, 1780, 765, 1254, 549, 989, 549)
+rows = 2
+row_capacities = PackedInt32Array(5, 2)
+
+[sub_resource type="Resource" id="Resource_m8cuk"]
+script = ExtResource("1_nvkqt")
+quad = PackedVector2Array(292, 429, 878, 404, 840, 335, 691, 330)
+row_capacities = PackedInt32Array(3)
+back_scale = 0.6
+
+[resource]
+script = ExtResource("2_46joe")
+texture = ExtResource("3_s7lsa")
+fields = Array[ExtResource("1_nvkqt")]([SubResource("Resource_fscs5"), SubResource("Resource_m8cuk")])
+metadata/_custom_type_script = "uid://mccxa5pvph1i"

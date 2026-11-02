@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://blvxhohoql616"]
 
 [ext_resource type="Script" uid="uid://7hjlw7v5vdm1" path="res://modules/quiz_rpg/scripts/tools/battle_layout_preview.gd" id="1_06b7j"]
-[ext_resource type="Resource" uid="uid://dt31oa5ee34w6" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/tutorial_area/variant_3_stairs_layout.tres" id="2_oauwv"]
+[ext_resource type="Resource" uid="uid://qqxcg4h5v4de" path="res://modules/quiz_rpg/assets/textures/battle_backgrounds/pixel_crawler/sewer/variant_5.tres" id="2_oauwv"]
 [ext_resource type="SpriteFrames" uid="uid://hakd74l6xj11" path="res://modules/quiz_rpg/resources/enemies/enemy_slime_1.tres" id="3_yxwq2"]
 [ext_resource type="SpriteFrames" uid="uid://dahqhhfiusn31" path="res://modules/quiz_rpg/resources/enemies/enemy_ork_1.tres" id="4_ork1"]
 [ext_resource type="SpriteFrames" uid="uid://bjx77wr2i5rp8" path="res://modules/quiz_rpg/resources/enemies/enemy_warhog.tres" id="5_whog"]
@@ -11,8 +11,10 @@
 custom_minimum_size = Vector2(1920, 1080)
 layout_mode = 3
 anchors_preset = 0
-offset_right = 1920.0
-offset_bottom = 1080.0
+offset_left = 649.0
+offset_top = 74.0
+offset_right = 2569.0
+offset_bottom = 1154.0
 script = ExtResource("1_06b7j")
 layout = ExtResource("2_oauwv")
 field_counts = PackedInt32Array()
@@ -21,7 +23,8 @@ enemy_sprites = Array[SpriteFrames]([ExtResource("3_yxwq2"), ExtResource("4_ork1
 [node name="Fields" type="Node2D" parent="." unique_id=1528560065]
 position = Vector2(1920, 765)
 
-[node name="Field1" type="Polygon2D" parent="Fields" unique_id=984051693]
-position = Vector2(-286, 0)
+[node name="Field1" type="Polygon2D" parent="Fields" unique_id=2024296768]
+position = Vector2(-55, -5)
+scale = Vector2(1, 0.9427966)
 color = Color(1, 0.85, 0.2, 0.18)
-polygon = PackedVector2Array(-1348, 0, 0, 0, -217, -127, -559, -342, -789, -342, -1115, -134)
+polygon = PackedVector2Array(-1767, -2, 0, 0, -613, -168.64722, -1131, -472, -1309, -462, -1769, -169)
