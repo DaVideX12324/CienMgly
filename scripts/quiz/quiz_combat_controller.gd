@@ -34,7 +34,9 @@ const SKILL_SP_COST := 20
 ## o trafieniu, tylko o sile (decyzja usera 2026-11-02): zła odpowiedź = cios ×WRONG_DAMAGE_MULT bez krytyka,
 ## seria (rng_bonus) podbija szansę krytyka.
 const ATTACK_HIT := 0.95
+## Unik wroga z AGI: ENEMY_EVA przy równej AGI z atakującym, proporcjonalnie do AGI wroga / AGI atakującego, do EVA_MAX.
 const ENEMY_EVA := 0.05
+const EVA_MAX := 0.25
 const WRONG_DAMAGE_MULT := 0.5
 const CRIT_BASE := 0.05
 const CRIT_STREAK_SCALE := 0.5  # krytyk = CRIT_BASE + rng_bonus × skala (rng_bonus do 0,5 -> do 30%)
@@ -1867,7 +1869,7 @@ func _resolve_attack(correct: bool) -> void:
 				continue
 			_active_enemy_index = ti
 			var hit: bool = (skill != null and skill.hit_ignores_quiz) or randf() < hit_chance
-			if not hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)) or randf() < ENEMY_EVA:
+			if not hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)) or randf() < _enemy_eva(user, _unit_stats(_enemy_units[ti])):
 				_show_attack_miss(ti, correct)
 				continue
 			var dmg := QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti]))
@@ -1906,6 +1908,10 @@ func _offense_targets(skill: QuizRpgSkillBase) -> Array[int]:
 	if t >= 0:
 		one.append(t)
 	return one
+
+
+func _enemy_eva(user: Dictionary, target: Dictionary) -> float:
+	return clampf(ENEMY_EVA * float(target.get("agi", 1)) / float(maxi(int(user.get("agi", 1)), 1)), 0.0, EVA_MAX)
 
 
 func _apply_player_hit(ti: int, base_dmg: int, can_crit: bool = true) -> void:
