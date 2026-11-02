@@ -34,7 +34,8 @@ const SKILL_SP_COST := 20
 ## o trafieniu, tylko o sile (decyzja usera 2026-11-02): zła odpowiedź = cios ×WRONG_DAMAGE_MULT bez krytyka,
 ## seria (rng_bonus) podbija szansę krytyka.
 const ATTACK_HIT := 0.95
-## Unik wroga z AGI: ENEMY_EVA przy równej AGI z atakującym, proporcjonalnie do AGI wroga / AGI atakującego, do EVA_MAX.
+## Unik z AGI (wroga i drużyny): ENEMY_EVA przy równej AGI z atakującym, proporcjonalnie do AGI celu / AGI atakującego,
+## do EVA_MAX. Wrogowie trafiają też z HIT ATTACK_HIT.
 const ENEMY_EVA := 0.05
 const EVA_MAX := 0.25
 const WRONG_DAMAGE_MULT := 0.5
@@ -1869,7 +1870,7 @@ func _resolve_attack(correct: bool) -> void:
 				continue
 			_active_enemy_index = ti
 			var hit: bool = (skill != null and skill.hit_ignores_quiz) or randf() < hit_chance
-			if not hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)) or randf() < _enemy_eva(user, _unit_stats(_enemy_units[ti])):
+			if not hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)) or randf() < _eva(user, _unit_stats(_enemy_units[ti])):
 				_show_attack_miss(ti, correct)
 				continue
 			var dmg := QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti]))
@@ -1910,8 +1911,8 @@ func _offense_targets(skill: QuizRpgSkillBase) -> Array[int]:
 	return one
 
 
-func _enemy_eva(user: Dictionary, target: Dictionary) -> float:
-	return clampf(ENEMY_EVA * float(target.get("agi", 1)) / float(maxi(int(user.get("agi", 1)), 1)), 0.0, EVA_MAX)
+func _eva(attacker: Dictionary, target: Dictionary) -> float:
+	return clampf(ENEMY_EVA * float(target.get("agi", 1)) / float(maxi(int(attacker.get("agi", 1)), 1)), 0.0, EVA_MAX)
 
 
 func _apply_player_hit(ti: int, base_dmg: int, can_crit: bool = true) -> void:
@@ -2086,7 +2087,7 @@ func _enemy_act(enemy_index: int) -> bool:
 	var t: int = alive[randi() % alive.size()] if not alive.is_empty() else 0
 	var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
 	var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
-	if randf() >= _unit_hit_mult(enemy_unit):
+	if randf() >= _unit_hit_mult(enemy_unit) * ATTACK_HIT or randf() < _eva(_unit_stats(enemy_unit), _member_stats(t)):
 		_push_log(QuizRpgI18n.tf("combat.enemy_misses_log", {"enemy": enemy_label}, "{enemy} pudłuje!"), Color(0.75, 0.75, 0.82))
 		FloatingText.create_at(player, player.global_position + Vector2(0, -20), QuizRpgI18n.t("combat.dodge_short", "Unik!"), Color(0.8, 0.8, 0.8), 12)
 		await get_tree().create_timer(0.8).timeout
