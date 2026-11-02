@@ -37,6 +37,9 @@ func _init() -> void:
 		else:
 			DirAccess.remove_absolute(_patch_dir.path_join(f))  # paczka starszej bazy (stary exe)
 	mine.sort_custom(func(a: String, b: String) -> bool: return _patch_build(a) < _patch_build(b))
+	# Paczki są skumulowane względem bazy — wystarczy najnowsza, starsze usuwane.
+	while mine.size() > 1:
+		DirAccess.remove_absolute(_patch_dir.path_join(mine.pop_front()))
 	for f in mine:
 		if not ProjectSettings.load_resource_pack(_patch_dir.path_join(f)):
 			push_warning("[Update] Nie wczytano paczki: " + f)
