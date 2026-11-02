@@ -23,11 +23,12 @@ const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1),
 ## Przesunięcie punktu obiektu względem środka dołu kratki kotwicy (lewa kolumna, rząd stopy): x na granicę kolumn,
 ## y w głąb niszy (px).
 const OFFSET := Vector2(8, -14)
-## Przedmiot i skrzynia: w najszerszej części niszy (~31 px nad dołem rzędu stopy; wolne miejsce sięga ~46 px, wyżej się zwęża). Przejście zostaje na
+## Przedmiot i skrzynia: głęboko w niszy (~42 px nad dołem rzędu stopy, w połowie kolizji kolanek na górze; prośba usera
+## 2026-11-02; wolne miejsce sięga ~46 px). Przejście zostaje na
 ## OFFSET (szczelina Gap wypełnia niszę), głębiej przesunięty tylko jego obszar użycia (PASSAGE_USE_Y).
-const DEEP_OFFSET := Vector2(8, -23)
+const DEEP_OFFSET := Vector2(8, -34)
 ## Promień obszaru interakcji skrzyni niszy (scena skrzyni: 30 px — podpowiedź z podłogi przed niszą).
-const CHEST_REACH := 12.0
+const CHEST_REACH := 20.0  # +8 jak głębokość (DEEP_OFFSET -23 -> -34)
 ## Obszar użycia przejścia: tyle px nad punktem węzła.
 const PASSAGE_USE_Y := -16.0
 ## Rzędy podłogi przed niszą (od rzędu stopy w dół) bez innych obiektów.
