@@ -448,6 +448,8 @@
   "name_entry.dev.taken": "taken",
   "name_entry.dev.title": "Easter eggs (developer menu): click a name to enter it and show the reaction; taken = the name is refused; {name} in a reaction = the entered name. Changes are saved right away.",
   "name_entry.hint": "Enter — confirm, Esc — back. Empty field = default name.",
+  "name_entry.keyboard": "⌨ Keyboard",
+  "name_entry.keyboard_tip": "Show / hide the on-screen keyboard (Y on gamepad)",
   "name_entry.placeholder": "Hero",
   "name_entry.prompt": "What is your name, hero?",
   "npc.armorer.greeting_1": "A shield and a good helmet have saved more heads than the finest sword.",

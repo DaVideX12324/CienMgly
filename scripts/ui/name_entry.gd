@@ -33,6 +33,7 @@ static var user_eggs_path: String = "user://cien_mgly_name_easter_eggs.json"
 @onready var _confirm: Button = %ConfirmButton
 @onready var _back: Button = %BackButton
 @onready var _keyboard: GridContainer = %Keyboard
+@onready var _keyboard_toggle: Button = %KeyboardToggle
 @onready var _dev_eggs: Control = %DevEggs
 @onready var _egg_list: VBoxContainer = %EggList
 @onready var _new_name: LineEdit = %NewName
@@ -60,6 +61,9 @@ func _ready() -> void:
 	_back.pressed.connect(func() -> void: cancelled.emit())
 	_add.pressed.connect(_on_add)
 	_build_keyboard()
+	_keyboard_toggle.text = QuizRpgI18n.t("name_entry.keyboard", "⌨ Klawiatura")
+	_keyboard_toggle.tooltip_text = QuizRpgI18n.t("name_entry.keyboard_tip", "Pokaż / ukryj klawiaturę ekranową (Y na padzie)")
+	_keyboard_toggle.pressed.connect(func() -> void: _set_keyboard(not _keyboard.visible))
 	load_eggs()
 	_rebuild_list()
 	var cheats := get_node_or_null("/root/CheatService")
@@ -75,9 +79,20 @@ func open() -> void:
 	_reset_prompt()
 	_upper = true
 	_refresh_keys()
-	# Z padem kursor na klawiaturze (A w polu tekstowym nic nie robi), bez — w polu.
-	var first := _keyboard.get_child(0) as Control
-	(first if not Input.get_connected_joypads().is_empty() else _edit).grab_focus.call_deferred()
+	# Klawiatura ekranowa domyślnie przy podłączonym padzie (A w polu tekstowym nic nie robi).
+	_set_keyboard(not Input.get_connected_joypads().is_empty())
+
+
+## Klawiatura ekranowa pokazana / schowana (przycisk albo Y na padzie); fokus na pierwszy klawisz albo pole.
+func _set_keyboard(on: bool) -> void:
+	_keyboard.visible = on
+	(_keyboard.get_child(0) as Control if on else _edit).grab_focus.call_deferred()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_Y:
+		_set_keyboard(not _keyboard.visible)
+		get_viewport().set_input_as_handled()
 
 
 func _build_keyboard() -> void:

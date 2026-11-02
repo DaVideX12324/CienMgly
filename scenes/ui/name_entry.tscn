@@ -56,6 +56,13 @@ custom_minimum_size = Vector2(240, 42)
 layout_mode = 2
 text = "▶ Rozpocznij"
 
+[node name="KeyboardToggle" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 42)
+layout_mode = 2
+tooltip_text = "Pokaż / ukryj klawiaturę ekranową (Y na padzie)"
+text = "⌨ Klawiatura"
+
 [node name="BackButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 42)

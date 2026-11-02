@@ -448,6 +448,8 @@
   "name_entry.dev.taken": "zajęte",
   "name_entry.dev.title": "Easter eggi (menu deweloperskie): klik w imię wpisuje je i pokazuje reakcję; zajęte = imię nie przechodzi; {name} w reakcji = wpisane imię. Zmiany zapisują się od razu.",
   "name_entry.hint": "Enter — zatwierdź, Esc — wróć. Puste pole = imię domyślne.",
+  "name_entry.keyboard": "⌨ Klawiatura",
+  "name_entry.keyboard_tip": "Pokaż / ukryj klawiaturę ekranową (Y na padzie)",
   "name_entry.placeholder": "Bohater",
   "name_entry.prompt": "Jak masz na imię, bohaterze?",
   "npc.armorer.greeting_1": "Tarcza i dobry hełm uratowały więcej głów niż najlepszy miecz.",
