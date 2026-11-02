@@ -30,8 +30,15 @@ const TP_START_MIN := 10           # TP na start walki: losowo TP_START_MIN..TP_
 const TP_START_MAX := 20
 const GUARD_SPEED := 2000          # Obrona zawsze pierwsza (Guard w FNaFB ma speed 2000)
 const SKILL_SP_COST := 20
-const ATTACK_HIT_CHANCE_CORRECT := 0.8
-const ATTACK_HIT_CHANCE_WRONG := 0.2
+## Trafienie jak w FNaFB (VX Ace): HIT atakującego × success_rate umiejętności, potem unik celu (EVA). Quiz nie decyduje
+## o trafieniu, tylko o sile (decyzja usera 2026-11-02): zła odpowiedź = cios ×WRONG_DAMAGE_MULT bez krytyka,
+## seria (rng_bonus) podbija szansę krytyka.
+const ATTACK_HIT := 0.95
+const ENEMY_EVA := 0.05
+const WRONG_DAMAGE_MULT := 0.5
+const CRIT_BASE := 0.05
+const CRIT_STREAK_SCALE := 0.5  # krytyk = CRIT_BASE + rng_bonus × skala (rng_bonus do 0,5 -> do 30%)
+const CRIT_MULT := 1.8
 const FLEE_SUCCESS_CHANCE := 0.8  # jak w FNaFB1 (BattleManager.make_escape_ratio)
 const COMMAND_PANEL_WIDTH_DEFAULT := 1.0
 const PARTY_PANEL_WIDTH_DEFAULT := 2.2
@@ -1846,7 +1853,7 @@ func _resolve_attack(correct: bool) -> void:
 	var targets := _offense_targets(skill)
 	if targets.is_empty():
 		return
-	var hit_chance: float = ATTACK_HIT_CHANCE_CORRECT if correct else ATTACK_HIT_CHANCE_WRONG
+	var hit_chance: float = ATTACK_HIT
 	if _ps and _ps.has_method("member_hit_mult"):
 		hit_chance *= _ps.member_hit_mult(_active_actor_index)
 	var hits: int = skill.hits if skill else 1
@@ -1859,11 +1866,12 @@ func _resolve_attack(correct: bool) -> void:
 			if int(_enemy_units[ti].get("hp", 0)) <= 0:
 				continue
 			_active_enemy_index = ti
-			var quiz_hit: bool = true if skill != null and skill.hit_ignores_quiz else (_ps.roll_with_bonus(hit_chance) if _ps else randf() < hit_chance)
-			if not quiz_hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)):
+			var hit: bool = (skill != null and skill.hit_ignores_quiz) or randf() < hit_chance
+			if not hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)) or randf() < ENEMY_EVA:
 				_show_attack_miss(ti, correct)
 				continue
-			_apply_player_hit(ti, QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti])))
+			var dmg := QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti]))
+			_apply_player_hit(ti, dmg if correct else maxi(int(dmg * WRONG_DAMAGE_MULT), 1), correct)
 			_gain_party_tp(_active_actor_index, skill.tp_gain if skill else TP_PER_HIT)  # TP za każde trafienie
 			_unit_on_damaged(ti)
 			touched[ti] = true
@@ -1900,7 +1908,7 @@ func _offense_targets(skill: QuizRpgSkillBase) -> Array[int]:
 	return one
 
 
-func _apply_player_hit(ti: int, base_dmg: int) -> void:
+func _apply_player_hit(ti: int, base_dmg: int, can_crit: bool = true) -> void:
 	var audio := get_node_or_null("/root/AudioService")
 	if audio:
 		audio.play_sfx_by_name("hit")
@@ -1908,8 +1916,8 @@ func _apply_player_hit(ti: int, base_dmg: int) -> void:
 	var target_name_str := str(target.get("name", enemy_name_str))
 	var dmg := base_dmg
 	var crit := false
-	if _ps and _ps.roll_with_bonus(0.15):
-		dmg = int(dmg * 1.8)
+	if can_crit and randf() < CRIT_BASE + (float(_ps.rng_bonus) * CRIT_STREAK_SCALE if _ps else 0.0):
+		dmg = int(dmg * CRIT_MULT)
 		crit = true
 	target["hp"] = maxi(int(target.get("hp", 0)) - dmg, 0)
 	if int(target.get("hp", 0)) <= 0 and audio:

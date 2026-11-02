@@ -406,9 +406,6 @@ func on_wrong_answer() -> void:
 	rng_bonus = maxf(rng_bonus - 0.1, 0.0)
 
 
-func roll_with_bonus(base_chance: float) -> bool:
-	return randf() < clampf(base_chance + rng_bonus, 0.0, 0.95)
-
 
 func take_damage(amount: int) -> void:
 	if _god_mode():
