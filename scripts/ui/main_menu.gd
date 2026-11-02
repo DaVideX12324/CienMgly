@@ -59,18 +59,26 @@ func _ready() -> void:
 		audio.play_music("menu")
 
 
-## Wersja z module_manifest.json do wyświetlenia: "0.8.0-alpha" -> "0.8.0 Alpha" (zasady wersjonowania: docs hosta).
-## " (build N)" z resources/build.json hosta (podbijany przy eksporcie release); bez pliku — "".
-func _build_suffix() -> String:
+## resources/build.json hosta (podbijany przy eksporcie release, podmieniany też przez łatki); bez pliku — {}.
+func _build_data() -> Dictionary:
 	var path := QuizRpgPaths.host("res://resources/build.json")
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
-	var build := int((data as Dictionary).get("build", 0)) if data is Dictionary else 0
+	return data if data is Dictionary else {}
+
+
+## " (build N)" z build.json; bez pliku — "".
+func _build_suffix() -> String:
+	var build := int(_build_data().get("build", 0))
 	return " (build %d)" % build if build > 0 else ""
 
 
+## Wersja do wyświetlenia: "0.8.0-alpha" -> "0.8.0 Alpha" (zasady wersjonowania: docs hosta).
+## Z build.json (wersja wydania), bez niego (standalone) z module_manifest.json.
 func _version_label() -> String:
-	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path("module_manifest.json")))
-	var version := str(manifest.get("version", "")) if manifest is Dictionary else ""
+	var version := str(_build_data().get("version", ""))
+	if version == "":
+		var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path("module_manifest.json")))
+		version = str(manifest.get("version", "")) if manifest is Dictionary else ""
 	var parts := version.split("-", true, 1)
 	if parts.size() < 2:
 		return version
