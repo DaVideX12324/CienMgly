@@ -30,12 +30,12 @@ const TP_START_MIN := 10           # TP na start walki: losowo TP_START_MIN..TP_
 const TP_START_MAX := 20
 const GUARD_SPEED := 2000          # Obrona zawsze pierwsza (Guard w FNaFB ma speed 2000)
 const SKILL_SP_COST := 20
-## Trafienie jak w FNaFB (VX Ace): HIT atakującego × success_rate umiejętności, potem unik celu (EVA). Quiz nie decyduje
+## Trafienie jak w FNaFB (VX Ace, QuizRpgSkillMath.roll_hit): pewne / fizyczne (success_rate × HIT, unik z AGI) /
+## magiczne (success_rate). Quiz nie decyduje
 ## o trafieniu, tylko o sile (decyzja usera 2026-11-02): zła odpowiedź = cios ×WRONG_DAMAGE_MULT bez krytyka,
 ## seria (rng_bonus) podbija szansę krytyka.
-const ATTACK_HIT := 0.95
 ## Unik z AGI (wroga i drużyny): ENEMY_EVA przy równej AGI z atakującym, proporcjonalnie do AGI celu / AGI atakującego,
-## do EVA_MAX. Wrogowie trafiają też z HIT ATTACK_HIT.
+## do EVA_MAX.
 const ENEMY_EVA := 0.05
 const EVA_MAX := 0.25
 const WRONG_DAMAGE_MULT := 0.5
@@ -1856,9 +1856,7 @@ func _resolve_attack(correct: bool) -> void:
 	var targets := _offense_targets(skill)
 	if targets.is_empty():
 		return
-	var hit_chance: float = ATTACK_HIT
-	if _ps and _ps.has_method("member_hit_mult"):
-		hit_chance *= _ps.member_hit_mult(_active_actor_index)
+	var hit_mult: float = _ps.member_hit_mult(_active_actor_index) if _ps and _ps.has_method("member_hit_mult") else 1.0
 	var hits: int = skill.hits if skill else 1
 	var user := _member_stats(_active_actor_index)
 	var touched := {}
@@ -1869,8 +1867,7 @@ func _resolve_attack(correct: bool) -> void:
 			if int(_enemy_units[ti].get("hp", 0)) <= 0:
 				continue
 			_active_enemy_index = ti
-			var hit: bool = (skill != null and skill.hit_ignores_quiz) or randf() < hit_chance
-			if not hit or (skill != null and not QuizRpgSkillMath.roll_hit(skill)) or randf() < _eva(user, _unit_stats(_enemy_units[ti])):
+			if not QuizRpgSkillMath.roll_hit(skill, hit_mult, _eva(user, _unit_stats(_enemy_units[ti]))):
 				_show_attack_miss(ti, correct)
 				continue
 			var dmg := QuizRpgSkillMath.damage(skill, user, _unit_stats(_enemy_units[ti]))
@@ -2087,7 +2084,7 @@ func _enemy_act(enemy_index: int) -> bool:
 	var t: int = alive[randi() % alive.size()] if not alive.is_empty() else 0
 	var target_suffix := "" if _party_state.size() <= 1 else " (%s)" % _member_name(t)
 	var full_damage := QuizRpgSkillMath.basic_attack(_unit_stats(enemy_unit), _member_stats(t))
-	if randf() >= _unit_hit_mult(enemy_unit) * ATTACK_HIT or randf() < _eva(_unit_stats(enemy_unit), _member_stats(t)):
+	if not QuizRpgSkillMath.roll_hit(null, _unit_hit_mult(enemy_unit), _eva(_unit_stats(enemy_unit), _member_stats(t))):
 		_push_log(QuizRpgI18n.tf("combat.enemy_misses_log", {"enemy": enemy_label}, "{enemy} pudłuje!"), Color(0.75, 0.75, 0.82))
 		FloatingText.create_at(player, player.global_position + Vector2(0, -20), QuizRpgI18n.t("combat.dodge_short", "Unik!"), Color(0.8, 0.8, 0.8), 12)
 		await get_tree().create_timer(0.8).timeout
@@ -2237,7 +2234,7 @@ func _enemy_use_skill(enemy_index: int, enemy_unit: Dictionary, enemy_label: Str
 		if targets.is_empty():
 			break
 		for t in targets:
-			if not QuizRpgSkillMath.roll_hit(sk, _unit_hit_mult(enemy_unit)):
+			if not QuizRpgSkillMath.roll_hit(sk, _unit_hit_mult(enemy_unit), _eva(_unit_stats(enemy_unit), _member_stats(t))):
 				if t == 0:
 					FloatingText.create_at(player, player.global_position + Vector2(0, -20), QuizRpgI18n.t("combat.dodge_short", "Unik!"), Color(0.8, 0.8, 0.8), 12)
 				continue

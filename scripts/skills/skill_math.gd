@@ -43,10 +43,30 @@ static func heal(skill: QuizRpgSkillBase, max_hp: int, user_mat: int = 0) -> int
 	return 0
 
 
-## Czy trafienie wchodzi (success_rate × dodatkowa szansa, np. z quizu).
-static func roll_hit(skill: QuizRpgSkillBase, extra_chance: float = 1.0, rng: RandomNumberGenerator = null) -> bool:
-	var chance := extra_chance * (skill.success_rate if skill != null else 1.0)
-	return (rng.randf() if rng else randf()) < chance
+## HIT atakującego (VX Ace: ~95 % z klasy) — trafienie fizyczne.
+const HIT := 0.95
+
+
+## Czy trafienie wchodzi — model VX Ace (skill null = zwykły atak, fizyczny): pewne zawsze; inaczej success_rate,
+## fizyczne dodatkowo HIT × hit_mult (statusy, np. oślepienie) i unik celu (eva); magiczne bez uniku (MEV 0).
+static func roll_hit(skill: QuizRpgSkillBase, hit_mult: float = 1.0, eva: float = 0.0, rng: RandomNumberGenerator = null) -> bool:
+	var r := func() -> float: return rng.randf() if rng else randf()
+	var type := hit_type(skill)
+	if type == QuizRpgSkillBase.HitType.CERTAIN:
+		return true
+	if skill != null and r.call() >= skill.success_rate:
+		return false
+	if type == QuizRpgSkillBase.HitType.MAGICAL:
+		return true
+	return r.call() < HIT * hit_mult and r.call() >= eva
+
+
+static func hit_type(skill: QuizRpgSkillBase) -> QuizRpgSkillBase.HitType:
+	if skill == null:
+		return QuizRpgSkillBase.HitType.PHYSICAL
+	if skill.hit_type != QuizRpgSkillBase.HitType.AUTO:
+		return skill.hit_type
+	return QuizRpgSkillBase.HitType.PHYSICAL if skill.atk_coeff >= skill.mat_coeff else QuizRpgSkillBase.HitType.MAGICAL
 
 
 ## Bonus tylko w górę (bonus_roll_max / bonus_roll_curve): 1 + max × u^curve.

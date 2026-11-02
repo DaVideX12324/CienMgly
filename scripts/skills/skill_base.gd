@@ -9,6 +9,9 @@ enum DamageMode { FORMULA, FIXED, NONE }
 enum Target { ONE_OPPONENT, ALL_OPPONENTS, RANDOM_OPPONENTS, SELF, ONE_ALLY, ALL_ALLIES, DEAD_ALLY }
 enum HealMode { NONE, FIXED, PERCENT }
 enum PoisonMode { PERCENT, FIXED }
+## Rodzaj trafienia jak w RPG Makerze VX Ace: pewne (zawsze), fizyczne (success_rate × HIT, potem unik z AGI), magiczne
+## (sam success_rate). AUTO: fizyczne, gdy atk_coeff >= mat_coeff, inaczej magiczne.
+enum HitType { AUTO, CERTAIN, PHYSICAL, MAGICAL }
 
 @export var display_name: String = "Umiejętność"  # zapasowa; nazwa w grze: localized_name() (resources/i18n)
 @export_multiline var description: String = ""
@@ -30,7 +33,7 @@ enum PoisonMode { PERCENT, FIXED }
 @export_range(1, 20, 1) var hits: int = 1
 ## Odstęp między trafieniami serii (s).
 @export_range(0.05, 2.0, 0.05) var hit_interval: float = 0.35
-## Szansa trafienia każdego ciosu (jak „success rate” w RPG Makerze); u gracza mnożona z szansą z quizu.
+## Szansa trafienia każdego ciosu (jak „success rate” w RPG Makerze).
 @export_range(0.0, 1.0, 0.01) var success_rate: float = 1.0
 ## Losowy bonus do obrażeń tylko w górę: mnożnik 1 + bonus_roll_max × u^bonus_roll_curve, u z [0, 1]. Krzywa > 1 sprawia, że
 ## wyższy bonus jest coraz rzadszy (np. Backup Bash z FNaFB: max +100 %, krzywa 2 -> średnio +33 %). 0 = bez bonusu.
@@ -38,8 +41,7 @@ enum PoisonMode { PERCENT, FIXED }
 @export_range(1.0, 6.0, 0.1) var bonus_roll_curve: float = 1.0
 ## Obrona z dobrą odpowiedzią blokuje (0), ze złą — połowa; false = obrona nie działa.
 @export var can_be_blocked: bool = true
-## Trafienie zależy tylko od success_rate (bez szansy z odpowiedzi na quiz).
-@export var hit_ignores_quiz: bool = false
+@export var hit_type: HitType = HitType.AUTO
 
 @export_group("Kolejka i TP")
 ## Prędkość jak w FNaFB (dodawana do prędkości z AGI w kolejce rundy): +2000 zawsze pierwsza, −2000 zawsze ostatnia,
