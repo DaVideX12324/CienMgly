@@ -40,6 +40,8 @@ var _direction_color: Color = Color(1.0, 1.0, 0.3)
 ## domyślny ruch: przy domyślnym biegu przytrzymanie daje chód.
 const MODULE_ID := "quiz_rpg"
 const SPRINT_ACTION := "sprint"
+const STICK_DEADZONE := 0.2
+const STICK_RUN := 0.9
 ## Nazwy kierunków animacji w kolejności kątów co 45° od prawej (oś Y w dół).
 const DIRECTIONS_8 := ["right", "down_right", "down", "down_left", "left", "up_left", "up", "up_right"]
 const MOVE_DEFAULT_KEY := "move_default"
@@ -329,7 +331,18 @@ func is_running() -> bool:
 		return _follow_target != null and _follow_target.has_method("is_running") and _follow_target.call("is_running")
 	var alternate := _sprint_toggled if _sprint_toggle_mode \
 			else (InputMap.has_action(SPRINT_ACTION) and Input.is_action_pressed(SPRINT_ACTION))
-	return _default_run != alternate
+	# Gałka pada: pełne wychylenie = bieg, częściowe = chód (zamiast ustawienia domyślnego ruchu).
+	var stick := _stick_magnitude()
+	var base := stick >= STICK_RUN if stick > STICK_DEADZONE else _default_run
+	return base != alternate
+
+
+## Największe wychylenie lewej gałki spośród podłączonych padów (0–1).
+func _stick_magnitude() -> float:
+	var best := 0.0
+	for pad in Input.get_connected_joypads():
+		best = maxf(best, Vector2(Input.get_joy_axis(pad, JOY_AXIS_LEFT_X), Input.get_joy_axis(pad, JOY_AXIS_LEFT_Y)).length())
+	return best
 
 
 func _load_move_settings() -> void:
@@ -343,7 +356,7 @@ func _load_move_settings() -> void:
 
 func _get_input() -> Vector2:
 	# get_vector: okrągła martwa strefa — gałka daje dowolny kąt (get_axis z martwą strefą 0,5 na oś dawał 8 kierunków).
-	return Input.get_vector("move_left", "move_right", "move_up", "move_down", 0.2).normalized()
+	return Input.get_vector("move_left", "move_right", "move_up", "move_down", STICK_DEADZONE).normalized()
 
 
 func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
