@@ -9,7 +9,7 @@ extends Node
 ## inna baza = tylko informacja z linkiem do pełnego exe.
 ## Android: wpis "android" manifestu ({version, build, base, url (APK), patches}), baza = "base_android" z build.json
 ## (ustawia eksport APK), paczki w user://patches (obok APK nie da się pisać). Brak wpisu = bez aktualizacji.
-## Pełny exe nowej bazy ("exe_url") pobiera ExeUpdater (węzeł z WindowService — dochodzi łatką, ten skrypt jest w exe).
+## Pełny exe nowej bazy (wpis "exe" manifestu) pobiera ExeUpdater (węzeł z WindowService — dochodzi łatką, ten skrypt jest w exe).
 
 signal update_available(text: String, url: String)
 

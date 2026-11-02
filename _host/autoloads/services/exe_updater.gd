@@ -1,8 +1,8 @@
 extends Node
 
 ## Autoaktualizacja pełnego exe (Windows). Węzeł tworzy WindowService, więc ten skrypt dochodzi łatką .pck — także do
-## starszych exe, których UpdateService (wczytany z exe przed łatkami) o exe_url nie wie.
-## Manifest z gista z "exe_url" i bazą inną niż build exe: pobiera exe do <exe>.new, działający exe zmienia nazwę na
+## starszych exe, których UpdateService (wczytany z exe przed łatkami) o wpisie "exe" nie wie.
+## Wpis "exe" manifestu ({version, build, base, url}) z bazą inną niż baza tego exe: pobiera exe do <exe>.new, działający exe zmienia nazwę na
 ## <exe>.old (Windows pozwala), .new na <exe>, komunikat „uruchom ponownie” przez UpdateService. Przy starcie usuwa .old.
 ## Folder exe bez prawa zapisu / błąd pobierania = zostaje link do pełnego exe (komunikat UpdateService).
 
@@ -20,8 +20,9 @@ func _ready() -> void:
 
 
 func _on_manifest(ok: bool, body: PackedByteArray) -> void:
-	var m: Variant = JSON.parse_string(body.get_string_from_utf8()) if ok else null
-	if not m is Dictionary or str(m.get("exe_url", "")) == "":
+	var root: Variant = JSON.parse_string(body.get_string_from_utf8()) if ok else null
+	var m: Variant = (root as Dictionary).get("exe") if root is Dictionary else null
+	if not m is Dictionary or str(m.get("url", "")) == "":
 		return
 	var update := get_node_or_null("/root/UpdateService")
 	if update == null or int(m.get("build", 0)) <= int(update.call("current_build")):
@@ -31,7 +32,7 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 		return  # ta sama baza = wystarczą łatki
 	var exe := OS.get_executable_path()
 	var version := str(m.get("version", ""))
-	_request(str(m.exe_url), exe + ".new", DOWNLOAD_TIMEOUT, func(got: bool, _b: PackedByteArray) -> void:
+	_request(str(m.url), exe + ".new", DOWNLOAD_TIMEOUT, func(got: bool, _b: PackedByteArray) -> void:
 		var done := got and FileAccess.file_exists(exe + ".new") and DirAccess.rename_absolute(exe, exe + ".old") == OK
 		if done and DirAccess.rename_absolute(exe + ".new", exe) != OK:
 			DirAccess.rename_absolute(exe + ".old", exe)  # cofnięcie
