@@ -218,6 +218,7 @@ func _input(event: InputEvent) -> void:
 				if not _tabs.is_tab_hidden(i):
 					break
 			_tabs.current_tab = i
+			_tabs.get_tab_bar().grab_focus()  # fokus z ukrytej zakładki by zniknął
 			if AudioService:
 				AudioService.play_sfx_by_name("click")
 			get_viewport().set_input_as_handled()
