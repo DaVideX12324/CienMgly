@@ -7,6 +7,8 @@ extends Node
 ## {"version": "0.9.8-beta", "build": 4, "base": 2, "url": "<pełny exe>", "patches": [{"build": 4, "url": "<.pck>"}]}
 ## Paczki dla bazy tego exe (base == build exe) są pobierane do patches/ (działają po ponownym uruchomieniu);
 ## inna baza = tylko informacja z linkiem do pełnego exe.
+## Android: wpis "android" manifestu ({version, build, base, url (APK), patches}), baza = "base_android" z build.json
+## (ustawia eksport APK), paczki w user://patches (obok APK nie da się pisać). Brak wpisu = bez aktualizacji.
 
 signal update_available(text: String, url: String)
 
@@ -16,8 +18,10 @@ var last_message: Array = []
 const MANIFEST_URL := "https://gist.githubusercontent.com/DaVideX12324/cc2274c3de25a1ee9a122ad9419097a8/raw/"
 const BUILD_PATH := "res://_host/resources/build.json"
 
-var _patch_dir := OS.get_executable_path().get_base_dir().path_join("patches")
-var _base_build := 0  # build exe (bez paczek)
+const ANDROID := "android"
+
+var _patch_dir := "user://patches" if OS.has_feature(ANDROID) else OS.get_executable_path().get_base_dir().path_join("patches")
+var _base_build := 0  # build exe / APK (bez paczek)
 
 
 func _init() -> void:
@@ -76,6 +80,8 @@ func _fetch(url: String, done: Callable, save_to: String = "") -> void:
 
 func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	var m: Variant = JSON.parse_string(body.get_string_from_utf8()) if ok else null
+	if m is Dictionary and OS.has_feature(ANDROID):
+		m = m.get(ANDROID)  # wpis Androida; linki Windowsa (exe) na telefonie nic nie dają
 	if not m is Dictionary or int(m.get("build", 0)) <= current_build():
 		return
 	var version := str(m.get("version", ""))
