@@ -93,7 +93,7 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	var pending: Array = [] if int(m.get("base", -1)) != _base_build else (m.get("patches", []) as Array).filter(func(p: Variant) -> bool:
 		return p is Dictionary)
 	if pending.is_empty():
-		_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), str(m.get("url", "")))
+		_notify_download(version, str(m.get("url", "")))
 		return
 	DirAccess.make_dir_recursive_absolute(_patch_dir)
 	var left := [pending.size()]
@@ -107,9 +107,15 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 			left[0] -= 1
 			if left[0] == 0:
 				if failed[0]:
-					_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), str(m.get("url", "")))
+					_notify_download(version, str(m.get("url", "")))
 				else:
 					_notify(_t("update.restart", "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie", version), ""), dest)
+
+
+## „Dostępna wersja — pobierz” z linkiem do pełnego exe; bez linku nic (przycisk z pustym linkiem restartuje grę).
+func _notify_download(version: String, url: String) -> void:
+	if url != "":
+		_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), url)
 
 
 func _notify(text: String, url: String) -> void:
