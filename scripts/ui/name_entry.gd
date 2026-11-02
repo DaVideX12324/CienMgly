@@ -18,6 +18,11 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const PL_PLAIN := {"ą": "a", "ć": "c", "ę": "e", "ł": "l", "ń": "n", "ó": "o", "ś": "s", "ź": "z", "ż": "z"}
 const COLOR_TAKEN := Color(1.0, 0.5, 0.5)
 const COLOR_REACTION := Color(0.95, 0.85, 0.45)
+## Klawiatura ekranowa (pad): litery, potem klawisze specjalne.
+const KEY_LETTERS := "AĄBCĆDEĘFGHIJKLŁMNŃOÓPQRSŚTUVWXYZŹŻ"
+const KEY_SHIFT := "Aa"
+const KEY_SPACE := "␣"
+const KEY_BACK := "⌫"
 
 ## Plik easter eggów w projekcie i zapas w user:// (testy podmieniają ścieżki, żeby nie ruszać danych gry).
 static var eggs_path: String = QuizRpgPaths.path("resources/data/name_easter_eggs.json")
@@ -27,6 +32,7 @@ static var user_eggs_path: String = "user://cien_mgly_name_easter_eggs.json"
 @onready var _reaction: Label = %Reaction
 @onready var _confirm: Button = %ConfirmButton
 @onready var _back: Button = %BackButton
+@onready var _keyboard: GridContainer = %Keyboard
 @onready var _dev_eggs: Control = %DevEggs
 @onready var _egg_list: VBoxContainer = %EggList
 @onready var _new_name: LineEdit = %NewName
@@ -42,6 +48,8 @@ var eggs: Array[Dictionary] = []
 var _pending := ""
 var _confirm_text := ""
 var _opis := ""
+## Klawiatura: następna litera wielka (auto na początku imienia, przełącznik Aa).
+var _upper := true
 
 
 func _ready() -> void:
@@ -51,6 +59,7 @@ func _ready() -> void:
 	_confirm.pressed.connect(_submit)
 	_back.pressed.connect(func() -> void: cancelled.emit())
 	_add.pressed.connect(_on_add)
+	_build_keyboard()
 	load_eggs()
 	_rebuild_list()
 	var cheats := get_node_or_null("/root/CheatService")
@@ -64,7 +73,56 @@ func open() -> void:
 	visible = true
 	_edit.text = ""
 	_reset_prompt()
-	_edit.grab_focus.call_deferred()
+	_upper = true
+	_refresh_keys()
+	# Z padem kursor na klawiaturze (A w polu tekstowym nic nie robi), bez — w polu.
+	var first := _keyboard.get_child(0) as Control
+	(first if not Input.get_connected_joypads().is_empty() else _edit).grab_focus.call_deferred()
+
+
+func _build_keyboard() -> void:
+	var keys: Array[String] = []
+	for ch in KEY_LETTERS:
+		keys.append(ch)
+	keys.append_array([KEY_SHIFT, KEY_SPACE, KEY_BACK])
+	for k in keys:
+		var b := Button.new()
+		b.text = k
+		b.custom_minimum_size = Vector2(52, 44)
+		b.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		b.add_theme_font_size_override("font_size", 22)
+		b.set_meta("key", k)
+		b.pressed.connect(_on_key.bind(k))
+		_keyboard.add_child(b)
+	_edit.focus_neighbor_bottom = _edit.get_path_to(_keyboard.get_child(0))
+
+
+func _on_key(k: String) -> void:
+	match k:
+		KEY_SHIFT:
+			_upper = not _upper
+		KEY_BACK:
+			_edit.text = _edit.text.left(-1)
+			_upper = _edit.text.is_empty()
+		KEY_SPACE:
+			if _edit.text.length() < _edit.max_length:
+				_edit.text += " "
+			_upper = true
+		_:
+			if _edit.text.length() < _edit.max_length:
+				_edit.text += k if _upper else k.to_lower()
+			_upper = false
+	_edit.caret_column = _edit.text.length()
+	_reset_prompt()
+	_refresh_keys()
+
+
+## Litery wielkie / małe wg _upper.
+func _refresh_keys() -> void:
+	for b: Button in _keyboard.get_children():
+		var k := str(b.get_meta("key"))
+		if k.length() == 1 and k in KEY_LETTERS:
+			b.text = k if _upper else k.to_lower()
 
 
 func _reset_prompt() -> void:
