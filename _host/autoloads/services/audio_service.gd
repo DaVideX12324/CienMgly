@@ -75,8 +75,17 @@ var _music_stream_cache: Dictionary = {}
 const PREFERENCES_PATH := "user://preferences.dat"
 
 
+## Dwa kliki w tym oknie = jeden (globalny klik przycisków + własny klik menu).
+const CLICK_DEDUPE_MS := 80
+var _last_click_ms := -1000
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Klik przy każdym przycisku UI (podmenu bez własnego dźwięku); własne _play_click nie dublują (_last_click_ms).
+	get_tree().node_added.connect(func(n: Node) -> void:
+		if n is BaseButton:
+			(n as BaseButton).pressed.connect(func() -> void: play_sfx_by_name("click")))
 
 	_ensure_bus(BUS_MASTER)
 	_ensure_bus(BUS_MUSIC)
@@ -218,6 +227,11 @@ var _sfx_stream_cache: Dictionary = {}
 ## ============================================
 ## bus: szyna wprost (np. BUS_SFX_UI dla monety w sklepie); pusta — grupa z SFX_NAME_BUS, inaczej SFX.
 func play_sfx_by_name(sfx_name: String, volume_db: float = 0.0, pitch_scale: float = 1.0, bus: String = "") -> void:
+	if sfx_name == "click":
+		var now := Time.get_ticks_msec()
+		if now - _last_click_ms < CLICK_DEDUPE_MS:
+			return
+		_last_click_ms = now
 	var stream := _get_sfx_stream(sfx_name)
 	if stream:
 		play_sfx(stream, volume_db, pitch_scale, bus if bus != "" else str(SFX_NAME_BUS.get(sfx_name, BUS_SFX)))
@@ -319,7 +333,8 @@ func start_boss_music(boss_name: String, fade_time: float = 0.5) -> void:
 
 
 func return_to_previous_track(fade_time: float = 1.0) -> void:
-	if previous_track != "" and music_track_paths.has(previous_track):
+	# Utwór mapy bywa ścieżką pliku (LevelMusic), nie nazwą z music_tracks.json.
+	if previous_track != "" and _get_music_stream(previous_track) != null:
 		play_music(previous_track, fade_time)
 	else:
 		stop_music(fade_time)
