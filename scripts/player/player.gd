@@ -342,10 +342,8 @@ func _load_move_settings() -> void:
 
 
 func _get_input() -> Vector2:
-	var input = Vector2.ZERO
-	input.x = Input.get_axis("move_left", "move_right")
-	input.y = Input.get_axis("move_up", "move_down")
-	return input.normalized()
+	# get_vector: okrągła martwa strefa — gałka daje dowolny kąt (get_axis z martwą strefą 0,5 na oś dawał 8 kierunków).
+	return Input.get_vector("move_left", "move_right", "move_up", "move_down", 0.2).normalized()
 
 
 func _update_sprite_animation(state: String, anim_speed: float = 1.0) -> void:
