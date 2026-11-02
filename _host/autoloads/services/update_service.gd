@@ -86,6 +86,12 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	var m: Variant = JSON.parse_string(body.get_string_from_utf8()) if ok else null
 	if m is Dictionary and OS.has_feature(ANDROID):
 		m = m.get(ANDROID)  # wpis Androida; linki Windowsa (exe) na telefonie nic nie dają
+	elif m is Dictionary and m.get("bases") is Dictionary and (m.bases as Dictionary).has(str(_base_build)):
+		# Łatki tej bazy (wpis główny zostaje dla starych exe — ich UpdateService czyta tylko jego).
+		var own: Dictionary = (m.bases[str(_base_build)] as Dictionary).duplicate()
+		own["base"] = _base_build
+		own["url"] = m.get("url", "")
+		m = own
 	if not m is Dictionary or int(m.get("build", 0)) <= current_build():
 		return
 	var version := str(m.get("version", ""))

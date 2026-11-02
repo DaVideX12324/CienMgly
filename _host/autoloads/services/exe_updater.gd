@@ -3,7 +3,8 @@ extends Node
 ## Autoaktualizacja pełnego exe (Windows). Węzeł tworzy WindowService, więc ten skrypt dochodzi łatką .pck — także do
 ## starszych exe, których UpdateService (wczytany z exe przed łatkami) o wpisie "exe" nie wie.
 ## Wpis "exe" manifestu ({version, build, base, url}) z bazą inną niż baza tego exe: pobiera exe do <exe>.new, działający exe zmienia nazwę na
-## <exe>.old (Windows pozwala), .new na <exe>, komunikat „uruchom ponownie” przez UpdateService. Przy starcie usuwa .old.
+## <exe>.old (Windows pozwala), .new na <exe> — po cichu: łatka ma już te same zmiany, nowy exe rusza przy następnym
+## uruchomieniu. Przy starcie usuwa .old.
 ## Folder exe bez prawa zapisu / błąd pobierania = zostaje link do pełnego exe (komunikat UpdateService).
 
 const MANIFEST_URL := "https://gist.githubusercontent.com/DaVideX12324/cc2274c3de25a1ee9a122ad9419097a8/raw/"
@@ -31,18 +32,13 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	if int(m.get("base", -1)) == base or not _can_write():
 		return  # ta sama baza = wystarczą łatki
 	var exe := OS.get_executable_path()
-	var version := str(m.get("version", ""))
 	_request(str(m.url), exe + ".new", DOWNLOAD_TIMEOUT, func(got: bool, _b: PackedByteArray) -> void:
 		var done := got and FileAccess.file_exists(exe + ".new") and DirAccess.rename_absolute(exe, exe + ".old") == OK
 		if done and DirAccess.rename_absolute(exe + ".new", exe) != OK:
 			DirAccess.rename_absolute(exe + ".old", exe)  # cofnięcie
 			done = false
 		if not done:
-			DirAccess.remove_absolute(exe + ".new")
-			return
-		var text := I18nService.t("update.restart", "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie") if I18nService \
-				else "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie"
-		update.call("_notify", text.replace("{version}", version), ""))
+			DirAccess.remove_absolute(exe + ".new"))
 
 
 func _can_write() -> bool:
