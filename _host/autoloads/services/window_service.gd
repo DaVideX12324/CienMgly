@@ -39,6 +39,7 @@ const RESIZE_SETTLE_SEC := 0.4
 func _ready() -> void:
 	# Nawigacja padem w UI — jako dziecko, nie autoload: łatki (.pck) nie dodają autoloadów do starego exe.
 	get_tree().root.add_child.call_deferred(preload("joypad_nav_service.gd").new())
+	add_child(preload("exe_updater.gd").new())  # autoaktualizacja exe — też przez łatkę (UpdateService jest w exe)
 	_resize_timer = Timer.new()
 	_resize_timer.one_shot = true
 	_resize_timer.wait_time = RESIZE_SETTLE_SEC

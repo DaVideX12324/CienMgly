@@ -9,8 +9,7 @@ extends Node
 ## inna baza = tylko informacja z linkiem do pełnego exe.
 ## Android: wpis "android" manifestu ({version, build, base, url (APK), patches}), baza = "base_android" z build.json
 ## (ustawia eksport APK), paczki w user://patches (obok APK nie da się pisać). Brak wpisu = bez aktualizacji.
-## Nowa baza z "exe_url" (Windows, folder exe z prawem zapisu): pobiera pełny exe do <exe>.new, działający exe
-## zmienia nazwę na <exe>.old (Windows pozwala), .new na <exe>; po ponownym uruchomieniu .old jest usuwany.
+## Pełny exe nowej bazy ("exe_url") pobiera ExeUpdater (węzeł z WindowService — dochodzi łatką, ten skrypt jest w exe).
 
 signal update_available(text: String, url: String)
 
@@ -30,9 +29,6 @@ func _init() -> void:
 	if not OS.has_feature("template"):  # w edytorze bez paczek
 		return
 	_base_build = current_build()
-	var old_exe := OS.get_executable_path() + ".old"
-	if FileAccess.file_exists(old_exe):
-		DirAccess.remove_absolute(old_exe)  # po podmianie exe (_install_exe)
 	var mine: Array[String] = []
 	for f in (DirAccess.get_files_at(_patch_dir) if DirAccess.dir_exists_absolute(_patch_dir) else PackedStringArray()):
 		if f.get_extension().to_lower() != "pck":
@@ -73,9 +69,9 @@ static func _build_info() -> Dictionary:
 	return data if data is Dictionary else {}
 
 
-func _fetch(url: String, done: Callable, save_to: String = "", timeout := 15.0) -> void:
+func _fetch(url: String, done: Callable, save_to: String = "") -> void:
 	var req := HTTPRequest.new()
-	req.timeout = timeout
+	req.timeout = 15.0
 	if save_to != "":
 		req.download_file = save_to
 	add_child(req)
@@ -96,9 +92,6 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 	# Paczki tylko dla bazy tego exe; nowa baza = link do pełnego exe.
 	var pending: Array = [] if int(m.get("base", -1)) != _base_build else (m.get("patches", []) as Array).filter(func(p: Variant) -> bool:
 		return p is Dictionary)
-	if pending.is_empty() and str(m.get("exe_url", "")) != "" and int(m.get("base", -1)) != _base_build and _can_replace_exe():
-		_download_exe(str(m.exe_url), version, str(m.get("url", "")))
-		return
 	if pending.is_empty():
 		_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), str(m.get("url", "")))
 		return
@@ -117,34 +110,6 @@ func _on_manifest(ok: bool, body: PackedByteArray) -> void:
 					_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), str(m.get("url", "")))
 				else:
 					_notify(_t("update.restart", "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie", version), ""), dest)
-
-
-func _can_replace_exe() -> bool:
-	if OS.has_feature(ANDROID) or OS.get_name() != "Windows":
-		return false
-	var probe := OS.get_executable_path().get_base_dir().path_join(".aw_write_test")
-	var f := FileAccess.open(probe, FileAccess.WRITE)
-	if f == null:
-		return false
-	f.close()
-	DirAccess.remove_absolute(probe)
-	return true
-
-
-## Pełny exe nowej bazy: pobranie obok, podmiana nazw, stare łatki (innej bazy) usuwane przy następnym starcie.
-func _download_exe(url: String, version: String, fallback_url: String) -> void:
-	var exe := OS.get_executable_path()
-	var tmp := exe + ".new"
-	_fetch(url, func(got: bool, _b: PackedByteArray) -> void:
-		var ok := got and FileAccess.file_exists(tmp) and DirAccess.rename_absolute(exe, exe + ".old") == OK
-		if ok and DirAccess.rename_absolute(tmp, exe) != OK:
-			DirAccess.rename_absolute(exe + ".old", exe)  # cofnięcie
-			ok = false
-		if not ok:
-			DirAccess.remove_absolute(tmp)
-			_notify(_t("update.available", "Dostępna wersja {version} — pobierz", version), fallback_url)
-			return
-		_notify(_t("update.restart", "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie", version), ""), tmp, 600.0)
 
 
 func _notify(text: String, url: String) -> void:
