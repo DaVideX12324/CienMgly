@@ -14,6 +14,8 @@ const DEADZONE := 0.5
 ## Przytrzymanie kierunku (gałka, krzyżak, strzałki, WASD): pojedynczy krok, po REPEAT_DELAY s przewijanie.
 const REPEAT_DELAY := 1.0
 const REPEAT_RATE := 0.12
+## Przewijanie prawą gałką (px/s przy pełnym wychyleniu).
+const SCROLL_SPEED := 900.0
 
 var _held: StringName = &""
 var _timer := 0.0
@@ -24,6 +26,8 @@ var _raw_held := {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Zaznaczenie padem / klawiaturą poza widocznym obszarem listy — lista przewija się do niego.
+	get_viewport().gui_focus_changed.connect(_follow_focus)
 	# _input idzie od ostatniego węzła drzewa — serwis trzyma się na końcu korzenia, żeby pochłaniać gałkę przed
 	# menu z własnym _input (pauza, sklep, ...).
 	get_tree().root.child_entered_tree.connect(func(n: Node) -> void:
@@ -54,6 +58,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	_scroll_with_right_stick(delta)
 	var stick := _stick_action()
 	var dir := stick if stick != &"" else _held_button_action()
 	if dir != _held:
@@ -68,6 +73,55 @@ func _process(delta: float) -> void:
 	if _timer <= 0.0:
 		_timer = REPEAT_RATE
 		_press(dir)
+
+
+func _follow_focus(c: Control) -> void:
+	var n: Node = c.get_parent()
+	while n != null:
+		if n is ScrollContainer:
+			(n as ScrollContainer).ensure_control_visible.call_deferred(c)
+			return
+		n = n.get_parent()
+
+
+## Prawa gałka przewija listę przy fokusie: najbliższy przodek ScrollContainer, inaczej pierwsza przewijalna
+## lista / tekst (ScrollContainer, RichTextLabel) w scenie fokusu (np. okno „Co nowego”).
+func _scroll_with_right_stick(delta: float) -> void:
+	var v := 0.0
+	for pad in Input.get_connected_joypads():
+		var y := Input.get_joy_axis(pad, JOY_AXIS_RIGHT_Y)
+		if absf(y) > absf(v):
+			v = y
+	if absf(v) < DEADZONE * 0.5:
+		return
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus == null:
+		return
+	var bar := _scroll_bar_for(focus)
+	if bar != null:
+		bar.value += v * SCROLL_SPEED * delta
+
+
+func _scroll_bar_for(focus: Control) -> VScrollBar:
+	var n: Node = focus.get_parent()
+	while n != null:
+		if n is ScrollContainer and (n as ScrollContainer).is_visible_in_tree():
+			return (n as ScrollContainer).get_v_scroll_bar()
+		n = n.get_parent()
+	var root: Node = focus.owner if focus.owner != null else focus.get_parent()
+	if root == null:
+		return null
+	for c in root.find_children("*", "Control", true, false):
+		if not (c as Control).is_visible_in_tree():
+			continue
+		var bar: VScrollBar = null
+		if c is ScrollContainer:
+			bar = (c as ScrollContainer).get_v_scroll_bar()
+		elif c is RichTextLabel:
+			bar = (c as RichTextLabel).get_v_scroll_bar()
+		if bar != null and bar.max_value - bar.page > 0.0:
+			return bar
+	return null
 
 
 ## Kierunek trzymany klawiszem / krzyżakiem (ui_* albo move_*) jako akcja ui_* albo "".
