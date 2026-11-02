@@ -23,6 +23,7 @@
   "host.options.tab_audio": "Audio",
   "host.options.tab_theme": "Theme",
   "host.options.tab_questions": "Questions",
+  "host.options.tab_module": "Module",
   "host.options.tab_controls": "Controls",
   "host.options.quizless_mode": "Play without quizzes (auto-pass)",
   "host.options.language": "Language",

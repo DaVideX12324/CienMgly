@@ -39,6 +39,11 @@ signal closed
 @onready var _lbl_bars: Label = $Panel/Margin/VBox/Tabs/Motyw/Content/LblBars
 @onready var _bars_option: OptionButton = $Panel/Margin/VBox/Tabs/Motyw/Content/BarsOption
 @onready var _extra_options: VBoxContainer = $Panel/Margin/VBox/Tabs/Motyw/Content/ExtraOptions
+## Zakładka ustawień aktywnego modułu (get_module_options) — tytuł = nazwa modułu, bez opcji ukryta.
+@onready var _module_tab: Control = $Panel/Margin/VBox/Tabs/Modul
+@onready var _module_options: VBoxContainer = $Panel/Margin/VBox/Tabs/Modul/ModuleOptions
+## Kontener, do którego _add_*_option dokładają wiersze (Motyw albo zakładka modułu).
+var _opt_target: VBoxContainer
 
 @onready var _sets_list: VBoxContainer = $Panel/Margin/VBox/Tabs/Pytania/SetsScroll/SetsList
 @onready var _lbl_sets: Label = $Panel/Margin/VBox/Tabs/Pytania/LblSets
@@ -597,11 +602,23 @@ func _sync_skin_tab() -> void:
 ## Dodatkowe opcje wyglądu modułu (get_ui_options: [{key, label, type: "bool" | "choice", default}],
 ## "choice" z listą choices: [{id, name}]) — zapis w ustawieniach modułu, zmiana od razu (module_setting_changed).
 func _build_extra_options(module: Node) -> void:
-	for c in _extra_options.get_children():
+	_build_options(_extra_options, module.get_ui_options() if module and module.has_method("get_ui_options") else [])
+	# Ustawienia modułu (nie wyglądu) — osobna zakładka z nazwą modułu.
+	var opts: Array = module.get_module_options() if module and module.has_method("get_module_options") else []
+	_build_options(_module_options, opts)
+	var idx := _module_tab.get_index()
+	_tabs.set_tab_hidden(idx, opts.is_empty())
+	if not opts.is_empty():
+		var core := get_node_or_null("/root/CoreManager")
+		var manifest: Dictionary = ModuleRegistry.get_by_id(core.get_active_module_id()) if core else {}
+		_tabs.set_tab_title(idx, str(manifest.get("name", I18nService.t("host.options.tab_module", "Moduł"))))
+
+
+func _build_options(target: VBoxContainer, options: Array) -> void:
+	for c in target.get_children():
 		c.queue_free()
-	if module == null or not module.has_method("get_ui_options"):
-		return
-	for opt in module.get_ui_options():
+	_opt_target = target
+	for opt in options:
 		var type := str(opt.get("type", "bool"))
 		if type == "choice":
 			_add_choice_option(opt)
@@ -619,7 +636,7 @@ func _build_extra_options(module: Node) -> void:
 		cb.toggled.connect(func(on: bool) -> void:
 			_play_click()
 			SettingsService.set_module(_skin_module_id, key, on))
-		_extra_options.add_child(cb)
+		_opt_target.add_child(cb)
 
 
 ## Opcja liczbowa modułu ({key, label, type: "number", min, max, step, default}): etykieta + pole liczbowe.
@@ -643,7 +660,7 @@ func _add_number_option(opt: Dictionary) -> void:
 	spin.value_changed.connect(func(v: float) -> void:
 		SettingsService.set_module(_skin_module_id, key, v))
 	row.add_child(spin)
-	_extra_options.add_child(row)
+	_opt_target.add_child(row)
 
 
 ## Opcja wyboru modułu ({key, label, type: "choice", choices: [{id, name}], default}): etykieta + lista.
@@ -656,7 +673,7 @@ func _add_choice_option(opt: Dictionary) -> void:
 	lbl.text = str(opt.get("label", key)) + ":"
 	lbl.add_theme_color_override("font_color", Color(0.7, 0.7, 0.8, 1))
 	lbl.add_theme_font_size_override("font_size", _fs(18))
-	_extra_options.add_child(lbl)
+	_opt_target.add_child(lbl)
 	var option := OptionButton.new()
 	var current := str(SettingsService.get_module(_skin_module_id, key, opt.get("default", "")))
 	for i in range(choices.size()):
@@ -670,7 +687,7 @@ func _add_choice_option(opt: Dictionary) -> void:
 	option.item_selected.connect(func(index: int) -> void:
 		_play_click()
 		SettingsService.set_module(_skin_module_id, key, str(choices[index].get("id", ""))))
-	_extra_options.add_child(option)
+	_opt_target.add_child(option)
 
 
 ## Lista [{id, name}] w przycisku; zaznaczona pozycja z ustawień modułu (`key`), domyślnie pierwsza.
