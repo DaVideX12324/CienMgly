@@ -218,7 +218,7 @@ func _input(event: InputEvent) -> void:
 				if not _tabs.is_tab_hidden(i):
 					break
 			_tabs.current_tab = i
-			_tabs.get_tab_bar().grab_focus()  # fokus z ukrytej zakładki by zniknął
+			_focus_tab_content.call_deferred()  # fokus z ukrytej zakładki by zniknął
 			if AudioService:
 				AudioService.play_sfx_by_name("click")
 			get_viewport().set_input_as_handled()
@@ -260,6 +260,16 @@ func embed_in(container: Control) -> void:
 
 func is_embedded() -> bool:
 	return _embedded_content != null
+
+
+## Fokus na pierwszym elemencie bieżącej zakładki (brak — pasek zakładek).
+func _focus_tab_content() -> void:
+	for n in _tabs.get_current_tab_control().find_children("*", "Control", true, false):
+		var c := n as Control
+		if c.focus_mode == Control.FOCUS_ALL and c.is_visible_in_tree() and not (c is BaseButton and c.disabled):
+			c.grab_focus()
+			return
+	_tabs.get_tab_bar().grab_focus()
 
 
 func open() -> void:
