@@ -341,8 +341,9 @@ func _place_level_label() -> void:
 		return
 	var h := tex.get_size().y * sprite.scale.y
 	var top := sprite.position.y + sprite.offset.y * sprite.scale.y - (h / 2.0 if sprite.centered else 0.0)
-	lbl.offset_bottom = top + 2.0
-	lbl.offset_top = lbl.offset_bottom - 10.0
+	# Etykieta w 4x większej rozdzielczości, zmniejszona skalą (ostry tekst przy zoomie kamery): 48x10 px świata.
+	lbl.size = Vector2(192.0, 40.0)
+	lbl.position = Vector2(-24.0, top + 2.0 - 40.0 * lbl.scale.y)
 
 
 ## Złoto z poziomu wroga (wróg bez poziomu, np. tutorial, liczony jak poziom 1); skala rozmiaru mapy jak przy XP.
