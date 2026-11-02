@@ -203,6 +203,21 @@ func _input(event: InputEvent) -> void:
 		_capture_key(event as InputEventKey)
 		get_viewport().set_input_as_handled()
 		return
+	# Bumpery (tab_prev / tab_next) zmieniają zakładkę niezależnie od fokusu.
+	for dir in [-1, 1]:
+		var act := "tab_prev" if dir < 0 else "tab_next"
+		var typing := event is InputEventKey and (get_viewport().gui_get_focus_owner() is LineEdit 				or get_viewport().gui_get_focus_owner() is TextEdit)
+		if InputMap.has_action(act) and event.is_action_pressed(act) and not _confirming and not typing:
+			var i := _tabs.current_tab
+			for _k in _tabs.get_tab_count():  # z pominięciem ukrytych zakładek
+				i = posmod(i + dir, _tabs.get_tab_count())
+				if not _tabs.is_tab_hidden(i):
+					break
+			_tabs.current_tab = i
+			if AudioService:
+				AudioService.play_sfx_by_name("click")
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action_pressed("ui_cancel"):
 		if _confirming:
 			_on_revert()
