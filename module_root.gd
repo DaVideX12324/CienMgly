@@ -61,6 +61,11 @@ func get_ui_options() -> Array[Dictionary]:
 	return QuizTheme.get_ui_options()
 
 
+## Ustawienia gry (nie wyglądu) dla zakładki modułu w opcjach — ten sam format co get_ui_options.
+func get_module_options() -> Array[Dictionary]:
+	return preload("scripts/enemies/difficulty.gd").ui_options()
+
+
 ## Style pasków dla zakładki „Motyw” (klucz ui_bar_style).
 func get_ui_bar_styles() -> Array[Dictionary]:
 	return QuizTheme.get_bar_styles()
