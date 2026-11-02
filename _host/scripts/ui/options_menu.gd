@@ -269,6 +269,8 @@ func open() -> void:
 	_populate_binds()  # aktywny moduł mógł się zmienić
 	_on_scale_changed(UIScaleService.scale_factor)  # czcionka aktywnego modułu (mógł się zmienić)
 	visible = true
+	# Fokus na zakładkach — pad / klawiatura mają od czego zacząć (lewo/prawo = zakładki, dół = treść).
+	_tabs.get_tab_bar().grab_focus.call_deferred()
 
 
 func close() -> void:
