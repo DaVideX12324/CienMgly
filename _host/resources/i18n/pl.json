@@ -1,5 +1,8 @@
 {
   "update.whats_new": "Co nowego w {version}",
+  "update.exe_downloading": "Pobieranie aktualizacji {version}…",
+  "update.exe_done": "Zaktualizowano do {version} — nowa wersja przy następnym uruchomieniu.",
+  "update.exe_failed": "Nie udało się pobrać aktualizacji {version}.",
   "update.available": "Dostępna wersja {version} — pobierz",
   "update.restart": "Pobrano aktualizację {version} — kliknij, by uruchomić ponownie",
   "host.menu.title": "Artefakt Wiedzy",

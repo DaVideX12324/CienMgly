@@ -1,5 +1,8 @@
 {
   "update.whats_new": "What's new in {version}",
+  "update.exe_downloading": "Downloading update {version}…",
+  "update.exe_done": "Updated to {version} — the new version starts next time.",
+  "update.exe_failed": "Could not download update {version}.",
   "update.available": "Version {version} available — download",
   "update.restart": "Update {version} downloaded — click to restart",
   "host.menu.title": "Artefakt Wiedzy",
