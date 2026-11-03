@@ -151,7 +151,8 @@ func _draw() -> void:
 	m.set_shader_parameter(&"ratio", clampf((value - min_value) / span, 0.0, 1.0) if span > 0.0 else 0.0)
 	var h := src.y * k
 	var fill_h := (src.y - 2 * _outline()) * k
-	draw_texture_rect(under, Rect2(Vector2(0, roundf((size.y - fill_h) * 0.5) - _outline() * k), Vector2(dst_w * k, h)), false)
+	# Wycinek, nie AtlasTexture — z atlasem UV w shaderze to współrzędne całego arkusza (pasek jednolity).
+	draw_texture_rect(_flat(under), Rect2(Vector2(0, roundf((size.y - fill_h) * 0.5) - _outline() * k), Vector2(dst_w * k, h)), false)
 
 
 ## Wycinek atlasu jako osobna tekstura — sampler shadera dostaje RID całego atlasu, nie regionu.
