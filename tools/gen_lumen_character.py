@@ -561,7 +561,10 @@ def _texture(lab, x, y, n, group):
             return 1
         if d == 1 or (d == 2 and x % 2 == 0):
             return 0
-        return 2 if (x + d // 2) % 3 == 0 else 1
+        # Kosmyki rozchodzą się od przedziałka (środek włosów w wierszu): lewa połowa skośnie w lewo, prawa w prawo.
+        xs = [px for (px, py), m in lab.items() if py == y and m == 'hair']
+        rel = x - (min(xs) + max(xs)) // 2
+        return 2 if rel != 0 and (abs(rel) - d // 2) % 3 == 0 else 1
     if n in STRANDS:
         return 0 if up is None or piece(up) != group else 1
     if n in ('robe', 'robe_hem'):
