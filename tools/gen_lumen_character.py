@@ -125,7 +125,7 @@ CHARACTERS = {
     # Mag (wzór: NPC Wizzard): fioletowy spiczasty kapelusz i szata, siwa broda.
     'mag': {
         'head_style': 'wizard', 'body': 'robe',
-        'head': PURPLE, 'hat': PURPLE, 'hair': WHITE, 'beard': WHITE, 'face': SKIN, 'eye': (20, 20, 18),
+        'head': PURPLE, 'hat': PURPLE, 'hat_stars': (255, 210, 90), 'hair': WHITE, 'beard': WHITE, 'face': SKIN, 'eye': (20, 20, 18),
         'trim': GOLD,
         'torso_up': PURPLE, 'torso_lo': PURPLE, 'belt': LEATHER, 'buckle': GOLD, 'robe': PURPLE,
         'arm_up': PURPLE, 'arm_lo': PURPLE, 'hand': SKIN, 'cuff': GOLD,
@@ -542,6 +542,26 @@ def ramp_for(n, spec):
     return spec.get(key) or spec['torso_lo']
 
 
+## Faktura (tylko kratki w tonie średnim): światło z lewej-góry — górny / lewy brzeg części jasny (ton 0);
+## włosy — rzadkie ciemne pasma (co 4 px); szata — fałdy (przerywana ciemna kreska co 4 px).
+LIT = {'hair', 'hood', 'hat', 'head', 'torso_up', 'robe', 'arm_up', 'r_up', 'l_up'}
+STRANDS = {'hair', 'hood', 'hat'}
+
+
+def _texture(lab, x, y, n, group):
+    up = lab.get((x, y - 1))
+    left = lab.get((x - 1, y))
+    if n in STRANDS:
+        if up is None or piece(up) != group:
+            return 0
+        return 2 if n == 'hair' and (x + y // 4) % 4 == 0 else 1
+    if n in ('robe', 'robe_hem'):
+        return 2 if x % 4 == 0 and y % 3 != 0 else 1
+    if n in LIT and ((up is None or piece(up) != group) or (left is None or piece(left) != group)):
+        return 0
+    return 1
+
+
 def paint(fr, spec, direction):
     lab, hip = segment(fr)
     shape_head(lab, spec, direction)
@@ -549,6 +569,16 @@ def paint(fr, spec, direction):
     add_details(lab, spec, direction)
     out = Image.new('RGBA', (FRAME, FRAME), (0, 0, 0, 0))
     back = BACK_SIDE[direction]
+    # Bryła (styl LPC): zasięg każdej części w wierszu — przy lewym brzegu odblask, przy prawym cień.
+    span = {}
+    box = {}
+    for (x, y), n in lab.items():
+        k = (piece(n), y)
+        a, b = span.get(k, (x, x))
+        span[k] = (min(a, x), max(b, x))
+        g = piece(n)
+        bx = box.get(g, (x, y))
+        box[g] = (min(bx[0], x), min(bx[1], y))
     for (x, y), n in lab.items():
         if not (0 <= x < FRAME and 0 <= y < FRAME):
             continue
@@ -564,13 +594,29 @@ def paint(fr, spec, direction):
                 tone = 2
         if spec.get('plaid') and tone == 1 and n in ('torso_up', 'torso_lo', 'arm_up') and (x + y) % 2 == 0:
             tone = 2    # koszula w kratę: szachownica tonu środkowego i ciemnego
-        out.putpixel((x, y), ramp[tone] + (255,))
+        if tone == 1:
+            tone = _texture(lab, x, y, n, group)
+        if tone == 1:
+            a, b = span[(group, y)]
+            if b - a >= 3 and x == a + 1 and n not in ('face',):
+                tone = 0
+            elif b - a >= 4 and x == b - 1:
+                tone = 2
+        col = ramp[tone]
+        if n == 'hat' and spec.get('hat_stars') and tone == 1:
+            bx = box[group]
+            rx, ry = x - bx[0], y - bx[1]
+            if ry >= 3 and (rx * 3 + ry * 5) % 9 == 0:
+                col = spec['hat_stars']    # gwiazdki na kapeluszu (stałe względem kapelusza, nie migają)
+        out.putpixel((x, y), col + (255,))
     solid = {p for p in lab if 0 <= p[0] < FRAME and 0 <= p[1] < FRAME}
     for (x, y) in solid:
         for d in D4:
             n = (x + d[0], y + d[1])
             if n not in solid and 0 <= n[0] < FRAME and 0 <= n[1] < FRAME:
-                out.putpixel(n, OUTLINE + (255,))
+                # Kontur w kolorze sąsiada (selout jak w LPC): bardzo ciemny odcień części, nie czarny.
+                c = out.getpixel((x, y))
+                out.putpixel(n, tuple(int(c[i] * 0.3 + OUTLINE[i] * 0.4) for i in range(3)) + (255,))
     return out
 
 
