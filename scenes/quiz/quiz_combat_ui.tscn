@@ -778,7 +778,7 @@ size_flags_vertical = 0
 text = "Bohater"
 
 [node name="StatusIcons" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow0" unique_id=1771300000]
-custom_minimum_size = Vector2(64, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 4
@@ -903,7 +903,7 @@ size_flags_vertical = 0
 text = "Ally 2"
 
 [node name="StatusIcons" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow1" unique_id=1771300001]
-custom_minimum_size = Vector2(64, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 4
@@ -1028,7 +1028,7 @@ size_flags_vertical = 0
 text = "Ally 3"
 
 [node name="StatusIcons" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow2" unique_id=1771300002]
-custom_minimum_size = Vector2(64, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 4
@@ -1153,7 +1153,7 @@ size_flags_vertical = 0
 text = "Ally 4"
 
 [node name="StatusIcons" type="HBoxContainer" parent="Root/BattleWindow/WindowMargin/VBox/ContentRow/PartyPanel/PartyMargin/PartyVBox/PartyRow3" unique_id=1771300003]
-custom_minimum_size = Vector2(64, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 4
