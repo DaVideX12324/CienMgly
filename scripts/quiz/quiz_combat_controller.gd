@@ -3115,9 +3115,10 @@ func _combat_ui_compact() -> bool:
 	return QuizTheme.combat_ui_compact() and not _narrow_window()
 
 
-## Okno gry węższe niż compact_min_viewport_width — w pikselach okna, nie ekranu logicznego skali UI.
+## Ekran logiczny (okno / skala UI) węższy niż compact_min_viewport_width — przy dużej skali UI pas walki też
+## idzie na całą szerokość (inaczej paski w oknie statusu kurczą się do samych liczb).
 func _narrow_window() -> bool:
-	return get_viewport_rect().size.x < compact_min_viewport_width
+	return UiLayerScale.screen_size(self).x < compact_min_viewport_width
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
