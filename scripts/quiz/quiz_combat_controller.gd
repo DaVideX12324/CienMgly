@@ -3723,14 +3723,16 @@ func _guarded_status_chance(member_index: int, sk: QuizRpgSkillBase) -> float:
 
 ## Statusy postaci w wierszu drużyny: nazwy w kolorach statusów (QuizRpgStatusCatalog), puste = brak.
 func _set_party_row_statuses(row: HBoxContainer, member_index: int) -> void:
-	var label := row.get_node_or_null("StatusLabel") as RichTextLabel
-	if label == null:
+	var box := row.get_node_or_null("StatusIcons") as HBoxContainer
+	if box == null:
 		return
-	var parts: Array[String] = []
+	var ids: Array = []
 	if _ps and _ps.has_method("get_statuses"):
-		for sid in _ps.get_statuses(member_index):
-			parts.append("[color=#%s]%s[/color]" % [QuizRpgStatusCatalog.color_of(String(sid)).to_html(false), QuizRpgStatusCatalog.name_of(String(sid))])
-	label.text = ", ".join(parts)
+		ids = Array(_ps.get_statuses(member_index))
+	if ids == box.get_meta(&"ids", []):
+		return  # bez zmian — animacje ikon lecą dalej
+	box.set_meta(&"ids", ids)
+	QuizRpgStatusIcon.fill(box, ids)
 
 
 func _set_party_row_name(row: HBoxContainer, value: String) -> void:

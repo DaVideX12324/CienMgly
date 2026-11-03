@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="QuizRpgStatusData" format=3]
 
 [ext_resource type="Script" path="res://modules/quiz_rpg/scripts/skills/status_data.gd" id="1_status"]
+[ext_resource type="Texture2D" path="res://assets/UI/status_effects/se_feared.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_status")
+icon = ExtResource("2_icon")
 status_id = "spooked"
 display_name = "Przestrach"
 color = Color(0.4, 0.7, 0.85, 1)

@@ -12,6 +12,8 @@ enum Restriction { NONE, SKIP_TURN, CONFUSED, SILENCED }
 @export var status_id: String = ""
 @export var display_name: String = "Status"
 @export var color: Color = Color(0.8, 0.8, 0.8)
+## Ikona: pasek klatek 16×16 (assets/UI/status_effects, animowana — QuizRpgStatusIcon); tło ikony w kolorze `color`.
+@export var icon: Texture2D
 
 @export_group("Czas")
 ## Tury trwania (losowo min..max); 0 / 0 = do wyleczenia (np. trucizna drużyny).
