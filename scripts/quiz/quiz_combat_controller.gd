@@ -78,7 +78,9 @@ const COMPLEX_CHANCE_MAX := 0.8
 @export_range(0.2, 0.8, 0.01) var list_party_width := 0.4  ## lista umiejętności / przedmiotów: okno drużyny obok (reszta pasa = lista)
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
 @export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
-@export var compact_min_viewport_width := 1600.0  ## węższe okno gry (px): UI walki na całą szerokość (także sam status i opcja „na szerokość treści”)
+## Paski HP / SP / TP krótsze niż tyle (px ekranu logicznego) w węższym układzie -> pas walki na całą szerokość.
+@export var compact_min_bar_width := 140.0
+var _bars_squeezed := false
 
 var phase: Phase = Phase.ACTION_SELECT:
 	set(v):
@@ -369,6 +371,7 @@ func _ready() -> void:
 	var ui_scale_service: Node = get_node_or_null(^"/root/UIScaleService")
 	if ui_scale_service and ui_scale_service.has_signal("scale_changed"):
 		ui_scale_service.scale_changed.connect(func(_f: float) -> void:
+			_bars_squeezed = false
 			_apply_responsive_layout()
 		)
 
@@ -2933,6 +2936,7 @@ func _ensure_enemy_target_highlight(slot: Control) -> Control:
 
 
 func _on_viewport_size_changed() -> void:
+	_bars_squeezed = false
 	_apply_responsive_layout()
 
 
@@ -3109,16 +3113,29 @@ func _fit_field_to_band(band_h: float) -> void:
 		window_shadow.offset_top = -band_h - _shadow_height
 
 
-## Opcja „UI walki na szerokość treści”, ale tylko w oknie gry co najmniej compact_min_viewport_width — w węższym
-## (np. 1280 px) wąskie okna drużyny / quizu są za ciasne, więc pas idzie na całą szerokość.
+## Opcja „UI walki na szerokość treści”, chyba że paski drużyny wyszły w niej za krótkie (_narrow_window).
 func _combat_ui_compact() -> bool:
 	return QuizTheme.combat_ui_compact() and not _narrow_window()
 
 
-## Ekran logiczny (okno / skala UI) węższy niż compact_min_viewport_width — przy dużej skali UI pas walki też
-## idzie na całą szerokość (inaczej paski w oknie statusu kurczą się do samych liczb).
+## Pas walki na całą szerokość: paski HP / SP / TP w węższym układzie wyszły krótsze niż compact_min_bar_width
+## (zależy od okna, skali UI, imion i ikon statusów — nie od samej rozdzielczości). Sprawdzane po ułożeniu
+## (_check_bar_squeeze), kasowane przy zmianie okna / skali UI.
 func _narrow_window() -> bool:
-	return UiLayerScale.screen_size(self).x < compact_min_viewport_width
+	return _bars_squeezed
+
+
+func _check_bar_squeeze() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if _bars_squeezed or party_panel_container == null or not party_panel_container.is_visible_in_tree():
+		return
+	var bar := party_panel_container.find_child("Bar", true, false) as Control
+	if bar == null or not bar.is_visible_in_tree():
+		return
+	if bar.size.x < compact_min_bar_width:
+		_bars_squeezed = true
+		_set_band_mode(_band_mode)
 
 
 ## Układ dolnego pasa (kolejność i szerokość okien komend / statusu).
@@ -3174,6 +3191,8 @@ func _set_band_mode(mode: Band) -> void:
 			else:
 				party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 				party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
+	if not _bars_squeezed:
+		_check_bar_squeeze()
 
 
 ## Zmiana pasa bez przeskoku: okna, które zostają (np. drużyna w środku), przesuwają się z poprzedniego miejsca na nowe;
