@@ -543,7 +543,7 @@ def ramp_for(n, spec):
 
 
 ## Faktura (tylko kratki w tonie średnim): światło z lewej-góry — górny / lewy brzeg części jasny (ton 0);
-## włosy — rzadkie ciemne pasma (co 4 px); szata — fałdy (przerywana ciemna kreska co 4 px).
+## włosy — połysk pod szczytem i skośne kosmyki (LPC); szata — fałdy (przerywana ciemna kreska co 4 px).
 LIT = {'hair', 'hood', 'hat', 'head', 'torso_up', 'robe', 'arm_up', 'r_up', 'l_up'}
 STRANDS = {'hair', 'hood', 'hat'}
 
@@ -551,10 +551,19 @@ STRANDS = {'hair', 'hood', 'hat'}
 def _texture(lab, x, y, n, group):
     up = lab.get((x, y - 1))
     left = lab.get((x - 1, y))
-    if n in STRANDS:
-        if up is None or piece(up) != group:
+    if n == 'hair':
+        # Włosy jak w LPC: pasmo połysku pod szczytem (rząd 1–2 od góry kolumny), niżej kosmyki rozdzielone
+        # skośnymi ciemnymi liniami.
+        d = 0
+        while lab.get((x, y - d - 1)) == 'hair':
+            d += 1
+        if d == 0:
+            return 1
+        if d == 1 or (d == 2 and x % 2 == 0):
             return 0
-        return 2 if n == 'hair' and (x + y // 4) % 4 == 0 else 1
+        return 2 if (x + d // 2) % 3 == 0 else 1
+    if n in STRANDS:
+        return 0 if up is None or piece(up) != group else 1
     if n in ('robe', 'robe_hem'):
         return 2 if x % 4 == 0 and y % 3 != 0 else 1
     if n in LIT and ((up is None or piece(up) != group) or (left is None or piece(left) != group)):
