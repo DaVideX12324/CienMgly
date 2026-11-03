@@ -1021,6 +1021,14 @@ func _show_appeared_window() -> void:
 	# Układ okien musi się ustalić (pomiar wysokości dolnego pasa w _get_or_create_victory_log).
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# Pas jeszcze ukryty — ułożony niewidocznie, żeby zmierzyć paski (_check_bar_squeeze): przy ciasnych komunikat
+	# też idzie na całą szerokość.
+	if content_row and not content_row.visible and not _bars_squeezed:
+		content_row.modulate.a = 0.0
+		content_row.visible = true
+		await _check_bar_squeeze()
+		content_row.visible = false
+		content_row.modulate.a = 1.0
 	var lbl := _get_or_create_victory_log()
 	lbl.text = "\n".join(lines)
 	lbl.visible_characters = 0
@@ -4153,6 +4161,8 @@ func _fit_message_window_width() -> void:
 				left = minf(left, (c as Control).global_position.x)
 				right = maxf(right, (c as Control).global_position.x + (c as Control).size.x)
 	var width := maxf(right - left, vp_w * status_only_width) if right > left else vp_w * status_only_width
+	if _bars_squeezed:
+		width = vp_w
 	_message_window.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_message_window.custom_minimum_size.x = minf(width, vp_w)
 
