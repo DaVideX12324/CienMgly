@@ -78,7 +78,7 @@ const COMPLEX_CHANCE_MAX := 0.8
 @export_range(0.2, 0.8, 0.01) var list_party_width := 0.4  ## lista umiejętności / przedmiotów: okno drużyny obok (reszta pasa = lista)
 @export_range(0.3, 1.0, 0.01) var compact_party_width := 0.5  ## UI „na szerokość treści” (opcje): okno drużyny
 @export_range(0.2, 1.0, 0.01) var compact_quiz_min_width := 0.45  ## UI „na szerokość treści”: quiz co najmniej tyle szerokości ekranu
-## Paski HP / SP / TP krótsze niż tyle (px ekranu logicznego) w węższym układzie -> pas walki na całą szerokość.
+## Paski HP / SP / TP krótsze niż tyle (px ekranu logicznego) przy „na szerokość treści” -> opcja odznaczona.
 @export var compact_min_bar_width := 140.0
 var _bars_squeezed := false
 
@@ -1021,8 +1021,7 @@ func _show_appeared_window() -> void:
 	# Układ okien musi się ustalić (pomiar wysokości dolnego pasa w _get_or_create_victory_log).
 	await get_tree().process_frame
 	await get_tree().process_frame
-	# Pas jeszcze ukryty — ułożony niewidocznie, żeby zmierzyć paski (_check_bar_squeeze): przy ciasnych komunikat
-	# też idzie na całą szerokość.
+	# Pas jeszcze ukryty — ułożony niewidocznie, żeby zmierzyć paski (_check_bar_squeeze) przed komunikatem.
 	if content_row and not content_row.visible and not _bars_squeezed:
 		content_row.modulate.a = 0.0
 		content_row.visible = true
@@ -3121,28 +3120,25 @@ func _fit_field_to_band(band_h: float) -> void:
 		window_shadow.offset_top = -band_h - _shadow_height
 
 
-## Opcja „UI walki na szerokość treści”, chyba że paski drużyny wyszły w niej za krótkie (_narrow_window).
+## Opcja „UI walki na szerokość treści”.
 func _combat_ui_compact() -> bool:
-	return QuizTheme.combat_ui_compact() and not _narrow_window()
+	return QuizTheme.combat_ui_compact()
 
 
-## Pas walki na całą szerokość: paski HP / SP / TP w węższym układzie wyszły krótsze niż compact_min_bar_width
-## (zależy od okna, skali UI, imion i ikon statusów — nie od samej rozdzielczości). Sprawdzane po ułożeniu
-## (_check_bar_squeeze), kasowane przy zmianie okna / skali UI.
-func _narrow_window() -> bool:
-	return _bars_squeezed
-
-
+## Opcja „na szerokość treści” przy pasku HP / SP / TP krótszym niż compact_min_bar_width (okno, skala UI, imiona,
+## ikony statusów): gra ją odznacza i zapamiętuje szerokość ekranu (QuizTheme.mark_combat_compact_tight) — w opcjach
+## przy niej ostrzeżenie. Sprawdzane po ułożeniu pasa, raz na walkę.
 func _check_bar_squeeze() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
-	if _bars_squeezed or party_panel_container == null or not party_panel_container.is_visible_in_tree():
+	if _bars_squeezed or not QuizTheme.combat_ui_compact() or party_panel_container == null or not party_panel_container.is_visible_in_tree():
 		return
 	var bar := party_panel_container.find_child("Bar", true, false) as Control
 	if bar == null or not bar.is_visible_in_tree():
 		return
 	if bar.size.x < compact_min_bar_width:
 		_bars_squeezed = true
+		QuizTheme.mark_combat_compact_tight(UiLayerScale.screen_size(self).x)
 		_set_band_mode(_band_mode)
 
 
@@ -3193,12 +3189,8 @@ func _set_band_mode(mode: Band) -> void:
 			party_command_panel.visible = false
 			if actor_command_panel:
 				actor_command_panel.visible = false
-			if _narrow_window():
-				party_panel_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				party_panel_container.custom_minimum_size = Vector2.ZERO
-			else:
-				party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-				party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
+			party_panel_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			party_panel_container.custom_minimum_size = Vector2(vp_w * (compact_party_width if compact else status_only_width), 0)
 	if not _bars_squeezed:
 		_check_bar_squeeze()
 
@@ -4161,8 +4153,6 @@ func _fit_message_window_width() -> void:
 				left = minf(left, (c as Control).global_position.x)
 				right = maxf(right, (c as Control).global_position.x + (c as Control).size.x)
 	var width := maxf(right - left, vp_w * status_only_width) if right > left else vp_w * status_only_width
-	if _bars_squeezed:
-		width = vp_w
 	_message_window.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_message_window.custom_minimum_size.x = minf(width, vp_w)
 

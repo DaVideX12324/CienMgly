@@ -917,6 +917,7 @@
   "theme.bar.zdrowie": "Red-green",
   "theme.opt.answers_layout": "Combat answers layout",
   "theme.opt.combat_compact": "Combat UI compact to content width",
+  "theme.opt.combat_compact_tight": "Not recommended for the current window settings — party bars in combat are too short.",
   "theme.opt.combat_intro": "Combat intro animation",
   "theme.opt.combat_intro_style": "Combat intro style",
   "theme.opt.intro_swirl": "Swirl and iris",

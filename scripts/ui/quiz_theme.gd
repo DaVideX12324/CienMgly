@@ -129,6 +129,8 @@ static func get_ui_options() -> Array[Dictionary]:
 		var item: Dictionary = opt.duplicate(true)
 		var k: String = str(item.get("key", "")).trim_prefix("ui_")
 		item["label"] = QuizRpgI18n.t("theme.opt." + k, str(item.get("label", "")))
+		if k == "combat_compact" and combat_compact_not_recommended():
+			item["warning"] = QuizRpgI18n.t("theme.opt.combat_compact_tight", "Niezalecane przy obecnych ustawieniach okna — paski drużyny w walce są za krótkie.")
 		if item.has("choices"):
 			var choices: Array = []
 			for ch in item["choices"]:
@@ -399,6 +401,31 @@ static func combat_intro_style() -> String:
 	var settings := _settings_service()
 	var v := str(settings.call("get_module", MODULE_ID, SETTING_COMBAT_INTRO_STYLE, INTRO_SWIRL)) if settings else INTRO_SWIRL
 	return v if v == INTRO_SLICES else INTRO_SWIRL
+
+
+## Szerokość ekranu logicznego (okno / skala UI), przy której gra odznaczyła „UI walki na szerokość treści” (za
+## krótkie paski) — w opcjach ostrzeżenie przy tej szerokości i węższej.
+const SETTING_COMBAT_COMPACT_TIGHT := "ui_combat_compact_tight_w"
+
+
+static func mark_combat_compact_tight(screen_w: float) -> void:
+	var settings := _settings_service()
+	if settings == null:
+		return
+	settings.call("set_module", MODULE_ID, SETTING_COMBAT_COMPACT, false)
+	var prev := float(settings.call("get_module", MODULE_ID, SETTING_COMBAT_COMPACT_TIGHT, 0.0))
+	settings.call("set_module", MODULE_ID, SETTING_COMBAT_COMPACT_TIGHT, maxf(prev, roundf(screen_w)))
+
+
+static func combat_compact_not_recommended() -> bool:
+	var settings := _settings_service()
+	var tight := float(settings.call("get_module", MODULE_ID, SETTING_COMBAT_COMPACT_TIGHT, 0.0)) if settings else 0.0
+	var tree := Engine.get_main_loop() as SceneTree
+	if tight <= 0.0 or tree == null:
+		return false
+	var ui_scale: Node = tree.root.get_node_or_null(^"UIScaleService")
+	var f: float = float(ui_scale.get("scale_factor")) if ui_scale else 1.0
+	return tree.root.get_visible_rect().size.x / maxf(f, 0.01) <= tight
 
 
 static func combat_ui_compact() -> bool:

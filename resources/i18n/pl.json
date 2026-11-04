@@ -917,6 +917,7 @@
   "theme.bar.zdrowie": "Czerwono-zielone",
   "theme.opt.answers_layout": "Odpowiedzi w walce",
   "theme.opt.combat_compact": "UI walki tylko na szerokość treści",
+  "theme.opt.combat_compact_tight": "Niezalecane przy obecnych ustawieniach okna — paski drużyny w walce są za krótkie.",
   "theme.opt.combat_intro": "Animacja wejścia do walki",
   "theme.opt.combat_intro_style": "Styl animacji wejścia do walki",
   "theme.opt.intro_swirl": "Wir i źrenica",

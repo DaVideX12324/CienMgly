@@ -610,7 +610,7 @@ func _sync_skin_tab() -> void:
 	_syncing_skin = false
 
 
-## Dodatkowe opcje wyglądu modułu (get_ui_options: [{key, label, type: "bool" | "choice", default}],
+## Dodatkowe opcje wyglądu modułu (get_ui_options: [{key, label, type: "bool" | "choice", default, warning?}],
 ## "choice" z listą choices: [{id, name}]) — zapis w ustawieniach modułu, zmiana od razu (module_setting_changed).
 func _build_extra_options(module: Node) -> void:
 	_build_options(_extra_options, module.get_ui_options() if module and module.has_method("get_ui_options") else [])
@@ -648,6 +648,15 @@ func _build_options(target: VBoxContainer, options: Array) -> void:
 			_play_click()
 			SettingsService.set_module(_skin_module_id, key, on))
 		_opt_target.add_child(cb)
+		# "warning": ostrzeżenie modułu pod przełącznikiem (np. opcja niezalecana przy obecnym oknie).
+		var warn := str(opt.get("warning", ""))
+		if warn != "":
+			var wl := Label.new()
+			wl.text = warn
+			wl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			wl.add_theme_color_override("font_color", Color(1.0, 0.72, 0.35))
+			wl.add_theme_font_size_override("font_size", _fs(15))
+			_opt_target.add_child(wl)
 
 
 ## Opcja liczbowa modułu ({key, label, type: "number", min, max, step, default}): etykieta + pole liczbowe.
