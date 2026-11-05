@@ -220,6 +220,7 @@
   "hero.lotrzyk.name": "Kael",
   "hero.mag.name": "Eldon",
   "hud.level_up": "LEVEL UP! Lv {level}",
+  "hud.new_goal": "New goal!",
   "hud.reward": "Reward: {reward}",
   "inventory.cannot_use_item": "Cannot use item.",
   "inventory.empty_desc": "No items.",

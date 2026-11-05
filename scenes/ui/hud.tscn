@@ -20,6 +20,33 @@ vertical_alignment = 1
 
 [node name="Minimap" parent="." instance=ExtResource("2_minimap")]
 
+[node name="Goal" type="PanelContainer" parent="." unique_id=1090747140]
+modulate = Color(1, 1, 1, 0.9)
+offset_left = 16.0
+offset_top = 60.0
+offset_right = 416.0
+offset_bottom = 140.0
+mouse_filter = 2
+theme_type_variation = &"QuizWindow"
+
+[node name="Box" type="VBoxContainer" parent="Goal" unique_id=1090747141]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Goal/Box" unique_id=1090747142]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0.4, 1)
+theme_override_font_sizes/font_size = 20
+text = "Cel główny"
+
+[node name="Text" type="Label" parent="Goal/Box" unique_id=1090747143]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Cel"
+autowrap_mode = 3
+
 [node name="FadeOverlay" type="ColorRect" parent="." unique_id=1343108672]
 anchors_preset = 15
 anchor_right = 1.0
