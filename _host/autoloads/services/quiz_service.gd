@@ -198,6 +198,7 @@ func start_quiz(
 	var effective_quiz_id := _resolve_quiz_id(module_id, quiz_id)
 	# Losowanie z puli aktywnych (pierwotny quiz_id — nieznany zestaw = wszystkie aktywne).
 	var questions := get_questions(module_id, quiz_id, difficulty_range, count, allowed_types)
+	questions = questions.map(_shuffled_answers)
 	var key := _session_key(module_id, session_id)
 	_sessions[key] = {
 		"module_id": module_id,
@@ -212,6 +213,23 @@ func start_quiz(
 
 	quiz_loaded.emit(module_id, effective_quiz_id)
 	return questions[0]
+
+
+## Kopia pytania z wyborem w losowej kolejności odpowiedzi (correct_index przeliczony),
+## żeby gracz nie uczył się pozycji poprawnej odpowiedzi.
+static func _shuffled_answers(question: Dictionary) -> Dictionary:
+	var answers: Array = question.get("answers", [])
+	if str(question.get("type", "multiple_choice")) != "multiple_choice" or answers.size() < 2:
+		return question
+	var order := range(answers.size())
+	order.shuffle()
+	var q := question.duplicate(true)
+	var shuffled: Array = []
+	for i: int in order:
+		shuffled.append(answers[i])
+	q["answers"] = shuffled
+	q["correct_index"] = order.find(int(question.get("correct_index", 0)))
+	return q
 
 
 func start_custom_questions(
