@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const TutorialHint = preload("tutorial_hint.gd")
+
 ## Nakładka na mapę: komunikaty nagród (awans, nagroda), cel główny w rogu (Goal — z main_quest.json, odświeżany
 ## po fladze fabularnej) i zaciemnienie przejść (FadeOverlay — GameManager). Statystyki gracza tylko w menu Esc.
 
@@ -54,6 +56,7 @@ func _refresh_goal(announce: bool) -> void:
 
 func _on_level_up(new_level: int) -> void:
 	_show_reward_popup(QuizRpgI18n.tf("hud.level_up", {"level": new_level}, "LEVEL UP! Lvl {level}"))
+	TutorialHint.show_hint(get_tree(), "level_up")
 
 
 func _on_reward_earned(reward_name: String) -> void:

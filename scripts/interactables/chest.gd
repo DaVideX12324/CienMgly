@@ -3,6 +3,7 @@ class_name Chest
 
 const InteractPromptScript = preload("../ui/interact_prompt.gd")
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const TutorialHint = preload("../ui/tutorial_hint.gd")
 
 @export var lock_id: String = "dungeon_1"
 @export var unique_id: String = ""
@@ -290,6 +291,7 @@ func _on_interaction_area_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_in_interaction_range = true
 		if not opened:
+			TutorialHint.show_hint(get_tree(), "chest")
 			InteractPromptScript.request(self, QuizRpgI18n.t("prompt.open", "Otwórz") if not is_locked else QuizRpgI18n.t("prompt.open_key_lockpick", "Otwórz (klucz / wytrych)"))
 
 

@@ -3,6 +3,7 @@ extends Control
 const TargetRowScene = preload("../../scenes/quiz/combat_target_row.tscn")
 const ActorPreviewScene = preload("../../scenes/quiz/actor_preview.tscn")
 const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
+const TutorialHint = preload("../ui/tutorial_hint.gd")
 
 signal combat_finished(player_won: bool)
 
@@ -776,6 +777,7 @@ func _begin_input() -> void:
 	_clear_battle_log()
 	if turn_number == 1:
 		_push_initiative_notice()
+		TutorialHint.show_hint(get_tree(), "combat")
 	if turn_label:
 		turn_label.text = QuizRpgI18n.tf("combat.turn_number", {"turn": turn_number}, "Tura {turn}")
 	result_label.visible = false

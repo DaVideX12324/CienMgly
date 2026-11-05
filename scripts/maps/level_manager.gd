@@ -6,6 +6,9 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 
 signal set_spawn(spawn: Vector2)
 
+const TutorialHint = preload("../ui/tutorial_hint.gd")
+## Wskazówka samouczka przy pierwszym wejściu na mapę (nazwa pliku sceny -> id w TutorialHint.HINTS).
+const LEVEL_HINTS := {"tutorial_area": "welcome", "cave": "cave", "town": "town"}
 static var INITIAL_LEVEL_PATH: String = QuizRpgPaths.path("scenes/maps/tutorial_area.tscn")
 const DEFAULT_SPAWN_NAME := "Spawn"
 const LoadingScreenScene = preload("../../scenes/ui/loading_screen.tscn")
@@ -122,6 +125,9 @@ func load_level_direct(level_path: String, spawn_name: String = DEFAULT_SPAWN_NA
 	QuizRpgProgressLog.map_entered(_progress_ps(), level_path)
 	_close_loading_screen()
 	await _unblock_input_after_fade(player)
+	var hint := str(LEVEL_HINTS.get(level_path.get_file().get_basename().get_slice("#", 0), ""))
+	if hint != "":
+		TutorialHint.show_hint(get_tree(), hint)
 
 
 ## Oddaje sterowanie, gdy nie ma już ekranu ładowania (też ekranu ProceduralLevel) i drużyna się wynurzyła.
