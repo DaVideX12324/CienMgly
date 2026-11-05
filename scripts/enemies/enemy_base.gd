@@ -330,20 +330,16 @@ func _update_level_label() -> void:
 		else Color(1.0, 0.7, 0.25) if diff >= LEVEL_WARN else Color(0.9, 0.9, 0.9))
 
 
-## Napis tuż nad górną krawędzią klatki sprite'a (sceny dziedziczące mają różne rozmiary).
+## Napis pod stopami: tuż pod dolną krawędzią kolizji ciała (stopy; sceny dziedziczące mają różne rozmiary sprite'ów).
 func _place_level_label() -> void:
 	var lbl := get_node_or_null("LevelLabel") as Label
-	var sprite := get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
-	if lbl == null or sprite == null or sprite.sprite_frames == null or not sprite.sprite_frames.has_animation(sprite.animation) 			or sprite.sprite_frames.get_frame_count(sprite.animation) == 0:
+	var cs := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if lbl == null or cs == null or cs.shape == null:
 		return
-	var tex := sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
-	if tex == null:
-		return
-	var h := tex.get_size().y * sprite.scale.y
-	var top := sprite.position.y + sprite.offset.y * sprite.scale.y - (h / 2.0 if sprite.centered else 0.0)
+	var bottom := cs.position.y + cs.shape.get_rect().end.y
 	# Etykieta w 4x większej rozdzielczości, zmniejszona skalą (ostry tekst przy zoomie kamery): 48x10 px świata.
 	lbl.size = Vector2(192.0, 40.0)
-	lbl.position = Vector2(-24.0, top + 2.0 - 40.0 * lbl.scale.y)
+	lbl.position = Vector2(-24.0, bottom + 1.0)
 
 
 ## Złoto z poziomu wroga (wróg bez poziomu, np. tutorial, liczony jak poziom 1); skala rozmiaru mapy jak przy XP.
