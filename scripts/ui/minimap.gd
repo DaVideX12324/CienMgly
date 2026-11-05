@@ -236,7 +236,7 @@ func _build(level: Node, level_key: String) -> void:
 
 
 ## Znaczniki z bieżącego poziomu: nieotwarte skrzynie, NPC, niepokonani bossowie, przejścia nisz, przedmioty na ziemi
-## (kratki poza mapą pomijane).
+## (kratki poza mapą pomijane). Skrzynie i przedmioty spoza nisz widać od razu (cel zwiedzania), z nisz — po odkryciu.
 func _collect_markers() -> void:
 	var out: Array = []
 	if data != null and is_instance_valid(_level):
@@ -247,10 +247,10 @@ func _collect_markers() -> void:
 				_add_marker(out, p, color_passage_visited if visited else color_passage)
 		for it in get_tree().get_nodes_in_group("ground_items"):
 			if _level.is_ancestor_of(it) and not it.is_queued_for_deletion():
-				_add_marker(out, it, color_item)
+				_add_marker(out, it, color_item, not _in_niche(it))
 		for c in get_tree().get_nodes_in_group("chests"):
 			if _level.is_ancestor_of(c) and not bool(c.get("opened")):
-				_add_marker(out, c, color_chest)
+				_add_marker(out, c, color_chest, not _in_niche(c))
 		for n in _npcs:
 			if is_instance_valid(n) and n.visible:
 				_add_marker(out, n, color_npc)
@@ -262,10 +262,16 @@ func _collect_markers() -> void:
 		_redraw_markers()
 
 
-func _add_marker(out: Array, node: Node2D, color: Color) -> void:
+## always = znacznik widoczny też na nieodkrytej kratce.
+func _add_marker(out: Array, node: Node2D, color: Color, always := false) -> void:
 	var p := QuizRpgMinimapData.cell_of(_level.to_local(node.global_position))
 	if data.has_cell(p):
-		out.append([p, color])
+		out.append([p, color, always])
+
+
+## Zawartość niszy (unique_id „niche_…” z NicheContentPlanner) — sekret, nie zdradzać przed odkryciem.
+static func _in_niche(node: Node) -> bool:
+	return String(node.get("unique_id")).begins_with("niche_") if "unique_id" in node else false
 
 
 func _redraw_markers() -> void:

@@ -1,7 +1,7 @@
 extends Control
 
 ## Znaczniki na minimapie (dziecko TextureRect mapy w scenes/ui/minimap.tscn, rozciągnięte na całą mapę): kwadraty
-## w kratkach z listy minimapy (Minimap.markers: [kratka, kolor]), tylko na odkrytych kratkach. Rozmiar to kratka mapy
+## w kratkach z listy minimapy (Minimap.markers: [kratka, kolor, zawsze]), na odkrytych kratkach (albo zawsze = true). Rozmiar to kratka mapy
 ## w bieżącym powiększeniu × cell_factor, nie mniej niż min_size px; ciemny obrys, żeby odcinał się od podłogi.
 
 @export var min_size := 7.0
@@ -23,7 +23,7 @@ func _draw() -> void:
 	var s := maxf(maxf(cell.x, cell.y) * cell_factor, min_size)
 	for m: Array in minimap.get("markers"):
 		var p: Vector2i = m[0]
-		if not data.is_revealed(p):
+		if not data.is_revealed(p) and not (m.size() > 2 and m[2]):
 			continue
 		var center := (Vector2(p - data.origin) + Vector2(0.5, 0.5)) * cell
 		var r := Rect2(center - Vector2(s, s) * 0.5, Vector2(s, s))
