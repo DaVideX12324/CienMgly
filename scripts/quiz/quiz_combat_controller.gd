@@ -42,6 +42,8 @@ const WRONG_DAMAGE_MULT := 0.5
 const CRIT_BASE := 0.05
 const CRIT_STREAK_SCALE := 0.5  # krytyk = CRIT_BASE + rng_bonus × skala (rng_bonus do 0,5 -> do 30%)
 const CRIT_MULT := 1.8
+## Progi serii poprawnych odpowiedzi z komunikatem nad bohaterem (potem co 5).
+const STREAK_MILESTONES: Array[int] = [3, 5, 10]
 const FLEE_SUCCESS_CHANCE := 0.8  # jak w FNaFB1 (BattleManager.make_escape_ratio)
 const COMMAND_PANEL_WIDTH_DEFAULT := 1.0
 const PARTY_PANEL_WIDTH_DEFAULT := 2.2
@@ -156,7 +158,6 @@ var _shadow_height := 35.0
 @onready var help_label: Label = $TopWindow/VBox/HelpLabel
 const ListRowScene := preload("../../scenes/quiz/combat_list_row.tscn")
 @onready var turn_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/TurnLabel") as Label
-@onready var streak_label: Label = get_node_or_null("BattleWindow/WindowMargin/VBox/TopRow/StreakLabel") as Label
 @onready var target_panel: VBoxContainer = (party_panel_container.get_node_or_null("PartyMargin/TargetPanel") if party_panel_container else null) as VBoxContainer
 @onready var target_label: Label = (target_panel.get_node_or_null("TargetLabel") if target_panel else null) as Label
 @onready var target_list_vbox: GridContainer = (target_panel.get_node_or_null("TargetListVBox") if target_panel else null) as GridContainer
@@ -777,8 +778,6 @@ func _begin_input() -> void:
 		_push_initiative_notice()
 	if turn_label:
 		turn_label.text = QuizRpgI18n.tf("combat.turn_number", {"turn": turn_number}, "Tura {turn}")
-	if streak_label and _ps:
-		streak_label.text = QuizRpgI18n.tf("combat.streak_rng", {"streak": _ps.streak, "bonus": "%.0f" % (_ps.rng_bonus * 100.0)}, "Seria: {streak} | RNG: +{bonus}%")
 	result_label.visible = false
 	_refresh_enemy_header()
 	_refresh_stats_panel()
@@ -1818,6 +1817,7 @@ func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void
 	if _ps:
 		if correct:
 			_bonus_xp_reward += _ps.on_correct_answer(false)  # XP za odpowiedź tylko po wygranej
+			_announce_streak(int(_ps.streak))
 		else:
 			_ps.on_wrong_answer()
 	if _dm:
@@ -1828,6 +1828,16 @@ func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void
 		_round_question_answered.emit(correct)  # pytanie rundy: akcja później, w kolejce AGI
 		return
 	_resolve_action(correct)
+
+
+## Seria na progu (3, 5, 10, potem co 5): napis nad bohaterem z bieżącą szansą krytyka — premia za serię jest widoczna.
+func _announce_streak(streak: int) -> void:
+	if not (streak in STREAK_MILESTONES or (streak > 10 and streak % 5 == 0)) or player == null:
+		return
+	var crit := (CRIT_BASE + float(_ps.rng_bonus) * CRIT_STREAK_SCALE) * 100.0
+	FloatingText.create_at(player, player.global_position + Vector2(0, -40),
+			QuizRpgI18n.tf("combat.streak_milestone", {"streak": streak, "crit": "%.0f" % crit}, "Seria {streak}! Kryt {crit}%"),
+			Color(1.0, 0.75, 0.2), 16)
 
 
 func _show_quiz_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
@@ -1853,8 +1863,6 @@ func _resolve_action(correct: bool) -> void:
 	_update_hp_bars()
 	_refresh_enemy_header()
 	_refresh_stats_panel()
-	if streak_label and _ps:
-		streak_label.text = QuizRpgI18n.tf("combat.streak_rng", {"streak": _ps.streak, "bonus": "%.0f" % (_ps.rng_bonus * 100.0)}, "Seria: {streak} | RNG: +{bonus}%")
 	await get_tree().create_timer(1.5).timeout
 	_next_turn()
 
