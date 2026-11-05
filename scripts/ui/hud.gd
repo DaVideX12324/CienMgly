@@ -64,6 +64,11 @@ func _on_reward_earned(reward_name: String) -> void:
 func _show_reward_popup(text: String) -> void:
 	if not reward_popup:
 		return
+	# W trakcie przejścia między mapami (premia za przejście) — poczekaj, aż ekran się rozjaśni.
+	var waited := 0.0
+	while fade_overlay and fade_overlay.color.a > 0.3 and waited < 5.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
 	reward_popup.text = text
 	reward_popup.visible = true
 	reward_popup.modulate.a = 1.0

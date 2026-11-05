@@ -69,6 +69,9 @@ var _gear_tier: int = 0  # companion-JSON "gear_tier": rekomendowany tier sprzę
 var _enemy_loot: Dictionary = {}  # companion-JSON "enemy_loot": tier wroga (int) -> QuizRpgLootTableData (ścieżka .tres)
 var _chest_loot: QuizRpgLootTableData = null  # companion-JSON "chest_loot": ścieżka .tres — tabela skrzyń strefy
 var _barrel_loot: QuizRpgLootTableData = null  # companion-JSON "barrel_loot": ścieżka .tres — tabela beczek strefy
+## Premia za pierwsze przejście mapy (_grant_first_clear): flaga fabularna i krotność łupu zwykłego wroga.
+const FIRST_CLEAR_PREFIX := "cleared:"
+const FIRST_CLEAR_KILLS := 3
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
@@ -1148,7 +1151,7 @@ func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMa
 ## (Spawn przy wejściu, FromNext przy wyjściu — MapGeneratorBase.arrival_cell), więc od razu nie wraca.
 ## "exit_ends_game" (ścieki): wyjście kończy grę — _finish_game zamiast przejścia.
 func _connect_exit_trigger() -> void:
-	var on_exit := _finish_game if _exit_ends_game else _change_level.bind(next_level_path, next_spawn_name)
+	var on_exit := _finish_game if _exit_ends_game else _leave_forward
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D, on_exit,
 		next_portal_use_key, next_portal_prompt)
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D,
@@ -1199,6 +1202,31 @@ func _refresh_exit_gate(leaving: Node = null) -> void:
 	for node in get_tree().get_nodes_in_group(MapGeneratorBaseScript.EXIT_PORTAL_GROUP):
 		if is_ancestor_of(node):
 			node.set("light_on", not locked)
+
+
+## Wyjście dalej: przy pierwszym przejściu mapy (flaga zapisu FIRST_CLEAR_PREFIX + ścieżka) bonus złota i XP.
+func _leave_forward() -> void:
+	if not _transitioning and not next_level_path.is_empty():
+		_grant_first_clear()
+	_change_level(next_level_path, next_spawn_name)
+
+
+## Premia za pierwsze przejście: FIRST_CLEAR_KILLS × łup zwykłego wroga na poziomie bohatera (skaluje się z grą).
+func _grant_first_clear() -> void:
+	var lsm := _get_level_state_manager()
+	var ps: Node = CoreManager.get_singleton("PlayerStats")
+	if lsm == null or ps == null:
+		return
+	var key := FIRST_CLEAR_PREFIX + (level_path if level_path != "" else scene_file_path)
+	if not lsm.call("set_story_flag", key):
+		return  # flaga już była
+	var lvl := maxi(int(ps.get("level")), 1)
+	var gold := QuizRpgEnemyGold.kill_gold(lvl, 1) * FIRST_CLEAR_KILLS
+	var xp := QuizRpgEnemyXp.kill_xp(lvl, 1) * FIRST_CLEAR_KILLS
+	ps.call("add_gold", gold)
+	ps.call("add_xp", xp)
+	ps.emit_signal("reward_earned", QuizRpgI18n.tf("hud.first_clear", {"gold": gold, "xp": xp},
+			"Mapa przebyta! +{gold} zł, +{xp} XP"))
 
 
 func _change_level(path: String, spawn_name: String) -> void:
