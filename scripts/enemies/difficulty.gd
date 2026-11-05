@@ -24,8 +24,16 @@ const DATA_VERSIONS := {
 		"v2": {"max_hp": 220, "attack": 17, "defense": 18, "magic_attack": 17, "magic_defense": 18},
 	},
 }
-const DEFAULTS := {"diff_tier_balance": "v2", "diff_boss_stats": "v1", "diff_boss_skill_damage": "v2",
+const DEFAULTS := {"difficulty": "normal", "diff_tier_balance": "v2", "diff_boss_stats": "v1", "diff_boss_skill_damage": "v2",
 	"diff_boss_cooldown": "v1", "diff_skill_level_scale": true, "diff_bat_fur": "v2"}
+
+
+## Poziom trudności gry (opcja modułu „difficulty”, ekran nowej gry): mnożniki HP i ataku (ATK, MAT) wrogów w walce.
+const PRESETS := {"easy": {"hp": 0.75, "atk": 0.8}, "normal": {"hp": 1.0, "atk": 1.0}, "hard": {"hp": 1.3, "atk": 1.2}}
+
+
+static func preset() -> Dictionary:
+	return PRESETS.get(str(_setting("difficulty")), PRESETS["normal"])
 
 
 static func _setting(key: String) -> Variant:

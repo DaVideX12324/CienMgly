@@ -3479,6 +3479,7 @@ func _roll_enemy_party() -> void:
 				_bonus_xp_reward += int(src.xp_reward)
 		_bonus_xp_reward += extra * int(enemy.xp_reward)  # kopie głównego wroga jak w walce bez grupy
 		_active_enemy_index = 0
+		_apply_game_difficulty()
 		_refresh_enemy_cache()
 		return
 	var encounter_count := randi_range(min_count, max_count)
@@ -3499,8 +3500,19 @@ func _roll_enemy_party() -> void:
 		})
 	_active_enemy_index = 0
 	_bonus_xp_reward = maxi(0, encounter_count - 1) * enemy.xp_reward
+	_apply_game_difficulty()
 	_refresh_enemy_cache()
 
+
+
+## Poziom trudności gry (QuizRpgEnemyStats.Difficulty.preset): HP i atak wylosowanych wrogów.
+func _apply_game_difficulty() -> void:
+	var d := QuizRpgEnemyStats.Difficulty.preset()
+	for u: Dictionary in _enemy_units:
+		u["max_hp"] = maxi(roundi(int(u["max_hp"]) * float(d["hp"])), 1)
+		u["hp"] = u["max_hp"]
+		u["atk"] = maxi(roundi(int(u["atk"]) * float(d["atk"])), 1)
+		u["mat"] = roundi(int(u["mat"]) * float(d["atk"]))
 
 
 func _refresh_enemy_cache() -> void:

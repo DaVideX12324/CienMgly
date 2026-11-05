@@ -96,6 +96,25 @@
   ],
   "control_options": [
     {
+      "key": "difficulty",
+      "label": "Poziom trudności",
+      "default": "normal",
+      "options": [
+        {
+          "id": "easy",
+          "name": "Łatwy"
+        },
+        {
+          "id": "normal",
+          "name": "Normalny"
+        },
+        {
+          "id": "hard",
+          "name": "Trudny"
+        }
+      ]
+    },
+    {
       "key": "move_default",
       "label": "Domyślny ruch",
       "default": "walk",
