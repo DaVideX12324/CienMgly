@@ -24,6 +24,9 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 @onready var background: ColorRect = $BG
 @onready var ver_label: Label = $VerLabel
 @onready var name_entry: VBoxContainer = $ScreenPanel/Margin/RightVBox/ContextBody/NameEntry
+@onready var new_game_setup: VBoxContainer = $ScreenPanel/Margin/RightVBox/ContextBody/NewGameSetup
+## Imię z NameEntry czekające na ekran ustawień rozgrywki.
+var _pending_name := ""
 @onready var back_btn: Button = $ScreenPanel/Margin/RightVBox/BtnBack
 
 var _title_time := 0.0
@@ -96,7 +99,12 @@ func _process(delta: float) -> void:
 func _connect_buttons() -> void:
 	if not new_game_btn.pressed.is_connected(_on_new_game):
 		new_game_btn.pressed.connect(_on_new_game)
-	name_entry.confirmed.connect(_start_new_game)
+	name_entry.confirmed.connect(_on_name_confirmed)
+	new_game_setup.confirmed.connect(func() -> void: _start_new_game(_pending_name))
+	new_game_setup.cancelled.connect(func() -> void:
+		_play_click()
+		_show_context("name")
+		name_entry.open())
 	name_entry.cancelled.connect(func() -> void:
 		_play_click()
 		_show_context(""))
@@ -138,7 +146,7 @@ func _play_click() -> void:
 		audio.play_sfx_by_name("click")
 
 
-## „Nowa gra” — najpierw imię bohatera (NameEntry); start po jego zatwierdzeniu.
+## „Nowa gra” — najpierw imię bohatera (NameEntry), potem ustawienia rozgrywki (NewGameSetup), dopiero wtedy start.
 func _on_new_game() -> void:
 	if _context == "name":
 		_show_context("")
@@ -146,6 +154,14 @@ func _on_new_game() -> void:
 	context_title.text = QuizRpgI18n.t("main_menu.title_new_game", "Nowa gra")
 	_show_context("name")
 	name_entry.open()
+
+
+func _on_name_confirmed(player_name: String) -> void:
+	_play_click()
+	_pending_name = player_name
+	context_title.text = QuizRpgI18n.t("setup.title", "Nowa gra — ustawienia")
+	_show_context("setup")
+	new_game_setup.open()
 
 
 func _start_new_game(player_name: String) -> void:
@@ -212,7 +228,8 @@ func _show_context(kind: String) -> void:
 	menu_center.visible = kind == ""
 	stats_label.visible = kind == "stats"
 	name_entry.visible = kind == "name"
-	back_btn.visible = kind != "name"  # ekran imienia ma własne „Wstecz”
+	new_game_setup.visible = kind == "setup"
+	back_btn.visible = kind != "name" and kind != "setup"  # te ekrany mają własne „Wstecz”
 	if _save_slots_panel:
 		_save_slots_panel.visible = kind == "load"
 	if kind != "options" and _options_menu != null and is_instance_valid(_options_menu):

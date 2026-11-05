@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/ui/new_game_setup.gd" id="1_script"]
+
+[node name="NewGameSetup" type="VBoxContainer"]
+visible = false
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+script = ExtResource("1_script")
+
+[node name="Prompt" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.98, 1)
+theme_override_font_sizes/font_size = 27
+text = "Ustawienia rozgrywki"
+horizontal_alignment = 1
+
+[node name="Grid" type="GridContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 12
+columns = 2
+
+[node name="DifficultyLabel" type="Label" parent="Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Poziom trudności"
+
+[node name="Difficulty" type="OptionButton" parent="Grid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 42)
+layout_mode = 2
+
+[node name="EncountersLabel" type="Label" parent="Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Losowe spotkania"
+
+[node name="Encounters" type="CheckButton" parent="Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Tempo walki"
+
+[node name="Speed" type="OptionButton" parent="Grid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 42)
+layout_mode = 2
+
+[node name="QuizlessLabel" type="Label" parent="Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Tryb bez quizów"
+
+[node name="Quizless" type="CheckButton" parent="Grid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Description" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.85, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="StartButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 42)
+layout_mode = 2
+text = "▶ Rozpocznij"
+
+[node name="BackButton" type="Button" parent="Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 42)
+layout_mode = 2
+text = "Wstecz"
+
+[node name="Hint" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.68, 0.68, 0.76, 1)
+theme_override_font_sizes/font_size = 20
+text = "Wszystko można później zmienić w Opcjach."
+horizontal_alignment = 1
+autowrap_mode = 3
