@@ -950,7 +950,7 @@ func _show_quest_panel() -> void:
 	var main_label := quest_panel.find_child("MainGoalLabel", true, false) as Label
 	if main_title and main_label:
 		main_title.text = QuizRpgI18n.t("quest.main.title", "Cel główny")
-		main_label.text = QuizRpgQuestLog.main_goal(lsm)
+		main_label.text = QuizRpgQuestLog.main_goal(lsm, get_parent().get_node_or_null("level_manager") if get_parent() else null)
 	quest_empty_label.visible = ids.is_empty()
 	quest_empty_label.text = QuizRpgI18n.t("pause.quests_empty", "Brak zadań. Porozmawiaj z mieszkańcami.")
 	for i in rows.size():

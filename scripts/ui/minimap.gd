@@ -8,6 +8,7 @@ extends Control
 ## w rogu zmienia skalę wycinka, na pełnej mapie przybliża wokół gracza.
 ## Znaczniki (MinimapMarkers na obu mapach) na odkrytych kratkach: nieotwarte skrzynie, NPC, niepokonani bossowie,
 ## przejścia nisz do sekretnych pokoi / krypty (przygaszone po odwiedzeniu) i niepodniesione przedmioty w niszach.
+## Boss z celu głównego (QuizRpgQuestLog.main_step) — większy, czerwony i widoczny od razu, też w nieodkrytym miejscu.
 ## Opcja „Minimapa” w zakładce Sterowanie (manifest control_options, klucz minimap): róg i pełna mapa / tylko pełna mapa
 ## pod M / wyłączona. Odkrywanie mgły działa w każdym trybie — po włączeniu mapa jest aktualna.
 
@@ -38,6 +39,9 @@ const MARKER_INTERVAL := 0.5
 @export var color_chest := Color(0.95, 0.55, 0.15)
 @export var color_npc := Color(0.35, 0.95, 0.45)
 @export var color_boss := Color(0.8, 0.35, 1.0)
+## Boss z celu głównego: kolor i powiększenie znacznika.
+@export var color_goal := Color(1.0, 0.22, 0.18)
+@export var goal_marker_scale := 1.7
 @export var color_passage := Color(0.3, 0.9, 0.95)
 @export var color_passage_visited := Color(0.3, 0.5, 0.55)
 @export var color_item := Color(1.0, 0.95, 0.6)
@@ -64,7 +68,7 @@ var _mask_dirty := false
 var _flush_left := FLUSH_INTERVAL
 var _full_zoom := 1.0   # przybliżenie pełnej mapy (1 = cała mapa w oknie)
 var _mode := MODE_CORNER
-## Znaczniki: [kratka, kolor] — czyta je MinimapMarkers.
+## Znaczniki: [kratka, kolor, zawsze, skala] — czyta je MinimapMarkers.
 var markers: Array = []
 var _npcs: Array[Node2D] = []
 var _marker_left := 0.0
@@ -254,19 +258,23 @@ func _collect_markers() -> void:
 		for n in _npcs:
 			if is_instance_valid(n) and n.visible:
 				_add_marker(out, n, color_npc)
+		var goal_flag := str(QuizRpgQuestLog.main_step(lsm).get("flag", ""))
 		for e in get_tree().get_nodes_in_group("enemies"):
 			if _level.is_ancestor_of(e) and bool(e.get("is_boss")) and not bool(e.get("defeated")) and (e as Node2D).visible:
-				_add_marker(out, e, color_boss)
+				if goal_flag != "" and e.has_method("story_flag") and e.story_flag() == goal_flag:
+					_add_marker(out, e, color_goal, true, goal_marker_scale)
+				else:
+					_add_marker(out, e, color_boss)
 	if out != markers:
 		markers = out
 		_redraw_markers()
 
 
-## always = znacznik widoczny też na nieodkrytej kratce.
-func _add_marker(out: Array, node: Node2D, color: Color, always := false) -> void:
+## always = znacznik widoczny też na nieodkrytej kratce; marker_scale = powiększenie (cel główny).
+func _add_marker(out: Array, node: Node2D, color: Color, always := false, marker_scale := 1.0) -> void:
 	var p := QuizRpgMinimapData.cell_of(_level.to_local(node.global_position))
 	if data.has_cell(p):
-		out.append([p, color, always])
+		out.append([p, color, always, marker_scale])
 
 
 ## Zawartość niszy (unique_id „niche_…” z NicheContentPlanner) — sekret, nie zdradzać przed odkryciem.

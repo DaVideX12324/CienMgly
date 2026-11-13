@@ -16,17 +16,37 @@ const QuizRpgPaths = preload("../quiz_rpg_paths.gd")
 const MAIN_QUEST_PATH := "resources/data/main_quest.json"
 
 
-## Cel główny fabuły: pierwszy krok z resources/data/main_quest.json bez flagi fabularnej (lsm = LevelStateManager).
-static func main_goal(lsm: Node) -> String:
-	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path(MAIN_QUEST_PATH)))
-	if not data is Dictionary:
-		return ""
-	var step: Dictionary = data.get("final", {})
-	for s: Dictionary in data.get("steps", []):
+static var _main_quest: Dictionary = {}
+
+
+## Bieżący krok celu głównego: pierwszy z resources/data/main_quest.json bez flagi fabularnej (lsm =
+## LevelStateManager), po ostatnim — "final". Pola: flag, key, text, map (mapa celu, opcjonalnie).
+static func main_step(lsm: Node) -> Dictionary:
+	if _main_quest.is_empty():
+		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(QuizRpgPaths.path(MAIN_QUEST_PATH)))
+		if not data is Dictionary:
+			return {}
+		_main_quest = data
+	for s: Dictionary in _main_quest.get("steps", []):
 		if lsm == null or not lsm.has_method("has_story_flag") or not lsm.has_story_flag(str(s.get("flag", ""))):
-			step = s
-			break
-	return QuizRpgI18n.t(str(step.get("key", "")), str(step.get("text", "")))
+			return s
+	return _main_quest.get("final", {})
+
+
+## Tekst celu głównego. Z level_manager (węzeł z current_level_path) cel z mapą ("map" kroku) mówi, gdzie go szukać:
+## na tej mapie — znacznik na minimapie (Minimap: color_goal), na innej — nazwa mapy celu (gracz mógł minąć bossa).
+static func main_goal(lsm: Node, level_manager: Node = null) -> String:
+	var step := main_step(lsm)
+	var text := QuizRpgI18n.t(str(step.get("key", "")), str(step.get("text", "")))
+	var map := str(step.get("map", ""))
+	if text == "" or map == "" or level_manager == null:
+		return text
+	var here := QuizRpgPaths.level_scene(str(level_manager.get("current_level_path"))).get_file().get_basename()
+	if here == "":
+		return text
+	if here == map:
+		return text + " " + QuizRpgI18n.t("quest.main.on_minimap", "(znacznik na mapie)")
+	return text + " " + QuizRpgI18n.tf("quest.main.on_map", {"map": QuizRpgI18n.t("map.%s.name" % map, map)}, "(mapa: {map})")
 
 
 static func entry(ps: Node, quest_id: String) -> Dictionary:

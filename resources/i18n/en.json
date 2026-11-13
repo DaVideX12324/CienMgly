@@ -577,6 +577,8 @@
   "quest.main.bat_matriarch": "Return to the caves and defeat the Bat Matriarch.",
   "quest.main.sewer": "Descend into the sewers beneath the town and defeat their guardian.",
   "quest.main.done": "Leave the sewers — the adventure continues soon.",
+  "quest.main.on_map": "(map: {map})",
+  "quest.main.on_minimap": "(marked on the map)",
   "end.title": "The End",
   "end.subtitle": "The party left the sewers for the graveyard beyond the town walls.\nTo be continued — thanks for playing!",
   "end.time": "Play time",

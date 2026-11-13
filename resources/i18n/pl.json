@@ -577,6 +577,8 @@
   "quest.main.bat_matriarch": "Wróć do jaskiń i pokonaj Matkę Nietoperzy.",
   "quest.main.sewer": "Zejdź do ścieków pod miastem i pokonaj ich strażnika.",
   "quest.main.done": "Opuść ścieki — dalsza część przygody wkrótce.",
+  "quest.main.on_map": "(mapa: {map})",
+  "quest.main.on_minimap": "(znacznik na mapie)",
   "end.title": "Koniec gry",
   "end.subtitle": "Drużyna wyszła ze ścieków na cmentarzysko za murami miasta.\nCiąg dalszy nastąpi — dziękujemy za grę!",
   "end.time": "Czas gry",

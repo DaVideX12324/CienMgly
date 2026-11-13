@@ -3,7 +3,8 @@ extends CanvasLayer
 const TutorialHint = preload("tutorial_hint.gd")
 
 ## Nakładka na mapę: komunikaty nagród (awans, nagroda), cel główny w rogu (Goal — z main_quest.json, odświeżany
-## po fladze fabularnej) i zaciemnienie przejść (FadeOverlay — GameManager). Statystyki gracza tylko w menu Esc.
+## po fladze fabularnej i po wejściu na mapę — dopisek, gdzie jest cel) i zaciemnienie przejść (FadeOverlay —
+## GameManager). Statystyki gracza tylko w menu Esc.
 
 @onready var reward_popup: Label       = $RewardPopup
 @onready var fade_overlay: ColorRect   = $FadeOverlay
@@ -14,6 +15,7 @@ const TutorialHint = preload("tutorial_hint.gd")
 var _ps: Node  # PlayerStats
 var _reward_base_y: float = 80.0
 var _lsm: Node  # LevelStateManager
+var _level_manager: Node
 
 
 func _ready() -> void:
@@ -28,6 +30,9 @@ func _ready() -> void:
 	_lsm = CoreManager.get_singleton("LevelStateManager")
 	if _lsm and _lsm.has_signal("story_flag_changed"):
 		_lsm.story_flag_changed.connect(func(_f: String, _v: bool) -> void: _refresh_goal(true))
+	_level_manager = get_parent().get_node_or_null("level_manager") if get_parent() else null
+	if _level_manager and _level_manager.has_signal("set_spawn"):  # nowa mapa: inny dopisek „gdzie jest cel”
+		_level_manager.set_spawn.connect(func(_p: Vector2) -> void: _refresh_goal(false))
 	_refresh_goal(false)
 
 	_ps = CoreManager.get_singleton("PlayerStats")
@@ -43,7 +48,7 @@ func _refresh_goal(announce: bool) -> void:
 	if not goal_panel:
 		return
 	goal_title.text = QuizRpgI18n.t("quest.main.title", "Cel główny")
-	var text := QuizRpgQuestLog.main_goal(_lsm)
+	var text := QuizRpgQuestLog.main_goal(_lsm, _level_manager)
 	goal_panel.visible = text != ""
 	if text == goal_text.text:
 		return
