@@ -28,6 +28,10 @@ func answer_current(player_answer: Dictionary) -> Dictionary:
 	return QuizService.answer_current(module_id, player_answer, DEFAULT_SESSION)
 
 
+func answer_question(question: Dictionary, player_answer: Dictionary) -> bool:
+	return QuizService.answer_question(_get_effective_module_id(), question, player_answer)
+
+
 func get_questions(
 	quiz_id: String,
 	difficulty_range: Vector2i = Vector2i(1, 5),

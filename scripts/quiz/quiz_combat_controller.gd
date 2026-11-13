@@ -1479,26 +1479,8 @@ func _should_auto_resolve_quiz(allowed_types: Array) -> bool:
 
 func _is_quizless_mode_enabled() -> bool:
 	var settings_service: Node = get_node_or_null("/root/SettingsService")
-	if settings_service == null:
-		return false
-	if settings_service.has_method("is_quizless_mode_enabled"):
-		return bool(settings_service.call("is_quizless_mode_enabled"))
-	if _read_quizless_flag(settings_service, true):
-		return true
-	return _read_quizless_flag(settings_service, false)
-
-
-func _read_quizless_flag(settings_service: Node, module_scope: bool) -> bool:
-	var keys: Array[String] = ["quizless_mode", "disable_quizzes", "skip_quizzes"]
-	for key_name in keys:
-		var value: Variant
-		if module_scope:
-			value = settings_service.call("get_module", "quiz_rpg", key_name, null)
-		else:
-			value = settings_service.call("get_global", key_name, null)
-		if value != null:
-			return bool(value)
-	return false
+	return settings_service != null and settings_service.has_method("is_quizless_mode_enabled") \
+		and bool(settings_service.call("is_quizless_mode_enabled"))
 
 
 ## Ruch kursora po siatce listy (delta: ±1 w poziomie, ±kolumny w pionie), z zawijaniem.

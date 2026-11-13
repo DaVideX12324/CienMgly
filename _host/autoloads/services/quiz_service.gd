@@ -294,6 +294,15 @@ func answer_current(module_id: String, player_answer: Dictionary, session_id: St
 	}
 
 
+## Ocena odpowiedzi na pytanie spoza sesji (moduł sam losuje i pokazuje pytanie, np. szybkie pytania BitBombera):
+## sprawdza, zapisuje statystyki i emituje question_answered. Moduł nie porównuje odpowiedzi sam.
+func answer_question(module_id: String, question: Dictionary, player_answer: Dictionary) -> bool:
+	var correct := _check_answer(question, player_answer)
+	_record_answer(module_id, question, correct)
+	question_answered.emit(module_id, str(question.get("quiz_id", "")), correct, question)
+	return correct
+
+
 func get_current_question(module_id: String, session_id: String = "default") -> Dictionary:
 	var session: Dictionary = _sessions.get(_session_key(module_id, session_id), {})
 	var questions: Array = session.get("questions", [])
