@@ -30,6 +30,7 @@ const TP_PER_HIT := 5              # zwykły atak (za trafienie) i Obrona — �
 const TP_START_MIN := 10           # TP na start walki: losowo TP_START_MIN..TP_START_MAX (decyzja usera 2026-10-16)
 const TP_START_MAX := 20
 const GUARD_SPEED := 2000          # Obrona zawsze pierwsza (Guard w FNaFB ma speed 2000)
+const ITEM_SPEED := 100000         # Przedmiot działa od razu na początku rundy — przed Obroną i każdym wrogiem
 const SKILL_SP_COST := 20
 ## Trafienie jak w FNaFB (VX Ace, QuizRpgSkillMath.roll_hit): pewne / fizyczne (success_rate × HIT, unik z AGI) /
 ## magiczne (success_rate). Quiz nie decyduje
@@ -961,10 +962,12 @@ func _turn_order() -> Array[Dictionary]:
 	return order
 
 
-## Dodatek prędkości wybranej akcji: Obrona GUARD_SPEED, umiejętność — jej speed (jak w FNaFB).
+## Dodatek prędkości wybranej akcji: przedmiot ITEM_SPEED, Obrona GUARD_SPEED, umiejętność — jej speed (jak w FNaFB).
 func _plan_speed(plan: Dictionary) -> int:
 	if plan.is_empty():
 		return 0
+	if plan.has("item"):  # plan przedmiotu niesie poprzednią akcję i pustą umiejętność — bez tego szedłby wg samej AGI
+		return ITEM_SPEED
 	if int(plan["action"]) == Action.DEFEND:
 		return GUARD_SPEED
 	var skill := (plan["skill"] as Dictionary).get("resource") as QuizRpgSkillBase
