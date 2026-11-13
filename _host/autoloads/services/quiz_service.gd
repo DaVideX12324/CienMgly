@@ -20,6 +20,7 @@ const TYPE_MULTIPLIER := {
 
 var _sources: Dictionary = {}
 var _quizzes: Dictionary = {}
+var _quiz_names: Dictionary = {}   # module_id -> {quiz_id -> nazwa zestawu z pola "name"}
 var _answered_questions: Dictionary = {}
 var _sessions: Dictionary = {}
 var _selection: Dictionary = {}   # wybór aktywnych zestawów / pytań (QuestionBank.load_selection)
@@ -71,6 +72,7 @@ func reload_module(module_id: String) -> void:
 		return
 
 	_quizzes[module_id] = {}
+	_quiz_names[module_id] = {}
 	for source_path_variant in _sources[module_id]:
 		var source_path := str(source_path_variant)
 		var dir := DirAccess.open(source_path)
@@ -145,6 +147,15 @@ func get_quiz_ids(module_id: String = "") -> Array:
 			if not result.has(entry):
 				result.append(entry)
 	return result
+
+
+## Nazwa zestawu do pokazania graczowi (pole "name" pliku); bez niej — id zestawu.
+func get_quiz_title(module_id: String, quiz_id: String) -> String:
+	for mod in [module_id, "quiz_rpg", "global", ""]:
+		var names: Dictionary = _quiz_names.get(mod, {})
+		if names.has(quiz_id):
+			return str(names[quiz_id])
+	return quiz_id
 
 
 func get_questions(
@@ -483,8 +494,10 @@ func _load_quiz_file(module_id: String, quiz_id: String, path: String) -> void:
 		return
 
 	var raw_questions: Array = []
+	var quiz_name := ""
 	if json.data is Dictionary and json.data.has("questions"):
 		raw_questions = json.data["questions"]
+		quiz_name = str(json.data.get("name", "")).strip_edges()
 	elif json.data is Array:
 		raw_questions = json.data
 	else:
@@ -495,6 +508,11 @@ func _load_quiz_file(module_id: String, quiz_id: String, path: String) -> void:
 	for q in normalized:
 		q["set_id"] = quiz_id
 	_quizzes[module_id][quiz_id] = normalized
+	# Zestaw własny o tym samym id przesłania wbudowany — razem z nazwą.
+	if quiz_name != "":
+		_quiz_names[module_id][quiz_id] = quiz_name
+	else:
+		_quiz_names[module_id].erase(quiz_id)
 
 
 ## Po zmianach w zestawach / wyborze (edytor pytań, opcje): wczytanie od nowa wszystkich modułów.

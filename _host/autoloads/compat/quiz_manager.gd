@@ -72,6 +72,10 @@ func get_quiz_ids() -> Array:
 	return QuizService.get_quiz_ids(module_id)
 
 
+func get_quiz_title(quiz_id: String) -> String:
+	return QuizService.get_quiz_title(_get_effective_module_id(), quiz_id)
+
+
 func start_custom_questions(questions: Array, quiz_id: String = "custom") -> Dictionary:
 	var module_id := _get_effective_module_id()
 	return QuizService.start_custom_questions(module_id, questions, quiz_id, DEFAULT_SESSION)
