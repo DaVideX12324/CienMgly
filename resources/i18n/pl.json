@@ -7,6 +7,8 @@
   "cutscene.cave_climb": "Wspinasz się długo po skalnej ścianie, z głębi jaskini ku światłu…",
   "chest.key_opens": "Klucz otwiera skrzynię.",
   "chest.locked_need_key": "Zamknięte. Potrzebny klucz tieru {tier} (lub wyższego) albo wytrych.",
+  "chest.locked_key_only": "Zamek nie da się wytrychowi. Potrzebny klucz tieru {tier} (lub wyższego) — może ma go strażnik.",
+  "prompt.open_key": "Otwórz (klucz)",
   "chest.lockpick_broke": "Wytrych się złamał!",
   "chest.lockpick_failed_held": "Nie udało się. Wytrych wytrzymał.",
   "chest.name_locked": "Zamknięta skrzynia",

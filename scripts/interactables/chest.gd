@@ -29,8 +29,8 @@ const TutorialHint = preload("../ui/tutorial_hint.gd")
 		story_flag = v
 		if is_node_ready():
 			call_deferred("_check_if_opened")  # poziom ustawia flagę już po _ready (po realizacji obiektów)
-## Klucz pasujący do skrzyni zużywany przed wytrychem (skrzynia krypty: boss dropi do niej klucz).
-@export var prefer_key: bool = false
+## Tylko klucz, bez wytrycha (skrzynia krypty strzeżona przez bossa — boss dropi do niej klucz).
+@export var key_only: bool = false
 
 var is_locked: bool = true
 var opened: bool = false
@@ -114,7 +114,7 @@ func _generate_unique_id() -> String:
 
 
 ## Otwarcie przez gracza: wytrych uruchamia quiz (tier skrzyni = trudność), klucz tieru ≥ tier skrzyni otwiera od razu;
-## wytrych jest używany przed kluczem (klucze są rzadsze). Bez jednego i drugiego skrzynia zostaje zamknięta.
+## wytrych jest używany przed kluczem (klucze są rzadsze), chyba że skrzynia jest key_only. Bez jednego i drugiego zostaje zamknięta.
 func try_open() -> void:
 	if opened or _picking:
 		return
@@ -125,15 +125,16 @@ func try_open() -> void:
 	if ps == null:
 		return
 	var key_id := _usable_key(ps)
-	if int(ps.call("get_item_count", LOCKPICK_ITEM)) > 0 and not (prefer_key and key_id != ""):
+	if not key_only and int(ps.call("get_item_count", LOCKPICK_ITEM)) > 0:
 		_start_lockpicking(ps)
+	elif key_id != "":
+		ps.call("consume_item", key_id, 1)
+		_toast(QuizRpgI18n.t("chest.key_opens", "Klucz otwiera skrzynię."))
+		unlock()
+	elif key_only:
+		_toast(QuizRpgI18n.tf("chest.locked_key_only", {"tier": tier}, "Zamek nie da się wytrychowi. Potrzebny klucz tieru {tier} (lub wyższego) — może ma go strażnik."))
 	else:
-		if key_id != "":
-			ps.call("consume_item", key_id, 1)
-			_toast(QuizRpgI18n.t("chest.key_opens", "Klucz otwiera skrzynię."))
-			unlock()
-		else:
-			_toast(QuizRpgI18n.tf("chest.locked_need_key", {"tier": tier}, "Zamknięte. Potrzebny klucz tieru {tier} (lub wyższego) albo wytrych."))
+		_toast(QuizRpgI18n.tf("chest.locked_need_key", {"tier": tier}, "Zamknięte. Potrzebny klucz tieru {tier} (lub wyższego) albo wytrych."))
 
 
 ## Najsłabszy klucz z plecaka, który otwiera tę skrzynię (tier klucza ≥ tier skrzyni); "" gdy brak.
@@ -292,7 +293,15 @@ func _on_interaction_area_body_entered(body: Node2D) -> void:
 		_player_in_interaction_range = true
 		if not opened:
 			TutorialHint.show_hint(get_tree(), "chest")
-			InteractPromptScript.request(self, QuizRpgI18n.t("prompt.open", "Otwórz") if not is_locked else QuizRpgI18n.t("prompt.open_key_lockpick", "Otwórz (klucz / wytrych)"))
+			InteractPromptScript.request(self, _prompt_text())
+
+
+func _prompt_text() -> String:
+	if not is_locked:
+		return QuizRpgI18n.t("prompt.open", "Otwórz")
+	if key_only:
+		return QuizRpgI18n.t("prompt.open_key", "Otwórz (klucz)")
+	return QuizRpgI18n.t("prompt.open_key_lockpick", "Otwórz (klucz / wytrych)")
 
 
 func _on_interaction_area_body_exited(body: Node2D) -> void:

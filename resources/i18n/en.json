@@ -7,6 +7,8 @@
   "cutscene.cave_climb": "You climb the rock wall for a long time, from the depths of the cave towards the light…",
   "chest.key_opens": "The key unlocks the chest.",
   "chest.locked_need_key": "Locked. Requires tier {tier} key (or higher) or a lockpick.",
+  "chest.locked_key_only": "This lock can't be picked. You need a tier {tier} key (or higher) — maybe the guardian has one.",
+  "prompt.open_key": "Open (key)",
   "chest.lockpick_broke": "The lockpick broke!",
   "chest.lockpick_failed_held": "Failed. The lockpick held.",
   "chest.name_locked": "Locked Chest",

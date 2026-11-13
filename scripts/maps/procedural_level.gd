@@ -1054,7 +1054,7 @@ func _apply_niche_content(result) -> void:
 
 
 ## Skarb ("treasure", TreasurePlanner): skrzynie (tier i łup). "flag" — skrzynia z jedynym przedmiotem (krypta): flaga
-## ustawiana przy otwarciu, stała przy rerollu (przedmiot nie wraca); "prefer_key" — klucz przed wytrychem. Boss mapy
+## ustawiana przy otwarciu, stała przy rerollu (przedmiot nie wraca); "key_only" — tylko klucz, bez wytrycha. Boss mapy
 ## ("boss": story_id, counts_toward_device, locks_exit — _setup_exit_gate; "story": false — boss poza fabułą, bez flagi boss:<id>; "loot" —
 ## własna tabela łupu .tres, np. strażnik krypty z gwarantowanym kluczem do skrzyni skarbu).
 func _apply_treasure() -> void:
@@ -1064,7 +1064,7 @@ func _apply_treasure() -> void:
 		for node in get_tree().get_nodes_in_group("chests"):
 			if is_ancestor_of(node) and String(node.get("unique_id")).begins_with(String(TreasurePlanner.CHEST_DEF_ID) + "_"):
 				node.set("story_flag", str(_treasure.flag))
-				node.set("prefer_key", bool(_treasure.get("prefer_key", false)))
+				node.set("key_only", bool(_treasure.get("key_only", false)))
 	if not _boss_cfg.is_empty():
 		var boss_loot := QuizRpgLootTableData.from_json(_boss_cfg.get("loot", ""))
 		for node in get_tree().get_nodes_in_group("enemies"):
