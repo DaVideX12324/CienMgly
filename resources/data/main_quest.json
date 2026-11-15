@@ -1,10 +1,11 @@
 {
-  "_doc": "Cel główny w dzienniku (Pauza → Zadania): pierwszy krok, którego flagi fabularnej jeszcze nie ma. Tekst = klucz i18n modułu (resources/i18n), \"text\" = zapas. \"map\" = nazwa pliku sceny mapy, na której jest cel (boss): na niej cel dostaje dopisek o znaczniku na minimapie, na innych — nazwę tej mapy.",
+  "_doc": "Cel główny w dzienniku (Pauza → Zadania): pierwszy krok, którego flagi fabularnej jeszcze nie ma. Tekst = klucz i18n modułu (resources/i18n), \"text\" = zapas. \"map\" = nazwa pliku sceny mapy, na której jest cel (boss): na niej cel dostaje dopisek o znaczniku na minimapie, na innych — nazwę tej mapy. \"level\" = poziom bossa celu (ręcznie, wg enemy_level sceny / enemy_levels tieru 4 / return_boss.level w JSON mapy) — gracz wie, do czego się szykować.",
   "steps": [
-    {"flag": "boss:tutorial_area", "map": "tutorial_area", "key": "quest.main.tutorial", "text": "Pokonaj wielkiego szlama, który strzeże polany, i zejdź do jaskini."},
+    {"flag": "boss:tutorial_area", "map": "tutorial_area", "level": 5, "key": "quest.main.tutorial", "text": "Pokonaj wielkiego szlama, który strzeże polany, i zejdź do jaskini."},
+    {"flag": "boss:cave", "map": "cave", "level": 9, "key": "quest.main.cave_guardian", "text": "Pokonaj Starego Grzyba, który zasypał wyjście z jaskiń."},
     {"flag": "visited:town", "key": "quest.main.reach_town", "text": "Przejdź przez jaskinie i dotrzyj do miasta."},
-    {"flag": "boss:cave_return", "map": "cave", "key": "quest.main.bat_matriarch", "text": "Wróć do jaskiń i pokonaj Matkę Nietoperzy."},
-    {"flag": "boss:sewer", "map": "sewer", "key": "quest.main.sewer", "text": "Zejdź do ścieków pod miastem i pokonaj ich strażnika."}
+    {"flag": "boss:cave_return", "map": "cave", "level": 14, "key": "quest.main.bat_matriarch", "text": "Wróć do jaskiń i pokonaj Matkę Nietoperzy."},
+    {"flag": "boss:sewer", "map": "sewer", "level": 15, "key": "quest.main.sewer", "text": "Zejdź do ścieków pod miastem i pokonaj ich strażnika."}
   ],
   "final": {"key": "quest.main.done", "text": "Opuść ścieki — dalsza część przygody wkrótce."}
 }

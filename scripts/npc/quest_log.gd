@@ -38,6 +38,8 @@ static func main_step(lsm: Node) -> Dictionary:
 static func main_goal(lsm: Node, level_manager: Node = null) -> String:
 	var step := main_step(lsm)
 	var text := QuizRpgI18n.t(str(step.get("key", "")), str(step.get("text", "")))
+	if int(step.get("level", 0)) > 0 and text != "":
+		text += " " + QuizRpgI18n.tf("quest.main.boss_level", {"level": int(step.level)}, "(strażnik: Lv {level})")
 	var map := str(step.get("map", ""))
 	if text == "" or map == "" or level_manager == null:
 		return text
