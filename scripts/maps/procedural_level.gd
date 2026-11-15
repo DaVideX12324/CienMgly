@@ -75,6 +75,7 @@ const FIRST_CLEAR_KILLS := 3
 var _chest_tier: int = 1  # companion-JSON "chest_tier" (1..4): trudność quizu wytrycha dla skrzyń wygenerowanych na mapie
 var _niche_content: Dictionary = {}  # companion-JSON "niche_content": wagi, tier i łup zawartości nisz out (NicheContentPlanner)
 var _treasure: Dictionary = {}  # companion-JSON "treasure": skarb (TreasurePlanner) — skrzynie (tier, łup) albo relikwia
+var _exit_locked := false  # wyjście zamknięte do pokonania bossa (_refresh_exit_gate)
 var _boss_cfg: Dictionary = {}  # companion-JSON "boss": story_id, counts_toward_device, locks_exit bossów mapy
 var music_track := ""  # companion-JSON "music" (_music_from_config)
 var _exit_ends_game := false  # companion-JSON "exit_ends_game": wyjście pokazuje ekran końca zamiast następnej mapy
@@ -1069,9 +1070,10 @@ func _apply_treasure() -> void:
 		var boss_loot := QuizRpgLootTableData.from_json(_boss_cfg.get("loot", ""))
 		for node in get_tree().get_nodes_in_group("enemies"):
 			if is_ancestor_of(node) and bool(node.get("is_boss")):
-				node.set("boss_story_id", str(_boss_cfg.get("story_id", "")))
-				node.set("story_boss", bool(_boss_cfg.get("story", true)))
-				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", true)))
+				# brak klucza = wartość wroga (boss powrotu ma własne story_id z generatora)
+				node.set("boss_story_id", str(_boss_cfg.get("story_id", node.get("boss_story_id"))))
+				node.set("story_boss", bool(_boss_cfg.get("story", node.get("story_boss"))))
+				node.set("counts_toward_device", bool(_boss_cfg.get("counts_toward_device", node.get("counts_toward_device"))))
 				if boss_loot != null:
 					node.set("loot_data", boss_loot)
 
@@ -1152,7 +1154,7 @@ func _get_or_create_layer(layer_name: String, z_idx: int, ts: TileSet) -> TileMa
 ## "exit_ends_game" (ścieki): wyjście kończy grę — _finish_game zamiast przejścia.
 func _connect_exit_trigger() -> void:
 	var on_exit := _finish_game if _exit_ends_game else _leave_forward
-	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D, on_exit,
+	LevelPortal.connect_area(get_node_or_null(LevelPortal.NEXT_AREA) as Area2D, _try_exit.bind(on_exit),
 		next_portal_use_key, next_portal_prompt)
 	LevelPortal.connect_area(get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D,
 		_change_level.bind(previous_level_path, previous_spawn_name), previous_portal_use_key, previous_portal_prompt)
@@ -1177,13 +1179,14 @@ func _finish_game() -> void:
 
 
 ## Wyjście zamknięte do pokonania bossów mapy (companion-JSON "boss": {"locks_exit": true}, np. ścieki — boss przed
-## ekranem końca): obszar wyjścia nie działa, a snop światła drabiny wyjścia jest ukryty. Otwiera się, gdy ostatni boss
-## zniknie po przegranej walce albo gdy był już pokonany w tym zapisie (usuwa się sam po wczytaniu).
+## ekranem końca, jaskinia — Stary Grzyb): wyjście daje tylko komunikat, a snop światła wyjścia jest ukryty. Otwiera się, gdy ostatni boss
+## zniknie po przegranej walce albo gdy był już pokonany w tym zapisie (usuwa się sam po wczytaniu). Boss powrotu
+## (requires_flag, np. Matka Nietoperzy) nie zamyka wyjścia — gracz wracający z miasta może zawrócić.
 func _setup_exit_gate() -> void:
 	if not bool(_boss_cfg.get("locks_exit", false)):
 		return
 	for node in get_tree().get_nodes_in_group("enemies"):
-		if is_ancestor_of(node) and bool(node.get("is_boss")):
+		if _gates_exit(node):
 			node.tree_exiting.connect(_refresh_exit_gate.bind(node))
 	_refresh_exit_gate()
 
@@ -1191,17 +1194,28 @@ func _setup_exit_gate() -> void:
 func _refresh_exit_gate(leaving: Node = null) -> void:
 	if not is_inside_tree():
 		return
-	var locked := false
+	_exit_locked = false
 	for node in get_tree().get_nodes_in_group("enemies"):
-		if node != leaving and is_ancestor_of(node) and bool(node.get("is_boss")) and not bool(node.get("defeated")):
-			locked = true
+		if node != leaving and _gates_exit(node) and not bool(node.get("defeated")):
+			_exit_locked = true
 			break
-	var area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
-	if area:
-		area.set_deferred("monitoring", not locked)
 	for node in get_tree().get_nodes_in_group(MapGeneratorBaseScript.EXIT_PORTAL_GROUP):
 		if is_ancestor_of(node):
-			node.set("light_on", not locked)
+			node.set("light_on", not _exit_locked)
+
+
+func _try_exit(on_exit: Callable) -> void:
+	if not _exit_locked:
+		on_exit.call()
+		return
+	var loot := get_node_or_null("/root/CoreManager")
+	loot = loot.call("get_singleton", "LootManager") if loot else get_node_or_null("/root/LootManager")
+	if loot and loot.has_method("show_message_toast"):
+		loot.call("show_message_toast", QuizRpgI18n.t("gate.exit_locked", "Przejście zasypane. Najpierw pokonaj strażnika tej mapy."))
+
+
+func _gates_exit(node: Node) -> bool:
+	return is_ancestor_of(node) and bool(node.get("is_boss")) and str(node.get("requires_flag")) in ["", "<null>"]
 
 
 ## Wyjście dalej: przy pierwszym przejściu mapy (flaga zapisu FIRST_CLEAR_PREFIX + ścieżka) bonus złota i XP.

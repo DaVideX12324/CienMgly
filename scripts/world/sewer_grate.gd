@@ -2,10 +2,12 @@ extends StaticBody2D
 
 ## Kratka ściekowa nad przejściem do ścieków (obszar `portal` w trybie klawisza). Zamknięta: można po niej chodzić,
 ## pierwsze [E] ją otwiera. Otwarta: kolizja (nie wejdzie się w dziurę), kolejne [E] — zejście. Otwarcie zostaje
-## w zapisie (flaga fabularna `flag`).
+## w zapisie (flaga fabularna `flag`). Przed pokonaniem bossa (next_required_flag mapy, BossGate) kratka się nie otwiera.
 
 @export var portal: NodePath = ^"../enter_next_level"
 @export var flag := "town:sewer_grate_open"
+
+const BossGate = preload("../maps/boss_gate.gd")
 @export var closed_region := Rect2(288, 240, 32, 32)
 @export var open_region := Rect2(288, 272, 32, 32)
 
@@ -31,6 +33,10 @@ func _hook() -> void:
 	var descend_text: String = key.prompt_text
 	key.prompt_text = "prompt.open_grate"
 	key.on_enter = func() -> void:
+		var level := owner if owner else get_parent()
+		if not BossGate.try_pass(self, str(level.get("next_required_flag")) if "next_required_flag" in level else "",
+				str(level.get("next_locked_key")) if "next_locked_key" in level else "prompt.locked", "Zamknięte"):
+			return
 		_set_open(true)
 		var lsm := _lsm()
 		if lsm:

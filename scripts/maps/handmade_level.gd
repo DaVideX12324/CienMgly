@@ -12,6 +12,7 @@ const LevelPortal = preload("level_portal.gd")
 const MapPrefetch = preload("map_prefetch.gd")
 const MapLinks = preload("map_links.gd")
 const Freeroam = preload("freeroam.gd")
+const BossGate = preload("boss_gate.gd")
 const ArrivalCaptionScene = preload("../../scenes/ui/arrival_caption.tscn")
 
 ## Mapa za wyjściem `enter_next_level` i marker, przy którym gracz się tam pojawia.
@@ -20,6 +21,10 @@ const ArrivalCaptionScene = preload("../../scenes/ui/arrival_caption.tscn")
 ## Mapa za wyjściem `enter_previous_level` i marker na niej (mapy generowane: FromNext — przy ich wyjściu).
 @export_file("*.tscn") var previous_level_path: String = ""
 @export var previous_spawn_name: String = LevelPortal.FROM_NEXT_SPAWN
+## Flaga fabularna wymagana do wyjścia `enter_next_level` (np. boss:cave_return); pusta = zawsze otwarte.
+@export var next_required_flag: String = ""
+## Klucz i18n komunikatu przy zamkniętym wyjściu.
+@export var next_locked_key: String = "prompt.locked"
 ## Krawędź mapy, którą się wchodzi z poprzedniej (MapLinks: 0 N, 1 E, 2 S, 3 W; -1 = bez krawędzi, np. drzwi).
 ## Poprzednia mapa generowana powinna mieć next_entry_edge = ta sama wartość (wyjście po przeciwnej stronie).
 @export_enum("Brak:-1", "N:0", "E:1", "S:2", "W:3") var entry_edge: int = -1
@@ -59,7 +64,7 @@ func _ready() -> void:
 func _connect_areas() -> void:
 	var next_area := get_node_or_null(LevelPortal.NEXT_AREA) as Area2D
 	if next_area != null and not next_level_path.is_empty():
-		LevelPortal.connect_area(next_area, _change_level.bind(next_level_path, next_spawn_name))
+		LevelPortal.connect_area(next_area, _leave_forward)
 	var prev_area := get_node_or_null(LevelPortal.PREVIOUS_AREA) as Area2D
 	if prev_area != null and not previous_level_path.is_empty():
 		LevelPortal.connect_area(prev_area, _change_level.bind(previous_level_path, previous_spawn_name))
@@ -87,6 +92,11 @@ func _play_arrival_scene() -> void:
 	if is_instance_valid(player) and "input_blocked" in player:
 		player.set("input_blocked", false)
 	layer.queue_free()
+
+
+func _leave_forward() -> void:
+	if BossGate.try_pass(self, next_required_flag, next_locked_key, "Zamknięte"):
+		_change_level(next_level_path, next_spawn_name)
 
 
 func _change_level(path: String, spawn: String) -> void:

@@ -83,6 +83,7 @@
     "chest_loot": "resources/loot/caves_niche_chests.tres",
     "item_loot": "resources/loot/caves_niche_items.tres"
   },
+  "boss": {"locks_exit": true},
   "return_boss": {
     "scene": "scenes/enemies/pixel_crawler/bat_matriarch.tscn",
     "story_id": "cave_return",

@@ -13,6 +13,9 @@ const FROM_CAVES_SPAWN := "Tutorial-Caves"
 const LevelPortal = preload("level_portal.gd")
 const MapPrefetch = preload("map_prefetch.gd")
 const MapLinks = preload("map_links.gd")
+const BossGate = preload("boss_gate.gd")
+## Zejście do jaskini dopiero po pokonaniu strażnika polany (drzwi z kłódką + to zabezpieczenie).
+const EXIT_FLAG := "boss:tutorial_area"
 
 ## Krawędź mapy, którą wychodzi się do jaskini (spójna trasa map, MapLinks): schody na górze ruin = N. Jaskinia ma wtedy
 ## wejście od południa.
@@ -41,7 +44,7 @@ func _connect_next_area(area: Area2D) -> void:
 
 
 func _on_enter_next_level() -> void:
-	if _transitioning:
+	if _transitioning or not BossGate.try_pass(self, EXIT_FLAG, "gate.tutorial_locked", "Zamknięte na kłódkę. Najpierw pokonaj strażnika polany."):
 		return
 	var level_manager := _get_level_manager()
 	if level_manager == null or not level_manager.has_method("change_level"):

@@ -63,7 +63,7 @@ static func _connect_key(area: Area2D, on_enter: Callable, prompt: String) -> vo
 
 
 ## Uzbraja obszar po ARM_PHYSICS_FRAMES klatkach fizyki, gdy gracz jest dalej niż ARM_DISTANCE od jego krawędzi.
-## Obszar wyłączony (wyjście zamknięte do pokonania bossa) — liczenie dopiero od jego włączenia.
+## Obszar wyłączony (monitoring = false) — liczenie dopiero od jego włączenia.
 static func _arm_when_clear(area: Area2D, armed: Array) -> void:
 	var i := 0
 	while i < ARM_PHYSICS_FRAMES:

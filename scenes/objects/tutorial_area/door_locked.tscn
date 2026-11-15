@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://c8m5o1lxci0um" path="res://modules/quiz_rpg/scenes/objects/tutorial_area/door_vertical_short.tscn" id="1_base"]
+[ext_resource type="Script" path="res://modules/quiz_rpg/scripts/interactables/locked_door.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://3678qgkduftd" path="res://assets/textures/legacy_amonra/atlases/Dungeon tileset/Dungeon tileset.png" id="3_tex"]
+
+[node name="Door_Locked" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+
+[node name="Lock" type="Sprite2D" parent="." index="1"]
+z_index = 1
+position = Vector2(0, 4)
+texture = ExtResource("3_tex")
+region_enabled = true
+region_rect = Rect2(290, 100, 12, 8)
