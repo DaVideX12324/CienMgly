@@ -4,6 +4,8 @@ signal answered(result: Dictionary, submitted_answer: Dictionary)
 
 const TEXT_PRIMARY := Color(0.95, 0.95, 0.98)
 const TEXT_SECONDARY := Color(0.65, 0.65, 0.72)
+## Ramka kursora klawiatury (karta pary, luka) i kolor wybranego słowa.
+const CURSOR_FRAME := Color(1.0, 0.85, 0.2)
 const FEEDBACK_CORRECT_FILL := Color(0.12, 0.42, 0.18, 0.95)
 const FEEDBACK_CORRECT_BORDER := Color(0.3, 1.0, 0.4, 1.0)
 const FEEDBACK_WRONG_FILL := Color(0.42, 0.12, 0.12, 0.95)
@@ -55,10 +57,17 @@ var _total_time := 0.0
 var _tile_slots: Array[String] = []
 var _tile_buttons: Array[Button] = []
 var _gap_buttons: Array[Button] = []
-var _active_gap := 0
-var _tile_cursor := 0  # kursor klawiatury: kafelek 0..n-1, n = „Potwierdź”
+var _tile_texts: Array[String] = []
+## Luki: najpierw wybór luki albo słowa, potem tylko druga strona (luka -> słowo, słowo -> luka).
+var _sel_gap := -1
+var _sel_tile := -1
+var _tile_row := 1  # kursor klawiatury: 0 = wiersz luk, 1 = kafelki (+ „Potwierdź” na końcu)
+var _gap_cursor := 0
+var _tile_cursor := 0  # kafelek 0..n-1, n = „Potwierdź”
 var _match_cursor := Vector2i.ZERO  # kursor klawiatury w parach: x 0 = lewa, 1 = prawa, 2 = „Potwierdź”; y = wiersz
-var _match_selected := -1
+## Pary: wybrana karta (strona 0 = lewa, 1 = prawa; -1 = brak) — potem tylko karta z przeciwnej strony.
+var _match_sel_side := -1
+var _match_sel_idx := -1
 var _match_pairs: Dictionary = {}
 var _match_left_buttons: Array[Button] = []
 var _match_right_buttons: Array[Button] = []
@@ -291,41 +300,50 @@ func handle_input(event: InputEvent) -> bool:
 				return true
 
 		"fill_tiles":
-			# Klawiatura: lewo / prawo — kafelek (na końcu „Potwierdź”), góra / dół / Tab — luka, 1–9 — kafelek wprost,
-			# Enter / Z / spacja — wstaw kafelek albo potwierdź, Backspace / Delete — opróżnij lukę.
+			# Klawiatura: najpierw luka albo słowo, potem druga strona. Góra / dół / Tab — wiersz luk / kafelków (gdy nic
+			# nie wybrano), lewo / prawo — w wierszu, Enter / Z / spacja — wybór (albo „Potwierdź”), 1–9 — kafelek wprost,
+			# Backspace / Delete — anuluje wybór albo opróżnia lukę pod kursorem.
 			var tile_key := _answer_index(event)  # kafelki 1–4: akcje odpowiedzi, 5–9: cyfry
 			if tile_key < 0 and key >= KEY_5 and key <= KEY_9:
 				tile_key = key - KEY_1
 			if tile_key >= 0 and tile_key < _tile_buttons.size():
-				_place_tile_at(tile_key)
+				_on_tile_clicked(tile_key)
 				return true
 			if event.is_action_pressed("ui_left") or _act(event, &"move_left"):
-				_move_tile_cursor(-1)
+				_move_fill_cursor(-1)
 				return true
 			if event.is_action_pressed("ui_right") or _act(event, &"move_right"):
-				_move_tile_cursor(1)
+				_move_fill_cursor(1)
 				return true
-			if event.is_action_pressed("ui_up") or _act(event, &"move_up"):
-				_active_gap = posmod(_active_gap - 1, maxi(_tile_slots.size(), 1))
-				_update_gap_highlight()
-				return true
-			if event.is_action_pressed("ui_down") or _act(event, &"move_down") or key == KEY_TAB:
-				_active_gap = (_active_gap + 1) % maxi(_tile_slots.size(), 1)
-				_update_gap_highlight()
+			var to_gaps := event.is_action_pressed("ui_up") or _act(event, &"move_up")
+			var to_tiles := event.is_action_pressed("ui_down") or _act(event, &"move_down")
+			if to_gaps or to_tiles or key == KEY_TAB:
+				if _sel_gap < 0 and _sel_tile < 0:   # wybór blokuje wiersz: luka -> tylko słowa, słowo -> tylko luki
+					_tile_row = 0 if to_gaps else (1 if to_tiles else 1 - _tile_row)
+					if _tile_row == 1 and (_tile_cursor < _tile_buttons.size() and _tile_buttons[_tile_cursor].disabled):
+						_tile_cursor = _next_free_tile(_tile_cursor, 1, true)
+				_refresh_fill_tiles()
 				return true
 			if key in [KEY_BACKSPACE, KEY_DELETE]:
-				_clear_gap(_active_gap)
+				if _sel_gap >= 0 or _sel_tile >= 0:
+					_cancel_fill_selection()
+				elif _tile_row == 0:
+					_clear_gap(_gap_cursor)
 				return true
 			if _is_choice_accept(event):
-				if _tile_cursor >= _tile_buttons.size():
+				if _tile_row == 0:
+					_on_gap_clicked(_gap_cursor)
+				elif _tile_cursor >= _tile_buttons.size():
 					_submit_answer(answer_fill_tiles())
 				else:
-					_place_tile_at(_tile_cursor)
+					_on_tile_clicked(_tile_cursor)
 				return true
 
 		"matching":
-			# Klawiatura: góra / dół — wiersz (pod ostatnim „Potwierdź”), lewo / prawo — kolumna, Enter / Z / spacja —
-			# wybór karty (po lewej kursor przechodzi na prawą) albo potwierdzenie.
+			# Klawiatura: najpierw karta z dowolnej strony, potem tylko karta z przeciwnej (kursor przechodzi tam sam).
+			# Góra / dół — wiersz (pod ostatnim „Potwierdź”), lewo / prawo — kolumna (gdy nic nie wybrano), Enter / Z /
+			# spacja — wybór karty albo potwierdzenie, Backspace / Delete — anuluje wybór albo rozłącza parę pod kursorem.
+			var locked := _match_sel_side >= 0
 			if event.is_action_pressed("ui_up") or _act(event, &"move_up"):
 				_move_match_cursor(Vector2i(0, -1))
 				return true
@@ -333,26 +351,28 @@ func handle_input(event: InputEvent) -> bool:
 				_move_match_cursor(Vector2i(0, 1))
 				return true
 			if event.is_action_pressed("ui_left") or _act(event, &"move_left"):
-				_move_match_cursor(Vector2i(-1, 0))
+				if not locked:
+					_move_match_cursor(Vector2i(-1, 0))
 				return true
 			if event.is_action_pressed("ui_right") or _act(event, &"move_right"):
-				_move_match_cursor(Vector2i(1, 0))
+				if not locked:
+					_move_match_cursor(Vector2i(1, 0))
 				return true
-			if _is_choice_accept(event):
-				match _match_cursor.x:
-					0:
-						_on_match_left(_match_cursor.y)
-						if _match_selected >= 0:
-							_match_cursor = Vector2i(1, mini(_match_cursor.y, _match_right_buttons.size() - 1))
-					1:
-						_on_match_right(_match_cursor.y)
-						if _match_pairs.size() >= _match_left_buttons.size():
-							_match_cursor = Vector2i(2, 0)
-					_:
-						_submit_answer(answer_matching())
+			if key in [KEY_BACKSPACE, KEY_DELETE]:
+				if locked:
+					_match_cursor = Vector2i(_match_sel_side, _match_sel_idx)
+					_match_sel_side = -1
+					_match_sel_idx = -1
+				elif _match_cursor.x < 2:
+					_unpair(_match_cursor.x, _match_cursor.y)
 				_refresh_match_cursor()
 				return true
-
+			if _is_choice_accept(event):
+				if _match_cursor.x == 2:
+					_submit_answer(answer_matching())
+				else:
+					_on_match_card(_match_cursor.x, _match_cursor.y)
+				return true
 	return false
 
 
@@ -410,9 +430,13 @@ func reset_question() -> void:
 	_answering = false
 	_time_left = 0.0
 	_total_time = 0.0
-	_match_selected = -1
+	_match_sel_side = -1
+	_match_sel_idx = -1
+	_sel_gap = -1
+	_sel_tile = -1
 	_match_pairs.clear()
 	_tile_slots.clear()
+	_tile_texts.clear()
 	_tile_buttons.clear()
 	_gap_buttons.clear()
 	_match_left_buttons.clear()
@@ -748,8 +772,10 @@ func _build_fill_tiles(question: Dictionary) -> void:
 		child.queue_free()
 	_tile_slots.clear()
 	_tile_buttons.clear()
+	_tile_texts.clear()
 	_gap_buttons.clear()
-	_active_gap = 0
+	_sel_gap = -1
+	_sel_tile = -1
 	var text_with_gaps := str(question.get("text_with_gaps", ""))
 	var gaps: Array = question.get("gaps", [])
 	var tiles: Array = question.get("tiles", [])
@@ -775,7 +801,7 @@ func _build_fill_tiles(question: Dictionary) -> void:
 			gap_button.focus_mode = Control.FOCUS_NONE
 			gap_button.custom_minimum_size = Vector2(120, 36)
 			gap_button.add_theme_font_size_override("font_size", _ts(16))
-			var gap_index := i
+			var gap_index := _gap_buttons.size()
 			gap_button.pressed.connect(func(): _on_gap_clicked(gap_index))
 			gap_row.add_child(gap_button)
 			_gap_buttons.append(gap_button)
@@ -785,13 +811,15 @@ func _build_fill_tiles(question: Dictionary) -> void:
 		tile_button.focus_mode = Control.FOCUS_NONE
 		tile_button.custom_minimum_size = Vector2(90, 36)
 		tile_button.add_theme_font_size_override("font_size", _ts(16))
-		var tile_text := str(tile)
-		tile_button.pressed.connect(func(): _on_tile_clicked(tile_text, tile_button))
+		var tile_index := _tile_buttons.size()
+		tile_button.pressed.connect(func(): _on_tile_clicked(tile_index))
 		tile_row.add_child(tile_button)
 		_tile_buttons.append(tile_button)
-	_update_gap_highlight()
+		_tile_texts.append(str(tile))
+	_tile_row = 1
+	_gap_cursor = 0
 	_tile_cursor = 0
-	_refresh_tile_cursor()
+	_refresh_fill_tiles()
 
 
 func _build_matching(question: Dictionary) -> void:
@@ -800,7 +828,8 @@ func _build_matching(question: Dictionary) -> void:
 		child.queue_free()
 	for child in match_right.get_children():
 		child.queue_free()
-	_match_selected = -1
+	_match_sel_side = -1
+	_match_sel_idx = -1
 	_match_pairs.clear()
 	_match_left_buttons.clear()
 	_match_right_buttons.clear()
@@ -812,7 +841,7 @@ func _build_matching(question: Dictionary) -> void:
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var index := i
-		button.pressed.connect(func(): _on_match_left(index))
+		button.pressed.connect(func(): _on_match_card(0, index))
 		match_left.add_child(button)
 		_match_left_buttons.append(button)
 	for i in range(right_items.size()):
@@ -821,10 +850,9 @@ func _build_matching(question: Dictionary) -> void:
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var index := i
-		button.pressed.connect(func(): _on_match_right(index))
+		button.pressed.connect(func(): _on_match_card(1, index))
 		match_right.add_child(button)
 		_match_right_buttons.append(button)
-	_refresh_matching_display()
 	_match_cursor = Vector2i.ZERO
 	_refresh_match_cursor()
 
@@ -950,124 +978,243 @@ func _measure_result_width() -> float:
 	return width
 
 
-## Kafelek i (klawiatura) do aktywnej luki; po wypełnieniu wszystkich luk kursor na „Potwierdź”.
-func _place_tile_at(i: int) -> void:
-	if i < 0 or i >= _tile_buttons.size() or _tile_buttons[i].disabled:
+## Klik / Enter na luce: wybrane słowo -> wstawia je; inaczej wybiera lukę (potem tylko słowa), ponownie — anuluje.
+func _on_gap_clicked(gap: int) -> void:
+	if not _answering or gap < 0 or gap >= _tile_slots.size():
 		return
-	_on_tile_clicked(_tile_buttons[i].text, _tile_buttons[i])
-	_tile_cursor = _tile_buttons.size() if not _tile_slots.has("") else i
-	_move_tile_cursor(0)
+	_gap_cursor = gap
+	if _sel_tile >= 0:
+		_put_tile(gap, _sel_tile)
+		return
+	if _sel_gap == gap:
+		_sel_gap = -1
+	else:
+		_sel_gap = gap
+		_tile_row = 1
+		_tile_cursor = _next_free_tile(-1, 1, false)
+	_refresh_fill_tiles()
+
+
+## Klik / Enter / cyfra na kafelku: wybrana luka -> wstawia słowo; inaczej wybiera słowo (potem tylko luki).
+func _on_tile_clicked(tile: int) -> void:
+	if not _answering or tile < 0 or tile >= _tile_buttons.size() or _tile_buttons[tile].disabled:
+		return
+	_tile_cursor = tile
+	if _sel_gap >= 0:
+		_put_tile(_sel_gap, tile)
+		return
+	if _sel_tile == tile:
+		_sel_tile = -1
+	else:
+		_sel_tile = tile
+		_tile_row = 0
+		var empty := _tile_slots.find("")
+		_gap_cursor = empty if empty >= 0 else clampi(_gap_cursor, 0, maxi(_tile_slots.size() - 1, 0))
+	_refresh_fill_tiles()
+
+
+## Słowo `tile` do luki `gap` (słowo, które tam było, wraca do kafelków). Kursor: następny wolny kafelek, a gdy
+## wszystkie luki pełne — „Potwierdź”.
+func _put_tile(gap: int, tile: int) -> void:
+	_release_gap_tile(gap)
+	_tile_slots[gap] = _tile_texts[tile]
+	_tile_buttons[tile].disabled = true
+	_sel_gap = -1
+	_sel_tile = -1
+	_tile_row = 1
+	_tile_cursor = _tile_buttons.size() if not _tile_slots.has("") else _next_free_tile(tile, 1, false)
+	_refresh_fill_tiles()
 
 
 func _clear_gap(gap: int) -> void:
 	if gap < 0 or gap >= _tile_slots.size() or _tile_slots[gap] == "":
 		return
-	for button in _tile_buttons:
-		if button.text == _tile_slots[gap] and button.disabled:
-			button.disabled = false
-			break
+	_release_gap_tile(gap)
 	_tile_slots[gap] = ""
-	_gap_buttons[gap].text = "[ ___ ]"
-	_refresh_tile_cursor()
+	_refresh_fill_tiles()
 
 
-## Kursor o step (0 = zostaje) z pominięciem użytych kafelków; „Potwierdź” na końcu.
-func _move_tile_cursor(step: int) -> void:
+## Kafelek ze słowem z luki znów do wzięcia.
+func _release_gap_tile(gap: int) -> void:
+	if _tile_slots[gap] == "":
+		return
+	for i in _tile_buttons.size():
+		if _tile_texts[i] == _tile_slots[gap] and _tile_buttons[i].disabled:
+			_tile_buttons[i].disabled = false
+			return
+
+
+func _cancel_fill_selection() -> void:
+	if _sel_gap >= 0:
+		_tile_row = 0
+		_gap_cursor = _sel_gap
+	elif _sel_tile >= 0:
+		_tile_row = 1
+		_tile_cursor = _sel_tile
+	_sel_gap = -1
+	_sel_tile = -1
+	_refresh_fill_tiles()
+
+
+## Lewo / prawo w bieżącym wierszu: luki z zawinięciem; kafelki z pominięciem użytych, „Potwierdź” na końcu (nie,
+## gdy wybrana jest luka — wtedy tylko słowa).
+func _move_fill_cursor(step: int) -> void:
+	if _tile_row == 0:
+		if not _tile_slots.is_empty():
+			_gap_cursor = posmod(_gap_cursor + step, _tile_slots.size())
+	else:
+		_tile_cursor = _next_free_tile(_tile_cursor, step, _sel_gap < 0)
+	_refresh_fill_tiles()
+
+
+## Następny od `from` (o step, z zawinięciem) wolny kafelek; with_confirm — także „Potwierdź” (indeks n).
+func _next_free_tile(from: int, step: int, with_confirm: bool) -> int:
 	var n := _tile_buttons.size() + 1
-	var i := _tile_cursor
+	var i := from
 	for _k in n:
-		i = posmod(i + (step if step != 0 else 0), n)
-		if i >= _tile_buttons.size() or not _tile_buttons[i].disabled:
-			break
-		if step == 0:
-			step = 1
-	_tile_cursor = i
-	_refresh_tile_cursor()
+		i = posmod(i + step, n)
+		if i == _tile_buttons.size():
+			if with_confirm:
+				return i
+		elif not _tile_buttons[i].disabled:
+			return i
+	return _tile_buttons.size()
 
 
-func _refresh_tile_cursor() -> void:
+## Wygląd luk i kafelków: wybrana luka / słowo (▶, żółty tekst), kursor klawiatury (ramka na luce, zaznaczenie kafelka).
+func _refresh_fill_tiles() -> void:
+	for g in _gap_buttons.size():
+		var btn := _gap_buttons[g]
+		var word := _tile_slots[g] if g < _tile_slots.size() else ""
+		var selected := g == _sel_gap
+		btn.text = ("▶ " if selected else "") + (word if word != "" else "[ ___ ]")
+		_style_slot(btn, word != "", selected, _tile_row == 0 and g == _gap_cursor)
 	var targets: Array[Button] = _tile_buttons.duplicate()
 	targets.append(tiles_confirm)
 	for i in targets.size():
-		var on := i == _tile_cursor
+		var btn := targets[i]
+		var on := _tile_row == 1 and i == _tile_cursor
+		var selected := i == _sel_tile
+		if i < _tile_texts.size():
+			btn.text = ("▶ " if selected else "") + _tile_texts[i]
 		if selection_styler.is_valid():
-			selection_styler.call(targets[i], on)
+			selection_styler.call(btn, on)
+			if selected:
+				btn.add_theme_color_override("font_color", CURSOR_FRAME)
+			elif not on:
+				btn.remove_theme_color_override("font_color")
 		else:
-			targets[i].add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if on else TEXT_PRIMARY)
+			btn.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45) if on or selected else TEXT_PRIMARY)
 
 
-func _on_gap_clicked(gap_index: int) -> void:
-	_active_gap = gap_index
-	_update_gap_highlight()
+## Luka: pusta / z wyrazem, wybrana (biała ramka, żółty tekst), pod kursorem klawiatury (żółta ramka).
+func _style_slot(btn: Button, filled: bool, selected: bool, cursor: bool) -> void:
+	btn.add_theme_color_override("font_color", CURSOR_FRAME if selected else (TEXT_PRIMARY if filled else TEXT_SECONDARY))
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var box := StyleBoxFlat.new()
+		box.bg_color = Color(0.1, 0.12, 0.18, 0.95) if filled else Color(0.04, 0.05, 0.08, 0.9)
+		box.border_color = CURSOR_FRAME if cursor else (Color.WHITE if selected else Color(0.3, 0.34, 0.45, 0.9))
+		box.set_border_width_all(3 if cursor or selected else 1)
+		if state == "hover":
+			box.bg_color = box.bg_color.lightened(0.08)
+		box.set_corner_radius_all(6)
+		box.content_margin_left = 12
+		box.content_margin_right = 12
+		box.content_margin_top = 4
+		box.content_margin_bottom = 4
+		btn.add_theme_stylebox_override(state, box)
 
 
-func _on_tile_clicked(tile_text: String, tile_button: Button) -> void:
-	if _tile_slots.is_empty():
-		return
-	var old_tile := _tile_slots[_active_gap]
-	if old_tile != "":
-		for button in _tile_buttons:
-			if button.text == old_tile:
-				button.disabled = false
-				break
-	_tile_slots[_active_gap] = tile_text
-	tile_button.disabled = true
-	_gap_buttons[_active_gap].text = tile_text
-	var next := (_active_gap + 1) % _tile_slots.size()
-	for _i in range(_tile_slots.size()):
-		if _tile_slots[next] == "":
-			break
-		next = (next + 1) % _tile_slots.size()
-	_active_gap = next
-	_update_gap_highlight()
-	_move_tile_cursor(0)  # kursor klawiatury nie zostaje na użytym kafelku
-
-
-func _update_gap_highlight() -> void:
-	for i in range(_gap_buttons.size()):
-		if i == _active_gap:
-			_gap_buttons[i].add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-		else:
-			_gap_buttons[i].remove_theme_color_override("font_color")
-
-
-func _on_match_left(index: int) -> void:
+## Klik / Enter na karcie pary: bez wyboru — wybiera ją (kursor przechodzi na przeciwną kolumnę); ta sama strona —
+## zmienia wybór (ta sama karta — anuluje); przeciwna strona — łączy parę (istniejąca ta sama para — rozłącza).
+func _on_match_card(side: int, index: int) -> void:
 	if not _answering:
 		return
-	if _match_selected == index:
-		# Ponowne kliknięcie: jeśli było już sparowane, odłącz
-		if _match_pairs.has(index):
-			_match_pairs.erase(index)
-		_match_selected = -1
-	else:
-		_match_selected = index
-	_refresh_matching_display()
-
-
-func _on_match_right(index: int) -> void:
-	if not _answering:
+	var buttons := _match_left_buttons if side == 0 else _match_right_buttons
+	if index < 0 or index >= buttons.size():
 		return
-	if _match_selected >= 0:
-		# Jeśli ten prawy przycisk był już z czymś połączony, zwolnij poprzednie połączenie
-		for key in _match_pairs.keys():
-			if _match_pairs[key] == index:
-				_match_pairs.erase(key)
-		_match_pairs[_match_selected] = index
-		_match_selected = -1
-		_refresh_matching_display()
+	if _match_sel_side < 0 or _match_sel_side == side:
+		if _match_sel_side == side and _match_sel_idx == index:
+			_match_sel_side = -1
+			_match_sel_idx = -1
+			_match_cursor = Vector2i(side, index)
+		else:
+			_match_sel_side = side
+			_match_sel_idx = index
+			_match_cursor = Vector2i(1 - side, _partner_row(side, index))
+		_refresh_match_cursor()
+		return
+	var left := index if side == 0 else _match_sel_idx
+	var right := index if side == 1 else _match_sel_idx
+	var from_side := _match_sel_side
+	var from_idx := _match_sel_idx
+	if _match_pairs.has(left) and int(_match_pairs[left]) == right:
+		_match_pairs.erase(left)
 	else:
-		# Brak aktywnego wyboru z lewej: kliknięcie na połączony prawy odłącza go
-		var to_erase: Array = []
-		for key in _match_pairs.keys():
-			if _match_pairs[key] == index:
-				to_erase.append(key)
-		for key in to_erase:
-			_match_pairs.erase(key)
-		_refresh_matching_display()
+		_unpair(1, right)
+		_match_pairs[left] = right
+	_match_sel_side = -1
+	_match_sel_idx = -1
+	_match_cursor = _next_unpaired(from_side, from_idx)
+	_refresh_match_cursor()
 
 
+## Rozłącza parę z kartą (strona, indeks), jeśli jest połączona.
+func _unpair(side: int, index: int) -> void:
+	if side == 0:
+		_match_pairs.erase(index)
+		return
+	for k in _match_pairs.keys():
+		if int(_match_pairs[k]) == index:
+			_match_pairs.erase(k)
+
+
+## Wiersz kursora po wyborze karty: jej obecna para po drugiej stronie, inaczej pierwsza wolna karta tam (od wiersza
+## wybranej), inaczej ten sam wiersz.
+func _partner_row(side: int, index: int) -> int:
+	var other := _match_right_buttons if side == 0 else _match_left_buttons
+	if other.is_empty():
+		return 0
+	if side == 0 and _match_pairs.has(index):
+		return int(_match_pairs[index])
+	if side == 1:
+		for k in _match_pairs.keys():
+			if int(_match_pairs[k]) == index:
+				return int(k)
+	for k in other.size():
+		var j := (index + k) % other.size()
+		if not _is_paired(1 - side, j):
+			return j
+	return mini(index, other.size() - 1)
+
+
+func _is_paired(side: int, index: int) -> bool:
+	if side == 0:
+		return _match_pairs.has(index)
+	for k in _match_pairs.keys():
+		if int(_match_pairs[k]) == index:
+			return true
+	return false
+
+
+## Kursor po parze: następna (w dół, z zawinięciem) niepołączona karta po stronie, od której zaczęto; wszystkie lewe
+## połączone — „Potwierdź”.
+func _next_unpaired(side: int, from: int) -> Vector2i:
+	if _match_pairs.size() >= _match_left_buttons.size():
+		return Vector2i(2, 0)
+	var buttons := _match_left_buttons if side == 0 else _match_right_buttons
+	for k in buttons.size():
+		var i := (from + 1 + k) % buttons.size()
+		if not _is_paired(side, i):
+			return Vector2i(side, i)
+	return Vector2i(2, 0)
+
+
+## Góra / dół: wiersz (pod ostatnim „Potwierdź”; gdy wybrana jest karta — z zawinięciem w kolumnie); lewo / prawo:
+## kolumna.
 func _move_match_cursor(d: Vector2i) -> void:
 	var c := _match_cursor
+	var locked := _match_sel_side >= 0
 	if c.x == 2:
 		if d.y < 0 or d.x != 0:
 			c = Vector2i(0 if d.x <= 0 else 1, maxi(_match_left_buttons.size() - 1, 0))
@@ -1076,19 +1223,18 @@ func _move_match_cursor(d: Vector2i) -> void:
 		var rows := (_match_left_buttons if c.x == 0 else _match_right_buttons).size()
 		c.y += d.y
 		if c.y >= rows:
-			c = Vector2i(2, 0)
-		else:
+			c = Vector2i(c.x, 0) if locked else Vector2i(2, 0)
+		elif c.y < 0:
+			c.y = rows - 1 if locked else 0
+		if c.x < 2:
 			c.y = clampi(c.y, 0, maxi(rows - 1, 0))
 	_match_cursor = c
 	_refresh_match_cursor()
 
 
-## Kursor klawiatury w parach: rozjaśniona karta albo zaznaczone „Potwierdź”.
+## Wygląd par z kursorem klawiatury: karta w żółtej ramce albo zaznaczone „Potwierdź”.
 func _refresh_match_cursor() -> void:
-	for col in 2:
-		var buttons := _match_left_buttons if col == 0 else _match_right_buttons
-		for i in buttons.size():
-			buttons[i].modulate = Color(1.35, 1.35, 1.35) if _match_cursor == Vector2i(col, i) else Color.WHITE
+	_refresh_matching_display()
 	if selection_styler.is_valid():
 		selection_styler.call(match_confirm, _match_cursor.x == 2)
 	else:
@@ -1105,7 +1251,7 @@ func _refresh_matching_display() -> void:
 		var raw_left: String = str(left_items[i]) if i < left_items.size() else ""
 		var pair_color: Color = MATCH_COLORS[i % MATCH_COLORS.size()]
 		var is_matched: bool = _match_pairs.has(i)
-		var is_selected: bool = (i == _match_selected)
+		var is_selected: bool = _match_sel_side == 0 and i == _match_sel_idx
 
 		# Para widoczna po tej samej literze i kolorze po obu stronach — bez dopisywania prawej pozycji do lewej.
 		btn.text = ("%s ▶ %s" if is_selected else "%s  %s") % [tag, raw_left]
@@ -1123,11 +1269,11 @@ func _refresh_matching_display() -> void:
 			var left_idx: int = int(reverse_map[j])
 			var tag: String = MATCH_TAGS[left_idx % MATCH_TAGS.size()]
 			var pair_color: Color = MATCH_COLORS[left_idx % MATCH_COLORS.size()]
-			btn.text = "%s  %s" % [tag, raw_right]
-			_apply_match_card_style(btn, pair_color, true, false)
+			btn.text = ("◀ %s  %s" if j == _right_selected() else "%s  %s") % [tag, raw_right]
+			_apply_match_card_style(btn, pair_color, true, j == _right_selected())
 		else:
-			btn.text = "[ — ]  %s" % [raw_right]
-			_apply_match_card_style(btn, Color(0.4, 0.45, 0.55), false, false)
+			btn.text = ("◀ [ — ]  %s" if j == _right_selected() else "[ — ]  %s") % [raw_right]
+			_apply_match_card_style(btn, Color(0.4, 0.45, 0.55), false, j == _right_selected())
 
 	# Lewa kolumna na szerokość najdłuższej pozycji (bez rozciągania), prawa bierze resztę — GridContainer dzieli
 	# rozciągane kolumny po równo, a prawe pozycje są zwykle dużo dłuższe.
@@ -1136,6 +1282,25 @@ func _refresh_matching_display() -> void:
 	match_right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for btn in _match_left_buttons:
 		btn.custom_minimum_size.x = left_w
+	if _match_cursor.x < 2:
+		var col := _match_left_buttons if _match_cursor.x == 0 else _match_right_buttons
+		if _match_cursor.y < col.size():
+			_frame_cursor(col[_match_cursor.y])
+
+
+func _right_selected() -> int:
+	return _match_sel_idx if _match_sel_side == 1 else -1
+
+
+## Żółta ramka kursora klawiatury na karcie pary (na jej świeżo nadanym tle — _apply_match_card_style).
+func _frame_cursor(btn: Button) -> void:
+	for state in ["normal", "hover"]:
+		var cur := btn.get_theme_stylebox(state)
+		if cur is StyleBoxFlat:
+			var box := (cur as StyleBoxFlat).duplicate() as StyleBoxFlat
+			box.border_color = CURSOR_FRAME
+			box.set_border_width_all(3)
+			btn.add_theme_stylebox_override(state, box)
 
 
 func _apply_match_card_style(btn: Button, color: Color, is_matched: bool, is_selected: bool) -> void:
