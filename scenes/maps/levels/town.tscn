@@ -1019,7 +1019,7 @@ position = Vector2(1049, 195)
 position = Vector2(784, 152)
 
 [node name="bush_rust_small" parent="Object Layer PC/Bushes" unique_id=136788353 instance=ExtResource("63_4jsxo")]
-position = Vector2(762, 188)
+position = Vector2(762, 183)
 
 [node name="bush_olive_medium_2" parent="Object Layer PC/Bushes" unique_id=1078844325 instance=ExtResource("60_a0vx2")]
 position = Vector2(642, 182)
