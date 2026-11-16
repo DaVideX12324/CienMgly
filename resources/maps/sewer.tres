@@ -1533,6 +1533,7 @@ texture = ExtResource("1_props")
 0:6/size_in_atlas = Vector2i(2, 3)
 0:6/0 = 0
 0:6/0/texture_origin = Vector2i(-8, 16)
+0:6/0/physics_layer_1/polygon_0/points = PackedVector2Array(-7, -10, 23, -10, 23, 5, -7, 5)
 
 [sub_resource type="TileSetAtlasSource" id="src_water"]
 texture = ExtResource("2_water")
