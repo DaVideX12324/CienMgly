@@ -21,8 +21,9 @@ const TEXT_EXTS := ["gd", "tscn", "tres", "json", "cfg", "gdshader", "import", "
 ## Folder wskazany ścieżką (np. res://resources/quizzes) kopiujemy cały — o ile jest mały.
 const MAX_DIR_FILES := 200
 ## Zasoby hosta spoza odwołań w plikach modułu, a potrzebne wersji samodzielnej (np. arkusze, z których wycięto ikony
-## przedmiotów — przy dalszym cięciu ikon źródło ma być pod ręką).
-const EXTRA_HOST_ASSETS: Array[String] = []
+## przedmiotów — przy dalszym cięciu ikon źródło ma być pod ręką). Szablon zestawu edytor pytań czyta ścieżką
+## względną w zwykłym stringu (FileAccess), więc skan odwołań go nie widzi.
+const EXTRA_HOST_ASSETS: Array[String] = ["res://resources/data/question_set_template.json"]
 ## Uruchomienie z repo modułu otwartego samodzielnie: główna scena i nazwa projektu.
 const STANDALONE_MAIN_SCENE := "res://modules/quiz_rpg/standalone/standalone_main.tscn"
 const STANDALONE_NAME := "Cień Mgły"

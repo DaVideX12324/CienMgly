@@ -35,12 +35,20 @@ const ID_PREFIX := {
 }
 
 
+## Teksty PL, gdy nie ma I18nService (kopia w modules/BitBomber/shared/ w BitBomberze uruchomionym samodzielnie).
+## Ścieżka względna — ta sama w hoście i w kopiach.
+const FALLBACK_TEXTS = preload("../../resources/i18n/pl.json")
+
+
 static func _t(key: String, fallback: String = "") -> String:
 	var loop := Engine.get_main_loop()
 	if loop is SceneTree:
 		var i18n := (loop as SceneTree).root.get_node_or_null("I18nService")
 		if i18n and i18n.has_method("t"):
 			return str(i18n.call("t", key, fallback))
+	var texts: Variant = FALLBACK_TEXTS.data
+	if texts is Dictionary and (texts as Dictionary).has(key):
+		return str(texts[key])
 	return fallback if fallback != "" else key
 
 
@@ -50,7 +58,7 @@ static func _tf(key: String, args: Dictionary, fallback: String = "") -> String:
 		var i18n := (loop as SceneTree).root.get_node_or_null("I18nService")
 		if i18n and i18n.has_method("tf"):
 			return str(i18n.call("tf", key, args, fallback))
-	return fallback.format(args) if fallback != "" else key
+	return _t(key, fallback).format(args)
 
 
 static func get_type_name(type: String) -> String:
