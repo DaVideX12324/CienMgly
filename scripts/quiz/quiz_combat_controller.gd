@@ -3122,11 +3122,19 @@ func _combat_ui_compact() -> bool:
 
 ## Opcja „na szerokość treści” przy pasku HP / SP / TP krótszym niż compact_min_bar_width (okno, skala UI, imiona,
 ## ikony statusów): gra ją odznacza i zapamiętuje szerokość ekranu (QuizTheme.mark_combat_compact_tight) — w opcjach
-## przy niej ostrzeżenie. Sprawdzane po ułożeniu pasa, raz na walkę.
+## przy niej ostrzeżenie. Sprawdzane po ułożeniu pasa, raz na walkę — tylko w układach z oknem drużyny w szerokości
+## „na treść” (nie przy liście umiejętności / przedmiotów, gdzie okno jest celowo węższe — zgłoszenie: po przejściu
+## przez menu walka nagle szła na całą szerokość) i nie w trakcie animacji pasa.
 func _check_bar_squeeze() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
+	while is_inside_tree() and _band_tween and _band_tween.is_running():
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
 	if _bars_squeezed or not QuizTheme.combat_ui_compact() or party_panel_container == null or not party_panel_container.is_visible_in_tree():
+		return
+	if not _band_mode in [Band.PARTY_COMMAND, Band.ACTOR_COMMAND, Band.STATUS_ONLY]:
 		return
 	var bar := party_panel_container.find_child("Bar", true, false) as Control
 	if bar == null or not bar.is_visible_in_tree():

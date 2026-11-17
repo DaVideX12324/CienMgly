@@ -21,6 +21,7 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 - Umiejętności bossów ×0,7 (było ×0,6); bossowie sekretnych pokoi na lv 7 (było 9).
 
 ### Naprawiono
+- Walka: po wejściu w listę umiejętności / przedmiotów gra potrafiła sama wyłączyć „UI walki na szerokość treści” (okno drużyny jest tam węższe, a sprawdzenie długości pasków brało to za za krótkie paski) — od tej chwili walka szła na całą szerokość ekranu.
 - Walka: pas drużyny znikał przy kolejnej postaci (przerwana animacja zostawiała ściśnięte okno).
 
 ### Naprawiono
