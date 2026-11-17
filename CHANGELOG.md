@@ -5,6 +5,9 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ## [Unreleased]
 
+### Dodano
+- Edytor pytań w Opcjach → Pytania („Edytor pytań…”), także w wersji samodzielnej (zestawy, import, własne pytania).
+
 ### Zmieniono
 - Szybszy początek: awans na niskich poziomach wymaga mniej XP (×0,5 na lv 1, pełne od lv 20); XP za wrogów ×1,5.
 - Samouczek: boss-szlam zawsze daje czapkę, tunikę i laskę ucznia; zwykłe szlamy czasem czapkę / tunikę / miksturę.

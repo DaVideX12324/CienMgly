@@ -391,12 +391,12 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="LblSetsHint" type="Label" parent="Panel/Margin/VBox/Tabs/Pytania"]
+[node name="BtnQuestionEditor" type="Button" parent="Panel/Margin/VBox/Tabs/Pytania"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.6, 0.7, 1)
-theme_override_font_sizes/font_size = 14
-text = "Dodawanie, import i edycja pytań: menu główne -> Pytania."
-autowrap_mode = 3
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 18
+text = "Edytor pytań…"
 
 [node name="Sterowanie" type="VBoxContainer" parent="Panel/Margin/VBox/Tabs"]
 visible = false

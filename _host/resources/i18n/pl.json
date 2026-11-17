@@ -66,7 +66,7 @@
   "host.options.brightness_initial": "Jasność motywu: 100%",
   "host.options.brightness_val": "Jasność motywu: {val}%",
   "host.options.sets_label": "Zestawy pytań używane w grze:",
-  "host.options.sets_hint": "Dodawanie, import i edycja pytań: menu główne -> Pytania.",
+  "host.options.btn_question_editor": "Edytor pytań…",
   "host.options.set_edited": "(edytowany)",
   "host.options.set_user": "(własny)",
   "host.options.questions_count.one": "{n} pytanie",

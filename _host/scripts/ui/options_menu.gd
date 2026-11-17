@@ -46,7 +46,10 @@ var _opt_target: VBoxContainer
 
 @onready var _sets_list: VBoxContainer = $Panel/Margin/VBox/Tabs/Pytania/SetsScroll/SetsList
 @onready var _lbl_sets: Label = $Panel/Margin/VBox/Tabs/Pytania/LblSets
-@onready var _lbl_sets_hint: Label = $Panel/Margin/VBox/Tabs/Pytania/LblSetsHint
+@onready var _btn_question_editor: Button = $Panel/Margin/VBox/Tabs/Pytania/BtnQuestionEditor
+## Edytor pytań nad opcjami — dostępny z każdego modułu, także w wersji samodzielnej (opcje są wspólne).
+const QuestionEditorScene = preload("res://_host/scenes/ui/question_editor.tscn")
+var _question_editor: CanvasLayer = null
 
 @onready var _binds_list: VBoxContainer = $Panel/Margin/VBox/Tabs/Sterowanie/BindsScroll/BindsList
 @onready var _lbl_info: Label = $Panel/Margin/VBox/Tabs/Sterowanie/LblInfo
@@ -132,6 +135,7 @@ func _ready() -> void:
 	_mode_btns = [_btn_windowed, _btn_borderless, _btn_fullscreen]
 	_btn_apply.pressed.connect(_on_apply)
 	_btn_close.pressed.connect(_on_close)
+	_btn_question_editor.pressed.connect(_open_question_editor)
 	_btn_confirm.pressed.connect(_on_confirm)
 	_btn_revert.pressed.connect(_on_revert)
 	for index in range(_mode_btns.size()):
@@ -201,7 +205,7 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if not visible:
+	if not visible or _is_question_editor_open():
 		return
 	if not _capture.is_empty() and event is InputEventKey and event.pressed and not event.echo:
 		_capture_key(event as InputEventKey)
@@ -795,6 +799,21 @@ func _populate_question_sets() -> void:
 		_sets_list.add_child(cb)
 
 
+## Edytor jako warstwa nad opcjami (także wbudowanymi w panel modułu); po zamknięciu odświeża listę zestawów.
+func _open_question_editor() -> void:
+	_play_click()
+	if _question_editor == null:
+		_question_editor = QuestionEditorScene.instantiate() as CanvasLayer
+		add_child(_question_editor)
+		_question_editor.connect("closed", _populate_question_sets)
+	_question_editor.layer = maxi(_question_editor.layer, layer + 1)
+	_question_editor.call("open")
+
+
+func _is_question_editor_open() -> bool:
+	return _question_editor != null and _question_editor.visible
+
+
 ## Zakładka „Sterowanie”: sekcje z manifestów modułów (pole "controls": [{label, actions, keys}], opcjonalnie
 ## "action_labels": {akcja: nazwa}). W menu głównym — lista „Gra:” wybiera moduł (zamiast wszystkich naraz,
 ## prośba usera 2026-10-04), w trakcie gry — tylko aktywny moduł, bez listy. Każda akcja ma InputBinds.SLOTS pola: klik -> „Naciśnij klawisz…” (Esc anuluje, Backspace
@@ -1121,7 +1140,8 @@ func _on_scale_changed(_scale: float) -> void:
 	_bind_game_option.add_theme_font_size_override("font_size", main_size)
 	_scale_popup_font(_bind_game_option, main_size)
 	_lbl_sets.add_theme_font_size_override("font_size", main_size)
-	_lbl_sets_hint.add_theme_font_size_override("font_size", _fs(14))
+	_btn_question_editor.add_theme_font_size_override("font_size", main_size)
+	_btn_question_editor.custom_minimum_size = Vector2(0, UIScaleService.px(40))
 	for child in _sets_list.get_children():
 		if child is CheckBox:
 			child.add_theme_font_size_override("font_size", main_size)
