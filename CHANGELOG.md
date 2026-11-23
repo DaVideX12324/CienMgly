@@ -7,6 +7,8 @@ w repo hosta (Artefakt Wiedzy). Plany są w roadmapie / zakresie inżynierki, ni
 
 ### Dodano
 - Edytor pytań w Opcjach → Pytania („Edytor pytań…”), także w wersji samodzielnej (zestawy, import, własne pytania).
+- Wyjaśnienia pytań: po odpowiedzi w walce i w zagadkach pytanie może pokazać krótkie „Wyjaśnienie: …” (pole `explanation` w zestawie, edytowalne w edytorze pytań).
+- Opcje modułu „Wyjaśnienia pytań” (po złej odpowiedzi / zawsze / nigdy) i „Czekanie po odpowiedzi (Enter / klik)” (po złej odpowiedzi / po każdej / nie czekaj). Bez czekania pauza z wyjaśnieniem jest dłuższa, wg długości tekstu (do 8 s).
 
 ### Zmieniono
 - Szybszy początek: awans na niskich poziomach wymaga mniej XP (×0,5 na lv 1, pełne od lv 20); XP za wrogów ×1,5.

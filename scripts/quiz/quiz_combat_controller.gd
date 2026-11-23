@@ -434,6 +434,7 @@ func _ready() -> void:
 		"timer_bar": $TopWindow/VBox/TimerRow/TimerBar,
 		"result_label": result_label,
 		"correct_answer_label": $TopWindow/VBox/CorrectAnswerLabel,
+		"explanation_label": $TopWindow/VBox/ExplanationLabel,
 	})
 	_quiz_panel_controller.answered.connect(_on_quiz_answered)
 	_quiz_panel_controller.show_index_prefix = false
@@ -586,6 +587,10 @@ func _input(event: InputEvent) -> void:
 		return
 	if _awaiting_notice and (_is_menu_accept(event) or (event is InputEventMouseButton and event.pressed 			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT)):
 		confirm_notice()
+		get_viewport().set_input_as_handled()
+		return
+	# Po odpowiedzi panel czeka na Enter / klik (opcja „Czekanie po odpowiedzi”) — klik w okno też przechodzi dalej.
+	if _quiz_panel_controller and _quiz_panel_controller.is_awaiting_continue() and _quiz_panel_controller.handle_input(event):
 		get_viewport().set_input_as_handled()
 		return
 	if _handle_hovered_enemy_click(event) or _handle_actor_row_mouse(event):
@@ -1788,6 +1793,7 @@ func _use_item(item_data: Dictionary) -> void:
 
 
 func _show_question(q: Dictionary) -> void:
+	QuizTheme.apply_feedback_settings(_quiz_panel_controller)  # opcje mogły się zmienić w trakcie gry
 	_quiz_panel_controller.start_question(q, _diff_range.x)
 	_set_quiz_layout_active(true)
 
@@ -1810,7 +1816,8 @@ func _on_quiz_answered(result: Dictionary, submitted_answer: Dictionary) -> void
 	if _dm:
 		_dm.record_answer(category, correct)
 	_show_quiz_feedback(result, submitted_answer)
-	await get_tree().create_timer(1.2).timeout
+	# Opcje modułu: czekanie na Enter / klik (po złej / każdej odpowiedzi) albo pauza, dłuższa z wyjaśnieniem.
+	await _quiz_panel_controller.wait_after_feedback(get_tree(), 1.2)
 	if _round_questions:
 		_round_question_answered.emit(correct)  # pytanie rundy: akcja później, w kolejce AGI
 		return
@@ -3817,6 +3824,8 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 					result_label.reparent(quiz_modal_vbox, false)
 				if _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != quiz_modal_vbox:
 					_quiz_panel_controller.correct_answer_label.reparent(quiz_modal_vbox, false)
+				if _quiz_panel_controller.explanation_label and _quiz_panel_controller.explanation_label.get_parent() != quiz_modal_vbox:
+					_quiz_panel_controller.explanation_label.reparent(quiz_modal_vbox, false)
 		else:
 			# Bottom bar mode: hide party panel and actor command panel, show quiz panel in party_command_panel
 			# (opcja „UI walki tylko na szerokość treści”: okno quizu na szerokość pytania i odpowiedzi).
@@ -3851,6 +3860,8 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 				result_label.reparent(_result_home(), false)
 			if _quiz_panel_controller and _quiz_panel_controller.correct_answer_label and _quiz_panel_controller.correct_answer_label.get_parent() != _top_home():
 				_quiz_panel_controller.correct_answer_label.reparent(_top_home(), false)
+			if _quiz_panel_controller and _quiz_panel_controller.explanation_label and _quiz_panel_controller.explanation_label.get_parent() != _top_home():
+				_return_explanation_label_to_top()
 
 		# Restore bottom bar layout
 		party_panel_container.visible = true
@@ -3862,6 +3873,16 @@ func _set_quiz_layout_active(active: bool, _animated: bool = true) -> void:
 		if _quiz_panel_controller and _quiz_panel_controller.quiz_panel:
 			_quiz_panel_controller.quiz_panel.visible = false
 		_set_band_mode(_band_mode)
+
+
+## Wyjaśnienie z okna modalnego z powrotem do okna u góry — zaraz pod poprawną odpowiedzią, jak w scenie.
+func _return_explanation_label_to_top() -> void:
+	var explanation: Label = _quiz_panel_controller.explanation_label
+	var correct: Label = _quiz_panel_controller.correct_answer_label
+	var home := _top_home()
+	explanation.reparent(home, false)
+	if correct and correct.get_parent() == home:
+		home.move_child(explanation, correct.get_index() + 1)
 
 
 ## Stan walki każdego członka drużyny (PlayerStats.party): HP i SP z PlayerStats, TP na walkę.
@@ -4440,4 +4461,5 @@ func _update_top_window() -> void:
 	var help_on: bool = help_label != null and help_label.visible
 	_log_label.visible = not _log_lines.is_empty() and not help_on
 	var question_in_log: bool = qpc.question_label.get_parent() == _top_vbox  # opcja „Pytanie w walce”
-	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or qpc.correct_answer_label.visible or help_on
+	var feedback_on: bool = qpc.correct_answer_label.visible or (qpc.explanation_label != null and qpc.explanation_label.visible)
+	_top_window.visible = (quiz_on and question_in_log) or not _log_lines.is_empty() or feedback_on or help_on

@@ -68,7 +68,9 @@ func _ready() -> void:
 		"timer_bar": $Window/Margin/CommandVBox/TimerRow/TimerBar,
 		"result_label": _result_label,
 		"correct_answer_label": $Window/Margin/CommandVBox/CorrectAnswerLabel,
+		"explanation_label": $Window/Margin/CommandVBox/ExplanationLabel,
 	})
+	QuizTheme.apply_feedback_settings(_qp)  # opcje modułu: wyjaśnienia i czekanie na Enter / klik
 	_qp.answered.connect(_on_answered)
 	_qp.show_index_prefix = false
 	_qp.selection_styler = func(btn: Button, selected: bool) -> void:
@@ -113,6 +115,14 @@ func trigger_instant_win() -> void:
 	current_question = total_questions
 	_update_progress()
 	_finish(true)
+
+
+## Po odpowiedzi panel czeka na Enter / klik (opcja „Czekanie po odpowiedzi”) — klik w okno też przechodzi dalej.
+func _input(event: InputEvent) -> void:
+	if _finished or _qp == null or not _qp.is_awaiting_continue():
+		return
+	if _qp.handle_input(event):
+		get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -180,7 +190,7 @@ func _on_answered(result: Dictionary, submitted_answer: Dictionary) -> void:
 	current_question += 1
 	_update_progress()
 
-	await get_tree().create_timer(1.2).timeout
+	await _qp.wait_after_feedback(get_tree(), 1.2)
 	if _finished or not is_inside_tree():
 		return
 

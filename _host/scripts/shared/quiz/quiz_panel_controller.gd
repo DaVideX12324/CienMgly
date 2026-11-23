@@ -1,6 +1,19 @@
 extends RefCounted
 
 signal answered(result: Dictionary, submitted_answer: Dictionary)
+## Gracz zamknął wyjaśnienie (Enter / klik) — kontroler może przejść dalej (is_awaiting_continue()).
+signal continued
+
+## Tryby explanation_mode (kiedy pokazać wyjaśnienie, pole "explanation") i wait_mode (kiedy po odpowiedzi czekać
+## na Enter / klik): zawsze, tylko po złej odpowiedzi / czasie, nigdy.
+const EXPLAIN_ALWAYS := "always"
+const EXPLAIN_WRONG := "wrong"
+const EXPLAIN_NEVER := "never"
+## Najkrótszy czas po odpowiedzi, zanim Enter / klik przejdzie dalej (żeby nie przeklikać razem z odpowiedzią).
+const CONTINUE_MIN_MSEC := 500
+## Bez czekania na gracza: dodatkowy czas na przeczytanie wyjaśnienia (na znak) i górna granica całej pauzy.
+const EXPLANATION_SEC_PER_CHAR := 0.05
+const EXPLANATION_MAX_DELAY := 8.0
 
 const TEXT_PRIMARY := Color(0.95, 0.95, 0.98)
 const TEXT_SECONDARY := Color(0.65, 0.65, 0.72)
@@ -26,6 +39,12 @@ var command_vbox: VBoxContainer
 var quiz_panel: VBoxContainer
 var result_label: Label
 var correct_answer_label: Label
+## Wyjaśnienie i podpowiedź „Enter / klik — dalej” po odpowiedzi — opcjonalne (scena bez ExplanationLabel =
+## bez wyjaśnień i bez czekania na gracza).
+var explanation_label: Label
+var explanation_mode := EXPLAIN_WRONG
+var wait_mode := EXPLAIN_NEVER
+var _shown_explanation := ""
 var question_label: Label
 var hint_label: Label
 var timer_label: Label
@@ -78,11 +97,13 @@ var selection_styler: Callable
 ## Numery „[1] ” przed odpowiedziami (klawisze 1–4 działają także bez nich).
 var show_index_prefix := true
 var _tf_selected_idx: int = 0
+var _awaiting_continue := false
+var _continue_ready_msec := 0
 
 
 ## `nodes`: węzły przeniesione poza panel quizu (np. pytanie i czas w oknie u góry ekranu) —
-## question_label, timer_label, timer_bar, result_label, correct_answer_label; brak klucza = ścieżka
-## domyślna w command_vbox / QuizPanel.
+## question_label, timer_label, timer_bar, result_label, correct_answer_label, explanation_label; brak klucza =
+## ścieżka domyślna w command_vbox / QuizPanel (explanation_label: ExplanationLabel, może go nie być).
 ## Tłumaczenia przez autoload I18nService pobrany z drzewa (identyfikator autoloadu nie kompiluje się, gdy skrypt ładuje się przed autoloadami, np. w testach -s).
 static func _i18n_service() -> Node:
 	var loop := Engine.get_main_loop()
@@ -106,6 +127,10 @@ func setup(p_command_vbox: VBoxContainer, nodes: Dictionary = {}) -> void:
 	quiz_panel = command_vbox.get_node("QuizPanel") as VBoxContainer
 	result_label = _pick(nodes, "result_label", command_vbox, "ResultLabel") as Label
 	correct_answer_label = _pick(nodes, "correct_answer_label", command_vbox, "CorrectAnswerLabel") as Label
+	if nodes.get("explanation_label") != null:
+		explanation_label = nodes["explanation_label"] as Label
+	else:
+		explanation_label = command_vbox.get_node_or_null("ExplanationLabel") as Label
 	question_label = _pick(nodes, "question_label", quiz_panel, "QuestionLabel") as Label
 	hint_label = quiz_panel.get_node("HintLabel") as Label
 	timer_label = _pick(nodes, "timer_label", quiz_panel, "TimerLabel") as Label
@@ -164,6 +189,9 @@ func apply_visual_style(button_styler: Callable) -> void:
 	hint_label.add_theme_font_size_override("font_size", 14)
 	correct_answer_label.add_theme_color_override("font_color", Color(0.35, 0.95, 0.45))
 	correct_answer_label.add_theme_font_size_override("font_size", 16)
+	if explanation_label:
+		explanation_label.add_theme_color_override("font_color", TEXT_SECONDARY)
+		explanation_label.add_theme_font_size_override("font_size", 15)
 	for btn in mc_buttons:
 		button_styler.call(btn, 17)
 	for btn in tf_buttons:
@@ -214,6 +242,8 @@ func tick(delta: float) -> void:
 
 
 func handle_input(event: InputEvent) -> bool:
+	if _awaiting_continue:
+		return _handle_continue_input(event)
 	if not _answering:
 		return false
 	if not (event is InputEventKey) or not event.pressed or event.is_echo():
@@ -389,6 +419,7 @@ func start_question(question: Dictionary, base_difficulty: int) -> void:
 	quiz_panel.visible = true
 	result_label.visible = false
 	correct_answer_label.visible = false
+	_hide_explanation()
 	hide_quiz_modes()
 	var qm := _get_quiz_manager()
 	if qm and qm.has_method("get_question_display_text"):
@@ -447,12 +478,14 @@ func reset_question() -> void:
 		quiz_panel.visible = false
 	if correct_answer_label:
 		correct_answer_label.visible = false
+	_hide_explanation()
 
 
 func hide_quiz() -> void:
 	_answering = false
 	if quiz_panel:
 		quiz_panel.visible = false
+	_hide_explanation()
 
 
 func get_desired_panel_width() -> float:
@@ -503,6 +536,7 @@ func show_feedback(result: Dictionary, submitted_answer: Dictionary) -> void:
 	result_label.visible = true
 	correct_answer_label.visible = false
 	_show_correct_answer()
+	_show_explanation_and_wait(result)
 	if bool(result.get("correct", false)):
 		result_label.text = _i18n_t("host.quiz.correct")
 		result_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.4))
@@ -868,6 +902,89 @@ func _show_correct_answer() -> void:
 		return
 	correct_answer_label.text = _i18n_tf("host.quiz.correct_answer_revealed", {"answer": answer_text})
 	correct_answer_label.visible = true
+
+
+## Tekst wyjaśnienia z wyniku odpowiedzi (QuizService / QuizManager), a bez niego — z samego pytania.
+func _explanation_text(result: Dictionary) -> String:
+	var text := str(result.get("explanation", "")).strip_edges()
+	if text == "":
+		text = str(_current_question.get("explanation", "")).strip_edges()
+	return text
+
+
+## Tryb "always" / "wrong" / "never" dla danej odpowiedzi.
+static func _mode_applies(mode: String, correct: bool) -> bool:
+	if mode == EXPLAIN_ALWAYS:
+		return true
+	if mode == EXPLAIN_WRONG:
+		return not correct
+	return false
+
+
+## Pod poprawną odpowiedzią: wyjaśnienie (explanation_mode) i podpowiedź „Enter / klik — dalej”, gdy panel czeka na
+## gracza (wait_mode) — wtedy kontroler czeka na sygnał continued.
+func _show_explanation_and_wait(result: Dictionary) -> void:
+	if explanation_label == null:
+		return
+	var correct := bool(result.get("correct", false))
+	var lines: Array[String] = []
+	var text := _explanation_text(result)
+	if text != "" and _mode_applies(explanation_mode, correct):
+		_shown_explanation = text
+		lines.append(_i18n_tf("host.quiz.explanation", {"text": text}))
+	if _mode_applies(wait_mode, correct):
+		_awaiting_continue = true
+		_continue_ready_msec = Time.get_ticks_msec() + CONTINUE_MIN_MSEC
+		lines.append(_i18n_t("host.quiz.explanation_continue"))
+	if lines.is_empty():
+		return
+	explanation_label.text = "\n".join(lines)
+	explanation_label.visible = true
+
+
+func _hide_explanation() -> void:
+	_awaiting_continue = false
+	_shown_explanation = ""
+	if explanation_label:
+		explanation_label.visible = false
+
+
+## Czy panel czeka, aż gracz przejdzie dalej (wtedy kontroler czeka na sygnał continued zamiast stałego czasu).
+func is_awaiting_continue() -> bool:
+	return _awaiting_continue
+
+
+## Pauza po odpowiedzi bez czekania na gracza: base_delay, a z widocznym wyjaśnieniem — dłużej, wg długości tekstu.
+func feedback_delay(base_delay: float) -> float:
+	if _shown_explanation == "":
+		return base_delay
+	var delay := base_delay + EXPLANATION_SEC_PER_CHAR * _shown_explanation.length()
+	return minf(delay, maxf(EXPLANATION_MAX_DELAY, base_delay))
+
+
+## Po odpowiedzi: czeka na Enter / klik (wait_mode) albo feedback_delay(base_delay). Wywołanie: await panel.wait_after_feedback(tree, 1.2).
+func wait_after_feedback(tree: SceneTree, base_delay: float) -> void:
+	if _awaiting_continue:
+		await continued
+	else:
+		await tree.create_timer(feedback_delay(base_delay)).timeout
+
+
+## Enter / Z / spacja albo lewy klik przechodzi dalej (po CONTINUE_MIN_MSEC); inne klawisze w tym czasie są
+## zjadane, żeby nie trafiły do gry.
+func _handle_continue_input(event: InputEvent) -> bool:
+	var is_click: bool = event is InputEventMouseButton and event.pressed \
+			and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT
+	var is_key: bool = event is InputEventKey and event.pressed and not event.is_echo()
+	if not (is_click or is_key):
+		return false
+	if not (is_click or _is_choice_accept(event)):
+		return true
+	if Time.get_ticks_msec() < _continue_ready_msec:
+		return true
+	_awaiting_continue = false
+	continued.emit()
+	return true
 
 
 func _apply_choice_feedback(button: Button, is_correct: bool) -> void:

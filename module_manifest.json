@@ -211,6 +211,44 @@
           "name": "Bardzo szybkie (×2)"
         }
       ]
+    },
+    {
+      "key": "quiz_explanations",
+      "label": "Wyjaśnienia pytań",
+      "default": "wrong",
+      "options": [
+        {
+          "id": "wrong",
+          "name": "Po złej odpowiedzi"
+        },
+        {
+          "id": "always",
+          "name": "Zawsze"
+        },
+        {
+          "id": "never",
+          "name": "Nigdy"
+        }
+      ]
+    },
+    {
+      "key": "quiz_feedback_wait",
+      "label": "Czekanie po odpowiedzi (Enter / klik)",
+      "default": "wrong",
+      "options": [
+        {
+          "id": "wrong",
+          "name": "Po złej odpowiedzi"
+        },
+        {
+          "id": "always",
+          "name": "Po każdej odpowiedzi"
+        },
+        {
+          "id": "never",
+          "name": "Nie czekaj"
+        }
+      ]
     }
   ]
 }

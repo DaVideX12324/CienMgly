@@ -260,6 +260,15 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.35, 0.95, 0.45, 1)
 autowrap_mode = 3
 
+[node name="ExplanationLabel" type="Label" parent="Root/Window/Margin/CommandVBox"]
+auto_translate_mode = 2
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.8, 0.88, 1)
+text = "Wyjaśnienie: ...
+Enter / klik — dalej"
+autowrap_mode = 3
+
 [node name="ResultLabel" type="Label" parent="Root/Window/Margin/CommandVBox"]
 auto_translate_mode = 2
 visible = false

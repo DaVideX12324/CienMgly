@@ -447,6 +447,35 @@ static func answers_layout() -> String:
 	return v if v == ANSWERS_GRID else ANSWERS_LIST
 
 
+## Opcje modułu (module_manifest.json → settings): kiedy pokazać wyjaśnienie pytania i kiedy po odpowiedzi czekać na
+## Enter / klik — wartości jak stałe EXPLAIN_* panelu pytań: "always", "wrong", "never".
+const SETTING_QUIZ_EXPLANATIONS := "quiz_explanations"
+const SETTING_QUIZ_FEEDBACK_WAIT := "quiz_feedback_wait"
+const FEEDBACK_MODES: Array[String] = ["always", "wrong", "never"]
+
+
+static func quiz_explanations_mode() -> String:
+	return _feedback_setting(SETTING_QUIZ_EXPLANATIONS)
+
+
+static func quiz_feedback_wait_mode() -> String:
+	return _feedback_setting(SETTING_QUIZ_FEEDBACK_WAIT)
+
+
+static func _feedback_setting(key: String) -> String:
+	var settings := _settings_service()
+	var value := str(settings.call("get_module", MODULE_ID, key, "wrong")) if settings else "wrong"
+	if FEEDBACK_MODES.has(value):
+		return value
+	return "wrong"
+
+
+## Ustawia w panelu pytań (QuizPanelController) tryb wyjaśnień i czekania z opcji modułu.
+static func apply_feedback_settings(panel) -> void:
+	panel.explanation_mode = quiz_explanations_mode()
+	panel.wait_mode = quiz_feedback_wait_mode()
+
+
 ## Układ list umiejętności / przedmiotów w walce (LIST_GRID / LIST_SCROLL).
 static func list_layout() -> String:
 	var settings := _settings_service()
